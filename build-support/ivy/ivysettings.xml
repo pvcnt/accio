@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<ivysettings>
+  <!-- Properties for local repositories -->
+  <property name="sbt.repo.relpath" value="[organization]/[module]/[revision]"/>
+  <property name="sbt.repo.artifact" value="${sbt.repo.relpath}/[type]s/[module].[ext]"/>
+  <property name="sbt.repo.pom" value="${sbt.repo.relpath}/poms/[module].pom"/>
+  <property name="m2.repo.relpath" value="[organisation]/[module]/[revision]"/>
+  <property name="m2.repo.pom" value="${m2.repo.relpath}/[module]-[revision].pom"/>
+  <property name="m2.repo.artifact"
+            value="${m2.repo.relpath}/[artifact]-[revision](-[classifier]).[ext]"/>
+
+  <property name="sbt.repo.dir" value="${user.home}/.ivy2/local" override="false"/>
+  <property name="m2.repo.dir" value="${user.home}/.m2/repository" override="false"/>
+
+  <settings defaultResolver="chain-repos"/>
+
+  <resolvers>
+    <chain name="chain-repos" returnFirst="true">
+      <ibiblio name="maven-central" m2compatible="true" descriptor="required"/>
+      <ibiblio name="twitter" m2compatible="true" root="http://maven.twttr.com" descriptor="required"/>
+
+      <!-- Fall back to local repositories -->
+
+      <!-- sbt standard -->
+      <filesystem name="local.sbt" m2compatible="false" local="true" checkmodified="false">
+        <ivy pattern="${sbt.repo.dir}/${sbt.repo.pom}"/>
+        <artifact pattern="${sbt.repo.dir}/${sbt.repo.artifact}"/>
+      </filesystem>
+
+      <!-- mvn standard -->
+      <!--<filesystem name="local.m2" m2compatible="true" local="true" checkmodified="false">
+        <ivy pattern="${m2.repo.dir}/${m2.repo.pom}"/>
+        <artifact pattern="${m2.repo.dir}/${m2.repo.artifact}"/>
+      </filesystem>-->
+    </chain>
+  </resolvers>
+</ivysettings>

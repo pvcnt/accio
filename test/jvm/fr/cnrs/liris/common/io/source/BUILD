@@ -1,0 +1,9 @@
+junit_tests(
+    name='source',
+    dependencies=[
+        'src/jvm/fr/cnrs/liris/common/io/source',
+        'src/jvm/fr/cnrs/liris/common/util',
+        'test/jvm/fr/cnrs/liris/testing',
+    ],
+    sources=globs('*.scala'),
+)

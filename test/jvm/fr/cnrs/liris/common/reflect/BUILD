@@ -1,0 +1,9 @@
+junit_tests(
+    name='reflect',
+    dependencies=[
+        '3rdparty/jvm:findbugs',
+        'src/jvm/fr/cnrs/liris/common/reflect',
+        'test/jvm/fr/cnrs/liris/testing',
+    ],
+    sources=globs('*.scala'),
+)

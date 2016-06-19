@@ -1,0 +1,10 @@
+scala_library(
+    name='util',
+    dependencies=[
+        '3rdparty/jvm/google/guava',
+        '3rdparty/jvm:scala-logging',
+        '3rdparty/jvm:scala-time',
+        '3rdparty/jvm/twitter/util:core',
+    ],
+    sources=globs('*.scala')
+)

@@ -1,0 +1,10 @@
+scala_library(
+  name='profiler',
+  dependencies=[
+    '3rdparty/jvm/google/guava',
+    '3rdparty/jvm/twitter/util:core',
+    'src/jvm/fr/cnrs/liris/common/util',
+    'src/thrift/fr/cnrs/liris/profiler',
+  ],
+  sources=rglobs('*.scala')
+)

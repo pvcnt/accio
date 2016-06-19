@@ -1,0 +1,20 @@
+# IDE-specific files
+/.idea/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Pants-specific files
+/.pants.d
+/.pids
+/.pants.workdir.file_lock*
+/dist
+/.cache
+
+# Vagrant-specific files
+/.vagrant
+
+# Experiment results
+/*.txt
+/*.csv

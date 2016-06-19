@@ -1,0 +1,12 @@
+scala_library(
+    name='transform',
+    dependencies=[
+        'src/jvm/fr/cnrs/liris/accio/core/model',
+        'src/jvm/fr/cnrs/liris/accio/core/framework',
+        'src/jvm/fr/cnrs/liris/common/geo',
+        'src/jvm/fr/cnrs/liris/common/util',
+        'src/jvm/fr/cnrs/liris/common/random',
+        'src/jvm/fr/cnrs/liris/privamov/lib/laplace',
+    ],
+    sources=globs('*.scala')
+)

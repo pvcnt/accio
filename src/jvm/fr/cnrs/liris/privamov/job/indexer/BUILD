@@ -1,0 +1,25 @@
+scala_library(
+  name='indexer',
+  dependencies=[
+    '3rdparty/jvm/elastic4s:core',
+    '3rdparty/jvm:scala-logging',
+    'src/jvm/fr/cnrs/liris/accio/core/dataset',
+    'src/jvm/fr/cnrs/liris/accio/core/io',
+    'src/jvm/fr/cnrs/liris/common/flags',
+    'src/jvm/com/google/common/geometry',
+  ],
+  sources=globs('*.scala')
+)
+
+jvm_binary(
+  name='bin',
+  dependencies=[
+    '3rdparty/jvm:logback',
+    ':indexer',
+  ],
+  resources=[
+    'src/resources/fr/cnrs/liris/privamov/svc:logback',
+  ],
+  main='fr.cnrs.liris.privamov.job.indexer.IndexerJobMain',
+  basename='privamov-indexer-job',
+)

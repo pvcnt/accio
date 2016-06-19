@@ -1,0 +1,9 @@
+scala_library(
+    name='io',
+    dependencies=[
+        'src/jvm/fr/cnrs/liris/common/geo',
+        'src/jvm/fr/cnrs/liris/accio/core/model',
+        'src/jvm/fr/cnrs/liris/common/io/source',
+    ],
+    sources=globs('*.scala')
+)

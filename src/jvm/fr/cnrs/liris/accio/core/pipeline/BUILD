@@ -1,0 +1,21 @@
+scala_library(
+    name='pipeline',
+    dependencies=[
+        'src/thrift/fr/cnrs/liris/accio/core',
+        'src/jvm/fr/cnrs/liris/accio/core/param',
+        'src/jvm/fr/cnrs/liris/accio/core/framework',
+        'src/jvm/fr/cnrs/liris/accio/core/model',
+        'src/jvm/fr/cnrs/liris/accio/core/dataset',
+        'src/jvm/fr/cnrs/liris/accio/core/io',
+        'src/jvm/fr/cnrs/liris/common/flags',
+        'src/jvm/fr/cnrs/liris/privamov/lib/optimization',
+        '3rdparty/jvm:scala-logging',
+        '3rdparty/jvm:scala-guice',
+        '3rdparty/jvm:breeze',
+        '3rdparty/jvm/jackson',
+        '3rdparty/jvm/jackson:scala',
+        '3rdparty/jvm/jackson:joda',
+        '3rdparty/jvm/twitter/util:core',
+    ],
+    sources=globs('*.scala')
+)
