@@ -25,17 +25,10 @@ class AnnotationOpMetaReader extends OpMetaReader {
       require(refl.isAnnotated[Op], s"Operator must be annotated with @Op")
       val op = refl.annotation[Op]
       val name = if (op.name.nonEmpty) op.name else clazz.getSimpleName.stripPrefix("Op")
-      val params = refl.fields.map { field =>
-        require(field.isAnnotated[Param], s"Operator parameter ${field.name} must be annotated with @Param")
-        val param = field.annotation[Param]
-        val optional = field.tpe <:< typeOf[Option[_]]
-        val tpe = if (optional) field.tpe.baseType(typeOf[Option[_]].typeSymbol).typeArgs.head else field.tpe
-        ParamDef(field.name, ParamType.of(tpe), maybe(param.help), field.defaultValue, optional)
-      }
       OperatorDef(
         name = name,
-        params = params,
-        inputs = Seq.empty,
+        params = getParams(refl),
+        inputs = getInputs(refl),
         outputs = Seq.empty,
         help = maybe(op.help),
         description = maybe(op.description),
@@ -48,6 +41,24 @@ class AnnotationOpMetaReader extends OpMetaReader {
     }
 
     OpMeta(defn, clazz.asInstanceOf[Class[Operator]])
+  }
+
+  private def getParams(refl: ReflectCaseClass) =
+    refl.fields.map { field =>
+      require(field.isAnnotated[Param], s"Operator parameter ${field.name} must be annotated with @Param")
+      val param = field.annotation[Param]
+      val optional = field.tpe <:< typeOf[Option[_]]
+      val tpe = if (optional) field.tpe.baseType(typeOf[Option[_]].typeSymbol).typeArgs.head else field.tpe
+      ParamDef(field.name, ParamType.of(tpe), maybe(param.help), field.defaultValue, optional)
+    }
+
+  private def getInputs(refl: ReflectCaseClass) = refl.tpe match {
+    case t if t <:< typeOf[Transformer] => Seq(InputDef("data", Some("Input dataset of traces")))
+    case t if t <:< typeOf[Analyzer] => Seq(InputDef("data", Some("Input dataset of traces")))
+    case t if t <:< typeOf[Evaluator] => Seq(
+      InputDef("train", Some("Training dataset of traces")),
+      InputDef("test", Some("Testing dataset of traces")))
+    case _ => Seq.empty[InputDef]
   }
 
   private def maybe(str: String) = if (str.isEmpty) None else Some(str)
