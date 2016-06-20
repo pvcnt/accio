@@ -40,7 +40,7 @@ import fr.cnrs.liris.accio.core.param.Param
 /**
  * Enforce a minimum duration on traces. Any trace shorter than a given threshold will discarded.
  */
-@Op
+@Op(help = "Remove traces having a too short duration")
 case class MinDuration(
     @Param(help = "Minimum duration of a trace")
     duration: Duration

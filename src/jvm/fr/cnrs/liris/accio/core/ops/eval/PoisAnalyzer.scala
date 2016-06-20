@@ -43,7 +43,7 @@ import fr.cnrs.liris.privamov.lib.clustering.DTClusterer
  * Analyzer computing statistics about the POIs that can be extracted from a trace, using a
  * classical DJ-clustering algorithm.
  */
-@Op
+@Op(category = "metric")
 case class PoisAnalyzer(
     @Param(help = "Clustering maximum diameter")
     diameter: Distance,
@@ -60,7 +60,10 @@ case class PoisAnalyzer(
       Metric("count", pois.size),
       Metric("size", sizeInPoi),
       Metric("duration", durationInPoi),
-      Metric("size-ratio", sizeInPoi.toDouble / trace.size),
-      Metric("duration-ratio", durationInPoi.toDouble / trace.duration.seconds))
+      Metric("size_ratio", sizeInPoi.toDouble / trace.size),
+      Metric("duration_ratio", durationInPoi.toDouble / trace.duration.seconds))
   }
+
+  override def metrics: Seq[String] =
+    Seq("count", "size", "duration", "size_ratio", "duration_ratio")
 }

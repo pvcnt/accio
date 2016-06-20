@@ -7,7 +7,11 @@ import fr.cnrs.liris.accio.core.model.Trace
 import fr.cnrs.liris.accio.core.param.Param
 import fr.cnrs.liris.common.util.FileUtils
 
-@Op(ephemeral = true)
+@Op(
+  category = "source",
+  help = "Read a dataset of traces in CSV format",
+  ephemeral = true
+)
 case class EventSource(
     @Param(help = "Dataset URL")
     url: String,

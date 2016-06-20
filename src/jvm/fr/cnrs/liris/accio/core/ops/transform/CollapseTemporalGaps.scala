@@ -38,7 +38,10 @@ import fr.cnrs.liris.accio.core.model.Trace
 import fr.cnrs.liris.accio.core.param.Param
 import org.joda.time.Instant
 
-@Op
+@Op(
+  help = "Collapse temporal gaps between days",
+  description = "It removes empty days by shifting data to fill those empty days."
+)
 case class CollapseTemporalGaps(@Param startAt: Duration) extends Mapper {
   val startAtDate = new Instant(startAt.millis).toDateTime.withTimeAtStartOfDay
 

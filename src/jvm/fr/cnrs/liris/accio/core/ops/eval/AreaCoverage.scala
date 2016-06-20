@@ -37,17 +37,23 @@ import fr.cnrs.liris.accio.core.framework.{Evaluator, Metric, Op}
 import fr.cnrs.liris.accio.core.model.Trace
 import fr.cnrs.liris.accio.core.param.Param
 
-@Op
+@Op(
+  category = "metric",
+  help = "Compute area coverage difference between two datasets of traces"
+)
 case class AreaCoverage(
     @Param(help = "S2 cells levels")
     level: Int
 ) extends Evaluator {
+
   override def evaluate(reference: Trace, result: Trace): Seq[Metric] = {
     val refCells = getCells(reference, level)
     val resCells = getCells(result, level)
     val matched = resCells.intersect(refCells).size
     MetricUtils.informationRetrieval(refCells.size, resCells.size, matched)
   }
+
+  override def metrics: Seq[String] = MetricUtils.informationRetrievalMetrics
 
   private def getCells(trace: Trace, level: Int) =
     trace.records.map(rec => S2CellId.fromLatLng(rec.point.toLatLng.toS2).parent(level)).toSet

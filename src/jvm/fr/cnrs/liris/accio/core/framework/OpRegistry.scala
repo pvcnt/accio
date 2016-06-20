@@ -43,8 +43,8 @@ import scala.reflect.runtime.universe._
 
 case class OpMeta(defn: OperatorDef, clazz: Class[Operator])
 
-class IllegalOpDefinition(op: String, cause: Throwable)
-    extends Exception(s"Illegal definition of operator $op: ${cause.getMessage}", cause)
+class IllegalOpDefinition(clazz: Class[_], cause: Throwable)
+    extends Exception(s"Illegal definition of operator ${clazz.getName}: ${cause.getMessage}", cause)
 
 /**
  * Operator registry stores all operators known to Accio.
@@ -55,13 +55,11 @@ class OpRegistry {
   @throws[IllegalOpDefinition]
   def register[T <: Operator : ClassTag : TypeTag]: OpMeta = {
     val clazz = implicitly[ClassTag[T]].runtimeClass.asInstanceOf[Class[Operator]]
-    val name = clazz.getSimpleName
-    require(!_ops.contains(name), s"Duplicate operator $name")
-
     val defn = try {
       val refl = ReflectCaseClass.of[T]
       require(refl.isAnnotated[Op], s"Operator defined in ${clazz.getName} must be annotated with @Op")
       val op = refl.annotation[Op]
+      val name = if (op.name.nonEmpty) op.name else clazz.getSimpleName.stripPrefix("Op")
       val params = refl.fields.map { field =>
         require(field.isAnnotated[Param], s"Operator parameter ${field.name} must be annotated with @Param")
         val param = field.annotation[Param]
@@ -78,12 +76,13 @@ class OpRegistry {
         ephemeral = op.ephemeral,
         unstable = op.unstable)
     } catch {
-      case e: NoSuchElementException => throw new IllegalOpDefinition(name, e)
-      case e: IllegalArgumentException => throw new IllegalOpDefinition(name, e)
+      case e: NoSuchElementException => throw new IllegalOpDefinition(clazz, e)
+      case e: IllegalArgumentException => throw new IllegalOpDefinition(clazz, e)
     }
 
+    require(!_ops.contains(defn.name), s"Duplicate operator ${defn.name}")
     val meta = OpMeta(defn, clazz.asInstanceOf[Class[Operator]])
-    _ops(name) = meta
+    _ops(defn.name) = meta
     meta
   }
 

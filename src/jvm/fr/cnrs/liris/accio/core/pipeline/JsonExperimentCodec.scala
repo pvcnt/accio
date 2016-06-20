@@ -20,12 +20,12 @@ class JsonExperimentCodec extends ExperimentWriter with ExperimentReader {
   override def readExperiment(workDir: Path, id: String): Experiment =
     om.reader.readValue[Experiment](workDir.resolve(s"experiment-$id.json").toFile)
 
-  override def readWorkflowRun(workDir: Path, id: String): WorkflowRun =
-    om.reader.readValue[WorkflowRun](workDir.resolve(s"run-$id.json").toFile)
+  override def readRun(workDir: Path, id: String): Run =
+    om.reader.readValue[Run](workDir.resolve(s"run-$id.json").toFile)
 
   override def write(workDir: Path, experiment: Experiment): Unit =
     om.writer.writeValue(workDir.resolve(s"experiment-${experiment.id}.json").toFile, experiment)
 
-  override def write(workDir: Path, run: WorkflowRun): Unit =
+  override def write(workDir: Path, run: Run): Unit =
     om.writer.writeValue(workDir.resolve(s"run-${run.id}.json").toFile, run)
 }

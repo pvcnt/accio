@@ -29,7 +29,7 @@ class LocalExperimentExecutor @Inject()(graphBuilder: GraphBuilder, graphExecuto
       val (graphDef, meta) = scheduled.dequeue()
       val runId = UUID.randomUUID().toString
       logger.trace(s"Starting execution of workflow run $runId: $graphDef")
-      var run = WorkflowRun(runId, None, graphDef, None)
+      var run = Run(runId, None, graphDef, None)
       experiment = experiment.copy(children = experiment.children ++ Seq(runId))
       writer.write(workDir, run)
       writer.write(workDir, experiment)

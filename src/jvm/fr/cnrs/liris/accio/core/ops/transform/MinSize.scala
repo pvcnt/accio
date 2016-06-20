@@ -40,7 +40,9 @@ import fr.cnrs.liris.accio.core.param.Param
  * Enforce a minimum number of records in traces. Any trace having less than a given number
  * of records will be discarded.
  */
-@Op
+@Op(
+  help = "Remove traces having a too small size"
+)
 case class MinSize(
     @Param(help = "Minimum number of records inside traces")
     size: Int

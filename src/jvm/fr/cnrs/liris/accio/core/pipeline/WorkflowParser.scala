@@ -67,12 +67,11 @@ class JsonWorkflowParser @Inject()(registry: OpRegistry) extends WorkflowParser 
     val root = om.readTree(path.toFile)
 
     val id = root.getString("id").getOrElse(FileUtils.removeExtension(path.getFileName.toString))
-    val version = root.getString("version").orElse(root.getInteger("version").map(_.toString)).getOrElse("1")
     val name = root.getString("meta.name")
     val owner = root.getString("meta.owner").map(User.parse)
     val nodes = root.child("graph").elements.asScala.map(getNode).toSeq
 
-    new WorkflowDef(id, version, new GraphDef(nodes), name, owner)
+    new WorkflowDef(id, new GraphDef(nodes), name, owner)
   }
 
   private def getNode(node: JsonNode) = {

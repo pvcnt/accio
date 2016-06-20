@@ -47,8 +47,11 @@ import scala.collection.mutable
  * Anonymization for the Publication of Mobility Data with High Utility. In Proceedings of
  * TrustCom'15.
  */
-@Op
-case class SpeedSmoothing(
+@Op(
+  category = "lppm",
+  help = "Enforce speed smoothing guarantees on traces"
+)
+case class PromesseOp(
     @Param(help = "Distance to enforce between two consecutive points")
     epsilon: Distance
 ) extends Mapper {

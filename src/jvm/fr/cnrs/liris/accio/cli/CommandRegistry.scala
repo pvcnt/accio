@@ -1,6 +1,7 @@
 package fr.cnrs.liris.accio.cli
 
 import com.google.inject.Singleton
+import fr.cnrs.liris.accio.cli.commands.AccioCommand
 import fr.cnrs.liris.common.reflect.ReflectUtils
 
 import scala.collection.mutable

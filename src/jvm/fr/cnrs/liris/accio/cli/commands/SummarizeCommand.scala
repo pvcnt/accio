@@ -30,61 +30,57 @@
  * knowledge of the CeCILL-B license and that you accept its terms.
  */
 
-package fr.cnrs.liris.accio.cli
+package fr.cnrs.liris.accio.cli.commands
 
-import java.nio.file.{Files, Path, Paths}
-import java.util.UUID
+import java.nio.file.Paths
 
 import com.google.inject.Inject
-import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.core.pipeline._
+import fr.cnrs.liris.accio.cli.{Command, Reporter}
+import fr.cnrs.liris.accio.core.pipeline.ExperimentReader
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.util.FileUtils
 
-case class MakeCommandOpts(
-    @Flag(name = "workdir")
-    workDir: String = "",
-    @Flag(name = "name")
-    name: String = "",
-    @Flag(name = "tags")
-    tags: String = "",
-    @Flag(name = "notes")
-    notes: String = "",
-    @Flag(name = "runs")
-    runs: Int = 1)
+case class SummarizeCommandOpts(
+    @Flag(name = "html")
+    html: Boolean = false,
+    @Flag(name = "gnuplot")
+    gnuplot: Boolean = false,
+    @Flag(name = "what")
+    gnuplotWhat: String = ""
+)
 
 @Command(
-  name = "run",
-  help = "Execute an Accio workflow",
+  name = "summarize",
+  help = "Generate summaries from previously generated reports",
   allowResidue = true)
-class RunCommand @Inject()(parser: ExperimentParser, executor: ExperimentExecutor)
-    extends AccioCommand[MakeCommandOpts] with StrictLogging {
+class SummarizeCommand @Inject()(reader: ExperimentReader) extends AccioCommand[SummarizeCommandOpts] {
 
   def run(flags: FlagsProvider, out: Reporter): ExitCode = {
-    val opts = flags.as[MakeCommandOpts]
-    val workDir = if (opts.workDir.nonEmpty) Paths.get(opts.workDir) else Files.createTempDirectory("accio-")
-    out.writeln(s"Persisting artifacts and reports to <comment>${workDir.toAbsolutePath}</comment>")
-    flags.residue.foreach { url =>
-      make(opts, workDir, url)
+    val opts = flags.as[SummarizeCommandOpts]
+    val path = Paths.get(FileUtils.replaceHome(flags.residue.head))
+    //val experiment = reader.readExperiment(path)
+
+    if (opts.html) {
+      val htmlFile = path.resolveSibling(path.getFileName.toString + ".html")
+      //val summarizer = new HtmlReportCreator
+      //summarizer.write(eventReader.reports, htmlFile)
+    } else if (opts.gnuplot) {
+      require(opts.gnuplotWhat.nonEmpty)
+      require(opts.gnuplotWhat.contains(":"))
+      val parts = opts.gnuplotWhat.split(":")
+      val kind = parts.head
+      val name = parts.tail.mkString(":")
+      val file = path.resolveSibling(path.getFileName.toString + "-" + name.replace("/", "__") + ".plt")
+      //val summarizer = new GnuplotReportCreator(name, kind)
+      //summarizer.write(eventReader.reports, file)
+      /*val exitCode = s"gnuplot ${file.toAbsolutePath}".!
+      if (exitCode != 0) {
+        println("Failed to execute gnuplot")
+      }*/
+    } else {
+      //val summarizer = new TextReportCreator
+      //summarizer.print(eventReader.reports, Console.out)
     }
     ExitCode.Success
-  }
-
-  private def make(opts: MakeCommandOpts, workDir: Path, url: String) = {
-    val id = UUID.randomUUID().toString
-    var experimentDef = parser.parse(Paths.get(FileUtils.replaceHome(url)))
-    if (opts.name.nonEmpty) {
-      experimentDef = experimentDef.copy(name = opts.name)
-    }
-    if (opts.tags.nonEmpty) {
-      experimentDef = experimentDef.copy(tags = opts.tags.split(",").toSet)
-    }
-    if (opts.notes.nonEmpty) {
-      experimentDef = experimentDef.copy(notes = Some(opts.notes))
-    }
-    if (opts.runs > 1) {
-      experimentDef = experimentDef.copy(workflow = experimentDef.workflow.setRuns(opts.runs))
-    }
-    executor.execute(workDir, id, experimentDef)
   }
 }

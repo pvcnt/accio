@@ -42,6 +42,10 @@ object ParamType {
 
 case class ParamDef(name: String, typ: ParamType, help: Option[String], defaultValue: Option[Any], optional: Boolean)
 
+case class InputDef(name: String, help: Option[String])
+
+case class OutputDef(name: String, help: Option[String], typ: String)
+
 case class OperatorDef(
     name: String,
     params: Seq[ParamDef],

@@ -97,7 +97,7 @@ class JsonExperimentParser @Inject()(registry: OpRegistry, workflowParser: Workf
       initiator = getDefaultUser)
 
     root.getInteger("runs").foreach { runs =>
-      defn = defn.copy(workflow = defn.workflow.setRuns(runs))
+      defn = defn.copy(workflow = defn.workflow.requireRuns(runs))
     }
     defn
   }

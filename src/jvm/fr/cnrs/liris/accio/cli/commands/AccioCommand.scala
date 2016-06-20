@@ -30,8 +30,9 @@
  * knowledge of the CeCILL-B license and that you accept its terms.
  */
 
-package fr.cnrs.liris.accio.cli
+package fr.cnrs.liris.accio.cli.commands
 
+import fr.cnrs.liris.accio.cli.Reporter
 import fr.cnrs.liris.common.flags.FlagsProvider
 
 case class ExitCode(code: Int, name: String)

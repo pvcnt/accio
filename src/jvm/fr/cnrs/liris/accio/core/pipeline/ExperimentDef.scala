@@ -34,28 +34,37 @@ package fr.cnrs.liris.accio.core.pipeline
 
 import fr.cnrs.liris.accio.core.param.{ParamGrid, ParamMap}
 
-case class User(name: String, email: Option[String] = None)
-
-object User {
-  private[this] val UserRegex = "(.+)<(.+)>".r
-
-  def parse(str: String): User = str match {
-    case UserRegex(name, email) => new User(name.trim, Some(email.trim))
-    case _ => throw new IllegalArgumentException(s"Invalid user format '$str'")
-  }
-}
-
-case class WorkflowDef(id: String, version: String, graph: GraphDef, name: Option[String], owner: Option[User]) {
+/**
+ * Definition of a workflow. A workflow is a uniquely identified graph of operators.
+ *
+ * @param id    Unique workflow identifier
+ * @param graph Graph of operators
+ * @param name  Human-readable name
+ * @param owner User owning this workflow
+ */
+case class WorkflowDef(id: String, graph: GraphDef, name: Option[String], owner: Option[User]) {
+  /**
+   * Return a copy of this workflow with new parameters propagated into the graph.
+   *
+   * @param paramMap Override parameters map
+   * @return A new workflow
+   */
   def setParams(paramMap: ParamMap): WorkflowDef = copy(graph = graph.setParams(paramMap))
 
-  def setRuns(runs: Int): WorkflowDef = copy(graph = graph.setRuns(runs))
+  /**
+   * Return a copy of this workflow with a minimum number of runs propagated into the graph.
+   *
+   * @param runs Minimum number of runs
+   * @return A new workflow
+   */
+  def requireRuns(runs: Int): WorkflowDef = copy(graph = graph.requireRuns(runs))
 }
 
 /**
- * Definition of an experiment. An experiment is based on a workflow. It can be a simple execution
- * of this workflow, an exploration of parameters or an optimization of parameters.
+ * Definition of an experiment. An experiment is based on a workflow. It can be either a direct
+ * execution of this workflow, an exploration of parameters or an optimization of parameters.
  *
- * @param name         Experiment name
+ * @param name         Human-readable name
  * @param workflow     Base workflow
  * @param paramMap     Override parameters map
  * @param exploration  Parameters exploration (cannot be combined with `optimization`)
@@ -85,4 +94,30 @@ case class Optimization(
     objectives: Set[Objective]) {
   require(iters > 0, s"Number of iterations per step must be strictly positive (got $iters)")
   require(contraction > 0 && contraction <= 1, s"Contraction factor must be in (0,1] (got $contraction)")
+}
+
+/**
+ * A user of Accio.
+ *
+ * @param name  Username
+ * @param email Email address
+ */
+case class User(name: String, email: Option[String] = None)
+
+/**
+ * Factory of [[User]].
+ */
+object User {
+  private[this] val UserRegex = "(.+)<(.+)>".r
+
+  /**
+   * Parse a string into a user.
+   * The string is expected have the following format: "User name <email@address>".
+   *
+   * @param str String to parse
+   */
+  def parse(str: String): User = str match {
+    case UserRegex(name, email) => new User(name.trim, Some(email.trim))
+    case _ => new User(str, None)
+  }
 }

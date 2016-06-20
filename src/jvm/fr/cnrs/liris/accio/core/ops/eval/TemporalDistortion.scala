@@ -37,7 +37,10 @@ import fr.cnrs.liris.accio.core.framework.{Evaluator, Metric, Op}
 import fr.cnrs.liris.accio.core.model.Trace
 import org.joda.time.Instant
 
-@Op
+@Op(
+  category = "metric",
+  help = "Compute temporal distortion difference between two datasets of traces"
+)
 case class TemporalDistortion() extends Evaluator {
   override def evaluate(reference: Trace, result: Trace): Seq[Metric] = {
     val (larger, smaller) = if (reference.size > result.size) (reference, result) else (result, reference)
@@ -46,6 +49,8 @@ case class TemporalDistortion() extends Evaluator {
     }
     MetricUtils.descriptiveStats(distances)
   }
+
+  override def metrics: Seq[String] = MetricUtils.descriptiveStatsMetrics
 
   private def interpolate(trace: Trace, time: Instant) =
     if (time.isBefore(trace.records.head.time)) {

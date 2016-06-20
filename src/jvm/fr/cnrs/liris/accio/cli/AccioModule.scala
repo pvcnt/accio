@@ -1,6 +1,7 @@
 package fr.cnrs.liris.accio.cli
 
 import com.google.inject.{AbstractModule, Provides, Singleton}
+import fr.cnrs.liris.accio.cli.commands._
 import fr.cnrs.liris.accio.core.dataset.DatasetEnv
 import fr.cnrs.liris.accio.core.framework.OpRegistry
 import fr.cnrs.liris.accio.core.ops.eval.{TransmissionDelay, _}
@@ -45,7 +46,7 @@ class AccioModule extends AbstractModule with ScalaModule {
     registry.register[TemporalSampling]
     registry.register[UniformSampling]
     registry.register[GeoIndistinguishability]
-    registry.register[SpeedSmoothing]
+    registry.register[PromesseOp]
 
     // Evaluators
     registry.register[PoisRetrieval]
@@ -67,6 +68,7 @@ class AccioModule extends AbstractModule with ScalaModule {
     registry.register[RunCommand]
     registry.register[SummarizeCommand]
     registry.register[HelpCommand]
+    registry.register[OpsCommand]
     registry
   }
 }

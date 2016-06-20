@@ -41,7 +41,9 @@ import fr.cnrs.liris.common.geo.Point
 /**
  * Applies gaussian kernel smoothing on a trace, attenuating the impact of noisy observations.
  */
-@Op
+@Op(
+  help = "Applies gaussian kernel smoothing on traces"
+)
 case class GaussianKernelSmoothing(
     @Param(help = "Bandwidth")
     omega: Duration

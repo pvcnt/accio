@@ -30,13 +30,14 @@
  * knowledge of the CeCILL-B license and that you accept its terms.
  */
 
-package fr.cnrs.liris.accio.cli
+package fr.cnrs.liris.accio.cli.commands
 
 import java.io.PrintStream
 import java.nio.file.{Path, Paths}
 
 import com.twitter.util.Duration
 import com.typesafe.scalalogging.StrictLogging
+import fr.cnrs.liris.accio.cli.{Command, Reporter}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.util.FileUtils
 import fr.cnrs.liris.profiler.output.{HtmlCreator, PhaseText, PhaseUtils}

@@ -46,7 +46,11 @@ import fr.cnrs.liris.privamov.lib.laplace.Laplace
  * Catuscia Palamidessi. 2013. Geo-indistinguishability: differential privacy for
  * location-based systems. In Proceedings of CCS'13.
  */
-@Op
+@Op(
+  help = "Enforce geo-indistinguishability guarantees on traces",
+  category = "lppm",
+  unstable = true
+)
 case class GeoIndistinguishability(
     @Param(help = "Privacy budget")
     epsilon: Double = 0.001

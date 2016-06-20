@@ -15,6 +15,12 @@ case class GraphDef(nodes: Seq[NodeDef]) {
     new ParamMap(map)
   }
 
+  /**
+   * Return a copy of this graph with new parameters propagated into the nodes.
+   *
+   * @param paramMap Override parameters map
+   * @return A new graph
+   */
   def setParams(paramMap: ParamMap): GraphDef = {
     val newNodes = nodes.map { nodeDef =>
       nodeDef.copy(paramMap = nodeDef.paramMap ++ paramMap.filter(nodeDef.name))
@@ -22,9 +28,17 @@ case class GraphDef(nodes: Seq[NodeDef]) {
     copy(nodes = newNodes)
   }
 
-  def setRuns(runs: Int): GraphDef = {
-    val newNodes = nodes.map(node => node.copy(runs = math.max(node.runs, runs)))
-    copy(nodes = newNodes)
+  /**
+   * Return a copy of this graph with a minimum number of runs propagated into the nodes.
+   *
+   * @param runs Minimum number of runs
+   * @return A new graph
+   */
+  def requireRuns(runs: Int): GraphDef = {
+    if (runs > 1) {
+      val newNodes = nodes.map(node => node.copy(runs = math.max(node.runs, runs)))
+      copy(nodes = newNodes)
+    } else this
   }
 }
 

@@ -17,16 +17,16 @@ case class Report(stats: ExecStats, nodes: Map[String, ExecStats], artifacts: Se
 
 case class ExecStats(startedAt: Instant, completedAt: Instant, successful: Boolean, memoryPeak: StorageUnit)
 
-case class WorkflowRun(id: String, name: Option[String], graphDef: GraphDef, report: Option[Report])
+case class Run(id: String, name: Option[String], graphDef: GraphDef, report: Option[Report])
 
 trait ExperimentWriter {
   def write(workDir: Path, experiment: Experiment): Unit
 
-  def write(workDir: Path, run: WorkflowRun): Unit
+  def write(workDir: Path, run: Run): Unit
 }
 
 trait ExperimentReader {
   def readExperiment(workDir: Path, id: String): Experiment
 
-  def readWorkflowRun(workDir: Path, id: String): WorkflowRun
+  def readRun(workDir: Path, id: String): Run
 }

@@ -39,7 +39,10 @@ import fr.cnrs.liris.accio.core.param.Param
 import fr.cnrs.liris.common.util.Distance
 import fr.cnrs.liris.privamov.lib.clustering.DTClusterer
 
-@Op
+@Op(
+  category = "metric",
+  help = "Compute POIs retrieval difference between two datasets of traces"
+)
 case class PoisRetrieval(
     @Param(help = "Clustering maximum diameter")
     diameter: Distance,
@@ -58,4 +61,6 @@ case class PoisRetrieval(
     }
     MetricUtils.informationRetrieval(refPois.size, resPois.size, matched)
   }
+
+  override def metrics: Seq[String] = MetricUtils.informationRetrievalMetrics
 }
