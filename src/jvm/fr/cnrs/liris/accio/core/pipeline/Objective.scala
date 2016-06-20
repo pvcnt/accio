@@ -30,7 +30,7 @@
  * knowledge of the CeCILL-B license and that you accept its terms.
  */
 
-package fr.cnrs.liris.accio.core.framework
+package fr.cnrs.liris.accio.core.pipeline
 
 /**
  * An optimization objective.

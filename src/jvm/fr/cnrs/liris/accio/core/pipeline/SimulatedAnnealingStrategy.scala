@@ -1,7 +1,6 @@
 package fr.cnrs.liris.accio.core.pipeline
 
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.core.framework.{GraphDef, Optimization, Report}
 import fr.cnrs.liris.accio.core.param.ParamMap
 import fr.cnrs.liris.common.random.RandomUtils
 import fr.cnrs.liris.privamov.lib.optimization.CoolingSchedule
@@ -17,7 +16,7 @@ class SimulatedAnnealingStrategy(graphUnderOptimization: GraphDef, optimization:
 
   override def next: Seq[(GraphDef, Any)] = {
     val solution = optimization.paramGrid.random()
-    Seq(graphUnderOptimization.set(solution) -> AnnealingMeta(coolingSchedule.start, 1, None))
+    Seq(graphUnderOptimization.setParams(solution) -> AnnealingMeta(coolingSchedule.start, 1, None))
   }
 
   override def next(graphDef: GraphDef, meta: Any, report: Report): Seq[(GraphDef, Any)] =
@@ -61,11 +60,11 @@ class SimulatedAnnealingStrategy(graphUnderOptimization: GraphDef, optimization:
     val nextSolution = nextState match {
       case State.Terminate => None
       case State.Accept =>
-        val nextGraphDef = graphUnderOptimization.set(neighbor(solution))
+        val nextGraphDef = graphUnderOptimization.setParams(neighbor(solution))
         val nextMeta = nextStep(meta).copy(previous = Some(solution -> cost))
         Some(nextGraphDef -> nextMeta)
       case State.Reject =>
-        val nextGraphDef = graphUnderOptimization.set(neighbor(meta.previous.get._1))
+        val nextGraphDef = graphUnderOptimization.setParams(neighbor(meta.previous.get._1))
         val nextMeta = nextStep(meta)
         Some(nextGraphDef -> nextMeta)
     }

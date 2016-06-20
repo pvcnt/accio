@@ -1,4 +1,4 @@
-package fr.cnrs.liris.accio.core.framework
+package fr.cnrs.liris.accio.core.pipeline
 
 import java.nio.file.Path
 

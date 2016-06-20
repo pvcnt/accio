@@ -33,7 +33,8 @@
 package fr.cnrs.liris.accio.cli.reporting
 
 import com.twitter.util.Time
-import fr.cnrs.liris.accio.core.framework.{DistributionArtifact, Report, ScalarArtifact}
+import fr.cnrs.liris.accio.core.framework.DistributionArtifact
+import fr.cnrs.liris.accio.core.pipeline.{DistributionArtifact, Report, ScalarArtifact}
 import fr.cnrs.liris.accio.core.thrift
 import fr.cnrs.liris.common.stats.{AggregatedStats, Distribution}
 import fr.cnrs.liris.common.util.MathUtils.roundAt6

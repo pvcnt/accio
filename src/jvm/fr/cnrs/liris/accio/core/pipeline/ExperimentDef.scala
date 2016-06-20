@@ -30,10 +30,9 @@
  * knowledge of the CeCILL-B license and that you accept its terms.
  */
 
-package fr.cnrs.liris.accio.core.framework
+package fr.cnrs.liris.accio.core.pipeline
 
 import fr.cnrs.liris.accio.core.param.{ParamGrid, ParamMap}
-import fr.cnrs.liris.common.util.Named
 
 case class User(name: String, email: Option[String] = None)
 
@@ -44,12 +43,12 @@ object User {
     case UserRegex(name, email) => new User(name.trim, Some(email.trim))
     case _ => throw new IllegalArgumentException(s"Invalid user format '$str'")
   }
-
-  def fromEnv: User = new User(sys.props("user.name"), None)
 }
 
 case class WorkflowDef(id: String, version: String, graph: GraphDef, name: Option[String], owner: Option[User]) {
-  def set(paramMap: ParamMap): WorkflowDef = copy(graph = graph.set(paramMap))
+  def setParams(paramMap: ParamMap): WorkflowDef = copy(graph = graph.setParams(paramMap))
+
+  def setRuns(runs: Int): WorkflowDef = copy(graph = graph.setRuns(runs))
 }
 
 /**
@@ -87,23 +86,3 @@ case class Optimization(
   require(iters > 0, s"Number of iterations per step must be strictly positive (got $iters)")
   require(contraction > 0 && contraction <= 1, s"Contraction factor must be in (0,1] (got $contraction)")
 }
-
-case class GraphDef(nodes: Seq[NodeDef]) {
-  def apply(name: String): NodeDef = nodes.find(_.name == name).get
-
-  def set(paramMap: ParamMap): GraphDef = {
-    val newNodes = nodes.map { nodeDef =>
-      nodeDef.copy(paramMap = nodeDef.paramMap ++ paramMap.filter(nodeDef.name))
-    }
-    copy(nodes = newNodes)
-  }
-
-  def params: ParamMap = {
-    val map = nodes.flatMap { node =>
-      node.paramMap.toSeq.map { case (name, value) => s"${node.name}/$name" -> value }
-    }.toMap
-    new ParamMap(map)
-  }
-}
-
-case class NodeDef(op: String, name: String, paramMap: ParamMap, inputs: Seq[String], runs: Int) extends Named

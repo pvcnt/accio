@@ -2,7 +2,7 @@ package fr.cnrs.liris.accio.core.pipeline
 
 import java.nio.file.Path
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.{ObjectMapper, PropertyNamingStrategy}
 import com.fasterxml.jackson.datatype.joda.JodaModule
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import com.google.inject.Singleton
@@ -13,6 +13,7 @@ class JsonExperimentCodec extends ExperimentWriter with ExperimentReader {
   private[this] val om = {
     val om = new ObjectMapper
     om.registerModules(new DefaultScalaModule, new JodaModule)
+    om.setPropertyNamingStrategy(PropertyNamingStrategy.CAMEL_CASE_TO_LOWER_CASE_WITH_UNDERSCORES)
     om
   }
 

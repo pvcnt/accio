@@ -78,8 +78,8 @@ class OpRegistry {
         ephemeral = op.ephemeral,
         unstable = op.unstable)
     } catch {
-      case t: Throwable =>
-        throw new IllegalOpDefinition(s"Error while registering operator $name", t)
+      case e: NoSuchElementException => throw new IllegalOpDefinition(name, e)
+      case e: IllegalArgumentException => throw new IllegalOpDefinition(name, e)
     }
 
     val meta = OpMeta(defn, clazz.asInstanceOf[Class[Operator]])

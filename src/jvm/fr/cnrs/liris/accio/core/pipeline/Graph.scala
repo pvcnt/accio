@@ -1,8 +1,34 @@
 package fr.cnrs.liris.accio.core.pipeline
 
 import com.google.inject.Inject
-import fr.cnrs.liris.accio.core.framework.{GraphDef, NodeDef, OpRegistry, Operator}
+import fr.cnrs.liris.accio.core.framework.{OpRegistry, Operator}
+import fr.cnrs.liris.accio.core.param.ParamMap
 import fr.cnrs.liris.common.util.Named
+
+case class GraphDef(nodes: Seq[NodeDef]) {
+  def apply(name: String): NodeDef = nodes.find(_.name == name).get
+
+  def params: ParamMap = {
+    val map = nodes.flatMap { node =>
+      node.paramMap.toSeq.map { case (name, value) => s"${node.name}/$name" -> value }
+    }.toMap
+    new ParamMap(map)
+  }
+
+  def setParams(paramMap: ParamMap): GraphDef = {
+    val newNodes = nodes.map { nodeDef =>
+      nodeDef.copy(paramMap = nodeDef.paramMap ++ paramMap.filter(nodeDef.name))
+    }
+    copy(nodes = newNodes)
+  }
+
+  def setRuns(runs: Int): GraphDef = {
+    val newNodes = nodes.map(node => node.copy(runs = math.max(node.runs, runs)))
+    copy(nodes = newNodes)
+  }
+}
+
+case class NodeDef(op: String, name: String, paramMap: ParamMap, inputs: Seq[String], runs: Int) extends Named
 
 class Graph(_nodes: Map[String, Node]) {
   def apply(name: String): Node = _nodes(name)

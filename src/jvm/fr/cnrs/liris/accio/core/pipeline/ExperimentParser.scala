@@ -39,6 +39,7 @@ import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.param.{ParamGrid, ParamMap}
+import fr.cnrs.liris.accio.core.pipeline.JsonHelper._
 import fr.cnrs.liris.common.util.{Distance, FileUtils}
 
 import scala.collection.JavaConverters._
@@ -55,7 +56,7 @@ class JsonExperimentParser @Inject()(registry: OpRegistry, workflowParser: Workf
     if (root.has("workflow")) {
       getExperiment(path, root)
     } else {
-      logger.warn(s"Implicitly converting a workflow definition into an experiment definition in ${path.toAbsolutePath}")
+      logger.warn(s"Implicitly converting a workflow definition into an experiment definition at ${path.toAbsolutePath}")
       val workflow = workflowParser.parse(path)
       new ExperimentDef(
         name = getDefaultName(path),
@@ -65,32 +66,27 @@ class JsonExperimentParser @Inject()(registry: OpRegistry, workflowParser: Workf
         optimization = None,
         notes = None,
         tags = Set.empty,
-        initiator = User.fromEnv)
+        initiator = getDefaultUser)
     }
   }
 
   private def getExperiment(path: Path, root: JsonNode) = {
-    val workflow = getWorkflow(path, root.get("workflow"))
-    val (name, notes, tags) = if (root.has("meta")) {
-      val meta = root.get("meta")
-      val name = if (meta.hasNonNull("name")) meta.get("name").asText else getDefaultName(path)
-      val notes = if (meta.hasNonNull("notes")) Some(meta.get("notes").asText) else None
-      val tags = if (meta.hasNonNull("tags")) meta.get("tags").elements.asScala.map(_.asText).toSet else Set.empty[String]
-      (name, notes, tags)
-    } else {
-      (getDefaultName(path), None, Set.empty[String])
-    }
-
+    val workflow = getWorkflow(path, root.child("workflow"))
+    val name = root.getString("meta.name").getOrElse(getDefaultName(path))
+    val notes = root.getString("meta.notes")
+    val tags = root.getArray("meta.tags")
+        .map(_.map(_.string).toSet)
+        .getOrElse(Set.empty)
     val paramDefs = workflow.graph.nodes.flatMap { nodeDef =>
       registry(nodeDef.op).defn.params.map { paramDef =>
         paramDef.copy(name = s"${nodeDef.name}/${paramDef.name}")
       }
     }
-    val params = if (root.has("params")) Some(getParamMap(paramDefs, root.get("params"))) else None
-    val optimization = if (root.has("optimization")) Some(getOptimization(paramDefs, root.get("optimization"))) else None
-    val exploration = if (root.has("exploration")) Some(getExploration(paramDefs, root.get("exploration"))) else None
+    val params = root.getChild("params").map(getParamMap(paramDefs, _))
+    val optimization = root.getChild("optimization").map(getOptimization(paramDefs, _))
+    val exploration = root.getChild("exploration").map(getExploration(paramDefs, _))
 
-    new ExperimentDef(
+    var defn = new ExperimentDef(
       name = name,
       workflow = workflow,
       paramMap = params,
@@ -98,17 +94,22 @@ class JsonExperimentParser @Inject()(registry: OpRegistry, workflowParser: Workf
       optimization = optimization,
       notes = notes,
       tags = tags,
-      initiator = User.fromEnv)
+      initiator = getDefaultUser)
+
+    root.getInteger("runs").foreach { runs =>
+      defn = defn.copy(workflow = defn.workflow.setRuns(runs))
+    }
+    defn
   }
 
   private def getDefaultName(path: Path) = path.getFileName.toString.stripSuffix(".json")
 
+  private def getDefaultUser = User(sys.env.getOrElse("ACCIO_USERNAME", sys.props("user.name")))
+
   private def getExploration(paramDefs: Seq[ParamDef], node: JsonNode) = {
-    val paramGrid = if (node.has("grid")) {
-      getParamGrid(paramDefs, node.get("grid"))
-    } else {
-      ParamGrid.empty
-    }
+    val paramGrid = node.getChild("grid")
+        .map(getParamGrid(paramDefs, _))
+        .getOrElse(ParamGrid.empty)
     new Exploration(paramGrid)
   }
 
@@ -126,25 +127,21 @@ class JsonExperimentParser @Inject()(registry: OpRegistry, workflowParser: Workf
   }
 
   private def getOptimization(paramDefs: Seq[ParamDef], node: JsonNode) = {
-    val objectives = if (node.hasNonNull("objectives")) {
-      node.get("objectives").elements.asScala.map(getObjective).toSet
-    } else {
-      Set.empty[Objective]
-    }
-    val paramGrid = if (node.has("grid")) {
-      getParamGrid(paramDefs, node.get("grid"))
-    } else {
-      ParamGrid.empty
-    }
-    val iters = if (node.hasNonNull("iters")) node.get("iters").asInt else 1
-    val contraction = if (node.hasNonNull("contraction")) node.get("contraction").asDouble else .5
+    val objectives = node.getChild("objectives")
+        .map(_.elements.asScala.map(getObjective).toSet)
+        .getOrElse(Set.empty)
+    val paramGrid = node.getChild("grid")
+        .map(getParamGrid(paramDefs, _))
+        .getOrElse(ParamGrid.empty)
+    val iters = node.getInteger("iters").getOrElse(1)
+    val contraction = node.getDouble("contraction").getOrElse(.5)
     new Optimization(paramGrid, iters, contraction, objectives)
   }
 
   private def getObjective(node: JsonNode): Objective = {
-    val metric = node.get("metric").asText
-    val threshold = if (node.hasNonNull("threshold")) Some(node.get("threshold").asDouble) else None
-    node.get("type").asText match {
+    val metric = node.string("metric")
+    val threshold = node.getDouble("threshold")
+    node.string("type") match {
       case "minimize" => Objective.Minimize(metric, threshold)
       case "maximize" => Objective.Maximize(metric, threshold)
       case typ => throw new IllegalArgumentException(s"Unknown objective type: $typ")

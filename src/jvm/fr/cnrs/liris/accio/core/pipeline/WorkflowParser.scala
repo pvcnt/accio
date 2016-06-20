@@ -38,60 +38,62 @@ import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.param._
+import fr.cnrs.liris.accio.core.pipeline.JsonHelper._
 import fr.cnrs.liris.common.util.FileUtils
 
 import scala.collection.JavaConverters._
 
+/**
+ * Parser for workflow definitions.
+ */
 trait WorkflowParser {
+  /**
+   * Parse a file into a workflow definition.
+   *
+   * @param path Path to a workflow definition
+   * @return A workflow definition
+   */
   def parse(path: Path): WorkflowDef
 }
 
+/**
+ * Parser for workflow definitions stored into JSON files.
+ *
+ * @param registry Operator registry
+ */
 class JsonWorkflowParser @Inject()(registry: OpRegistry) extends WorkflowParser {
   override def parse(path: Path): WorkflowDef = {
     val om = new ObjectMapper
     val root = om.readTree(path.toFile)
 
-    val id = if (root.hasNonNull("id")) {
-      root.get("id").asText
-    } else {
-      FileUtils.removeExtension(path.getFileName.toString)
-    }
-    val version = if (root.hasNonNull("version")) getVersion(root.get("version")) else "1"
-    val (name, owner) = if (root.has("meta")) {
-      val meta = root.get("meta")
-      val name = if (meta.hasNonNull("name")) Some(meta.get("name").asText) else None
-      val owner = if (meta.hasNonNull("owner")) Some(User.parse(meta.get("owner").asText)) else None
-      (name, owner)
-    } else {
-      (None, None)
-    }
-    val nodes = root.get("graph").elements.asScala.map(getNode).toSeq
+    val id = root.getString("id").getOrElse(FileUtils.removeExtension(path.getFileName.toString))
+    val version = root.getString("version").orElse(root.getInteger("version").map(_.toString)).getOrElse("1")
+    val name = root.getString("meta.name")
+    val owner = root.getString("meta.owner").map(User.parse)
+    val nodes = root.child("graph").elements.asScala.map(getNode).toSeq
 
     new WorkflowDef(id, version, new GraphDef(nodes), name, owner)
   }
 
-  private def getVersion(node: JsonNode) = if (node.isInt) node.asInt.toString else node.asText
-
   private def getNode(node: JsonNode) = {
-    val opName = node.get("op").asText
+    val opName = node.string("op")
     require(registry.contains(opName), s"Unknown operator $opName")
     val opMeta = registry(opName)
-    val name = if (node.hasNonNull("name")) node.get("name").asText else opName
-    val rawParams = if (node.hasNonNull("params")) {
-      node.get("params").fields.asScala.map(entry => entry.getKey -> entry.getValue).toMap
-    } else {
-      Map.empty[String, JsonNode]
-    }
+
+    val name = node.getString("name").getOrElse(opName)
+    val rawParams = node.getChild("params")
+        .map(_.fields.asScala.map(entry => entry.getKey -> entry.getValue).toMap)
+        .getOrElse(Map.empty)
     val params = opMeta.defn.params.map { paramDef =>
       val maybeValue = rawParams.get(paramDef.name).map(Params.parse(paramDef.typ, _)).orElse(paramDef.defaultValue)
       require(maybeValue.isDefined, s"Param $name/${paramDef.name} is not defined")
       paramDef.name -> maybeValue.get
     }
-    val inputs = if (node.hasNonNull("inputs")) {
-      node.get("inputs").elements.asScala.map(_.asText).toSeq
-    } else {
-      Seq.empty[String]
-    }
-    new NodeDef(opName, name, new ParamMap(params.toMap), inputs, 1)
+    val inputs = node.getChild("inputs")
+        .map(_.elements.asScala.map(_.asText).toSeq)
+        .getOrElse(Seq.empty)
+    val runs = node.getInteger("runs").getOrElse(1)
+
+    new NodeDef(opName, name, new ParamMap(params.toMap), inputs, runs)
   }
 }

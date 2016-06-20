@@ -52,7 +52,7 @@ class LocalExperimentExecutor @Inject()(graphBuilder: GraphBuilder, graphExecuto
   private def getExecutionStrategy(experimentDef: ExperimentDef) = {
     val graphDef = experimentDef.paramMap match {
       case None => experimentDef.workflow.graph
-      case Some(m) => experimentDef.workflow.graph.set(m)
+      case Some(m) => experimentDef.workflow.graph.setParams(m)
     }
     if (experimentDef.exploration.isDefined) {
       new ExplorationStrategy(graphDef, experimentDef.exploration.get)

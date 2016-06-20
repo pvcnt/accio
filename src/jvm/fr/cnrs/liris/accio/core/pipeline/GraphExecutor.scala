@@ -4,6 +4,7 @@ import com.google.inject.Inject
 import com.twitter.util.StorageUnit
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.dataset.{Dataset, DatasetEnv}
+import fr.cnrs.liris.common.util.Requirements._
 import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.model.Trace
 import org.joda.time.Instant
@@ -39,21 +40,40 @@ class GraphExecutor @Inject()(env: DatasetEnv) extends StrictLogging {
         case out => throw new RuntimeException(s"Cannot use $out as an input dependency")
       }
     }
-    run(node.name, node.operator, inputs)
+    run(node.name, node.runs, node.operator, inputs)
   }
 
-  private def run(nodeName: String, operator: Operator, inputs: Seq[Dataset[Trace]]): Seq[Artifact] = {
+  private def run(nodeName: String, runs: Int, operator: Operator, inputs: Seq[Dataset[Trace]]): Seq[Artifact] = {
     operator match {
-      case s: Source => Seq(DatasetArtifact(nodeName, s.get(env)))
-      case t: Transformer =>
-        Seq(DatasetArtifact(nodeName, inputs.head.flatMap(t.transform)))
-      case a: Analyzer =>
-        val metrics = inputs.head.flatMap(a.analyze).toArray
-        getDistributions(nodeName, metrics)
-      case e: Evaluator =>
-        val metrics = inputs.head.zip(inputs.last).flatMap { case (ref, res) => e.evaluate(ref, res) }.toArray
-        getDistributions(nodeName, metrics)
+      case s: Source => run(s, nodeName, inputs)
+      case t: Transformer => run(t, nodeName, inputs)
+      case a: Analyzer => run(a, nodeName, runs, inputs)
+      case e: Evaluator => run(e, nodeName, runs, inputs)
     }
+  }
+
+  private def run(source: Source, nodeName: String, inputs: Seq[Dataset[Trace]]) = {
+    requireState(inputs.isEmpty, s"Source requires no input (got ${inputs.size})")
+    Seq(DatasetArtifact(nodeName, source.get(env)))
+  }
+
+  private def run(transformer: Transformer, nodeName: String, inputs: Seq[Dataset[Trace]]) = {
+    requireState(inputs.size == 1, s"Transformer requires exacly one input (got ${inputs.size})")
+    Seq(DatasetArtifact(nodeName, inputs.head.flatMap(transformer.transform)))
+  }
+
+  private def run(analyzer: Analyzer, nodeName: String, runs: Int, inputs: Seq[Dataset[Trace]]) = {
+    requireState(inputs.size == 1, s"Analyzer requires exacly one input (got ${inputs.size})")
+    val metrics = Array.fill(runs)(inputs.head.flatMap(analyzer.analyze).toArray).flatten
+    getDistributions(nodeName, metrics)
+  }
+
+  private def run(evaluator: Evaluator, nodeName: String, runs: Int, inputs: Seq[Dataset[Trace]]) = {
+    requireState(inputs.size == 2, s"Evaluator requires exacly two inputs (got ${inputs.size})")
+    val metrics = inputs.head.zip(inputs.last).flatMap { case (ref, res) =>
+      evaluator.evaluate(ref, res)
+    }.toArray
+    getDistributions(nodeName, metrics)
   }
 
   private def getDistributions(nodeName: String, metrics: Seq[Metric]) = {

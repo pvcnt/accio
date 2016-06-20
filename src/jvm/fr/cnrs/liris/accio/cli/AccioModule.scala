@@ -2,7 +2,7 @@ package fr.cnrs.liris.accio.cli
 
 import com.google.inject.{AbstractModule, Provides, Singleton}
 import fr.cnrs.liris.accio.core.dataset.DatasetEnv
-import fr.cnrs.liris.accio.core.framework.{ExperimentReader, ExperimentWriter, OpRegistry}
+import fr.cnrs.liris.accio.core.framework.OpRegistry
 import fr.cnrs.liris.accio.core.ops.eval.{TransmissionDelay, _}
 import fr.cnrs.liris.accio.core.ops.source.EventSource
 import fr.cnrs.liris.accio.core.ops.transform.{SplitSequentially, TemporalSampling, UniformSampling, _}

@@ -43,7 +43,15 @@ import fr.cnrs.liris.common.util.FileUtils
 
 case class MakeCommandOpts(
     @Flag(name = "workdir")
-    workDir: String = "")
+    workDir: String = "",
+    @Flag(name = "name")
+    name: String = "",
+    @Flag(name = "tags")
+    tags: String = "",
+    @Flag(name = "notes")
+    notes: String = "",
+    @Flag(name = "runs")
+    runs: Int = 1)
 
 @Command(
   name = "run",
@@ -64,7 +72,19 @@ class RunCommand @Inject()(parser: ExperimentParser, executor: ExperimentExecuto
 
   private def make(opts: MakeCommandOpts, workDir: Path, url: String) = {
     val id = UUID.randomUUID().toString
-    val experimentDef = parser.parse(Paths.get(FileUtils.replaceHome(url)))
+    var experimentDef = parser.parse(Paths.get(FileUtils.replaceHome(url)))
+    if (opts.name.nonEmpty) {
+      experimentDef = experimentDef.copy(name = opts.name)
+    }
+    if (opts.tags.nonEmpty) {
+      experimentDef = experimentDef.copy(tags = opts.tags.split(",").toSet)
+    }
+    if (opts.notes.nonEmpty) {
+      experimentDef = experimentDef.copy(notes = Some(opts.notes))
+    }
+    if (opts.runs > 1) {
+      experimentDef = experimentDef.copy(workflow = experimentDef.workflow.setRuns(opts.runs))
+    }
     executor.execute(workDir, id, experimentDef)
   }
 }

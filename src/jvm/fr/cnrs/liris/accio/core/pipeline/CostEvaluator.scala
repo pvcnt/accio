@@ -2,7 +2,6 @@ package fr.cnrs.liris.accio.core.pipeline
 
 import breeze.stats._
 import com.typesafe.scalalogging.LazyLogging
-import fr.cnrs.liris.accio.core.framework.{DistributionArtifact, Objective, Report, ScalarArtifact}
 
 class CostEvaluator(objectives: Set[Objective]) extends LazyLogging {
   def compute(report: Report): Double = objectives.map(compute(_, report)).sum

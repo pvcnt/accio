@@ -35,7 +35,7 @@ package fr.cnrs.liris.accio.cli
 import java.nio.file.Paths
 
 import com.google.inject.Inject
-import fr.cnrs.liris.accio.core.framework.ExperimentReader
+import fr.cnrs.liris.accio.core.pipeline.ExperimentReader
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.util.FileUtils
 
