@@ -8,65 +8,77 @@ import fr.cnrs.liris.privamov.lib.optimization.CoolingSchedule
 
 import scala.util.Random
 
-class SimulatedAnnealingStrategy(graph: GraphDef, optimization: Optimization) extends ExecutionStrategy with StrictLogging {
+case class AnnealingMeta(temp: Double, iter: Int, previous: Option[(ParamMap, Double)])
+
+class SimulatedAnnealingStrategy(graphUnderOptimization: GraphDef, optimization: Optimization) extends ExecutionStrategy with StrictLogging {
   private[this] val costEvaluator = new CostEvaluator(optimization.objectives)
   private[this] val random = new Random
   private[this] val coolingSchedule = CoolingSchedule()
 
-  private[this] var temp = coolingSchedule.start
-  private[this] var iter = 0
-  private[this] var previous: Option[(GraphDef, Double)] = None
-
-  override def next: Seq[GraphDef] = {
+  override def next: Seq[(GraphDef, Any)] = {
     val solution = optimization.paramGrid.random()
-    Seq(graph.set(solution))
+    Seq(graphUnderOptimization.set(solution) -> AnnealingMeta(coolingSchedule.start, 1, None))
   }
 
-  override def next(graph: GraphDef, report: Report): Seq[GraphDef] = {
-    val nextGraph = if (temp < coolingSchedule.minimum) {
+  override def next(graphDef: GraphDef, meta: Any, report: Report): Seq[(GraphDef, Any)] =
+    meta match {
+      case m: AnnealingMeta => next(graphDef, m, report)
+    }
+
+  private def next(graphDef: GraphDef, meta: AnnealingMeta, report: Report) = {
+    val solution = getSolution(graphDef)
+    val cost = costEvaluator.compute(report)
+
+    val nextState = if (meta.temp < coolingSchedule.minimum) {
       // We reached the minimal temperature.
-      logger.debug(s"Reached minimal temperature at T=$temp")
-      None
-    } else if (previous.isEmpty) {
-      val cost = costEvaluator.compute(report)
+      logger.debug(s"Reached minimal temperature at T=${meta.temp}")
+      State.Terminate
+    } else if (meta.previous.isEmpty) {
       if (cost == 0) {
         // If the cost of the solution is null, we can terminate now.
-        logger.debug(s"Got null cost at T=$temp, iter=$iter")
-        None
+        logger.debug(s"Got null cost at T=${meta.temp}, iter=${meta.iter}")
+        State.Terminate
       } else {
-        previous = Some(graph -> cost)
-        Some(graph.set(neighbor(getSolution(graph))))
+        State.Accept
       }
     } else {
-      val cost = costEvaluator.compute(report)
       if (cost == 0) {
         // If the cost of the solution is null, we can terminate now.
-        logger.debug(s"Got null cost at T=$temp, iter=$iter")
-        None
+        logger.debug(s"Got null cost at T=${meta.temp}, iter=${meta.iter}")
+        State.Terminate
       } else {
         // We compute an acceptance probability for the new solution.
-        val ap = acceptanceProbability(previous.get._2, cost, temp)
+        val ap = acceptanceProbability(meta.previous.get._2, cost, meta.temp)
         if (ap == 1 || ap >= random.nextDouble()) {
-          val solution = getSolution(graph)
-          logger.debug(s"Accepted $solution (cost=$cost, ap=$ap) at T=$temp, iter=$iter")
-          previous = Some(graph -> cost)
-          Some(graph.set(neighbor(solution)))
+          logger.debug(s"Accepted $solution (cost=$cost, ap=$ap) at T=${meta.temp}, iter=${meta.iter}")
+          State.Accept
         } else {
-          logger.debug(s"Rejected ${getSolution(graph)} (cost=$cost, ap=$ap) at T=$temp, iter=$iter")
-          Some(graph.set(neighbor(getSolution(previous.get._1))))
+          logger.debug(s"Rejected ${getSolution(graphUnderOptimization)} (cost=$cost, ap=$ap) at T=${meta.temp}, iter=${meta.iter}")
+          State.Reject
         }
       }
     }
-    nextGraph match {
-      case None => Seq.empty
-      case Some(g) =>
-        iter += 1
-        if (iter >= optimization.iters) {
-          iter = 0
-          temp = coolingSchedule.decrease(temp)
-          logger.debug(s"Decreased temperature to $temp")
-        }
-        Seq(g)
+    val nextSolution = nextState match {
+      case State.Terminate => None
+      case State.Accept =>
+        val nextGraphDef = graphUnderOptimization.set(neighbor(solution))
+        val nextMeta = nextStep(meta).copy(previous = Some(solution -> cost))
+        Some(nextGraphDef -> nextMeta)
+      case State.Reject =>
+        val nextGraphDef = graphUnderOptimization.set(neighbor(meta.previous.get._1))
+        val nextMeta = nextStep(meta)
+        Some(nextGraphDef -> nextMeta)
+    }
+    nextSolution.toSeq
+  }
+
+  private def nextStep(meta: AnnealingMeta): AnnealingMeta = {
+    if (meta.iter >= optimization.iters - 1) {
+      val nextTemp = coolingSchedule.decrease(meta.temp)
+      logger.debug(s"Decreased temperature to $nextTemp")
+      meta.copy(iter = 0, temp = nextTemp)
+    } else {
+      meta.copy(iter = meta.iter + 1)
     }
   }
 
@@ -110,4 +122,16 @@ class SimulatedAnnealingStrategy(graph: GraphDef, optimization: Optimization) ex
       el
     }
   }
+}
+
+private sealed trait State
+
+private object State {
+
+  case object Terminate extends State
+
+  case object Reject extends State
+
+  case object Accept extends State
+
 }

@@ -24,9 +24,9 @@ class LocalExperimentExecutor @Inject()(graphBuilder: GraphBuilder, graphExecuto
     writer.write(workDir, experiment)
 
     val strategy = getExecutionStrategy(experimentDef)
-    var scheduled = mutable.Queue.empty[GraphDef] ++ strategy.next
+    var scheduled = mutable.Queue.empty[(GraphDef, Any)] ++ strategy.next
     while (scheduled.nonEmpty) {
-      val graphDef = scheduled.dequeue()
+      val (graphDef, meta) = scheduled.dequeue()
       val runId = UUID.randomUUID().toString
       logger.trace(s"Starting execution of workflow run $runId: $graphDef")
       var run = WorkflowRun(runId, None, graphDef, None)
@@ -36,7 +36,7 @@ class LocalExperimentExecutor @Inject()(graphBuilder: GraphBuilder, graphExecuto
 
       val graph = graphBuilder.build(graphDef)
       val report = graphExecutor.execute(graph)
-      scheduled ++= strategy.next(graphDef, report)
+      scheduled ++= strategy.next(graphDef, meta, report)
 
       run = run.copy(report = Some(report.withoutEphemeral))
       writer.write(workDir, run)

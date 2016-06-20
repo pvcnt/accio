@@ -36,31 +36,49 @@ import java.nio.file.{Path, Paths}
 
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.google.inject.Inject
+import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.param.{ParamGrid, ParamMap}
 import fr.cnrs.liris.common.util.{Distance, FileUtils}
 
 import scala.collection.JavaConverters._
 
-
 trait ExperimentParser {
   def parse(path: Path): ExperimentDef
 }
 
-class JsonExperimentParser @Inject()(registry: OpRegistry, workflowParser: WorkflowParser) extends ExperimentParser {
+class JsonExperimentParser @Inject()(registry: OpRegistry, workflowParser: WorkflowParser)
+    extends ExperimentParser with LazyLogging {
   override def parse(path: Path): ExperimentDef = {
     val om = new ObjectMapper
     val root = om.readTree(path.toFile)
+    if (root.has("workflow")) {
+      getExperiment(path, root)
+    } else {
+      logger.warn(s"Implicitly converting a workflow definition into an experiment definition in ${path.toAbsolutePath}")
+      val workflow = workflowParser.parse(path)
+      new ExperimentDef(
+        name = getDefaultName(path),
+        workflow = workflow,
+        paramMap = None,
+        exploration = None,
+        optimization = None,
+        notes = None,
+        tags = Set.empty,
+        initiator = User.fromEnv)
+    }
+  }
 
+  private def getExperiment(path: Path, root: JsonNode) = {
     val workflow = getWorkflow(path, root.get("workflow"))
     val (name, notes, tags) = if (root.has("meta")) {
       val meta = root.get("meta")
-      val name = if (meta.hasNonNull("name")) meta.get("name").asText else path.getFileName.toString.stripSuffix(".json")
+      val name = if (meta.hasNonNull("name")) meta.get("name").asText else getDefaultName(path)
       val notes = if (meta.hasNonNull("notes")) Some(meta.get("notes").asText) else None
       val tags = if (meta.hasNonNull("tags")) meta.get("tags").elements.asScala.map(_.asText).toSet else Set.empty[String]
       (name, notes, tags)
     } else {
-      (path.getFileName.toString.stripSuffix(".json"), None, Set.empty[String])
+      (getDefaultName(path), None, Set.empty[String])
     }
 
     val paramDefs = workflow.graph.nodes.flatMap { nodeDef =>
@@ -71,10 +89,19 @@ class JsonExperimentParser @Inject()(registry: OpRegistry, workflowParser: Workf
     val params = if (root.has("params")) Some(getParamMap(paramDefs, root.get("params"))) else None
     val optimization = if (root.has("optimization")) Some(getOptimization(paramDefs, root.get("optimization"))) else None
     val exploration = if (root.has("exploration")) Some(getExploration(paramDefs, root.get("exploration"))) else None
-    val initiator = User("vincent") //TODO: get from environment
 
-    new ExperimentDef(name, workflow, params, exploration, optimization, notes, tags, initiator)
+    new ExperimentDef(
+      name = name,
+      workflow = workflow,
+      paramMap = params,
+      exploration = exploration,
+      optimization = optimization,
+      notes = notes,
+      tags = tags,
+      initiator = User.fromEnv)
   }
+
+  private def getDefaultName(path: Path) = path.getFileName.toString.stripSuffix(".json")
 
   private def getExploration(paramDefs: Seq[ParamDef], node: JsonNode) = {
     val paramGrid = if (node.has("grid")) {

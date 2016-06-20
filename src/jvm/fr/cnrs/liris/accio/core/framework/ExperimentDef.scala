@@ -41,9 +41,11 @@ object User {
   private[this] val UserRegex = "(.+)<(.+)>".r
 
   def parse(str: String): User = str match {
-    case UserRegex(name, email) => User(name.trim, Some(email.trim))
+    case UserRegex(name, email) => new User(name.trim, Some(email.trim))
     case _ => throw new IllegalArgumentException(s"Invalid user format '$str'")
   }
+
+  def fromEnv: User = new User(sys.props("user.name"), None)
 }
 
 case class WorkflowDef(id: String, version: String, graph: GraphDef, name: Option[String], owner: Option[User]) {
