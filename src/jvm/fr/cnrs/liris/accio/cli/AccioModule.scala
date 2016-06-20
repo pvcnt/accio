@@ -3,7 +3,7 @@ package fr.cnrs.liris.accio.cli
 import com.google.inject.{AbstractModule, Provides, Singleton}
 import fr.cnrs.liris.accio.cli.commands._
 import fr.cnrs.liris.accio.core.dataset.DatasetEnv
-import fr.cnrs.liris.accio.core.framework.OpRegistry
+import fr.cnrs.liris.accio.core.framework.{AnnotationOpMetaReader, OpMetaReader, OpRegistry}
 import fr.cnrs.liris.accio.core.ops.eval.{TransmissionDelay, _}
 import fr.cnrs.liris.accio.core.ops.source.EventSource
 import fr.cnrs.liris.accio.core.ops.transform.{SplitSequentially, TemporalSampling, UniformSampling, _}
@@ -12,6 +12,7 @@ import net.codingwell.scalaguice.ScalaModule
 
 class AccioModule extends AbstractModule with ScalaModule {
   override def configure(): Unit = {
+    bind[OpMetaReader].to[AnnotationOpMetaReader]
     bind[ExperimentParser].to[JsonExperimentParser]
     bind[WorkflowParser].to[JsonWorkflowParser]
     bind[ExperimentExecutor].to[LocalExperimentExecutor]
@@ -26,8 +27,8 @@ class AccioModule extends AbstractModule with ScalaModule {
 
   @Provides
   @Singleton
-  def providesOpRegistry: OpRegistry = {
-    val registry = new OpRegistry
+  def providesOpRegistry(metaReader: OpMetaReader): OpRegistry = {
+    val registry = new OpRegistry(metaReader)
     // Sources
     registry.register[EventSource]
 

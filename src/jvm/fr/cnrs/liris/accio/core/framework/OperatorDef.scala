@@ -49,6 +49,8 @@ case class OutputDef(name: String, help: Option[String], typ: String)
 case class OperatorDef(
     name: String,
     params: Seq[ParamDef],
+    inputs: Seq[InputDef],
+    outputs: Seq[InputDef],
     help: Option[String],
     description: Option[String],
     category: String,

@@ -34,55 +34,22 @@ package fr.cnrs.liris.accio.core.framework
 
 import java.util.NoSuchElementException
 
-import fr.cnrs.liris.accio.core.param.Param
-import fr.cnrs.liris.common.reflect.ReflectCaseClass
-
 import scala.collection.mutable
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe._
 
-case class OpMeta(defn: OperatorDef, clazz: Class[Operator])
-
-class IllegalOpDefinition(clazz: Class[_], cause: Throwable)
-    extends Exception(s"Illegal definition of operator ${clazz.getName}: ${cause.getMessage}", cause)
 
 /**
  * Operator registry stores all operators known to Accio.
  */
-class OpRegistry {
+class OpRegistry(metaReader: OpMetaReader) {
   private[this] val _ops = mutable.Map.empty[String, OpMeta]
 
   @throws[IllegalOpDefinition]
   def register[T <: Operator : ClassTag : TypeTag]: OpMeta = {
-    val clazz = implicitly[ClassTag[T]].runtimeClass.asInstanceOf[Class[Operator]]
-    val defn = try {
-      val refl = ReflectCaseClass.of[T]
-      require(refl.isAnnotated[Op], s"Operator defined in ${clazz.getName} must be annotated with @Op")
-      val op = refl.annotation[Op]
-      val name = if (op.name.nonEmpty) op.name else clazz.getSimpleName.stripPrefix("Op")
-      val params = refl.fields.map { field =>
-        require(field.isAnnotated[Param], s"Operator parameter ${field.name} must be annotated with @Param")
-        val param = field.annotation[Param]
-        val optional = field.tpe <:< typeOf[Option[_]]
-        val tpe = if (optional) field.tpe.baseType(typeOf[Option[_]].typeSymbol).typeArgs.head else field.tpe
-        ParamDef(field.name, ParamType.of(tpe), maybe(param.help), field.defaultValue, optional)
-      }
-      OperatorDef(
-        name = name,
-        params = params,
-        help = maybe(op.help),
-        description = maybe(op.description),
-        category = op.category,
-        ephemeral = op.ephemeral,
-        unstable = op.unstable)
-    } catch {
-      case e: NoSuchElementException => throw new IllegalOpDefinition(clazz, e)
-      case e: IllegalArgumentException => throw new IllegalOpDefinition(clazz, e)
-    }
-
-    require(!_ops.contains(defn.name), s"Duplicate operator ${defn.name}")
-    val meta = OpMeta(defn, clazz.asInstanceOf[Class[Operator]])
-    _ops(defn.name) = meta
+    val meta = metaReader.read[T]
+    require(!_ops.contains(meta.defn.name), s"Duplicate operator ${meta.defn.name}")
+    _ops(meta.defn.name) = meta
     meta
   }
 
@@ -111,6 +78,4 @@ class OpRegistry {
    */
   @throws[NoSuchElementException]
   def apply(name: String): OpMeta = _ops(name)
-
-  private def maybe(str: String) = if (str.isEmpty) None else Some(str)
 }
