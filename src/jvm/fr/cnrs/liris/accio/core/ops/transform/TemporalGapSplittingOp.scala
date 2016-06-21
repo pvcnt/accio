@@ -32,30 +32,23 @@
 
 package fr.cnrs.liris.accio.core.ops.transform
 
-import fr.cnrs.liris.accio.core.framework.{Mapper, Op}
-import fr.cnrs.liris.accio.core.model.Trace
+import com.github.nscala_time.time.Imports._
+import fr.cnrs.liris.accio.core.framework.Op
+import fr.cnrs.liris.accio.core.model.Record
 import fr.cnrs.liris.accio.core.param.Param
 
-@Op
-case class SplitSequentially(
-    @Param
-    percentBegin: Double,
-    @Param
-    percentEnd: Double,
-    @Param
-    complement: Boolean = false
-) extends Mapper {
-  require(percentBegin >= 0 && percentBegin <= 100)
-  require(percentEnd >= 0 && percentEnd <= 100)
-  require(percentBegin <= percentEnd)
+/**
+ * Split a trace into two traces if there is a duration greater than some threshold between two
+ * consecutive records.
+ */
+@Op(
+  help = "Split traces, when there is a too long duration between consecutive events"
+)
+case class TemporalGapSplittingOp(
+    @Param(help="Maximum duration between two consecutive records")
+    duration: Duration
+) extends SlidingSplitting {
 
-  override def map(trace: Trace): Trace = {
-    val from = math.max(0, (percentBegin * trace.size / 100).floor.toInt)
-    val until = math.min(trace.size, (percentEnd * trace.size / 100).ceil.toInt)
-    if (complement) {
-      trace.transform(records => records.slice(0, from) ++ records.slice(until, records.size))
-    } else {
-      trace.transform(_.slice(from, until))
-    }
-  }
+  override protected def split(buffer: Seq[Record], curr: Record): Boolean =
+    (buffer.last.time to curr.time).duration >= duration
 }

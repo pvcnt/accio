@@ -7,7 +7,7 @@ import fr.cnrs.liris.accio.testing.WithTraceGenerator
 import fr.cnrs.liris.testing.UnitSpec
 
 /**
- * Unit tests for [[MaxDuration]].
+ * Unit tests for [[MaxDurationOp]].
  */
 class MaxDurationSpec extends UnitSpec with WithTraceGenerator {
   "MaxDuration" should "shorten traces with a duration greater than threshold" in {
@@ -25,7 +25,7 @@ class MaxDurationSpec extends UnitSpec with WithTraceGenerator {
   }
 
   private def transform(trace: Trace, duration: Duration) = {
-    val transformation = BoundTransformer(new MaxDuration)(_.duration := duration)
+    val transformation = BoundTransformer(new MaxDurationOp)(_.duration := duration)
     val res = transformation.transform(trace)
     res should have size 1
     res.head

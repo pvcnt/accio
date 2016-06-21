@@ -38,11 +38,12 @@ import fr.cnrs.liris.accio.core.model.Trace
 /**
  * An analyzer computing statistics about distances between consecutive records inside a trace.
  */
-@Op(category = "metric")
+@Op(
+  category = "metric",
+  metrics = Array("min", "max", "stddev", "avg", "median")
+)
 case class DistanceAnalyzer() extends Analyzer {
   override def analyze(trace: Trace): Seq[Metric] = {
     MetricUtils.descriptiveStats(trace.distances.map(_.meters))
   }
-
-  override def metrics: Seq[String] = MetricUtils.descriptiveStatsMetrics
 }

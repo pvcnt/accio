@@ -30,30 +30,25 @@
  * knowledge of the CeCILL-B license and that you accept its terms.
  */
 
-package fr.cnrs.liris.accio.core.ops.eval
+package fr.cnrs.liris.accio.core.ops.transform
 
-import com.google.common.geometry.S2CellId
-import fr.cnrs.liris.accio.core.framework.{Evaluator, Metric, Op}
-import fr.cnrs.liris.accio.core.model.Trace
+import fr.cnrs.liris.accio.core.framework.Op
+import fr.cnrs.liris.accio.core.model.Record
 import fr.cnrs.liris.accio.core.param.Param
+import fr.cnrs.liris.common.util.Distance
 
+/**
+ * Split a trace into two traces if there is a distance greater than some threshold between two
+ * consecutive records.
+ */
 @Op(
-  category = "metric",
-  help = "Compute area coverage difference between two datasets of traces",
-  metrics = Array("precision", "recall", "fscore")
+  help = "Split traces, when there is a too huge distance between consecutive events"
 )
-case class AreaCoverage(
-    @Param(help = "S2 cells levels")
-    level: Int
-) extends Evaluator {
+case class SpatialGapSplittingOp(
+    @Param(help = "Maximum distance between two consecutive records")
+    distance: Distance
+) extends SlidingSplitting {
 
-  override def evaluate(reference: Trace, result: Trace): Seq[Metric] = {
-    val refCells = getCells(reference, level)
-    val resCells = getCells(result, level)
-    val matched = resCells.intersect(refCells).size
-    MetricUtils.informationRetrieval(refCells.size, resCells.size, matched)
-  }
-
-  private def getCells(trace: Trace, level: Int) =
-    trace.records.map(rec => S2CellId.fromLatLng(rec.point.toLatLng.toS2).parent(level)).toSet
+  override protected def split(buffer: Seq[Record], curr: Record): Boolean =
+    buffer.last.point.distance(curr.point) >= distance
 }

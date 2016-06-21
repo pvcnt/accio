@@ -38,13 +38,12 @@ import fr.cnrs.liris.accio.core.model.Trace
 
 @Op(
   category = "metric",
-  help = "Compute transmission delay between two datasets of traces"
+  help = "Compute transmission delay between two datasets of traces",
+  metrics = Array("value")
 )
 case class TransmissionDelay() extends Evaluator {
   override def evaluate(reference: Trace, result: Trace): Seq[Metric] = {
     val delay = (reference.records.last.time to result.records.last.time).millis
     Seq(Metric("value", delay))
   }
-
-  override def metrics: Seq[String] = Seq("value")
 }

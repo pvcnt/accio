@@ -7,7 +7,7 @@ import fr.cnrs.liris.accio.testing.WithTraceGenerator
 import fr.cnrs.liris.testing.UnitSpec
 
 /**
- * Unit tests for [[MinDuration]].
+ * Unit tests for [[MinDurationOp]].
  */
 class MinDurationSpec extends UnitSpec with WithTraceGenerator {
   "MinDuration" should "keep traces with a duration equal to threshold" in {
@@ -27,7 +27,7 @@ class MinDurationSpec extends UnitSpec with WithTraceGenerator {
   }
 
   private def transform(trace: Trace, duration: Duration) = {
-    val transformation = BoundTransformer(new MinDuration)(_.duration := duration)
+    val transformation = BoundTransformer(new MinDurationOp)(_.duration := duration)
     transformation.transform(trace)
   }
 }

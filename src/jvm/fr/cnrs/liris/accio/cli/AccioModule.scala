@@ -5,8 +5,8 @@ import fr.cnrs.liris.accio.cli.commands._
 import fr.cnrs.liris.accio.core.dataset.DatasetEnv
 import fr.cnrs.liris.accio.core.framework.{AnnotationOpMetaReader, OpMetaReader, OpRegistry}
 import fr.cnrs.liris.accio.core.ops.eval.{TransmissionDelay, _}
-import fr.cnrs.liris.accio.core.ops.source.EventSource
-import fr.cnrs.liris.accio.core.ops.transform.{SplitSequentially, TemporalSampling, UniformSampling, _}
+import fr.cnrs.liris.accio.core.ops.source.EventSourceOp
+import fr.cnrs.liris.accio.core.ops.transform.{SequentialSplittingOp, TemporalSamplingOp, UniformSamplingOp, _}
 import fr.cnrs.liris.accio.core.pipeline._
 import net.codingwell.scalaguice.ScalaModule
 
@@ -30,23 +30,24 @@ class AccioModule extends AbstractModule with ScalaModule {
   def providesOpRegistry(metaReader: OpMetaReader): OpRegistry = {
     val registry = new OpRegistry(metaReader)
     // Sources
-    registry.register[EventSource]
+    registry.register[EventSourceOp]
 
     // Transformers
-    registry.register[CollapseTemporalGaps]
-    registry.register[GaussianKernelSmoothing]
-    registry.register[MaxDuration]
-    registry.register[MinDuration]
-    registry.register[MinSize]
-    registry.register[SpatialSampling]
-    registry.register[SplitByDuration]
-    registry.register[SplitBySize]
-    registry.register[SplitBySpatialGap]
-    registry.register[SplitByTemporalGap]
-    registry.register[SplitSequentially]
-    registry.register[TemporalSampling]
-    registry.register[UniformSampling]
-    registry.register[GeoIndistinguishability]
+    registry.register[CollapseTemporalGapsOp]
+    registry.register[GaussianKernelSmoothingOp]
+    registry.register[MaxDurationOp]
+    registry.register[MinDurationOp]
+    registry.register[MinSizeOp]
+    registry.register[MaxSizeOp]
+    registry.register[SpatialSamplingOp]
+    registry.register[DurationSplittingOp]
+    registry.register[SizeSplittingOp]
+    registry.register[SpatialGapSplittingOp]
+    registry.register[TemporalGapSplittingOp]
+    registry.register[SequentialSplittingOp]
+    registry.register[TemporalSamplingOp]
+    registry.register[UniformSamplingOp]
+    registry.register[GeoIndistinguishabilityOp]
     registry.register[PromesseOp]
 
     // Evaluators

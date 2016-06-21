@@ -35,18 +35,29 @@ package fr.cnrs.liris.accio.core.ops.transform
 import fr.cnrs.liris.accio.core.framework.{Mapper, Op}
 import fr.cnrs.liris.accio.core.model.Trace
 import fr.cnrs.liris.accio.core.param.Param
-import fr.cnrs.liris.common.random.SamplingUtils
 
-/**
- * Perform a uniform sampling on traces, keeping each record with a given probability.
- */
-@Op
-case class UniformSampling(
-    @Param(help = "Probability to keep each record")
-    probability: Double
+@Op(
+  help = "Split traces sequentially, according to chronological order"
+)
+case class SequentialSplittingOp(
+    @Param(help = "Percentage of records at which a trace begins")
+    percentBegin: Double,
+    @Param(help = "Percentage of records at which a trace ends")
+    percentEnd: Double,
+    @Param(help = "Whether to take the complement trace")
+    complement: Boolean = false
 ) extends Mapper {
-  require(probability >= 0 && probability <= 1, s"probability must be in [0, 1] (got $probability)")
+  require(percentBegin >= 0 && percentBegin <= 100, s"Begin percentage must be in [0,100] (got $percentBegin)")
+  require(percentEnd >= 0 && percentEnd <= 100, s"End percentage must be in [0,100] (got $percentEnd)")
+  require(percentBegin <= percentEnd, s"End percentage must be greater than begin percentage")
 
-  override def map(trace: Trace): Trace =
-    trace.copy(records = SamplingUtils.sampleUniform(trace.records, probability))
+  override def map(trace: Trace): Trace = {
+    val from = math.max(0, (percentBegin * trace.size / 100).floor.toInt)
+    val until = math.min(trace.size, (percentEnd * trace.size / 100).ceil.toInt)
+    if (complement) {
+      trace.transform(records => records.slice(0, from) ++ records.slice(until, records.size))
+    } else {
+      trace.transform(_.slice(from, until))
+    }
+  }
 }

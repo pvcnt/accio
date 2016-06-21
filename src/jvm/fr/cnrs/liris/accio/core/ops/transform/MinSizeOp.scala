@@ -43,7 +43,7 @@ import fr.cnrs.liris.accio.core.param.Param
 @Op(
   help = "Remove traces having a too small size"
 )
-case class MinSize(
+case class MinSizeOp(
     @Param(help = "Minimum number of records inside traces")
     size: Int
 ) extends Filter {

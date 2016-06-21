@@ -39,7 +39,11 @@ import fr.cnrs.liris.accio.core.model.Trace
 /**
  * An analyzer computing basic statistics about a trace: its size, length and duration.
  */
-@Op(category = "metric")
+@Op(
+  help = "Compute basic statistics about traces",
+  category = "metric",
+  metrics = Array("size", "length", "duration")
+)
 case class BasicAnalyzer() extends Analyzer {
   override def analyze(trace: Trace): Seq[Metric] = {
     Seq(
@@ -47,6 +51,4 @@ case class BasicAnalyzer() extends Analyzer {
       Metric("length", trace.length.meters),
       Metric("duration", trace.duration.seconds))
   }
-
-  override def metrics: Seq[String] = Seq("size", "lengh", "duration")
 }

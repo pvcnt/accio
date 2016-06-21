@@ -32,19 +32,33 @@
 
 package fr.cnrs.liris.accio.core.ops.transform
 
-import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.core.framework.{Filter, Op}
+import fr.cnrs.liris.accio.core.framework.{Mapper, Op}
 import fr.cnrs.liris.accio.core.model.Trace
 import fr.cnrs.liris.accio.core.param.Param
+import fr.cnrs.liris.privamov.lib.laplace.Laplace
 
 /**
- * Enforce a minimum duration on traces. Any trace shorter than a given threshold will discarded.
+ * Generate locations satisfying geo-indistinguishability properties. The method
+ * used here is the one presented by the authors of the paper and consists in
+ * adding noise following a double-exponential distribution.
+ *
+ * Miguel E. Andrés, Nicolás E. Bordenabe, Konstantinos Chatzikokolakis and
+ * Catuscia Palamidessi. 2013. Geo-indistinguishability: differential privacy for
+ * location-based systems. In Proceedings of CCS'13.
  */
-@Op(help = "Remove traces having a too short duration")
-case class MinDuration(
-    @Param(help = "Minimum duration of a trace")
-    duration: Duration
-) extends Filter {
+@Op(
+  help = "Enforce geo-indistinguishability guarantees on traces",
+  category = "lppm",
+  unstable = true
+)
+case class GeoIndistinguishabilityOp(
+    @Param(help = "Privacy budget")
+    epsilon: Double = 0.001
+) extends Mapper {
+  require(epsilon > 0, s"Epsilon must be strictly positive (got $epsilon)")
 
-  override def filter(input: Trace): Boolean = input.duration >= duration
+  override def map(trace: Trace): Trace =
+    trace.transform(_.map { rec =>
+      rec.copy(point = Laplace.noise(epsilon, rec.point))
+    })
 }

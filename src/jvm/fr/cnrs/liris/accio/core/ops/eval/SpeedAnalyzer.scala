@@ -38,11 +38,12 @@ import fr.cnrs.liris.accio.core.model.Trace
 /**
  * An analyzer computing statistics about speeds inside a trace.
  */
-@Op(category = "metric")
+@Op(
+  category = "metric",
+  metrics = Array("min", "max", "stddev", "avg", "median")
+)
 case class SpeedAnalyzer() extends Analyzer {
   override def analyze(trace: Trace): Seq[Metric] = {
     MetricUtils.descriptiveStats(trace.speeds.map(_.metersPerSec))
   }
-
-  override def metrics: Seq[String] = MetricUtils.descriptiveStatsMetrics
 }

@@ -26,7 +26,7 @@ class UniformSamplingSpec extends UnitSpec with WithTraceGenerator {
   }
 
   private def transform(trace: Trace, probability: Double) = {
-    val transformation = BoundTransformer(new UniformSampling)(_.probability := probability)
+    val transformation = BoundTransformer(new UniformSamplingOp)(_.probability := probability)
     val res = transformation.transform(trace)
     res should have size 1
     res.head

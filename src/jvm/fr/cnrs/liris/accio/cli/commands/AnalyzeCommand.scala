@@ -70,7 +70,7 @@ case class AnalyzeCommandOpts(
   allowResidue = true)
 class AnalyzeCommand extends AccioCommand[AnalyzeCommandOpts] with StrictLogging {
 
-  def run(flags: FlagsProvider, out: Reporter): ExitCode = {
+  def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     val opts = flags.as[AnalyzeCommandOpts]
     flags.residue.foreach { str =>
       val path = Paths.get(FileUtils.replaceHome(str))

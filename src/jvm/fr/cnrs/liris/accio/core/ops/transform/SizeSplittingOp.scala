@@ -32,33 +32,20 @@
 
 package fr.cnrs.liris.accio.core.ops.transform
 
-import fr.cnrs.liris.accio.core.framework.{Mapper, Op}
-import fr.cnrs.liris.accio.core.model.Trace
+import fr.cnrs.liris.accio.core.framework.Op
+import fr.cnrs.liris.accio.core.model.Record
 import fr.cnrs.liris.accio.core.param.Param
-import fr.cnrs.liris.privamov.lib.laplace.Laplace
 
 /**
- * Generate locations satisfying geo-indistinguishability properties. The method
- * used here is the one presented by the authors of the paper and consists in
- * adding noise following a double-exponential distribution.
- *
- * Miguel E. Andrés, Nicolás E. Bordenabe, Konstantinos Chatzikokolakis and
- * Catuscia Palamidessi. 2013. Geo-indistinguishability: differential privacy for
- * location-based systems. In Proceedings of CCS'13.
+ * Split a trace into multiple traces to ensure a fixed maximum number of records inside each trace.
  */
 @Op(
-  help = "Enforce geo-indistinguishability guarantees on traces",
-  category = "lppm",
-  unstable = true
+  help = "Split traces, ensuring a maximum size for each one"
 )
-case class GeoIndistinguishability(
-    @Param(help = "Privacy budget")
-    epsilon: Double = 0.001
-) extends Mapper {
-  require(epsilon > 0, s"Epsilon must be strictly positive (got $epsilon)")
+case class SizeSplittingOp(
+    @Param(help = "Maximum number of records allowed in each trace")
+    size: Int
+) extends SlidingSplitting {
 
-  override def map(trace: Trace): Trace =
-    trace.transform(_.map { rec =>
-      rec.copy(point = Laplace.noise(epsilon, rec.point))
-    })
+  override protected def split(buffer: Seq[Record], curr: Record): Boolean = buffer.size >= size
 }

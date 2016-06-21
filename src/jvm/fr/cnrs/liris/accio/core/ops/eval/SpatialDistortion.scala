@@ -39,7 +39,8 @@ import fr.cnrs.liris.common.geo.Point
 
 @Op(
   category = "metric",
-  help = "Compute spatial distortion between two datasets of traces"
+  help = "Compute spatial distortion between two datasets of traces",
+  metrics = Array("min", "max", "stddev", "avg", "median")
 )
 case class SpatialDistortion(
     @Param(help = "Whether to interpolate between points")
@@ -55,8 +56,6 @@ case class SpatialDistortion(
     }
     MetricUtils.descriptiveStats(distances.map(_.meters))
   }
-
-  override def metrics: Seq[String] = MetricUtils.descriptiveStatsMetrics
 
   private def evaluateWithoutInterpolation(reference: Seq[Point], result: Trace) =
     result.records.map(event => Point.nearest(event.point, reference).distance)

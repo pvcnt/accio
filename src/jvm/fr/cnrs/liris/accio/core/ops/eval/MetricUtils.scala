@@ -53,16 +53,12 @@ private[eval] object MetricUtils {
   def recall(reference: Int, matched: Int): Double =
     if (reference != 0) matched.toDouble / reference else 0d
 
-  def informationRetrievalMetrics: Seq[String] = Seq("precision", "recall", "fscore")
-
   def informationRetrieval(reference: Int, result: Int, matched: Int): Seq[Metric] = {
     Seq(
       Metric("precision", precision(result, matched)),
       Metric("recall", recall(reference, matched)),
       Metric("fscore", fscore(reference, result, matched)))
   }
-
-  def descriptiveStatsMetrics: Seq[String] = Seq("min", "max", "stddev", "avg", "median")
 
   def descriptiveStats(values: Seq[Double]): Seq[Metric] = {
     def maybe(fn: => Double) = if (values.nonEmpty) fn else 0d

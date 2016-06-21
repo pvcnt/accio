@@ -19,4 +19,6 @@ public @interface Op {
     boolean unstable() default false;
 
     boolean ephemeral() default false;
+
+    String[] metrics() default {};
 }

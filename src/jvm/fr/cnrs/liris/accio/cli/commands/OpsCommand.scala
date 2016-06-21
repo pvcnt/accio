@@ -1,23 +1,36 @@
 package fr.cnrs.liris.accio.cli.commands
 
+import java.io.InputStreamReader
+
+import com.google.common.io.CharStreams
 import com.google.inject.Inject
 import fr.cnrs.liris.accio.cli.{Command, Reporter}
-import fr.cnrs.liris.accio.core.framework.{Analyzer, _}
+import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.common.flags.FlagsProvider
 import fr.cnrs.liris.common.util.TextUtils
 
-@Command(name = "ops", help = "Provide information about registered operators")
+@Command(
+  name = "ops",
+  help = "Provide information about registered operators"
+)
 class OpsCommand @Inject()(opRegistry: OpRegistry) extends AccioCommand[(HelpFlags)] {
-  override def run(flags: FlagsProvider, out: Reporter): ExitCode = {
+  override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     if (flags.residue.isEmpty) {
       printSummary(out)
-    } else {
+      ExitCode.Success
+    } else if (flags.residue.size == 1) {
       opRegistry.get(flags.residue.head) match {
-        case Some(meta) => printOperator(out, meta, flags.as[HelpFlags])
-        case None => out.writeln(s"<error>Unknown operator '${flags.residue.head}'</error>")
+        case Some(meta) =>
+          printOperator(out, meta, flags.as[HelpFlags])
+          ExitCode.Success
+        case None =>
+          out.writeln(s"<error>Unknown operator '${flags.residue.head}'</error>")
+          ExitCode.CommandLineError
       }
+    } else {
+      out.writeln("<error>You must specify only one operator</error>")
+      ExitCode.CommandLineError
     }
-    ExitCode.Success
   }
 
   private def printSummary(out: Reporter) = {
@@ -47,12 +60,18 @@ class OpsCommand @Inject()(opRegistry: OpRegistry) extends AccioCommand[(HelpFla
       out.writeln()
     }
     meta.defn.description.foreach { description =>
-      out.writeln(description)
+      val text = if (description.startsWith("resource:")) {
+        CharStreams.toString(new InputStreamReader(meta.clazz.getResourceAsStream(description.substring(9))))
+      } else {
+        description
+      }
+      out.writeln(TextUtils.paragraphFill(text, 80))
       out.writeln()
     }
 
+    printOperatorInputs(out, meta, opts)
     printOperatorParams(out, meta, opts)
-    printOperatorIO(out, meta, opts)
+    printOperatorOutputs(out, meta, opts)
   }
 
   private def printOperatorParams(out: Reporter, meta: OpMeta, opts: HelpFlags) = {
@@ -73,50 +92,29 @@ class OpsCommand @Inject()(opRegistry: OpRegistry) extends AccioCommand[(HelpFla
     }
   }
 
-  private def printOperatorIO(out: Reporter, meta: OpMeta, opts: HelpFlags) = {
-    if (classOf[Transformer].isAssignableFrom(meta.clazz)) {
+  private def printOperatorInputs(out: Reporter, meta: OpMeta, opts: HelpFlags) = {
+    if (meta.defn.inputs.nonEmpty) {
       out.writeln("<info>Inputs:</info>")
-      out.write("  - data (type: dataset)")
-      out.writeln()
-      if (opts.long) {
-        out.writeln("    Input dataset of traces")
+      meta.defn.inputs.foreach { inputDef =>
+        out.write(s"  - ${inputDef.name} (type: dataset)")
+        out.writeln()
+        if (opts.long && inputDef.help.isDefined) {
+          out.writeln(TextUtils.paragraphFill(inputDef.help.get, 80, 4))
+        }
       }
-      out.writeln()
+    }
+  }
+
+  private def printOperatorOutputs(out: Reporter, meta: OpMeta, opts: HelpFlags) = {
+    if (meta.defn.outputs.nonEmpty) {
       out.writeln("<info>Outputs:</info>")
-      out.write("  - data (type: dataset)")
-      if (opts.long) {
-        out.writeln("    Output dataset of traces that has been transformed")
+      meta.defn.outputs.foreach { outputDef =>
+        out.write(s"  - ${outputDef.name} (type: ${outputDef.`type`})")
+        out.writeln()
+        if (opts.long && outputDef.help.isDefined) {
+          out.writeln(TextUtils.paragraphFill(outputDef.help.get, 80, 4))
+        }
       }
-      out.writeln()
-    } else if (classOf[Evaluator].isAssignableFrom(meta.clazz)) {
-      out.writeln("<info>Inputs:</info>")
-      out.write("  - train (type: dataset)")
-      out.writeln()
-      if (opts.long) {
-        out.writeln("    Training dataset of traces (contains normally reference traces, the ground truth)")
-      }
-      out.write("  - test (type: dataset)")
-      out.writeln()
-      if (opts.long) {
-        out.writeln("    Testing dataset of traces (contains normally protected traces)")
-      }
-      out.writeln()
-    } else if (classOf[Analyzer].isAssignableFrom(meta.clazz)) {
-      out.writeln("<info>Inputs:</info>")
-      out.write("  - data (type: dataset)")
-      out.writeln()
-      if (opts.long) {
-        out.writeln("    Input dataset of traces")
-      }
-      out.writeln()
-    } else if (classOf[Source].isAssignableFrom(meta.clazz)) {
-      out.writeln("<info>Outputs:</info>")
-      out.write("  - data (type: dataset)")
-      out.writeln()
-      if (opts.long) {
-        out.writeln("    Source dataset of traces")
-      }
-      out.writeln()
     }
   }
 }

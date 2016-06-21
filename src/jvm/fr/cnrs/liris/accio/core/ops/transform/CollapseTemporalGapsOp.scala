@@ -33,21 +33,41 @@
 package fr.cnrs.liris.accio.core.ops.transform
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.core.framework.Op
-import fr.cnrs.liris.accio.core.model.Record
+import fr.cnrs.liris.accio.core.framework.{Mapper, Op}
+import fr.cnrs.liris.accio.core.model.Trace
 import fr.cnrs.liris.accio.core.param.Param
+import org.joda.time.Instant
 
-/**
- * Enforce a minimum duration between two consecutive records in a trace. If the duration is
- * less than a given threshold, records will be discarded until the next point that fullfill
- * the minimum duration requirement.
- */
-@Op
-case class TemporalSampling(
-    @Param(help = "Minimum duration between two consecutive records")
-    duration: Duration
-) extends SlidingSampler {
+@Op(
+  help = "Collapse temporal gaps between days",
+  description = "It removes empty days by shifting data to fill those empty days."
+)
+case class CollapseTemporalGapsOp(
+    @Param(help = "Start date for all traces")
+    startAt: Instant
+) extends Mapper {
+  val startAtDate = new Instant(startAt.millis).toDateTime.withTimeAtStartOfDay
 
-  override protected def sample(prev: Record, curr: Record): Boolean =
-    (prev.time to curr.time).duration >= duration
+  override def map(trace: Trace): Trace = {
+    trace.transform { records =>
+      var shift = 0L
+      var prev: Option[DateTime] = None
+      records.map(record => {
+        val time = record.time.toDateTime.withTimeAtStartOfDay
+        if (prev.isEmpty) {
+          shift = (time to startAtDate).duration.days
+        } else if (time != prev.get) {
+          val days = (prev.get to time).duration.days
+          shift += days - 1
+        }
+        val aligned = if (shift.intValue > 0) {
+          record.time - Duration.standardDays(shift)
+        } else {
+          record.time + Duration.standardDays(-shift)
+        }
+        prev = Some(time)
+        record.copy(time = aligned)
+      })
+    }
+  }
 }

@@ -14,7 +14,7 @@ case class HelpFlags(
   help = "Display Accio help",
   allowResidue = true)
 class HelpCommand @Inject()(commandRegistry: CommandRegistry, opRegistry: OpRegistry) extends AccioCommand[HelpFlags] {
-  override def run(flags: FlagsProvider, out: Reporter): ExitCode = {
+  override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     if (flags.residue.isEmpty) {
       printSummary(out)
     } else {

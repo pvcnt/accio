@@ -32,21 +32,19 @@
 
 package fr.cnrs.liris.accio.core.ops.transform
 
-import fr.cnrs.liris.accio.core.framework.Op
-import fr.cnrs.liris.accio.core.model.Record
+import com.github.nscala_time.time.Imports._
+import fr.cnrs.liris.accio.core.framework.{Filter, Op}
+import fr.cnrs.liris.accio.core.model.Trace
 import fr.cnrs.liris.accio.core.param.Param
-import fr.cnrs.liris.common.util.Distance
 
 /**
- * Split a trace into two traces if there is a distance greater than some threshold between two
- * consecutive records.
+ * Enforce a minimum duration on traces. Any trace shorter than a given threshold will discarded.
  */
-@Op
-case class SplitBySpatialGap(
-    @Param(help = "Maximum distance between two consecutive records")
-    distance: Distance
-) extends SlidingSplitter {
+@Op(help = "Remove traces having a too short duration")
+case class MinDurationOp(
+    @Param(help = "Minimum duration of a trace")
+    duration: Duration
+) extends Filter {
 
-  override protected def split(buffer: Seq[Record], curr: Record): Boolean =
-    buffer.last.point.distance(curr.point) >= distance
+  override def filter(input: Trace): Boolean = input.duration >= duration
 }

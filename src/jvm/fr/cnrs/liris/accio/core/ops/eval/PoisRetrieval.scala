@@ -41,7 +41,8 @@ import fr.cnrs.liris.privamov.lib.clustering.DTClusterer
 
 @Op(
   category = "metric",
-  help = "Compute POIs retrieval difference between two datasets of traces"
+  help = "Compute POIs retrieval difference between two datasets of traces",
+  metrics = Array("precision", "recall", "fscore")
 )
 case class PoisRetrieval(
     @Param(help = "Clustering maximum diameter")
@@ -61,6 +62,4 @@ case class PoisRetrieval(
     }
     MetricUtils.informationRetrieval(refPois.size, resPois.size, matched)
   }
-
-  override def metrics: Seq[String] = MetricUtils.informationRetrievalMetrics
 }

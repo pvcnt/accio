@@ -40,8 +40,9 @@ case class ExitCode(code: Int, name: String)
 object ExitCode {
   val Success = ExitCode(0, "SUCCESS")
   val ParsingFailure = ExitCode(1, "PARSING_FAILURE")
+  val CommandLineError = ExitCode(2, "COMMAND_LINE_ERROR")
 }
 
 trait AccioCommand[Flags] {
-  def run(flags: FlagsProvider, out: Reporter): ExitCode
+  def execute(flags: FlagsProvider, out: Reporter): ExitCode
 }

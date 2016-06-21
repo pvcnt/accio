@@ -40,7 +40,7 @@ import com.twitter.finatra.http.Controller
 import com.twitter.finatra.request.{QueryParam, RouteParam}
 import fr.cnrs.liris.accio.core.model.GeoJsonConverters._
 import fr.cnrs.liris.accio.core.model.{Record, Trace}
-import fr.cnrs.liris.accio.core.ops.transform.{GeoIndistinguishability, PromesseOp}
+import fr.cnrs.liris.accio.core.ops.transform.{GeoIndistinguishabilityOp, PromesseOp}
 import fr.cnrs.liris.common.geo._
 import fr.cnrs.liris.common.util.Distance
 import fr.cnrs.liris.privamov.service.gateway.auth.{AccessToken, Firewall, Scope}
@@ -188,7 +188,7 @@ class GatewayController @Inject()(
       val res = parts.head match {
         case "geoind" =>
           val epsilon = parts(1).toDouble
-          GeoIndistinguishability(epsilon).transform(Trace(records))
+          GeoIndistinguishabilityOp(epsilon).transform(Trace(records))
         case "smooth" =>
           val epsilon = Distance.parse(parts(1))
           PromesseOp(epsilon).transform(Trace(records))

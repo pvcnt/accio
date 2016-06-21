@@ -37,7 +37,7 @@ import fr.cnrs.liris.accio.core.model.{Record, Trace}
 
 import scala.collection.mutable
 
-private[ops] trait SlidingSampler extends Mapper {
+private[ops] trait SlidingSampling extends Mapper {
   override final def map(trace: Trace): Trace = {
     if (trace.isEmpty) {
       trace
@@ -64,7 +64,7 @@ private[ops] trait SlidingSampler extends Mapper {
 /**
  * Base class for all functions using previous record and current one to take a decision.
  */
-private[ops] trait SlidingSplitter extends Transformer {
+private[ops] trait SlidingSplitting extends Transformer {
   override final def transform(input: Trace): Seq[Trace] = {
     val output = mutable.ListBuffer[Trace]()
     val buffer = mutable.ListBuffer[Record]()

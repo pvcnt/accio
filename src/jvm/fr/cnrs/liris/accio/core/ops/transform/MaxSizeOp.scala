@@ -32,21 +32,19 @@
 
 package fr.cnrs.liris.accio.core.ops.transform
 
-import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.core.framework.Op
-import fr.cnrs.liris.accio.core.model.Record
+import fr.cnrs.liris.accio.core.framework.{Mapper, Op}
+import fr.cnrs.liris.accio.core.model.Trace
 import fr.cnrs.liris.accio.core.param.Param
 
 /**
- * Split a trace into two traces if there is a duration greater than some threshold between two
- * consecutive records.
+ * Enforce a maximum size on traces. Any trace larger than a given threshold will be cut
+ * and the subsequent part will be discarded.
  */
-@Op
-case class SplitByTemporalGap(
-    @Param(help="Maximum duration between two consecutive records")
-    duration: Duration
-) extends SlidingSplitter {
+@Op(help = "Truncate traces having a too huge size")
+case class MaxSizeOp(
+    @Param(help = "Maximum size of a trace")
+    size: Int
+) extends Mapper {
 
-  override protected def split(buffer: Seq[Record], curr: Record): Boolean =
-    (buffer.last.time to curr.time).duration >= duration
+  override def map(trace: Trace): Trace = trace.transform(_.take(size))
 }

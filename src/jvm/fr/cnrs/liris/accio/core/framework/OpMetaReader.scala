@@ -24,12 +24,12 @@ class AnnotationOpMetaReader extends OpMetaReader {
       val refl = ReflectCaseClass.of[T]
       require(refl.isAnnotated[Op], s"Operator must be annotated with @Op")
       val op = refl.annotation[Op]
-      val name = if (op.name.nonEmpty) op.name else clazz.getSimpleName.stripPrefix("Op")
+      val name = if (op.name.nonEmpty) op.name else clazz.getSimpleName.stripSuffix("Op")
       OperatorDef(
         name = name,
         params = getParams(refl),
         inputs = getInputs(refl),
-        outputs = Seq.empty,
+        outputs = getOutputs(refl, op),
         help = maybe(op.help),
         description = maybe(op.description),
         category = op.category,
@@ -52,14 +52,27 @@ class AnnotationOpMetaReader extends OpMetaReader {
       ParamDef(field.name, ParamType.of(tpe), maybe(param.help), field.defaultValue, optional)
     }
 
-  private def getInputs(refl: ReflectCaseClass) = refl.tpe match {
-    case t if t <:< typeOf[Transformer] => Seq(InputDef("data", Some("Input dataset of traces")))
-    case t if t <:< typeOf[Analyzer] => Seq(InputDef("data", Some("Input dataset of traces")))
-    case t if t <:< typeOf[Evaluator] => Seq(
-      InputDef("train", Some("Training dataset of traces")),
-      InputDef("test", Some("Testing dataset of traces")))
-    case _ => Seq.empty[InputDef]
-  }
+  private def getInputs(refl: ReflectCaseClass): Seq[InputDef] =
+    refl.tpe match {
+      case t if t <:< typeOf[Transformer] => Seq(InputDef("data", Some("Input dataset of traces")))
+      case t if t <:< typeOf[Analyzer] => Seq(InputDef("data", Some("Input dataset of traces")))
+      case t if t <:< typeOf[Evaluator] => Seq(
+        InputDef("train", Some("Training dataset of traces")),
+        InputDef("test", Some("Testing dataset of traces")))
+      case _ => Seq.empty[InputDef]
+    }
+
+  private def getOutputs(refl: ReflectCaseClass, op: Op): Seq[OutputDef] =
+    refl.tpe match {
+      case t if t <:< typeOf[Transformer] =>
+        Seq(OutputDef("data", "dataset", Some("Output dataset of traces")))
+      case t if t <:< typeOf[Analyzer] =>
+        op.metrics.map(name => OutputDef(name, "distribution", None)).toSeq
+      case t if t <:< typeOf[Evaluator] =>
+        op.metrics.map(name => OutputDef(name, "distribution", None)).toSeq
+      case t if t <:< typeOf[Source] =>
+        Seq(OutputDef("data", "dataset", Some("Source dataset of traces")))
+    }
 
   private def maybe(str: String) = if (str.isEmpty) None else Some(str)
 }

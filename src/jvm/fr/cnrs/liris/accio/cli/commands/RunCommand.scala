@@ -61,7 +61,7 @@ case class MakeCommandOpts(
 class RunCommand @Inject()(parser: ExperimentParser, executor: ExperimentExecutor)
     extends AccioCommand[MakeCommandOpts] with StrictLogging {
 
-  def run(flags: FlagsProvider, out: Reporter): ExitCode = {
+  def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     val opts = flags.as[MakeCommandOpts]
     val workDir = if (opts.workDir.nonEmpty) Paths.get(opts.workDir) else Files.createTempDirectory("accio-")
     out.writeln(s"Persisting artifacts and reports to <comment>${workDir.toAbsolutePath}</comment>")

@@ -70,7 +70,7 @@ class AccioApp extends StrictLogging {
     val command = injector.getInstance(meta.clazz)
 
     Profiler.markPhase(ProfilePhase.Exec)
-    val exitCode = command.run(flags, reporter)
+    val exitCode = command.execute(flags, reporter)
 
     Profiler.markPhase(ProfilePhase.Finish)
     maybeStopProfiler(launchFlags)

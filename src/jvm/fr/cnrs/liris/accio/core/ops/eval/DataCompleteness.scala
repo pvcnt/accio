@@ -38,7 +38,8 @@ import fr.cnrs.liris.accio.core.model.Trace
 
 @Op(
   category = "metric",
-  help = "Compute data completeness difference between two datasets of traces"
+  help = "Compute data completeness difference between two datasets of traces",
+  metrics = Array("value")
 )
 case class DataCompleteness() extends Evaluator {
   override def evaluate(reference: Trace, result: Trace): Seq[Metric] = {
@@ -51,6 +52,4 @@ case class DataCompleteness() extends Evaluator {
     }
     Seq(Metric("value", completeness))
   }
-
-  override def metrics: Seq[String] = Seq("value")
 }

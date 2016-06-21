@@ -6,7 +6,7 @@ import fr.cnrs.liris.accio.testing.WithTraceGenerator
 import fr.cnrs.liris.testing.UnitSpec
 
 /**
- * Unit tests for [[MinSize]].
+ * Unit tests for [[MinSizeOp]].
  */
 class MinSizeSpec extends UnitSpec with WithTraceGenerator {
   "MinSize" should "keep traces with a length equal to threshold" in {
@@ -26,7 +26,7 @@ class MinSizeSpec extends UnitSpec with WithTraceGenerator {
   }
 
   private def transform(trace: Trace, size: Int) = {
-    val transformation = BoundTransformer(new MinSize)(_.size := size)
+    val transformation = BoundTransformer(new MinSizeOp)(_.size := size)
     transformation.transform(trace)
   }
 }

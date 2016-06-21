@@ -39,11 +39,12 @@ import fr.cnrs.liris.accio.core.model.Trace
 /**
  * An analyzer computing statistics about durations between consecutive records inside a trace.
  */
-@Op(category = "metric")
+@Op(
+  category = "metric",
+  metrics = Array("min", "max", "stddev", "avg", "median")
+)
 case class DurationAnalyzer() extends Analyzer {
   override def analyze(trace: Trace): Seq[Metric] = {
     MetricUtils.descriptiveStats(trace.durations.map(_.seconds.toDouble))
   }
-
-  override def metrics: Seq[String] = MetricUtils.descriptiveStatsMetrics
 }

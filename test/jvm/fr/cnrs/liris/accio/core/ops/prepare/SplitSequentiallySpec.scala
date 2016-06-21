@@ -6,7 +6,7 @@ import fr.cnrs.liris.accio.testing.WithTraceGenerator
 import fr.cnrs.liris.testing.UnitSpec
 
 /**
- * Unit tests for [[SplitSequentially]].
+ * Unit tests for [[SequentialSplittingOp]].
  */
 class SplitSequentiallySpec extends UnitSpec with WithTraceGenerator {
   "SplitSequentially" should "split a trace with an even number of records without losing any of them" in {
@@ -52,8 +52,8 @@ class SplitSequentiallySpec extends UnitSpec with WithTraceGenerator {
   }
 
   private def split(percent: Double, traces: Trace*): (Seq[Trace], Seq[Trace]) = {
-    val splitter1 = BoundTransformer(new SplitSequentially)(_.percentBegin := 0, _.percentEnd := percent, _.complement := false)
-    val splitter2 = BoundTransformer(new SplitSequentially)(_.percentBegin := 0, _.percentEnd := percent, _.complement := true)
+    val splitter1 = BoundTransformer(new SequentialSplittingOp)(_.percentBegin := 0, _.percentEnd := percent, _.complement := false)
+    val splitter2 = BoundTransformer(new SequentialSplittingOp)(_.percentBegin := 0, _.percentEnd := percent, _.complement := true)
     val out1 = traces.flatMap(splitter1.transform)
     val out2 = traces.flatMap(splitter2.transform)
     out1 should have size traces.size

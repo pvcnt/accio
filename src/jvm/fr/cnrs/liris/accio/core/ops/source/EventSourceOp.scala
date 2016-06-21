@@ -12,7 +12,7 @@ import fr.cnrs.liris.common.util.FileUtils
   help = "Read a dataset of traces in CSV format",
   ephemeral = true
 )
-case class EventSource(
+case class EventSourceOp(
     @Param(help = "Dataset URL")
     url: String,
     @Param(help = "Sampling ratio")

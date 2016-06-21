@@ -25,7 +25,7 @@ class SplitByDurationSpec extends UnitSpec with WithTraceGenerator {
   }
 
   private def transform(trace: Trace, duration: Duration) = {
-    val transformation = BoundTransformer(new SplitByDuration)(_.duration := duration)
+    val transformation = BoundTransformer(new DurationSplittingOp)(_.duration := duration)
     transformation.transform(trace)
   }
 }

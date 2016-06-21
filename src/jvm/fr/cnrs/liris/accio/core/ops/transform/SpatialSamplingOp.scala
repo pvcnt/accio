@@ -32,39 +32,24 @@
 
 package fr.cnrs.liris.accio.core.ops.transform
 
-import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.core.framework.{Mapper, Op}
-import fr.cnrs.liris.accio.core.model.Trace
+import fr.cnrs.liris.accio.core.framework.Op
+import fr.cnrs.liris.accio.core.model.Record
 import fr.cnrs.liris.accio.core.param.Param
-import org.joda.time.Instant
+import fr.cnrs.liris.common.util.Distance
 
+/**
+ * Enforce a minimum distance between two consecutive records in a trace. If the distance is
+ * less than a given threshold, records will be discarded until the next point that fullfill
+ * the minimum distance requirement.
+ */
 @Op(
-  help = "Collapse temporal gaps between days",
-  description = "It removes empty days by shifting data to fill those empty days."
+  help = "Enforce a minimum distance between two consecutive records in traces"
 )
-case class CollapseTemporalGaps(@Param startAt: Duration) extends Mapper {
-  val startAtDate = new Instant(startAt.millis).toDateTime.withTimeAtStartOfDay
+case class SpatialSamplingOp(
+    @Param(help = "Minimum distance between two consecutive records")
+    distance: Distance
+) extends SlidingSampling {
 
-  override def map(trace: Trace): Trace = {
-    trace.transform { records =>
-      var shift = 0L
-      var prev: Option[DateTime] = None
-      records.map(record => {
-        val time = record.time.toDateTime.withTimeAtStartOfDay
-        if (prev.isEmpty) {
-          shift = (time to startAtDate).duration.days
-        } else if (time != prev.get) {
-          val days = (prev.get to time).duration.days
-          shift += days - 1
-        }
-        val aligned = if (shift.intValue > 0) {
-          record.time - Duration.standardDays(shift)
-        } else {
-          record.time + Duration.standardDays(-shift)
-        }
-        prev = Some(time)
-        record.copy(time = aligned)
-      })
-    }
-  }
+  override protected def sample(prev: Record, curr: Record): Boolean =
+    prev.point.distance(curr.point) >= distance
 }

@@ -1,7 +1,7 @@
 package fr.cnrs.liris.accio.core.framework
 
 import fr.cnrs.liris.common.util.Distance
-import org.joda.time.Duration
+import org.joda.time.{Duration, Instant}
 
 import scala.reflect.runtime.universe._
 
@@ -25,6 +25,8 @@ object ParamType {
 
   case object Distance extends ParamType
 
+  case object Timestamp extends ParamType
+
   def of[T: TypeTag]: ParamType = of(implicitly[TypeTag[T]].tpe)
 
   def of(tpe: Type): ParamType = tpe match {
@@ -34,6 +36,7 @@ object ParamType {
     case t if t =:= typeOf[String] => String
     case t if t =:= typeOf[Boolean] => Boolean
     case t if t =:= typeOf[Duration] => Duration
+    case t if t =:= typeOf[Instant] => Timestamp
     case t if t =:= typeOf[Distance] => Distance
     case t if t =:= typeOf[Seq[String]] => StringList
     case _ => throw new IllegalArgumentException(s"Invalid parameter type $tpe")
@@ -44,13 +47,13 @@ case class ParamDef(name: String, typ: ParamType, help: Option[String], defaultV
 
 case class InputDef(name: String, help: Option[String])
 
-case class OutputDef(name: String, help: Option[String], typ: String)
+case class OutputDef(name: String, `type`: String, help: Option[String])
 
 case class OperatorDef(
     name: String,
     params: Seq[ParamDef],
     inputs: Seq[InputDef],
-    outputs: Seq[InputDef],
+    outputs: Seq[OutputDef],
     help: Option[String],
     description: Option[String],
     category: String,

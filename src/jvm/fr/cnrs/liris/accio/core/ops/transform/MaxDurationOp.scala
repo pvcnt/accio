@@ -32,22 +32,24 @@
 
 package fr.cnrs.liris.accio.core.ops.transform
 
-import fr.cnrs.liris.accio.core.framework.Op
-import fr.cnrs.liris.accio.core.model.Record
+import com.github.nscala_time.time.Imports._
+import fr.cnrs.liris.accio.core.framework.{Mapper, Op}
+import fr.cnrs.liris.accio.core.model.Trace
 import fr.cnrs.liris.accio.core.param.Param
-import fr.cnrs.liris.common.util.Distance
 
 /**
- * Enforce a minimum distance between two consecutive records in a trace. If the distance is
- * less than a given threshold, records will be discarded until the next point that fullfill
- * the minimum distance requirement.
+ * Enforce a maximum duration on traces. Any trace longer than a given threshold will be cut
+ * and the subsequent part will be discarded.
  */
-@Op
-case class SpatialSampling(
-    @Param(help = "Minimum distance between two consecutive records")
-    distance: Distance
-) extends SlidingSampler {
+@Op(help = "Truncate traces having a too long duration")
+case class MaxDurationOp(
+    @Param(help = "Maximum duration of a trace")
+    duration: Duration
+) extends Mapper {
 
-  override protected def sample(prev: Record, curr: Record): Boolean =
-    prev.point.distance(curr.point) >= distance
+  override def map(trace: Trace): Trace = {
+    val startAt = trace.records.head.time
+    val endAt = startAt + duration
+    trace.transform(_.takeWhile(r => r.time <= endAt))
+  }
 }

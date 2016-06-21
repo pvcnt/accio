@@ -33,37 +33,21 @@
 package fr.cnrs.liris.accio.core.ops.transform
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.core.framework.{Mapper, Op}
-import fr.cnrs.liris.accio.core.model.Trace
+import fr.cnrs.liris.accio.core.framework.Op
+import fr.cnrs.liris.accio.core.model.Record
 import fr.cnrs.liris.accio.core.param.Param
-import fr.cnrs.liris.common.geo.Point
 
 /**
- * Applies gaussian kernel smoothing on a trace, attenuating the impact of noisy observations.
+ * Split a trace into multiple traces, each spanning across a maximum duration.
  */
 @Op(
-  help = "Applies gaussian kernel smoothing on traces"
+  help = "Split traces, ensuring a maximum duration for each one"
 )
-case class GaussianKernelSmoothing(
-    @Param(help = "Bandwidth")
-    omega: Duration
-) extends Mapper {
-  override def map(trace: Trace): Trace =
-    trace.transform(_.map { record =>
-      var ks = 0d
-      var x = 0d
-      var y = 0d
-      for (i <- trace.records.indices) {
-        val k = gaussianKernel(record.time.millis, trace.records(i).time.millis)
-        ks += k
-        x += k * trace.records(i).point.x
-        y += k * trace.records(i).point.y
-      }
-      x /= ks
-      y /= ks
-      record.copy(point = Point(x, y))
-    })
+case class DurationSplittingOp(
+    @Param(help = "Maximum duration of each trace")
+    duration: Duration
+) extends SlidingSplitting {
 
-  private def gaussianKernel(t1: Long, t2: Long): Double =
-    Math.exp(-Math.pow(t1 - t2, 2) / (2 * omega.millis * omega.millis))
+  override protected def split(buffer: Seq[Record], curr: Record): Boolean =
+    (buffer.head.time to curr.time).duration > duration
 }

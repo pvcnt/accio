@@ -55,7 +55,7 @@ case class SummarizeCommandOpts(
   allowResidue = true)
 class SummarizeCommand @Inject()(reader: ExperimentReader) extends AccioCommand[SummarizeCommandOpts] {
 
-  def run(flags: FlagsProvider, out: Reporter): ExitCode = {
+  def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     val opts = flags.as[SummarizeCommandOpts]
     val path = Paths.get(FileUtils.replaceHome(flags.residue.head))
     //val experiment = reader.readExperiment(path)

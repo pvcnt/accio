@@ -32,20 +32,23 @@
 
 package fr.cnrs.liris.accio.core.ops.transform
 
-import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.core.framework.Op
-import fr.cnrs.liris.accio.core.model.Record
+import fr.cnrs.liris.accio.core.framework.{Mapper, Op}
+import fr.cnrs.liris.accio.core.model.Trace
 import fr.cnrs.liris.accio.core.param.Param
+import fr.cnrs.liris.common.random.SamplingUtils
 
 /**
- * Split a trace into multiple traces, each spanning across a maximum duration.
+ * Perform a uniform sampling on traces, keeping each record with a given probability.
  */
-@Op
-case class SplitByDuration(
-    @Param(help = "Maximum duration of each trace")
-    duration: Duration
-) extends SlidingSplitter {
+@Op(
+  help = "Uniformly sample events inside traces"
+)
+case class UniformSamplingOp(
+    @Param(help = "Probability to keep each record")
+    probability: Double
+) extends Mapper {
+  require(probability >= 0 && probability <= 1, s"probability must be in [0, 1] (got $probability)")
 
-  override protected def split(buffer: Seq[Record], curr: Record): Boolean =
-    (buffer.head.time to curr.time).duration > duration
+  override def map(trace: Trace): Trace =
+    trace.copy(records = SamplingUtils.sampleUniform(trace.records, probability))
 }

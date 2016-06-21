@@ -33,7 +33,7 @@ class TemporalSamplingSpec extends UnitSpec with WithTraceGenerator {
   }
 
   private def transform(trace: Trace, duration: Duration) = {
-    val transformation = BoundTransformer(new TemporalSampling)(_.duration := duration)
+    val transformation = BoundTransformer(new TemporalSamplingOp)(_.duration := duration)
     val res = transformation.transform(trace)
     res should have size 1
     res.head
