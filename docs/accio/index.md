@@ -12,7 +12,7 @@ Accio can be compiled as a JAR in one command:
 ./pants binary src/jvm/fr/cnrs/liris/accio/cli:bin
 ```
 
-An `accio-bin.jar` will then appear in the `dist/` folder.
+An `accio.jar` will then appear in the `dist/` folder.
 
 If you have [Vagrant](https://www.vagrantup.com/) and [VirtualBox](https://www.virtualbox.org/) installed on your machine, you can otherwise launch a development environment via `vagrant up`.
 The source code will be located under `/vagrant`, with tools to compile and launch it already installed.

@@ -63,12 +63,17 @@ class RunCommand @Inject()(parser: ExperimentParser, executor: ExperimentExecuto
 
   def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     val opts = flags.as[MakeCommandOpts]
-    val workDir = if (opts.workDir.nonEmpty) Paths.get(opts.workDir) else Files.createTempDirectory("accio-")
-    out.writeln(s"Persisting artifacts and reports to <comment>${workDir.toAbsolutePath}</comment>")
-    flags.residue.foreach { url =>
-      make(opts, workDir, url)
+    if (flags.residue.isEmpty) {
+      out.writeln("<error>Specify one or multiple files to run as arguments</error>")
+      ExitCode.CommandLineError
+    } else {
+      val workDir = if (opts.workDir.nonEmpty) Paths.get(opts.workDir) else Files.createTempDirectory("accio-")
+      out.writeln(s"Persisting artifacts and reports to <comment>${workDir.toAbsolutePath}</comment>")
+      flags.residue.foreach { url =>
+        make(opts, workDir, url)
+      }
+      ExitCode.Success
     }
-    ExitCode.Success
   }
 
   private def make(opts: MakeCommandOpts, workDir: Path, url: String) = {
