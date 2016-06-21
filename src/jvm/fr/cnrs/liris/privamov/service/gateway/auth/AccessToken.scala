@@ -32,7 +32,7 @@
 
 package fr.cnrs.liris.privamov.service.gateway.auth
 
-import fr.cnrs.liris.privamov.service.gateway.store.{EventStore, View}
+import fr.cnrs.liris.privamov.service.gateway.store.EventStore
 
 case class AccessToken(scopes: Set[Scope], acl: AccessControlList) {
   def in(scope: Scope): Boolean = scopes.contains(scope)

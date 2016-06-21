@@ -4,39 +4,28 @@ import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.twitter.querulous.driver.DatabaseDriver
 import com.twitter.querulous.evaluator.{QueryEvaluator, QueryEvaluatorFactory}
-import fr.cnrs.liris.common.geo.LatLng
 import fr.cnrs.liris.accio.core.model.Record
-import org.joda.time.{DateTime, Instant}
+import fr.cnrs.liris.common.geo.LatLng
+import fr.cnrs.liris.privamov.service.gateway.auth.View
+import org.joda.time.{Instant, LocalDate}
 
 import scala.collection.mutable
 
 /**
  * Data provider reading data from a PostgreSQL/PostGIS database using standard Priva'Mov schema.
  *
- * @author Vincent Primault <vincent.primault@liris.cnrs.fr>
  * @param evaluator A query evaluator
  * @param name      Store name
  */
 class PrivamovStore(evaluator: QueryEvaluator, override val name: String) extends EventStore {
   override def contains(user: String): Boolean = getSourceId(user).isDefined
 
-  override def sources(views: Set[View], limit: Option[Int], startAfter: Option[String]): Seq[Source] = {
-    var sqlTail = sourcesWhereClause(views)
-    startAfter.foreach { startAfter =>
-      sqlTail += s" and device::character varying > '${imeiToUuid(startAfter)}'"
-    }
-    sqlTail += " order by device::character varying"
-    limit.foreach { limit =>
-      sqlTail += s" limit $limit"
-    }
-    val sql = s"select distinct device::character varying from source where $sqlTail"
-    val ids = evaluator.select(sql)(rs => uuidToImei(rs.getString(1)))
-    ids.map(id => Source(id))
-  }
-
-  override def countSources(views: Set[View]): Int = {
-    val whereClause = sourcesWhereClause(views)
-    evaluator.count(s"select count(1) from source where $whereClause")
+  override def sources(views: Set[View]): Seq[String] = {
+    val sql = s"select distinct device::character varying " +
+        s"from source " +
+        s"where ${sourcesWhereClause(views)} " +
+        s"order by device::character varying"
+    evaluator.select(sql)(rs => uuidToImei(rs.getString(1)))
   }
 
   override def features(views: Set[View], limit: Option[Int] = None, sample: Boolean = false): Seq[Record] = {
@@ -74,8 +63,7 @@ class PrivamovStore(evaluator: QueryEvaluator, override val name: String) extend
   }
 
   override def countFeatures(views: Set[View]): Int = {
-    val whereClause = locationWhereClause(views)
-    evaluator.count(s"select count(1) from location where $whereClause")
+    evaluator.count(s"select count(1) from location where ${locationWhereClause(views)}")
   }
 
   override def apply(id: String): Source = {
@@ -83,12 +71,14 @@ class PrivamovStore(evaluator: QueryEvaluator, override val name: String) extend
     val countSql = s"select count(1) from location where $whereClause"
     val count = evaluator.count(countSql)
     if (count > 0) {
-      val firstLastSeenSql = s"select extract(epoch from min(timestamp)), extract(epoch from max(timestamp)) from location where $whereClause"
-      val firstLastSeen = evaluator.selectOne(firstLastSeenSql)(rs => (new DateTime(rs.getLong(1) * 1000), new DateTime(rs.getLong(2) * 1000)))
-
-      Source(id, firstLastSeen.map(_._1), firstLastSeen.map(_._2), Some(count))
+      val activeDaysSql = s"select distinct extract(epoch from date_trunc('day', timestamp)) " +
+          s"from location " +
+          s"where $whereClause " +
+          s"order by extract(epoch from date_trunc('day', timestamp))"
+      val activeDays = evaluator.select(activeDaysSql)(rs => new LocalDate(rs.getLong(1) * 1000))
+      Source(id, count, activeDays)
     } else {
-      Source(id, None, None, Some(0))
+      Source(id, 0, Seq.empty)
     }
   }
 
@@ -148,14 +138,16 @@ class PrivamovStore(evaluator: QueryEvaluator, override val name: String) extend
 /**
  * Factory for [[PrivamovStore]].
  *
- * @author Vincent Primault <vincent.primault@liris.cnrs.fr>
  * @param queryEvaluatorFactory A query evaluator factory
  */
-class PrivamovStoreFactory @Inject()(@Named("privamov") queryEvaluatorFactory: QueryEvaluatorFactory) extends EventStoreFactory {
+class PrivamovStoreFactory @Inject()(@Named("privamov") queryEvaluatorFactory: QueryEvaluatorFactory)
+    extends EventStoreFactory {
   override def create(name: String): EventStore = {
     val upperName = name.toUpperCase
-    Set("HOST", "BASE", "PASS", "USER")
-        .foreach(v => require(sys.env.contains(s"QUERULOUS__${upperName}_$v"), s"You must provide a value for envvar QUERULOUS__${upperName}_$v"))
+    Set("HOST", "BASE", "PASS", "USER").foreach { v =>
+      require(sys.env.contains(s"QUERULOUS__${upperName}_$v"),
+        s"You must provide a value for envvar QUERULOUS__${upperName}_$v")
+    }
     val hostname = sys.env(s"QUERULOUS__${upperName}_HOST")
     val dbname = sys.env(s"QUERULOUS__${upperName}_BASE")
     val username = sys.env(s"QUERULOUS__${upperName}_USER")

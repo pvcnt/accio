@@ -43,10 +43,9 @@ import fr.cnrs.liris.accio.core.model.{Record, Trace}
 import fr.cnrs.liris.accio.core.ops.transform.{GeoIndistinguishabilityOp, PromesseOp}
 import fr.cnrs.liris.common.geo._
 import fr.cnrs.liris.common.util.Distance
-import fr.cnrs.liris.privamov.service.gateway.auth.{AccessToken, Firewall, Scope}
-import fr.cnrs.liris.privamov.service.gateway.store.{EventStore, StoreRegistry, View}
+import fr.cnrs.liris.privamov.service.gateway.auth.{AccessToken, Firewall, Scope, View}
+import fr.cnrs.liris.privamov.service.gateway.store.{EventStore, StoreRegistry}
 import org.joda.time.DateTime
-
 
 case class ListDatasetsRequest(@QueryParam accessToken: Option[String])
 
@@ -84,8 +83,6 @@ case class ListFeaturesRequest(
  */
 case class Dataset(name: String, storage: String, description: Option[String] = None)
 
-case class PaginatedList[T](next: Option[String], total: Option[Int], data: T)
-
 case class Error(`type`: String, message: Option[String], param: Option[String])
 
 object Error {
@@ -113,10 +110,9 @@ class GatewayController @Inject()(
 
   get("/api/datasets") { request: ListDatasetsRequest =>
     authenticated(request.accessToken, Scope.Datasets) { token =>
-      val datasets = stores
+      stores
           .filter(token.acl.accessible)
           .map(store => Dataset(store.name, store.getClass.getSimpleName))
-      PaginatedList(None, Some(datasets.size), datasets)
     }
   }
 
@@ -132,11 +128,7 @@ class GatewayController @Inject()(
     authenticated(request.accessToken, Scope.Datasets) { token =>
       withStore(request.name, token) { store =>
         val accessibleViews = token.acl.resolve(store.name).views
-        val limit = request.limit.map(math.min(_, standardLimit)).getOrElse(standardLimit)
-        val data = store.sources(accessibleViews, Some(limit), request.startAfter)
-        val count = store.countSources(accessibleViews)
-        val next = if (count > data.size) Some(data.last.id) else None
-        PaginatedList(next, Some(count), data)
+        store.sources(accessibleViews)
       }
     }
   }
@@ -169,13 +161,7 @@ class GatewayController @Inject()(
           case Some(spec) => transform(rawData, spec)
           case None => rawData
         }
-        val count = store.countFeatures(allowedViews)
-        val next = if (!sample && count > transformedData.size) {
-          Some(transformedData.last.time.toString)
-        } else {
-          None
-        }
-        PaginatedList(next, Some(count), toGeoJson(transformedData))
+        toGeoJson(transformedData)
       }
     }
   }
@@ -184,12 +170,14 @@ class GatewayController @Inject()(
     if (records.isEmpty) {
       records
     } else {
-      val parts = spec.split("\\|")
+      val parts = spec.split("=")
       val res = parts.head match {
         case "geoind" =>
+          require(parts.size == 2, "Transformation 'geoind' needs a parameter")
           val epsilon = parts(1).toDouble
           GeoIndistinguishabilityOp(epsilon).transform(Trace(records))
         case "smooth" =>
+          require(parts.size == 2, "Transformation 'smooth' needs a parameter")
           val epsilon = Distance.parse(parts(1))
           PromesseOp(epsilon).transform(Trace(records))
         case name => throw new IllegalArgumentException(s"Unknown transformation '$name'")

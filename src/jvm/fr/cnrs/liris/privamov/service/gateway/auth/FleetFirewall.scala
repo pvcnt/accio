@@ -34,7 +34,6 @@ package fr.cnrs.liris.privamov.service.gateway.auth
 
 import com.google.inject.{Inject, Singleton}
 import fr.cnrs.liris.privamov.service.gateway.FleetClient
-import fr.cnrs.liris.privamov.service.gateway.store.View
 
 @Singleton
 class FleetFirewall @Inject()(client: FleetClient) extends Firewall {
