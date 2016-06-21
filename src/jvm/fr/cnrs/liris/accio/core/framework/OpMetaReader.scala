@@ -8,15 +8,41 @@ import fr.cnrs.liris.common.reflect.ReflectCaseClass
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe._
 
+/**
+ * Metadata about an operator.
+ *
+ * @param defn  Operator definition
+ * @param clazz Operator class
+ */
 case class OpMeta(defn: OperatorDef, clazz: Class[Operator])
 
-class IllegalOpDefinition(clazz: Class[_], cause: Throwable)
+/**
+ * Exception thrown when the definition of an operator is invalid.
+ *
+ * @param clazz Operator class
+ * @param cause Root exception
+ */
+class IllegalOpDefinition(clazz: Class[Operator], cause: Throwable)
     extends Exception(s"Illegal definition of operator ${clazz.getName}: ${cause.getMessage}", cause)
 
+/**
+ * Metadata readers extract metadata about operators.
+ */
 trait OpMetaReader {
+  /**
+   * Read operator metadata from its class specification.
+   *
+   * @tparam T Operator type
+   * @return Operator metadata
+   * @throws IllegalOpDefinition If the operator definition is invalid
+   */
+  @throws[IllegalOpDefinition]
   def read[T <: Operator : ClassTag : TypeTag]: OpMeta
 }
 
+/**
+ * Reads operator metadata from annotations found on this operator type.
+ */
 class AnnotationOpMetaReader extends OpMetaReader {
   override def read[T <: Operator : ClassTag : TypeTag]: OpMeta = {
     val clazz = implicitly[ClassTag[T]].runtimeClass.asInstanceOf[Class[Operator]]
@@ -39,7 +65,6 @@ class AnnotationOpMetaReader extends OpMetaReader {
       case e: NoSuchElementException => throw new IllegalOpDefinition(clazz, e)
       case e: IllegalArgumentException => throw new IllegalOpDefinition(clazz, e)
     }
-
     OpMeta(defn, clazz.asInstanceOf[Class[Operator]])
   }
 

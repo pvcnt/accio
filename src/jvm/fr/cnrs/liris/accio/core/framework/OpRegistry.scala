@@ -38,14 +38,22 @@ import scala.collection.mutable
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe._
 
-
 /**
  * Operator registry stores all operators known to Accio.
  */
 class OpRegistry(metaReader: OpMetaReader) {
   private[this] val _ops = mutable.Map.empty[String, OpMeta]
 
+  /**
+   * Register a new operator.
+   *
+   * @tparam T Operator type
+   * @throws IllegalOpDefinition      If the operator definition is invalid
+   * @throws IllegalArgumentException If an operator with the same name is already registered
+   * @return Operator metadata
+   */
   @throws[IllegalOpDefinition]
+  @throws[IllegalArgumentException]
   def register[T <: Operator : ClassTag : TypeTag]: OpMeta = {
     val meta = metaReader.read[T]
     require(!_ops.contains(meta.defn.name), s"Duplicate operator ${meta.defn.name}")
@@ -53,6 +61,9 @@ class OpRegistry(metaReader: OpMetaReader) {
     meta
   }
 
+  /**
+   * Return all registered operators, ordered by name.
+   */
   def ops: Seq[OpMeta] = _ops.values.toSeq.sortBy(_.defn.name)
 
   /**

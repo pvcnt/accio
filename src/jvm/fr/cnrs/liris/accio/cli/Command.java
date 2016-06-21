@@ -5,11 +5,14 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * Annotation encoding metadata about an Accio command.
+ */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Command {
     /**
-     * The name of the command, as the user would type it.
+     * Name of this command, as the user would type it.
      */
     String name();
 
@@ -19,8 +22,8 @@ public @interface Command {
     String help() default "";
 
     /**
-     * The help message for this command.  If the value starts with "resource:", the remainder is
-     * interpreted as the name of a text file resource (in the .jar file that provides the Command
+     * The help message for this command. If the value starts with "resource:", the remainder is
+     * interpreted as the name of a text file resource (in the .jar file that provides the command
      * implementation class).
      */
     String description() default "";
@@ -32,7 +35,7 @@ public @interface Command {
     boolean allowResidue() default false;
 
     /**
-     * True if the command should not be shown in the output of 'blaze help'.
+     * Specifies whether the command should not be shown in the output of 'accio help'.
      */
     boolean hidden() default false;
 }

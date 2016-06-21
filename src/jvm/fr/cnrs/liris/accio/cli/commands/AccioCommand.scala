@@ -35,14 +35,35 @@ package fr.cnrs.liris.accio.cli.commands
 import fr.cnrs.liris.accio.cli.Reporter
 import fr.cnrs.liris.common.flags.FlagsProvider
 
+/**
+ * A command line exit code.
+ *
+ * @param code Numerical code
+ * @param name Machine name
+ */
 case class ExitCode(code: Int, name: String)
 
+/**
+ * Factory for [[ExitCode]].
+ */
 object ExitCode {
   val Success = ExitCode(0, "SUCCESS")
   val ParsingFailure = ExitCode(1, "PARSING_FAILURE")
   val CommandLineError = ExitCode(2, "COMMAND_LINE_ERROR")
 }
 
+/**
+ * Executable command being registered into the Accio application.
+ *
+ * @tparam Flags Command flags type(s)
+ */
 trait AccioCommand[Flags] {
+  /**
+   * Execute this command with given input.
+   *
+   * @param flags Flags provider
+   * @param out   Output where to write
+   * @return Exit code
+   */
   def execute(flags: FlagsProvider, out: Reporter): ExitCode
 }

@@ -30,7 +30,7 @@ class HelpCommand @Inject()(commandRegistry: CommandRegistry, opRegistry: OpRegi
     out.writeln("Usage: accio <command> <options>...")
     out.writeln()
     out.writeln("<info>Available commands:</info>")
-    val maxLength = commandRegistry.commands.map(_.defn.name.length).max
+    val maxLength = commandRegistry.commands.filterNot(_.defn.hidden).map(_.defn.name.length).max
     commandRegistry.commands.foreach { command =>
       val padding = " " * (maxLength - command.defn.name.length)
       out.writeln(s"  <comment>${command.defn.name}</comment>$padding ${command.defn.help.getOrElse("")}")
