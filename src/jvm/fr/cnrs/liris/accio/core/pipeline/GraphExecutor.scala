@@ -69,7 +69,7 @@ class GraphExecutor @Inject()(env: DatasetEnv) extends StrictLogging {
   }
 
   private def run(evaluator: Evaluator, nodeName: String, runs: Int, inputs: Seq[Dataset[Trace]]) = {
-    requireState(inputs.size == 2, s"Evaluator requires exacly two inputs (got ${inputs.size})")
+    requireState(inputs.size == 2, s"Evaluator requires exactly two inputs (got ${inputs.size})")
     val metrics = inputs.head.zip(inputs.last).flatMap { case (ref, res) =>
       evaluator.evaluate(ref, res)
     }.toArray

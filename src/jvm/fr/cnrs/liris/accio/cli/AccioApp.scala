@@ -47,7 +47,9 @@ object AccioAppMain extends AccioApp
 
 case class AccioAppLaunchFlags(
     @Flag(name = "profile")
-    profile: String = "")
+    profile: String = "",
+    @Flag(name = "cores", help = "Number of cores to use")
+    cores: Int = 0)
 
 class AccioApp extends StrictLogging {
   def main(args: Array[String]): Unit = {

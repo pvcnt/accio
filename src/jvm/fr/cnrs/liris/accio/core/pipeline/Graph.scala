@@ -29,20 +29,27 @@ case class GraphDef(nodes: Seq[NodeDef]) {
   }
 
   /**
-   * Return a copy of this graph with a minimum number of runs propagated into the nodes.
+   * Return a copy of this graph with a minimum number of runs propagated into the nodes that
+   * would otherwise run only one time.
    *
    * @param runs Minimum number of runs
    * @return A new graph
    */
-  def requireRuns(runs: Int): GraphDef = {
+  def setRuns(runs: Int): GraphDef = {
     if (runs > 1) {
-      val newNodes = nodes.map(node => node.copy(runs = math.max(node.runs, runs)))
+      val newNodes = nodes.map { node =>
+        if (node.runs <= 1) {
+          node.copy(runs = math.max(node.runs, runs))
+        } else {
+          node
+        }
+      }
       copy(nodes = newNodes)
     } else this
   }
 }
 
-case class NodeDef(op: String, name: String, paramMap: ParamMap, inputs: Seq[String], runs: Int) extends Named
+case class NodeDef(op: String, name: String, paramMap: ParamMap, inputs: Seq[String], runs: Int, ephemeral: Boolean) extends Named
 
 class Graph(_nodes: Map[String, Node]) {
   def apply(name: String): Node = _nodes(name)
@@ -52,7 +59,14 @@ class Graph(_nodes: Map[String, Node]) {
   def roots: Set[Node] = nodes.filter(_.dependencies.isEmpty)
 }
 
-case class Node(name: String, operator: Operator, dependencies: Seq[String], successors: Set[String], runs: Int) extends Named
+case class Node(
+    name: String,
+    operator: Operator,
+    dependencies: Seq[String],
+    successors: Set[String],
+    runs: Int,
+    ephemeral: Boolean
+) extends Named
 
 class GraphBuilder @Inject()(registry: OpRegistry) {
   def build(graphDef: GraphDef): Graph = {
@@ -65,7 +79,7 @@ class GraphBuilder @Inject()(registry: OpRegistry) {
   }
 
   private def getNode(nodeDef: NodeDef) = {
-    require(registry.contains(nodeDef.op), s"Unknown operator '${nodeDef.op}'")
+    require(registry.contains(nodeDef.op), s"Unknown operator: ${nodeDef.op}")
     val opMeta = registry(nodeDef.op)
     val args = opMeta.defn.params.map { paramDef =>
       val maybeValue = nodeDef.paramMap.get(paramDef.name).orElse(paramDef.defaultValue)
@@ -79,6 +93,6 @@ class GraphBuilder @Inject()(registry: OpRegistry) {
       } else maybeValue.get
     }.map(_.asInstanceOf[AnyRef])
     val operator = opMeta.clazz.getConstructors.head.newInstance(args: _*).asInstanceOf[Operator]
-    new Node(nodeDef.name, operator, nodeDef.inputs, Set.empty, 1)
+    new Node(nodeDef.name, operator, nodeDef.inputs, Set.empty, nodeDef.runs, nodeDef.ephemeral)
   }
 }

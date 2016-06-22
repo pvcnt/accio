@@ -86,7 +86,7 @@ class JsonExperimentParser @Inject()(registry: OpRegistry, workflowParser: Workf
     val optimization = root.getChild("optimization").map(getOptimization(paramDefs, _))
     val exploration = root.getChild("exploration").map(getExploration(paramDefs, _))
 
-    var defn = new ExperimentDef(
+    new ExperimentDef(
       name = name,
       workflow = workflow,
       paramMap = params,
@@ -95,11 +95,6 @@ class JsonExperimentParser @Inject()(registry: OpRegistry, workflowParser: Workf
       notes = notes,
       tags = tags,
       initiator = getDefaultUser)
-
-    root.getInteger("runs").foreach { runs =>
-      defn = defn.copy(workflow = defn.workflow.requireRuns(runs))
-    }
-    defn
   }
 
   private def getDefaultName(path: Path) = path.getFileName.toString.stripSuffix(".json")

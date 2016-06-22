@@ -52,12 +52,13 @@ case class WorkflowDef(id: String, graph: GraphDef, name: Option[String], owner:
   def setParams(paramMap: ParamMap): WorkflowDef = copy(graph = graph.setParams(paramMap))
 
   /**
-   * Return a copy of this workflow with a minimum number of runs propagated into the graph.
+   * Return a copy of this workflow with a number of runs propagated into the graph to nodes that
+   * would otherwise run only one time.
    *
    * @param runs Minimum number of runs
    * @return A new workflow
    */
-  def requireRuns(runs: Int): WorkflowDef = copy(graph = graph.requireRuns(runs))
+  def setRuns(runs: Int): WorkflowDef = copy(graph = graph.setRuns(runs))
 }
 
 /**

@@ -71,12 +71,16 @@ class JsonWorkflowParser @Inject()(registry: OpRegistry) extends WorkflowParser 
     val owner = root.getString("meta.owner").map(User.parse)
     val nodes = root.child("graph").elements.asScala.map(getNode).toSeq
 
-    new WorkflowDef(id, new GraphDef(nodes), name, owner)
+    var defn = new WorkflowDef(id, new GraphDef(nodes), name, owner)
+    root.getInteger("runs").foreach { runs =>
+      defn = defn.setRuns(runs)
+    }
+    defn
   }
 
   private def getNode(node: JsonNode) = {
     val opName = node.string("op")
-    require(registry.contains(opName), s"Unknown operator $opName")
+    require(registry.contains(opName), s"Unknown operator: $opName")
     val opMeta = registry(opName)
 
     val name = node.getString("name").getOrElse(opName)
@@ -92,7 +96,8 @@ class JsonWorkflowParser @Inject()(registry: OpRegistry) extends WorkflowParser 
         .map(_.elements.asScala.map(_.asText).toSeq)
         .getOrElse(Seq.empty)
     val runs = node.getInteger("runs").getOrElse(1)
+    val ephemeral = node.getBoolean("ephemeral").getOrElse(false) || opMeta.defn.ephemeral
 
-    new NodeDef(opName, name, new ParamMap(params.toMap), inputs, runs)
+    new NodeDef(opName, name, new ParamMap(params.toMap), inputs, runs, ephemeral)
   }
 }
