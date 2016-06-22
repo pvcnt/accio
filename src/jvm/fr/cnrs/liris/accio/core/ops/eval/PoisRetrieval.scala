@@ -57,9 +57,11 @@ case class PoisRetrieval(
   override def evaluate(reference: Trace, result: Trace): Seq[Metric] = {
     val refPois = clusterer.cluster(reference.records)
     val resPois = clusterer.cluster(result.records)
-    val matched = resPois.count { resPoi =>
-      refPois.exists(_.centroid.distance(resPoi.centroid) <= threshold)
-    }
+    val matched = resPois.flatMap { resPoi =>
+      refPois.zipWithIndex.find { case (refPoi, _) =>
+        refPoi.centroid.distance(resPoi.centroid) <= threshold
+      }.map(_._2).toSeq
+    }.toSet.size
     MetricUtils.informationRetrieval(refPois.size, resPois.size, matched)
   }
 }
