@@ -1,9 +1,12 @@
 ---
-layout: page
+layout: documentation
 title: Workflows & experiments definition
 ---
 
-Workflows and experiments are easily defined as JSON.
+This section covers how to define workflows and experiments easily as JSON documents.
+
+* TOC
+{:toc}
 
 ## Workflow definition
 
@@ -21,9 +24,10 @@ A workflow is a JSON object formed of the following fields.
 | graph[*].inputs | Names of nodes acting as inputs of this node. | string[] | false |
 | graph[*].params | Mapping between parameter names and values. All parameters without a default value should be specified. | object | false |
 | graph[*].runs | Number of times this node should be ran. It is only useful for nodes producing metrics. If it is defined here, the value takes precedence over the global runs value. Results of different runs will be aggregated together (i.e., distributions resulting from all runs will be merged). | integer | false |
+| graph[*].ephemeral | Force the node dataset output to be ephemeral (it can only be forced at he operator level). Ephemeral outputs are not stored as artifacts. | boolean | false |
 {: class="table table-striped"}
 
-Here is a example of a simple workflow definition:
+Here is an example of a simple workflow definition:
 
 ```json
 {
@@ -88,9 +92,53 @@ An experiment is a JSON object formed of the following fields.
 | optimization.objectives[*].threshold | Objective threshold. | double | false |
 {: class="table table-striped"}
 
+Here is an example of a simple experiment definition:
+
+```json
+{
+  "workflow": "./geoind-workflow.json",
+  "runs": 3,
+  "meta": {
+    "name": "My brand new experiment",
+    "tags": ["brand", "new"]
+  },
+  "optimization": {
+    "grid": {
+      "GeoIndistinguishability/epsilon": {
+        "ranges": [[1,0.01,0.001], [0.01,0.001,0.00001]]
+      }
+    },
+    "objectives": [
+      {
+        "type": "minimize",
+        "metric": "privacy/fscore"
+      },
+      {
+        "type": "minimize",
+        "metric": "utility/avg",
+        "threshold": 500
+      }
+    ]
+  }
+}
+```
+
+### Implicit conversion from a workflow to an experiment
+
+Any workflow can be implicitly converted into an experiment whose goal is simply to run the workflow as-is.
+You cannot run optimizations of explorations this way, but you can still define metadata through command-line arguments (cf. [CLI interface](/docs/cli-interface.html) documentation).
+
 ## Parameters
 
 ### Parameters values
+
+  * **integer, long and double:** JSON number.
+  * **string:** JSON string.
+  * **boolean:** JSON boolean.
+  * **string list:** JSON array of strings.
+  * **distance:** JSON string, formatted as `<quantity>.<unit>`, where `<quantity>` is a number and `<unit>` one of "meters", "kilometers" or "miles", either singular or plural.
+  * **duration:** JSON string, formatted as `<quantity>.<unit>`, where `<quantity>` is a number and `<unit>` one of "millis", "seconds", "minutes", "hours" or "days", either singular or plural.
+  * **timestamp:** JSON string, following [ISO 8601 format](https://www.w3.org/TR/NOTE-datetime), e.g., "2016-06-22T11:28:32Z".
 
 
 ### Parameters references

@@ -1,5 +1,5 @@
 ---
-layout: page
+layout: documentation
 title: Installing Accio
 ---
 
@@ -43,6 +43,8 @@ This will download a DMG image with an install wizard.
 
 ## Install Accio from a wrapper script
 
+TODO.
+
 ## Install Accio from a JAR
 
 You can also get the latest version of Accio as a pre-compiled JAR from [GitHub](https://github.com/pvcnt/location-privacy/releases).
@@ -52,7 +54,7 @@ You should then be able to run it the usual way:
 $ java -jar accio.jar <command> <options>...
 ```
 
-When running experiments, you will need to tune JVM memory options:
+When running experiments, you may need to tune JVM memory options, like increasing the quantity of available memory:
 
 ```bash
 $ java -Xmx8G -jar accio.jar <command> <options>...

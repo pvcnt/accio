@@ -1,4 +1,4 @@
 ---
-layout: page
+layout: documentation
 title: Command line interface
 ---
