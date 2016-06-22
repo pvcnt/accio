@@ -186,7 +186,12 @@ class GatewayController @Inject()(
     }
   }
 
-  private def toGeoJson(records: Seq[Record]) = FeatureCollection(records.map(_.toGeoJson))
+  private def toGeoJson(records: Seq[Record]) = {
+    val features = records.map { record =>
+      record.set("distance", record.point.distance(records.head.point).meters).toGeoJson
+    }
+    FeatureCollection(features)
+  }
 
   protected def authenticated[T](bearer: Option[String], requiredScopes: Scope*)(fn: AccessToken => T) = {
     bearer.flatMap(firewall.authenticate) match {
