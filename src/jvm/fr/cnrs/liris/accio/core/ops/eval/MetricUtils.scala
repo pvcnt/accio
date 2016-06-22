@@ -47,11 +47,15 @@ private[eval] object MetricUtils {
     }
   }
 
-  def precision(result: Int, matched: Int): Double =
-    if (result != 0) matched.toDouble / result else 0d
+  def precision(result: Int, matched: Int): Double = {
+    require(matched <= result, s"Matched points must be less than result points (got $matched and $result)")
+    if (result != 0) matched.toDouble / result else 1
+  }
 
-  def recall(reference: Int, matched: Int): Double =
-    if (reference != 0) matched.toDouble / reference else 0d
+  def recall(reference: Int, matched: Int): Double = {
+    require(matched <= reference, s"Matched points must be less than reference points (got $matched and $reference)")
+    if (reference != 0) matched.toDouble / reference else 0
+  }
 
   def informationRetrieval(reference: Int, result: Int, matched: Int): Seq[Metric] = {
     Seq(
