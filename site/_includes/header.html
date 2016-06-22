@@ -5,7 +5,7 @@
     </div>
     <ul class="nav navbar-nav pull-right">
       <li{% if page.nav == "docs" %} class="active"{% endif %}>
-        <a href="/docs/install.html">Docs</a>
+        <a href="{{ "/docs/install.html" | prepend: site.baseurl }}">Docs</a>
       </li>
       <li>
         <a href="https://github.com/pvcnt/location-privacy">GitHub</a>

@@ -3,18 +3,23 @@ layout: documentation
 title: Installing Accio
 ---
 
+* TOC
+{:toc}
+
 ## System requirements
 
 Supported platforms:
 
   * Linux
-  * Mac OS
+  * Mac OS X
 
 Java:
 
   * Java JDK 8 or later
 
-## Install dependencies
+## Install as a binary
+
+### Install dependencies
 
 **Ubuntu Trusty (14.04 LTS).**
 OpenJDK 8 is not available on Trusty.
@@ -41,11 +46,11 @@ JDK 8 can be downloaded from [Oracle's JDK Page](http://www.oracle.com/technetwo
 Look for "Mac OS X x64" under "Java SE Development Kit".
 This will download a DMG image with an install wizard.
 
-## Install Accio from a wrapper script
+### Install from a wrapper script
 
 TODO.
 
-## Install Accio from a JAR
+### Install from a JAR
 
 You can also get the latest version of Accio as a pre-compiled JAR from [GitHub](https://github.com/pvcnt/location-privacy/releases).
 You should then be able to run it the usual way:
@@ -69,7 +74,7 @@ $ cd location-privacy
 $ ./pants binary src/jvm/fr/cnrs/liris/accio/cli:bin
 ```
 
-If the compilation is successful, an `accio.jar` will appear in the `dist/` folder.
+If the compilation is successful, an `accio.jar` JAR will appear in the `dist/` folder.
 
 To compile from source, you might need additional dependencies.
 Alternatively, if you have [Vagrant](https://www.vagrantup.com) and [VirtualBox](https://www.virtualbox.org) installed on your machine, you can launch a development environment via `vagrant up`.

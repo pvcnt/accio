@@ -79,6 +79,7 @@ An experiment is a JSON object formed of the following fields.
 | meta.notes | Some free text notes. | string | false |
 | meta.tags | Some tags. | string[] |  false |
 | workflow | Path to a workflow definition file. It can be either a relative (starting with `./`), home relative (starting with `~`) or absolute (starting with `/`) path. | string | true |
+| runs | Override the default number of runs for each node. | integer | false |
 | params | Mapping between fully qualified names of parameters to override and new values. | object | false|
 | exploration | Exploration configuration. | object | false |
 | exploration.params | Mapping between fully qualified names of parameters to override and domains of values. | object | true |
@@ -126,7 +127,7 @@ Here is an example of a simple experiment definition:
 ### Implicit conversion from a workflow to an experiment
 
 Any workflow can be implicitly converted into an experiment whose goal is simply to run the workflow as-is.
-You cannot run optimizations of explorations this way, but you can still define metadata through command-line arguments (cf. [CLI interface](/docs/cli-interface.html) documentation).
+You cannot run optimizations of explorations this way, but you can still define metadata through command line arguments (cf. [CLI interface](cli-interface.html) documentation).
 
 ## Parameters
 

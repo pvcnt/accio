@@ -51,6 +51,8 @@ case class MakeCommandOpts(
     tags: String = "",
     @Flag(name = "notes")
     notes: String = "",
+    @Flag(name = "user")
+    user: String = "",
     @Flag(name = "runs")
     runs: Int = 1)
 
@@ -83,10 +85,13 @@ class RunCommand @Inject()(parser: ExperimentParser, executor: ExperimentExecuto
       experimentDef = experimentDef.copy(name = opts.name)
     }
     if (opts.tags.nonEmpty) {
-      experimentDef = experimentDef.copy(tags = opts.tags.split(",").toSet)
+      experimentDef = experimentDef.copy(tags = opts.tags.split(",").map(_.trim).toSet)
     }
     if (opts.notes.nonEmpty) {
       experimentDef = experimentDef.copy(notes = Some(opts.notes))
+    }
+    if (opts.user.nonEmpty) {
+      experimentDef = experimentDef.copy(initiator = User.parse(opts.user))
     }
     if (opts.runs > 1) {
       experimentDef = experimentDef.copy(workflow = experimentDef.workflow.setRuns(opts.runs))

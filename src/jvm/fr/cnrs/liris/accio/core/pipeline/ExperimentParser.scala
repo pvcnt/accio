@@ -57,7 +57,7 @@ class JsonExperimentParser @Inject()(registry: OpRegistry, workflowParser: Workf
       getExperiment(path, root)
     } else {
       logger.warn(s"Implicitly converting a workflow definition into an experiment definition at ${path.toAbsolutePath}")
-      val workflow = workflowParser.parse(path)
+      val workflow = workflowParser.parse(path).setRuns(root.getInteger("runs").getOrElse(1))
       new ExperimentDef(
         name = getDefaultName(path),
         workflow = workflow,
@@ -99,7 +99,8 @@ class JsonExperimentParser @Inject()(registry: OpRegistry, workflowParser: Workf
 
   private def getDefaultName(path: Path) = path.getFileName.toString.stripSuffix(".json")
 
-  private def getDefaultUser = User(sys.env.getOrElse("ACCIO_USERNAME", sys.props("user.name")))
+  private def getDefaultUser =
+    sys.env.get("ACCIO_USER").map(User.parse).getOrElse(User(sys.props("user.name")))
 
   private def getExploration(paramDefs: Seq[ParamDef], node: JsonNode) = {
     val paramGrid = node.getChild("grid")
