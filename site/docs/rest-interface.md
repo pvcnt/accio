@@ -1,7 +1,5 @@
 ---
 layout: documentation
 nav: docs
-title: Getting started
+title: REST interface
 ---
-
-Lorem ipsum.

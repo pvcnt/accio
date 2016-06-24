@@ -1,5 +1,6 @@
 ---
 layout: documentation
+nav: docs
 title: Command line interface
 ---
 

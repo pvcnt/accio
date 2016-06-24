@@ -1,5 +1,6 @@
 ---
 layout: documentation
+nav: docs
 title: Installing Accio
 ---
 
@@ -8,18 +9,19 @@ title: Installing Accio
 
 ## System requirements
 
-Supported platforms:
+The following are required to run Accio:
 
-  * Linux
-  * Mac OS X
+  * Platforms: Linux or Mac OS X;
+  * Java: JDK 8 or later.
 
-Java:
+## Use a binary distribution
 
-  * Java JDK 8 or later
-
-## Install as a binary
+The most straightforward way to install Accio is to fetch a binary release.
 
 ### Install dependencies
+
+Before running Accio, you need to install the Java runtime on your machine.
+The exact procedure depends on the platform.
 
 **Ubuntu Trusty (14.04 LTS).**
 OpenJDK 8 is not available on Trusty.
@@ -46,13 +48,13 @@ JDK 8 can be downloaded from [Oracle's JDK Page](http://www.oracle.com/technetwo
 Look for "Mac OS X x64" under "Java SE Development Kit".
 This will download a DMG image with an install wizard.
 
-### Install from a wrapper script
+### Run via a wrapper script
 
 TODO.
 
-### Install from a JAR
+### Run via a JAR
 
-You can also get the latest version of Accio as a pre-compiled JAR from [GitHub](https://github.com/pvcnt/location-privacy/releases).
+You can also get the latest version of Accio as a pre-compiled JAR from [GitHub releases](https://github.com/pvcnt/location-privacy/releases).
 You should then be able to run it the usual way:
 
 ```bash
@@ -66,7 +68,11 @@ $ java -Xmx8G -jar accio.jar <command> <options>...
 ```
 
 ## Compiling from source
-If you want to compile Accio from source, you will need to get the source from GitHub and built it:
+
+You can also compile Accio by yourself from the source.
+It is only needed if you want to be up-to-date with HEAD version, or want to develop Accio.
+[Pants](http://pantsbuild.org) is the build tool used for this purpose.
+To compile Accio from source, you will need to get the source from the Git repository and build it:
 
 ```bash
 $ git clone git@github.com:pvcnt/location-privacy.git
