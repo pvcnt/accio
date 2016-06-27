@@ -51,6 +51,7 @@ trait ExperimentParser {
 class JsonExperimentParser @Inject()(registry: OpRegistry, workflowParser: WorkflowParser)
     extends ExperimentParser with LazyLogging {
   override def parse(path: Path): ExperimentDef = {
+    require(path.toFile.exists && path.toFile.isFile, s"${path.toAbsolutePath} does not seem to be a valid file")
     val om = new ObjectMapper
     val root = om.readTree(path.toFile)
     if (root.has("workflow")) {

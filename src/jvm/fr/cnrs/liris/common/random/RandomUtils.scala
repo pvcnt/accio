@@ -1,5 +1,7 @@
 package fr.cnrs.liris.common.random
 
+import java.util.UUID
+
 import scala.reflect.ClassTag
 import scala.util.Random
 

@@ -16,8 +16,8 @@ class AccioModule extends AbstractModule with ScalaModule {
     bind[ExperimentParser].to[JsonExperimentParser]
     bind[WorkflowParser].to[JsonWorkflowParser]
     bind[ExperimentExecutor].to[LocalExperimentExecutor]
-    bind[ExperimentWriter].to[JsonExperimentCodec]
-    bind[ExperimentReader].to[JsonExperimentCodec]
+    bind[ReportWriter].to[JsonReportCodec]
+    bind[ReportReader].to[JsonReportCodec]
   }
 
   @Provides
@@ -68,7 +68,7 @@ class AccioModule extends AbstractModule with ScalaModule {
     val registry = new CommandRegistry
     registry.register[AnalyzeCommand]
     registry.register[RunCommand]
-    registry.register[SummarizeCommand]
+    registry.register[VisualizeCommand]
     registry.register[HelpCommand]
     registry.register[OpsCommand]
     registry

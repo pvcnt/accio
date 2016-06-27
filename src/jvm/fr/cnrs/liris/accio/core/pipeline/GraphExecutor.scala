@@ -23,12 +23,12 @@ class GraphExecutor @Inject()(env: DatasetEnv) extends StrictLogging {
       val startedAt = Instant.now()
       val artifacts = run(graph, node, outputs.toMap)
       outputs ++= artifacts.map(art => art.name -> art)
-      nodeStats(node.name) = ExecStats(startedAt, Instant.now(), successful = true, StorageUnit.zero)
+      nodeStats(node.name) = ExecStats(startedAt, Some(Instant.now()), successful = Some(true))
       scheduled ++= node.successors.map(graph(_)).filter(_.dependencies.forall(outputs.contains))
       logger.trace(s"Completed execution of node ${node.name}")
     }
-    val stats = ExecStats(startedAt, Instant.now(), successful = true, StorageUnit.zero)
-    Report(stats, Map.empty, outputs.values.toSeq)
+    val stats = ExecStats(startedAt, Some(Instant.now()), successful = Some(true))
+    Report(stats, nodeStats.toMap, outputs.values.toSeq)
   }
 
   private def run(graph: Graph, node: Node, outputs: Map[String, Artifact]): Seq[Artifact] = {

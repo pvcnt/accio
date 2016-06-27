@@ -39,9 +39,11 @@ import com.google.inject.Guice
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.common.flags.{Flag, FlagsData, FlagsParser, FlagsProvider}
 import fr.cnrs.liris.common.util.FileUtils
+import fr.cnrs.liris.accio.cli.commands._
 import fr.cnrs.liris.profiler.{ProfilePhase, ProfiledTaskKinds, Profiler}
 
 import scala.reflect.runtime.universe._
+import scala.util.control.NonFatal
 
 object AccioAppMain extends AccioApp
 
@@ -72,7 +74,20 @@ class AccioApp extends StrictLogging {
     val command = injector.getInstance(meta.clazz)
 
     Profiler.markPhase(ProfilePhase.Exec)
-    val exitCode = command.execute(flags, reporter)
+    val exitCode = try {
+      command.execute(flags, reporter)
+    } catch {
+      case e: IllegalArgumentException =>
+        reporter.writeln(s"<error>${e.getMessage.stripPrefix("requirement failed:").trim}</error>")
+        ExitCode.RuntimeError
+      case e: RuntimeException =>
+        reporter.writeln(s"<error>${e.getMessage}</error>")
+        ExitCode.RuntimeError
+      case NonFatal(e) =>
+        reporter.writeln(s"<error>${e.getMessage}</error>")
+        e.getStackTrace.foreach(elem => reporter.writeln(s"  <error>$elem</error>"))
+        ExitCode.InternalError
+    }
 
     Profiler.markPhase(ProfilePhase.Finish)
     maybeStopProfiler(launchFlags)

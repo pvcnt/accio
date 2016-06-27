@@ -34,7 +34,6 @@ trait BaseRecordReaderSpec extends UnitSpec with BeforeAndAfter {
     seq should have size expected.size
     seq.zipWithIndex.foreach { case (record, idx) =>
       util.Arrays.equals(record.bytes, expected(idx)) shouldBe true
-      record.url shouldBe rootPath.resolve(filename).toString
       record.labels shouldBe labels
     }
   }

@@ -36,7 +36,7 @@ import java.nio.file.Paths
 
 import com.google.inject.Inject
 import fr.cnrs.liris.accio.cli.{Command, Reporter}
-import fr.cnrs.liris.accio.core.pipeline.ExperimentReader
+import fr.cnrs.liris.accio.core.pipeline.ReportReader
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.util.FileUtils
 
@@ -53,7 +53,7 @@ case class SummarizeCommandOpts(
   name = "summarize",
   help = "Generate summaries from previously generated reports",
   allowResidue = true)
-class SummarizeCommand @Inject()(reader: ExperimentReader) extends AccioCommand[SummarizeCommandOpts] {
+class SummarizeCommand @Inject()(reader: ReportReader) extends AccioCommand[SummarizeCommandOpts] {
 
   def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     val opts = flags.as[SummarizeCommandOpts]

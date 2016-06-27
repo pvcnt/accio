@@ -36,33 +36,53 @@ import java.nio.charset.Charset
 
 import com.google.common.base.Charsets
 
-trait Encoder[T] extends Serializable {
-  def encode(obj: T): Array[Byte]
+/**
+ * An encoder converts a plain object into a (binary) record.
+ *
+ * @tparam T Plain object type
+ */
+trait Encoder[T] {
+  /**
+   * Encodes an object into a binary record.
+   *
+   * @param obj Plain object
+   * @return Binary record
+   */
+  def encode(obj: T): EncodedRecord
 }
 
-trait Decoder[T] extends Serializable {
+/**
+ * A decoder converts a binary (record) into a plain object.
+ *
+ * @tparam T Plain object type
+ */
+trait Decoder[T] {
+  /**
+   * Decodes a binary record into an object.
+   *
+   * @param record Binary record
+   * @return Plain object
+   */
   def decode(record: EncodedRecord): Option[T]
 }
 
-trait Codec[T] extends Encoder[T] with Decoder[T]
-
 /**
- * Codec doing nothing and handling raw bytes sequences.
+ * Codec doing no conversion.
  */
-class IdentityCodec extends Codec[Array[Byte]] {
+class IdentityCodec extends Encoder[Array[Byte]] with Decoder[Array[Byte]] {
   override def decode(record: EncodedRecord): Option[Array[Byte]] = Some(record.bytes)
 
-  override def encode(obj: Array[Byte]): Array[Byte] = obj
+  override def encode(obj: Array[Byte]): EncodedRecord = EncodedRecord(obj)
 }
 
 /**
  * Codec handling the (de)serialization of strings from bytes.
  *
- * @param charset Charset to use (UTF-8 by default)
+ * @param charset Charset to use
  */
-class StringCodec(charset: Charset = Charsets.UTF_8) extends Codec[String] {
+class StringCodec(charset: Charset = Charsets.UTF_8) extends Encoder[String] with Decoder[String] {
   override def decode(record: EncodedRecord): Option[String] =
     Some(new String(record.bytes, charset))
 
-  override def encode(obj: String): Array[Byte] = obj.getBytes(charset)
+  override def encode(obj: String): EncodedRecord = EncodedRecord(obj.getBytes(charset))
 }

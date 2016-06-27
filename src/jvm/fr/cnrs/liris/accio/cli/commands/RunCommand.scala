@@ -40,7 +40,8 @@ import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.cli.{Command, Reporter}
 import fr.cnrs.liris.accio.core.pipeline._
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
-import fr.cnrs.liris.common.util.FileUtils
+import fr.cnrs.liris.common.util.{FileUtils, HashUtils}
+import org.joda.time.Instant
 
 case class MakeCommandOpts(
     @Flag(name = "workdir")
@@ -79,7 +80,7 @@ class RunCommand @Inject()(parser: ExperimentParser, executor: ExperimentExecuto
   }
 
   private def make(opts: MakeCommandOpts, workDir: Path, url: String) = {
-    val id = UUID.randomUUID().toString
+    val id = HashUtils.sha1(UUID.randomUUID().toString)
     var experimentDef = parser.parse(Paths.get(FileUtils.replaceHome(url)))
     if (opts.name.nonEmpty) {
       experimentDef = experimentDef.copy(name = opts.name)
@@ -96,6 +97,7 @@ class RunCommand @Inject()(parser: ExperimentParser, executor: ExperimentExecuto
     if (opts.runs > 1) {
       experimentDef = experimentDef.copy(workflow = experimentDef.workflow.setRuns(opts.runs))
     }
-    executor.execute(workDir, id, experimentDef)
+    val experiment = ExperimentRun(id, experimentDef, ExecStats(Instant.now))
+    executor.execute(workDir, experiment)
   }
 }

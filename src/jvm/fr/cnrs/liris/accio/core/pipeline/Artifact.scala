@@ -1,7 +1,7 @@
 package fr.cnrs.liris.accio.core.pipeline
 
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type
-import com.fasterxml.jackson.annotation.{JsonProperty, JsonSubTypes, JsonTypeInfo}
+import com.fasterxml.jackson.annotation.{JsonIgnoreProperties, JsonProperty, JsonSubTypes, JsonTypeInfo}
 import fr.cnrs.liris.accio.core.dataset.Dataset
 import fr.cnrs.liris.accio.core.model.Trace
 
@@ -9,6 +9,7 @@ import fr.cnrs.liris.accio.core.model.Trace
  * An artifact is something produced by an operator and possibly consumed by another operator.
  * Artifacts have a unique name among all artifacts produced by a given graph.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes(Array(
   new Type(value = classOf[StoredDatasetArtifact], name = "dataset"),

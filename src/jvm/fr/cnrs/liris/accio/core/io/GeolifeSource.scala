@@ -83,8 +83,8 @@ class GeolifeIndex(url: String) extends AbstractIndex {
 }
 
 class GeolifeDecoder extends Decoder[Record] {
-  override def decode(ser: EncodedRecord): Option[Record] = {
-    val line = new String(ser.bytes)
+  override def decode(record: EncodedRecord): Option[Record] = {
+    val line = new String(record.bytes)
     val parts = line.trim.split(",")
     if (parts.length < 7) {
       None
@@ -92,9 +92,9 @@ class GeolifeDecoder extends Decoder[Record] {
       val lat = parts(0).toDouble
       val lng = parts(1).toDouble
       val time = Instant.parse(s"${parts(5)}T${parts(6)}Z")
-      val username = GeolifeSource.extractUser(Paths.get(ser.url))
+      val user = record.labels.mkString(",")
       try {
-        Some(Record(username, LatLng.degrees(lat, lng).toPoint, time))
+        Some(Record(user, LatLng.degrees(lat, lng).toPoint, time))
       } catch {
         //Error in original data, skip record.
         case e: IllegalArgumentException => None

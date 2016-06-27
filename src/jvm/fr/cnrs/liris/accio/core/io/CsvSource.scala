@@ -53,7 +53,7 @@ class CsvDecoder(charset: Charset = Charsets.UTF_8) extends Decoder[Record] with
     val line = new String(record.bytes, charset).trim
     val parts = line.split(",")
     if (parts.length != 3) {
-      logger.warn(s"Invalid line in ${record.url}: $line")
+      logger.warn(s"Invalid line: $line")
       None
     } else {
       val x = parts(0).toDouble
@@ -66,6 +66,8 @@ class CsvDecoder(charset: Charset = Charsets.UTF_8) extends Decoder[Record] with
 }
 
 class CsvEncoder extends Encoder[Record] {
-  override def encode(obj: Record): Array[Byte] =
-    s"${obj.user},${obj.point.x},${obj.point.y},${obj.time.millis / 1000}".getBytes
+  override def encode(obj: Record): EncodedRecord = {
+    val bytes = s"${obj.user},${obj.point.x},${obj.point.y},${obj.time.millis / 1000}".getBytes
+    EncodedRecord(bytes, Set(obj.user))
+  }
 }

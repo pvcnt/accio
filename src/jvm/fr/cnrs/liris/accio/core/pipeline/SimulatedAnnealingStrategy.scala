@@ -24,6 +24,8 @@ class SimulatedAnnealingStrategy(graphUnderOptimization: GraphDef, optimization:
       case m: AnnealingMeta => next(graphDef, m, report)
     }
 
+  override def name(graphDef: GraphDef): Option[String] = None
+
   private def next(graphDef: GraphDef, meta: AnnealingMeta, report: Report) = {
     val solution = getSolution(graphDef)
     val cost = costEvaluator.compute(report)

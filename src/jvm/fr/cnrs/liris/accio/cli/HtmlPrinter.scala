@@ -30,16 +30,44 @@
  * knowledge of the CeCILL-B license and that you accept its terms.
  */
 
-package fr.cnrs.liris.common.io.source
+package fr.cnrs.liris.accio.cli
 
-trait DataSource[T] extends Serializable {
-  def index: Index
+import java.io.PrintStream
 
-  def decoder: Decoder[T]
+/**
+ * Utility function for writing HTML data to a [[PrintStream]].
+ */
+class HtmlPrinter(out: PrintStream) {
+  /**
+   * Print an open tag with attributes and possibly content and increase indentation level.
+   *
+   * All array elements are taken in pairs for attributes and their values. If odd, the last
+   * element is taken as the content of the element. It is printed directly after the opening tag.
+   *
+   * @param tagName                  Tag name
+   * @param attributesAndContent must have the form: attr1, value1, attr2, value2, ..., content
+   */
+  def tag(tagName: String, attributesAndContent: Any*)(fn: => Unit): Unit = {
+    out.print(s"<$tagName")
+    for (index <- 0 until (attributesAndContent.length - 1) by 2) {
+      out.print(s""" ${attributesAndContent(index)}="${attributesAndContent(index + 1)}"""")
+    }
+    out.print(">")
+    if (attributesAndContent.length % 2 == 1) {
+      out.print(attributesAndContent.last)
+    }
+    fn
+    out.print(s"</$tagName>")
+  }
 
-  def reader: RecordReader
+  /**
+   * Print a single element with attributes and possibly content.
+   */
+  def element(tagName: String, attributesAndContent: Any*): Unit = {
+    tag(tagName, attributesAndContent: _*)({})
+  }
 }
 
-trait DataSink[T] {
-  def encoder: Encoder[T]
+object HtmlPrinter {
+  implicit def toHtmlPrinter(out: PrintStream): HtmlPrinter = new HtmlPrinter(out)
 }

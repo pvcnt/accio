@@ -50,6 +50,8 @@ object ExitCode {
   val Success = ExitCode(0, "SUCCESS")
   val ParsingFailure = ExitCode(1, "PARSING_FAILURE")
   val CommandLineError = ExitCode(2, "COMMAND_LINE_ERROR")
+  val RuntimeError = ExitCode(3, "RUNTIME_ERROR")
+  val InternalError = ExitCode(4, "INTERNAL_ERROR")
 }
 
 /**

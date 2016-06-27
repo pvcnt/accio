@@ -86,7 +86,7 @@ abstract class Dataset[T: ClassTag](val env: DatasetEnv) {
 
   def foreach(fn: T => Unit): Unit = env.submit[T, Unit](this, keys, _.foreach(fn))
 
-  def write(path: Path): Unit = {}
+  def save(url: String): Unit = {}
 
   override def toString: String =
     MoreObjects.toStringHelper(this)

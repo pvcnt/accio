@@ -35,11 +35,10 @@ package fr.cnrs.liris.common.io.source
 import java.nio.charset.Charset
 
 import com.google.common.base.Charsets
-import fr.cnrs.liris.common.io.getter.Getter
 import fr.cnrs.liris.common.collect.BaseIterator
+import fr.cnrs.liris.common.io.getter.Getter
 
 import scala.collection.AbstractIterable
-
 
 /**
  * A record reader extracts binary records from a file. Implementations should be thread-safe.
@@ -54,13 +53,12 @@ trait RecordReader extends Serializable {
 }
 
 /**
- * An encoded (or binary) record stored inside a file.
+ * An encoded (or binary) record.
  *
- * @param url    URL of the file containing this record
- * @param labels Labels applied on this record
  * @param bytes  Binary representation
+ * @param labels Labels applied on this record
  */
-case class EncodedRecord(url: String, labels: Set[String], bytes: Array[Byte])
+case class EncodedRecord(bytes: Array[Byte], labels: Set[String] = Set.empty)
 
 abstract class BaseRecordReader extends RecordReader {
   override final def read(file: IndexedFile): Iterable[EncodedRecord] = {
@@ -76,7 +74,7 @@ abstract class BaseRecordReader extends RecordReader {
           } else {
             idx += 1
           }
-          res.map(bytes => EncodedRecord(file.url, file.labels, bytes))
+          res.map(bytes => EncodedRecord(bytes, file.labels))
         }
       }
     }

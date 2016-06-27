@@ -70,6 +70,11 @@ class ParamMap(protected val map: Map[String, Any]) {
    */
   def toSeq: Seq[(String, Any)] = map.toSeq.sortBy(_._1)
 
+  /**
+   * Return this parameters map viewed as a Scala map between parameters and values.
+   */
+  def toMap: Map[String, Any] = map
+
   override def toString: String = map.map { case (name, value) => s"$name=$value" }.mkString(", ")
 }
 

@@ -50,8 +50,8 @@ class CabspottingIndex(url: String) extends AbstractIndex {
 }
 
 class CabspottingDecoder extends Decoder[Record] {
-  override def decode(ser: EncodedRecord): Option[Record] = {
-    val line = new String(ser.bytes)
+  override def decode(record: EncodedRecord): Option[Record] = {
+    val line = new String(record.bytes)
     val parts = line.trim.split(" ")
     if (parts.length < 4) {
       None
@@ -59,9 +59,9 @@ class CabspottingDecoder extends Decoder[Record] {
       val lat = parts(0).toDouble
       val lng = parts(1).toDouble
       val time = new Instant(parts(3).toLong * 1000)
-      val username = CabspottingSource.extractUser(Paths.get(ser.url))
+      val user = record.labels.mkString(",")
       try {
-        Some(Record(username, LatLng.degrees(lat, lng).toPoint, time))
+        Some(Record(user, LatLng.degrees(lat, lng).toPoint, time))
       } catch {
         //Error in original data, skip record.
         case e: IllegalArgumentException => None

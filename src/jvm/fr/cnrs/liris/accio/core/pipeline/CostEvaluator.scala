@@ -3,7 +3,17 @@ package fr.cnrs.liris.accio.core.pipeline
 import breeze.stats._
 import com.typesafe.scalalogging.LazyLogging
 
+/**
+ * Evaluate the cost resulting of a report according to a set of objectives.
+ *
+ * @param objectives Objectives
+ */
 class CostEvaluator(objectives: Set[Objective]) extends LazyLogging {
+  /**
+   * Compute the cost associated with a given report.
+   *
+   * @param report Report
+   */
   def compute(report: Report): Double = objectives.map(compute(_, report)).sum
 
   private def compute(objective: Objective, report: Report): Double = {

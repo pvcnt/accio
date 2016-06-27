@@ -14,6 +14,7 @@ scala_library(
         'src/jvm/fr/cnrs/liris/common/util',
         'src/jvm/fr/cnrs/liris/common/reflect',
         'src/jvm/fr/cnrs/liris/common/flags',
+        'src/jvm/fr/cnrs/liris/common/stats',
         '3rdparty/jvm:scala-logging',
         '3rdparty/jvm:scala-guice',
     ],
