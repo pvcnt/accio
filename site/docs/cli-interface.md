@@ -61,3 +61,9 @@ If this option is not specified, the person who launched an experiment is automa
   * The current shell user, in which case no email address can be inferred.
 
 ## Generating reports
+
+## Built-in documentation
+
+Accio comes with built-in documentation.
+`accio help` enumerates all available commands and their options.
+`accio ops` enumerates all available operators, their inputs, parameters and outputs.
