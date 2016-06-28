@@ -2,7 +2,8 @@ package fr.cnrs.liris.accio.core.pipeline
 
 import java.nio.file.Path
 
-import org.joda.time.Instant
+import com.fasterxml.jackson.annotation.JsonProperty
+import org.joda.time.{Duration, Instant}
 
 case class ExperimentRun(
     id: String,
@@ -36,7 +37,10 @@ case class Report(
 case class ExecStats(
     startedAt: Instant,
     completedAt: Option[Instant] = None,
-    successful: Option[Boolean] = None)
+    successful: Option[Boolean] = None) {
+  @JsonProperty
+  def duration: Option[Duration] = completedAt.map(end => Duration.millis(end.getMillis - startedAt.getMillis))
+}
 
 /**
  * A run is a particular instantiation of a graph, where everything is well defined (i.e., all

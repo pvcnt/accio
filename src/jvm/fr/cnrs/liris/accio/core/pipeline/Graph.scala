@@ -15,6 +15,9 @@ case class GraphDef(nodes: Seq[NodeDef]) {
     new ParamMap(map)
   }
 
+  def hasSameStructure(other: GraphDef): Boolean =
+    other.nodes.size == nodes.size && nodes.forall(n => other.nodes.exists(_.hasSameStructure(n)))
+
   /**
    * Return a copy of this graph with new parameters propagated into the nodes.
    *
@@ -49,7 +52,10 @@ case class GraphDef(nodes: Seq[NodeDef]) {
   }
 }
 
-case class NodeDef(op: String, name: String, paramMap: ParamMap, inputs: Seq[String], runs: Int, ephemeral: Boolean) extends Named
+case class NodeDef(op: String, name: String, paramMap: ParamMap, inputs: Seq[String], runs: Int, ephemeral: Boolean) extends Named {
+  def hasSameStructure(other: NodeDef): Boolean =
+    other.op == op && other.name == name && other.inputs == inputs
+}
 
 class Graph(_nodes: Map[String, Node]) {
   def apply(name: String): Node = _nodes(name)

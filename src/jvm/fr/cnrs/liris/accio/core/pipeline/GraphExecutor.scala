@@ -1,12 +1,11 @@
 package fr.cnrs.liris.accio.core.pipeline
 
 import com.google.inject.Inject
-import com.twitter.util.StorageUnit
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.dataset.{Dataset, DatasetEnv}
-import fr.cnrs.liris.common.util.Requirements._
 import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.model.Trace
+import fr.cnrs.liris.common.util.Requirements._
 import org.joda.time.Instant
 
 import scala.collection.mutable
@@ -58,27 +57,31 @@ class GraphExecutor @Inject()(env: DatasetEnv) extends StrictLogging {
   }
 
   private def run(transformer: Transformer, nodeName: String, inputs: Seq[Dataset[Trace]]) = {
-    requireState(inputs.size == 1, s"Transformer requires exacly one input (got ${inputs.size})")
+    requireState(inputs.size == 1, s"Transformer requires exactly one input (got ${inputs.size})")
     Seq(DatasetArtifact(nodeName, inputs.head.flatMap(transformer.transform)))
   }
 
   private def run(analyzer: Analyzer, nodeName: String, runs: Int, inputs: Seq[Dataset[Trace]]) = {
-    requireState(inputs.size == 1, s"Analyzer requires exacly one input (got ${inputs.size})")
-    val metrics = Array.fill(runs)(inputs.head.flatMap(analyzer.analyze).toArray).flatten
+    requireState(inputs.size == 1, s"Analyzer requires exactly one input (got ${inputs.size})")
+    val metrics = Array.fill(runs) {
+      inputs.head.flatMap(trace => analyzer.analyze(trace).map(metric => (trace.user, metric))).toArray
+    }.flatten
     getDistributions(nodeName, metrics)
   }
 
   private def run(evaluator: Evaluator, nodeName: String, runs: Int, inputs: Seq[Dataset[Trace]]) = {
     requireState(inputs.size == 2, s"Evaluator requires exactly two inputs (got ${inputs.size})")
     val metrics = inputs.head.zip(inputs.last).flatMap { case (ref, res) =>
-      evaluator.evaluate(ref, res)
+      require(ref.user == res.user, s"Trace mismatch: ${ref.user} / ${res.user}")
+      Seq.fill(runs)(evaluator.evaluate(ref, res).map(metric => (ref.user, metric))).flatten
     }.toArray
     getDistributions(nodeName, metrics)
   }
 
-  private def getDistributions(nodeName: String, metrics: Seq[Metric]) = {
-    metrics.groupBy(_.name)
-        .map { case (name, values) => DistributionArtifact(s"$nodeName/$name", values.map(_.value)) }
-        .toSeq
-  }
+  private def getDistributions(nodeName: String, metrics: Array[(String, Metric)]) =
+    metrics
+        .groupBy(_._2.name)
+        .map { case (name, values) =>
+          DistributionArtifact(s"$nodeName/$name", values.map { case (k, v) => (k, v.value) })
+        }.toSeq
 }

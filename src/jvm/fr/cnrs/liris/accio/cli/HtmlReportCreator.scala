@@ -36,7 +36,7 @@ import java.io.PrintStream
 import java.util.concurrent.atomic.AtomicInteger
 
 import fr.cnrs.liris.accio.cli.HtmlPrinter._
-import fr.cnrs.liris.accio.core.pipeline.{Artifact, DistributionArtifact, ScalarArtifact, StoredDatasetArtifact}
+import fr.cnrs.liris.accio.core.pipeline._
 import fr.cnrs.liris.common.stats.{AggregatedStats, Distribution}
 import fr.cnrs.liris.common.util.MathUtils.roundAt4
 
@@ -67,6 +67,11 @@ class HtmlReportCreator(showArtifacts: Set[String] = Set.empty, showParameters: 
 
   private def printNav(out: PrintStream) = {
     out.tag("ul", "class", "nav nav-tabs") {
+      if (showGraph) {
+        out.tag("li") {
+          out.element("a", "href", "#tab-graph", "data-toggle", "tab", "Execution graph")
+        }
+      }
       if (showArtifacts.nonEmpty) {
         out.tag("li", "class", "active") {
           out.element("a", "href", "#tab-evals", "data-toggle", "tab", "Artifacts")
@@ -77,16 +82,16 @@ class HtmlReportCreator(showArtifacts: Set[String] = Set.empty, showParameters: 
           out.element("a", "href", "#tab-params", "data-toggle", "tab", "Parameters")
         }
       }
-      if (showGraph) {
-        out.tag("li") {
-          out.element("a", "href", "#tab-params", "data-toggle", "tab", "Parameters")
-        }
-      }
     }
   }
 
   private def printContent(out: PrintStream, reportStats: ReportStatistics) = {
     out.tag("div", "class", "tab-content") {
+      if (showGraph) {
+        out.tag("div", "class", "tab-pane active", "id", "tab-graph") {
+          reportStats.runs.head.graphDef
+        }
+      }
       if (showArtifacts.nonEmpty) {
         out.tag("div", "class", "tab-pane active", "id", "tab-evals") {
           reportStats
@@ -97,6 +102,7 @@ class HtmlReportCreator(showArtifacts: Set[String] = Set.empty, showParameters: 
         if (showParameters.nonEmpty) {
           out.tag("div", "class", "tab-pane", "id", "tab-params") {
             out.tag("div", "class", "row") {
+              reportStats.similarGraphs.filter(_.size > 1).foreach(printParameters(out, _))
               //reportStats.reports.filter(_.isOptimization).foreach(report => printSolutionChart(out, report))
             }
           }
@@ -110,25 +116,40 @@ class HtmlReportCreator(showArtifacts: Set[String] = Set.empty, showParameters: 
       artifacts.head._2 match {
         case _: ScalarArtifact =>
           require(artifacts.values.forall(_.isInstanceOf[ScalarArtifact]))
-        //printScalarArtifacts(out, name, artifacts.asInstanceOf[Map[String, ScalarArtifact]])
         case _: DistributionArtifact =>
           require(artifacts.values.forall(_.isInstanceOf[DistributionArtifact]))
-          printDistributionArtifacts(out, name, artifacts.asInstanceOf[Map[String, DistributionArtifact]])
+          printDistributionArtifacts(out, name, normalizeArtifacts[DistributionArtifact](artifacts))
         case _: StoredDatasetArtifact =>
           require(artifacts.values.forall(_.isInstanceOf[StoredDatasetArtifact]))
       }
     }
   }
 
+  private def normalizeArtifacts[T <: Artifact](artifacts: Map[String, Any]): Map[String, T] = {
+    val multiplePrefixes = artifacts.keySet.map(_.split("/").head).size > 1
+    artifacts.map { case (name, art) =>
+      val key = if (multiplePrefixes) name else name.split("/").tail.mkString("/")
+      key -> art
+    }.asInstanceOf[Map[String, T]]
+  }
+
   private def printDistributionArtifacts(out: PrintStream, title: String, artifacts: Map[String, DistributionArtifact]) = {
-    val distributions = artifacts.map { case (name, dist) => name -> Distribution(dist.values) }
+    val distributions = artifacts.map { case (name, art) => name -> Distribution(art.values) }
     printDistributions(out, title, distributions)
     artifacts.foreach { case (name, dist) =>
       printStats(out, AggregatedStats(dist.values), Some(name))
     }
   }
 
-  private def printParamChart(out: PrintStream, title: String, dist: Distribution[String]): Unit = {
+  private def printParameters(out: PrintStream, graphs: Seq[GraphDef]) = {
+    val params = graphs
+        .flatMap(_.nodes)
+        .flatMap(node => node.paramMap.toSeq.map { case (name, value) => s"${node.name}/$name" -> value })
+        .groupBy(_._1)
+        .map { case (name, values) => name -> values.map(_._2) }
+  }
+
+  private def printCategoricalParameter(out: PrintStream, title: String, dist: Distribution[String]): Unit = {
     if (dist.size > 1) {
       val id = s"chart-${idGenerator.incrementAndGet()}"
       //out.tag("div", "class", "col-sm-6") {
@@ -148,7 +169,7 @@ class HtmlReportCreator(showArtifacts: Set[String] = Set.empty, showParameters: 
     }
   }
 
-  private def printParamVariability(out: PrintStream, title: String, distByUser: Map[String, Distribution[Double]]) = {
+  private def printScalarParameter(out: PrintStream, title: String, distByUser: Map[String, Distribution[Double]]) = {
     val statsByUser = distByUser.values.map(_.toStats).toSeq
     out.tag("div", "class", "col-sm-6") {
       val stddevSeries = statsByUser.filter(_.n > 1).map(_.stddev)
@@ -177,7 +198,7 @@ class HtmlReportCreator(showArtifacts: Set[String] = Set.empty, showParameters: 
     }
   }
 
-  private def printScatter(out: PrintStream, title: String, cdfs: Map[String, Seq[(Double, Double)]], moveLegend: Boolean = false, lines: Boolean = true) = {
+  private def printScatter(out: PrintStream, title: String, cdfs: Map[String, Seq[(Double, Double)]], lines: Boolean = true) = {
     val id = s"chart-${idGenerator.incrementAndGet()}"
     out.element("div", "id", id)
     out.tag("script") {
@@ -195,9 +216,9 @@ class HtmlReportCreator(showArtifacts: Set[String] = Set.empty, showParameters: 
       out.println("];")
       out.print(s"Plotly.newPlot('$id',data,")
       out.print(s"{margin:{b:60,t:50,l:40,r:40},title:'$title'")
-      if (moveLegend) {
+      /*if (moveLegend) {
         out.print(",legend:{y:0.1,x:0.25}")
-      }
+      }*/
       out.print("},{showLink:false, displaylogo:false}")
       out.println(");")
       out.println("})();")

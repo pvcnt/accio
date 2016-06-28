@@ -68,11 +68,14 @@ case class ScalarArtifact(name: String, value: Double) extends Artifact {
 }
 
 /**
- * An artifact holding a metric as a distribution of double.
+ * An artifact holding a metric as a distribution of double values, each one being associated to a
+ * given user.
  *
- * @param name   Artifact unique name
- * @param values List of double values
+ * @param name Artifact unique name
+ * @param dist Distribution of (user, double)'s
  */
-case class DistributionArtifact(name: String, values: Seq[Double]) extends Artifact {
+case class DistributionArtifact(name: String, dist: Seq[(String, Double)]) extends Artifact {
   override def `type`: String = "distribution"
+
+  def values: Seq[Double] = dist.map(_._2)
 }
