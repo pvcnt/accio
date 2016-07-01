@@ -1,14 +1,12 @@
 package fr.cnrs.liris.accio.core.io
 
-import java.io.File
-import java.nio.file.{Path, Paths}
+import java.nio.file.{Files, Path, Paths}
 
-import fr.cnrs.liris.common.io.source._
-import fr.cnrs.liris.common.geo.LatLng
+import fr.cnrs.liris.accio.core.dataset.{DataSource, Decoder, TextLineDecoder}
 import fr.cnrs.liris.accio.core.model.{Record, Trace}
+import fr.cnrs.liris.common.geo.LatLng
 import org.joda.time.Instant
 
-import scala.reflect._
 import scala.sys.process._
 
 /**
@@ -16,12 +14,34 @@ import scala.sys.process._
  * Each trace is stored inside its own file, newest records first.
  */
 case class CabspottingSource(url: String) extends DataSource[Trace] {
-  override val decoder = new TraceDecoder(new CabspottingDecoder)
-  override val reader = new WholeFileReader
-  override val index = new CabspottingIndex(url)
+  private[this] val path = Paths.get(url)
+  private[this] val decoder = new TextLineDecoder(new CabspottingDecoder)
+
+  override lazy val keys = path.toFile
+    .listFiles
+    .filter(_.getName.startsWith("new_"))
+    .map(_.toPath.getFileName.toString.drop(4).dropRight(4))
+    .toSeq
+    .sorted
+
+  override def read(key: String): Iterable[Trace] = {
+    val records = decoder.decode(key, Files.readAllBytes(path.resolve(s"new_$key.txt"))).getOrElse(Seq.empty)
+    if (records.nonEmpty) Iterable(Trace(records)) else Iterable.empty
+  }
 }
 
+/**
+ * Factory for [[CabspottingSource]].
+ */
 object CabspottingSource {
+  /**
+   * Download the Cabspotting dataset from Crawdad. Credentials are needed.
+   *
+   * @param dest            Destination path
+   * @param crawdadUsername Crawdad username
+   * @param crawdadPassword Crawdad password
+   * @return A Cabspotting source
+   */
   def download(dest: Path, crawdadUsername: String, crawdadPassword: String): CabspottingSource = {
     val tarFile = dest.resolve("cabspotting.tar.gz").toFile
     var exitCode = (s"curl -u $crawdadUsername:$crawdadPassword -q http://uk.crawdad.org//download/epfl/mobility/cabspottingdata.tar.gz" #> tarFile).!
@@ -35,23 +55,14 @@ object CabspottingSource {
     tarFile.delete()
     new CabspottingSource(dest.toAbsolutePath.toString)
   }
-
-  private[io] def extractUser(path: Path): String = path.getFileName.toString.drop(4).dropRight(4)
 }
 
-class CabspottingIndex(url: String) extends AbstractIndex {
-  override protected def getFiles: Set[IndexedFile] =
-    new File(url)
-        .listFiles
-        .filter(_.getName.startsWith("new_"))
-        .map(_.toPath)
-        .map(path => IndexedFile(path.toString, labels = Set(CabspottingSource.extractUser(path))))
-        .toSet
-}
-
+/**
+ * Decoder decoding a line of Cabspotting file into a record.
+ */
 class CabspottingDecoder extends Decoder[Record] {
-  override def decode(record: EncodedRecord): Option[Record] = {
-    val line = new String(record.bytes)
+  override def decode(key: String, bytes: Array[Byte]): Option[Record] = {
+    val line = new String(bytes)
     val parts = line.trim.split(" ")
     if (parts.length < 4) {
       None
@@ -59,9 +70,8 @@ class CabspottingDecoder extends Decoder[Record] {
       val lat = parts(0).toDouble
       val lng = parts(1).toDouble
       val time = new Instant(parts(3).toLong * 1000)
-      val user = record.labels.mkString(",")
       try {
-        Some(Record(user, LatLng.degrees(lat, lng).toPoint, time))
+        Some(Record(key, LatLng.degrees(lat, lng).toPoint, time))
       } catch {
         //Error in original data, skip record.
         case e: IllegalArgumentException => None

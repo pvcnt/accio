@@ -19,7 +19,7 @@ case class EventSourceOp(
     kind: String = "csv",
     @Param(help = "Sampling ratio")
     sample: Option[Double],
-    @Param(help = "User identifiers")
+    @Param(help = "Users to include")
     users: Seq[String]
 ) extends Source {
 

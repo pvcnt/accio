@@ -10,7 +10,6 @@ scala_library(
         'src/jvm/fr/cnrs/liris/accio/core/ops/source',
         'src/jvm/fr/cnrs/liris/accio/core/io',
         'src/jvm/fr/cnrs/liris/accio/core/dataset',
-        'src/jvm/fr/cnrs/liris/common/io/source',
         'src/jvm/fr/cnrs/liris/common/util',
         'src/jvm/fr/cnrs/liris/common/reflect',
         'src/jvm/fr/cnrs/liris/common/flags',

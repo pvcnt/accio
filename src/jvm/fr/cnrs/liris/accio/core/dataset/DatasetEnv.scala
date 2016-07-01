@@ -3,7 +3,6 @@ package fr.cnrs.liris.accio.core.dataset
 import java.util.concurrent.Executors
 
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.common.io.source.{DataSource, Decoder, Index, RecordReader}
 
 import scala.collection.immutable.TreeMap
 import scala.concurrent.duration.Duration
@@ -27,35 +26,29 @@ class DatasetEnv(level: Int) extends StrictLogging {
   /**
    * Create a new dataset from an index, a record reader and a decoder.
    *
-   * @param index   A file index
-   * @param reader  A record reader
-   * @param decoder A record decoder
+   * @param source Data source
    * @tparam T Type of elements
    */
-  def read[T: ClassTag](index: Index, reader: RecordReader, decoder: Decoder[T]): Dataset[T] =
-    new SourceDataset(index, reader, decoder, this)
-
-  def read[T: ClassTag](source: DataSource[T]): Dataset[T] =
-    new SourceDataset(source.index, source.reader, source.decoder, this)
+  def read[T: ClassTag](source: DataSource[T]): Dataset[T] = new SourceDataset(source, this)
 
   def union[T: ClassTag](datasets: Dataset[T]*): Dataset[T] = new UnionDataset(datasets, this)
 
   def stop(): Unit = {}
 
-  def submit[T, U: ClassTag](dataset: Dataset[T], keys: Seq[String], processor: Iterator[T] => U): Array[U] = {
+  private[dataset] def submit[T, U: ClassTag](dataset: Dataset[T], keys: Seq[String], processor: (String, Iterator[T]) => U): Array[U] = {
     if (keys.isEmpty) {
       Array.empty
     } else if (keys.size == 1) {
-      Array(processor(dataset.load(Some(keys.head))))
+      Array(processor(keys.head, dataset.load(Some(keys.head))))
     } else {
-      val futures = keys.map(key => Future(processor(dataset.load(Some(key)))))
+      val futures = keys.map(key => Future(processor(key, dataset.load(Some(key)))))
       Await.result[Array[U]](Future.sequence(futures).map(_.toArray), Duration.Inf)
     }
   }
 }
 
 private class ParallelCollectionDataset[T: ClassTag](data: TreeMap[String, Seq[T]], env: DatasetEnv)
-    extends Dataset[T](env) {
+  extends Dataset[T](env) {
   override def keys: Seq[String] = data.keySet.toSeq
 
   override def load(label: Option[String]): Iterator[T] = label match {
@@ -65,20 +58,16 @@ private class ParallelCollectionDataset[T: ClassTag](data: TreeMap[String, Seq[T
 }
 
 /**
- * A dataset loading its data on the fly using an index, a record reader and a decoder. The index
- * is used to retrieve files containing data for a given label, the reader extracts binary data
- * from each file and the decoder converts a binary record into a Scala object.
+ * A dataset loading its data on the fly using a data source.
  *
- * @param index   A file index
- * @param reader  A record reader
- * @param decoder A record decoder
+ * @param source Data source
  * @tparam T Type of elements being read
  */
-private class SourceDataset[T: ClassTag](index: Index, reader: RecordReader, decoder: Decoder[T], env: DatasetEnv)
-    extends Dataset[T](env) {
-  override def keys: Seq[String] = index.labels
+private class SourceDataset[T: ClassTag](source: DataSource[T], env: DatasetEnv) extends Dataset[T](env) {
+  override def keys: Seq[String] = source.keys
 
-  override def load(label: Option[String]): Iterator[T] = {
-    index.read(label).flatMap(reader.read).flatMap(decoder.decode).iterator
+  override def load(label: Option[String]): Iterator[T] = label match {
+    case Some(key) => source.read(key).iterator
+    case None => keys.flatMap(source.read).iterator
   }
 }

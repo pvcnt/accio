@@ -32,15 +32,13 @@
 
 package fr.cnrs.liris.accio.core.io
 
-import java.io.File
-import java.nio.file.{Path, Paths}
+import java.nio.file.{Files, Path, Paths}
 
-import fr.cnrs.liris.common.io.source._
-import fr.cnrs.liris.common.geo.LatLng
+import fr.cnrs.liris.accio.core.dataset.{DataSource, Decoder, TextLineDecoder}
 import fr.cnrs.liris.accio.core.model.{Record, Trace}
+import fr.cnrs.liris.common.geo.LatLng
 import org.joda.time.Instant
 
-import scala.reflect._
 import scala.sys.process._
 
 /**
@@ -49,11 +47,30 @@ import scala.sys.process._
  * oldest records first.
  */
 case class GeolifeSource(url: String) extends DataSource[Trace] {
-  override val decoder = new TraceDecoder(new GeolifeDecoder)
-  override val reader = new TextLineReader(headerLines = 6) //TODO: fixme
-  override val index = new GeolifeIndex(url)
+  private[this] val path = Paths.get(url)
+  private[this] val decoder = new TextLineDecoder(new GeolifeDecoder, headerLines = 6)
+
+  override lazy val keys =
+    path.toFile
+      .listFiles
+      .filter(_.isDirectory)
+      .flatMap(_.toPath.resolve("Trajectory").toFile.listFiles)
+      .map(_.toPath.getParent.getParent.getFileName.toString)
+      .toSeq
+      .sorted
+
+  override def read(key: String): Iterable[Trace] = {
+    val records = path.resolve("Trajectory").toFile.listFiles.flatMap(file => read(key, file.toPath))
+    if (records.nonEmpty) Iterable(Trace(records)) else Iterable.empty
+  }
+
+  private def read(key: String, path: Path) =
+    decoder.decode(key, Files.readAllBytes(path.resolve(s"new_$key.csv"))).getOrElse(Seq.empty)
 }
 
+/**
+ * Factory for [[GeolifeSource]].
+ */
 object GeolifeSource {
   def download(dest: Path): GeolifeSource = {
     val zipFile = dest.resolve("geolife.zip").toFile
@@ -68,23 +85,11 @@ object GeolifeSource {
     zipFile.delete()
     new GeolifeSource(dest.toAbsolutePath.toString)
   }
-
-  private[io] def extractUser(path: Path): String = path.getParent.getParent.getFileName.toString
-}
-
-class GeolifeIndex(url: String) extends AbstractIndex {
-  override protected def getFiles: Set[IndexedFile] =
-    new File(url)
-        .listFiles
-        .filter(_.isDirectory)
-        .flatMap(_.toPath.resolve("Trajectory").toFile.listFiles.map(_.toPath))
-        .map(path => IndexedFile(path.toString, labels = Set(GeolifeSource.extractUser(path))))
-        .toSet
 }
 
 class GeolifeDecoder extends Decoder[Record] {
-  override def decode(record: EncodedRecord): Option[Record] = {
-    val line = new String(record.bytes)
+  override def decode(key: String, bytes: Array[Byte]): Option[Record] = {
+    val line = new String(bytes)
     val parts = line.trim.split(",")
     if (parts.length < 7) {
       None
@@ -92,9 +97,8 @@ class GeolifeDecoder extends Decoder[Record] {
       val lat = parts(0).toDouble
       val lng = parts(1).toDouble
       val time = Instant.parse(s"${parts(5)}T${parts(6)}Z")
-      val user = record.labels.mkString(",")
       try {
-        Some(Record(user, LatLng.degrees(lat, lng).toPoint, time))
+        Some(Record(key, LatLng.degrees(lat, lng).toPoint, time))
       } catch {
         //Error in original data, skip record.
         case e: IllegalArgumentException => None

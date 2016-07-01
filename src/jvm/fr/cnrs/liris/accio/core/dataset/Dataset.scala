@@ -32,8 +32,6 @@
 
 package fr.cnrs.liris.accio.core.dataset
 
-import java.nio.file.Path
-
 import com.google.common.base.MoreObjects
 import fr.cnrs.liris.common.random.SamplingUtils
 
@@ -63,39 +61,41 @@ abstract class Dataset[T: ClassTag](val env: DatasetEnv) {
 
   def union(other: Dataset[T]): Dataset[T] = new UnionDataset(Seq(this, other), env)
 
-  def count(): Long = env.submit[T, Long](this, keys, _.size).sum
+  def count(): Long = env.submit[T, Long](this, keys, (_, it) => it.size).sum
 
-  def min(implicit cmp: Ordering[T]): T = env.submit[T, T](this, keys, _.min(cmp)).min(cmp)
+  def min(implicit cmp: Ordering[T]): T = env.submit[T, T](this, keys, (_, it) => it.min(cmp)).min(cmp)
 
-  def max(implicit cmp: Ordering[T]): T = env.submit[T, T](this, keys, _.max(cmp)).max(cmp)
+  def max(implicit cmp: Ordering[T]): T = env.submit[T, T](this, keys, (_, it) => it.max(cmp)).max(cmp)
 
-  def reduce(fn: (T, T) => T): T = env.submit[T, T](this, keys, _.reduce(fn)).reduce(fn)
+  def reduce(fn: (T, T) => T): T = env.submit[T, T](this, keys, (_, it) => it.reduce(fn)).reduce(fn)
 
-  def toArray: Array[T] = env.submit[T, Array[T]](this, keys, _.toArray).flatten
+  def toArray: Array[T] = env.submit[T, Array[T]](this, keys, (_, it) => it.toArray).flatten
 
   def first(): T = {
     val keysIt = keys.iterator
     var res: Option[T] = None
     while (res.isEmpty && keysIt.hasNext) {
-      res = env.submit[T, Option[T]](this, Seq(keysIt.next()), it => if (it.hasNext) Some(it.next()) else None)
-          .headOption
-          .flatten
+      res = env.submit[T, Option[T]](this, Seq(keysIt.next()), (_, it) => if (it.hasNext) Some(it.next()) else None)
+        .headOption
+        .flatten
     }
     res.get
   }
 
-  def foreach(fn: T => Unit): Unit = env.submit[T, Unit](this, keys, _.foreach(fn))
+  def foreach(fn: T => Unit): Unit = env.submit[T, Unit](this, keys, (_, it) => it.foreach(fn))
 
-  def save(url: String): Unit = {}
+  def write(sink: DataSink[T]): Unit = {
+    env.submit[T, Unit](this, keys, (key, it) => sink.write(key, it))
+  }
 
   override def toString: String =
     MoreObjects.toStringHelper(this)
-        .addValue(elementClassTag)
-        .toString
+      .addValue(elementClassTag)
+      .toString
 }
 
 private[dataset] class RestrictDataset[T: ClassTag](inner: Dataset[T], override val keys: Seq[String])
-    extends Dataset[T](inner.env) {
+  extends Dataset[T](inner.env) {
   override def load(label: Option[String]): Iterator[T] = {
     require(label.isEmpty || keys.contains(label.get))
     inner.load(label)
@@ -103,14 +103,14 @@ private[dataset] class RestrictDataset[T: ClassTag](inner: Dataset[T], override 
 }
 
 private[dataset] class FilterDataset[T: ClassTag](inner: Dataset[T], fn: T => Boolean)
-    extends Dataset[T](inner.env) {
+  extends Dataset[T](inner.env) {
   override def keys: Seq[String] = inner.keys
 
   override def load(label: Option[String]): Iterator[T] = inner.load(label).filter(fn)
 }
 
 private[dataset] class SampleDataset[T: ClassTag](inner: Dataset[T], proba: Double)
-    extends Dataset[T](inner.env) {
+  extends Dataset[T](inner.env) {
   require(proba >= 0 && proba <= 1, s"Sampling probability must be in [0,1] (got $proba)")
 
   override val keys = SamplingUtils.sampleUniform(inner.keys, proba)
@@ -122,21 +122,21 @@ private[dataset] class SampleDataset[T: ClassTag](inner: Dataset[T], proba: Doub
 }
 
 private[dataset] class MapDataset[T, U: ClassTag](inner: Dataset[T], fn: T => U)
-    extends Dataset[U](inner.env) {
+  extends Dataset[U](inner.env) {
   override def keys: Seq[String] = inner.keys
 
   override def load(label: Option[String]): Iterator[U] = inner.load(label).map(fn)
 }
 
 private[dataset] class FlatMapDataset[T, U: ClassTag](inner: Dataset[T], fn: T => Iterable[U])
-    extends Dataset[U](inner.env) {
+  extends Dataset[U](inner.env) {
   override def keys: Seq[String] = inner.keys
 
   override def load(label: Option[String]): Iterator[U] = inner.load(label).flatMap(fn)
 }
 
 private[dataset] class UnionDataset[T: ClassTag](datasets: Iterable[Dataset[T]], env: DatasetEnv)
-    extends Dataset[T](env) {
+  extends Dataset[T](env) {
   override def keys: Seq[String] = datasets.flatMap(_.keys).toSeq.distinct.sorted
 
   override def load(label: Option[String]): Iterator[T] =
@@ -144,7 +144,7 @@ private[dataset] class UnionDataset[T: ClassTag](datasets: Iterable[Dataset[T]],
 }
 
 private[dataset] class ZipDataset[T: ClassTag, U: ClassTag](first: Dataset[T], other: Dataset[U])
-    extends Dataset[(T, U)](first.env) {
+  extends Dataset[(T, U)](first.env) {
   override def keys: Seq[String] = first.keys
 
   override def load(label: Option[String]): Iterator[(T, U)] =

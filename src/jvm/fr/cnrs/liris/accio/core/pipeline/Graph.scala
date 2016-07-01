@@ -1,7 +1,7 @@
 package fr.cnrs.liris.accio.core.pipeline
 
 import com.google.inject.Inject
-import fr.cnrs.liris.accio.core.framework.{OpRegistry, Operator}
+import fr.cnrs.liris.accio.core.framework.{OpMeta, OpRegistry, Operator}
 import fr.cnrs.liris.accio.core.param.ParamMap
 import fr.cnrs.liris.common.util.Named
 
@@ -66,12 +66,12 @@ class Graph(_nodes: Map[String, Node]) {
 }
 
 case class Node(
-    name: String,
-    operator: Operator,
-    dependencies: Seq[String],
-    successors: Set[String],
-    runs: Int,
-    ephemeral: Boolean
+  name: String,
+  operator: Operator,
+  dependencies: Seq[String],
+  successors: Set[String],
+  runs: Int,
+  ephemeral: Boolean
 ) extends Named
 
 class GraphBuilder @Inject()(registry: OpRegistry) {
@@ -87,7 +87,15 @@ class GraphBuilder @Inject()(registry: OpRegistry) {
   private def getNode(nodeDef: NodeDef) = {
     require(registry.contains(nodeDef.op), s"Unknown operator: ${nodeDef.op}")
     val opMeta = registry(nodeDef.op)
-    val args = opMeta.defn.params.map { paramDef =>
+    val args = getConstructorArgs(opMeta, nodeDef)
+    val operator = opMeta.clazz.getConstructors.head.newInstance(args: _*).asInstanceOf[Operator]
+    new Node(nodeDef.name, operator, nodeDef.inputs, Set.empty, nodeDef.runs, nodeDef.ephemeral)
+  }
+
+  private def getConstructorArgs(opMeta: OpMeta, nodeDef: NodeDef) = {
+    val invalidParams = nodeDef.paramMap.keys.diff(opMeta.defn.params.map(_.name).toSet)
+    require(invalidParams.isEmpty, s"Unknown params: ${invalidParams.map(n => s"${nodeDef.name}/$n").mkString(", ")}")
+    opMeta.defn.params.map { paramDef =>
       val maybeValue = nodeDef.paramMap.get(paramDef.name).orElse(paramDef.defaultValue)
       require(maybeValue.isDefined, s"Param ${nodeDef.name}/${paramDef.name} is not defined")
       if (paramDef.optional) {
@@ -98,7 +106,5 @@ class GraphBuilder @Inject()(registry: OpRegistry) {
         }
       } else maybeValue.get
     }.map(_.asInstanceOf[AnyRef])
-    val operator = opMeta.clazz.getConstructors.head.newInstance(args: _*).asInstanceOf[Operator]
-    new Node(nodeDef.name, operator, nodeDef.inputs, Set.empty, nodeDef.runs, nodeDef.ephemeral)
   }
 }

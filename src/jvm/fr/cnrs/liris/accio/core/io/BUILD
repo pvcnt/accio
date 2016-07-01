@@ -3,7 +3,7 @@ scala_library(
     dependencies=[
         'src/jvm/fr/cnrs/liris/common/geo',
         'src/jvm/fr/cnrs/liris/accio/core/model',
-        'src/jvm/fr/cnrs/liris/common/io/source',
+        'src/jvm/fr/cnrs/liris/accio/core/dataset',
     ],
     sources=globs('*.scala')
 )

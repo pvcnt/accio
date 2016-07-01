@@ -1,9 +1,0 @@
-scala_library(
-    name='source',
-    dependencies=[
-        'src/jvm/fr/cnrs/liris/common/io/getter',
-        'src/jvm/fr/cnrs/liris/common/collect',
-        '3rdparty/jvm/google/guava',
-    ],
-    sources=globs('*.scala')
-)

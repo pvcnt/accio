@@ -11,6 +11,8 @@ class ParamMap(protected val map: Map[String, Any]) {
    */
   def isEmpty: Boolean = map.isEmpty
 
+  def keys: Set[String] = map.keySet
+
   /**
    * Check whether this map is not empty.
    */

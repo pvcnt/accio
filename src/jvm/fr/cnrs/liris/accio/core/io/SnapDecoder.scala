@@ -32,17 +32,14 @@
 
 package fr.cnrs.liris.accio.core.io
 
-import fr.cnrs.liris.common.io.source.Decoder
-import fr.cnrs.liris.common.io.source.EncodedRecord
-import fr.cnrs.liris.common.geo.LatLng
+import fr.cnrs.liris.accio.core.dataset.Decoder
 import fr.cnrs.liris.accio.core.model.Poi
+import fr.cnrs.liris.common.geo.LatLng
 import org.joda.time.Instant
 
-import scala.reflect._
-
 class SnapDecoder extends Decoder[Poi] {
-  override def decode(record: EncodedRecord): Option[Poi] = {
-    val line = new String(record.bytes)
+  override def decode(key: String, bytes: Array[Byte]): Option[Poi] = {
+    val line = new String(bytes)
     val parts = line.trim.split("\t")
     if (parts.length < 5) {
       None
