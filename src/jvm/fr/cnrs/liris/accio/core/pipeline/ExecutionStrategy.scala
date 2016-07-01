@@ -1,5 +1,9 @@
 package fr.cnrs.liris.accio.core.pipeline
 
+import com.fasterxml.jackson.annotation.JsonProperty
+import fr.cnrs.liris.accio.core.param.ParamMap
+import org.joda.time.Instant
+
 trait ExecutionStrategy {
   def next: Seq[(GraphDef, Any)]
 
@@ -25,4 +29,16 @@ class ExplorationStrategy(graph: GraphDef, exploration: Exploration) extends Exe
   override def name(graphDef: GraphDef): Option[String] = {
     Some(graphDef.params.filter(exploration.paramGrid.keys).toString)
   }
+}
+
+case class Observation(paramMap: ParamMap, report: Option[Report], createdAt: Instant) {
+  @JsonProperty
+  def failed: Boolean = report.isEmpty
+}
+
+object Observation {
+  def apply(paramMap: ParamMap, report: Report): Observation =
+    new Observation(paramMap, Some(report), Instant.now)
+
+  def failed(paramMap: ParamMap): Observation = new Observation(paramMap, None, Instant.now)
 }
