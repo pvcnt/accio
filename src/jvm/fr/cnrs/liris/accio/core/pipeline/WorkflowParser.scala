@@ -82,22 +82,24 @@ class JsonWorkflowParser @Inject()(registry: OpRegistry) extends WorkflowParser 
     val opName = node.string("op")
     require(registry.contains(opName), s"Unknown operator: $opName")
     val opMeta = registry(opName)
-
     val name = node.getString("name").getOrElse(opName)
-    val rawParams = node.getChild("params")
-        .map(_.fields.asScala.map(entry => entry.getKey -> entry.getValue).toMap)
-        .getOrElse(Map.empty)
-    val params = opMeta.defn.params.map { paramDef =>
+    val params = getParams(opMeta, name, node.getChild("params"))
+    val inputs = getInputs(node.getChild("inputs"))
+    val runs = node.getInteger("runs").getOrElse(1)
+    val ephemeral = node.getBoolean("ephemeral").getOrElse(false) || opMeta.defn.ephemeral
+    new NodeDef(opName, name, new ParamMap(params.toMap), inputs, runs, ephemeral)
+  }
+
+  private def getParams(opMeta: OpMeta, name: String, node: Option[JsonNode]) = {
+    val invalidParams = node.map(_.fields.asScala.map(_.getKey).toSet).getOrElse(Set.empty).diff(opMeta.defn.params.map(_.name).toSet)
+    require(invalidParams.isEmpty, s"Unknown param(s): ${invalidParams.map(n => s"$name/$n").mkString(", ")}")
+    val rawParams = node.map(_.fields.asScala.map(entry => entry.getKey -> entry.getValue).toMap).getOrElse(Map.empty)
+    opMeta.defn.params.map { paramDef =>
       val maybeValue = rawParams.get(paramDef.name).map(Params.parse(paramDef.typ, _)).orElse(paramDef.defaultValue)
       require(maybeValue.isDefined, s"Param $name/${paramDef.name} is not defined")
       paramDef.name -> maybeValue.get
     }
-    val inputs = node.getChild("inputs")
-        .map(_.elements.asScala.map(_.asText).toSeq)
-        .getOrElse(Seq.empty)
-    val runs = node.getInteger("runs").getOrElse(1)
-    val ephemeral = node.getBoolean("ephemeral").getOrElse(false) || opMeta.defn.ephemeral
-
-    new NodeDef(opName, name, new ParamMap(params.toMap), inputs, runs, ephemeral)
   }
+
+  private def getInputs(node: Option[JsonNode]) = node.map(_.elements.asScala.map(_.asText).toSeq).getOrElse(Seq.empty)
 }
