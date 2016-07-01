@@ -55,32 +55,11 @@ case class CsvSource(url: String, charset: Charset = Charsets.UTF_8) extends Dat
   }
 }
 
-class CsvDecoder(charset: Charset = Charsets.UTF_8) extends Decoder[Record] with LazyLogging {
-  override def decode(key: String, bytes: Array[Byte]): Option[Record] = {
-    val line = new String(bytes, charset).trim
-    val parts = line.split(",")
-    if (parts.length != 3) {
-      logger.warn(s"Invalid line: $line")
-      None
-    } else {
-      val x = parts(0).toDouble
-      val y = parts(1).toDouble
-      val time = new Instant(parts(2).toLong * 1000)
-      Some(Record(key, Point(x, y), time))
-    }
-  }
-}
-
-class CsvEncoder(charset: Charset = Charsets.UTF_8) extends Encoder[Record] {
-  override def encode(obj: Record): Array[Byte] = {
-    s"${obj.user},${obj.point.x},${obj.point.y},${obj.time.millis / 1000}".getBytes(charset)
-  }
-}
-
-class CsvSink(url: String, charset: Charset = Charsets.UTF_8) extends DataSink[Trace] {
+case class CsvSink(url: String, charset: Charset = Charsets.UTF_8) extends DataSink[Trace] {
   private[this] val path = Paths.get(url)
   private[this] val encoder = new CsvEncoder(charset)
   private[this] val NL = "\n".getBytes(charset)
+  Files.createDirectories(path)
 
   def write(records: Iterable[Array[Byte]], labels: Set[String]): Unit = {
     val path = Paths.get(s"$url/${labels.mkString(",")}.csv")
@@ -89,5 +68,31 @@ class CsvSink(url: String, charset: Charset = Charsets.UTF_8) extends DataSink[T
 
   override def write(key: String, elements: Iterator[Trace]): Unit = {
     Files.write(path.resolve(s"$key.csv"), elements.flatMap(_.records).map(encoder.encode).fold(Array.empty)(_ ++ NL ++ _))
+  }
+}
+
+class CsvDecoder(charset: Charset = Charsets.UTF_8) extends Decoder[Record] with LazyLogging {
+  override def decode(key: String, bytes: Array[Byte]): Option[Record] = {
+    val line = new String(bytes, charset).trim
+    if (line.isEmpty) {
+      None
+    } else {
+      val parts = line.split(",")
+      if (parts.length != 3) {
+        logger.warn(s"Invalid line: $line")
+        None
+      } else {
+        val x = parts(0).toDouble
+        val y = parts(1).toDouble
+        val time = new Instant(parts(2).toLong * 1000)
+        Some(Record(key, Point(x, y), time))
+      }
+    }
+  }
+}
+
+class CsvEncoder(charset: Charset = Charsets.UTF_8) extends Encoder[Record] {
+  override def encode(obj: Record): Array[Byte] = {
+    s"${obj.point.x},${obj.point.y},${obj.time.millis / 1000}".getBytes(charset)
   }
 }

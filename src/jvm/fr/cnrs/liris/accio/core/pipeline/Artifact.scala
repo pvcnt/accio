@@ -39,9 +39,9 @@ sealed trait Artifact {
  * An artifact holding a dataset of traces read from a path.
  *
  * @param name Artifact unique name
- * @param path Path where the dataset is stored
+ * @param url  URL to the dataset
  */
-case class StoredDatasetArtifact(name: String, path: String) extends Artifact {
+case class StoredDatasetArtifact(name: String, url: String) extends Artifact {
   override def `type`: String = "dataset"
 }
 
