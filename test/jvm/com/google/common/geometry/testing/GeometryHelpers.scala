@@ -1,11 +1,10 @@
 package com.google.common.geometry.testing
 
-import java.common.random
-
 import com.google.common.base.Splitter
 import com.google.common.geometry.{S2Polygon, S2Polyline, _}
 
 import scala.collection.JavaConverters._
+import scala.util.Random
 
 trait GeometryHelpers {
   private[this] val rand = new Random(123456)
