@@ -84,9 +84,7 @@ abstract class Dataset[T: ClassTag](val env: DatasetEnv) {
 
   def foreach(fn: T => Unit): Unit = env.submit[T, Unit](this, keys, (_, it) => it.foreach(fn))
 
-  def write(sink: DataSink[T]): Unit = {
-    env.submit[T, Unit](this, keys, (key, it) => sink.write(key, it))
-  }
+  def write(sink: DataSink[T]): Unit = env.submit[T, Unit](this, keys, (key, it) => sink.write(key, it))
 
   override def toString: String =
     MoreObjects.toStringHelper(this)

@@ -4,7 +4,7 @@ import java.util.concurrent.Executors
 
 import com.typesafe.scalalogging.StrictLogging
 
-import scala.collection.immutable.TreeMap
+import scala.collection.immutable.ListMap
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.reflect.ClassTag
@@ -18,10 +18,10 @@ class DatasetEnv(level: Int) extends StrictLogging {
   }
 
   def parallelize[T: ClassTag](data: (String, Iterable[T])*): Dataset[T] =
-    new ParallelCollectionDataset(TreeMap(data.map { case (key, value) => key -> value.toSeq }: _*), this)
+    new ParallelCollectionDataset(ListMap(data.map { case (key, value) => key -> value.toSeq }: _*), this)
 
   def parallelize[T: ClassTag](values: T*)(indexer: T => String): Dataset[T] =
-    new ParallelCollectionDataset(TreeMap(values.groupBy(indexer).toSeq: _*), this)
+    new ParallelCollectionDataset(values.groupBy(indexer), this)
 
   /**
    * Create a new dataset from an index, a record reader and a decoder.
@@ -47,7 +47,7 @@ class DatasetEnv(level: Int) extends StrictLogging {
   }
 }
 
-private class ParallelCollectionDataset[T: ClassTag](data: TreeMap[String, Seq[T]], env: DatasetEnv)
+private class ParallelCollectionDataset[T: ClassTag](data: Map[String, Seq[T]], env: DatasetEnv)
   extends Dataset[T](env) {
   override def keys: Seq[String] = data.keySet.toSeq
 
