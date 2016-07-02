@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type
 import com.fasterxml.jackson.annotation.{JsonIgnoreProperties, JsonProperty, JsonSubTypes, JsonTypeInfo}
 import fr.cnrs.liris.accio.core.dataset.Dataset
 import fr.cnrs.liris.accio.core.model.Trace
+import fr.cnrs.liris.common.util.Named
 
 /**
  * An artifact is something produced by an operator and possibly consumed by another operator.
@@ -16,7 +17,7 @@ import fr.cnrs.liris.accio.core.model.Trace
   new Type(value = classOf[ScalarArtifact], name = "scalar"),
   new Type(value = classOf[DistributionArtifact], name = "distribution")
 ))
-sealed trait Artifact {
+sealed trait Artifact extends Named {
   /**
    * Return the unique name of this artifact.
    */
@@ -31,7 +32,6 @@ sealed trait Artifact {
   /**
    * Return the type of this artifact.
    */
-  @JsonProperty
   def `type`: String
 }
 
@@ -71,11 +71,11 @@ case class ScalarArtifact(name: String, value: Double) extends Artifact {
  * An artifact holding a metric as a distribution of double values, each one being associated to a
  * given user.
  *
- * @param name Artifact unique name
- * @param dist Distribution of (user, double)'s
+ * @param name         Artifact unique name
+ * @param distribution Distribution of (user, double)'s
  */
-case class DistributionArtifact(name: String, dist: Seq[(String, Double)]) extends Artifact {
+case class DistributionArtifact(name: String, distribution: Seq[(String, Double)]) extends Artifact {
   override def `type`: String = "distribution"
 
-  def values: Seq[Double] = dist.map(_._2)
+  def values: Seq[Double] = distribution.map(_._2)
 }

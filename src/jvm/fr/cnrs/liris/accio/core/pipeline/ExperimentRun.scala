@@ -3,16 +3,15 @@ package fr.cnrs.liris.accio.core.pipeline
 import java.nio.file.Path
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import org.joda.time.{Duration, Instant}
+import org.joda.time.{DateTime, Duration}
 
 case class ExperimentRun(
   id: String,
   defn: ExperimentDef,
-  stats: ExecStats = new ExecStats(Instant.now),
+  stats: ExecStats = new ExecStats,
   children: Seq[String] = Seq.empty) {
 
-  def complete(successful: Boolean): ExperimentRun =
-    copy(stats = stats.copy(completedAt = Some(Instant.now), successful = Some(successful)))
+  def complete(successful: Boolean): ExperimentRun = copy(stats = stats.complete(successful))
 }
 
 /**
@@ -44,21 +43,26 @@ case class WorkflowRun(
  */
 case class Report(
   stats: ExecStats = new ExecStats,
-  nodeStats: Map[String, ExecStats] = Map.empty,
-  artifacts: Seq[Artifact] = Seq.empty) {
+  nodeStats: Set[ExecStats] = Set.empty,
+  artifacts: Set[Artifact] = Set.empty) {
 
-  def start(nodeName: String): Report = copy(nodeStats = nodeStats.updated(nodeName, new ExecStats))
+  def start(nodeName: String): Report = copy(nodeStats = nodeStats + new ExecStats(Some(nodeName)))
 
   def complete(nodeName: String, artifacts: Seq[Artifact]): Report = {
-    val stats = nodeStats(nodeName)
-    copy(
-      nodeStats = nodeStats.updated(nodeName, stats.complete(successful = true)),
-      artifacts = this.artifacts ++ artifacts.filterNot(_.ephemeral))
+    nodeStats.find(_.name.contains(nodeName)) match {
+      case Some(s) =>
+        copy(
+          nodeStats = nodeStats - s + s.complete(successful = true),
+          artifacts = this.artifacts ++ artifacts.filterNot(_.ephemeral))
+      case None => throw new IllegalStateException(s"Execution of node $nodeName was not started")
+    }
   }
 
   def complete(nodeName: String, error: Throwable): Report = {
-    val stats = nodeStats(nodeName)
-    copy(nodeStats = nodeStats.updated(nodeName, stats.complete(error)))
+    nodeStats.find(_.name == nodeName) match {
+      case Some(s) => copy(nodeStats = nodeStats - s + s.complete(error))
+      case None => throw new IllegalStateException(s"Execution of node $nodeName was not started")
+    }
   }
 
   def complete(successful: Boolean): Report = copy(stats = stats.complete(successful))
@@ -69,14 +73,16 @@ case class Report(
 /**
  * Execution statistics.
  *
+ * @param name        Name of the node these stats apply to
  * @param startedAt   Time at which the execution started
  * @param completedAt Time at which the execution completed
  * @param successful  Did the execution completed successfully?
  * @param error       Error caught during execution
  */
 case class ExecStats(
-  startedAt: Instant = Instant.now,
-  completedAt: Option[Instant] = None,
+  name: Option[String] = None,
+  startedAt: DateTime = DateTime.now,
+  completedAt: Option[DateTime] = None,
   successful: Option[Boolean] = None,
   error: Option[Throwable] = None) {
 
@@ -91,7 +97,7 @@ case class ExecStats(
    *
    * @param successful Did the execution completed successfully?
    */
-  def complete(successful: Boolean): ExecStats = copy(completedAt = Some(Instant.now), successful = Some(successful))
+  def complete(successful: Boolean): ExecStats = copy(completedAt = Some(DateTime.now), successful = Some(successful))
 
   /**
    * Return completed statistics, after an error.
@@ -99,7 +105,7 @@ case class ExecStats(
    * @param error Error caught during execution
    */
   def complete(error: Throwable): ExecStats =
-    copy(completedAt = Some(Instant.now), successful = Some(false), error = Some(error))
+    copy(completedAt = Some(DateTime.now), successful = Some(false), error = Some(error))
 }
 
 trait ReportWriter {

@@ -2,11 +2,12 @@ package fr.cnrs.liris.accio.core.pipeline
 
 import java.nio.file.Path
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.core.{JsonGenerator, JsonParser}
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.databind.ser.std.StdSerializer
-import com.fasterxml.jackson.databind.{DeserializationContext, ObjectMapper, SerializerProvider}
+import com.fasterxml.jackson.databind.{DeserializationContext, ObjectMapper, SerializationFeature, SerializerProvider}
 import com.fasterxml.jackson.datatype.joda.JodaModule
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import com.google.inject.Singleton
@@ -17,6 +18,9 @@ class JsonReportCodec extends ReportWriter with ReportReader {
   private[this] val om = {
     val om = new ObjectMapper
     om.registerModules(new DefaultScalaModule, new JodaModule, new JacksonAccioModule)
+    om.setSerializationInclusion(JsonInclude.Include.NON_NULL)
+    om.setSerializationInclusion(JsonInclude.Include.NON_ABSENT)
+    om.enable(SerializationFeature.INDENT_OUTPUT)
     om
   }
 

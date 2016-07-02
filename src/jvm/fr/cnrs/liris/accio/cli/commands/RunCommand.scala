@@ -97,7 +97,7 @@ class RunCommand @Inject()(parser: ExperimentParser, executor: ExperimentExecuto
     if (opts.runs > 1) {
       experimentDef = experimentDef.copy(workflow = experimentDef.workflow.setRuns(opts.runs))
     }
-    val experiment = ExperimentRun(id, experimentDef, ExecStats(Instant.now))
+    val experiment = ExperimentRun(id, experimentDef)
     executor.execute(workDir, experiment)
   }
 }
