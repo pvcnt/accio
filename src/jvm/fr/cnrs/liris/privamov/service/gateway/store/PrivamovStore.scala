@@ -4,7 +4,7 @@ import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.twitter.querulous.driver.DatabaseDriver
 import com.twitter.querulous.evaluator.{QueryEvaluator, QueryEvaluatorFactory}
-import fr.cnrs.liris.accio.core.model.Record
+import fr.cnrs.liris.accio.core.model.Event
 import fr.cnrs.liris.common.geo.LatLng
 import fr.cnrs.liris.privamov.service.gateway.auth.View
 import org.joda.time.{Instant, LocalDate}
@@ -28,7 +28,7 @@ class PrivamovStore(evaluator: QueryEvaluator, override val name: String) extend
     evaluator.select(sql)(rs => uuidToImei(rs.getString(1)))
   }
 
-  override def features(views: Set[View], limit: Option[Int] = None, sample: Boolean = false): Seq[Record] = {
+  override def features(views: Set[View], limit: Option[Int] = None, sample: Boolean = false): Seq[Event] = {
     var selectTail = ""
     var joinClause = ""
     val whereClause = s" where ${locationWhereClause(views)}"
@@ -58,7 +58,7 @@ class PrivamovStore(evaluator: QueryEvaluator, override val name: String) extend
       val imei = uuidToImei(rs.getString(4))
       val point = LatLng.degrees(rs.getDouble(2), rs.getDouble(3)).toPoint
       val time = new Instant(rs.getLong(1) * 1000)
-      Record(imei, point, time)
+      Event(imei, point, time)
     }
   }
 

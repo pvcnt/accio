@@ -32,7 +32,7 @@
 
 package fr.cnrs.liris.privamov.service.gateway.store
 
-import fr.cnrs.liris.accio.core.model.Record
+import fr.cnrs.liris.accio.core.model.Event
 import fr.cnrs.liris.privamov.service.gateway.auth.View
 import org.joda.time.LocalDate
 
@@ -75,7 +75,7 @@ trait EventStore {
   /**
    * Return features from this event store.
    */
-  def features(views: Set[View], limit: Option[Int] = None, sample: Boolean = false): Seq[Record]
+  def features(views: Set[View], limit: Option[Int] = None, sample: Boolean = false): Seq[Event]
 
   def countFeatures(views: Set[View]): Int
 }

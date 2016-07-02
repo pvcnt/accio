@@ -1,17 +1,17 @@
 package fr.cnrs.liris.privamov.service.gateway.auth
 
-import fr.cnrs.liris.accio.core.model.Record
+import fr.cnrs.liris.accio.core.model.Event
 import fr.cnrs.liris.common.geo.BoundingBox
 import org.joda.time.DateTime
 
 case class View(source: Option[String] = None, startAfter: Option[DateTime] = None, endBefore: Option[DateTime] = None, area: Option[BoundingBox] = None) {
   def accessible(id: String): Boolean = source.contains(id) || source.isEmpty
 
-  def filter(records: Seq[Record]): Seq[Record] = {
+  def filter(events: Seq[Event]): Seq[Event] = {
     if (source.isDefined || startAfter.isDefined || endBefore.isDefined || area.isDefined) {
-      records.filter(filter)
+      events.filter(filter)
     } else {
-      records
+      events
     }
   }
 
@@ -72,9 +72,9 @@ case class View(source: Option[String] = None, startAfter: Option[DateTime] = No
     }
   }
 
-  private def filter(record: Record) = {
-    startAfter.forall(record.time.isAfter) && endBefore.forall(record.time.isBefore) &&
-        area.forall(_.contains(record.point)) && source.forall(_.contains(record.user))
+  private def filter(event: Event) = {
+    startAfter.forall(event.time.isAfter) && endBefore.forall(event.time.isBefore) &&
+        area.forall(_.contains(event.point)) && source.forall(_.contains(event.user))
   }
 }
 

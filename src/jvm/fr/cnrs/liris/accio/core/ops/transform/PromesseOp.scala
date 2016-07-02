@@ -34,7 +34,7 @@ package fr.cnrs.liris.accio.core.ops.transform
 
 import com.github.nscala_time.time.Imports._
 import fr.cnrs.liris.accio.core.framework.{Mapper, Op}
-import fr.cnrs.liris.accio.core.model.{Record, Trace}
+import fr.cnrs.liris.accio.core.model.{Event, Trace}
 import fr.cnrs.liris.accio.core.param.Param
 import fr.cnrs.liris.common.util.Distance
 
@@ -62,36 +62,36 @@ case class PromesseOp(
     } else if (epsilon == Distance.Zero) {
       trace
     } else {
-      // We sample records to keep those at a distance of exactly `epsilon` from the previous one.
+      // We sample events to keep those at a distance of exactly `epsilon` from the previous one.
       // Sampled locations will be interpolated linearly between the two nearest reported
-      // locations. This way there will be the same distance between two consecutive records.
-      val sampled = sample(trace.records)
+      // locations. This way there will be the same distance between two consecutive events.
+      val sampled = sample(trace.events)
 
       // The time to "spend" will be uniformely allocated. This way there will be the same
-      // duration between two consecutive records.
-      trace.copy(records = allocate(sampled))
+      // duration between two consecutive events.
+      trace.copy(events = allocate(sampled))
     }
 
-  private def sample(records: Seq[Record]) = {
-    var sampled = mutable.ListBuffer.empty[Record]
-    var prev: Option[Record] = None
-    for (record <- records) {
+  private def sample(events: Seq[Event]) = {
+    var sampled = mutable.ListBuffer.empty[Event]
+    var prev: Option[Event] = None
+    for (event <- events) {
       if (prev.isDefined) {
-        var d = record.point.distance(prev.get.point)
+        var d = event.point.distance(prev.get.point)
         while (d >= epsilon) {
           // Generate as many points as needed to get from previous to current location by steps
           // of epsilon.
           val ratio = epsilon.meters / d.meters
-          val newPoint = prev.get.point.interpolate(record.point, ratio)
-          sampled += record.copy(point = newPoint)
+          val newPoint = prev.get.point.interpolate(event.point, ratio)
+          sampled += event.copy(point = newPoint)
 
-          prev = Some(record.copy(point = newPoint))
-          d = record.point.distance(prev.get.point)
+          prev = Some(event.copy(point = newPoint))
+          d = event.point.distance(prev.get.point)
         }
       } else {
         //First iteration, keep true location and time.
-        sampled += record
-        prev = Some(record)
+        sampled += event
+        prev = Some(event)
       }
     }
     // We skip the potential first and last stay to maximize utility (there will likely be a stay
@@ -105,16 +105,16 @@ case class PromesseOp(
     sampled
   }
 
-  private def allocate(sampled: Seq[Record]) =
+  private def allocate(sampled: Seq[Event]) =
     if (sampled.size <= 2) {
       sampled
     } else {
       val from = sampled.head.time
       val timeSpent = (from to sampled.last.time).millis
       val interval = timeSpent.toDouble / (sampled.size - 1)
-      sampled.zipWithIndex.map { case (record, i) =>
-        val shift = math.ceil(i * interval).toInt
-        record.copy(time = from + shift)
+      sampled.zipWithIndex.map { case (event, idx) =>
+        val shift = math.ceil(idx * interval).toInt
+        event.copy(time = from + shift)
       }
     }
 }

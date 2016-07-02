@@ -32,26 +32,24 @@
 
 package fr.cnrs.liris.accio.core.io
 
-import java.nio.charset.Charset
 import java.nio.file.{Files, Paths}
 
 import com.github.nscala_time.time.Imports._
 import com.google.common.base.Charsets
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.core.dataset._
-import fr.cnrs.liris.accio.core.model.{Record, Trace}
+import fr.cnrs.liris.accio.core.model.{Event, Trace}
 import fr.cnrs.liris.common.geo.Point
 import org.joda.time.Instant
 
 /**
  * Mobility traces source reading data from our custom CSV format, with one file per trace.
  *
- * @param url     Path to directory where to read
- * @param charset Charset to use
+ * @param url Path to directory where to read
  */
-case class CsvSource(url: String, charset: Charset = Charsets.UTF_8) extends DataSource[Trace] {
+case class CsvSource(url: String) extends DataSource[Trace] {
   private[this] val path = Paths.get(url)
-  private[this] val decoder = new TextLineDecoder(new CsvDecoder(charset))
+  private[this] val decoder = new TextLineDecoder(new CsvDecoder)
 
   override def keys: Seq[String] = path.toFile.listFiles.filter(_.isDirectory).map(_.toPath.getFileName.toString)
 
@@ -61,7 +59,7 @@ case class CsvSource(url: String, charset: Charset = Charsets.UTF_8) extends Dat
       .listFiles
       .map(file => decoder.decode(key, Files.readAllBytes(file.toPath)))
       .flatMap {
-        case Some(records) => Some(new Trace(key, records))
+        case Some(events) => Some(new Trace(key, events))
         case None => None
       }.toIterable
   }
@@ -70,32 +68,30 @@ case class CsvSource(url: String, charset: Charset = Charsets.UTF_8) extends Dat
 /**
  * Mobility traces sink writing data to our custom CSV format, with one file per trace.
  *
- * @param url     Path to directory where to write
- * @param charset Charset to use
+ * @param url Path to directory where to write
  */
-case class CsvSink(url: String, charset: Charset = Charsets.UTF_8) extends DataSink[Trace] {
+case class CsvSink(url: String) extends DataSink[Trace] {
   private[this] val path = Paths.get(url)
-  require(!path.toFile.exists || (path.toFile.isDirectory && path.toFile.listFiles.isEmpty), s"Non-empty directory: ${path.toAbsolutePath}")
-  private[this] val encoder = new CsvEncoder(charset)
-  private[this] val NL = "\n".getBytes(charset)
+  require(!path.toFile.exists || (path.toFile.isDirectory && path.toFile.listFiles.isEmpty),
+    s"Non-empty directory: ${path.toAbsolutePath}")
+  private[this] val encoder = new CsvEncoder
+  private[this] val NL = "\n".getBytes(Charsets.UTF_8)
 
   override def write(key: String, elements: Iterator[Trace]): Unit = {
     Files.createDirectories(path.resolve(key))
     elements.zipWithIndex.foreach { case (trace, idx) =>
-      val bytes = trace.records.map(encoder.encode).fold(Array.empty)(_ ++ NL ++ _)
+      val bytes = trace.events.map(encoder.encode).fold(Array.empty)(_ ++ NL ++ _)
       Files.write(path.resolve(key).resolve(s"$key-$idx.csv"), bytes)
     }
   }
 }
 
 /**
- * Decoder for our custo
- *
- * @param charset
+ * Decoder for our custom CSV format handling events.
  */
-class CsvDecoder(charset: Charset = Charsets.UTF_8) extends Decoder[Record] with LazyLogging {
-  override def decode(key: String, bytes: Array[Byte]): Option[Record] = {
-    val line = new String(bytes, charset).trim
+class CsvDecoder extends Decoder[Event] with LazyLogging {
+  override def decode(key: String, bytes: Array[Byte]): Option[Event] = {
+    val line = new String(bytes, Charsets.UTF_8).trim
     if (line.isEmpty) {
       None
     } else {
@@ -107,14 +103,17 @@ class CsvDecoder(charset: Charset = Charsets.UTF_8) extends Decoder[Record] with
         val x = parts(0).toDouble
         val y = parts(1).toDouble
         val time = new Instant(parts(2).toLong * 1000)
-        Some(Record(key, Point(x, y), time))
+        Some(Event(key, Point(x, y), time))
       }
     }
   }
 }
 
-class CsvEncoder(charset: Charset = Charsets.UTF_8) extends Encoder[Record] {
-  override def encode(obj: Record): Array[Byte] = {
-    s"${obj.point.x},${obj.point.y},${obj.time.millis / 1000}".getBytes(charset)
+/**
+ * Encoder for our custom CSV format handling events.
+ */
+class CsvEncoder extends Encoder[Event] {
+  override def encode(obj: Event): Array[Byte] = {
+    s"${obj.point.x},${obj.point.y},${obj.time.millis / 1000}".getBytes(Charsets.UTF_8)
   }
 }

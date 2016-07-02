@@ -35,7 +35,7 @@ package fr.cnrs.liris.accio.core.io
 import java.nio.file.{Files, Path, Paths}
 
 import fr.cnrs.liris.accio.core.dataset.{DataSource, Decoder, TextLineDecoder}
-import fr.cnrs.liris.accio.core.model.{Record, Trace}
+import fr.cnrs.liris.accio.core.model.{Event, Trace}
 import fr.cnrs.liris.common.geo.LatLng
 import org.joda.time.Instant
 
@@ -44,7 +44,7 @@ import scala.sys.process._
 /**
  * Support for the [[http://research.microsoft.com/apps/pubs/?id=152176 Geolife dataset]].
  * Each trace is stored inside its own directory splitted into multiple roughly one per day,
- * oldest records first.
+ * oldest events first.
  */
 case class GeolifeSource(url: String) extends DataSource[Trace] {
   private[this] val path = Paths.get(url)
@@ -60,8 +60,8 @@ case class GeolifeSource(url: String) extends DataSource[Trace] {
       .sorted
 
   override def read(key: String): Iterable[Trace] = {
-    val records = path.resolve("Trajectory").toFile.listFiles.flatMap(file => read(key, file.toPath))
-    if (records.nonEmpty) Iterable(Trace(records)) else Iterable.empty
+    val events = path.resolve("Trajectory").toFile.listFiles.flatMap(file => read(key, file.toPath))
+    if (events.nonEmpty) Iterable(Trace(events)) else Iterable.empty
   }
 
   private def read(key: String, path: Path) =
@@ -87,8 +87,8 @@ object GeolifeSource {
   }
 }
 
-class GeolifeDecoder extends Decoder[Record] {
-  override def decode(key: String, bytes: Array[Byte]): Option[Record] = {
+class GeolifeDecoder extends Decoder[Event] {
+  override def decode(key: String, bytes: Array[Byte]): Option[Event] = {
     val line = new String(bytes)
     val parts = line.trim.split(",")
     if (parts.length < 7) {
@@ -98,9 +98,9 @@ class GeolifeDecoder extends Decoder[Record] {
       val lng = parts(1).toDouble
       val time = Instant.parse(s"${parts(5)}T${parts(6)}Z")
       try {
-        Some(Record(key, LatLng.degrees(lat, lng).toPoint, time))
+        Some(Event(key, LatLng.degrees(lat, lng).toPoint, time))
       } catch {
-        //Error in original data, skip record.
+        //Error in original data, skip event.
         case e: IllegalArgumentException => None
       }
     }

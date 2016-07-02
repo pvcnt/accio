@@ -3,7 +3,7 @@ package fr.cnrs.liris.accio.core.io
 import java.nio.file.{Files, Path, Paths}
 
 import fr.cnrs.liris.accio.core.dataset.{DataSource, Decoder, TextLineDecoder}
-import fr.cnrs.liris.accio.core.model.{Record, Trace}
+import fr.cnrs.liris.accio.core.model.{Event, Trace}
 import fr.cnrs.liris.common.geo.LatLng
 import org.joda.time.Instant
 
@@ -11,7 +11,7 @@ import scala.sys.process._
 
 /**
  * Support for the [[http://crawdad.org/epfl/mobility/20090224/ Cabspotting dataset]].
- * Each trace is stored inside its own file, newest records first.
+ * Each trace is stored inside its own file, newest events first.
  */
 case class CabspottingSource(url: String) extends DataSource[Trace] {
   private[this] val path = Paths.get(url)
@@ -25,8 +25,8 @@ case class CabspottingSource(url: String) extends DataSource[Trace] {
     .sorted
 
   override def read(key: String): Iterable[Trace] = {
-    val records = decoder.decode(key, Files.readAllBytes(path.resolve(s"new_$key.txt"))).getOrElse(Seq.empty)
-    if (records.nonEmpty) Iterable(Trace(records)) else Iterable.empty
+    val events = decoder.decode(key, Files.readAllBytes(path.resolve(s"new_$key.txt"))).getOrElse(Seq.empty)
+    if (events.nonEmpty) Iterable(Trace(events)) else Iterable.empty
   }
 }
 
@@ -58,10 +58,10 @@ object CabspottingSource {
 }
 
 /**
- * Decoder decoding a line of Cabspotting file into a record.
+ * Decoder decoding a line of a Cabspotting file into an event.
  */
-class CabspottingDecoder extends Decoder[Record] {
-  override def decode(key: String, bytes: Array[Byte]): Option[Record] = {
+class CabspottingDecoder extends Decoder[Event] {
+  override def decode(key: String, bytes: Array[Byte]): Option[Event] = {
     val line = new String(bytes)
     val parts = line.trim.split(" ")
     if (parts.length < 4) {
@@ -71,7 +71,7 @@ class CabspottingDecoder extends Decoder[Record] {
       val lng = parts(1).toDouble
       val time = new Instant(parts(3).toLong * 1000)
       try {
-        Some(Record(key, LatLng.degrees(lat, lng).toPoint, time))
+        Some(Event(key, LatLng.degrees(lat, lng).toPoint, time))
       } catch {
         //Error in original data, skip record.
         case e: IllegalArgumentException => None

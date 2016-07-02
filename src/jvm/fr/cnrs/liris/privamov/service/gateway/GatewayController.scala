@@ -39,7 +39,7 @@ import com.twitter.finatra.annotations.Flag
 import com.twitter.finatra.http.Controller
 import com.twitter.finatra.request.{QueryParam, RouteParam}
 import fr.cnrs.liris.accio.core.model.GeoJsonConverters._
-import fr.cnrs.liris.accio.core.model.{Record, Trace}
+import fr.cnrs.liris.accio.core.model.{Event, Trace}
 import fr.cnrs.liris.accio.core.ops.transform.{GeoIndistinguishabilityOp, PromesseOp}
 import fr.cnrs.liris.common.geo._
 import fr.cnrs.liris.common.util.Distance
@@ -50,29 +50,29 @@ import org.joda.time.DateTime
 case class ListDatasetsRequest(@QueryParam accessToken: Option[String])
 
 case class GetDatasetRequest(
-    @RouteParam name: String,
-    @QueryParam accessToken: Option[String])
+  @RouteParam name: String,
+  @QueryParam accessToken: Option[String])
 
 case class ListSourcesRequest(
-    @RouteParam name: String,
-    @QueryParam accessToken: Option[String],
-    @QueryParam startAfter: Option[String],
-    @QueryParam limit: Option[Int])
+  @RouteParam name: String,
+  @QueryParam accessToken: Option[String],
+  @QueryParam startAfter: Option[String],
+  @QueryParam limit: Option[Int])
 
 case class GetSourceRequest(
-    @RouteParam name: String,
-    @RouteParam id: String,
-    @QueryParam accessToken: Option[String])
+  @RouteParam name: String,
+  @RouteParam id: String,
+  @QueryParam accessToken: Option[String])
 
 case class ListFeaturesRequest(
-    @RouteParam name: String,
-    @QueryParam accessToken: Option[String],
-    @QueryParam sources: Set[String],
-    @QueryParam startAfter: Option[DateTime],
-    @QueryParam endBefore: Option[DateTime],
-    @QueryParam limit: Option[Int],
-    @QueryParam sample: Option[Boolean],
-    @QueryParam transform: Option[String])
+  @RouteParam name: String,
+  @QueryParam accessToken: Option[String],
+  @QueryParam sources: Set[String],
+  @QueryParam startAfter: Option[DateTime],
+  @QueryParam endBefore: Option[DateTime],
+  @QueryParam limit: Option[Int],
+  @QueryParam sample: Option[Boolean],
+  @QueryParam transform: Option[String])
 
 /**
  * A dataset holding some mobility data.
@@ -102,17 +102,17 @@ object Error {
  */
 @Singleton
 class GatewayController @Inject()(
-    @Flag("viz.standard_limit") standardLimit: Int,
-    @Flag("viz.extended_limit") extendedLimit: Int,
-    stores: StoreRegistry,
-    firewall: Firewall
+  @Flag("viz.standard_limit") standardLimit: Int,
+  @Flag("viz.extended_limit") extendedLimit: Int,
+  stores: StoreRegistry,
+  firewall: Firewall
 ) extends Controller {
 
   get("/api/datasets") { request: ListDatasetsRequest =>
     authenticated(request.accessToken, Scope.Datasets) { token =>
       stores
-          .filter(token.acl.accessible)
-          .map(store => Dataset(store.name, store.getClass.getSimpleName))
+        .filter(token.acl.accessible)
+        .map(store => Dataset(store.name, store.getClass.getSimpleName))
     }
   }
 
@@ -166,29 +166,29 @@ class GatewayController @Inject()(
     }
   }
 
-  private def transform(records: Seq[Record], spec: String) = {
-    if (records.isEmpty) {
-      records
+  private def transform(events: Seq[Event], spec: String) = {
+    if (events.isEmpty) {
+      events
     } else {
       val parts = spec.split("=")
       val res = parts.head match {
         case "geoind" =>
           require(parts.size == 2, "Transformation 'geoind' needs a parameter")
           val epsilon = parts(1).toDouble
-          GeoIndistinguishabilityOp(epsilon).transform(Trace(records))
+          GeoIndistinguishabilityOp(epsilon).transform(Trace(events))
         case "smooth" =>
           require(parts.size == 2, "Transformation 'smooth' needs a parameter")
           val epsilon = Distance.parse(parts(1))
-          PromesseOp(epsilon).transform(Trace(records))
+          PromesseOp(epsilon).transform(Trace(events))
         case name => throw new IllegalArgumentException(s"Unknown transformation '$name'")
       }
-      res.head.records
+      res.head.events
     }
   }
 
-  private def toGeoJson(records: Seq[Record]) = {
-    val features = records.map { record =>
-      record.set("distance", record.point.distance(records.head.point).meters).toGeoJson
+  private def toGeoJson(events: Seq[Event]) = {
+    val features = events.map { event =>
+      event.set("distance", event.point.distance(events.head.point).meters).toGeoJson
     }
     FeatureCollection(features)
   }

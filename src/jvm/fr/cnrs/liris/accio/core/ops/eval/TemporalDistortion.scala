@@ -45,19 +45,19 @@ import org.joda.time.Instant
 case class TemporalDistortion() extends Evaluator {
   override def evaluate(reference: Trace, result: Trace): Seq[Metric] = {
     val (larger, smaller) = if (reference.size > result.size) (reference, result) else (result, reference)
-    val distances = smaller.records.map { rec =>
+    val distances = smaller.events.map { rec =>
       rec.point.distance(interpolate(larger, rec.time)).meters
     }
     MetricUtils.descriptiveStats(distances)
   }
 
   private def interpolate(trace: Trace, time: Instant) =
-    if (time.isBefore(trace.records.head.time)) {
-      trace.records.head.point
-    } else if (time.isAfter(trace.records.last.time)) {
-      trace.records.last.point
+    if (time.isBefore(trace.events.head.time)) {
+      trace.events.head.point
+    } else if (time.isAfter(trace.events.last.time)) {
+      trace.events.last.point
     } else {
-      val between = trace.records.sliding(2).find { recs =>
+      val between = trace.events.sliding(2).find { recs =>
         time.compareTo(recs.head.time) >= 0 && time.compareTo(recs.last.time) <= 0
       }.get
       if (time == between.head.time) {

@@ -35,7 +35,7 @@ package fr.cnrs.liris.privamov.lib.clustering
 import com.google.common.base.Preconditions.checkArgument
 import fr.cnrs.liris.common.util.Distance
 import fr.cnrs.liris.common.geo.Point
-import fr.cnrs.liris.accio.core.model.Record
+import fr.cnrs.liris.accio.core.model.Event
 
 import scala.collection.mutable
 
@@ -50,15 +50,15 @@ class DJClusterer(epsilon: Distance, minPoints: Int) extends Clusterer {
   checkArgument(minPoints > 0)
   checkArgument(epsilon.meters > 0)
 
-  override def cluster(records: Seq[Record]): Seq[Cluster] = {
+  override def cluster(events: Seq[Event]): Seq[Cluster] = {
     var clusters = mutable.ListBuffer.empty[Cluster]
-    for (record <- records) {
-      val neighborhood = neighbors(record.point, records)
+    for (event <- events) {
+      val neighborhood = neighbors(event.point, events)
       if (neighborhood.length >= minPoints) {
-        val newCluster = mutable.HashSet.empty[Record]
+        val newCluster = mutable.HashSet.empty[Event]
         newCluster ++= neighborhood
-        val intersecting = clusters.filter(cluster => cluster.records.intersect(newCluster).nonEmpty)
-        intersecting.foreach(cluster => newCluster ++= cluster.records)
+        val intersecting = clusters.filter(cluster => cluster.events.intersect(newCluster).nonEmpty)
+        intersecting.foreach(cluster => newCluster ++= cluster.events)
         clusters = clusters.diff(intersecting)
         clusters += new Cluster(newCluster.toSet)
       }
@@ -73,6 +73,6 @@ class DJClusterer(epsilon: Distance, minPoints: Int) extends Clusterer {
    * @param world All available points
    * @return Points that are within a threshold fixed by { @link #epsilon}
    */
-  private def neighbors(point: Point, world: Seq[Record]): Seq[Record] =
+  private def neighbors(point: Point, world: Seq[Event]): Seq[Event] =
     world.filter(r => r.point.distance(point) <= epsilon)
 }

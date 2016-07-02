@@ -55,8 +55,8 @@ case class PoisRetrieval(
   private[this] val clusterer = new DTClusterer(duration, diameter)
 
   override def evaluate(reference: Trace, result: Trace): Seq[Metric] = {
-    val refPois = clusterer.cluster(reference.records)
-    val resPois = clusterer.cluster(result.records)
+    val refPois = clusterer.cluster(reference.events)
+    val resPois = clusterer.cluster(result.events)
     val matched = resPois.flatMap { resPoi =>
       refPois.zipWithIndex.find { case (refPoi, _) =>
         refPoi.centroid.distance(resPoi.centroid) <= threshold

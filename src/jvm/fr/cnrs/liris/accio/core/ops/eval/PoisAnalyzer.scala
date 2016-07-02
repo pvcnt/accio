@@ -57,7 +57,7 @@ case class PoisAnalyzer(
   private[this] val clusterer = new DTClusterer(duration, diameter)
 
   override def analyze(trace: Trace): Seq[Metric] = {
-    val pois = clusterer.cluster(trace.records).map(c => Poi(c.records))
+    val pois = clusterer.cluster(trace.events).map(c => Poi(c.events))
     val sizeInPoi = pois.map(_.size).sum
     val durationInPoi = pois.map(_.duration.seconds).sum
     Seq(

@@ -55,5 +55,5 @@ case class AreaCoverage(
   }
 
   private def getCells(trace: Trace, level: Int) =
-    trace.records.map(rec => S2CellId.fromLatLng(rec.point.toLatLng.toS2).parent(level)).toSet
+    trace.events.map(rec => S2CellId.fromLatLng(rec.point.toLatLng.toS2).parent(level)).toSet
 }

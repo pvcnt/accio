@@ -34,21 +34,21 @@ package fr.cnrs.liris.accio.core.ops.transform
 
 import com.github.nscala_time.time.Imports._
 import fr.cnrs.liris.accio.core.framework.Op
-import fr.cnrs.liris.accio.core.model.Record
+import fr.cnrs.liris.accio.core.model.Event
 import fr.cnrs.liris.accio.core.param.Param
 
 /**
  * Split a trace into two traces if there is a duration greater than some threshold between two
- * consecutive records.
+ * consecutive events.
  */
 @Op(
   help = "Split traces, when there is a too long duration between consecutive events"
 )
 case class TemporalGapSplittingOp(
-    @Param(help="Maximum duration between two consecutive records")
+    @Param(help="Maximum duration between two consecutive events")
     duration: Duration
 ) extends SlidingSplitting {
 
-  override protected def split(buffer: Seq[Record], curr: Record): Boolean =
+  override protected def split(buffer: Seq[Event], curr: Event): Boolean =
     (buffer.last.time to curr.time).duration >= duration
 }

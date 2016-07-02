@@ -49,19 +49,19 @@ case class GaussianKernelSmoothingOp(
     omega: Duration
 ) extends Mapper {
   override def map(trace: Trace): Trace =
-    trace.transform(_.map { record =>
+    trace.transform(_.map { event =>
       var ks = 0d
       var x = 0d
       var y = 0d
-      for (i <- trace.records.indices) {
-        val k = gaussianKernel(record.time.millis, trace.records(i).time.millis)
+      for (i <- trace.events.indices) {
+        val k = gaussianKernel(event.time.millis, trace.events(i).time.millis)
         ks += k
-        x += k * trace.records(i).point.x
-        y += k * trace.records(i).point.y
+        x += k * trace.events(i).point.x
+        y += k * trace.events(i).point.y
       }
       x /= ks
       y /= ks
-      record.copy(point = Point(x, y))
+      event.copy(point = Point(x, y))
     })
 
   private def gaussianKernel(t1: Long, t2: Long): Double =

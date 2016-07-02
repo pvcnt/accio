@@ -6,7 +6,7 @@ scala_library(
         'src/jvm/fr/cnrs/liris/common/geo',
         'src/jvm/fr/cnrs/liris/common/util',
     ],
-    sources=['Poi.scala', 'PoiSet.scala', 'Record.scala', 'Trace.scala']
+    sources=['Poi.scala', 'PoiSet.scala', 'Event.scala', 'Trace.scala']
 )
 
 scala_library(

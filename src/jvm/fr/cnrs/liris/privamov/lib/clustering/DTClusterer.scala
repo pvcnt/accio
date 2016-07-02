@@ -33,14 +33,14 @@
 package fr.cnrs.liris.privamov.lib.clustering
 
 import com.github.nscala_time.time.Imports._
+import fr.cnrs.liris.accio.core.model.Event
 import fr.cnrs.liris.common.util.Distance
-import fr.cnrs.liris.accio.core.model.Record
 
 import scala.collection.mutable
 
 /**
  * Density-time clustering algorithm performing the extraction of stays. A stay
- * is defined by a minimal amount of time spend in the same place (defined by a
+ * is defined by a minimal amount of time spent in the same place (defined by a
  * maximum distance between two points of the cluster).
  *
  * R. Hariharan and K. Toyama. Project Lachesis: parsing and modeling
@@ -50,10 +50,10 @@ import scala.collection.mutable
  * @param maxDiameter Maximum diameter of a stay (in meters)
  */
 class DTClusterer(minDuration: Duration, maxDiameter: Distance) extends Clusterer {
-  override def cluster(records: Seq[Record]): Seq[Cluster] = {
+  override def cluster(events: Seq[Event]): Seq[Cluster] = {
     val clusters = mutable.ListBuffer.empty[Cluster]
-    val candidate = mutable.ListBuffer.empty[Record]
-    records.foreach(doCluster(_, candidate, clusters))
+    val candidate = mutable.ListBuffer.empty[Event]
+    events.foreach(doCluster(_, candidate, clusters))
     handleCandidate(candidate, clusters)
     clusters
   }
@@ -61,30 +61,30 @@ class DTClusterer(minDuration: Duration, maxDiameter: Distance) extends Clustere
   /**
    * Recursive clustering routine.
    *
-   * @param record    Current record
+   * @param event     Current event
    * @param candidate Current list of tuples being a candidate stay
    * @param clusters  Current list of clusters
    */
-  private def doCluster(record: Record, candidate: mutable.ListBuffer[Record], clusters: mutable.ListBuffer[Cluster]): Unit =
-    if (candidate.isEmpty || isInDiameter(record, candidate)) {
-      candidate += record
+  private def doCluster(event: Event, candidate: mutable.ListBuffer[Event], clusters: mutable.ListBuffer[Cluster]): Unit =
+    if (candidate.isEmpty || isInDiameter(event, candidate)) {
+      candidate += event
     } else if (handleCandidate(candidate, clusters)) {
-      candidate += record
+      candidate += event
     } else {
       candidate.remove(0)
-      doCluster(record, candidate, clusters)
+      doCluster(event, candidate, clusters)
     }
 
   /**
-   * Check if a record can be added to a candidate cluster without breaking the
+   * Check if a event can be added to a candidate cluster without breaking the
    * distance requirement.
    *
-   * @param record    A record to tst
-   * @param candidate A collection of tuples
+   * @param event     Event to test
+   * @param candidate Collection of events
    * @return True if the tuple can be safely added, false other
    */
-  private def isInDiameter(record: Record, candidate: Seq[Record]) =
-    candidate.forall(_.point.distance(record.point) <= maxDiameter)
+  private def isInDiameter(event: Event, candidate: Seq[Event]) =
+    candidate.forall(_.point.distance(event.point) <= maxDiameter)
 
   /**
    * Check if a cluster is valid w.r.t. the time threshold.
@@ -93,7 +93,7 @@ class DTClusterer(minDuration: Duration, maxDiameter: Distance) extends Clustere
    * @param clusters  Current list of clusters
    * @return True if the stay is valid, false otherwise
    */
-  private def handleCandidate(candidate: mutable.ListBuffer[Record], clusters: mutable.ListBuffer[Cluster]) =
+  private def handleCandidate(candidate: mutable.ListBuffer[Event], clusters: mutable.ListBuffer[Cluster]) =
     if (candidate.size <= 1) {
       false
     } else if ((candidate.head.time to candidate.last.time).duration < minDuration) {

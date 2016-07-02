@@ -1,8 +1,8 @@
 package fr.cnrs.liris.accio.testing
 
 import com.github.nscala_time.time.Imports._
+import fr.cnrs.liris.accio.core.model.{Event, Trace}
 import fr.cnrs.liris.common.geo.LatLng
-import fr.cnrs.liris.accio.core.model.{Record, Trace}
 import org.joda.time.Instant
 
 trait WithTraceGenerator {
@@ -15,7 +15,7 @@ trait WithTraceGenerator {
     if (size <= 0) {
       Trace.empty(user)
     } else {
-      Trace(Seq.tabulate(size)(i => Record(user, Here, Now.plus(rate.multipliedBy(i)))))
+      Trace(Seq.tabulate(size)(i => Event(user, Here, Now.plus(rate.multipliedBy(i)))))
     }
   }
 }

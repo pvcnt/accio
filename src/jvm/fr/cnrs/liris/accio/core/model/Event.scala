@@ -47,29 +47,29 @@ import org.joda.time.Instant
  * @param time  A temporal moment
  * @param props Additional numeric properties
  */
-case class Record(user: String, point: Point, time: Instant, props: Map[String, Double]) extends Ordered[Record] {
-  def set(key: String, value: Double): Record = copy(props = props + (key -> value))
+case class Event(user: String, point: Point, time: Instant, props: Map[String, Double]) extends Ordered[Event] {
+  def set(key: String, value: Double): Event = copy(props = props + (key -> value))
 
-  override def compare(that: Record): Int = time.compare(that.time)
+  override def compare(that: Event): Int = time.compare(that.time)
 }
 
 /**
- * Factory for [[Record]].
+ * Factory for [[Event]].
  */
-object Record {
+object Event {
   /**
-   * Create a record with no additional properties.
+   * Create an event with no additional properties.
    *
    * @param user  A user identifier
    * @param point A geographical point
    * @param time  A temporal moment
    */
-  def apply(user: String, point: Point, time: Instant): Record =
-    new Record(user, point, time, Map.empty)
+  def apply(user: String, point: Point, time: Instant): Event =
+    new Event(user, point, time, Map.empty)
 
-  def apply(user: String, point: Point, time: Timestamp): Record =
-    new Record(user, point, new Instant(time.getTime), Map.empty)
+  def apply(user: String, point: Point, time: Timestamp): Event =
+    new Event(user, point, new Instant(time.getTime), Map.empty)
 
-  def apply(user: String, point: Point, time: Timestamp, props: Map[String, Double]): Record =
-    new Record(user, point, new Instant(time.getTime), props)
+  def apply(user: String, point: Point, time: Timestamp, props: Map[String, Double]): Event =
+    new Event(user, point, new Instant(time.getTime), props)
 }

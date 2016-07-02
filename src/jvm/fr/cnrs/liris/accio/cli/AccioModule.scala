@@ -4,9 +4,9 @@ import com.google.inject.{AbstractModule, Provides, Singleton}
 import fr.cnrs.liris.accio.cli.commands._
 import fr.cnrs.liris.accio.core.dataset.DatasetEnv
 import fr.cnrs.liris.accio.core.framework.{AnnotationOpMetaReader, OpMetaReader, OpRegistry}
-import fr.cnrs.liris.accio.core.ops.eval.{TransmissionDelay, _}
+import fr.cnrs.liris.accio.core.ops.eval._
+import fr.cnrs.liris.accio.core.ops.transform._
 import fr.cnrs.liris.accio.core.ops.source.EventSourceOp
-import fr.cnrs.liris.accio.core.ops.transform.{SequentialSplittingOp, TemporalSamplingOp, UniformSamplingOp, _}
 import fr.cnrs.liris.accio.core.pipeline._
 import net.codingwell.scalaguice.ScalaModule
 

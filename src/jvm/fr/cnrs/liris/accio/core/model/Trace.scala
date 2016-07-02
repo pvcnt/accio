@@ -37,36 +37,36 @@ import com.google.common.base.MoreObjects
 import fr.cnrs.liris.common.util.{Distance, Speed}
 
 /**
- * A trace is a list of records belonging to a single user.
+ * A trace is a list of events belonging to a single user.
  *
  * @param user    A user name
- * @param records A list of temporally ordered records
+ * @param events A list of temporally ordered events
  */
-case class Trace(user: String, records: Seq[Record]) {
+case class Trace(user: String, events: Seq[Event]) {
   /**
-   * Check if this trace is empty, i.e., contains no record.
+   * Check if this trace is empty, i.e., contains no event.
    */
-  def isEmpty: Boolean = records.isEmpty
+  def isEmpty: Boolean = events.isEmpty
 
   /**
-   * Check if this trace is not empty, i.e., contains at least one record.
+   * Check if this trace is not empty, i.e., contains at least one event.
    */
-  def nonEmpty: Boolean = records.nonEmpty
+  def nonEmpty: Boolean = events.nonEmpty
 
   /**
-   * Return the size of the trace, i.e., the number of records it contains.
+   * Return the size of the trace, i.e., the number of events it contains.
    */
-  def size: Int = records.size
+  def size: Int = events.size
 
   /**
    * Return the total duration of this trace, i.e., the elapsed time between the first and
-   * last record.
+   * last event.
    */
   def duration: Duration =
-    if (records.isEmpty) {
+    if (events.isEmpty) {
       Duration.millis(0)
     } else {
-      (records.head.time to records.last.time).duration
+      (events.head.time to events.last.time).duration
     }
 
   /**
@@ -79,7 +79,7 @@ case class Trace(user: String, records: Seq[Record]) {
    * is the size of this trace minus 1 (or 0 if the trace is empty).
    */
   def speeds: Seq[Speed] =
-    records.sliding(2).map(rs => {
+    events.sliding(2).map(rs => {
       val dl = rs.head.point.distance(rs.last.point)
       val dt = (rs.head.time to rs.last.time).duration
       Speed(dl, dt)
@@ -90,21 +90,21 @@ case class Trace(user: String, records: Seq[Record]) {
    * of this trace minus 1 (or 0 if the trace is empty).
    */
   def distances: Seq[Distance] =
-    records.sliding(2).map(rs => rs.head.point.distance(rs.last.point)).toSeq
+    events.sliding(2).map(rs => rs.head.point.distance(rs.last.point)).toSeq
 
   /**
    * Return the sequence of durations between consecutive points. The number of durations is equal
    * to the size of this collection minus 1 (or 0 if the trace is already empty).
    */
   def durations: Seq[Duration] =
-    records.sliding(2).map(rs => (rs.head.time to rs.last.time).duration).toSeq
+    events.sliding(2).map(rs => (rs.head.time to rs.last.time).duration).toSeq
 
   /**
-   * Return a new trace assigned to the same user created by applying a given function on records.
+   * Return a new trace assigned to the same user created by applying a given function on events.
    *
-   * @param fn A function modifying the records (it shouldn't modify the records' user)
+   * @param fn A function modifying the events (it shouldn't modify the events' user)
    */
-  def transform(fn: Seq[Record] => Seq[Record]): Trace = copy(records = fn(records))
+  def transform(fn: Seq[Event] => Seq[Event]): Trace = copy(events = fn(events))
 
   /**
    * Return an empty trace with the same user and batch.
@@ -112,16 +112,16 @@ case class Trace(user: String, records: Seq[Record]) {
   def empty: Trace = new Trace(user, Seq.empty)
 
   /**
-   * Return a trace with the same batch but with all records associated to another user name.
+   * Return a trace with the same batch but with all events associated to another user name.
    *
    * @param user Another user name
    */
-  def pseudonymise(user: String): Trace = new Trace(user, records.map(_.copy(user = user)))
+  def pseudonymise(user: String): Trace = new Trace(user, events.map(_.copy(user = user)))
 
   override def toString: String =
     MoreObjects.toStringHelper(this)
         .add("user", user)
-        .add("size", records.size)
+        .add("size", events.size)
         .toString
 }
 
@@ -135,19 +135,19 @@ object Trace {
   def empty(user: String): Trace = new Trace(user, Seq.empty)
 
   /**
-   * Create a trace from a list of records. The user name will be automatically inferred from this data, and the
-   * records will be temporally ordered.
+   * Create a trace from a list of events. The user name will be automatically inferred from this data, and the
+   * events will be temporally ordered.
    *
-   * @param records A non-empty list of records
+   * @param events A non-empty list of events
    */
-  def apply(records: Iterable[Record]): Trace = {
-    val seq = records.toSeq.sortBy(_.time)
-    require(seq.nonEmpty, "Cannot create a trace from an empty list of records")
+  def apply(events: Iterable[Event]): Trace = {
+    val seq = events.toSeq.sortBy(_.time)
+    require(seq.nonEmpty, "Cannot create a trace from an empty list of events")
     new Trace(seq.head.user, seq)
   }
 
-  def apply(user: String, records: Iterable[Record]): Trace = {
-    val seq = records.toSeq.sortBy(_.time)
+  def apply(user: String, events: Iterable[Event]): Trace = {
+    val seq = events.toSeq.sortBy(_.time)
     new Trace(user, seq)
   }
 }

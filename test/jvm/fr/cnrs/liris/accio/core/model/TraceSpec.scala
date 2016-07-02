@@ -22,7 +22,7 @@ class TraceSpec extends UnitSpec with WithTraceGenerator {
   }
 
   it should "return its user" in {
-    val t1 = Trace(Me, Seq(Record(Me, Here, Now)))
+    val t1 = Trace(Me, Seq(Event(Me, Here, Now)))
     t1.user shouldBe Me
 
     val t2 = Trace.empty(Me)

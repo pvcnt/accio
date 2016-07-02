@@ -43,17 +43,17 @@ import org.joda.time.Instant
   description = "It removes empty days by shifting data to fill those empty days."
 )
 case class CollapseTemporalGapsOp(
-    @Param(help = "Start date for all traces")
-    startAt: Instant
+  @Param(help = "Start date for all traces")
+  startAt: Instant
 ) extends Mapper {
   val startAtDate = new Instant(startAt.millis).toDateTime.withTimeAtStartOfDay
 
   override def map(trace: Trace): Trace = {
-    trace.transform { records =>
+    trace.transform { events =>
       var shift = 0L
       var prev: Option[DateTime] = None
-      records.map(record => {
-        val time = record.time.toDateTime.withTimeAtStartOfDay
+      events.map { event =>
+        val time = event.time.toDateTime.withTimeAtStartOfDay
         if (prev.isEmpty) {
           shift = (time to startAtDate).duration.days
         } else if (time != prev.get) {
@@ -61,13 +61,13 @@ case class CollapseTemporalGapsOp(
           shift += days - 1
         }
         val aligned = if (shift.intValue > 0) {
-          record.time - Duration.standardDays(shift)
+          event.time - Duration.standardDays(shift)
         } else {
-          record.time + Duration.standardDays(-shift)
+          event.time + Duration.standardDays(-shift)
         }
         prev = Some(time)
-        record.copy(time = aligned)
-      })
+        event.copy(time = aligned)
+      }
     }
   }
 }

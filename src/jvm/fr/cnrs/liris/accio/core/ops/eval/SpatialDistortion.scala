@@ -48,7 +48,7 @@ case class SpatialDistortion(
 ) extends Evaluator {
   override def evaluate(reference: Trace, result: Trace): Seq[Metric] = {
     require(reference.size > 1)
-    val points = reference.records.map(_.point)
+    val points = reference.events.map(_.point)
     val distances = if (interpolate) {
       evaluateWithInterpolation(points, result)
     } else {
@@ -58,13 +58,13 @@ case class SpatialDistortion(
   }
 
   private def evaluateWithoutInterpolation(reference: Seq[Point], result: Trace) =
-    result.records.map(event => Point.nearest(event.point, reference).distance)
+    result.events.map(event => Point.nearest(event.point, reference).distance)
 
   private def evaluateWithInterpolation(reference: Seq[Point], result: Trace) = {
-    result.records.map { record =>
-      val (a, b) = nearestLine(record.point, reference)
-      val projected = if (a == b) a else projectToLine(record.point, a, b)
-      record.point.distance(projected)
+    result.events.map { event =>
+      val (a, b) = nearestLine(event.point, reference)
+      val projected = if (a == b) a else projectToLine(event.point, a, b)
+      event.point.distance(projected)
     }
   }
 

@@ -1,7 +1,6 @@
 package fr.cnrs.liris.accio.core.ops.transform
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.core.framework.BoundTransformer
 import fr.cnrs.liris.accio.core.model.Trace
 import fr.cnrs.liris.accio.testing.WithTraceGenerator
 import fr.cnrs.liris.testing.UnitSpec
@@ -26,8 +25,7 @@ class UniformSamplingSpec extends UnitSpec with WithTraceGenerator {
   }
 
   private def transform(trace: Trace, probability: Double) = {
-    val transformation = BoundTransformer(new UniformSamplingOp)(_.probability := probability)
-    val res = transformation.transform(trace)
+    val res = UniformSamplingOp(probability).transform(trace)
     res should have size 1
     res.head
   }

@@ -33,8 +33,8 @@
 package fr.cnrs.liris.privamov.lib.clustering
 
 import com.github.nscala_time.time.Imports._
+import fr.cnrs.liris.accio.core.model.{Event, Poi}
 import fr.cnrs.liris.common.util.Distance
-import fr.cnrs.liris.accio.core.model.{Poi, Record}
 import org.joda.time.Instant
 
 /**
@@ -51,17 +51,17 @@ class PoisClusterer(minDuration: Duration, maxDiameter: Distance, minPoints: Int
   /**
    * Perform clustering of spatio-temporal points.
    *
-   * @param records
+   * @param events
    * @return A set of POIs
    */
-  def cluster(records: Iterable[Record]): Set[Poi] = {
-    val stays = dtClusterer.cluster(records.toSeq)
-    val staysAsRecords = stays.zipWithIndex.map {
-      case (stay, idx) => Record(idx.toString, stay.centroid, Instant.now)
+  def cluster(events: Iterable[Event]): Set[Poi] = {
+    val stays = dtClusterer.cluster(events.toSeq)
+    val staysAsEvents = stays.zipWithIndex.map {
+      case (stay, idx) => Event(idx.toString, stay.centroid, Instant.now)
     }
-    val pois = djClusterer.cluster(staysAsRecords)
+    val pois = djClusterer.cluster(staysAsEvents)
     pois.map(poi => {
-      Poi(poi.records.flatMap(record => stays(record.user.toInt).records))
+      Poi(poi.events.flatMap(event => stays(event.user.toInt).events))
     }).toSet
   }
 }

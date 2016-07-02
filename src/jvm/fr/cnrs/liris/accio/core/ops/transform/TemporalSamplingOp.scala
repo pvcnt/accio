@@ -34,22 +34,20 @@ package fr.cnrs.liris.accio.core.ops.transform
 
 import com.github.nscala_time.time.Imports._
 import fr.cnrs.liris.accio.core.framework.Op
-import fr.cnrs.liris.accio.core.model.Record
+import fr.cnrs.liris.accio.core.model.Event
 import fr.cnrs.liris.accio.core.param.Param
 
 /**
- * Enforce a minimum duration between two consecutive records in a trace. If the duration is
- * less than a given threshold, records will be discarded until the next point that fullfill
+ * Enforce a minimum duration between two consecutive events in a trace. If the duration is
+ * less than a given threshold, events will be discarded until the next point that fulfill
  * the minimum duration requirement.
  */
 @Op(
-  help = "Enforce a minimum duration between two consecutive records in traces"
+  help = "Enforce a minimum duration between two consecutive events in traces"
 )
 case class TemporalSamplingOp(
-    @Param(help = "Minimum duration between two consecutive records")
+    @Param(help = "Minimum duration between two consecutive events")
     duration: Duration
 ) extends SlidingSampling {
-
-  override protected def sample(prev: Record, curr: Record): Boolean =
-    (prev.time to curr.time).duration >= duration
+  override protected def sample(prev: Event, curr: Event): Boolean = (prev.time to curr.time).duration >= duration
 }

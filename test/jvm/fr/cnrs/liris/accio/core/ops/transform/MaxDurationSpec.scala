@@ -1,7 +1,6 @@
 package fr.cnrs.liris.accio.core.ops.transform
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.core.framework.BoundTransformer
 import fr.cnrs.liris.accio.core.model.Trace
 import fr.cnrs.liris.accio.testing.WithTraceGenerator
 import fr.cnrs.liris.testing.UnitSpec
@@ -25,14 +24,13 @@ class MaxDurationSpec extends UnitSpec with WithTraceGenerator {
   }
 
   private def transform(trace: Trace, duration: Duration) = {
-    val transformation = BoundTransformer(new MaxDurationOp)(_.duration := duration)
-    val res = transformation.transform(trace)
+    val res = MaxDurationOp(duration).transform(trace)
     res should have size 1
     res.head
   }
 
   private def assertTraceIsShortened(t: Trace, t1: Trace, s1: Int) = {
     t1.user shouldBe t.user
-    t1.records shouldBe t.records.take(s1)
+    t1.events shouldBe t.events.take(s1)
   }
 }

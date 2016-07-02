@@ -33,19 +33,18 @@
 package fr.cnrs.liris.accio.core.ops.transform
 
 import fr.cnrs.liris.accio.core.framework.Op
-import fr.cnrs.liris.accio.core.model.Record
+import fr.cnrs.liris.accio.core.model.Event
 import fr.cnrs.liris.accio.core.param.Param
 
 /**
- * Split a trace into multiple traces to ensure a fixed maximum number of records inside each trace.
+ * Split a trace into multiple traces to ensure a fixed maximum number of events inside each trace.
  */
 @Op(
   help = "Split traces, ensuring a maximum size for each one"
 )
 case class SizeSplittingOp(
-    @Param(help = "Maximum number of records allowed in each trace")
+    @Param(help = "Maximum number of events allowed in each trace")
     size: Int
 ) extends SlidingSplitting {
-
-  override protected def split(buffer: Seq[Record], curr: Record): Boolean = buffer.size >= size
+  override protected def split(buffer: Seq[Event], curr: Event): Boolean = buffer.size >= size
 }

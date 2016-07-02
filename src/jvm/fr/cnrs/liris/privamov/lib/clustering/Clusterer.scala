@@ -33,49 +33,48 @@
 package fr.cnrs.liris.privamov.lib.clustering
 
 import com.google.common.base.MoreObjects
+import fr.cnrs.liris.accio.core.model.{Event, Trace}
 import fr.cnrs.liris.common.geo.Point
-import fr.cnrs.liris.accio.core.model.{Record, Trace}
 
 /**
- * A clusterer creates clusters of points from a sequence of records.
+ * A clusterer creates clusters of points from a sequence of events.
  */
 trait Clusterer extends Serializable {
   /**
    * Perform clustering of spatio-temporal points.
    *
-   * @param records A temporally ordered list of records
+   * @param events A temporally ordered list of events
    * @return A list of cluters
    */
-  def cluster(records: Seq[Record]): Seq[Cluster]
+  def cluster(events: Seq[Event]): Seq[Cluster]
 
-  def cluster(trace: Trace): Seq[Cluster] = cluster(trace.records)
+  def cluster(trace: Trace): Seq[Cluster] = cluster(trace.events)
 }
 
 /**
- * A cluster is formed of a set of records.
+ * A cluster is formed of a set of events.
  *
- * @param records A set of records
+ * @param events A set of events
  */
-class Cluster(val records: Set[Record]) extends Serializable {
-  lazy val centroid = Point.centroid(records.map(_.point))
+class Cluster(val events: Set[Event]) extends Serializable {
+  lazy val centroid = Point.centroid(events.map(_.point))
 
   override def toString: String =
     MoreObjects.toStringHelper(this)
-        .add("size", records.size)
-        .toString
+      .add("size", events.size)
+      .toString
 }
 
 /**
- * A clusterer creating a cluster for each input record.
+ * A clusterer creating a cluster for each input event.
  */
 object IdentityClusterer extends Clusterer {
-  override def cluster(records: Seq[Record]): Seq[Cluster] =
-    records.map(record => new Cluster(Set(record)))
+  override def cluster(events: Seq[Event]): Seq[Cluster] = events.map(event => new Cluster(Set(event)))
 }
 
 /**
  * A clusterer creating no cluster.
  */
 object NoClusterer extends Clusterer {
-  override def cluster(records: Seq[Record]): Seq[Cluster] = Seq.empty
+  override def cluster(events: Seq[Event]): Seq[Cluster] = Seq.empty
 }

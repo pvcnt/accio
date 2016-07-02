@@ -33,22 +33,22 @@
 package fr.cnrs.liris.accio.core.ops.transform
 
 import fr.cnrs.liris.accio.core.framework.Op
-import fr.cnrs.liris.accio.core.model.Record
+import fr.cnrs.liris.accio.core.model.Event
 import fr.cnrs.liris.accio.core.param.Param
 import fr.cnrs.liris.common.util.Distance
 
 /**
  * Split a trace into two traces if there is a distance greater than some threshold between two
- * consecutive records.
+ * consecutive events.
  */
 @Op(
   help = "Split traces, when there is a too huge distance between consecutive events"
 )
 case class SpatialGapSplittingOp(
-    @Param(help = "Maximum distance between two consecutive records")
+    @Param(help = "Maximum distance between two consecutive events")
     distance: Distance
 ) extends SlidingSplitting {
 
-  override protected def split(buffer: Seq[Record], curr: Record): Boolean =
+  override protected def split(buffer: Seq[Event], curr: Event): Boolean =
     buffer.last.point.distance(curr.point) >= distance
 }

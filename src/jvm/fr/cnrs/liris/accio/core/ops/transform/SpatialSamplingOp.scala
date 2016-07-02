@@ -33,23 +33,23 @@
 package fr.cnrs.liris.accio.core.ops.transform
 
 import fr.cnrs.liris.accio.core.framework.Op
-import fr.cnrs.liris.accio.core.model.Record
+import fr.cnrs.liris.accio.core.model.Event
 import fr.cnrs.liris.accio.core.param.Param
 import fr.cnrs.liris.common.util.Distance
 
 /**
- * Enforce a minimum distance between two consecutive records in a trace. If the distance is
- * less than a given threshold, records will be discarded until the next point that fullfill
+ * Enforce a minimum distance between two consecutive events in a trace. If the distance is
+ * less than a given threshold, records will be discarded until the next point that fulfill
  * the minimum distance requirement.
  */
 @Op(
-  help = "Enforce a minimum distance between two consecutive records in traces"
+  help = "Enforce a minimum distance between two consecutive events in traces"
 )
 case class SpatialSamplingOp(
-    @Param(help = "Minimum distance between two consecutive records")
+    @Param(help = "Minimum distance between two consecutive events")
     distance: Distance
 ) extends SlidingSampling {
 
-  override protected def sample(prev: Record, curr: Record): Boolean =
+  override protected def sample(prev: Event, curr: Event): Boolean =
     prev.point.distance(curr.point) >= distance
 }

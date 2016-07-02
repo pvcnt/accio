@@ -40,9 +40,9 @@ import fr.cnrs.liris.accio.core.param.Param
   help = "Split traces sequentially, according to chronological order"
 )
 case class SequentialSplittingOp(
-    @Param(help = "Percentage of records at which a trace begins")
+    @Param(help = "Percentage of events at which a trace begins")
     percentBegin: Double,
-    @Param(help = "Percentage of records at which a trace ends")
+    @Param(help = "Percentage of events at which a trace ends")
     percentEnd: Double,
     @Param(help = "Whether to take the complement trace")
     complement: Boolean = false
@@ -55,7 +55,7 @@ case class SequentialSplittingOp(
     val from = math.max(0, (percentBegin * trace.size / 100).floor.toInt)
     val until = math.min(trace.size, (percentEnd * trace.size / 100).ceil.toInt)
     if (complement) {
-      trace.transform(records => records.slice(0, from) ++ records.slice(until, records.size))
+      trace.transform(events => events.slice(0, from) ++ events.slice(until, events.size))
     } else {
       trace.transform(_.slice(from, until))
     }

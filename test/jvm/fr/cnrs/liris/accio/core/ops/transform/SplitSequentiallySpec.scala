@@ -1,6 +1,5 @@
 package fr.cnrs.liris.accio.core.ops.transform
 
-import fr.cnrs.liris.accio.core.framework.BoundTransformer
 import fr.cnrs.liris.accio.core.model.Trace
 import fr.cnrs.liris.accio.testing.WithTraceGenerator
 import fr.cnrs.liris.testing.UnitSpec
@@ -9,13 +8,13 @@ import fr.cnrs.liris.testing.UnitSpec
  * Unit tests for [[SequentialSplittingOp]].
  */
 class SplitSequentiallySpec extends UnitSpec with WithTraceGenerator {
-  "SplitSequentially" should "split a trace with an even number of records without losing any of them" in {
+  "SplitSequentially" should "split a trace with an even number of events without losing any of them" in {
     val trace = randomTrace(Me, 150)
     val (out1, out2) = split(percent = 50, trace)
     assertTraceIsSplitted(trace, out1.head, out2.head, 75)
   }
 
-  it should "split a trace with a odd number of records without losing any of them" in {
+  it should "split a trace with a odd number of events without losing any of them" in {
     val trace = randomTrace(Me, 151)
     val (out1, out2) = split(percent = 50, trace)
     assertTraceIsSplitted(trace, out1.head, out2.head, 76)
@@ -52,8 +51,8 @@ class SplitSequentiallySpec extends UnitSpec with WithTraceGenerator {
   }
 
   private def split(percent: Double, traces: Trace*): (Seq[Trace], Seq[Trace]) = {
-    val splitter1 = BoundTransformer(new SequentialSplittingOp)(_.percentBegin := 0, _.percentEnd := percent, _.complement := false)
-    val splitter2 = BoundTransformer(new SequentialSplittingOp)(_.percentBegin := 0, _.percentEnd := percent, _.complement := true)
+    val splitter1 = SequentialSplittingOp(percentBegin = 0, percentEnd = percent, complement = false)
+    val splitter2 = SequentialSplittingOp(percentBegin = 0, percentEnd = percent, complement = true)
     val out1 = traces.flatMap(splitter1.transform)
     val out2 = traces.flatMap(splitter2.transform)
     out1 should have size traces.size
@@ -64,7 +63,7 @@ class SplitSequentiallySpec extends UnitSpec with WithTraceGenerator {
   private def assertTraceIsSplitted(t: Trace, t1: Trace, t2: Trace, s1: Int): Unit = {
     t1.user shouldBe t.user
     t2.user shouldBe t.user
-    t1.records shouldBe t.records.take(s1)
-    t2.records shouldBe t.records.drop(s1)
+    t1.events shouldBe t.events.take(s1)
+    t2.events shouldBe t.events.drop(s1)
   }
 }

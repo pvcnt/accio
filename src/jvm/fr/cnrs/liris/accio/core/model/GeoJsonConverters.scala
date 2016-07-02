@@ -6,9 +6,9 @@ object GeoJsonConverters {
   implicit def locationToGeoJson(location: Location): LocationToGeoJson =
     new LocationToGeoJson(location)
 
-  implicit def recordToGeoJson(record: Record): RecordToGeoJson = new RecordToGeoJson(record)
+  implicit def eventToGeoJson(event: Event): EventToGeoJson = new EventToGeoJson(event)
 
-  implicit def recordToGeoJson(poi: Poi): PoiToGeoJson = new PoiToGeoJson(poi)
+  implicit def poiToGeoJson(poi: Poi): PoiToGeoJson = new PoiToGeoJson(poi)
 
   implicit def traceToGeoJson(trace: Trace): TraceToGeoJson = new TraceToGeoJson(trace)
 }
@@ -23,16 +23,16 @@ class LocationToGeoJson(location: Location) {
   }
 }
 
-class RecordToGeoJson(record: Record) {
+class EventToGeoJson(event: Event) {
   /**
-   * Convert this record into GeoJSON.
+   * Convert this event into GeoJSON.
    */
   def toGeoJson: Feature = {
     val properties = Map(
-      "time" -> record.time.toString,
-      "user" -> record.user
-    ) ++ record.props
-    Feature(new LocationToGeoJson(record.point).toGeoJson, properties)
+      "time" -> event.time.toString,
+      "user" -> event.user
+    ) ++ event.props
+    Feature(new LocationToGeoJson(event.point).toGeoJson, properties)
   }
 }
 
@@ -57,5 +57,5 @@ class TraceToGeoJson(trace: Trace) {
    * Convert this trace into GeoJSON.
    */
   def toGeoJson(trace: Trace): FeatureCollection =
-    FeatureCollection(trace.records.map(new RecordToGeoJson(_).toGeoJson))
+    FeatureCollection(trace.events.map(new EventToGeoJson(_).toGeoJson))
 }

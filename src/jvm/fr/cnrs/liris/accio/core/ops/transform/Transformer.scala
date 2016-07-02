@@ -33,7 +33,7 @@
 package fr.cnrs.liris.accio.core.ops.transform
 
 import fr.cnrs.liris.accio.core.framework.{Mapper, Transformer}
-import fr.cnrs.liris.accio.core.model.{Record, Trace}
+import fr.cnrs.liris.accio.core.model.{Event, Trace}
 
 import scala.collection.mutable
 
@@ -42,38 +42,38 @@ private[ops] trait SlidingSampling extends Mapper {
     if (trace.isEmpty) {
       trace
     } else {
-      val newRecords = mutable.ListBuffer.empty[Record]
-      var maybePrev: Option[Record] = None
-      for (record <- trace.records) {
+      val newEvents = mutable.ListBuffer.empty[Event]
+      var maybePrev: Option[Event] = None
+      for (event <- trace.events) {
         val keep = maybePrev match {
-          case Some(prev) => sample(prev, record)
+          case Some(prev) => sample(prev, event)
           case None => true
         }
         if (keep) {
-          newRecords += record
-          maybePrev = Some(record)
+          newEvents += event
+          maybePrev = Some(event)
         }
       }
-      trace.copy(records = newRecords)
+      trace.copy(events = newEvents)
     }
   }
 
-  protected def sample(prev: Record, curr: Record): Boolean
+  protected def sample(prev: Event, curr: Event): Boolean
 }
 
 /**
- * Base class for all functions using previous record and current one to take a decision.
+ * Base class for all functions using previous event and current one to take a decision.
  */
 private[ops] trait SlidingSplitting extends Transformer {
   override final def transform(input: Trace): Seq[Trace] = {
     val output = mutable.ListBuffer[Trace]()
-    val buffer = mutable.ListBuffer[Record]()
-    for (record <- input.records) {
-      if (buffer.nonEmpty && split(buffer, record)) {
+    val buffer = mutable.ListBuffer[Event]()
+    for (event <- input.events) {
+      if (buffer.nonEmpty && split(buffer, event)) {
         output += Trace(buffer)
         buffer.clear()
       }
-      buffer += record
+      buffer += event
     }
     if (buffer.nonEmpty) {
       output += Trace(buffer)
@@ -81,5 +81,5 @@ private[ops] trait SlidingSplitting extends Transformer {
     output
   }
 
-  protected def split(buffer: Seq[Record], curr: Record): Boolean
+  protected def split(buffer: Seq[Event], curr: Event): Boolean
 }

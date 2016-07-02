@@ -43,7 +43,7 @@ import fr.cnrs.liris.accio.core.model.Trace
 )
 case class TransmissionDelay() extends Evaluator {
   override def evaluate(reference: Trace, result: Trace): Seq[Metric] = {
-    val delay = (reference.records.last.time to result.records.last.time).millis
+    val delay = (reference.events.last.time to result.events.last.time).millis
     Seq(Metric("value", delay))
   }
 }

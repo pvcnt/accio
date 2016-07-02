@@ -34,7 +34,7 @@ package fr.cnrs.liris.accio.core.ops.transform
 
 import com.github.nscala_time.time.Imports._
 import fr.cnrs.liris.accio.core.framework.Op
-import fr.cnrs.liris.accio.core.model.Record
+import fr.cnrs.liris.accio.core.model.Event
 import fr.cnrs.liris.accio.core.param.Param
 
 /**
@@ -48,6 +48,6 @@ case class DurationSplittingOp(
     duration: Duration
 ) extends SlidingSplitting {
 
-  override protected def split(buffer: Seq[Record], curr: Record): Boolean =
+  override protected def split(buffer: Seq[Event], curr: Event): Boolean =
     (buffer.head.time to curr.time).duration > duration
 }

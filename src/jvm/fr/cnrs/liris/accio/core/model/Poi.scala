@@ -41,24 +41,24 @@ import org.joda.time.Instant
 
 /**
  * A Point of Interest is a place where a user has spent some time. We only keep summarized information here (instead
- * of keeping the whole set of records forming that POI) to save some memory and allow easy (de)serialization.
+ * of keeping the whole set of events forming that POI) to save some memory and allow easy (de)serialization.
  *
  * There is no concept of "empty POI", if a POI exists it means that it is useful.
  *
  * @param user     A user
  * @param centroid Centroid of this POI
- * @param size     Number of records forming this POI
+ * @param size     Number of events forming this POI
  * @param start    First time the user has been inside inside this POI
  * @param end      Last time the user has been inside inside this POI
  * @param diameter Diameter of this POI (i.e., the distance between the two farthest points)
  */
 case class Poi(
-    user: String,
-    centroid: Point,
-    size: Int,
-    start: Instant,
-    end: Instant,
-    diameter: Distance) {
+  user: String,
+  centroid: Point,
+  size: Int,
+  start: Instant,
+  end: Instant,
+  diameter: Distance) {
   /**
    * Return the total amount of time spent inside this POI.
    *
@@ -83,14 +83,13 @@ case class Poi(
 
 object Poi {
   /**
-   * Create a new POI from a list of records.
+   * Create a new POI from a list of events.
    *
-   * @param records A non-empty list of records
-   * @return A POI
+   * @param events A non-empty list of events
    */
-  def apply(records: Iterable[Record]): Poi = {
-    val seq = records.toSeq.sortBy(_.time)
-    require(seq.nonEmpty, "Cannot create a POI from an empty list of records")
+  def apply(events: Iterable[Event]): Poi = {
+    val seq = events.toSeq.sortBy(_.time)
+    require(seq.nonEmpty, "Cannot create a POI from an empty list of events")
     val centroid = Point.centroid(seq.map(_.point))
     val diameter = Point.fastDiameter(seq.map(_.point))
     new Poi(seq.head.user, centroid, seq.size, seq.head.time, seq.last.time, diameter)
@@ -100,19 +99,17 @@ object Poi {
    * Create a POI from a single point and timestamp. Its duration will be zero and its diameter arbitrarily fixed
    * to 10 meters.
    *
-   * @param user  A user
+   * @param user  User identifier
    * @param point Location of this POI
-   * @param time  A timestamp
-   * @return A POI
+   * @param time  Timestamp
    */
   def apply(user: String, point: Point, time: Instant): Poi =
     Poi(user, point, 1, time, time, Distance.meters(10))
 
   /**
-   * Create a POI from a single record. Its duration will be zero and its diameter arbitrarily fixed to 10 meters
+   * Create a POI from a single event. Its duration will be zero and its diameter arbitrarily fixed to 10 meters.
    *
-   * @param record A record
-   * @return A POI
+   * @param event Event
    */
-  def apply(record: Record): Poi = apply(record.user, record.point, record.time)
+  def apply(event: Event): Poi = apply(event.user, event.point, event.time)
 }

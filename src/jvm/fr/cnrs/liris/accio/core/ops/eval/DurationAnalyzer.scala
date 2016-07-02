@@ -37,7 +37,7 @@ import fr.cnrs.liris.accio.core.framework.{Analyzer, Metric, Op}
 import fr.cnrs.liris.accio.core.model.Trace
 
 /**
- * An analyzer computing statistics about durations between consecutive records inside a trace.
+ * An analyzer computing statistics about durations between consecutive events inside a trace.
  */
 @Op(
   category = "metric",

@@ -104,14 +104,14 @@ class Indexer(elasticClient: ElasticClient, indexName: String) extends StrictLog
   private def addToIndex(typ: String, trace: Trace, timezone: DateTimeZone) = {
     val speeds = trace.speeds
     val future = elasticClient.execute {
-      bulk(trace.records.zipWithIndex.map { case (record, idx) =>
-        val time = record.time.toDateTime(timezone)
+      bulk(trace.events.zipWithIndex.map { case (event, idx) =>
+        val time = event.time.toDateTime(timezone)
         val uid = HashUtils.sha1(UUID.randomUUID().toString)
-        val latLng = record.point.toLatLng
+        val latLng = event.point.toLatLng
         val cell = S2CellId.fromLatLng(latLng.toS2)
 
         val coreFields = Seq(
-          "user" -> record.user,
+          "user" -> event.user,
           "location" -> new GeoPoint(latLng.lat.degrees, latLng.lng.degrees),
           "time" -> time.toString,
           "time_secsofday" -> time.secondOfDay.get,
@@ -125,7 +125,7 @@ class Indexer(elasticClient: ElasticClient, indexName: String) extends StrictLog
         index.into(indexName -> typ).fields(coreFields ++ cellFields: _*).id(uid)
       })
     }.andThen {
-      case Success(_) => logger.info(s"Indexed trace of user ${trace.user} (${trace.size} records)")
+      case Success(_) => logger.info(s"Indexed trace of user ${trace.user} (${trace.size} events)")
       case Failure(e) => logger.warn(s"Exception while indexing trace of user ${trace.user}", e)
     }.recover { case _ => Unit }
     Await.result(future, Duration.Inf)
