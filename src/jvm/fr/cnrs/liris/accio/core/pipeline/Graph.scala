@@ -18,6 +18,8 @@ case class GraphDef(nodes: Seq[NodeDef]) {
   def hasSameStructure(other: GraphDef): Boolean =
     other.nodes.size == nodes.size && nodes.forall(n => other.nodes.exists(_.hasSameStructure(n)))
 
+  def size: Int = nodes.size
+
   /**
    * Return a copy of this graph with new parameters propagated into the nodes.
    *
@@ -63,6 +65,8 @@ class Graph(_nodes: Map[String, Node]) {
   def nodes: Set[Node] = _nodes.values.toSet
 
   def roots: Set[Node] = nodes.filter(_.dependencies.isEmpty)
+
+  def size: Int = _nodes.size
 }
 
 case class Node(
