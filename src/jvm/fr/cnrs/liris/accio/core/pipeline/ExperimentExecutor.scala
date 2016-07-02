@@ -14,7 +14,7 @@ trait ExperimentExecutor {
   def execute(workDir: Path, experiment: ExperimentRun): ExperimentRun
 }
 
-class LocalExperimentExecutor @Inject()(workflowExecutor: WorkflowExecutor, writer: ReportWriter)
+class LocalExperimentExecutor @Inject()(workflowExecutor: RunExecutor, writer: ReportWriter)
   extends ExperimentExecutor with StrictLogging {
   override def execute(workDir: Path, experiment: ExperimentRun): ExperimentRun = {
     logger.trace(s"Starting execution of experiment ${experiment.id}: ${experiment.defn}")
@@ -28,7 +28,7 @@ class LocalExperimentExecutor @Inject()(workflowExecutor: WorkflowExecutor, writ
       val runId = HashUtils.sha1(UUID.randomUUID().toString)
       logger.trace(s"Starting execution of workflow run $runId: $graphDef")
       runningExperiment = runningExperiment.copy(children = runningExperiment.children ++ Seq(runId))
-      var run = WorkflowRun(runId, runningExperiment.id, graphDef, strategy.name(graphDef))
+      var run = Run(runId, runningExperiment.id, graphDef, strategy.name(graphDef))
       writer.write(workDir, runningExperiment)
 
       val progressReporter = new ConsoleWorkflowProgressReporter(graphDef.size)

@@ -1,10 +1,10 @@
 package fr.cnrs.liris.accio.cli
 
-import fr.cnrs.liris.accio.core.pipeline.{Artifact, GraphDef, WorkflowRun}
+import fr.cnrs.liris.accio.core.pipeline.{Artifact, GraphDef, Run}
 
 import scala.collection.mutable
 
-class ReportStatistics(val runs: Seq[WorkflowRun]) {
+class ReportStatistics(val runs: Seq[Run]) {
   require(runs.nonEmpty, "You must provide some runs to aggregate")
 
   def similarGraphs: Seq[Seq[GraphDef]] = {

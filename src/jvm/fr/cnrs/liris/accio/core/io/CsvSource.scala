@@ -43,34 +43,56 @@ import fr.cnrs.liris.accio.core.model.{Record, Trace}
 import fr.cnrs.liris.common.geo.Point
 import org.joda.time.Instant
 
+/**
+ * Mobility traces source reading data from our custom CSV format, with one file per trace.
+ *
+ * @param url     Path to directory where to read
+ * @param charset Charset to use
+ */
 case class CsvSource(url: String, charset: Charset = Charsets.UTF_8) extends DataSource[Trace] {
   private[this] val path = Paths.get(url)
   private[this] val decoder = new TextLineDecoder(new CsvDecoder(charset))
 
-  override def keys: Seq[String] = path.toFile.listFiles.map(_.toPath.getFileName.toString.dropRight(4))
+  override def keys: Seq[String] = path.toFile.listFiles.filter(_.isDirectory).map(_.toPath.getFileName.toString)
 
   override def read(key: String): Iterable[Trace] = {
-    val records = decoder.decode(key, Files.readAllBytes(path.resolve(s"$key.csv"))).getOrElse(Seq.empty)
-    if (records.nonEmpty) Iterable(Trace(records)) else Iterable.empty
+    path.resolve(key)
+      .toFile
+      .listFiles
+      .map(file => decoder.decode(key, Files.readAllBytes(file.toPath)))
+      .flatMap {
+        case Some(records) => Some(new Trace(key, records))
+        case None => None
+      }.toIterable
   }
 }
 
+/**
+ * Mobility traces sink writing data to our custom CSV format, with one file per trace.
+ *
+ * @param url     Path to directory where to write
+ * @param charset Charset to use
+ */
 case class CsvSink(url: String, charset: Charset = Charsets.UTF_8) extends DataSink[Trace] {
   private[this] val path = Paths.get(url)
+  require(!path.toFile.exists || (path.toFile.isDirectory && path.toFile.listFiles.isEmpty), s"Non-empty directory: ${path.toAbsolutePath}")
   private[this] val encoder = new CsvEncoder(charset)
   private[this] val NL = "\n".getBytes(charset)
-  Files.createDirectories(path)
-
-  def write(records: Iterable[Array[Byte]], labels: Set[String]): Unit = {
-    val path = Paths.get(s"$url/${labels.mkString(",")}.csv")
-    Files.write(path, records.fold(Array.empty[Byte])(_ ++ NL ++ _))
-  }
 
   override def write(key: String, elements: Iterator[Trace]): Unit = {
-    Files.write(path.resolve(s"$key.csv"), elements.flatMap(_.records).map(encoder.encode).fold(Array.empty)(_ ++ NL ++ _))
+    Files.createDirectories(path.resolve(key))
+    elements.zipWithIndex.foreach { case (trace, idx) =>
+      val bytes = trace.records.map(encoder.encode).fold(Array.empty)(_ ++ NL ++ _)
+      Files.write(path.resolve(key).resolve(s"$key-$idx.csv"), bytes)
+    }
   }
 }
 
+/**
+ * Decoder for our custo
+ *
+ * @param charset
+ */
 class CsvDecoder(charset: Charset = Charsets.UTF_8) extends Decoder[Record] with LazyLogging {
   override def decode(key: String, bytes: Array[Byte]): Option[Record] = {
     val line = new String(bytes, charset).trim

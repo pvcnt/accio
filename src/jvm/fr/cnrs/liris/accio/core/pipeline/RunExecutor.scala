@@ -33,8 +33,8 @@ object NoWorkflowProgressReporter extends WorkflowProgressReporter {
   override def onNodeStart(name: String): Unit = {}
 }
 
-class WorkflowExecutor @Inject()(env: DatasetEnv, graphBuilder: GraphBuilder, writer: ReportWriter) extends LazyLogging {
-  def execute(workDir: Path, run: WorkflowRun, progressReporter: WorkflowProgressReporter = NoWorkflowProgressReporter): Report = {
+class RunExecutor @Inject()(env: DatasetEnv, graphBuilder: GraphBuilder, writer: ReportWriter) extends LazyLogging {
+  def execute(workDir: Path, run: Run, progressReporter: WorkflowProgressReporter = NoWorkflowProgressReporter): Report = {
     val graph = graphBuilder.build(run.graphDef)
 
     val outputs = mutable.Map.empty[String, Artifact]

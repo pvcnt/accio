@@ -24,7 +24,7 @@ case class ExperimentRun(
  * @param graphDef Graph being executed
  * @param report   Execution report
  */
-case class WorkflowRun(
+case class Run(
   id: String,
   parent: String,
   graphDef: GraphDef,
@@ -111,11 +111,11 @@ case class ExecStats(
 trait ReportWriter {
   def write(workDir: Path, experiment: ExperimentRun): Unit
 
-  def write(workDir: Path, run: WorkflowRun): Unit
+  def write(workDir: Path, run: Run): Unit
 }
 
 trait ReportReader {
   def readExperiment(workDir: Path, id: String): ExperimentRun
 
-  def readRun(workDir: Path, id: String): WorkflowRun
+  def readRun(workDir: Path, id: String): Run
 }
