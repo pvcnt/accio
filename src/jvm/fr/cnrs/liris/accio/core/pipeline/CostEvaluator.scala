@@ -14,9 +14,9 @@ class CostEvaluator(objectives: Set[Objective]) extends LazyLogging {
    *
    * @param report Report
    */
-  def compute(report: Report): Double = objectives.map(compute(_, report)).sum
+  def compute(report: RunReport): Double = objectives.map(compute(_, report)).sum
 
-  private def compute(objective: Objective, report: Report): Double = {
+  private def compute(objective: Objective, report: RunReport): Double = {
     val values = report.artifacts.filter(art => art.name == objective.metric)
     if (values.isEmpty) {
       logger.warn(s"No artifact found with name ${objective.metric}")

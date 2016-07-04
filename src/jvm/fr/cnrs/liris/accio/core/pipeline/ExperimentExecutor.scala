@@ -14,7 +14,7 @@ trait ExperimentExecutor {
   def execute(workDir: Path, experiment: ExperimentRun): ExperimentRun
 }
 
-class LocalExperimentExecutor @Inject()(workflowExecutor: RunExecutor, writer: ReportWriter)
+class LocalExperimentExecutor @Inject()(workflowExecutor: GraphExecutor, writer: ReportWriter)
   extends ExperimentExecutor with StrictLogging {
   override def execute(workDir: Path, experiment: ExperimentRun): ExperimentRun = {
     logger.trace(s"Starting execution of experiment ${experiment.id}: ${experiment.defn}")
@@ -31,7 +31,7 @@ class LocalExperimentExecutor @Inject()(workflowExecutor: RunExecutor, writer: R
       var run = Run(runId, runningExperiment.id, graphDef, strategy.name(graphDef))
       writer.write(workDir, runningExperiment)
 
-      val progressReporter = new ConsoleWorkflowProgressReporter(graphDef.size)
+      val progressReporter = new ConsoleGraphProgressReporter(graphDef.size)
       val report = workflowExecutor.execute(workDir, run, progressReporter)
       scheduled ++= strategy.next(graphDef, meta, report)
 
@@ -46,7 +46,7 @@ class LocalExperimentExecutor @Inject()(workflowExecutor: RunExecutor, writer: R
     runningExperiment
   }
 
-  private def getExecutionStrategy(experimentDef: ExperimentDef) = {
+  private def getExecutionStrategy(experimentDef: Experiment) = {
     val graphDef = experimentDef.paramMap match {
       case None => experimentDef.workflow.graph
       case Some(m) => experimentDef.workflow.graph.setParams(m)
@@ -61,7 +61,7 @@ class LocalExperimentExecutor @Inject()(workflowExecutor: RunExecutor, writer: R
   }
 }
 
-class ConsoleWorkflowProgressReporter(count: Int, width: Int = 80) extends WorkflowProgressReporter {
+class ConsoleGraphProgressReporter(count: Int, width: Int = 80) extends GraphProgressReporter {
   private[this] val progress = new AtomicInteger
   private[this] var length = 0
 

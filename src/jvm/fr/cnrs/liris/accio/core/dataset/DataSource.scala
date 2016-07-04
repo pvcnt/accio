@@ -11,25 +11,6 @@ trait DataSource[T] {
   def read(key: String): Iterable[T]
 }
 
-trait DataSink[T] {
-  def write(key: String, elements: Iterator[T]): Unit
-}
-
-/**
- * An encoder converts a plain object into a (binary) record.
- *
- * @tparam T Plain object type
- */
-trait Encoder[T] {
-  /**
-   * Encodes an object into a binary record.
-   *
-   * @param obj Plain object
-   * @return Binary content
-   */
-  def encode(obj: T): Array[Byte]
-}
-
 /**
  * A decoder converts a binary (record) into a plain object.
  *

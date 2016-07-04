@@ -45,12 +45,12 @@ import fr.cnrs.liris.common.util.{Distance, FileUtils}
 import scala.collection.JavaConverters._
 
 trait ExperimentParser {
-  def parse(path: Path): ExperimentDef
+  def parse(path: Path): Experiment
 }
 
 class JsonExperimentParser @Inject()(registry: OpRegistry, workflowParser: WorkflowParser)
     extends ExperimentParser with LazyLogging {
-  override def parse(path: Path): ExperimentDef = {
+  override def parse(path: Path): Experiment = {
     require(path.toFile.exists && path.toFile.isFile, s"${path.toAbsolutePath} does not seem to be a valid file")
     val om = new ObjectMapper
     val root = om.readTree(path.toFile)
@@ -59,7 +59,7 @@ class JsonExperimentParser @Inject()(registry: OpRegistry, workflowParser: Workf
     } else {
       logger.warn(s"Implicitly converting a workflow definition into an experiment definition at ${path.toAbsolutePath}")
       val workflow = workflowParser.parse(path).setRuns(root.getInteger("runs").getOrElse(1))
-      new ExperimentDef(
+      new Experiment(
         name = getDefaultName(path),
         workflow = workflow,
         paramMap = None,
@@ -73,9 +73,9 @@ class JsonExperimentParser @Inject()(registry: OpRegistry, workflowParser: Workf
 
   private def getExperiment(path: Path, root: JsonNode) = {
     val workflow = getWorkflow(path, root.child("workflow"))
-    val name = root.getString("meta.name").getOrElse(getDefaultName(path))
-    val notes = root.getString("meta.notes")
-    val tags = root.getArray("meta.tags")
+    val name = root.getString("name").getOrElse(getDefaultName(path))
+    val notes = root.getString("notes")
+    val tags = root.getArray("tags")
         .map(_.map(_.string).toSet)
         .getOrElse(Set.empty)
     val paramDefs = workflow.graph.nodes.flatMap { nodeDef =>
@@ -87,7 +87,7 @@ class JsonExperimentParser @Inject()(registry: OpRegistry, workflowParser: Workf
     val optimization = root.getChild("optimization").map(getOptimization(paramDefs, _))
     val exploration = root.getChild("exploration").map(getExploration(paramDefs, _))
 
-    new ExperimentDef(
+    new Experiment(
       name = name,
       workflow = workflow,
       paramMap = params,
@@ -176,27 +176,27 @@ class JsonExperimentParser @Inject()(registry: OpRegistry, workflowParser: Workf
     val bounds = node.elements.asScala.map(Params.parse(paramDef.typ, _)).toSeq
     val range = paramDef.typ match {
       case ParamType.Double =>
-        require(bounds.size == 3, "You must specifify a double range as [from, to, step]")
+        require(bounds.size == 3, "You must specify a double range as [from, to, step]")
         val doubles = bounds.map(_.asInstanceOf[Double])
         val from = math.min(doubles(0), doubles(1))
         val to = math.max(doubles(0), doubles(1))
         from to to by doubles(2)
       case ParamType.Integer =>
-        require(bounds.size == 2 || bounds.size == 3, "You must specifify an integer range either as [from, to] or [from, to, step]")
+        require(bounds.size == 2 || bounds.size == 3, "You must specify an integer range either as [from, to] or [from, to, step]")
         val ints = bounds.map(_.asInstanceOf[Int])
         val step = if (ints.size == 3) ints(2) else 1
         val from = math.min(ints(0), ints(1))
         val to = math.max(ints(0), ints(1))
         from to to by step
       case ParamType.Long =>
-        require(bounds.size == 2 || bounds.size == 3, "You must specifify a long range either as [from, to] or [from, to, step]")
+        require(bounds.size == 2 || bounds.size == 3, "You must specify a long range either as [from, to] or [from, to, step]")
         val longs = bounds.map(_.asInstanceOf[Long])
         val step = if (longs.size == 3) longs(2) else 1L
         val from = math.min(longs(0), longs(1))
         val to = math.max(longs(0), longs(1))
         from to to by step
       case ParamType.Distance =>
-        require(bounds.size == 3, "You must specifify a distance range as [from, to, step]")
+        require(bounds.size == 3, "You must specify a distance range as [from, to, step]")
         val distances = bounds.map(_.asInstanceOf[Distance])
         val from = math.min(distances(0).meters, distances(1).meters)
         val to = math.max(distances(0).meters, distances(1).meters)

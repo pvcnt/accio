@@ -13,7 +13,7 @@ import fr.cnrs.liris.common.util.Requirements._
 import scala.collection.mutable
 import scala.util.control.NonFatal
 
-trait WorkflowProgressReporter {
+trait GraphProgressReporter {
   def onStart(): Unit
 
   def onComplete(successful: Boolean): Unit
@@ -23,7 +23,7 @@ trait WorkflowProgressReporter {
   def onNodeComplete(name: String, successful: Boolean): Unit
 }
 
-object NoWorkflowProgressReporter extends WorkflowProgressReporter {
+object NoGraphProgressReporter extends GraphProgressReporter {
   override def onStart(): Unit = {}
 
   override def onComplete(successful: Boolean): Unit = {}
@@ -33,59 +33,103 @@ object NoWorkflowProgressReporter extends WorkflowProgressReporter {
   override def onNodeStart(name: String): Unit = {}
 }
 
-class RunExecutor @Inject()(env: DatasetEnv, graphBuilder: GraphBuilder, writer: ReportWriter) extends LazyLogging {
-  def execute(workDir: Path, run: Run, progressReporter: WorkflowProgressReporter = NoWorkflowProgressReporter): Report = {
+/**
+ * A graph executor is responsible for the execution of a graph specified by a [[Run]]. The execution of a single graph
+ * is done locally, on a single machine.
+ *
+ * @param env          Dataset environment
+ * @param graphBuilder Graph builder
+ * @param writer       Report writer
+ */
+class GraphExecutor @Inject()(env: DatasetEnv, graphBuilder: GraphBuilder, writer: ReportWriter) extends LazyLogging {
+  /**
+   * Execute a given run. Artifacts and reports will be written inside a working directory, and a progress reporter
+   * will receive updates about the graph execution progress.
+   *
+   * @param run              Run to execute
+   * @param workDir          Working directory where to write artifacts and reports
+   * @param progressReporter Reporter receiving progress updates
+   * @return Final report
+   */
+  def execute(run: Run, workDir: Path, progressReporter: GraphProgressReporter = NoGraphProgressReporter): RunReport = {
     val graph = graphBuilder.build(run.graphDef)
 
     val outputs = mutable.Map.empty[String, Artifact]
-    val scheduled = mutable.Queue.empty[Node] ++ graph.roots
+    val scheduled = mutable.Queue.empty[Node] ++ graph.roots // Initially schedule graph roots
     var lastError: Option[Throwable] = None
-    var report = Report()
+    var report = new RunReport
 
-    progressReporter.onStart()
+    try {
+      progressReporter.onStart()
+    } catch {
+      case NonFatal(e) => logger.error("Error while reporting progress", e)
+    }
 
     while (scheduled.nonEmpty) {
       val node = scheduled.dequeue()
-      report = report.start(node.name)
-      progressReporter.onNodeStart(node.name)
+      report = report.startNode(node.name)
+
+      // We write the report and report status before executing the node.
+      writeReport(workDir, run, report)
+      try {
+        progressReporter.onNodeStart(node.name)
+      } catch {
+        case NonFatal(e) => logger.error("Error while reporting progress", e)
+      }
 
       try {
         val artifacts = execute(graph, node, outputs.toMap, run.id, workDir)
-        report = report.complete(node.name, artifacts)
+        report = report.completeNode(node.name, artifacts)
         outputs ++= artifacts.map(art => art.name -> art)
       } catch {
         case NonFatal(e) =>
-          report = report.complete(node.name, e)
+          report = report.completeNode(node.name, e)
           lastError = Some(e)
       }
 
-      // We report the outcome to the observer and try to write the report after each node execution.
-      progressReporter.onNodeComplete(node.name, lastError.isEmpty)
+      // We write the report and report status after executing the node.
+      writeReport(workDir, run, report)
       try {
-        writer.write(workDir, run.copy(report = report))
+        progressReporter.onNodeComplete(node.name, successful = lastError.isEmpty)
       } catch {
-        case NonFatal(e) => logger.error(s"Unable to write report for run ${run.id} at ${node.name}", e)
+        case NonFatal(e) => logger.error("Error while reporting progress", e)
       }
 
       // Then we can schedule next steps to take.
       if (lastError.isEmpty) {
-        // If the node was successfully executed, we scheduled its successors for which all dependencies are available.
+        // If the node was successfully executed, we schedule its successors for which all dependencies are available.
         scheduled ++= node.successors.map(graph(_)).filter(_.dependencies.forall(outputs.contains))
       } else {
         // Otherwise we clear the remaining scheduled nodes to exit the loop.
         scheduled.clear()
       }
     }
+    report = report.complete()
 
-    progressReporter.onComplete(successful = lastError.isEmpty)
-
-    lastError match {
-      case Some(e) =>
-        logger.error(s"Error while executing run ${run.id}", e)
-        report.complete(e)
-      case None => report.complete(successful = true)
+    // We write the report and report status. Moreover, we log the possible error, to be sure it will not be missed.
+    writeReport(workDir, run, report)
+    try {
+      progressReporter.onComplete(successful = lastError.isEmpty)
+    } catch {
+      case NonFatal(e) => logger.error("Error while reporting progress", e)
     }
+    lastError.foreach(e => logger.error(s"Error while executing run ${run.id}", e))
+
+    // Last verification that all nodes had a chance to run.
+    if (report.successful && report.nodeStats.size != run.graphDef.size) {
+      val missing = run.graphDef.nodes.map(_.name).toSet.diff(report.nodeStats.map(_.name))
+      throw new IllegalStateException(s"Some nodes were never executed: ${missing.mkString(", ")}")
+    }
+
+    report
   }
+
+  private def writeReport(workDir: Path, run: Run, report: RunReport) =
+    try {
+      writer.write(workDir, run.copy(report = Some(report)))
+    } catch {
+      case NonFatal(e) => logger.error(s"Unable to write report for run ${run.id}", e)
+    }
 
   private def execute(graph: Graph, node: Node, outputs: Map[String, Artifact], runId: String, workDir: Path): Seq[Artifact] = {
     val inputs = node.dependencies.map { dep =>

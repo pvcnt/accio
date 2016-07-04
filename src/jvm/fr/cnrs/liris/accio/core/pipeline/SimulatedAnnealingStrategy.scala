@@ -19,14 +19,14 @@ class SimulatedAnnealingStrategy(graphUnderOptimization: GraphDef, optimization:
     Seq(graphUnderOptimization.setParams(solution) -> AnnealingMeta(coolingSchedule.start, 1, None))
   }
 
-  override def next(graphDef: GraphDef, meta: Any, report: Report): Seq[(GraphDef, Any)] =
+  override def next(graphDef: GraphDef, meta: Any, report: RunReport): Seq[(GraphDef, Any)] =
     meta match {
       case m: AnnealingMeta => next(graphDef, m, report)
     }
 
   override def name(graphDef: GraphDef): Option[String] = None
 
-  private def next(graphDef: GraphDef, meta: AnnealingMeta, report: Report) = {
+  private def next(graphDef: GraphDef, meta: AnnealingMeta, report: RunReport) = {
     val solution = getSolution(graphDef)
     val cost = costEvaluator.compute(report)
 

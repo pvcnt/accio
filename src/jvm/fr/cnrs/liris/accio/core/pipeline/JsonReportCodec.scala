@@ -3,15 +3,10 @@ package fr.cnrs.liris.accio.core.pipeline
 import java.nio.file.Path
 
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.core.{JsonGenerator, JsonParser}
-import com.fasterxml.jackson.databind.deser.std.StdDeserializer
-import com.fasterxml.jackson.databind.module.SimpleModule
-import com.fasterxml.jackson.databind.ser.std.StdSerializer
-import com.fasterxml.jackson.databind.{DeserializationContext, ObjectMapper, SerializationFeature, SerializerProvider}
+import com.fasterxml.jackson.databind.{ObjectMapper, SerializationFeature}
 import com.fasterxml.jackson.datatype.joda.JodaModule
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import com.google.inject.Singleton
-import fr.cnrs.liris.accio.core.param.ParamMap
 
 @Singleton
 class JsonReportCodec extends ReportWriter with ReportReader {
@@ -35,22 +30,4 @@ class JsonReportCodec extends ReportWriter with ReportReader {
 
   override def write(workDir: Path, run: Run): Unit =
     om.writer.writeValue(workDir.resolve(s"run-${run.id}.json").toFile, run)
-}
-
-private class JacksonAccioModule extends SimpleModule {
-  addSerializer(new ParamMapSerializer)
-  addDeserializer(classOf[ParamMap], new ParamMapDeserializer)
-}
-
-private class ParamMapSerializer extends StdSerializer[ParamMap](classOf[ParamMap]) {
-  override def serialize(paramMap: ParamMap, jsonGenerator: JsonGenerator, serializerProvider: SerializerProvider): Unit = {
-    jsonGenerator.writeObject(paramMap.toMap)
-  }
-}
-
-private class ParamMapDeserializer extends StdDeserializer[ParamMap](classOf[ParamMap]) {
-  override def deserialize(jsonParser: JsonParser, deserializationContext: DeserializationContext): ParamMap = {
-    val map = jsonParser.readValueAs(classOf[Map[String, Any]])
-    new ParamMap(map)
-  }
 }

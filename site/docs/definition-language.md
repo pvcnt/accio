@@ -15,28 +15,24 @@ A workflow is a JSON object formed of the following fields.
 
 | Name | Description | Type | Required |
 |:-----|:------------|:-----|:---------|
-| id | A unique identifier for this workflow. By default, it is the file name without its extension. | string | false |
-| meta.name | A human-readable name. | string | false |
-| meta.owner | Person owning the workflow. It can include an email address between chevrons. | string | false |
+| name | A human-readable name. | string | false |
+| owner | Person owning the workflow. It can include an email address between chevrons. | string | false |
 | runs | Default number of runs for each node. It can be overriden on a per-node basis. | integer | false |
 | graph | Nodes composing the workflow graph. The order in which nodes are defined does not matter. | object[] | true |
 | graph[*].op | Operator name. | string | required |
-| graph[*].name | Node name. By default it will take the operator name, with a numerical suffix appended if an operator appears multiple times. | string | optional |
+| graph[*].name | Node name. By default it will be the operator's name. | string | optional |
 | graph[*].inputs | Names of nodes acting as inputs of this node. | string[] | false |
 | graph[*].params | Mapping between parameter names and values. All parameters without a default value should be specified. | object | false |
 | graph[*].runs | Number of times this node should be ran. It is only useful for nodes producing metrics. If it is defined here, the value takes precedence over the global runs value. Results of different runs will be aggregated together (i.e., distributions resulting from all runs will be merged). | integer | false |
 | graph[*].ephemeral | Force the node dataset output to be ephemeral (it can only be forced at he operator level). Ephemeral outputs are not stored as artifacts. | boolean | false |
 {: class="table table-striped"}
 
-Here is an example of a simple workflow definition:
+Here is an example of a simple workflow's definition:
 
 ```json
 {
-  "id": "geoind_workflow",
-  "meta": {
-    "name": "Geo-indistinguishability workflow",
-    "owner": "John Doe <john.doe@gmail.com>"
-  },
+  "name": "Geo-indistinguishability workflow",
+  "owner": "John Doe <john.doe@gmail.com>",
   "graph": [
     {
       "op": "EventSource",
@@ -76,9 +72,9 @@ An experiment is a JSON object formed of the following fields.
 
 | Name | Description | Type | Required |
 |:-----|:------------|:-----|:---------|
-| meta.name | A human-readable name. | string | false |
-| meta.notes | Some free text notes. | string | false |
-| meta.tags | Some tags. | string[] |  false |
+| name | A human-readable name. | string | false |
+| notes | Some free text notes. | string | false |
+| tags | Some tags. | string[] |  false |
 | workflow | Path to a workflow definition file. It can be either a relative (starting with `./`), home relative (starting with `~`) or absolute (starting with `/`) path. | string | true |
 | runs | Override the default number of runs for each node. | integer | false |
 | params | Mapping between fully qualified names of parameters to override and new values. | object | false|
@@ -100,10 +96,8 @@ Here is an example of a simple experiment definition:
 {
   "workflow": "./geoind-workflow.json",
   "runs": 3,
-  "meta": {
-    "name": "My brand new experiment",
-    "tags": ["brand", "new"]
-  },
+  "name": "My brand new experiment",
+  "tags": ["brand", "new"],
   "optimization": {
     "grid": {
       "GeoIndistinguishability/epsilon": {
@@ -148,4 +142,4 @@ You cannot run optimizations of explorations this way, but you can still define 
 When you need to refer to a parameter, you have two options.
 When inside the context of a node, you can use directly its name, for example `distance`.
 When outside of the context of a node (e.g., when defining global parameters overrides), you must use its fully qualified name.
-Fully qualified names are built with the node name, a slash '/' seperator and the parameter name, for example `PoisRetrieval:distance`.
+Fully qualified names are built with the node name, a slash '/' separator and the parameter name, e.g., `PoisRetrieval/distance`.

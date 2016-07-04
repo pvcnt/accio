@@ -39,7 +39,6 @@ import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.param._
 import fr.cnrs.liris.accio.core.pipeline.JsonHelper._
-import fr.cnrs.liris.common.util.FileUtils
 
 import scala.collection.JavaConverters._
 
@@ -53,7 +52,7 @@ trait WorkflowParser {
    * @param path Path to a workflow definition
    * @return A workflow definition
    */
-  def parse(path: Path): WorkflowDef
+  def parse(path: Path): Workflow
 }
 
 /**
@@ -62,16 +61,15 @@ trait WorkflowParser {
  * @param registry Operator registry
  */
 class JsonWorkflowParser @Inject()(registry: OpRegistry) extends WorkflowParser {
-  override def parse(path: Path): WorkflowDef = {
+  override def parse(path: Path): Workflow = {
     val om = new ObjectMapper
     val root = om.readTree(path.toFile)
 
-    val id = root.getString("id").getOrElse(FileUtils.removeExtension(path.getFileName.toString))
-    val name = root.getString("meta.name")
-    val owner = root.getString("meta.owner").map(User.parse)
+    val name = root.getString("name")
+    val owner = root.getString("owner").map(User.parse)
     val nodes = root.child("graph").elements.asScala.map(getNode).toSeq
 
-    var defn = new WorkflowDef(id, new GraphDef(nodes), name, owner)
+    var defn = new Workflow(new GraphDef(nodes), name, owner)
     root.getInteger("runs").foreach { runs =>
       defn = defn.setRuns(runs)
     }
