@@ -7,6 +7,7 @@ scala_library(
         'src/jvm/fr/cnrs/liris/common/util',
         'src/jvm/fr/cnrs/liris/common/random',
         'src/jvm/fr/cnrs/liris/privamov/lib/laplace',
+        '3rdparty/jvm:scala-time',
     ],
     sources=globs('*.scala')
 )

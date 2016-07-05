@@ -46,6 +46,7 @@ class AccioModule extends AbstractModule with ScalaModule {
     registry.register[TemporalGapSplittingOp]
     registry.register[SequentialSplittingOp]
     registry.register[TemporalSamplingOp]
+    registry.register[TemporalSplittingOp]
     registry.register[UniformSamplingOp]
     registry.register[GeoIndistinguishabilityOp]
     registry.register[PromesseOp]
@@ -66,7 +67,6 @@ class AccioModule extends AbstractModule with ScalaModule {
   @Provides
   def providesCommandRegistry: CommandRegistry = {
     val registry = new CommandRegistry
-    registry.register[AnalyzeCommand]
     registry.register[RunCommand]
     registry.register[VisualizeCommand]
     registry.register[HelpCommand]

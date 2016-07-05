@@ -1,10 +1,11 @@
 package fr.cnrs.liris.accio.core.pipeline
 
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type
-import com.fasterxml.jackson.annotation.{JsonIgnoreProperties, JsonProperty, JsonSubTypes, JsonTypeInfo}
+import com.fasterxml.jackson.annotation.{JsonIgnoreProperties, JsonSubTypes, JsonTypeInfo}
 import fr.cnrs.liris.accio.core.dataset.Dataset
 import fr.cnrs.liris.accio.core.model.Trace
 import fr.cnrs.liris.common.util.Named
+import org.joda.time.Instant
 
 /**
  * An artifact is something produced by an operator and possibly consumed by another operator.
@@ -79,3 +80,5 @@ case class DistributionArtifact(name: String, distribution: Seq[(String, Double)
 
   def values: Seq[Double] = distribution.map(_._2)
 }
+
+//case class Scalar(value: Double, user: String, start: Instant, to: Instant, size: Int)
