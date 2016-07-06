@@ -33,15 +33,16 @@
 package fr.cnrs.liris.accio.cli.commands
 
 import java.nio.file.{Files, Path, Paths}
-import java.util.UUID
+import java.util.concurrent.atomic.AtomicInteger
 
 import com.google.inject.Inject
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.cli.{Command, Reporter}
+import fr.cnrs.liris.accio.core.framework.OpRegistry
+import fr.cnrs.liris.accio.core.param.ParamMap
 import fr.cnrs.liris.accio.core.pipeline._
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
-import fr.cnrs.liris.common.util.{FileUtils, HashUtils}
-import org.joda.time.Instant
+import fr.cnrs.liris.common.util.FileUtils
 
 case class MakeCommandOpts(
     @Flag(name = "workdir")
@@ -55,13 +56,15 @@ case class MakeCommandOpts(
     @Flag(name = "user")
     user: String = "",
     @Flag(name = "runs")
-    runs: Int = 1)
+    runs: Int = 1,
+    @Flag(name = "params")
+    params: String = "")
 
 @Command(
   name = "run",
   help = "Execute an Accio workflow",
   allowResidue = true)
-class RunCommand @Inject()(parser: ExperimentParser, executor: ExperimentExecutor)
+class RunCommand @Inject()(parser: ExperimentParser, executor: ExperimentExecutor, opRegistry: OpRegistry)
     extends AccioCommand[MakeCommandOpts] with StrictLogging {
 
   def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
@@ -71,21 +74,23 @@ class RunCommand @Inject()(parser: ExperimentParser, executor: ExperimentExecuto
       ExitCode.CommandLineError
     } else {
       val workDir = if (opts.workDir.nonEmpty) Paths.get(opts.workDir) else Files.createTempDirectory("accio-")
-      out.writeln(s"Persisting artifacts and reports to <comment>${workDir.toAbsolutePath}</comment>")
+      out.writeln(s"Writing progress in <comment>${workDir.toAbsolutePath}</comment>")
+      val progressReporter = new ConsoleGraphProgressReporter(out)
       flags.residue.foreach { url =>
-        make(opts, workDir, url)
+        make(opts, workDir, url, progressReporter)
       }
+      out.writeln(s"Done. Reports in <comment>${workDir.toAbsolutePath}</comment>")
       ExitCode.Success
     }
   }
 
-  private def make(opts: MakeCommandOpts, workDir: Path, url: String) = {
+  private def make(opts: MakeCommandOpts, workDir: Path, url: String, progressReporter: ExperimentProgressReporter) = {
     var experiment = parser.parse(Paths.get(FileUtils.replaceHome(url)))
     if (opts.name.nonEmpty) {
       experiment = experiment.copy(name = opts.name)
     }
     if (opts.tags.nonEmpty) {
-      experiment = experiment.copy(tags = opts.tags.split(",").map(_.trim).toSet)
+      experiment = experiment.copy(tags = opts.tags.split(" ").map(_.trim).toSet)
     }
     if (opts.notes.nonEmpty) {
       experiment = experiment.copy(notes = Some(opts.notes))
@@ -96,6 +101,56 @@ class RunCommand @Inject()(parser: ExperimentParser, executor: ExperimentExecuto
     if (opts.runs > 1) {
       experiment = experiment.copy(workflow = experiment.workflow.setRuns(opts.runs))
     }
-    executor.execute(experiment, workDir)
+    if (opts.params.nonEmpty) {
+      val NameRegex = "([^/]+)/(.+)".r
+      val ParamRegex = "([^=]+)=(.+)".r
+      val map = opts.params.trim.split(" ").map {
+        case ParamRegex(name, value) => name match {
+          case NameRegex(nodeName, paramName) =>
+            val maybeNode = experiment.workflow.graph.nodes.find(_.name == nodeName)
+            require(maybeNode.isDefined, s"Unknown node: $nodeName")
+            val maybeParamDef = opRegistry(maybeNode.get.op).defn.params.find(_.name == paramName)
+            require(maybeParamDef.isDefined, s"Unknown param: ${maybeNode.get.op}/$paramName")
+            name -> Params.parse(maybeParamDef.get.typ, value)
+          case _ => throw new IllegalArgumentException(s"Invalid param name: $name")
+        }
+        case str => throw new IllegalArgumentException(s"Invalid param (expected key=value): $str")
+      }.toMap
+      experiment = experiment.setParams(new ParamMap(map))
+    }
+    executor.execute(experiment, workDir, progressReporter)
   }
+}
+
+private class ConsoleGraphProgressReporter(out: Reporter, width: Int = 80) extends ExperimentProgressReporter {
+  private[this] val progress = new AtomicInteger
+  private[this] var length = 0
+
+  override def onStart(experiment: Experiment): Unit = synchronized {
+    out.writeln(s"Experiment ${experiment.shortId}: <info>${experiment.name}</info>")
+  }
+
+  override def onComplete(experiment: Experiment): Unit = {}
+
+  override def onGraphStart(run: Run): Unit = synchronized {
+    out.writeln(s"  Run ${run.shortId}: <info>${run.name.getOrElse("(anonymous)")}</info>")
+  }
+
+  override def onGraphComplete(run: Run, successful: Boolean): Unit = synchronized {
+    out.write(s"    ${" " * length}\r")
+    length = 0
+  }
+
+  override def onNodeStart(run: Run, nodeDef: NodeDef): Unit = synchronized {
+    val i = progress.incrementAndGet
+    val str = s"    ${nodeDef.name}: $i/${run.graphDef.size}"
+    out.write(str)
+    if (str.length < length) {
+      out.write(" " * (length - str.length))
+    }
+    out.write("\r")
+    length = str.length
+  }
+
+  override def onNodeComplete(run: Run, nodeDef: NodeDef, successful: Boolean): Unit = {}
 }

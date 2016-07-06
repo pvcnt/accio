@@ -22,6 +22,8 @@ case class Run(
     name: Option[String] = None,
     report: Option[RunReport] = None) {
 
+  def shortId: String = id.substring(0, 8)
+
   override def toString: String = name.getOrElse(id)
 }
 

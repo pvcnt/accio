@@ -30,6 +30,13 @@ case class Experiment(
     initiator: User,
     report: Option[ExperimentReport] = None) {
   require(!(exploration.isDefined && optimization.isDefined), "Cannot define both an exploration and an optimization")
+
+  def shortId: String = id.substring(0, 8)
+
+  def setParams(paramMap: ParamMap): Experiment = {
+    val newParamMap = this.paramMap.map(_ ++ paramMap).getOrElse(paramMap)
+    copy(paramMap = Some(newParamMap))
+  }
 }
 
 case class Exploration(paramGrid: ParamGrid)

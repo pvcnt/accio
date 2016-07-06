@@ -93,14 +93,13 @@ class Graph(_nodes: Map[String, Node]) {
   def size: Int = _nodes.size
 }
 
-case class Node(
-  name: String,
-  operator: Operator,
-  dependencies: Seq[String],
-  successors: Set[String],
-  runs: Int,
-  ephemeral: Boolean
-) extends Named
+case class Node(defn: NodeDef, operator: Operator, dependencies: Seq[String], successors: Set[String]) extends Named {
+  override def name: String = defn.name
+
+  def runs: Int = defn.runs
+
+  def ephemeral: Boolean = defn.ephemeral
+}
 
 /**
  * A graph builder builds [[Graph]]'s from [[GraphDef]]'s.
@@ -122,7 +121,7 @@ class GraphBuilder @Inject()(registry: OpRegistry) {
     val opMeta = registry(nodeDef.op)
     val args = getConstructorArgs(opMeta, nodeDef)
     val operator = opMeta.clazz.getConstructors.head.newInstance(args: _*).asInstanceOf[Operator]
-    new Node(nodeDef.name, operator, nodeDef.inputs, Set.empty, nodeDef.runs, nodeDef.ephemeral)
+    new Node(nodeDef, operator, nodeDef.inputs, Set.empty)
   }
 
   private def getConstructorArgs(opMeta: OpMeta, nodeDef: NodeDef) = {

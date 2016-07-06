@@ -46,7 +46,6 @@ class AccioModule extends AbstractModule with ScalaModule {
     registry.register[TemporalGapSplittingOp]
     registry.register[SequentialSplittingOp]
     registry.register[TemporalSamplingOp]
-    registry.register[TemporalSplittingOp]
     registry.register[UniformSamplingOp]
     registry.register[GeoIndistinguishabilityOp]
     registry.register[PromesseOp]

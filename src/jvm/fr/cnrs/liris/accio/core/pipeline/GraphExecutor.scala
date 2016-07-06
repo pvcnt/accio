@@ -14,23 +14,23 @@ import scala.collection.mutable
 import scala.util.control.NonFatal
 
 trait GraphProgressReporter {
-  def onStart(): Unit
+  def onGraphStart(run: Run): Unit
 
-  def onComplete(successful: Boolean): Unit
+  def onGraphComplete(run: Run, successful: Boolean): Unit
 
-  def onNodeStart(name: String): Unit
+  def onNodeStart(run: Run, nodeDef: NodeDef): Unit
 
-  def onNodeComplete(name: String, successful: Boolean): Unit
+  def onNodeComplete(run: Run, nodeDef: NodeDef, successful: Boolean): Unit
 }
 
 object NoGraphProgressReporter extends GraphProgressReporter {
-  override def onStart(): Unit = {}
+  override def onGraphStart(run: Run): Unit = {}
 
-  override def onComplete(successful: Boolean): Unit = {}
+  override def onNodeComplete(run: Run, nodeDef: NodeDef, successful: Boolean): Unit = {}
 
-  override def onNodeComplete(name: String, successful: Boolean): Unit = {}
+  override def onGraphComplete(run: Run, successful: Boolean): Unit = {}
 
-  override def onNodeStart(name: String): Unit = {}
+  override def onNodeStart(run: Run, nodeDef: NodeDef): Unit = {}
 }
 
 /**
@@ -60,7 +60,7 @@ class GraphExecutor @Inject()(env: DatasetEnv, graphBuilder: GraphBuilder, write
     var report = new RunReport
 
     try {
-      progressReporter.onStart()
+      progressReporter.onGraphStart(run)
     } catch {
       case NonFatal(e) => logger.error("Error while reporting progress", e)
     }
@@ -72,7 +72,7 @@ class GraphExecutor @Inject()(env: DatasetEnv, graphBuilder: GraphBuilder, write
       // We write the report and report status before executing the node.
       writeReport(workDir, run, report)
       try {
-        progressReporter.onNodeStart(node.name)
+        progressReporter.onNodeStart(run, node.defn)
       } catch {
         case NonFatal(e) => logger.error("Error while reporting progress", e)
       }
@@ -90,7 +90,7 @@ class GraphExecutor @Inject()(env: DatasetEnv, graphBuilder: GraphBuilder, write
       // We write the report and report status after executing the node.
       writeReport(workDir, run, report)
       try {
-        progressReporter.onNodeComplete(node.name, successful = lastError.isEmpty)
+        progressReporter.onNodeComplete(run, node.defn, successful = lastError.isEmpty)
       } catch {
         case NonFatal(e) => logger.error("Error while reporting progress", e)
       }
@@ -109,7 +109,7 @@ class GraphExecutor @Inject()(env: DatasetEnv, graphBuilder: GraphBuilder, write
     // We write the report and report status. Moreover, we log the possible error, to be sure it will not be missed.
     writeReport(workDir, run, report)
     try {
-      progressReporter.onComplete(successful = lastError.isEmpty)
+      progressReporter.onGraphComplete(run, successful = lastError.isEmpty)
     } catch {
       case NonFatal(e) => logger.error("Error while reporting progress", e)
     }
@@ -192,8 +192,8 @@ class GraphExecutor @Inject()(env: DatasetEnv, graphBuilder: GraphBuilder, write
 
   private def getDistributions(nodeName: String, metrics: Array[(String, Metric)]) =
     metrics
-      .groupBy(_._2.name)
-      .map { case (name, values) =>
-        DistributionArtifact(s"$nodeName/$name", values.map { case (k, v) => (k, v.value) })
-      }.toSeq
+        .groupBy(_._2.name)
+        .map { case (name, values) =>
+          DistributionArtifact(s"$nodeName/$name", values.map { case (k, v) => (k, v.value) })
+        }.toSeq
 }

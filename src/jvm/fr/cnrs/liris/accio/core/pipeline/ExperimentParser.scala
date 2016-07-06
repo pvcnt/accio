@@ -36,12 +36,14 @@ import java.nio.file.{Path, Paths}
 import java.util.UUID
 
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
+import com.github.nscala_time.time.Imports._
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.param.{ParamGrid, ParamMap}
 import fr.cnrs.liris.accio.core.pipeline.JsonHelper._
 import fr.cnrs.liris.common.util.{Distance, FileUtils, HashUtils}
+import org.joda.time.Instant
 
 import scala.collection.JavaConverters._
 
@@ -178,34 +180,47 @@ class JsonExperimentParser @Inject()(registry: OpRegistry, workflowParser: Workf
   }
 
   private def getRange(paramDef: ParamDef, node: JsonNode): Array[Any] = {
-    val bounds = node.elements.asScala.map(Params.parse(paramDef.typ, _)).toSeq
     val range = paramDef.typ match {
       case ParamType.Double =>
+        val bounds = node.elements.asScala.map(Params.parse(paramDef.typ, _).asInstanceOf[Double]).toSeq
         require(bounds.size == 3, "You must specify a double range as [from, to, step]")
-        val doubles = bounds.map(_.asInstanceOf[Double])
-        val from = math.min(doubles(0), doubles(1))
-        val to = math.max(doubles(0), doubles(1))
-        from to to by doubles(2)
+        val from = math.min(bounds(0), bounds(1))
+        val to = math.max(bounds(0), bounds(1))
+        from to to by bounds(2)
       case ParamType.Integer =>
+        val bounds = node.elements.asScala.map(Params.parse(paramDef.typ, _).asInstanceOf[Int]).toSeq
         require(bounds.size == 2 || bounds.size == 3, "You must specify an integer range either as [from, to] or [from, to, step]")
-        val ints = bounds.map(_.asInstanceOf[Int])
-        val step = if (ints.size == 3) ints(2) else 1
-        val from = math.min(ints(0), ints(1))
-        val to = math.max(ints(0), ints(1))
+        val step = if (bounds.size == 3) bounds(2) else 1
+        val from = math.min(bounds(0), bounds(1))
+        val to = math.max(bounds(0), bounds(1))
         from to to by step
       case ParamType.Long =>
+        val bounds = node.elements.asScala.map(Params.parse(paramDef.typ, _).asInstanceOf[Long]).toSeq
         require(bounds.size == 2 || bounds.size == 3, "You must specify a long range either as [from, to] or [from, to, step]")
-        val longs = bounds.map(_.asInstanceOf[Long])
-        val step = if (longs.size == 3) longs(2) else 1L
-        val from = math.min(longs(0), longs(1))
-        val to = math.max(longs(0), longs(1))
+        val from = math.min(bounds(0), bounds(1))
+        val to = math.max(bounds(0), bounds(1))
+        val step = if (bounds.size == 3) bounds(2) else 1L
         from to to by step
       case ParamType.Distance =>
+        val bounds = node.elements.asScala.map(Params.parse(paramDef.typ, _).asInstanceOf[Distance]).toSeq
         require(bounds.size == 3, "You must specify a distance range as [from, to, step]")
-        val distances = bounds.map(_.asInstanceOf[Distance])
-        val from = math.min(distances(0).meters, distances(1).meters)
-        val to = math.max(distances(0).meters, distances(1).meters)
-        (from to to by distances(2).meters).map(Distance.meters)
+        val from = math.min(bounds(0).meters, bounds(1).meters)
+        val to = math.max(bounds(0).meters, bounds(1).meters)
+        (from to to by bounds(2).meters).map(Distance.meters)
+      case ParamType.Duration =>
+        val bounds = node.elements.asScala.map(Params.parse(paramDef.typ, _).asInstanceOf[Duration]).toSeq
+        require(bounds.size == 3, "You must specify a duration range as [from, to, step]")
+        val from = math.min(bounds(0).getMillis, bounds(1).getMillis)
+        val to = math.max(bounds(0).getMillis, bounds(1).getMillis)
+        (from to to by bounds(2).getMillis).map(new Duration(_))
+      case ParamType.Timestamp =>
+        val bounds = node.elements.asScala.toSeq
+        require(node.elements.asScala.size == 3, "You must specify a duration range as [from, to, step]")
+        val timestamps = Seq(Params.parse(ParamType.Timestamp, bounds(0)), Params.parse(ParamType.Timestamp, bounds(1))).map(_.asInstanceOf[Instant])
+        val from = math.min(timestamps(0).millis, timestamps(1).millis)
+        val to = math.max(timestamps(0).millis, timestamps(1).millis)
+        val step = Params.parse(ParamType.Duration, bounds(2)).asInstanceOf[Duration]
+        (from to to by step.millis).map(new Instant(_))
       case typ => throw new IllegalArgumentException(s"Undefined range of param type $typ")
     }
     range.toArray

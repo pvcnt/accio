@@ -2,24 +2,44 @@ package fr.cnrs.liris.accio.core.pipeline
 
 import java.nio.file.Path
 import java.util.UUID
-import java.util.concurrent.atomic.AtomicInteger
 
 import com.google.inject.Inject
-import com.typesafe.scalalogging.StrictLogging
+import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.common.util.HashUtils
 
 import scala.collection.mutable
 
+trait ExperimentProgressReporter extends GraphProgressReporter {
+  def onStart(experiment: Experiment): Unit
+
+  def onComplete(experiment: Experiment): Unit
+}
+
+object NoExperimentProgressReporter extends ExperimentProgressReporter {
+  override def onStart(experiment: Experiment): Unit = {}
+
+  override def onComplete(experiment: Experiment): Unit = {}
+
+  override def onNodeComplete(run: Run, nodeDef: NodeDef, successful: Boolean): Unit = {}
+
+  override def onGraphComplete(run: Run, successful: Boolean): Unit = {}
+
+  override def onGraphStart(run: Run): Unit = {}
+
+  override def onNodeStart(run: Run, nodeDef: NodeDef): Unit = {}
+}
+
 trait ExperimentExecutor {
-  def execute(experiment: Experiment, workDir: Path): ExperimentReport
+  def execute(experiment: Experiment, workDir: Path, progressReporter: ExperimentProgressReporter = NoExperimentProgressReporter): ExperimentReport
 }
 
 class LocalExperimentExecutor @Inject()(workflowExecutor: GraphExecutor, writer: ReportWriter)
-    extends ExperimentExecutor with StrictLogging {
-  override def execute(experiment: Experiment, workDir: Path): ExperimentReport = {
-    logger.trace(s"Starting execution of experiment ${experiment.id}")
+    extends ExperimentExecutor with LazyLogging {
+  override def execute(experiment: Experiment, workDir: Path, progressReporter: ExperimentProgressReporter): ExperimentReport = {
     writer.write(workDir, experiment)
     var report = new ExperimentReport
+
+    progressReporter.onStart(experiment)
 
     val strategy = getExecutionStrategy(experiment)
     var scheduled = mutable.Queue.empty[(GraphDef, Any)] ++ strategy.next
@@ -31,7 +51,6 @@ class LocalExperimentExecutor @Inject()(workflowExecutor: GraphExecutor, writer:
       val run = Run(runId, experiment.id, graphDef, strategy.name(graphDef))
       writer.write(workDir, experiment.copy(report = Some(report)))
 
-      val progressReporter = new ConsoleGraphProgressReporter(graphDef.size)
       val runReport = workflowExecutor.execute(run, workDir, progressReporter)
       scheduled ++= strategy.next(graphDef, meta, runReport)
 
@@ -39,6 +58,7 @@ class LocalExperimentExecutor @Inject()(workflowExecutor: GraphExecutor, writer:
     }
 
     report = report.complete()
+    progressReporter.onComplete(experiment)
     writer.write(workDir, experiment.copy(report = Some(report)))
     logger.trace(s"Completed execution of experiment ${experiment.id}")
 
@@ -58,29 +78,4 @@ class LocalExperimentExecutor @Inject()(workflowExecutor: GraphExecutor, writer:
       new SingleExecutionStrategy(graphDef)
     }
   }
-}
-
-class ConsoleGraphProgressReporter(count: Int, width: Int = 80) extends GraphProgressReporter {
-  private[this] val progress = new AtomicInteger
-  private[this] var length = 0
-
-  override def onStart(): Unit = {}
-
-  override def onComplete(successful: Boolean): Unit = {
-    print(s"${" " * length}\r")
-    length = 0
-  }
-
-  override def onNodeStart(name: String): Unit = {
-    val i = progress.incrementAndGet
-    val str = s"$name: $i/$count"
-    print(str)
-    if (str.length < length) {
-      print(" " * (length - str.length))
-    }
-    print("\r")
-    length = str.length
-  }
-
-  override def onNodeComplete(name: String, successful: Boolean): Unit = {}
 }

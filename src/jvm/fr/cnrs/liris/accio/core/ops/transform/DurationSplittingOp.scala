@@ -49,5 +49,5 @@ case class DurationSplittingOp(
 ) extends SlidingSplitting {
 
   override protected def split(buffer: Seq[Event], curr: Event): Boolean =
-    (buffer.head.time to curr.time).duration > duration
+    (buffer.head.time to curr.time).duration >= duration
 }
