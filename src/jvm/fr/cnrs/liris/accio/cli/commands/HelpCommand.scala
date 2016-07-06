@@ -37,7 +37,7 @@ class HelpCommand @Inject()(commandRegistry: CommandRegistry, opRegistry: OpRegi
     }
     out.writeln()
     out.writeln("Getting more help:")
-    out.writeln("  <comment>accio help <command></comment> Prints help and options for <command>")
+    out.writeln("  <comment>accio help <command></comment> Print help and options for <command>")
   }
 
   private def printCommand(out: Reporter, defn: CommandDef) = {

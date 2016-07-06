@@ -18,7 +18,11 @@ case class VisualizeFlags(
     @Flag(name = "artifacts", help = "Specify a comma-separated list of artifacts to take into account")
     artifacts: String = "ALL")
 
-@Command(name = "visualize", allowResidue = true)
+@Command(
+  name = "visualize",
+  help = "Generate reports from previous runs",
+  allowResidue = true
+)
 class VisualizeCommand @Inject()(reportReader: ReportReader) extends AccioCommand[VisualizeFlags] {
   override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     val reports = flags.residue.flatMap { path =>
