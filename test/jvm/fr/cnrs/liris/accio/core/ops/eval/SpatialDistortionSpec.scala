@@ -11,14 +11,14 @@ import org.joda.time.Duration
 import scala.util.Random
 
 /**
- * Unit tests for [[SpatialDistortion]].
+ * Unit tests for [[SpatialDistortionOp]].
  */
 class SpatialDistortionSpec extends UnitSpec with WithTraceGenerator {
   val eps = 1e-9
 
   "SpatialDistortion" should "return zero for identical traces" in {
     val t1 = randomTrace(Me, 120)
-    val metrics = new SpatialDistortion().evaluate(t1, t1)
+    val metrics = new SpatialDistortionOp().evaluate(t1, t1)
     metrics.find(_.name == "avg").get.value shouldBe 0d
     metrics.find(_.name == "min").get.value shouldBe 0d
     metrics.find(_.name == "max").get.value shouldBe 0d
@@ -36,7 +36,7 @@ class SpatialDistortionSpec extends UnitSpec with WithTraceGenerator {
         rec.copy(time = now)
       }
     }
-    val metrics = new SpatialDistortion().evaluate(t1, t2)
+    val metrics = new SpatialDistortionOp().evaluate(t1, t2)
     metrics.find(_.name == "avg").get.value shouldBe 0d
     metrics.find(_.name == "min").get.value shouldBe 0d
     metrics.find(_.name == "max").get.value shouldBe 0d
@@ -52,7 +52,7 @@ class SpatialDistortionSpec extends UnitSpec with WithTraceGenerator {
         rec.copy(point = rec.point.translate(S1Angle.degrees(Random.nextInt(360)), Distance.meters(distances(idx))))
       }
     }
-    val metrics = new SpatialDistortion(interpolate = true).evaluate(t1, t2)
+    val metrics = new SpatialDistortionOp(interpolate = true).evaluate(t1, t2)
     metrics.find(_.name == "avg").get.value shouldBe (mean(distances) +- eps)
     metrics.find(_.name == "min").get.value shouldBe (min(distances) +- eps)
     metrics.find(_.name == "max").get.value shouldBe (max(distances) +- eps)

@@ -33,7 +33,8 @@
 package fr.cnrs.liris.accio.core.ops.transform
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.core.framework.{Mapper, Op}
+import fr.cnrs.liris.accio.core.dataset.Dataset
+import fr.cnrs.liris.accio.core.framework.{In, Mapper, Op, Out}
 import fr.cnrs.liris.accio.core.model.Trace
 import fr.cnrs.liris.accio.core.param.Param
 import fr.cnrs.liris.common.geo.Point
@@ -45,8 +46,7 @@ import fr.cnrs.liris.common.geo.Point
   help = "Applies gaussian kernel smoothing on traces"
 )
 case class GaussianKernelSmoothingOp(
-    @Param(help = "Bandwidth")
-    omega: Duration
+    @Param(help = "Bandwidth") omega: Duration
 ) extends Mapper {
   override def map(trace: Trace): Trace =
     trace.replace(_.map { event =>

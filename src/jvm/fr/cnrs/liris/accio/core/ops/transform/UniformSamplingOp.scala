@@ -44,8 +44,7 @@ import fr.cnrs.liris.common.random.SamplingUtils
   help = "Uniformly sample events inside traces"
 )
 case class UniformSamplingOp(
-    @Param(help = "Probability to keep each event")
-    probability: Double
+    @Param(help = "Probability to keep each event") probability: Double
 ) extends Mapper {
   require(probability >= 0 && probability <= 1, s"Probability must be in [0, 1] (got $probability)")
 

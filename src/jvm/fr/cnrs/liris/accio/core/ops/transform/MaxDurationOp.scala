@@ -43,8 +43,7 @@ import fr.cnrs.liris.accio.core.param.Param
  */
 @Op(help = "Truncate traces having a too long duration")
 case class MaxDurationOp(
-    @Param(help = "Maximum duration of a trace")
-    duration: Duration
+    @Param(help = "Maximum duration of a trace") duration: Duration
 ) extends Mapper {
 
   override def map(trace: Trace): Trace = {

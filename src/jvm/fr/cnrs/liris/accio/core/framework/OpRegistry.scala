@@ -54,7 +54,7 @@ class OpRegistry(metaReader: OpMetaReader) {
    */
   @throws[IllegalOpDefinition]
   @throws[IllegalArgumentException]
-  def register[T <: Operator : ClassTag : TypeTag]: OpMeta = {
+  def register[T <: Operator[_, _] : ClassTag : TypeTag]: OpMeta = {
     val meta = metaReader.read[T]
     require(!_ops.contains(meta.defn.name), s"Duplicate operator ${meta.defn.name}")
     _ops(meta.defn.name) = meta

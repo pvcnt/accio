@@ -45,8 +45,7 @@ import fr.cnrs.liris.accio.core.param.Param
   help = "Split traces, when there is a too long duration between consecutive events"
 )
 case class TemporalGapSplittingOp(
-    @Param(help="Maximum duration between two consecutive events")
-    duration: Duration
+    @Param(help="Maximum duration between two consecutive events") duration: Duration
 ) extends SlidingSplitting {
 
   override protected def split(buffer: Seq[Event], curr: Event): Boolean =

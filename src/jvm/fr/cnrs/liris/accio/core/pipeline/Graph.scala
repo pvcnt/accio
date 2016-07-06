@@ -93,7 +93,7 @@ class Graph(_nodes: Map[String, Node]) {
   def size: Int = _nodes.size
 }
 
-case class Node(defn: NodeDef, operator: Operator, dependencies: Seq[String], successors: Set[String]) extends Named {
+case class Node(defn: NodeDef, operator: Operator[_, _], dependencies: Seq[String], successors: Set[String]) extends Named {
   override def name: String = defn.name
 
   def runs: Int = defn.runs
@@ -120,7 +120,7 @@ class GraphBuilder @Inject()(registry: OpRegistry) {
     require(registry.contains(nodeDef.op), s"Unknown operator: ${nodeDef.op}")
     val opMeta = registry(nodeDef.op)
     val args = getConstructorArgs(opMeta, nodeDef)
-    val operator = opMeta.clazz.getConstructors.head.newInstance(args: _*).asInstanceOf[Operator]
+    val operator = opMeta.clazz.getConstructors.head.newInstance(args: _*).asInstanceOf[Operator[_, _]]
     new Node(nodeDef, operator, nodeDef.inputs, Set.empty)
   }
 

@@ -145,14 +145,14 @@ class GraphExecutor @Inject()(env: DatasetEnv, graphBuilder: GraphBuilder, write
 
   private def execute(node: Node, inputs: Seq[Dataset[Trace]], runId: String, workDir: Path): Seq[Artifact] = {
     node.operator match {
-      case s: Source => execute(s, node.name, node.ephemeral, inputs, runId, workDir)
+      case s: Source[_] => execute(s, node.name, node.ephemeral, inputs, runId, workDir)
       case t: Transformer => execute(t, node.name, node.ephemeral, inputs, runId, workDir)
-      case a: Analyzer => execute(a, node.name, node.runs, inputs)
-      case e: Evaluator => execute(e, node.name, node.runs, inputs)
+      case a: Analyzer[_, _] => execute(a, node.name, node.runs, inputs)
+      case e: Evaluator[_, _] => execute(e, node.name, node.runs, inputs)
     }
   }
 
-  private def execute(source: Source, nodeName: String, ephemeral: Boolean, inputs: Seq[Dataset[Trace]], runId: String, workDir: Path) = {
+  private def execute(source: Source[_], nodeName: String, ephemeral: Boolean, inputs: Seq[Dataset[Trace]], runId: String, workDir: Path) = {
     requireState(inputs.isEmpty, s"Source requires no input (got ${inputs.size})")
     Seq(getDataset(source.get(env), nodeName, ephemeral, runId, workDir))
   }
@@ -163,7 +163,7 @@ class GraphExecutor @Inject()(env: DatasetEnv, graphBuilder: GraphBuilder, write
     Seq(getDataset(data, nodeName, ephemeral, runId, workDir))
   }
 
-  private def execute(analyzer: Analyzer, nodeName: String, runs: Int, inputs: Seq[Dataset[Trace]]) = {
+  private def execute(analyzer: Analyzer[_, _], nodeName: String, runs: Int, inputs: Seq[Dataset[Trace]]) = {
     requireState(inputs.size == 1, s"Analyzer requires exactly one input (got ${inputs.size})")
     val metrics = Array.fill(runs) {
       inputs.head.flatMap(trace => analyzer.analyze(trace).map(metric => (trace.id, metric))).toArray
@@ -171,7 +171,7 @@ class GraphExecutor @Inject()(env: DatasetEnv, graphBuilder: GraphBuilder, write
     getDistributions(nodeName, metrics)
   }
 
-  private def execute(evaluator: Evaluator, nodeName: String, runs: Int, inputs: Seq[Dataset[Trace]]) = {
+  private def execute(evaluator: Evaluator[_, _], nodeName: String, runs: Int, inputs: Seq[Dataset[Trace]]) = {
     requireState(inputs.size == 2, s"Evaluator requires exactly two inputs (got ${inputs.size})")
     val metrics = inputs.head.zip(inputs.last).flatMap { case (ref, res) =>
       requireState(ref.id == res.id, s"Trace mismatch at $nodeName: ${ref.id} / ${res.id}")

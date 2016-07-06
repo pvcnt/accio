@@ -32,28 +32,52 @@
 
 package fr.cnrs.liris.accio.core.ops.eval
 
-import com.google.common.geometry.S2CellId
-import fr.cnrs.liris.accio.core.framework.{Evaluator, Metric, Op}
+import com.github.nscala_time.time.Imports._
+import fr.cnrs.liris.accio.core.dataset.Dataset
+import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.model.Trace
 import fr.cnrs.liris.accio.core.param.Param
+import fr.cnrs.liris.common.util.Distance
+import fr.cnrs.liris.privamov.lib.clustering.DTClusterer
 
 @Op(
   category = "metric",
-  help = "Compute area coverage difference between two datasets of traces",
+  help = "Compute POIs retrieval difference between two datasets of traces",
   metrics = Array("precision", "recall", "fscore")
 )
-case class AreaCoverage(
-    @Param(help = "S2 cells levels")
-    level: Int
-) extends Evaluator {
+case class PoisRetrievalOp(
+    @Param(help = "Clustering maximum diameter")
+    diameter: Distance,
+    @Param(help = "Clustering minimum duration")
+    duration: Duration,
+    @Param(help = "Matching threshold")
+    threshold: Distance
+) extends Evaluator[PoisRetrievalOp.Input, PoisRetrievalOp.Output] {
+  private[this] val clusterer = new DTClusterer(duration, diameter)
 
   override def evaluate(reference: Trace, result: Trace): Seq[Metric] = {
-    val refCells = getCells(reference, level)
-    val resCells = getCells(result, level)
-    val matched = resCells.intersect(refCells).size
-    MetricUtils.informationRetrieval(refCells.size, resCells.size, matched)
+    val refPois = clusterer.cluster(reference.events)
+    val resPois = clusterer.cluster(result.events)
+    val matched = resPois.flatMap { resPoi =>
+      refPois.zipWithIndex.find { case (refPoi, _) =>
+        refPoi.centroid.distance(resPoi.centroid) <= threshold
+      }.map(_._2).toSeq
+    }.toSet.size
+    MetricUtils.informationRetrieval(refPois.size, resPois.size, matched)
   }
+}
 
-  private def getCells(trace: Trace, level: Int) =
-    trace.events.map(rec => S2CellId.fromLatLng(rec.point.toLatLng.toS2).parent(level)).toSet
+object PoisRetrievalOp {
+
+  case class Input(
+      @In(help = "Train dataset") train: Dataset[Trace],
+      @In(help = "Test dataset") test: Dataset[Trace]
+  )
+
+  case class Output(
+      @Out(help = "POIs retrieval precision") precision: Dataset[Double],
+      @Out(help = "POIs retrieval recall") recall: Dataset[Double],
+      @Out(help = "POIs retrieval F-score") fscore: Dataset[Double]
+  )
+
 }

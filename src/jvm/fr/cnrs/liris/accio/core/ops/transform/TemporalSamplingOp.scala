@@ -46,8 +46,7 @@ import fr.cnrs.liris.accio.core.param.Param
   help = "Enforce a minimum duration between two consecutive events in traces"
 )
 case class TemporalSamplingOp(
-    @Param(help = "Minimum duration between two consecutive events")
-    duration: Duration
+    @Param(help = "Minimum duration between two consecutive events") duration: Duration
 ) extends SlidingSampling {
   override protected def sample(prev: Event, curr: Event): Boolean = (prev.time to curr.time).duration >= duration
 }

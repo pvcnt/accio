@@ -7,25 +7,31 @@ import fr.cnrs.liris.accio.core.param.Parameterizable
 /**
  * Operators are the basic processing unit of Accio.
  */
-sealed trait Operator extends Parameterizable
+sealed trait Operator[I, O] extends Parameterizable {
+  //def execute(in: I, ctx: OpContext): O
+}
+
+class OpContext(val env: DatasetEnv)
 
 /**
  * A source creates a dataset of traces. It has no dependencies and is therefore used as a
  * root operator.
  */
-trait Source extends Operator {
+trait Source[O] extends Operator[Unit, O] {
   /**
    * Return a dataset of trace.
    *
    * @param env Dataset environment
    */
   def get(env: DatasetEnv): Dataset[Trace]
+
+  def execute(in: Unit, ctx: OpContext): O
 }
 
 /**
  * An analyzer computes metrics from a single input trace.
  */
-trait Analyzer extends Operator {
+trait Analyzer[I, O] extends Operator[I, O] {
   /**
    * Analyze an input trace.
    *
@@ -40,7 +46,7 @@ trait Analyzer extends Operator {
  * dataset (i.e., the reference trace) and the other from a testing dataset (i.e., a modified
  * version of the reference trace).
  */
-trait Evaluator extends Operator {
+trait Evaluator[I, O] extends Operator[I, O] {
   /**
    * Compare a train trace with a test trace.
    *
@@ -64,7 +70,7 @@ case class Metric(name: String, value: Double)
  * implement filtering (cf. [[Filter]]), mapping (cf. [[Mapper]]) or more complex operations like
  * splitting data.
  */
-trait Transformer extends Operator {
+trait Transformer extends Operator[TransformerOp.Input, TransformerOp.Output] {
   /**
    * Transform an input trace into zero, one or many other traces.
    *
@@ -72,6 +78,14 @@ trait Transformer extends Operator {
    * @return Output trace(s)
    */
   def transform(trace: Trace): Seq[Trace]
+}
+
+object TransformerOp {
+
+  case class Input(@In(help = "Input dataset") data: Dataset[Trace])
+
+  case class Output(@Out(help = "Output dataset") data: Dataset[Trace])
+
 }
 
 trait Mapper extends Transformer {

@@ -33,8 +33,9 @@
 package fr.cnrs.liris.accio.core.ops.transform
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.core.framework.Op
-import fr.cnrs.liris.accio.core.model.Event
+import fr.cnrs.liris.accio.core.dataset.Dataset
+import fr.cnrs.liris.accio.core.framework.{In, Op, Out}
+import fr.cnrs.liris.accio.core.model.{Event, Trace}
 import fr.cnrs.liris.accio.core.param.Param
 
 /**
@@ -44,8 +45,7 @@ import fr.cnrs.liris.accio.core.param.Param
   help = "Split traces, ensuring a maximum duration for each one"
 )
 case class DurationSplittingOp(
-    @Param(help = "Maximum duration of each trace")
-    duration: Duration
+    @Param(help = "Maximum duration of each trace") duration: Duration
 ) extends SlidingSplitting {
 
   override protected def split(buffer: Seq[Event], curr: Event): Boolean =

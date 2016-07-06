@@ -45,8 +45,7 @@ import fr.cnrs.liris.common.util.Distance
   help = "Split traces, when there is a too huge distance between consecutive events"
 )
 case class SpatialGapSplittingOp(
-    @Param(help = "Maximum distance between two consecutive events")
-    distance: Distance
+    @Param(help = "Maximum distance between two consecutive events") distance: Distance
 ) extends SlidingSplitting {
 
   override protected def split(buffer: Seq[Event], curr: Event): Boolean =

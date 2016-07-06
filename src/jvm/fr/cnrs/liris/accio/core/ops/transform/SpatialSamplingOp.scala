@@ -46,8 +46,7 @@ import fr.cnrs.liris.common.util.Distance
   help = "Enforce a minimum distance between two consecutive events in traces"
 )
 case class SpatialSamplingOp(
-    @Param(help = "Minimum distance between two consecutive events")
-    distance: Distance
+    @Param(help = "Minimum distance between two consecutive events") distance: Distance
 ) extends SlidingSampling {
 
   override protected def sample(prev: Event, curr: Event): Boolean =

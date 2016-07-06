@@ -51,14 +51,14 @@ class AccioModule extends AbstractModule with ScalaModule {
     registry.register[PromesseOp]
 
     // Evaluators
-    registry.register[PoisRetrieval]
-    registry.register[SpatialDistortion]
-    registry.register[TemporalDistortion]
-    registry.register[AreaCoverage]
-    registry.register[DataCompleteness]
-    registry.register[TransmissionDelay]
-    registry.register[BasicAnalyzer]
-    registry.register[PoisAnalyzer]
+    registry.register[PoisRetrievalOp]
+    registry.register[SpatialDistortionOp]
+    registry.register[TemporalDistortionOp]
+    registry.register[AreaCoverageOp]
+    registry.register[DataCompletenessOp]
+    registry.register[TransmissionDelayOp]
+    registry.register[BasicAnalyzerOp]
+    registry.register[PoisAnalyzerOp]
 
     registry
   }

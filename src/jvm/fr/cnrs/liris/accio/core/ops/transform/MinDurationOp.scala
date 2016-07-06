@@ -33,7 +33,8 @@
 package fr.cnrs.liris.accio.core.ops.transform
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.core.framework.{Filter, Op}
+import fr.cnrs.liris.accio.core.dataset.Dataset
+import fr.cnrs.liris.accio.core.framework.{Filter, In, Op, Out}
 import fr.cnrs.liris.accio.core.model.Trace
 import fr.cnrs.liris.accio.core.param.Param
 
@@ -42,8 +43,7 @@ import fr.cnrs.liris.accio.core.param.Param
  */
 @Op(help = "Remove traces having a too short duration")
 case class MinDurationOp(
-    @Param(help = "Minimum duration of a trace")
-    duration: Duration
+    @Param(help = "Minimum duration of a trace") duration: Duration
 ) extends Filter {
 
   override def filter(input: Trace): Boolean = input.duration >= duration

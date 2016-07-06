@@ -32,7 +32,8 @@
 
 package fr.cnrs.liris.accio.core.ops.eval
 
-import fr.cnrs.liris.accio.core.framework.{Evaluator, Metric, Op}
+import fr.cnrs.liris.accio.core.dataset.Dataset
+import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.model.Trace
 import fr.cnrs.liris.accio.core.param.Param
 import fr.cnrs.liris.common.geo.Point
@@ -42,10 +43,10 @@ import fr.cnrs.liris.common.geo.Point
   help = "Compute spatial distortion between two datasets of traces",
   metrics = Array("min", "max", "stddev", "avg", "median")
 )
-case class SpatialDistortion(
+case class SpatialDistortionOp(
     @Param(help = "Whether to interpolate between points")
     interpolate: Boolean = true
-) extends Evaluator {
+) extends Evaluator[SpatialDistortionOp.Input, SpatialDistortionOp.Output] {
   override def evaluate(reference: Trace, result: Trace): Seq[Metric] = {
     require(result.isEmpty || reference.size >= 1,
       s"Cannot evaluate spatial distortion with empty reference trace ${reference.id}")
@@ -100,4 +101,21 @@ case class SpatialDistortion(
     }
     a + Point(abx * t, aby * t)
   }
+}
+
+object SpatialDistortionOp {
+
+  case class Input(
+      @In(help = "Train dataset") train: Dataset[Trace],
+      @In(help = "Test dataset") test: Dataset[Trace]
+  )
+
+  case class Output(
+      @Out(help = "Spatial distortion min") min: Dataset[Double],
+      @Out(help = "Spatial distortion max") max: Dataset[Double],
+      @Out(help = "Spatial distortion stddev") stddev: Dataset[Double],
+      @Out(help = "Spatial distortion avg") avg: Dataset[Double],
+      @Out(help = "Spatial distortion median") median: Dataset[Double]
+  )
+
 }

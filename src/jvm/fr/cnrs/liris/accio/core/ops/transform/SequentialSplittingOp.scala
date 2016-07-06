@@ -40,12 +40,9 @@ import fr.cnrs.liris.accio.core.param.Param
   help = "Split traces sequentially, according to chronological order"
 )
 case class SequentialSplittingOp(
-    @Param(help = "Percentage of events at which a trace begins")
-    percentBegin: Double,
-    @Param(help = "Percentage of events at which a trace ends")
-    percentEnd: Double,
-    @Param(help = "Whether to take the complement trace")
-    complement: Boolean = false
+    @Param(help = "Percentage of events at which a trace begins") percentBegin: Double,
+    @Param(help = "Percentage of events at which a trace ends") percentEnd: Double,
+    @Param(help = "Whether to take the complement trace") complement: Boolean = false
 ) extends Mapper {
   require(percentBegin >= 0 && percentBegin <= 100, s"Begin percentage must be in [0,100] (got $percentBegin)")
   require(percentEnd >= 0 && percentEnd <= 100, s"End percentage must be in [0,100] (got $percentEnd)")

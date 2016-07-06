@@ -33,17 +33,43 @@
 package fr.cnrs.liris.accio.core.ops.eval
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.core.framework.{Evaluator, Metric, Op}
+import fr.cnrs.liris.accio.core.dataset.Dataset
+import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.model.Trace
+import fr.cnrs.liris.accio.core.ops.eval.BasicAnalyzerOp._
 
+/**
+ * An analyzer computing basic statistics about a trace: its size, length and duration.
+ */
 @Op(
+  help = "Compute basic statistics about traces",
   category = "metric",
-  help = "Compute transmission delay between two datasets of traces",
-  metrics = Array("value")
+  metrics = Array("size", "length", "duration")
 )
-case class TransmissionDelay() extends Evaluator {
-  override def evaluate(reference: Trace, result: Trace): Seq[Metric] = {
-    val delay = (reference.events.last.time to result.events.last.time).millis
-    Seq(Metric("value", delay))
+case class BasicAnalyzerOp() extends Analyzer[Input, Output] {
+  /*override def execute(in: Input, ctx: OpContext): Output = {
+    Output(
+      size = in.data.map(_.size),
+      duration = in.data.map(_.duration.seconds),
+      length = in.data.map(_.length.meters))
+  }*/
+
+  override def analyze(trace: Trace): Seq[Metric] = {
+    Seq(
+      Metric("size", trace.size),
+      Metric("length", trace.length.meters),
+      Metric("duration", trace.duration.seconds))
   }
+}
+
+object BasicAnalyzerOp {
+
+  case class Input(@In(help = "Input dataset") data: Dataset[Trace])
+
+  case class Output(
+      @Out(help = "Traces sizes") size: Dataset[Long],
+      @Out(help = "Traces lengths") length: Dataset[Double],
+      @Out(help = "Traces durations") duration: Dataset[Long]
+  )
+
 }

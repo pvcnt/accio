@@ -33,18 +33,31 @@
 package fr.cnrs.liris.accio.core.ops.eval
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.core.framework.{Analyzer, Metric, Op}
+import fr.cnrs.liris.accio.core.dataset.Dataset
+import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.model.Trace
 
-/**
- * An analyzer computing statistics about durations between consecutive events inside a trace.
- */
 @Op(
   category = "metric",
-  metrics = Array("min", "max", "stddev", "avg", "median")
+  help = "Compute transmission delay between two datasets of traces",
+  metrics = Array("value")
 )
-case class DurationAnalyzer() extends Analyzer {
-  override def analyze(trace: Trace): Seq[Metric] = {
-    MetricUtils.descriptiveStats(trace.durations.map(_.seconds.toDouble))
+case class TransmissionDelayOp() extends Evaluator[TransmissionDelayOp.Input, TransmissionDelayOp.Output] {
+  override def evaluate(reference: Trace, result: Trace): Seq[Metric] = {
+    val delay = (reference.events.last.time to result.events.last.time).millis
+    Seq(Metric("value", delay))
   }
+}
+
+object TransmissionDelayOp {
+
+  case class Input(
+      @In(help = "Train dataset") train: Dataset[Trace],
+      @In(help = "Test dataset") test: Dataset[Trace]
+  )
+
+  case class Output(
+      @Out(help = "Transmission delay") value: Dataset[Double]
+  )
+
 }

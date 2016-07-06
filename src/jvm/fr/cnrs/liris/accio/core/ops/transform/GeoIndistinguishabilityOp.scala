@@ -52,8 +52,7 @@ import fr.cnrs.liris.privamov.lib.laplace.Laplace
   unstable = true
 )
 case class GeoIndistinguishabilityOp(
-    @Param(help = "Privacy budget")
-    epsilon: Double = 0.001
+    @Param(help = "Privacy budget") epsilon: Double = 0.001
 ) extends Mapper {
   require(epsilon > 0, s"Epsilon must be strictly positive (got $epsilon)")
 

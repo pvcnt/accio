@@ -33,7 +33,8 @@
 package fr.cnrs.liris.accio.core.ops.transform
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.core.framework.{Mapper, Op}
+import fr.cnrs.liris.accio.core.dataset.Dataset
+import fr.cnrs.liris.accio.core.framework.{In, Mapper, Op, Out}
 import fr.cnrs.liris.accio.core.model.{Event, Trace}
 import fr.cnrs.liris.accio.core.param.Param
 import fr.cnrs.liris.common.util.Distance
@@ -52,8 +53,7 @@ import scala.collection.mutable
   help = "Enforce speed smoothing guarantees on traces"
 )
 case class PromesseOp(
-    @Param(help = "Distance to enforce between two consecutive points")
-    epsilon: Distance
+    @Param(help = "Distance to enforce between two consecutive points") epsilon: Distance
 ) extends Mapper {
 
   override def map(trace: Trace): Trace =

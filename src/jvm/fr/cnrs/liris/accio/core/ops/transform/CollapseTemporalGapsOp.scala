@@ -33,7 +33,8 @@
 package fr.cnrs.liris.accio.core.ops.transform
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.core.framework.{Mapper, Op}
+import fr.cnrs.liris.accio.core.dataset.Dataset
+import fr.cnrs.liris.accio.core.framework.{In, Mapper, Op, Out}
 import fr.cnrs.liris.accio.core.model.Trace
 import fr.cnrs.liris.accio.core.param.Param
 import org.joda.time.Instant
@@ -43,10 +44,9 @@ import org.joda.time.Instant
   description = "It removes empty days by shifting data to fill those empty days."
 )
 case class CollapseTemporalGapsOp(
-  @Param(help = "Start date for all traces")
-  startAt: Instant
+    @Param(help = "Start date for all traces") startAt: Instant
 ) extends Mapper {
-  val startAtDate = new Instant(startAt.millis).toDateTime.withTimeAtStartOfDay
+  private[this] val startAtDate = new Instant(startAt.millis).toDateTime.withTimeAtStartOfDay
 
   override def map(trace: Trace): Trace = {
     trace.replace { events =>

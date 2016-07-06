@@ -1,9 +1,10 @@
 package fr.cnrs.liris.accio.core.ops.source
 
 import fr.cnrs.liris.accio.core.dataset.{Dataset, DatasetEnv}
-import fr.cnrs.liris.accio.core.framework.{Op, Source}
+import fr.cnrs.liris.accio.core.framework.{Op, OpContext, Out, Source}
 import fr.cnrs.liris.accio.core.io.{CabspottingSource, CsvSource, GeolifeSource}
 import fr.cnrs.liris.accio.core.model.Trace
+import fr.cnrs.liris.accio.core.ops.source.EventSourceOp._
 import fr.cnrs.liris.accio.core.param.Param
 import fr.cnrs.liris.common.util.FileUtils
 
@@ -13,15 +14,15 @@ import fr.cnrs.liris.common.util.FileUtils
   ephemeral = true
 )
 case class EventSourceOp(
-    @Param(help = "Dataset URL")
-    url: String,
-    @Param(help = "Kind of dataset")
-    kind: String = "csv",
-    @Param(help = "Sampling ratio")
-    sample: Option[Double],
-    @Param(help = "Users to include")
-    users: Seq[String]
-) extends Source {
+    @Param(help = "Dataset URL") url: String,
+    @Param(help = "Kind of dataset") kind: String = "csv",
+    @Param(help = "Sampling ratio") sample: Option[Double],
+    @Param(help = "Users to include") users: Seq[String]
+) extends Source[Output] {
+
+  override def execute(in: Unit, ctx: OpContext): Output = {
+    Output(get(ctx.env))
+  }
 
   override def get(env: DatasetEnv): Dataset[Trace] = {
     val source = kind match {
@@ -39,4 +40,10 @@ case class EventSourceOp(
     }
     data
   }
+}
+
+object EventSourceOp {
+
+  case class Output(@Out(help = "Source dataset", ephemeral = true) data: Dataset[Trace])
+
 }

@@ -32,39 +32,44 @@
 
 package fr.cnrs.liris.accio.core.ops.eval
 
-import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.core.framework.{Analyzer, Metric, Op}
-import fr.cnrs.liris.accio.core.model.{Poi, Trace}
+import com.google.common.geometry.S2CellId
+import fr.cnrs.liris.accio.core.dataset.Dataset
+import fr.cnrs.liris.accio.core.framework._
+import fr.cnrs.liris.accio.core.model.Trace
 import fr.cnrs.liris.accio.core.param.Param
-import fr.cnrs.liris.common.util.Distance
-import fr.cnrs.liris.privamov.lib.clustering.DTClusterer
 
-/**
- * Analyzer computing statistics about the POIs that can be extracted from a trace, using a
- * classical DJ-clustering algorithm.
- */
 @Op(
-  help = "Compute statistics about points of interest",
   category = "metric",
-  metrics = Array("count", "size", "duration", "size_ratio", "duration_ratio")
+  help = "Compute area coverage difference between two datasets of traces",
+  metrics = Array("precision", "recall", "fscore")
 )
-case class PoisAnalyzer(
-    @Param(help = "Clustering maximum diameter")
-    diameter: Distance,
-    @Param(help = "Clustering minimum duration")
-    duration: Duration
-) extends Analyzer {
-  private[this] val clusterer = new DTClusterer(duration, diameter)
+case class AreaCoverageOp(
+    @Param(help = "S2 cells levels")
+    level: Int
+) extends Evaluator[AreaCoverageOp.Input, AreaCoverageOp.Output] {
 
-  override def analyze(trace: Trace): Seq[Metric] = {
-    val pois = clusterer.cluster(trace.events).map(c => Poi(c.events))
-    val sizeInPoi = pois.map(_.size).sum
-    val durationInPoi = pois.map(_.duration.seconds).sum
-    Seq(
-      Metric("count", pois.size),
-      Metric("size", sizeInPoi),
-      Metric("duration", durationInPoi),
-      Metric("size_ratio", sizeInPoi.toDouble / trace.size),
-      Metric("duration_ratio", durationInPoi.toDouble / trace.duration.seconds))
+  override def evaluate(reference: Trace, result: Trace): Seq[Metric] = {
+    val refCells = getCells(reference, level)
+    val resCells = getCells(result, level)
+    val matched = resCells.intersect(refCells).size
+    MetricUtils.informationRetrieval(refCells.size, resCells.size, matched)
   }
+
+  private def getCells(trace: Trace, level: Int) =
+    trace.events.map(rec => S2CellId.fromLatLng(rec.point.toLatLng.toS2).parent(level)).toSet
+}
+
+object AreaCoverageOp {
+
+  case class Input(
+      @In(help = "Train dataset") train: Dataset[Trace],
+      @In(help = "Test dataset") test: Dataset[Trace]
+  )
+
+  case class Output(
+      @Out(help = "Area coverage precision") precision: Dataset[Double],
+      @Out(help = "Area coverage recall") recall: Dataset[Double],
+      @Out(help = "Area coverage F-score") fscore: Dataset[Double]
+  )
+
 }

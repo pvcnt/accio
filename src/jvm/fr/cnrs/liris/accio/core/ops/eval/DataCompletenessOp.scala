@@ -32,36 +32,37 @@
 
 package fr.cnrs.liris.accio.core.ops.eval
 
-import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.core.framework.{Evaluator, Metric, Op}
+import fr.cnrs.liris.accio.core.dataset.Dataset
+import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.model.Trace
-import fr.cnrs.liris.accio.core.param.Param
-import fr.cnrs.liris.common.util.Distance
-import fr.cnrs.liris.privamov.lib.clustering.DTClusterer
 
 @Op(
   category = "metric",
-  help = "Compute POIs retrieval difference between two datasets of traces",
-  metrics = Array("precision", "recall", "fscore")
+  help = "Compute data completeness difference between two datasets of traces",
+  metrics = Array("value")
 )
-case class PoisRetrieval(
-    @Param(help = "Clustering maximum diameter")
-    diameter: Distance,
-    @Param(help = "Clustering minimum duration")
-    duration: Duration,
-    @Param(help = "Matching threshold")
-    threshold: Distance
-) extends Evaluator {
-  private[this] val clusterer = new DTClusterer(duration, diameter)
-
+case class DataCompletenessOp() extends Evaluator[DataCompletenessOp.Input, DataCompletenessOp.Output] {
   override def evaluate(reference: Trace, result: Trace): Seq[Metric] = {
-    val refPois = clusterer.cluster(reference.events)
-    val resPois = clusterer.cluster(result.events)
-    val matched = resPois.flatMap { resPoi =>
-      refPois.zipWithIndex.find { case (refPoi, _) =>
-        refPoi.centroid.distance(resPoi.centroid) <= threshold
-      }.map(_._2).toSeq
-    }.toSet.size
-    MetricUtils.informationRetrieval(refPois.size, resPois.size, matched)
+    val completeness = if (result.isEmpty && reference.isEmpty) {
+      1d
+    } else if (result.isEmpty) {
+      0d
+    } else {
+      result.size.toDouble / reference.size
+    }
+    Seq(Metric("value", completeness))
   }
+}
+
+object DataCompletenessOp {
+
+  case class Input(
+      @In(help = "Train dataset") train: Dataset[Trace],
+      @In(help = "Test dataset") test: Dataset[Trace]
+  )
+
+  case class Output(
+      @Out(help = "Data completeness") value: Dataset[Double]
+  )
+
 }

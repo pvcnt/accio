@@ -43,8 +43,7 @@ import fr.cnrs.liris.accio.core.param.Param
   help = "Remove traces having a too small size"
 )
 case class MinSizeOp(
-    @Param(help = "Minimum number of events inside traces")
-    size: Int
+    @Param(help = "Minimum number of events inside traces") size: Int
 ) extends Filter {
   override def filter(trace: Trace): Boolean = trace.size >= size
 }

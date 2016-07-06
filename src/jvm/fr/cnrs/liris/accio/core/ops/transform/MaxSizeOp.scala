@@ -42,8 +42,7 @@ import fr.cnrs.liris.accio.core.param.Param
  */
 @Op(help = "Truncate traces having a too huge size")
 case class MaxSizeOp(
-    @Param(help = "Maximum size of a trace")
-    size: Int
+    @Param(help = "Maximum size of a trace") size: Int
 ) extends Mapper {
 
   override def map(trace: Trace): Trace = trace.replace(_.take(size))

@@ -33,7 +33,8 @@
 package fr.cnrs.liris.accio.core.ops.eval
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.core.framework.{Evaluator, Metric, Op}
+import fr.cnrs.liris.accio.core.dataset.Dataset
+import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.model.Trace
 import org.joda.time.Instant
 
@@ -42,7 +43,7 @@ import org.joda.time.Instant
   help = "Compute temporal distortion difference between two datasets of traces",
   metrics = Array("min", "max", "stddev", "avg", "median")
 )
-case class TemporalDistortion() extends Evaluator {
+case class TemporalDistortionOp() extends Evaluator[TemporalDistortionOp.Input, TemporalDistortionOp.Output] {
   override def evaluate(reference: Trace, result: Trace): Seq[Metric] = {
     val (larger, smaller) = if (reference.size > result.size) (reference, result) else (result, reference)
     val distances = smaller.events.map { rec =>
@@ -69,4 +70,21 @@ case class TemporalDistortion() extends Evaluator {
         between.head.point.interpolate(between.last.point, ratio)
       }
     }
+}
+
+object TemporalDistortionOp {
+
+  case class Input(
+      @In(help = "Train dataset") train: Dataset[Trace],
+      @In(help = "Test dataset") test: Dataset[Trace]
+  )
+
+  case class Output(
+      @Out(help = "Temporal distortion min") min: Dataset[Double],
+      @Out(help = "Temporal distortion max") max: Dataset[Double],
+      @Out(help = "Temporal distortion stddev") stddev: Dataset[Double],
+      @Out(help = "Temporal distortion avg") avg: Dataset[Double],
+      @Out(help = "Temporal distortion median") median: Dataset[Double]
+  )
+
 }

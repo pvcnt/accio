@@ -14,7 +14,7 @@ import scala.reflect.runtime.universe._
  * @param defn  Operator definition
  * @param clazz Operator class
  */
-case class OpMeta(defn: OperatorDef, clazz: Class[Operator])
+case class OpMeta(defn: OperatorDef, clazz: Class[Operator[_, _]])
 
 /**
  * Exception thrown when the definition of an operator is invalid.
@@ -22,7 +22,7 @@ case class OpMeta(defn: OperatorDef, clazz: Class[Operator])
  * @param clazz Operator class
  * @param cause Root exception
  */
-class IllegalOpDefinition(clazz: Class[Operator], cause: Throwable)
+class IllegalOpDefinition(clazz: Class[Operator[_, _]], cause: Throwable)
     extends Exception(s"Illegal definition of operator ${clazz.getName}: ${cause.getMessage}", cause)
 
 /**
@@ -37,15 +37,15 @@ trait OpMetaReader {
    * @throws IllegalOpDefinition If the operator definition is invalid
    */
   @throws[IllegalOpDefinition]
-  def read[T <: Operator : ClassTag : TypeTag]: OpMeta
+  def read[T <: Operator[_, _] : ClassTag : TypeTag]: OpMeta
 }
 
 /**
  * Reads operator metadata from annotations found on this operator type.
  */
 class AnnotationOpMetaReader extends OpMetaReader {
-  override def read[T <: Operator : ClassTag : TypeTag]: OpMeta = {
-    val clazz = implicitly[ClassTag[T]].runtimeClass.asInstanceOf[Class[Operator]]
+  override def read[T <: Operator[_, _] : ClassTag : TypeTag]: OpMeta = {
+    val clazz = implicitly[ClassTag[T]].runtimeClass.asInstanceOf[Class[Operator[_, _]]]
     val defn = try {
       val refl = ReflectCaseClass.of[T]
       require(refl.isAnnotated[Op], s"Operator must be annotated with @Op")
@@ -65,7 +65,7 @@ class AnnotationOpMetaReader extends OpMetaReader {
       case e: NoSuchElementException => throw new IllegalOpDefinition(clazz, e)
       case e: IllegalArgumentException => throw new IllegalOpDefinition(clazz, e)
     }
-    OpMeta(defn, clazz.asInstanceOf[Class[Operator]])
+    OpMeta(defn, clazz.asInstanceOf[Class[Operator[_, _]]])
   }
 
   private def getParams(refl: ReflectCaseClass) =
@@ -80,8 +80,8 @@ class AnnotationOpMetaReader extends OpMetaReader {
   private def getInputs(refl: ReflectCaseClass): Seq[InputDef] =
     refl.tpe match {
       case t if t <:< typeOf[Transformer] => Seq(InputDef("data", Some("Input dataset of traces")))
-      case t if t <:< typeOf[Analyzer] => Seq(InputDef("data", Some("Input dataset of traces")))
-      case t if t <:< typeOf[Evaluator] => Seq(
+      case t if t <:< typeOf[Analyzer[_, _]] => Seq(InputDef("data", Some("Input dataset of traces")))
+      case t if t <:< typeOf[Evaluator[_, _]] => Seq(
         InputDef("train", Some("Training dataset of traces")),
         InputDef("test", Some("Testing dataset of traces")))
       case _ => Seq.empty[InputDef]
@@ -91,11 +91,11 @@ class AnnotationOpMetaReader extends OpMetaReader {
     refl.tpe match {
       case t if t <:< typeOf[Transformer] =>
         Seq(OutputDef("data", "dataset", Some("Output dataset of traces")))
-      case t if t <:< typeOf[Analyzer] =>
+      case t if t <:< typeOf[Analyzer[_, _]] =>
         op.metrics.map(name => OutputDef(name, "distribution", None)).toSeq
-      case t if t <:< typeOf[Evaluator] =>
+      case t if t <:< typeOf[Evaluator[_, _]] =>
         op.metrics.map(name => OutputDef(name, "distribution", None)).toSeq
-      case t if t <:< typeOf[Source] =>
+      case t if t <:< typeOf[Source[_]] =>
         Seq(OutputDef("data", "dataset", Some("Source dataset of traces")))
     }
 
