@@ -89,7 +89,7 @@ class HtmlReportCreator(showArtifacts: Set[String] = Set.empty, showParameters: 
     out.tag("div", "class", "tab-content") {
       if (showGraph) {
         out.tag("div", "class", "tab-pane active", "id", "tab-graph") {
-          reportStats.runs.head.graphDef
+          reportStats.runs.head.graph
         }
       }
       if (showArtifacts.nonEmpty) {

@@ -149,7 +149,7 @@ private class ConsoleGraphProgressReporter(out: Reporter, width: Int = 80) exten
 
   override def onNodeStart(run: Run, nodeDef: NodeDef): Unit = synchronized {
     val i = progress.incrementAndGet
-    val str = s"    ${nodeDef.name}: $i/${run.graphDef.size}"
+    val str = s"    ${nodeDef.name}: $i/${run.graph.size}"
     out.write(str)
     if (str.length < length) {
       out.write(" " * (length - str.length))

@@ -9,10 +9,10 @@ class ReportStatistics(val runs: Seq[Run]) {
 
   def similarGraphs: Seq[Seq[GraphDef]] = {
     val handled = mutable.Set.empty[Int]
-    runs.map(_.graphDef).zipWithIndex.map { case (graphDef, idx) =>
-      val similar = runs.zipWithIndex.filter(p => !handled.contains(p._2) && p._1.graphDef.hasSameStructure(graphDef))
+    runs.map(_.graph).zipWithIndex.map { case (graphDef, idx) =>
+      val similar = runs.zipWithIndex.filter(p => !handled.contains(p._2) && p._1.graph.hasSameStructure(graphDef))
       handled ++= similar.map(_._2)
-      similar.map(_._1.graphDef)
+      similar.map(_._1.graph)
     }
   }
 

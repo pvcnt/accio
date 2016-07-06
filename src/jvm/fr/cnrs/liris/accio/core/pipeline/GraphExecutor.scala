@@ -52,7 +52,7 @@ class GraphExecutor @Inject()(env: DatasetEnv, graphBuilder: GraphBuilder, write
    * @return Final report
    */
   def execute(run: Run, workDir: Path, progressReporter: GraphProgressReporter = NoGraphProgressReporter): RunReport = {
-    val graph = graphBuilder.build(run.graphDef)
+    val graph = graphBuilder.build(run.graph)
 
     val outputs = mutable.Map.empty[String, Artifact]
     val scheduled = mutable.Queue.empty[Node] ++ graph.roots // Initially schedule graph roots
@@ -116,8 +116,8 @@ class GraphExecutor @Inject()(env: DatasetEnv, graphBuilder: GraphBuilder, write
     lastError.foreach(e => logger.error(s"Error while executing run ${run.id}", e))
 
     // Last verification that all nodes had a chance to run.
-    if (report.successful && report.nodeStats.size != run.graphDef.size) {
-      val missing = run.graphDef.nodes.map(_.name).toSet.diff(report.nodeStats.map(_.name))
+    if (report.successful && report.nodeStats.size != run.graph.size) {
+      val missing = run.graph.nodes.map(_.name).toSet.diff(report.nodeStats.map(_.name))
       throw new IllegalStateException(s"Some nodes were never executed: ${missing.mkString(", ")}")
     }
 

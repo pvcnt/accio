@@ -13,7 +13,7 @@ import fr.cnrs.liris.common.util.TextUtils
   name = "ops",
   help = "Provide information about registered operators"
 )
-class OpsCommand @Inject()(opRegistry: OpRegistry) extends AccioCommand[(HelpFlags)] {
+class OpsCommand @Inject()(opRegistry: OpRegistry) extends AccioCommand[Unit] {
   override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     if (flags.residue.isEmpty) {
       printSummary(out)
@@ -21,7 +21,7 @@ class OpsCommand @Inject()(opRegistry: OpRegistry) extends AccioCommand[(HelpFla
     } else if (flags.residue.size == 1) {
       opRegistry.get(flags.residue.head) match {
         case Some(meta) =>
-          printOperator(out, meta, flags.as[HelpFlags])
+          printOperator(out, meta)
           ExitCode.Success
         case None =>
           out.writeln(s"<error>Unknown operator '${flags.residue.head}'</error>")
@@ -45,7 +45,7 @@ class OpsCommand @Inject()(opRegistry: OpRegistry) extends AccioCommand[(HelpFla
     }
   }
 
-  private def printOperator(out: Reporter, meta: OpMeta, opts: HelpFlags) = {
+  private def printOperator(out: Reporter, meta: OpMeta) = {
     out.write(s"<comment>${meta.defn.name}</comment>")
     if (meta.defn.unstable || meta.defn.ephemeral) {
       out.write(" (")
@@ -69,13 +69,13 @@ class OpsCommand @Inject()(opRegistry: OpRegistry) extends AccioCommand[(HelpFla
       out.writeln()
     }
 
-    printOperatorInputs(out, meta, opts)
-    printOperatorParams(out, meta, opts)
-    printOperatorOutputs(out, meta, opts)
+    printOperatorInputs(out, meta)
+    printOperatorParams(out, meta)
+    printOperatorOutputs(out, meta)
   }
 
-  private def printOperatorParams(out: Reporter, meta: OpMeta, opts: HelpFlags) = {
-    out.writeln(s"<info>Parameters:</info>")
+  private def printOperatorParams(out: Reporter, meta: OpMeta) = {
+    out.writeln(s"<info>Available parameters:</info>")
     meta.defn.params.foreach { paramDef =>
       out.write(s"  - ${paramDef.name} (type: ${paramDef.typ.toString.toLowerCase}")
       if (paramDef.defaultValue.isDefined && paramDef.defaultValue.get != None) {
@@ -86,34 +86,28 @@ class OpsCommand @Inject()(opRegistry: OpRegistry) extends AccioCommand[(HelpFla
       }
       out.write(")")
       out.writeln()
-      if (opts.long && paramDef.help.isDefined) {
-        out.writeln(TextUtils.paragraphFill(paramDef.help.get, 80, 4))
-      }
+      paramDef.help.foreach(help => out.writeln(TextUtils.paragraphFill(help, 80, 4)))
     }
   }
 
-  private def printOperatorInputs(out: Reporter, meta: OpMeta, opts: HelpFlags) = {
+  private def printOperatorInputs(out: Reporter, meta: OpMeta) = {
     if (meta.defn.inputs.nonEmpty) {
-      out.writeln("<info>Inputs:</info>")
+      out.writeln("<info>Available inputs:</info>")
       meta.defn.inputs.foreach { inputDef =>
         out.write(s"  - ${inputDef.name} (type: dataset)")
         out.writeln()
-        if (opts.long && inputDef.help.isDefined) {
-          out.writeln(TextUtils.paragraphFill(inputDef.help.get, 80, 4))
-        }
+        inputDef.help.foreach(help => out.writeln(TextUtils.paragraphFill(help, 80, 4)))
       }
     }
   }
 
-  private def printOperatorOutputs(out: Reporter, meta: OpMeta, opts: HelpFlags) = {
+  private def printOperatorOutputs(out: Reporter, meta: OpMeta) = {
     if (meta.defn.outputs.nonEmpty) {
-      out.writeln("<info>Outputs:</info>")
+      out.writeln("<info>Available outputs:</info>")
       meta.defn.outputs.foreach { outputDef =>
         out.write(s"  - ${outputDef.name} (type: ${outputDef.`type`})")
         out.writeln()
-        if (opts.long && outputDef.help.isDefined) {
-          out.writeln(TextUtils.paragraphFill(outputDef.help.get, 80, 4))
-        }
+        outputDef.help.foreach(help => out.writeln(TextUtils.paragraphFill(help, 80, 4)))
       }
     }
   }

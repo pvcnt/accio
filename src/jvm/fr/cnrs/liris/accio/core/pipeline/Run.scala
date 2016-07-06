@@ -9,16 +9,16 @@ import org.joda.time.{DateTime, Duration}
  * A run is a particular instantiation of a graph, where everything is well defined (i.e., all parameters are fixed and
  * have a single value). A run always belongs to an experiment.
  *
- * @param id       Unique identifier (among all runs AND experiments)
- * @param parent   Parent experiment identifier
- * @param name     Human-readable name
- * @param graphDef Graph being executed
- * @param report   Execution report
+ * @param id     Unique identifier (among all runs AND experiments)
+ * @param parent Parent experiment identifier
+ * @param name   Human-readable name
+ * @param graph  Graph being executed
+ * @param report Execution report
  */
 case class Run(
     id: String,
     parent: String,
-    graphDef: GraphDef,
+    graph: GraphDef,
     name: Option[String] = None,
     report: Option[RunReport] = None) {
 

@@ -8,7 +8,12 @@ import scala.collection.mutable
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe._
 
-case class CommandDef(name: String, help: Option[String], description: Option[String], allowResidue: Boolean, hidden: Boolean)
+case class CommandDef(
+    name: String,
+    help: Option[String],
+    description: Option[String],
+    allowResidue: Boolean,
+    hidden: Boolean)
 
 case class CommandMeta(defn: CommandDef, clazz: Class[AccioCommand[_]], flagsTypes: Seq[Type])
 
