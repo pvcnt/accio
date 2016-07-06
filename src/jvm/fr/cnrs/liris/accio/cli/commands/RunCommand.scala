@@ -45,19 +45,19 @@ import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.util.FileUtils
 
 case class MakeCommandOpts(
-    @Flag(name = "workdir")
+    @Flag(name = "workdir", help = "Working directory where to write reports and artifacts")
     workDir: String = "",
-    @Flag(name = "name")
+    @Flag(name = "name", help = "Experiment name override")
     name: String = "",
-    @Flag(name = "tags")
+    @Flag(name = "tags", help = "Space-separated experiment tags override")
     tags: String = "",
-    @Flag(name = "notes")
+    @Flag(name = "notes", help = "Experiment notes override")
     notes: String = "",
-    @Flag(name = "user")
+    @Flag(name = "user", help = "User who launched the experiment")
     user: String = "",
-    @Flag(name = "runs")
+    @Flag(name = "runs", help = "Experiment runs override")
     runs: Int = 1,
-    @Flag(name = "params")
+    @Flag(name = "params", help = "Experiment parameters override")
     params: String = "")
 
 @Command(

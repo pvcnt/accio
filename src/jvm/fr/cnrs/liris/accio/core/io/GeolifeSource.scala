@@ -74,7 +74,7 @@ case class GeolifeSource(url: String) extends DataSource[Trace] {
 object GeolifeSource {
   def download(dest: Path): GeolifeSource = {
     val zipFile = dest.resolve("geolife.zip").toFile
-    var exitCode = (s"curl http://ftp.research.microsoft.com/downloads/b16d359d-d164-469e-9fd4-daa38f2b2e13/Geolife\\ Trajectories\\ 1.3.zip" #> zipFile).!
+    var exitCode = (s"curl -L http://ftp.research.microsoft.com/downloads/b16d359d-d164-469e-9fd4-daa38f2b2e13/Geolife\\ Trajectories\\ 1.3.zip" #> zipFile).!
     if (0 != exitCode) {
       throw new RuntimeException(s"Error while fetching the Geolife archive: $exitCode")
     }

@@ -58,7 +58,5 @@ case class GeoIndistinguishabilityOp(
   require(epsilon > 0, s"Epsilon must be strictly positive (got $epsilon)")
 
   override def map(trace: Trace): Trace =
-    trace.replace(_.map { rec =>
-      rec.copy(point = Laplace.noise(epsilon, rec.point))
-    })
+    trace.map(event => event.copy(point = Laplace.noise(epsilon, event.point)))
 }

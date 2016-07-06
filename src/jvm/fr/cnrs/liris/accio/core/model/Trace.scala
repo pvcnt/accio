@@ -110,7 +110,7 @@ class Trace(val id: String, val user: String, val events: Seq[Event]) {
    */
   def split(fn: Seq[Event] => Seq[Trace]): Seq[Trace] =
     fn(events).zipWithIndex.map { case (trace, idx) =>
-      new Trace(s"$id/$idx", trace.user, trace.events)
+      new Trace(s"$id-$idx", trace.user, trace.events)
     }
 
   /**

@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.{JsonIgnoreProperties, JsonSubTypes, Jso
 import fr.cnrs.liris.accio.core.dataset.Dataset
 import fr.cnrs.liris.accio.core.model.Trace
 import fr.cnrs.liris.common.util.Named
-import org.joda.time.Instant
 
 /**
  * An artifact is something produced by an operator and possibly consumed by another operator.
@@ -73,12 +72,10 @@ case class ScalarArtifact(name: String, value: Double) extends Artifact {
  * given user.
  *
  * @param name         Artifact unique name
- * @param distribution Distribution of (user, double)'s
+ * @param distribution Mapping between a trace identifier and a scalar
  */
-case class DistributionArtifact(name: String, distribution: Seq[(String, Double)]) extends Artifact {
+case class DistributionArtifact(name: String, distribution: Map[String, Double]) extends Artifact {
   override def `type`: String = "distribution"
 
-  def values: Seq[Double] = distribution.map(_._2)
+  def values: Seq[Double] = distribution.values.toSeq
 }
-
-//case class Scalar(value: Double, user: String, start: Instant, to: Instant, size: Int)

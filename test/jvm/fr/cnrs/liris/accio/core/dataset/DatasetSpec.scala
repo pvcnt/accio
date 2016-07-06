@@ -63,6 +63,9 @@ class DatasetSpec extends UnitSpec with BeforeAndAfter {
     data.restrict(Set("barfoo")).toArray shouldBe Array(5, 6, 7)
     data.restrict(Set("barfoo", "invalid_key")).toArray shouldBe Array(5, 6, 7)
     data.restrict(Set("invalid_key")).toArray shouldBe Array.empty[Int]
+
+    data.restrict(Set("foo", "bar")).load(Some("invalid_key")) shouldBe Iterator.empty
+    data.restrict(Set("foo", "bar")).load(None).toArray shouldBe Array(1, 2, 3)
   }
 
   it should "zip with another dataset with same keys and same size" in {

@@ -2,7 +2,7 @@ package fr.cnrs.liris.accio.core.pipeline
 
 import java.nio.file.Path
 
-import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.{JsonIgnoreProperties, JsonProperty}
 import org.joda.time.{DateTime, Duration}
 
 /**
@@ -35,6 +35,7 @@ case class Run(
  * @param nodeStats   Per-node stats
  * @param artifacts   Non-ephemeral artifacts
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 case class RunReport(
     startedAt: DateTime = DateTime.now,
     completedAt: Option[DateTime] = None,
@@ -143,6 +144,7 @@ case class RunReport(
  * @param successful  Did the execution completed successfully?
  * @param error       Error caught during execution
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 case class NodeExecStats(
     name: String,
     startedAt: DateTime = DateTime.now,

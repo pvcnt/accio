@@ -32,23 +32,23 @@ Outputs of several experiments can be stored in the same directory, names of fil
 
 `-name="My experiment name"`
 
-You can override the experiment name at runtime, when launching it.
+Overrides the experiment name at runtime, when launching it.
 It will replace the value specified in the definition file.
 
-`-tags="tag1,tag2"`
+`-tags="tag1 tag2"`
 
-You can override the experiment tags at runtime, when launching it.
-Tags are comma-separated, heading or trailing whitespaces are ignored.
+Overrides the experiment tags at runtime, when launching it.
+Tags are space-separated, heading or trailing whitespaces are ignored.
 It will replace the value specified in the definition file.
 
 `-notes="Some notes to remember why I ran this experiment"`
 
-You can override the experiment notes at runtime, when launching it.
+Overrides the experiment notes at runtime, when launching it.
 It will replace the value specified in the definition file.
 
 `-runs=3`
 
-You can override the experiment minimum number of runs at runtime, when launching it.
+Overrides the experiment minimum number of runs at runtime, when launching it.
 It will replace the value specified in the definition file.
 
 `-user="John Doe <john.doe@gmail.com>"`
@@ -59,6 +59,13 @@ If this option is not specified, the person who launched an experiment is automa
 
   * The environment variable `ACCIO_USER`, which contains the user in the same allowed format.
   * The current shell user, in which case no email address can be inferred.
+
+`-params="node1/epsilon=0.002 node2/distance=30.meters"`
+
+Overrides some parameters at runtime, when launching the experiment.
+Parameters are space-separated. Parameter names are references, written in the same manner than inside [workflow definitions](/definition-language.html).
+It will take precedence over parameters defined inside a workflow, but execution strategies may still override them later (e.g., if this parameter is being optimized).
+
 
 ## Generating reports
 

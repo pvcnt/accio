@@ -1,6 +1,6 @@
 package fr.cnrs.liris.accio.core.pipeline
 
-import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.{JsonIgnoreProperties, JsonProperty}
 import fr.cnrs.liris.accio.core.param.{ParamGrid, ParamMap}
 import org.joda.time.{DateTime, Duration}
 
@@ -50,6 +50,7 @@ case class Optimization(
   require(contraction > 0 && contraction <= 1, s"Contraction factor must be in (0,1] (got $contraction)")
 }
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 case class ExperimentReport(
     startedAt: DateTime = DateTime.now,
     completedAt: Option[DateTime] = None,

@@ -166,7 +166,7 @@ class GraphExecutor @Inject()(env: DatasetEnv, graphBuilder: GraphBuilder, write
   private def execute(analyzer: Analyzer, nodeName: String, runs: Int, inputs: Seq[Dataset[Trace]]) = {
     requireState(inputs.size == 1, s"Analyzer requires exactly one input (got ${inputs.size})")
     val metrics = Array.fill(runs) {
-      inputs.head.flatMap(trace => analyzer.analyze(trace).map(metric => (trace.user, metric))).toArray
+      inputs.head.flatMap(trace => analyzer.analyze(trace).map(metric => (trace.id, metric))).toArray
     }.flatten
     getDistributions(nodeName, metrics)
   }
@@ -174,8 +174,8 @@ class GraphExecutor @Inject()(env: DatasetEnv, graphBuilder: GraphBuilder, write
   private def execute(evaluator: Evaluator, nodeName: String, runs: Int, inputs: Seq[Dataset[Trace]]) = {
     requireState(inputs.size == 2, s"Evaluator requires exactly two inputs (got ${inputs.size})")
     val metrics = inputs.head.zip(inputs.last).flatMap { case (ref, res) =>
-      require(ref.user == res.user, s"Trace mismatch: ${ref.user} / ${res.user}")
-      Seq.fill(runs)(evaluator.evaluate(ref, res).map(metric => (ref.user, metric))).flatten
+      requireState(ref.id == res.id, s"Trace mismatch at $nodeName: ${ref.id} / ${res.id}")
+      Seq.fill(runs)(evaluator.evaluate(ref, res).map(metric => (ref.id, metric))).flatten
     }.toArray
     getDistributions(nodeName, metrics)
   }
@@ -194,6 +194,6 @@ class GraphExecutor @Inject()(env: DatasetEnv, graphBuilder: GraphBuilder, write
     metrics
         .groupBy(_._2.name)
         .map { case (name, values) =>
-          DistributionArtifact(s"$nodeName/$name", values.map { case (k, v) => (k, v.value) })
+          DistributionArtifact(s"$nodeName/$name", values.map { case (k, v) => k -> v.value }.toMap)
         }.toSeq
 }

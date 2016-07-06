@@ -128,14 +128,29 @@ You cannot run optimizations of explorations this way, but you can still define 
 
 ### Parameters values
 
-  * **integer, long and double:** JSON number.
+  * **integer:** JSON integer number.
+  * **long:** JSON long number.
+  * **double:** JSON float number.
   * **string:** JSON string.
   * **boolean:** JSON boolean.
   * **string list:** JSON array of strings.
   * **distance:** JSON string, formatted as `<quantity>.<unit>`, where `<quantity>` is a number and `<unit>` one of "meters", "kilometers" or "miles", either singular or plural.
   * **duration:** JSON string, formatted as `<quantity>.<unit>`, where `<quantity>` is a number and `<unit>` one of "millis", "seconds", "minutes", "hours" or "days", either singular or plural.
-  * **timestamp:** JSON string, following [ISO 8601 format](https://www.w3.org/TR/NOTE-datetime), e.g., "2016-06-22T11:28:32Z".
+  * **timestamp:** JSON string, formatted with respect to[ISO 8601](https://www.w3.org/TR/NOTE-datetime), e.g., "2016-06-22T11:28:32Z".
 
+### Parameters ranges
+
+When defining an exploration, you can define ranges of parameters to explore.
+
+  * **integer:** JSON array, either `[from, to, step]` or `[from, to]` (in the latter the step is assumed to be 1). Elements are JSON integers. Boundaries are inclusive.
+  * **long:** JSON array, either `[from, to, step]` or `[from, to]` (in the latter the step is assumed to be 1). Elements are JSON longs. Boundaries are inclusive.
+  * **double:** JSON array, `[from, to, step]`. Elements are JSON floats. Boundaries are inclusive.
+  * **distance:** JSON array, `[from, to, step]`. Elements are JSON strings formatted as distances. Boundaries are inclusive.
+  * **duration:** JSON array, `[from, to, step]`. Elements are JSON strings formatted as durations. Boundaries are inclusive.
+  * **timestamp:** JSON array, `[from, to, step]`. `from` and `to` are JSON strings formatted as timetamps, `step` is a string formatted as a duration. Boundaries are inclusive.
+  * **string:** not applicable.
+  * **boolean:** not applicable.
+  * **string list:** not applicable.
 
 ### Parameters references
 

@@ -76,14 +76,14 @@ private[transform] trait SlidingSplitting extends Transformer {
     var idx = 0
     for (event <- input.events) {
       if (buffer.nonEmpty && split(buffer, event)) {
-        output += new Trace(s"${buffer.head.user}/$idx", buffer.head.user, buffer)
+        output += new Trace(s"${buffer.head.user}-$idx", buffer.head.user, buffer)
         buffer.clear()
         idx += 1
       }
       buffer += event
     }
     if (buffer.nonEmpty) {
-      output += new Trace(s"${buffer.head.user}/$idx", buffer.head.user, buffer)
+      output += new Trace(s"${buffer.head.user}-$idx", buffer.head.user, buffer)
     }
     output
   }

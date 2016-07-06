@@ -171,7 +171,8 @@ class HtmlReportCreator(showArtifacts: Set[String] = Set.empty, showParameters: 
 
   private def printScalarParameter(out: PrintStream, title: String, distByUser: Map[String, Distribution[Double]]) = {
     val statsByUser = distByUser.values.map(_.toStats).toSeq
-    out.tag("div", "class", "col-sm-6") {
+    val id = title.replace("/", "__")
+    out.tag("div", "class", "col-sm-6", s"div-$id") {
       val stddevSeries = statsByUser.filter(_.n > 1).map(_.stddev)
       val rangeSeries = statsByUser.filter(_.n > 1).map(_.range)
 
@@ -180,7 +181,7 @@ class HtmlReportCreator(showArtifacts: Set[String] = Set.empty, showParameters: 
         val max = math.max(stddevSeries.max, rangeSeries.max)
         val stddevCdf = Distribution(stddevSeries).cdf(min, max, cdfNbSteps)
         val rangeCdf = Distribution(rangeSeries).cdf(min, max, cdfNbSteps)
-        printScatter(out, s"$title variability", Map("stddev" -> stddevCdf, "range" -> rangeCdf))
+        printScatter(out, s"chart-$id", s"$title variability", Map("stddev" -> stddevCdf, "range" -> rangeCdf))
 
         printStats(out, AggregatedStats(stddevSeries), Some("stddev"))
         printStats(out, AggregatedStats(rangeSeries), Some("range"))
@@ -188,18 +189,18 @@ class HtmlReportCreator(showArtifacts: Set[String] = Set.empty, showParameters: 
     }
   }
 
-  private def printDistributions(out: PrintStream, title: String, dists: Map[String, Distribution[Double]], moveLegend: Boolean = false) = {
+  private def printDistributions(out: PrintStream, title: String, dists: Map[String, Distribution[Double]]) = {
     val nonEmptyDists = dists.filter(_._2.nonEmpty)
     if (nonEmptyDists.nonEmpty) {
+      val id = title.replace("/", "__")
       val min = nonEmptyDists.values.map(_.min).min
       val max = nonEmptyDists.values.map(_.max).max
       val cdfs = nonEmptyDists.map { case (name, dist) => name -> dist.cdf(min, max, cdfNbSteps) }
-      printScatter(out, title, cdfs, moveLegend)
+      printScatter(out, s"chart-$id", title, cdfs)
     }
   }
 
-  private def printScatter(out: PrintStream, title: String, cdfs: Map[String, Seq[(Double, Double)]], lines: Boolean = true) = {
-    val id = s"chart-${idGenerator.incrementAndGet()}"
+  private def printScatter(out: PrintStream, id: String, title: String, cdfs: Map[String, Seq[(Double, Double)]], lines: Boolean = true) = {
     out.element("div", "id", id)
     out.tag("script") {
       out.println("(function() {")
