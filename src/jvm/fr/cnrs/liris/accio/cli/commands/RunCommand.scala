@@ -73,7 +73,13 @@ class RunCommand @Inject()(parser: ExperimentParser, executor: ExperimentExecuto
       out.writeln("<error>Specify one or multiple files to run as arguments</error>")
       ExitCode.CommandLineError
     } else {
-      val workDir = if (opts.workDir.nonEmpty) Paths.get(opts.workDir) else Files.createTempDirectory("accio-")
+      val workDir = if (opts.workDir.nonEmpty) {
+        val path = Paths.get(opts.workDir)
+        require(path.toFile.isDirectory && path.toFile.canWrite, s"Invalid or unwritable directory ${path.toAbsolutePath}")
+        path
+      } else {
+        Files.createTempDirectory("accio-")
+      }
       out.writeln(s"Writing progress in <comment>${workDir.toAbsolutePath}</comment>")
       val progressReporter = new ConsoleGraphProgressReporter(out)
       flags.residue.foreach { url =>

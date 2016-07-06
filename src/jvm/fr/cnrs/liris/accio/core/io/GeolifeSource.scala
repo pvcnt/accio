@@ -49,6 +49,7 @@ import scala.sys.process._
 case class GeolifeSource(url: String) extends DataSource[Trace] {
   private[this] val path = Paths.get(url)
   private[this] val decoder = new TextLineDecoder(new GeolifeDecoder, headerLines = 6)
+  require(path.toFile.isDirectory && path.toFile.canRead, s"Invalid or unreadable path $url")
 
   override lazy val keys =
     path.toFile

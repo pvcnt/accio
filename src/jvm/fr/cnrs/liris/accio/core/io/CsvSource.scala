@@ -51,6 +51,7 @@ import org.joda.time.Instant
 case class CsvSource(url: String) extends DataSource[Trace] {
   private[this] val path = Paths.get(url)
   private[this] val decoder = new TextLineDecoder(new CsvDecoder)
+  require(path.toFile.isDirectory && path.toFile.canRead, s"Invalid or unreadable path $url")
 
   override def keys: Seq[String] = path.toFile.listFiles.filter(_.isDirectory).map(_.toPath.getFileName.toString)
 
