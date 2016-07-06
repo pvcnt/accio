@@ -47,8 +47,8 @@ case class UniformSamplingOp(
     @Param(help = "Probability to keep each event")
     probability: Double
 ) extends Mapper {
-  require(probability >= 0 && probability <= 1, s"probability must be in [0, 1] (got $probability)")
+  require(probability >= 0 && probability <= 1, s"Probability must be in [0, 1] (got $probability)")
 
   override def map(trace: Trace): Trace =
-    trace.copy(events = SamplingUtils.sampleUniform(trace.events, probability))
+    trace.replace(SamplingUtils.sampleUniform(trace.events, probability))
 }

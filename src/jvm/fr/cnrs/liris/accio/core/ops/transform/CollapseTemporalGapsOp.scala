@@ -49,7 +49,7 @@ case class CollapseTemporalGapsOp(
   val startAtDate = new Instant(startAt.millis).toDateTime.withTimeAtStartOfDay
 
   override def map(trace: Trace): Trace = {
-    trace.transform { events =>
+    trace.replace { events =>
       var shift = 0L
       var prev: Option[DateTime] = None
       events.map { event =>

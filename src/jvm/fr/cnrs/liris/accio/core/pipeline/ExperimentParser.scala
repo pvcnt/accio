@@ -33,6 +33,7 @@
 package fr.cnrs.liris.accio.core.pipeline
 
 import java.nio.file.{Path, Paths}
+import java.util.UUID
 
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.google.inject.Inject
@@ -40,7 +41,7 @@ import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.param.{ParamGrid, ParamMap}
 import fr.cnrs.liris.accio.core.pipeline.JsonHelper._
-import fr.cnrs.liris.common.util.{Distance, FileUtils}
+import fr.cnrs.liris.common.util.{Distance, FileUtils, HashUtils}
 
 import scala.collection.JavaConverters._
 
@@ -59,7 +60,9 @@ class JsonExperimentParser @Inject()(registry: OpRegistry, workflowParser: Workf
     } else {
       logger.warn(s"Implicitly converting a workflow definition into an experiment definition at ${path.toAbsolutePath}")
       val workflow = workflowParser.parse(path).setRuns(root.getInteger("runs").getOrElse(1))
+      val id = HashUtils.sha1(UUID.randomUUID().toString)
       new Experiment(
+        id = id,
         name = getDefaultName(path),
         workflow = workflow,
         paramMap = None,
@@ -72,6 +75,7 @@ class JsonExperimentParser @Inject()(registry: OpRegistry, workflowParser: Workf
   }
 
   private def getExperiment(path: Path, root: JsonNode) = {
+    val id = HashUtils.sha1(UUID.randomUUID().toString)
     val workflow = getWorkflow(path, root.child("workflow"))
     val name = root.getString("name").getOrElse(getDefaultName(path))
     val notes = root.getString("notes")
@@ -88,6 +92,7 @@ class JsonExperimentParser @Inject()(registry: OpRegistry, workflowParser: Workf
     val exploration = root.getChild("exploration").map(getExploration(paramDefs, _))
 
     new Experiment(
+      id = id,
       name = name,
       workflow = workflow,
       paramMap = params,

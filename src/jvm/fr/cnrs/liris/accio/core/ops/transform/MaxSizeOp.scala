@@ -46,5 +46,5 @@ case class MaxSizeOp(
     size: Int
 ) extends Mapper {
 
-  override def map(trace: Trace): Trace = trace.transform(_.take(size))
+  override def map(trace: Trace): Trace = trace.replace(_.take(size))
 }

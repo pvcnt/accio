@@ -11,50 +11,49 @@ import fr.cnrs.liris.common.util.HashUtils
 import scala.collection.mutable
 
 trait ExperimentExecutor {
-  def execute(workDir: Path, experiment: ExperimentRun): ExperimentRun
+  def execute(experiment: Experiment, workDir: Path): ExperimentReport
 }
 
 class LocalExperimentExecutor @Inject()(workflowExecutor: GraphExecutor, writer: ReportWriter)
-  extends ExperimentExecutor with StrictLogging {
-  override def execute(workDir: Path, experiment: ExperimentRun): ExperimentRun = {
-    logger.trace(s"Starting execution of experiment ${experiment.id}: ${experiment.defn}")
+    extends ExperimentExecutor with StrictLogging {
+  override def execute(experiment: Experiment, workDir: Path): ExperimentReport = {
+    logger.trace(s"Starting execution of experiment ${experiment.id}")
     writer.write(workDir, experiment)
-    var runningExperiment = experiment
+    var report = new ExperimentReport
 
-    val strategy = getExecutionStrategy(runningExperiment.defn)
+    val strategy = getExecutionStrategy(experiment)
     var scheduled = mutable.Queue.empty[(GraphDef, Any)] ++ strategy.next
     while (scheduled.nonEmpty) {
       val (graphDef, meta) = scheduled.dequeue()
       val runId = HashUtils.sha1(UUID.randomUUID().toString)
       logger.trace(s"Starting execution of workflow run $runId: $graphDef")
-      runningExperiment = runningExperiment.copy(children = runningExperiment.children ++ Seq(runId))
-      var run = Run(runId, runningExperiment.id, graphDef, strategy.name(graphDef))
-      writer.write(workDir, runningExperiment)
+      report = report.addRun(runId)
+      val run = Run(runId, experiment.id, graphDef, strategy.name(graphDef))
+      writer.write(workDir, experiment.copy(report = Some(report)))
 
       val progressReporter = new ConsoleGraphProgressReporter(graphDef.size)
-      val report = workflowExecutor.execute(workDir, run, progressReporter)
-      scheduled ++= strategy.next(graphDef, meta, report)
+      val runReport = workflowExecutor.execute(run, workDir, progressReporter)
+      scheduled ++= strategy.next(graphDef, meta, runReport)
 
-      run = run.copy(report = report)
-      writer.write(workDir, run)
       logger.trace(s"Completed execution of workflow run $runId")
     }
 
-    runningExperiment = runningExperiment.complete(successful = true)
-    writer.write(workDir, runningExperiment)
-    logger.trace(s"Completed execution of experiment ${runningExperiment.id}")
-    runningExperiment
+    report = report.complete()
+    writer.write(workDir, experiment.copy(report = Some(report)))
+    logger.trace(s"Completed execution of experiment ${experiment.id}")
+
+    report
   }
 
-  private def getExecutionStrategy(experimentDef: Experiment) = {
-    val graphDef = experimentDef.paramMap match {
-      case None => experimentDef.workflow.graph
-      case Some(m) => experimentDef.workflow.graph.setParams(m)
+  private def getExecutionStrategy(experiment: Experiment) = {
+    val graphDef = experiment.paramMap match {
+      case None => experiment.workflow.graph
+      case Some(m) => experiment.workflow.graph.setParams(m)
     }
-    if (experimentDef.exploration.isDefined) {
-      new ExplorationStrategy(graphDef, experimentDef.exploration.get)
-    } else if (experimentDef.optimization.isDefined) {
-      new SimulatedAnnealingStrategy(graphDef, experimentDef.optimization.get)
+    if (experiment.exploration.isDefined) {
+      new ExplorationStrategy(graphDef, experiment.exploration.get)
+    } else if (experiment.optimization.isDefined) {
+      new SimulatedAnnealingStrategy(graphDef, experiment.optimization.get)
     } else {
       new SingleExecutionStrategy(graphDef)
     }

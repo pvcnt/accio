@@ -16,11 +16,11 @@ import org.joda.time.{DateTime, Duration}
  * @param report   Execution report
  */
 case class Run(
-  id: String,
-  parent: String,
-  graphDef: GraphDef,
-  name: Option[String] = None,
-  report: Option[RunReport] = None) {
+    id: String,
+    parent: String,
+    graphDef: GraphDef,
+    name: Option[String] = None,
+    report: Option[RunReport] = None) {
 
   override def toString: String = name.getOrElse(id)
 }
@@ -34,10 +34,10 @@ case class Run(
  * @param artifacts   Non-ephemeral artifacts
  */
 case class RunReport(
-  startedAt: DateTime = DateTime.now,
-  completedAt: Option[DateTime] = None,
-  nodeStats: Set[NodeExecStats] = Set.empty,
-  artifacts: Set[Artifact] = Set.empty) {
+    startedAt: DateTime = DateTime.now,
+    completedAt: Option[DateTime] = None,
+    nodeStats: Set[NodeExecStats] = Set.empty,
+    artifacts: Set[Artifact] = Set.empty) {
 
   /**
    * Return whether the execution is completed, either successfully or not.
@@ -67,7 +67,8 @@ case class RunReport(
     copy(nodeStats = nodeStats + new NodeExecStats(nodeName, at))
 
   /**
-   * Return a copy of this report with the execution of a given node marked as successfully completed.
+   * Return a copy of this report with the execution of a given node marked as successfully
+   * completed.
    *
    * @param nodeName  Name of the node whose execution completed
    * @param artifacts Artifacts produced with the execution of the node
@@ -75,7 +76,7 @@ case class RunReport(
    * @throws IllegalStateException If the node was not marked as started
    */
   @throws[IllegalStateException]
-  def completeNode(nodeName: String, artifacts: Seq[Artifact], at: DateTime = DateTime.now): RunReport = {
+  def completeNode(nodeName: String, artifacts: Seq[Artifact], at: DateTime): RunReport =
     nodeStats.find(_.name.contains(nodeName)) match {
       case Some(s) =>
         copy(
@@ -83,7 +84,18 @@ case class RunReport(
           artifacts = this.artifacts ++ artifacts.filterNot(_.ephemeral))
       case None => throw new IllegalStateException(s"Execution of node $nodeName was not started")
     }
-  }
+
+  /**
+   * Return a copy of this report with the execution of a given node marked as successfully
+   * completed, considering it completed just now.
+   *
+   * @param nodeName  Name of the node whose execution completed
+   * @param artifacts Artifacts produced with the execution of the node
+   * @throws IllegalStateException If the node was not marked as started
+   */
+  @throws[IllegalStateException]
+  def completeNode(nodeName: String, artifacts: Seq[Artifact]): RunReport =
+    completeNode(nodeName, artifacts, DateTime.now)
 
   /**
    * Return a copy of this report with the execution of a given node marked as errored.
@@ -94,12 +106,23 @@ case class RunReport(
    * @throws IllegalStateException If the node was not marked as started
    */
   @throws[IllegalStateException]
-  def completeNode(nodeName: String, error: Throwable, at: DateTime = DateTime.now): RunReport = {
+  def completeNode(nodeName: String, error: Throwable, at: DateTime): RunReport =
     nodeStats.find(_.name == nodeName) match {
       case Some(s) => copy(nodeStats = nodeStats - s + s.complete(error, at))
       case None => throw new IllegalStateException(s"Execution of node $nodeName was not started")
     }
-  }
+
+  /**
+   * Return a copy of this report with the execution of a given node marked as errored, considering
+   * it completed just now.
+   *
+   * @param nodeName Name of the node whose execution completed
+   * @param error    Error caught during execution
+   * @throws IllegalStateException If the node was not marked as started
+   */
+  @throws[IllegalStateException]
+  def completeNode(nodeName: String, error: Throwable): RunReport =
+    completeNode(nodeName, error, DateTime.now)
 
   /**
    * Return a copy of this report with the execution marked as completed.
@@ -119,11 +142,11 @@ case class RunReport(
  * @param error       Error caught during execution
  */
 case class NodeExecStats(
-  name: String,
-  startedAt: DateTime = DateTime.now,
-  completedAt: Option[DateTime] = None,
-  successful: Option[Boolean] = None,
-  error: Option[Throwable] = None) {
+    name: String,
+    startedAt: DateTime = DateTime.now,
+    completedAt: Option[DateTime] = None,
+    successful: Option[Boolean] = None,
+    error: Option[Throwable] = None) {
 
   /**
    * Return whether the execution is completed, either successfully or not.
@@ -139,26 +162,41 @@ case class NodeExecStats(
 
   /**
    * Return successfully completed statistics.
+   *
+   * @param at Time at which the node execution completed
    */
   def complete(at: DateTime = DateTime.now): NodeExecStats = copy(completedAt = Some(at), successful = Some(true))
+
+  /**
+   * Return successfully completed statistics, considering it completed just now.
+   */
+  def complete(): NodeExecStats = complete(DateTime.now)
 
   /**
    * Return completed statistics, after an error.
    *
    * @param error Error caught during execution
+   * @param at    Time at which the node execution completed
    */
-  def complete(error: Throwable, at: DateTime = DateTime.now): NodeExecStats =
+  def complete(error: Throwable, at: DateTime): NodeExecStats =
     copy(completedAt = Some(at), successful = Some(false), error = Some(error))
+
+  /**
+   * Return completed statistics, after an error, considering it completed just now.
+   *
+   * @param error Error caught during execution
+   */
+  def complete(error: Throwable): NodeExecStats = complete(error, DateTime.now)
 }
 
 trait ReportWriter {
-  def write(workDir: Path, experiment: ExperimentRun): Unit
+  def write(workDir: Path, experiment: Experiment): Unit
 
   def write(workDir: Path, run: Run): Unit
 }
 
 trait ReportReader {
-  def readExperiment(workDir: Path, id: String): ExperimentRun
+  def readExperiment(workDir: Path, id: String): Experiment
 
   def readRun(workDir: Path, id: String): Run
 }

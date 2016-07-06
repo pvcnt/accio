@@ -19,33 +19,34 @@ import org.joda.time.{DateTime, Duration}
  * @param initiator    User initiating the experiment
  */
 case class Experiment(
-  id: String,
-  name: String,
-  workflow: Workflow,
-  paramMap: Option[ParamMap],
-  exploration: Option[Exploration],
-  optimization: Option[Optimization],
-  notes: Option[String],
-  tags: Set[String],
-  initiator: User) {
+    id: String,
+    name: String,
+    workflow: Workflow,
+    paramMap: Option[ParamMap],
+    exploration: Option[Exploration],
+    optimization: Option[Optimization],
+    notes: Option[String],
+    tags: Set[String],
+    initiator: User,
+    report: Option[ExperimentReport] = None) {
   require(!(exploration.isDefined && optimization.isDefined), "Cannot define both an exploration and an optimization")
 }
 
 case class Exploration(paramGrid: ParamGrid)
 
 case class Optimization(
-  paramGrid: ParamGrid,
-  iters: Int,
-  contraction: Double,
-  objectives: Set[Objective]) {
+    paramGrid: ParamGrid,
+    iters: Int,
+    contraction: Double,
+    objectives: Set[Objective]) {
   require(iters > 0, s"Number of iterations per step must be strictly positive (got $iters)")
   require(contraction > 0 && contraction <= 1, s"Contraction factor must be in (0,1] (got $contraction)")
 }
 
 case class ExperimentReport(
-  startedAt: DateTime = DateTime.now,
-  completedAt: Option[DateTime] = None,
-  runs: Seq[String] = Seq.empty) {
+    startedAt: DateTime = DateTime.now,
+    completedAt: Option[DateTime] = None,
+    runs: Seq[String] = Seq.empty) {
 
   /**
    * Return whether the execution is completed, either successfully or not.

@@ -37,7 +37,11 @@ import fr.cnrs.liris.accio.core.model.{Event, Trace}
 
 import scala.collection.mutable
 
-private[ops] trait SlidingSampling extends Mapper {
+/**
+ * Base class for transformers using previous event and current one to take a decision about
+ * whether to keep it or not.
+ */
+private[transform] trait SlidingSampling extends Mapper {
   override final def map(trace: Trace): Trace = {
     if (trace.isEmpty) {
       trace
@@ -54,7 +58,7 @@ private[ops] trait SlidingSampling extends Mapper {
           maybePrev = Some(event)
         }
       }
-      trace.copy(events = newEvents)
+      trace.replace(newEvents)
     }
   }
 
@@ -62,21 +66,24 @@ private[ops] trait SlidingSampling extends Mapper {
 }
 
 /**
- * Base class for all functions using previous event and current one to take a decision.
+ * Base class for transformers using previous event and current one to take a decision about
+ * whether to split a trace into multiple parts.
  */
-private[ops] trait SlidingSplitting extends Transformer {
+private[transform] trait SlidingSplitting extends Transformer {
   override final def transform(input: Trace): Seq[Trace] = {
-    val output = mutable.ListBuffer[Trace]()
-    val buffer = mutable.ListBuffer[Event]()
+    val output = mutable.ListBuffer.empty[Trace]
+    val buffer = mutable.ListBuffer.empty[Event]
+    var idx = 0
     for (event <- input.events) {
       if (buffer.nonEmpty && split(buffer, event)) {
-        output += Trace(buffer)
+        output += new Trace(s"${buffer.head.user}/$idx", buffer.head.user, buffer)
         buffer.clear()
+        idx += 1
       }
       buffer += event
     }
     if (buffer.nonEmpty) {
-      output += Trace(buffer)
+      output += new Trace(s"${buffer.head.user}/$idx", buffer.head.user, buffer)
     }
     output
   }

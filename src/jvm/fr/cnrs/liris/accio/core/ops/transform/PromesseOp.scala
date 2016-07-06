@@ -69,7 +69,7 @@ case class PromesseOp(
 
       // The time to "spend" will be uniformely allocated. This way there will be the same
       // duration between two consecutive events.
-      trace.copy(events = allocate(sampled))
+      trace.replace(allocate(sampled))
     }
 
   private def sample(events: Seq[Event]) = {

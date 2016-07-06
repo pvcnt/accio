@@ -50,6 +50,6 @@ case class MaxDurationOp(
   override def map(trace: Trace): Trace = {
     val startAt = trace.events.head.time
     val endAt = startAt + duration
-    trace.transform(_.takeWhile(r => r.time <= endAt))
+    trace.replace(_.takeWhile(r => r.time <= endAt))
   }
 }

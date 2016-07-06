@@ -59,7 +59,7 @@ case class CsvSource(url: String) extends DataSource[Trace] {
       .listFiles
       .map(file => decoder.decode(key, Files.readAllBytes(file.toPath)))
       .flatMap {
-        case Some(events) => Some(new Trace(key, events))
+        case Some(events) => Some(new Trace(key, key, events))
         case None => None
       }.toIterable
   }

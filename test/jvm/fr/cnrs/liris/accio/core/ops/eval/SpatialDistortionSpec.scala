@@ -28,7 +28,7 @@ class SpatialDistortionSpec extends UnitSpec with WithTraceGenerator {
 
   it should "return zero for temporally shifted traces" in {
     val t1 = randomTrace(Me, 120)
-    val t2 = t1.transform { events =>
+    val t2 = t1.replace { events =>
       var prev = events.head.time
       events.zipWithIndex.map { case (rec, idx) =>
         val now = prev.plus(Duration.standardSeconds(Random.nextInt(3600)))
@@ -47,7 +47,7 @@ class SpatialDistortionSpec extends UnitSpec with WithTraceGenerator {
   it should "compute the spatial distortion" in {
     val t1 = randomTrace(Me, 120)
     val distances = DenseVector(Seq.fill(120)(Random.nextInt(5000).toDouble): _*)
-    val t2 = t1.transform { events =>
+    val t2 = t1.replace { events =>
       events.zipWithIndex.map { case (rec, idx) =>
         rec.copy(point = rec.point.translate(S1Angle.degrees(Random.nextInt(360)), Distance.meters(distances(idx))))
       }

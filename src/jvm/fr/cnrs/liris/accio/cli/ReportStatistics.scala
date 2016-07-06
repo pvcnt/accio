@@ -19,8 +19,8 @@ class ReportStatistics(val runs: Seq[Run]) {
   /**
    * Return all artifacts as a map with names as keys and artifacts keyed by run name/id as value.
    */
-  def artifacts: Map[String, Map[String, Artifact]] = runs
-      .flatMap(run => run.report.artifacts.map(art => run.name.getOrElse(run.id) -> art))
-      .groupBy(_._2.name)
-      .map { case (id, group) => id -> group.toMap }
+  def artifacts: Map[String, Map[String, Artifact]] =
+    runs.flatMap { run => run.report.map(_.artifacts.map(art => run.name.getOrElse(run.id) -> art)).getOrElse(Seq.empty[(String, Artifact)]) }
+        .groupBy(_._2.name)
+        .map { case (id, group) => id -> group.toMap }
 }

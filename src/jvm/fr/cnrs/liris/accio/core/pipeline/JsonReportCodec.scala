@@ -19,13 +19,13 @@ class JsonReportCodec extends ReportWriter with ReportReader {
     om
   }
 
-  override def readExperiment(workDir: Path, id: String): ExperimentRun =
-    om.reader.withType(classOf[ExperimentRun]).readValue[ExperimentRun](workDir.resolve(s"experiment-$id.json").toFile)
+  override def readExperiment(workDir: Path, id: String): Experiment =
+    om.reader.withType(classOf[Experiment]).readValue[Experiment](workDir.resolve(s"experiment-$id.json").toFile)
 
   override def readRun(workDir: Path, id: String): Run =
     om.reader.withType(classOf[Run]).readValue[Run](workDir.resolve(s"run-$id.json").toFile)
 
-  override def write(workDir: Path, experiment: ExperimentRun): Unit =
+  override def write(workDir: Path, experiment: Experiment): Unit =
     om.writer.writeValue(workDir.resolve(s"experiment-${experiment.id}.json").toFile, experiment)
 
   override def write(workDir: Path, run: Run): Unit =

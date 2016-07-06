@@ -37,12 +37,15 @@ import com.google.common.base.MoreObjects
 import fr.cnrs.liris.common.util.{Distance, Speed}
 
 /**
- * A trace is a list of events belonging to a single user.
+ * A trace is a list of events belonging to a single user. Traces have an identifier allowing to
+ * track the lineage of transformations it went through. A trace identifier is only intended to
+ * change only when a trace is splitted into multiple traces.
  *
- * @param user    A user name
- * @param events A list of temporally ordered events
+ * @param id     Trace identifier
+ * @param user   User identifier
+ * @param events Temporally ordered events
  */
-case class Trace(user: String, events: Seq[Event]) {
+class Trace(val id: String, val user: String, val events: Seq[Event]) {
   /**
    * Check if this trace is empty, i.e., contains no event.
    */
@@ -100,29 +103,57 @@ case class Trace(user: String, events: Seq[Event]) {
     events.sliding(2).map(rs => (rs.head.time to rs.last.time).duration).toSeq
 
   /**
-   * Return a new trace assigned to the same user created by applying a given function on events.
+   * Return a list of traces after applying a function on the sequence of events.
+   *
+   * @param fn
+   * @return
+   */
+  def split(fn: Seq[Event] => Seq[Trace]): Seq[Trace] =
+    fn(events).zipWithIndex.map { case (trace, idx) =>
+      new Trace(s"$id/$idx", trace.user, trace.events)
+    }
+
+  /**
+   * Return a new trace after applying a given function on each event.
    *
    * @param fn A function modifying the events (it shouldn't modify the events' user)
    */
-  def transform(fn: Seq[Event] => Seq[Event]): Trace = copy(events = fn(events))
+  def map(fn: Event => Event): Trace = new Trace(id, user, events.map(fn))
 
   /**
-   * Return an empty trace with the same user and batch.
+   * Return a new trace after applying a given function on each event.
+   *
+   * @param fn Whether to keep an event or not
    */
-  def empty: Trace = new Trace(user, Seq.empty)
+  def filter(fn: Event => Boolean): Trace = new Trace(id, user, events.filter(fn))
+
+  /**
+   * Return a new trace after applying a function on the sequence of events.
+   *
+   * @param fn A function modifying the events (it shouldn't modify the events' user)
+   */
+  def replace(fn: Seq[Event] => Seq[Event]): Trace = new Trace(id, user, fn(events))
+
+  /**
+   * Return a new trace with other events.
+   *
+   * @param events New events (should belong to the same user)
+   */
+  def replace(events: Seq[Event]): Trace = new Trace(id, user, events)
+
+  /**
+   * Return an empty trace with the same user.
+   */
+  def empty: Trace = new Trace(id, user, Seq.empty)
 
   /**
    * Return a trace with the same batch but with all events associated to another user name.
    *
    * @param user Another user name
    */
-  def pseudonymise(user: String): Trace = new Trace(user, events.map(_.copy(user = user)))
+  def pseudonymise(user: String): Trace = new Trace(id, user, events.map(_.copy(user = user)))
 
-  override def toString: String =
-    MoreObjects.toStringHelper(this)
-        .add("user", user)
-        .add("size", events.size)
-        .toString
+  override def toString: String = MoreObjects.toStringHelper(this).addValue(id).toString
 }
 
 /** Factory for [[Trace]]. */
@@ -132,7 +163,7 @@ object Trace {
    *
    * @param user A user name
    */
-  def empty(user: String): Trace = new Trace(user, Seq.empty)
+  def empty(user: String): Trace = new Trace(user, user, Seq.empty)
 
   /**
    * Create a trace from a list of events. The user name will be automatically inferred from this data, and the
@@ -143,11 +174,11 @@ object Trace {
   def apply(events: Iterable[Event]): Trace = {
     val seq = events.toSeq.sortBy(_.time)
     require(seq.nonEmpty, "Cannot create a trace from an empty list of events")
-    new Trace(seq.head.user, seq)
+    new Trace(seq.head.user, seq.head.user, seq)
   }
 
   def apply(user: String, events: Iterable[Event]): Trace = {
     val seq = events.toSeq.sortBy(_.time)
-    new Trace(user, seq)
+    new Trace(user, user, seq)
   }
 }

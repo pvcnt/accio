@@ -49,7 +49,7 @@ case class GaussianKernelSmoothingOp(
     omega: Duration
 ) extends Mapper {
   override def map(trace: Trace): Trace =
-    trace.transform(_.map { event =>
+    trace.replace(_.map { event =>
       var ks = 0d
       var x = 0d
       var y = 0d

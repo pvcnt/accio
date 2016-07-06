@@ -80,24 +80,22 @@ class RunCommand @Inject()(parser: ExperimentParser, executor: ExperimentExecuto
   }
 
   private def make(opts: MakeCommandOpts, workDir: Path, url: String) = {
-    val id = HashUtils.sha1(UUID.randomUUID().toString)
-    var experimentDef = parser.parse(Paths.get(FileUtils.replaceHome(url)))
+    var experiment = parser.parse(Paths.get(FileUtils.replaceHome(url)))
     if (opts.name.nonEmpty) {
-      experimentDef = experimentDef.copy(name = opts.name)
+      experiment = experiment.copy(name = opts.name)
     }
     if (opts.tags.nonEmpty) {
-      experimentDef = experimentDef.copy(tags = opts.tags.split(",").map(_.trim).toSet)
+      experiment = experiment.copy(tags = opts.tags.split(",").map(_.trim).toSet)
     }
     if (opts.notes.nonEmpty) {
-      experimentDef = experimentDef.copy(notes = Some(opts.notes))
+      experiment = experiment.copy(notes = Some(opts.notes))
     }
     if (opts.user.nonEmpty) {
-      experimentDef = experimentDef.copy(initiator = User.parse(opts.user))
+      experiment = experiment.copy(initiator = User.parse(opts.user))
     }
     if (opts.runs > 1) {
-      experimentDef = experimentDef.copy(workflow = experimentDef.workflow.setRuns(opts.runs))
+      experiment = experiment.copy(workflow = experiment.workflow.setRuns(opts.runs))
     }
-    val experiment = ExperimentRun(id, experimentDef)
-    executor.execute(workDir, experiment)
+    executor.execute(experiment, workDir)
   }
 }

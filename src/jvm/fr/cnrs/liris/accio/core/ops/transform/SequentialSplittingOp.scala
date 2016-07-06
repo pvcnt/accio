@@ -55,9 +55,9 @@ case class SequentialSplittingOp(
     val from = math.max(0, (percentBegin * trace.size / 100).floor.toInt)
     val until = math.min(trace.size, (percentEnd * trace.size / 100).ceil.toInt)
     if (complement) {
-      trace.transform(events => events.slice(0, from) ++ events.slice(until, events.size))
+      trace.replace(events => events.slice(0, from) ++ events.slice(until, events.size))
     } else {
-      trace.transform(_.slice(from, until))
+      trace.replace(_.slice(from, until))
     }
   }
 }
