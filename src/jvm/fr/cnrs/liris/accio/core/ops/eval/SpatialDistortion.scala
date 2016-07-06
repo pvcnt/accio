@@ -47,7 +47,8 @@ case class SpatialDistortion(
     interpolate: Boolean = true
 ) extends Evaluator {
   override def evaluate(reference: Trace, result: Trace): Seq[Metric] = {
-    require(reference.size > 1)
+    require(result.isEmpty || reference.size >= 1,
+      s"Cannot evaluate spatial distortion with empty reference trace ${reference.id}")
     val points = reference.events.map(_.point)
     val distances = if (interpolate) {
       evaluateWithInterpolation(points, result)

@@ -106,7 +106,14 @@ case class CsvSink(url: String) extends DataSink[Trace] {
   override def write(key: String, elements: Iterator[Trace]): Unit = {
     Files.createDirectories(path.resolve(key))
     elements.foreach { trace =>
-      val bytes = trace.events.map(encoder.encode).fold(Array.empty)(_ ++ NL ++ _)
+      val encodedEvents = trace.events.map(encoder.encode)
+      val bytes = if (encodedEvents.isEmpty) {
+        Array.empty[Byte]
+      } else if (encodedEvents.size == 1) {
+        encodedEvents.head
+      } else {
+        encodedEvents.tail.fold(encodedEvents.head)(_ ++ NL ++ _)
+      }
       Files.write(path.resolve(key).resolve(s"${trace.id}.csv"), bytes)
     }
   }
@@ -118,19 +125,15 @@ case class CsvSink(url: String) extends DataSink[Trace] {
 class CsvDecoder extends Decoder[Event] with LazyLogging {
   override def decode(key: String, bytes: Array[Byte]): Option[Event] = {
     val line = new String(bytes, Charsets.UTF_8).trim
-    if (line.isEmpty) {
+    val parts = line.split(",")
+    if (parts.length != 3) {
+      logger.warn(s"Invalid line: $line")
       None
     } else {
-      val parts = line.split(",")
-      if (parts.length != 3) {
-        logger.warn(s"Invalid line: $line")
-        None
-      } else {
-        val x = parts(0).toDouble
-        val y = parts(1).toDouble
-        val time = new Instant(parts(2).toLong * 1000)
-        Some(Event(key, Point(x, y), time))
-      }
+      val x = parts(0).toDouble
+      val y = parts(1).toDouble
+      val time = new Instant(parts(2).toLong * 1000)
+      Some(Event(key, Point(x, y), time))
     }
   }
 }
