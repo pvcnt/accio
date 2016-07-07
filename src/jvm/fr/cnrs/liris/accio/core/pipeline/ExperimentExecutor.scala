@@ -75,7 +75,7 @@ class LocalExperimentExecutor @Inject()(workflowExecutor: GraphExecutor, writer:
     } else if (experiment.optimization.isDefined) {
       new SimulatedAnnealingStrategy(graphDef, experiment.optimization.get)
     } else {
-      new SingleExecutionStrategy(graphDef)
+      new SingleExecutionStrategy(graphDef, experiment.name)
     }
   }
 }

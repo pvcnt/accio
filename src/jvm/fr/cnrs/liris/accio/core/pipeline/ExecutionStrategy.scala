@@ -12,12 +12,12 @@ trait ExecutionStrategy {
   def name(graphDef: GraphDef): Option[String]
 }
 
-class SingleExecutionStrategy(graph: GraphDef) extends ExecutionStrategy {
+class SingleExecutionStrategy(graph: GraphDef, name: String) extends ExecutionStrategy {
   override def next: Seq[(GraphDef, Any)] = Seq(graph -> None)
 
   override def next(graphDef: GraphDef, meta: Any, report: RunReport): Seq[(GraphDef, Any)] = Seq.empty
 
-  override def name(graphDef: GraphDef): Option[String] = None
+  override def name(graphDef: GraphDef): Option[String] = Some(name)
 }
 
 class ExplorationStrategy(graph: GraphDef, exploration: Exploration) extends ExecutionStrategy {
