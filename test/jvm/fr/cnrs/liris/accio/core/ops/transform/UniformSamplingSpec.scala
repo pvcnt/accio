@@ -16,12 +16,16 @@ class UniformSamplingSpec extends UnitSpec with WithTraceGenerator {
 
   it should "handle null probability" in {
     val trace = randomTrace(Me, 100, 10.seconds)
-    transform(trace, 0) shouldBe Trace.empty(Me)
+    val res = transform(trace, 0)
+    res.user shouldBe trace.user
+    res.events should have size 0
   }
 
   it should "handle certain probability" in {
     val trace = randomTrace(Me, 100, 10.seconds)
-    transform(trace, 1) shouldBe trace
+    val res = transform(trace, 1)
+    res.user shouldBe trace.user
+    res.events shouldBe trace.events
   }
 
   private def transform(trace: Trace, probability: Double) = {

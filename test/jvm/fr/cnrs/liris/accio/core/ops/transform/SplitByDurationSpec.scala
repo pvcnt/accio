@@ -11,7 +11,9 @@ class SplitByDurationSpec extends UnitSpec with WithTraceGenerator {
     val trace = randomTrace(Me, 150, Duration.standardSeconds(Random.nextInt(10)))
     val res = DurationSplittingOp(Duration.standardSeconds(10)).transform(trace)
     res.map(_.user).foreach(user => user shouldBe Me)
-    res.flatMap(_.events) shouldBe trace.events
+    println(res.flatMap(_.events).size)
+    println(trace.events.size  )
+    res.flatMap(_.events) should contain theSameElementsInOrderAs trace.events
     res.foreach(_.duration.seconds should be <= (10L))
   }
 
@@ -19,6 +21,7 @@ class SplitByDurationSpec extends UnitSpec with WithTraceGenerator {
     val trace = randomTrace(Me, 60, Duration.standardSeconds(1))
     val res = DurationSplittingOp(Duration.standardSeconds(100)).transform(trace)
     res should have size 1
-    res.head shouldBe trace
+    res.head.user shouldBe trace.user
+    res.head.events should contain theSameElementsInOrderAs trace.events
   }
 }
