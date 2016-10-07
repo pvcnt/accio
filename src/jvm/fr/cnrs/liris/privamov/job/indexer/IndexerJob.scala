@@ -29,7 +29,7 @@ class IndexerJob {
       Settings.settingsBuilder.put("client.transport.ping_timeout", "30s").build,
       ElasticsearchClientUri(flags.elasticUri))
 
-    val env = DatasetEnv.local(1)
+    val env = new DatasetEnv(1)
     val indexer = new Indexer(elasticClient, indexName = "event")
     try {
       flagsParser.residue.foreach { url =>
@@ -48,6 +48,6 @@ class IndexerJob {
       case "geolife" => GeolifeSource(url)
       case _ => throw new IllegalArgumentException(s"Unknown type '$typ'")
     }
-    env.read(source.index, source.reader, source.decoder)
+    env.read(source)
   }
 }

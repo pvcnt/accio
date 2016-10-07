@@ -40,7 +40,7 @@ import com.google.common.base.Charsets
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.core.dataset._
 import fr.cnrs.liris.accio.core.model.{Event, Trace}
-import fr.cnrs.liris.common.geo.Point
+import fr.cnrs.liris.common.geo.LatLng
 import org.joda.time.Instant
 
 /**
@@ -53,16 +53,9 @@ case class CsvSource(url: String) extends DataSource[Trace] {
   private[this] val decoder = new TextLineDecoder(new CsvDecoder)
   require(path.toFile.isDirectory && path.toFile.canRead, s"Invalid or unreadable path $url")
 
-  override def keys: Seq[String] = path.toFile.listFiles.filter(_.isDirectory).map(_.toPath.getFileName.toString)
+  override def keys: Seq[String] = path.toFile.listFiles.sortWith(sortFiles).map(_.toPath.getFileName.toString)
 
-  override def read(key: String): Iterable[Trace] = {
-    path.resolve(key)
-        .toFile
-        .listFiles
-        .toSeq
-        .sortWith(sortFiles)
-        .flatMap(read(key, _))
-  }
+  override def read(key: String): Iterable[Trace] = read(key, path.resolve(key).toFile).toIterable
 
   private def read(key: String, file: File): Option[Trace] = {
     decoder.decode(key, Files.readAllBytes(file.toPath)) match {
@@ -130,10 +123,11 @@ class CsvDecoder extends Decoder[Event] with LazyLogging {
       logger.warn(s"Invalid line: $line")
       None
     } else {
-      val x = parts(0).toDouble
-      val y = parts(1).toDouble
+      val lat = parts(0).toDouble
+      val lng = parts(1).toDouble
+      val point = LatLng.degrees(lat, lng).toPoint
       val time = new Instant(parts(2).toLong * 1000)
-      Some(Event(key, Point(x, y), time))
+      Some(Event(key, point, time))
     }
   }
 }
@@ -143,6 +137,7 @@ class CsvDecoder extends Decoder[Event] with LazyLogging {
  */
 class CsvEncoder extends Encoder[Event] {
   override def encode(obj: Event): Array[Byte] = {
-    s"${obj.point.x},${obj.point.y},${obj.time.millis / 1000}".getBytes(Charsets.UTF_8)
+    val latLng = obj.point.toLatLng
+    s"${latLng.lat.degrees},${latLng.lng.degrees},${obj.time.millis}".getBytes(Charsets.UTF_8)
   }
 }
