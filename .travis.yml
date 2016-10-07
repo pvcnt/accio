@@ -8,12 +8,23 @@ before_cache:
   # Kill these files before the cache check to avoid un-needed cache re-packing and re-upload (a ~100s operation).
   - find $HOME/.ivy2/cache -type f -name "ivydata-*.properties" -print -delete
   - rm -fv $HOME/.ivy2/cache/*.{css,properties,xml,xsl}
+  # The stats cache contains timestamped reports unused by CI but that
+  # thrash the cache.  Skip caching these.
+  - rm -rf $HOME/.cache/pants/stats
 
 cache:
   directories:
+    - $HOME/.cache/pants
+    - $HOME/.ivy2/pants
     - $HOME/.ivy2/cache
 
 language: scala
 jdk: oraclejdk8
 scala:
-   - 2.11.7
+   - 2.11.8
+
+script:
+  - uname -a
+  - java -version
+  - echo $JAVA_HOME
+  - "./pants test ::"
