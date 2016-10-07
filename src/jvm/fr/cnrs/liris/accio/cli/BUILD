@@ -4,7 +4,6 @@ scala_library(
         ':annotations',
         'src/jvm/fr/cnrs/liris/accio/core/framework',
         'src/jvm/fr/cnrs/liris/accio/core/pipeline',
-        'src/jvm/fr/cnrs/liris/profiler',
         'src/jvm/fr/cnrs/liris/accio/core/ops/eval',
         'src/jvm/fr/cnrs/liris/accio/core/ops/transform',
         'src/jvm/fr/cnrs/liris/accio/core/ops/source',

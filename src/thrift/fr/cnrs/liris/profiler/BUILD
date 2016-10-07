@@ -1,9 +1,0 @@
-java_thrift_library(
-    name='profiler',
-    sources=globs('*.thrift'),
-    dependencies=[
-        '3rdparty/jvm:scrooge-core',
-    ],
-    compiler='scrooge',
-    language='scala'
-)

@@ -32,15 +32,10 @@
 
 package fr.cnrs.liris.accio.cli
 
-import java.io.FileOutputStream
-import java.nio.file.Paths
-
 import com.google.inject.Guice
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.common.flags.{Flag, FlagsData, FlagsParser, FlagsProvider}
-import fr.cnrs.liris.common.util.FileUtils
 import fr.cnrs.liris.accio.cli.commands._
-import fr.cnrs.liris.profiler.{ProfilePhase, ProfiledTaskKinds, Profiler}
 
 import scala.reflect.runtime.universe._
 import scala.util.control.NonFatal
@@ -48,18 +43,14 @@ import scala.util.control.NonFatal
 object AccioAppMain extends AccioApp
 
 case class AccioAppLaunchFlags(
-    @Flag(name = "profile")
-    profile: String = "",
     @Flag(name = "cores", help = "Number of cores to use")
     cores: Int = 0)
 
 class AccioApp extends StrictLogging {
   def main(args: Array[String]): Unit = {
-    Profiler.markPhase(ProfilePhase.Launch)
     val reporter = new StreamReporter(Console.out, useColors = true)
     val injector = Guice.createInjector(new AccioModule)
 
-    Profiler.markPhase(ProfilePhase.Init)
     val registry = injector.getInstance(classOf[CommandRegistry])
     val name = args.headOption.getOrElse("help")
     val meta = registry.get(name) match {
@@ -70,10 +61,8 @@ class AccioApp extends StrictLogging {
     }
     val flags = parseFlags(meta, args.drop(1))
     val launchFlags = flags.as[AccioAppLaunchFlags]
-    maybeStartProfiler(launchFlags)
     val command = injector.getInstance(meta.clazz)
 
-    Profiler.markPhase(ProfilePhase.Exec)
     val exitCode = try {
       command.execute(flags, reporter)
     } catch {
@@ -89,25 +78,8 @@ class AccioApp extends StrictLogging {
         ExitCode.InternalError
     }
 
-    Profiler.markPhase(ProfilePhase.Finish)
-    maybeStopProfiler(launchFlags)
     sys.exit(exitCode.code)
   }
-
-  private def maybeStartProfiler(flags: AccioAppLaunchFlags) =
-    if (flags.profile.nonEmpty) {
-      val profileFile = Paths.get(FileUtils.replaceHome(flags.profile)).toFile
-      if (profileFile.exists()) {
-        profileFile.delete()
-      }
-      Profiler.start(ProfiledTaskKinds.All, Some(new FileOutputStream(profileFile)))
-      logger.debug(s"Profiling application to ${profileFile.toPath.toAbsolutePath}")
-    }
-
-  private def maybeStopProfiler(flags: AccioAppLaunchFlags) =
-    if (flags.profile.nonEmpty) {
-      Profiler.stop()
-    }
 
   private def parseFlags(meta: CommandMeta, args: Seq[String]): FlagsProvider = {
     val flagsData = FlagsData.of(meta.flagsTypes ++ Seq(typeOf[AccioAppLaunchFlags]))

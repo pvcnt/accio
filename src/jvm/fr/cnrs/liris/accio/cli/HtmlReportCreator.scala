@@ -119,8 +119,7 @@ class HtmlReportCreator(showArtifacts: Set[String] = Set.empty, showParameters: 
         case _: DistributionArtifact =>
           require(artifacts.values.forall(_.isInstanceOf[DistributionArtifact]))
           printDistributionArtifacts(out, name, normalizeArtifacts[DistributionArtifact](artifacts))
-        case _: StoredDatasetArtifact =>
-          require(artifacts.values.forall(_.isInstanceOf[StoredDatasetArtifact]))
+        case _ => // Nothing to display.
       }
     }
   }
