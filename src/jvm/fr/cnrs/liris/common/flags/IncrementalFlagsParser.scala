@@ -1,6 +1,22 @@
+// Large portions of code are copied from Google's Bazel.
+/*
+ * Copyright 2014 The Bazel Authors. All rights reserved.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements.  See the
+ * NOTICE file distributed with this work for additional information regarding copyright ownership.  The ASF
+ * licenses this file to you under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the License
+ * for the specific language governing permissions and limitations under the License.
+ */
+
 package fr.cnrs.liris.common.flags
 
-import fr.cnrs.liris.common.reflect.ReflectCaseField
+import fr.cnrs.liris.common.reflect.CaseClassField
 
 import scala.collection.mutable
 import scala.reflect.runtime.universe._
@@ -9,7 +25,7 @@ private[flags] class IncrementalFlagsParser(flagsData: FlagsData) {
   /**
    * Results of parsing the arguments. This map is modified by repeated calls to [[parse()]].
    */
-  private val _parsedValues = mutable.Map.empty[ReflectCaseField, ParsedFlagEntry]
+  private val _parsedValues = mutable.Map.empty[CaseClassField, ParsedFlagEntry]
 
   /**
    * Pre-parsed, explicit flags for each priority. We use partially preparsed flags, which can
@@ -25,7 +41,7 @@ private[flags] class IncrementalFlagsParser(flagsData: FlagsData) {
    * [[FlagsParser.asListOfUnparsedFlags]]. A LinkedHashMap is used so that canonicalization
    * happens in the correct order.
    */
-  private val _canonicalValues = new mutable.LinkedHashMap[ReflectCaseField, UnparsedFlagValueDescription]
+  private val _canonicalValues = new mutable.LinkedHashMap[CaseClassField, UnparsedFlagValueDescription]
 
   /**
    * List of warnings generated during parsing.
@@ -41,7 +57,7 @@ private[flags] class IncrementalFlagsParser(flagsData: FlagsData) {
 
   def canonicalValues: Seq[UnparsedFlagValueDescription] = _canonicalValues.values.toSeq
 
-  def parsedValues: Map[ReflectCaseField, ParsedFlagEntry] = _parsedValues.toMap
+  def parsedValues: Map[CaseClassField, ParsedFlagEntry] = _parsedValues.toMap
 
   /**
    * Parses the args, and returns what it doesn't parse. May be called multiple times, and may be
@@ -51,8 +67,13 @@ private[flags] class IncrementalFlagsParser(flagsData: FlagsData) {
    * The method uses the invariant that if a flag has neither an implicit dependent nor an
    * expanded from value, then it must have been explicitly set.
    */
-  def parse(priority: Priority, source: Option[String], implicitDependent: Option[String],
-      expandedFrom: Option[String], args: Seq[String]): Seq[String] = {
+  def parse(
+    priority: Priority,
+    source: Option[String],
+    implicitDependent: Option[String],
+    expandedFrom: Option[String],
+    args: Seq[String]): Seq[String] = {
+
     val unparsedArgs = mutable.ListBuffer.empty[String]
     val implicitRequirements = mutable.Map.empty[String, Seq[String]]
     val remainingArgs = mutable.Queue[String](args: _*)
@@ -83,7 +104,7 @@ private[flags] class IncrementalFlagsParser(flagsData: FlagsData) {
     unparsedArgs.toList
   }
 
-  private def maybeAddDeprecationWarning(field: ReflectCaseField) = {
+  private def maybeAddDeprecationWarning(field: CaseClassField) = {
     val option = field.annotation[Flag]
     val warning = option.deprecationWarning
     if (warning.nonEmpty) {
@@ -91,8 +112,15 @@ private[flags] class IncrementalFlagsParser(flagsData: FlagsData) {
     }
   }
 
-  private def setValue(field: ReflectCaseField, name: String, value: Any, priority: Priority,
-      source: Option[String], implicitDependant: Option[String], expandedFrom: Option[String]) =
+  private def setValue(
+    field: CaseClassField,
+    name: String,
+    value: Any,
+    priority: Priority,
+    source: Option[String],
+    implicitDependant: Option[String],
+    expandedFrom: Option[String]) =
+
     _parsedValues.get(field) match {
       // Warnings should not end with a '.' because the internal reporter adds one automatically.
       case Some(entry) =>
@@ -118,7 +146,7 @@ private[flags] class IncrementalFlagsParser(flagsData: FlagsData) {
         maybeAddDeprecationWarning(field)
     }
 
-  private case class FieldValuePair(field: ReflectCaseField, value: Option[String])
+  private case class FieldValuePair(field: CaseClassField, value: Option[String])
 
   private def extractFieldAndValue(arg: String, remainingArgs: mutable.Queue[String]) = {
     var value: Option[String] = None
@@ -133,8 +161,8 @@ private[flags] class IncrementalFlagsParser(flagsData: FlagsData) {
 
     val field = if (!flagsData.fields.contains(name) && name.startsWith("no")) {
       // Look for a "no"-prefixed option name: "no<optionname>";
-      // (Undocumented: we also allow --no_foo.  We're generous like that.)
-      name = name.substring(if (name.startsWith("no_")) 3 else 2)
+      // (Undocumented: we also allow -no-foo.  We're generous like that.)
+      name = name.substring(if (name.startsWith("no-")) 3 else 2)
       if (value.isDefined) {
         throw new FlagsParsingException(s"Unexpected value after boolean flag: $arg", Some(arg))
       }
@@ -146,7 +174,7 @@ private[flags] class IncrementalFlagsParser(flagsData: FlagsData) {
     }
 
     if (value.isEmpty) {
-      if (field.tpe =:= typeOf[Unit]) {
+      if (field.scalaType.runtimeClass == classOf[Unit]) {
         // Fields of type Unit are expected to have no value.
       } else if (FlagsParser.isBooleanField(field)) {
         value = Some("1")
@@ -174,8 +202,13 @@ private[flags] class IncrementalFlagsParser(flagsData: FlagsData) {
     field
   }
 
-  private def handleFieldAndValue(pair: FieldValuePair, priority: Priority, source: Option[String],
-      implicitDependent: Option[String], expandedFrom: Option[String]) = {
+  private def handleFieldAndValue(
+    pair: FieldValuePair,
+    priority: Priority,
+    source: Option[String],
+    implicitDependent: Option[String],
+    expandedFrom: Option[String]) = {
+
     val flag = pair.field.annotation[Flag]
     if (implicitDependent.isEmpty) {
       // Log explicit options and expanded flags in the order they are parsed (can be sorted
@@ -207,7 +240,7 @@ private[flags] class IncrementalFlagsParser(flagsData: FlagsData) {
             throw new FlagsParsingException(s"While parsing flag ${flag.name}: ${e.getMessage}", None, e)
         }
       } else {
-        Unit
+        Unit.box(Unit)
       }
       // We allow duplicates of single-use options across separate calls to parse(); latest wins.
       setValue(pair.field, flag.name, convertedValue, priority, source, implicitDependent, expandedFrom)
@@ -227,11 +260,11 @@ private[flags] class IncrementalFlagsParser(flagsData: FlagsData) {
  * whether it was set as an implicit dependency, and the value.
  */
 private[flags] class ParsedFlagEntry(
-    val value: Any,
-    val priority: Priority,
-    val source: Option[String],
-    val implicitDependant: Option[String],
-    val expandedFrom: Option[String]) {
+  val value: Any,
+  val priority: Priority,
+  val source: Option[String],
+  val implicitDependant: Option[String],
+  val expandedFrom: Option[String]) {
   def asFlagValueDescription(fieldName: String): FlagValueDescription =
     new FlagValueDescription(fieldName, value, priority, source, implicitDependant, expandedFrom)
 }

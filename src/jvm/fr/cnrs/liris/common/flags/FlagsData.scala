@@ -1,69 +1,125 @@
+// Large portions of code are copied from Google's Bazel.
+/*
+ * Copyright 2014 The Bazel Authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package fr.cnrs.liris.common.flags
 
-import fr.cnrs.liris.common.reflect.{ReflectCaseClass, ReflectCaseField}
+import java.text.BreakIterator
 
-import scala.collection.mutable
-import scala.reflect.runtime.universe._
+import fr.cnrs.liris.common.reflect.{CaseClass, CaseClassField}
 
 /**
  * An immutable selection of flags data corresponding to a set of flags classes. The data is
  * collected using reflection, which can be expensive. Therefore this class can be used
  * internally to cache the results.
  *
- * @param classes    These are the flags-declaring classes which are annotated with
- *                   [[Flag]] annotations
+ * @param classes    These are the flags-declaring classes which are annotated with [[Flag]] annotations
  * @param fields     Maps flag name to Flag-annotated field
  * @param converters Mapping from each Flag-annotated field to the proper converter
  */
-final class FlagsData private(
-    val classes: Map[Class[_], ReflectCaseClass],
-    val fields: Map[String, ReflectCaseField],
-    val converters: Map[ReflectCaseField, Converter[_]])
+final class FlagsData private[flags](
+  val classes: Map[Class[_], CaseClass],
+  val fields: Map[String, CaseClassField],
+  val converters: Map[CaseClassField, Converter[_]]) {
 
-object FlagsData {
   /**
-   * A cache for the parsed options data. Both keys and values are immutable, so
-   * this is always safe. Only access this field through the [[of()]]
-   * method for thread-safety! The cache is very unlikely to grow to a significant amount of memory,
-   * because there's only a fixed set of options classes on the classpath.
+   * Returns a description of a set flags.
+   *
+   * @param verbosity  Verbosity of the description
+   * @param categories A mapping from category names to category descriptions. Flags of the same
+   *                   category will be grouped together, preceded by the description of the category
+   * @see [[HelpVerbosity]]
    */
-  private val cache = mutable.Map.empty[Seq[String], FlagsData]
-
-  def of[T: TypeTag]: FlagsData = of(typeOf[T])
-
-  def of(tpe: Type): FlagsData = {
-    val types =
-      if (tpe =:= typeOf[Unit]) {
-        Seq.empty[Type]
-      } else if (tpe <:< typeOf[Product] && tpe.typeArgs.nonEmpty) {
-        tpe.typeArgs
-      } else {
-        Seq(tpe)
+  def describe(verbosity: HelpVerbosity = HelpVerbosity.Medium, categories: Map[String, String] = Map.empty): String = {
+    fields.values.toSeq
+      .groupBy(_.annotation[Flag].category)
+      .filter { case (category, _) => DocumentationLevel(category) == DocumentationLevel.Documented }
+      .map { case (category, fields) =>
+        val description = categories.getOrElse(category, s"Flags category '$category'")
+        s"\n$description:\n" + fields
+          .sortBy(_.annotation[Flag].name)
+          .map(describe(_, verbosity).trim)
+          .mkString("\n")
       }
-    of(types)
+      .mkString.trim
   }
 
-  def of(types: Seq[Type]): FlagsData = synchronized {
-    cache.getOrElseUpdate(types.map(_.toString).sorted, create(types))
-  }
+  private def describe(field: CaseClassField, verbosity: HelpVerbosity) = {
+    val sb = new StringBuilder
+    val flagName = getFlagName(field)
+    val typeDescription = converters(field).typeDescription
+    val annotation = field.annotation[Flag]
+    sb.append("  -" + flagName)
 
-  private def create(types: Seq[Type]): FlagsData = {
-    val classes = mutable.Map.empty[Class[_], ReflectCaseClass]
-    val fields = mutable.Map.empty[String, ReflectCaseField]
-    val converters = mutable.Map.empty[ReflectCaseField, Converter[_]]
-    types.foreach { tpe =>
-      val refl = ReflectCaseClass.of(tpe)
-      classes += refl.runtimeClass -> refl
+    if (verbosity > HelpVerbosity.Short && typeDescription.nonEmpty) {
+      sb.append(" (" + typeDescription)
+      field.defaultValue
+        .filter(v => v != null && v != None) // We do not display uninformative default values
+        .foreach(v => sb.append(s"; default: $v"))
+      sb.append(")")
+    }
 
-      refl.fields.foreach { field =>
-        require(field.isAnnotated[Flag], "All fields must be annotated with @Flag")
-        val annotation = field.annotation[Flag]
-        require(annotation.name.nonEmpty, "Flag cannot have an empty name")
-        require(!fields.contains(annotation.name), s"Duplicate flag name: -${annotation.name}")
-        fields(annotation.name) = field
-        converters(field) = Converter.of(field.tpe)
+    if (verbosity > HelpVerbosity.Medium) {
+      sb.append("\n")
+      if (annotation.help.nonEmpty) {
+        sb.append(paragraphFill(annotation.help, indent = 4, width = 80))
+        sb.append('\n')
+      }
+      if (annotation.expansion.nonEmpty) {
+        val expandsMsg = "Expands to: " + annotation.expansion.mkString(" ")
+        sb.append(paragraphFill(expandsMsg, indent = 4, width = 80))
+        sb.append('\n')
       }
     }
-    new FlagsData(classes.toMap, fields.toMap, converters.toMap)
+    sb.toString
+  }
+
+  private def getFlagName(field: CaseClassField) = {
+    val name = field.annotation[Flag].name
+    if (FlagsParser.isBooleanField(field)) s"[no]$name" else name
+  }
+
+  /**
+   * Paragraph-fill the specified input text, indenting lines to 'indent' and
+   * wrapping lines at 'width'.  Returns the formatted result.
+   */
+  private def paragraphFill(in: String, width: Int, indent: Int = 0): String = {
+    val indentString = " " * indent
+    val out = new StringBuilder
+    var sep = ""
+    in.split("\n").foreach { paragraph =>
+      val boundary = BreakIterator.getLineInstance // (factory)
+      boundary.setText(paragraph)
+      out.append(sep).append(indentString)
+      var cursor = indent
+      var start = boundary.first()
+      var end = boundary.next()
+      while (end != BreakIterator.DONE) {
+        val word = paragraph.substring(start, end) // (may include trailing space)
+        if (word.length() + cursor > width) {
+          out.append('\n').append(indentString)
+          cursor = indent
+        }
+        out.append(word)
+        cursor += word.length()
+        start = end
+        end = boundary.next()
+      }
+      sep = "\n";
+    }
+    out.toString
   }
 }

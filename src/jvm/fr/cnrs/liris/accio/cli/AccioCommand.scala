@@ -30,9 +30,8 @@
  * knowledge of the CeCILL-B license and that you accept its terms.
  */
 
-package fr.cnrs.liris.accio.cli.commands
+package fr.cnrs.liris.accio.cli
 
-import fr.cnrs.liris.accio.cli.Reporter
 import fr.cnrs.liris.common.flags.FlagsProvider
 
 /**
@@ -56,10 +55,8 @@ object ExitCode {
 
 /**
  * Executable command being registered into the Accio application.
- *
- * @tparam Flags Command flags type(s)
  */
-trait AccioCommand[Flags] {
+trait AccioCommand {
   /**
    * Execute this command with given input.
    *

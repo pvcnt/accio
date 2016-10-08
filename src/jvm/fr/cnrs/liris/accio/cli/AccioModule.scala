@@ -1,16 +1,15 @@
 package fr.cnrs.liris.accio.cli
 
 import com.google.inject.{AbstractModule, Provides, Singleton}
-import fr.cnrs.liris.accio.cli.commands._
 import fr.cnrs.liris.accio.core.dataset.DatasetEnv
 import fr.cnrs.liris.accio.core.framework.{AnnotationOpMetaReader, OpMetaReader, OpRegistry}
 import fr.cnrs.liris.accio.core.ops.eval._
-import fr.cnrs.liris.accio.core.ops.transform._
 import fr.cnrs.liris.accio.core.ops.source.EventSourceOp
+import fr.cnrs.liris.accio.core.ops.transform._
 import fr.cnrs.liris.accio.core.pipeline._
 import net.codingwell.scalaguice.ScalaModule
 
-class AccioModule extends AbstractModule with ScalaModule {
+object AccioModule extends AbstractModule with ScalaModule {
   override def configure(): Unit = {
     bind[OpMetaReader].to[AnnotationOpMetaReader]
     bind[ExperimentParser].to[JsonExperimentParser]

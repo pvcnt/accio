@@ -32,10 +32,9 @@
 
 package fr.cnrs.liris.accio.cli
 
-import com.google.inject.Guice
+import com.google.inject.{Guice, Injector}
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.common.flags.{Flag, FlagsData, FlagsParser, FlagsProvider}
-import fr.cnrs.liris.accio.cli.commands._
+import fr.cnrs.liris.common.flags._
 
 import scala.reflect.runtime.universe._
 import scala.util.control.NonFatal
@@ -49,7 +48,7 @@ case class AccioAppLaunchFlags(
 class AccioApp extends StrictLogging {
   def main(args: Array[String]): Unit = {
     val reporter = new StreamReporter(Console.out, useColors = true)
-    val injector = Guice.createInjector(new AccioModule)
+    val injector = Guice.createInjector(AccioModule, FlagsModule)
 
     val registry = injector.getInstance(classOf[CommandRegistry])
     val name = args.headOption.getOrElse("help")
@@ -59,8 +58,8 @@ class AccioApp extends StrictLogging {
         registry("help")
       case Some(m) => m
     }
-    val flags = parseFlags(meta, args.drop(1))
-    val launchFlags = flags.as[AccioAppLaunchFlags]
+    val parserFactory = injector.getInstance(classOf[FlagsParserFactory])
+    val flags = parseFlags(parserFactory, meta, args.drop(1))
     val command = injector.getInstance(meta.clazz)
 
     val exitCode = try {
@@ -81,9 +80,8 @@ class AccioApp extends StrictLogging {
     sys.exit(exitCode.code)
   }
 
-  private def parseFlags(meta: CommandMeta, args: Seq[String]): FlagsProvider = {
-    val flagsData = FlagsData.of(meta.flagsTypes ++ Seq(typeOf[AccioAppLaunchFlags]))
-    val parser = new FlagsParser(flagsData, allowResidue = true)
+  private def parseFlags(parserFactory: FlagsParserFactory, meta: CommandMeta, args: Seq[String]): FlagsProvider = {
+    val parser = parserFactory.create(meta.defn.allowResidue, meta.defn.flags: _*)
     parser.parseAndExitUponError(args)
     parser
   }

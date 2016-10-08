@@ -16,30 +16,18 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.common.flags
+package fr.cnrs.liris.common.reflect
 
-/**
- * The verbosity with which option help messages are displayed.
- */
-sealed class HelpVerbosity(protected val level: Int) extends Ordered[HelpVerbosity] {
-  override def compare(that: HelpVerbosity): Int = level.compareTo(that.level)
-}
+object JavaTypes {
+  private[this] val javaToScalaTypes = Map[Class[_], Class[_]](
+    classOf[java.lang.Boolean] -> classOf[Boolean],
+    classOf[java.lang.Byte] -> classOf[Byte],
+    classOf[java.lang.Short] -> classOf[Short],
+    classOf[java.lang.Integer] -> classOf[Int],
+    classOf[java.lang.Long] -> classOf[Long],
+    classOf[java.lang.Double] -> classOf[Double])
 
-object HelpVerbosity {
+  def asScala(clazz: Class[_]): Class[_] = javaToScalaTypes.getOrElse(clazz, clazz)
 
-  /**
-   * Display only the name of the flags.
-   */
-  case object Short extends HelpVerbosity(0)
-
-  /**
-   * Display the name, type and default value of the flags.
-   */
-  case object Medium extends HelpVerbosity(1)
-
-  /**
-   * Display the full description of the flags.
-   */
-  case object Long extends HelpVerbosity(2)
-
+  def maybeAsScala(clazz: Class[_]): Option[Class[_]] = javaToScalaTypes.get(clazz)
 }

@@ -30,55 +30,55 @@
  * knowledge of the CeCILL-B license and that you accept its terms.
  */
 
-package fr.cnrs.liris.accio.cli.commands
+package fr.cnrs.liris.accio.cli
 
 import java.nio.file.{Files, Path, Paths}
 import java.util.concurrent.atomic.AtomicInteger
 
 import com.google.inject.Inject
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.cli.{Command, Reporter}
 import fr.cnrs.liris.accio.core.framework.OpRegistry
 import fr.cnrs.liris.accio.core.param.ParamMap
 import fr.cnrs.liris.accio.core.pipeline._
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.util.FileUtils
 
-case class MakeCommandOpts(
-    @Flag(name = "workdir", help = "Working directory where to write reports and artifacts")
-    workDir: String = "",
-    @Flag(name = "name", help = "Experiment name override")
-    name: String = "",
-    @Flag(name = "tags", help = "Space-separated experiment tags override")
-    tags: String = "",
-    @Flag(name = "notes", help = "Experiment notes override")
-    notes: String = "",
-    @Flag(name = "user", help = "User who launched the experiment")
-    user: String = "",
-    @Flag(name = "runs", help = "Experiment runs override")
-    runs: Int = 1,
-    @Flag(name = "params", help = "Experiment parameters override")
-    params: String = "")
+case class RunCommandOpts(
+  @Flag(name = "workdir", help = "Working directory where to write reports and artifacts")
+  workDir: Option[String],
+  @Flag(name = "name", help = "Experiment name override")
+  name: Option[String],
+  @Flag(name = "tags", help = "Space-separated experiment tags override")
+  tags: Option[String],
+  @Flag(name = "notes", help = "Experiment notes override")
+  notes: Option[String],
+  @Flag(name = "user", help = "User who launched the experiment")
+  user: Option[String],
+  @Flag(name = "runs", help = "Experiment runs override")
+  runs: Int = 1,
+  @Flag(name = "params", help = "Experiment parameters override")
+  params: Option[String])
 
 @Command(
   name = "run",
+  flags = Array(classOf[RunCommandOpts]),
   help = "Execute an Accio workflow",
   allowResidue = true)
 class RunCommand @Inject()(parser: ExperimentParser, executor: ExperimentExecutor, opRegistry: OpRegistry)
-    extends AccioCommand[MakeCommandOpts] with StrictLogging {
+  extends AccioCommand with StrictLogging {
 
   def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
-    val opts = flags.as[MakeCommandOpts]
+    val opts = flags.as[RunCommandOpts]
     if (flags.residue.isEmpty) {
       out.writeln("<error>Specify one or multiple files to run as arguments</error>")
       ExitCode.CommandLineError
     } else {
-      val workDir = if (opts.workDir.nonEmpty) {
-        val path = Paths.get(opts.workDir)
-        require(path.toFile.isDirectory && path.toFile.canWrite, s"Invalid or unwritable directory ${path.toAbsolutePath}")
-        path
-      } else {
-        Files.createTempDirectory("accio-")
+      val workDir = opts.workDir match {
+        case Some(dir) =>
+          val path = Paths.get(dir)
+          require(path.toFile.isDirectory && path.toFile.canWrite, s"Invalid or unwritable directory ${path.toAbsolutePath}")
+          path
+        case None => Files.createTempDirectory("accio-")
       }
       out.writeln(s"Writing progress in <comment>${workDir.toAbsolutePath}</comment>")
       val progressReporter = new ConsoleGraphProgressReporter(out)
@@ -90,27 +90,27 @@ class RunCommand @Inject()(parser: ExperimentParser, executor: ExperimentExecuto
     }
   }
 
-  private def make(opts: MakeCommandOpts, workDir: Path, url: String, progressReporter: ExperimentProgressReporter) = {
+  private def make(opts: RunCommandOpts, workDir: Path, url: String, progressReporter: ExperimentProgressReporter) = {
     var experiment = parser.parse(Paths.get(FileUtils.replaceHome(url)))
-    if (opts.name.nonEmpty) {
-      experiment = experiment.copy(name = opts.name)
+    opts.name.foreach { name =>
+      experiment = experiment.copy(name = name)
     }
-    if (opts.tags.nonEmpty) {
-      experiment = experiment.copy(tags = opts.tags.split(" ").map(_.trim).toSet)
+    opts.tags.foreach { tags =>
+      experiment = experiment.copy(tags = tags.split(" ").map(_.trim).toSet)
     }
-    if (opts.notes.nonEmpty) {
-      experiment = experiment.copy(notes = Some(opts.notes))
+    opts.notes.foreach { notes =>
+      experiment = experiment.copy(notes = Some(notes))
     }
-    if (opts.user.nonEmpty) {
-      experiment = experiment.copy(initiator = User.parse(opts.user))
+    opts.user.foreach { user =>
+      experiment = experiment.copy(initiator = User.parse(user))
     }
     if (opts.runs > 1) {
       experiment = experiment.copy(workflow = experiment.workflow.setRuns(opts.runs))
     }
-    if (opts.params.nonEmpty) {
+    opts.params.foreach { params =>
       val NameRegex = "([^/]+)/(.+)".r
       val ParamRegex = "([^=]+)=(.+)".r
-      val map = opts.params.trim.split(" ").map {
+      val map = params.trim.split(" ").map {
         case ParamRegex(name, value) => name match {
           case NameRegex(nodeName, paramName) =>
             val maybeNode = experiment.workflow.graph.nodes.find(_.name == nodeName)

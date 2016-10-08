@@ -1,11 +1,10 @@
-package fr.cnrs.liris.accio.cli.commands
+package fr.cnrs.liris.accio.cli
 
 import java.io.{FileOutputStream, PrintStream}
 import java.nio.file.Paths
 import java.util.UUID
 
 import com.google.inject.Inject
-import fr.cnrs.liris.accio.cli.{Command, HtmlReportCreator, ReportStatistics, Reporter}
 import fr.cnrs.liris.accio.core.pipeline.ReportReader
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.util.HashUtils
@@ -18,9 +17,10 @@ case class VisualizeFlags(
 
 @Command(
   name = "visualize",
+  flags = Array(classOf[VisualizeFlags]),
   help = "Generate reports from previous runs",
   allowResidue = true)
-class VisualizeCommand @Inject()(reportReader: ReportReader) extends AccioCommand[VisualizeFlags] {
+class VisualizeCommand @Inject()(reportReader: ReportReader) extends AccioCommand {
   override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     val reports = flags.residue.flatMap { path =>
       val workDir = Paths.get(path)

@@ -18,28 +18,21 @@
 
 package fr.cnrs.liris.common.flags
 
-/**
- * The verbosity with which option help messages are displayed.
- */
-sealed class HelpVerbosity(protected val level: Int) extends Ordered[HelpVerbosity] {
-  override def compare(that: HelpVerbosity): Int = level.compareTo(that.level)
-}
+import com.google.inject.TypeLiteral
+import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
 
-object HelpVerbosity {
-
-  /**
-   * Display only the name of the flags.
-   */
-  case object Short extends HelpVerbosity(0)
-
-  /**
-   * Display the name, type and default value of the flags.
-   */
-  case object Medium extends HelpVerbosity(1)
-
-  /**
-   * Display the full description of the flags.
-   */
-  case object Long extends HelpVerbosity(2)
-
+object FlagsModule extends ScalaModule {
+  override def configure(): Unit = {
+    val converters = ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Converter[_]] {})
+    converters.addBinding.to[ByteConverter]
+    converters.addBinding.to[ShortConverter]
+    converters.addBinding.to[IntConverter]
+    converters.addBinding.to[LongConverter]
+    converters.addBinding.to[DoubleConverter]
+    converters.addBinding.to[StringConverter]
+    converters.addBinding.to[PathConverter]
+    converters.addBinding.to[DurationConverter]
+    converters.addBinding.to[BooleanConverter]
+    converters.addBinding.to[TriStateConverter]
+  }
 }

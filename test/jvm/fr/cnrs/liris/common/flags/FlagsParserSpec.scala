@@ -1,77 +1,93 @@
 package fr.cnrs.liris.common.flags
 
 import fr.cnrs.liris.testing.UnitSpec
-import scala.reflect.runtime.universe._
 
 /**
  * Unit tests for [[FlagsParser]].
  */
 class FlagsParserSpec extends UnitSpec {
-  "FlagsParser" should "parse with multiple options interfaces" in {
-    val parser = FlagsParser(typeOf[ExampleFoo], typeOf[ExampleBaz])
+  val factory = {
+    val converters = Set[Converter[_]](
+      new ByteConverter,
+      new ShortConverter,
+      new IntConverter,
+      new LongConverter,
+      new DoubleConverter,
+      new StringConverter,
+      new PathConverter,
+      new BooleanConverter,
+      new TriStateConverter(new BooleanConverter))
+    new FlagsParserFactory(converters)
+  }
+
+  behavior of "FlagsParser"
+
+  it should "parse multiple flags classes" in {
+    val parser = factory.create(classOf[FooFlags], classOf[BazFlags])
     parser.parse(Seq("-baz=oops", "-bar", "17"))
-    val foo = parser.as[ExampleFoo]
+    val foo = parser.as[FooFlags]
     foo.foo shouldBe "defaultFoo"
     foo.bar shouldBe 17
-    val baz = parser.as[ExampleBaz]
+    val baz = parser.as[BazFlags]
     baz.baz shouldBe "oops"
     parser.residue should have size 0
   }
 
-  it should "fail parsing with unknown option" in {
-    val parser = FlagsParser(typeOf[ExampleFoo], typeOf[ExampleBaz])
+  it should "fail parsing an unknown flag" in {
+    val parser = factory.create(classOf[FooFlags], classOf[BazFlags])
     val e = intercept[FlagsParsingException] {
       parser.parse(Seq("-unknown", "option"))
     }
     e.invalidArgument shouldBe Some("-unknown")
-    parser.as[ExampleFoo] shouldBe an[ExampleFoo]
-    parser.as[ExampleBaz] shouldBe an[ExampleBaz]
+    parser.as[FooFlags] shouldBe an[FooFlags]
+    parser.as[BazFlags] shouldBe an[BazFlags]
     parser.residue should have size 0
   }
 
-  it should "parse known and unknown options" in {
-    val parser = FlagsParser(typeOf[ExampleFoo], typeOf[ExampleBaz])
+  it should "parse known and unknown flags" in {
+    val parser = factory.create(classOf[FooFlags], classOf[BazFlags])
     val e = intercept[FlagsParsingException] {
       parser.parse(Seq("-bar", "17", "-unknown", "option"))
     }
     e.invalidArgument shouldBe Some("-unknown")
-    val foo = parser.as[ExampleFoo]
+
+    val foo = parser.as[FooFlags]
     foo.bar shouldBe 17
-    parser.as[ExampleBaz] shouldBe an[ExampleBaz]
+    parser.as[BazFlags] shouldBe an[BazFlags]
     parser.residue should have size 0
   }
 
   it should "return flags and residue with no call to parse" in {
-    val parser = FlagsParser(typeOf[ExampleFoo])
-    parser.as[ExampleFoo].foo shouldBe "defaultFoo"
+    val parser = factory.create(classOf[FooFlags])
+    parser.as[FooFlags].foo shouldBe "defaultFoo"
     parser.residue should have size 0
   }
 
   it should "support being called repeatedly" in {
-    val parser = FlagsParser(typeOf[ExampleFoo])
+    val parser = factory.create(classOf[FooFlags])
     parser.parse(Seq("-foo", "foo1"))
-    parser.as[ExampleFoo].foo shouldBe "foo1"
+    parser.as[FooFlags].foo shouldBe "foo1"
     parser.parse(Seq.empty)
-    parser.as[ExampleFoo].foo shouldBe "foo1" // no change
+    parser.as[FooFlags].foo shouldBe "foo1" // no change
     parser.parse(Seq("-foo", "foo2"))
-    parser.as[ExampleFoo].foo shouldBe "foo2" // updated
+    parser.as[FooFlags].foo shouldBe "foo2" // updated
   }
 
   it should "support being called repeatedly with residue" in {
-    val parser = FlagsParser(allowResidue = true, typeOf[ExampleFoo])
+    val parser = factory.create(allowResidue = true, classOf[FooFlags])
     parser.parse(Seq("-foo", "one", "-bar", "43", "unknown1"))
     parser.parse(Seq("-foo", "two", "unknown2"))
-    val foo = parser.as[ExampleFoo]
+    val foo = parser.as[FooFlags]
     foo.foo shouldBe "two" // second call takes precedence
     foo.bar shouldBe 43
     parser.residue shouldBe Seq("unknown1", "unknown2")
   }
 
   it should "ignore flags after --" in {
-    val parser = FlagsParser(typeOf[ExampleFoo], typeOf[ExampleBaz])
+    val parser = factory.create(classOf[FooFlags], classOf[BazFlags])
     parser.parse(Seq("-foo", "well", "-baz", "here", "--", "-bar", "ignore"))
-    val foo = parser.as[ExampleFoo]
-    val baz = parser.as[ExampleBaz]
+    val foo = parser.as[FooFlags]
+    val baz = parser.as[BazFlags]
     foo.foo shouldBe "well"
     baz.baz shouldBe "here"
     foo.bar shouldBe 42 // the default!
@@ -79,30 +95,18 @@ class FlagsParserSpec extends UnitSpec {
   }
 
   it should "throw an exception if residue is not allowed" in {
-    val parser = FlagsParser(allowResidue = false, typeOf[ExampleFoo])
+    val parser = factory.create(allowResidue = false, classOf[FooFlags])
     an[FlagsParsingException] shouldBe thrownBy {
       parser.parse(Seq("residue", "is", "not", "OK"))
     }
   }
+
+  it should "support optional values" in {
+    val parser = factory.create(allowResidue = false, classOf[OptionalFlags])
+    parser.parse(Seq("-bar", "barbar"))
+    val opt = parser.as[OptionalFlags]
+    opt.foo shouldBe None
+    opt.bar shouldBe Some("barbar")
+    opt.baz shouldBe Some("bazbaz") // Although there is no reason to define an optional flag with default value!
+  }
 }
-
-private case class ExampleFoo(
-    @Flag(name = "foo", category = "one")
-    foo: String = "defaultFoo",
-    @Flag(name = "bar", category = "two")
-    bar: Int = 42,
-    @Flag(name = "nodoc", category = "undocumented")
-    nodoc: String = ""
-)
-
-private case class ExampleBaz(
-    @Flag(name = "baz", category = "one")
-    baz: String = "defaultBaz"
-)
-
-private case class CategoryTest(
-    @Flag(name = "swiss_bank_account_number", category = "undocumented")
-    swissBankAccountNumber: Int = 123456789,
-    @Flag(name = "student_bank_account_number", category = "one")
-    studentBankAccountNumber: Int = 987654321
-)

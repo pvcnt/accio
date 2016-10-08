@@ -37,7 +37,6 @@ import java.nio.file.{Files, Paths}
 
 import com.github.nscala_time.time.Imports._
 import com.google.common.base.Charsets
-import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.core.dataset._
 import fr.cnrs.liris.accio.core.model.{Event, Trace}
 import fr.cnrs.liris.common.geo.LatLng
@@ -107,7 +106,7 @@ case class CsvSink(url: String) extends DataSink[Trace] {
       } else {
         encodedEvents.tail.fold(encodedEvents.head)(_ ++ NL ++ _)
       }
-      Files.write(path.resolve(key).resolve(s"${trace.id}.csv"), bytes)
+      Files.write(path.resolve(s"${trace.id}.csv"), bytes)
     }
   }
 }
@@ -115,19 +114,20 @@ case class CsvSink(url: String) extends DataSink[Trace] {
 /**
  * Decoder for our custom CSV format handling events.
  */
-class CsvDecoder extends Decoder[Event] with LazyLogging {
+class CsvDecoder extends Decoder[Event] {
   override def decode(key: String, bytes: Array[Byte]): Option[Event] = {
     val line = new String(bytes, Charsets.UTF_8).trim
     val parts = line.split(",")
-    if (parts.length != 3) {
-      logger.warn(s"Invalid line: $line")
+    if (parts.length < 3 || parts.length > 4) {
       None
     } else {
-      val lat = parts(0).toDouble
-      val lng = parts(1).toDouble
+      val (user, lat, lng, time) = if (parts.length == 4) {
+        (parts(0), parts(1).toDouble, parts(2).toDouble, parts(3).toLong)
+      } else {
+        (key, parts(0).toDouble, parts(1).toDouble, parts(2).toLong)
+      }
       val point = LatLng.degrees(lat, lng).toPoint
-      val time = new Instant(parts(2).toLong * 1000)
-      Some(Event(key, point, time))
+      Some(Event(user, point, new Instant(time)))
     }
   }
 }
@@ -138,6 +138,6 @@ class CsvDecoder extends Decoder[Event] with LazyLogging {
 class CsvEncoder extends Encoder[Event] {
   override def encode(obj: Event): Array[Byte] = {
     val latLng = obj.point.toLatLng
-    s"${latLng.lat.degrees},${latLng.lng.degrees},${obj.time.millis}".getBytes(Charsets.UTF_8)
+    s"${obj.user},${latLng.lat.degrees},${latLng.lng.degrees},${obj.time.millis}".getBytes(Charsets.UTF_8)
   }
 }

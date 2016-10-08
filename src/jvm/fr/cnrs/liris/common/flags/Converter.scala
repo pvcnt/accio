@@ -1,137 +1,137 @@
+// Large portions of code are copied from Google's Bazel.
+/*
+ * Copyright 2014 The Bazel Authors. All rights reserved.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements.  See the
+ * NOTICE file distributed with this work for additional information regarding copyright ownership.  The ASF
+ * licenses this file to you under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the License
+ * for the specific language governing permissions and limitations under the License.
+ */
+
 package fr.cnrs.liris.common.flags
 
 import java.nio.file.{Path, Paths}
-import org.joda.time.{Duration => JodaDuration}
 
-import com.twitter.util.{Duration => TwitterDuration}
-import fr.cnrs.liris.common.util.Distance
+import com.google.inject.Inject
+import com.twitter.util.Duration
+import fr.cnrs.liris.common.util.FileUtils
 
-import scala.collection.mutable
-import scala.reflect.runtime.universe._
+import scala.reflect.ClassTag
 
 /**
  * A converter is a little helper object that can take a String and turn it into an instance of
  * type T (the type parameter to the converter).
  */
-trait Converter[T] {
+abstract class Converter[T: ClassTag] {
   /**
    * Convert a string into type T.
    */
   @throws[FlagsParsingException]
-  def convert(input: String): T
+  def convert(str: String): T
 
   /**
    * The type description appears in usage messages. E.g.: "a string", "a path", etc.
    */
   def typeDescription: String
+
+  def valueClass: Class[T] = implicitly[ClassTag[T]].runtimeClass.asInstanceOf[Class[T]]
 }
 
-object Converter {
-  private[this] val registry = mutable.Map.empty[Type, Converter[_]]
+class StringConverter extends Converter[String] {
+  override def convert(str: String): String = str
 
-  def of(tpe: Type): Converter[_] = {
-    registry.find { case (key, _) => key =:= tpe }.map(_._2) match {
-      case Some(converter) => converter
-      case None => throw new NoSuchElementException(s"No converter available for $tpe")
-    }
+  override def typeDescription: String = "a string"
+}
+
+class ByteConverter extends Converter[Byte] {
+  override def convert(str: String): Byte = try {
+    str.toByte
+  } catch {
+    case _: NumberFormatException => throw new FlagsParsingException(s"Invalid byte: $str")
   }
 
-  def of[T: TypeTag]: Converter[T] = of(typeOf[T]).asInstanceOf[Converter[T]]
+  override def typeDescription: String = "a byte"
+}
 
-  def register[T: TypeTag](converter: Converter[T]): Unit = {
-    val tpe = typeOf[T]
-    require(!registry.contains(tpe),
-      s"Duplicate converter for $tpe (found: ${registry(tpe).getClass.getName}, rejected: ${converter.getClass.getName})")
-    registry(tpe) = converter
+
+class ShortConverter extends Converter[Short] {
+  override def convert(str: String): Short = try {
+    str.toShort
+  } catch {
+    case _: NumberFormatException => throw new FlagsParsingException(s"Invalid short: $str")
   }
 
-  register(new Converter[String] {
-    override def convert(input: String): String = input
+  override def typeDescription: String = "a short integer"
+}
 
-    override def typeDescription: String = "a string"
-  })
 
-  register(new Converter[Int] {
-    override def convert(input: String): Int = try {
-      input.toInt
-    } catch {
-      case _: NumberFormatException => throw new FlagsParsingException(s"'$input' is not an integer")
-    }
+class IntConverter extends Converter[Int] {
+  override def convert(str: String): Int = try {
+    str.toInt
+  } catch {
+    case _: NumberFormatException => throw new FlagsParsingException(s"Invalid integer: $str")
+  }
 
-    override def typeDescription: String = "an integer"
-  })
+  override def typeDescription: String = "an integer"
+}
 
-  register(new Converter[Long] {
-    override def convert(input: String): Long = try {
-      input.toLong
-    } catch {
-      case _: NumberFormatException => throw new FlagsParsingException(s"'$input' is not an integer")
-    }
+class LongConverter extends Converter[Long] {
+  override def convert(str: String): Long = try {
+    str.toLong
+  } catch {
+    case _: NumberFormatException => throw new FlagsParsingException(s"Invalid long: $str")
+  }
 
-    override def typeDescription: String = "an integer"
-  })
+  override def typeDescription: String = "a long"
+}
 
-  register(new Converter[Double] {
-    override def convert(input: String): Double = try {
-      input.toDouble
-    } catch {
-      case _: NumberFormatException => throw new FlagsParsingException(s"'$input' is not a double")
-    }
+class DoubleConverter extends Converter[Double] {
+  override def convert(str: String): Double = try {
+    str.toDouble
+  } catch {
+    case _: NumberFormatException => throw new FlagsParsingException(s"Invalid double: $str")
+  }
 
-    override def typeDescription: String = "a double"
-  })
+  override def typeDescription: String = "a double"
+}
 
-  register(new Converter[Path] {
-    override def convert(input: String): Path = Paths.get(input)
+class PathConverter extends Converter[Path] {
+  override def convert(str: String): Path = Paths.get(FileUtils.replaceHome(str))
 
-    override def typeDescription: String = "a path"
-  })
+  override def typeDescription: String = "a path"
+}
 
-  register(new Converter[Distance] {
-    override def convert(input: String): Distance = try {
-      Distance.parse(input)
-    } catch {
-      case _: NumberFormatException => throw new FlagsParsingException(s"'$input' is not a distance")
-    }
+class DurationConverter extends Converter[Duration] {
+  override def convert(str: String): Duration = try {
+    Duration.parse(str)
+  } catch {
+    case _: RuntimeException => throw new FlagsParsingException(s"Invalid duration: $str")
+  }
 
-    override def typeDescription: String = "a distance"
-  })
+  override def typeDescription: String = "a duration"
+}
 
-  register(new Converter[TwitterDuration] {
-    override def convert(input: String): TwitterDuration = try {
-      TwitterDuration.parse(input)
-    } catch {
-      case e: NumberFormatException =>
-        throw new FlagsParsingException(s"'$input' is not a duration", None, e)
-    }
+class BooleanConverter extends Converter[Boolean] {
+  override def convert(str: String): Boolean = str.toLowerCase match {
+    case "true" | "t" | "1" | "yes" | "y" => true
+    case "false" | "f" | "0" | "no" | "n" => false
+    case _ => throw new FlagsParsingException(s"Invalid boolean: $str")
+  }
 
-    override def typeDescription: String = "a duration"
-  })
+  override def typeDescription: String = "a boolean"
+}
 
-  register(new Converter[JodaDuration] {
-    override def convert(input: String): JodaDuration = {
-      JodaDuration.millis(TwitterDuration.parse(input).inMillis)
-    }
+class TriStateConverter @Inject()(boolConverter: BooleanConverter) extends Converter[TriState] {
+  override def convert(str: String): TriState = str.toLowerCase match {
+    case "auto" => TriState.Auto
+    case _ => if (boolConverter.convert(str)) TriState.Yes else TriState.No
+  }
 
-    override def typeDescription: String = "a duration"
-  })
-
-  register(new Converter[Boolean] {
-    override def convert(input: String): Boolean = input.toLowerCase match {
-      case "true" | "t" | "1" | "yes" | "y" => true
-      case "false" | "f" | "0" | "no" | "n" => false
-      case _ => throw new FlagsParsingException(s"'$input' is not a boolean")
-    }
-
-    override def typeDescription: String = "a boolean"
-  })
-
-  register(new Converter[TriState] {
-    override def convert(input: String): TriState = input.toLowerCase match {
-      case "auto" => TriState.Auto
-      case _ => if (Converter.of[Boolean].convert(input)) TriState.Yes else TriState.No
-    }
-
-    override def typeDescription: String = "a tri-state (auto, yes, no)"
-  })
+  override def typeDescription: String = "a tri-state (auto, yes, no)"
 }

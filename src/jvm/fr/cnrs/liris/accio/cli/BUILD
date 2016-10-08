@@ -16,7 +16,7 @@ scala_library(
         '3rdparty/jvm:scala-logging',
         '3rdparty/jvm:scala-guice',
     ],
-    sources=rglobs('*.scala')
+    sources=globs('*.scala')
 )
 
 java_library(

@@ -61,12 +61,12 @@ case class GeolifeSource(url: String) extends DataSource[Trace] {
       .sorted
 
   override def read(key: String): Iterable[Trace] = {
-    val events = path.resolve("Trajectory").toFile.listFiles.flatMap(file => read(key, file.toPath))
+    val events = path.resolve("Trajectory").toFile.listFiles.sortBy(_.getName).flatMap(file => read(key, file.toPath))
     if (events.nonEmpty) Iterable(Trace(events)) else Iterable.empty
   }
 
   private def read(key: String, path: Path) =
-    decoder.decode(key, Files.readAllBytes(path.resolve(s"new_$key.csv"))).getOrElse(Seq.empty)
+    decoder.decode(key, Files.readAllBytes(path.resolve(s"$key.plt"))).getOrElse(Seq.empty)
 }
 
 /**

@@ -15,10 +15,9 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 junit_tests(
-  name='reflect',
+  name='collect',
   dependencies=[
-    '3rdparty/jvm:findbugs',
-    'src/jvm/fr/cnrs/liris/common/reflect',
+    'src/jvm/fr/cnrs/liris/common/collect',
     'test/jvm/fr/cnrs/liris/testing',
   ],
   sources=globs('*.scala'),

@@ -1,9 +1,8 @@
 package fr.cnrs.liris.accio.core.framework
 
+import fr.cnrs.liris.common.reflect.ScalaType
 import fr.cnrs.liris.common.util.Distance
 import org.joda.time.{Duration, Instant}
-
-import scala.reflect.runtime.universe._
 
 sealed trait ParamType
 
@@ -27,18 +26,16 @@ object ParamType {
 
   case object Timestamp extends ParamType
 
-  def of[T: TypeTag]: ParamType = of(implicitly[TypeTag[T]].tpe)
-
-  def of(tpe: Type): ParamType = tpe match {
-    case t if t =:= typeOf[Int] => Integer
-    case t if t =:= typeOf[Long] => Long
-    case t if t =:= typeOf[Double] => Double
-    case t if t =:= typeOf[String] => String
-    case t if t =:= typeOf[Boolean] => Boolean
-    case t if t =:= typeOf[Duration] => Duration
-    case t if t =:= typeOf[Instant] => Timestamp
-    case t if t =:= typeOf[Distance] => Distance
-    case t if t =:= typeOf[Seq[String]] => StringList
+  def apply(tpe: ScalaType): ParamType = tpe match {
+    case t if t.runtimeClass == classOf[Int] => Integer
+    case t if t.runtimeClass == classOf[Long] => Long
+    case t if t.runtimeClass == classOf[Double] => Double
+    case t if t.runtimeClass == classOf[String] => String
+    case t if t.runtimeClass == classOf[Boolean] => Boolean
+    case t if t.runtimeClass == classOf[Duration] => Duration
+    case t if t.runtimeClass == classOf[Instant] => Timestamp
+    case t if t.runtimeClass == classOf[Distance] => Distance
+    case t if classOf[Seq[_]].isAssignableFrom(t.runtimeClass) && t.typeArguments.head.runtimeClass == classOf[String] => StringList
     case _ => throw new IllegalArgumentException(s"Invalid parameter type $tpe")
   }
 }
@@ -50,12 +47,12 @@ case class InputDef(name: String, help: Option[String])
 case class OutputDef(name: String, `type`: String, help: Option[String])
 
 case class OperatorDef(
-    name: String,
-    params: Seq[ParamDef],
-    inputs: Seq[InputDef],
-    outputs: Seq[OutputDef],
-    help: Option[String],
-    description: Option[String],
-    category: String,
-    ephemeral: Boolean,
-    unstable: Boolean)
+  name: String,
+  params: Seq[ParamDef],
+  inputs: Seq[InputDef],
+  outputs: Seq[OutputDef],
+  help: Option[String],
+  description: Option[String],
+  category: String,
+  ephemeral: Boolean,
+  unstable: Boolean)

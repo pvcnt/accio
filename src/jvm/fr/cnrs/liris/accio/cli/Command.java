@@ -17,6 +17,11 @@ public @interface Command {
     String name();
 
     /**
+     * Flags processed by the command.
+     */
+    Class<?>[] flags() default {};
+
+    /**
      * A short description, which appears in 'accio help'.
      */
     String help() default "";

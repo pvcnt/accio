@@ -1,15 +1,21 @@
 scala_library(
-    name='flags',
-    dependencies=[
-        '3rdparty/jvm/twitter/util:core',
-        ':flags-java',
-        'src/jvm/fr/cnrs/liris/common/util',
-        'src/jvm/fr/cnrs/liris/common/reflect',
-    ],
-    sources=globs('*.scala')
+  name='flags',
+  dependencies=[
+    'src/jvm/fr/cnrs/liris/common/reflect',
+    'src/jvm/fr/cnrs/liris/common/util',
+    '3rdparty/jvm:scala-guice',
+    '3rdparty/jvm/twitter/util:core',
+  ],
+  java_sources=[
+    ':annotations',
+  ],
+  sources=globs('*.scala')
 )
 
 java_library(
-    name='flags-java',
-    sources=globs('*.java')
+  name='annotations',
+  dependencies=[
+    ':flags',
+  ],
+  sources=globs('*.java')
 )

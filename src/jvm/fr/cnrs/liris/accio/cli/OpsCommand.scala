@@ -1,19 +1,17 @@
-package fr.cnrs.liris.accio.cli.commands
+package fr.cnrs.liris.accio.cli
 
 import java.io.InputStreamReader
 
 import com.google.common.io.CharStreams
 import com.google.inject.Inject
-import fr.cnrs.liris.accio.cli.{Command, Reporter}
 import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.common.flags.FlagsProvider
 import fr.cnrs.liris.common.util.TextUtils
 
 @Command(
   name = "ops",
-  help = "Provide information about registered operators"
-)
-class OpsCommand @Inject()(opRegistry: OpRegistry) extends AccioCommand[Unit] {
+  help = "Provide information about registered operators")
+class OpsCommand @Inject()(opRegistry: OpRegistry) extends AccioCommand {
   override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     if (flags.residue.isEmpty) {
       printSummary(out)
