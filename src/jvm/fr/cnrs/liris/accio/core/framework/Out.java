@@ -15,9 +15,4 @@ public @interface Out {
      * A short description, which appears in 'accio ops'.
      */
     String help() default "";
-
-    /**
-     * Specifies whether this output should be persisted.
-     */
-    boolean ephemeral() default false;
 }

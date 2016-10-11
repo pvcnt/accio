@@ -1,13 +1,12 @@
 package fr.cnrs.liris.privamov.job.indexer
 
 import com.github.nscala_time.time.Imports._
+import com.google.inject.Guice
 import com.sksamuel.elastic4s.{ElasticClient, ElasticsearchClientUri}
 import fr.cnrs.liris.accio.core.dataset.DatasetEnv
 import fr.cnrs.liris.accio.core.io.{CabspottingSource, GeolifeSource}
-import fr.cnrs.liris.common.flags.{Flag, FlagsParser}
+import fr.cnrs.liris.common.flags.{Flag, FlagsModule, FlagsParserFactory}
 import org.elasticsearch.common.settings.Settings
-
-import scala.reflect.runtime.universe._
 
 case class IndexerFlags(
     @Flag(name = "type")
@@ -21,7 +20,9 @@ object IndexerJobMain extends IndexerJob
 
 class IndexerJob {
   def main(args: Array[String]): Unit = {
-    val flagsParser = FlagsParser(allowResidue = true, typeOf[IndexerFlags])
+    val injector = Guice.createInjector(FlagsModule)
+    val parserFactory = injector.getInstance(classOf[FlagsParserFactory])
+    val flagsParser = parserFactory.create(allowResidue = true, classOf[IndexerFlags])
     flagsParser.parseAndExitUponError(args)
     val flags = flagsParser.as[IndexerFlags]
 

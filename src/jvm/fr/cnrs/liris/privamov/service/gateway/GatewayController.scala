@@ -40,7 +40,7 @@ import com.twitter.finatra.http.Controller
 import com.twitter.finatra.request.{QueryParam, RouteParam}
 import fr.cnrs.liris.accio.core.model.GeoJsonConverters._
 import fr.cnrs.liris.accio.core.model.{Event, Trace}
-import fr.cnrs.liris.accio.core.ops.transform.{GeoIndistinguishabilityOp, PromesseOp}
+import fr.cnrs.liris.accio.ops.{GeoIndistinguishabilityOp, PromesseOp}
 import fr.cnrs.liris.common.geo._
 import fr.cnrs.liris.common.util.Distance
 import fr.cnrs.liris.privamov.service.gateway.auth.{AccessToken, Firewall, Scope, View}

@@ -28,10 +28,14 @@ object ParamType {
 
   def apply(tpe: ScalaType): ParamType = tpe match {
     case t if t.runtimeClass == classOf[Int] => Integer
+    case t if t.runtimeClass == classOf[java.lang.Integer] => Integer
     case t if t.runtimeClass == classOf[Long] => Long
+    case t if t.runtimeClass == classOf[java.lang.Long] => Long
     case t if t.runtimeClass == classOf[Double] => Double
+    case t if t.runtimeClass == classOf[java.lang.Double] => Double
     case t if t.runtimeClass == classOf[String] => String
     case t if t.runtimeClass == classOf[Boolean] => Boolean
+    case t if t.runtimeClass == classOf[java.lang.Boolean] => Boolean
     case t if t.runtimeClass == classOf[Duration] => Duration
     case t if t.runtimeClass == classOf[Instant] => Timestamp
     case t if t.runtimeClass == classOf[Distance] => Distance
@@ -54,5 +58,4 @@ case class OperatorDef(
   help: Option[String],
   description: Option[String],
   category: String,
-  ephemeral: Boolean,
   unstable: Boolean)

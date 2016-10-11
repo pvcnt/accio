@@ -24,7 +24,6 @@ A workflow is a JSON object formed of the following fields.
 | graph[*].inputs | Names of nodes acting as inputs of this node. | string[] | false |
 | graph[*].params | Mapping between parameter names and values. All parameters without a default value should be specified. | object | false |
 | graph[*].runs | Number of times this node should be ran. It is only useful for nodes producing metrics. If it is defined here, the value takes precedence over the global runs value. Results of different runs will be aggregated together (i.e., distributions resulting from all runs will be merged). | integer | false |
-| graph[*].ephemeral | Force the node dataset output to be ephemeral (it can only be forced at he operator level). Ephemeral outputs are not stored as artifacts. | boolean | false |
 {: class="table table-striped"}
 
 Here is an example of a simple workflow's definition:

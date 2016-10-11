@@ -78,7 +78,7 @@ case class GraphDef(nodes: Seq[NodeDef]) {
   }
 }
 
-case class NodeDef(op: String, name: String, paramMap: ParamMap, inputs: Seq[String] = Seq.empty, runs: Int = 1, ephemeral: Boolean = false) extends Named {
+case class NodeDef(op: String, name: String, paramMap: ParamMap, inputs: Seq[String] = Seq.empty, runs: Int = 1) extends Named {
   def hasSameStructure(other: NodeDef): Boolean =
     other.op == op && other.name == name && other.inputs == inputs
 }
@@ -97,8 +97,6 @@ case class Node(defn: NodeDef, operator: Operator[_, _], dependencies: Seq[Strin
   override def name: String = defn.name
 
   def runs: Int = defn.runs
-
-  def ephemeral: Boolean = defn.ephemeral
 }
 
 /**

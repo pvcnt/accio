@@ -34,59 +34,47 @@ package fr.cnrs.liris.accio.core.framework
 
 import java.util.NoSuchElementException
 
-import scala.collection.mutable
-import scala.reflect.ClassTag
-import scala.reflect.runtime.universe._
+import com.google.inject.{Inject, Singleton}
 
 /**
- * Operator registry stores all operators known to Accio.
+ * The operator registry stores all operators known to Accio. It is immutable, all operators should be
+ * registered when the object is created.
+ *
+ * @param reader  Operator definition reader.
+ * @param classes Classes containing operator implementations.
  */
-class OpRegistry(metaReader: OpMetaReader) {
-  private[this] val _ops = mutable.Map.empty[String, OpMeta]
+@Singleton
+class OpRegistry @Inject()(reader: OpMetaReader, classes: Set[Class[_ <: Operator[_, _]]]) {
+  private[this] val index = classes.map { clazz =>
+    val meta = reader.read(clazz)
+    meta.defn.name -> meta
+  }.toMap
 
   /**
-   * Register a new operator.
-   *
-   * @tparam T Operator type
-   * @throws IllegalOpDefinition      If the operator definition is invalid
-   * @throws IllegalArgumentException If an operator with the same name is already registered
-   * @return Operator metadata
+   * Return all operators known to this registry.
    */
-  @throws[IllegalOpDefinition]
-  @throws[IllegalArgumentException]
-  def register[T <: Operator[_, _] : ClassTag : TypeTag]: OpMeta = {
-    val meta = metaReader.read[T]
-    require(!_ops.contains(meta.defn.name), s"Duplicate operator ${meta.defn.name}")
-    _ops(meta.defn.name) = meta
-    meta
-  }
+  def ops: Set[OpMeta] = index.values.toSet
 
   /**
-   * Return all registered operators, ordered by name.
-   */
-  def ops: Seq[OpMeta] = _ops.values.toSeq.sortBy(_.defn.name)
-
-  /**
-   * Check whether the registry contains an [[Operator]] for the given name.
+   * Check whether the registry contains an operator with given name.
    *
-   * @param name An operation name
-   * @return True if there is an operation for the given name, false otherwise
+   * @param name Operator name
    */
-  def contains(name: String): Boolean = _ops.contains(name)
+  def contains(name: String): Boolean = index.contains(name)
 
   /**
-   * Return the [[Operator]] class for the given name, if it exists.
+   * Return operator definition for the given operator name, if it exists.
    *
-   * @param name An operation name
+   * @param name Operator name
    */
-  def get(name: String): Option[OpMeta] = _ops.get(name)
+  def get(name: String): Option[OpMeta] = index.get(name)
 
   /**
-   * Return the [[Operator]] class for the given name.
+   * Return operator definition for the given operator name.
    *
-   * @param name An operation name
-   * @throws NoSuchElementException If there is no operation for the given name
+   * @param name Operator name
+   * @throws NoSuchElementException If there is no operator for the given name
    */
   @throws[NoSuchElementException]
-  def apply(name: String): OpMeta = _ops(name)
+  def apply(name: String): OpMeta = index(name)
 }

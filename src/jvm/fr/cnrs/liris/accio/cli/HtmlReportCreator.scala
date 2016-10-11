@@ -103,7 +103,6 @@ class HtmlReportCreator(showArtifacts: Set[String] = Set.empty, showParameters: 
           out.tag("div", "class", "tab-pane", "id", "tab-params") {
             out.tag("div", "class", "row") {
               reportStats.similarGraphs.filter(_.size > 1).foreach(printParameters(out, _))
-              //reportStats.reports.filter(_.isOptimization).foreach(report => printSolutionChart(out, report))
             }
           }
         }

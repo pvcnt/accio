@@ -16,11 +16,12 @@ import scala.sys.process._
 case class CabspottingSource(url: String) extends DataSource[Trace] {
   private[this] val path = Paths.get(url)
   private[this] val decoder = new TextLineDecoder(new CabspottingDecoder)
-  require(path.toFile.isDirectory && path.toFile.canRead, s"Invalid or unreadable path $url")
+  require(path.toFile.isDirectory, s"$url is not a directory")
+  require(path.toFile.canRead, s"$url is unreadable")
 
   override lazy val keys = path.toFile
     .listFiles
-    .filter(_.getName.startsWith("new_"))
+    .filter(f => f.getName.startsWith("new_") && f.getName.endsWith(".txt"))
     .map(_.toPath.getFileName.toString.drop(4).dropRight(4))
     .toSeq
     .sorted

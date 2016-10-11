@@ -39,6 +39,8 @@ trait Analyzer[I, O] extends Operator[I, O] {
    * @return Some metrics
    */
   def analyze(trace: Trace): Seq[Metric]
+
+  def execute(in: I, ctx: OpContext): O
 }
 
 /**
@@ -78,6 +80,9 @@ trait Transformer extends Operator[TransformerOp.Input, TransformerOp.Output] {
    * @return Output trace(s)
    */
   def transform(trace: Trace): Seq[Trace]
+
+  def execute(in: TransformerOp.Input, ctx: OpContext): TransformerOp.Output =
+    TransformerOp.Output(in.data.flatMap(transform))
 }
 
 object TransformerOp {

@@ -145,22 +145,24 @@ class GraphExecutor @Inject()(env: DatasetEnv, graphBuilder: GraphBuilder, write
 
   private def execute(node: Node, inputs: Seq[Dataset[Trace]], runId: String, workDir: Path): Seq[Artifact] = {
     node.operator match {
-      case s: Source[_] => execute(s, node.name, node.ephemeral, inputs, runId, workDir)
-      case t: Transformer => execute(t, node.name, node.ephemeral, inputs, runId, workDir)
+      case s: Source[_] => execute(s, node.name, inputs, runId, workDir)
+      case t: Transformer => execute(t, node.name, inputs, runId, workDir)
       case a: Analyzer[_, _] => execute(a, node.name, node.runs, inputs)
       case e: Evaluator[_, _] => execute(e, node.name, node.runs, inputs)
     }
   }
 
-  private def execute(source: Source[_], nodeName: String, ephemeral: Boolean, inputs: Seq[Dataset[Trace]], runId: String, workDir: Path) = {
+  private def execute(source: Source[_], nodeName: String, inputs: Seq[Dataset[Trace]], runId: String, workDir: Path) = {
     requireState(inputs.isEmpty, s"Source requires no input (got ${inputs.size})")
-    Seq(getDataset(source.get(env), nodeName, ephemeral, runId, workDir))
+    Seq(DatasetArtifact(nodeName, source.get(env)))
   }
 
-  private def execute(transformer: Transformer, nodeName: String, ephemeral: Boolean, inputs: Seq[Dataset[Trace]], runId: String, workDir: Path) = {
+  private def execute(transformer: Transformer, nodeName: String, inputs: Seq[Dataset[Trace]], runId: String, workDir: Path) = {
     requireState(inputs.size == 1, s"Transformer requires exactly one input (got ${inputs.size})")
     val data = inputs.head.flatMap(transformer.transform)
-    Seq(getDataset(data, nodeName, ephemeral, runId, workDir))
+    val url = workDir.resolve("data").resolve(s"$runId-$nodeName").toAbsolutePath.toString
+    data.write(CsvSink(url))
+    Seq(StoredDatasetArtifact(nodeName, url))
   }
 
   private def execute(analyzer: Analyzer[_, _], nodeName: String, runs: Int, inputs: Seq[Dataset[Trace]]) = {
@@ -180,20 +182,10 @@ class GraphExecutor @Inject()(env: DatasetEnv, graphBuilder: GraphBuilder, write
     getDistributions(nodeName, metrics)
   }
 
-  private def getDataset(data: Dataset[Trace], nodeName: String, ephemeral: Boolean, runId: String, workDir: Path) = {
-    if (ephemeral) {
-      DatasetArtifact(nodeName, data)
-    } else {
-      val url = workDir.resolve("data").resolve(s"$runId-$nodeName").toAbsolutePath.toString
-      data.write(CsvSink(url))
-      StoredDatasetArtifact(nodeName, url)
-    }
-  }
-
   private def getDistributions(nodeName: String, metrics: Array[(String, Metric)]) =
     metrics
-        .groupBy(_._2.name)
-        .map { case (name, values) =>
-          DistributionArtifact(s"$nodeName/$name", values.map { case (k, v) => k -> v.value }.toMap)
-        }.toSeq
+      .groupBy(_._2.name)
+      .map { case (name, values) =>
+        DistributionArtifact(s"$nodeName/$name", values.map { case (k, v) => k -> v.value }.toMap)
+      }.toSeq
 }

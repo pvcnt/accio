@@ -32,11 +32,11 @@
 
 package fr.cnrs.liris.accio.cli
 
-import com.google.inject.{Guice, Injector}
+import com.google.inject.Guice
 import com.typesafe.scalalogging.StrictLogging
+import fr.cnrs.liris.accio.ops.OpsModule
 import fr.cnrs.liris.common.flags._
 
-import scala.reflect.runtime.universe._
 import scala.util.control.NonFatal
 
 object AccioAppMain extends AccioApp
@@ -48,7 +48,7 @@ case class AccioAppLaunchFlags(
 class AccioApp extends StrictLogging {
   def main(args: Array[String]): Unit = {
     val reporter = new StreamReporter(Console.out, useColors = true)
-    val injector = Guice.createInjector(AccioModule, FlagsModule)
+    val injector = Guice.createInjector(AccioModule, OpsModule, FlagsModule)
 
     val registry = injector.getInstance(classOf[CommandRegistry])
     val name = args.headOption.getOrElse("help")

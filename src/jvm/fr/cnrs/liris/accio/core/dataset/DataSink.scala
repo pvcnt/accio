@@ -1,7 +1,7 @@
 package fr.cnrs.liris.accio.core.dataset
 
 trait DataSink[T] {
-  def write(key: String, elements: Iterator[T]): Unit
+  def write(elements: Iterator[T]): Unit
 }
 
 /**

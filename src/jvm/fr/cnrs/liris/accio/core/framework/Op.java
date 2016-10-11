@@ -39,11 +39,6 @@ public @interface Op {
     boolean unstable() default false;
 
     /**
-     * Specifies whether the output of this operator should be persisted.
-     */
-    boolean ephemeral() default false;
-
-    /**
      * Metrics this operator produces (in case of an evaluator or analyzer).
      */
     String[] metrics() default {};

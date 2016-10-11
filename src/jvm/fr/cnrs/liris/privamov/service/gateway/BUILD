@@ -5,7 +5,7 @@ scala_library(
         '3rdparty/jvm/twitter/finatra:http',
         '3rdparty/jvm/twitter/finatra:httpclient',
         'src/jvm/com/twitter/querulous',
-        'src/jvm/fr/cnrs/liris/accio/core/ops/transform',
+        'src/jvm/fr/cnrs/liris/accio/ops',
         'src/jvm/fr/cnrs/liris/accio/core/model',
         'src/jvm/fr/cnrs/liris/accio/core/model:json',
         'src/jvm/fr/cnrs/liris/common/geo',

@@ -40,8 +40,7 @@ Workflow nodes are defined with:
   * an operator type;
   * values for all parameters;
   * a unique name among all nodes inside the same workflow;
-  * a scoped status for each input, forcing it to be scoped;
-  * an ephemeral status for each output, forcing it to be ephemeral.
+  * a scoped status for each input, forcing it to be scoped.
 
 Operator
 --------

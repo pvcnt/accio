@@ -84,8 +84,7 @@ class JsonWorkflowParser @Inject()(registry: OpRegistry) extends WorkflowParser 
     val params = getParams(opMeta, name, node.getChild("params"))
     val inputs = getInputs(node.getChild("inputs"))
     val runs = node.getInteger("runs").getOrElse(1)
-    val ephemeral = node.getBoolean("ephemeral").getOrElse(false) || opMeta.defn.ephemeral
-    new NodeDef(opName, name, new ParamMap(params.toMap), inputs, runs, ephemeral)
+    new NodeDef(opName, name, new ParamMap(params.toMap), inputs, runs)
   }
 
   private def getParams(opMeta: OpMeta, name: String, node: Option[JsonNode]) = {

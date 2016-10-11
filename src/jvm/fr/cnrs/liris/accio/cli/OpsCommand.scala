@@ -33,7 +33,7 @@ class OpsCommand @Inject()(opRegistry: OpRegistry) extends AccioCommand {
 
   private def printSummary(out: Reporter) = {
     val maxLength = opRegistry.ops.map(_.defn.name.length).max
-    opRegistry.ops.groupBy(_.defn.category).foreach { case (category, ops) =>
+    opRegistry.ops.toSeq.sortBy(_.defn.name).groupBy(_.defn.category).foreach { case (category, ops) =>
       out.writeln(s"<info>Operators in $category category:</info>")
       ops.foreach { op =>
         val padding = " " * (maxLength - op.defn.name.length)
@@ -45,12 +45,6 @@ class OpsCommand @Inject()(opRegistry: OpRegistry) extends AccioCommand {
 
   private def printOperator(out: Reporter, meta: OpMeta) = {
     out.write(s"<comment>${meta.defn.name}</comment>")
-    if (meta.defn.unstable || meta.defn.ephemeral) {
-      out.write(" (")
-      out.write(((if (meta.defn.unstable) Seq("unstable") else Seq.empty) ++
-          (if (meta.defn.ephemeral) Seq("ephemeral") else Seq.empty)).mkString(", "))
-      out.write(")")
-    }
     out.writeln()
     out.writeln()
     meta.defn.help.foreach { help =>

@@ -1,9 +1,0 @@
-scala_library(
-    name='source',
-    dependencies=[
-        'src/jvm/fr/cnrs/liris/accio/core/model',
-        'src/jvm/fr/cnrs/liris/accio/core/io',
-        'src/jvm/fr/cnrs/liris/accio/core/framework',
-    ],
-    sources=globs('*.scala')
-)

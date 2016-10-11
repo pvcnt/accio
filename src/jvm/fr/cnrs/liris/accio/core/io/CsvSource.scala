@@ -50,35 +50,26 @@ import org.joda.time.Instant
 case class CsvSource(url: String) extends DataSource[Trace] {
   private[this] val path = Paths.get(url)
   private[this] val decoder = new TextLineDecoder(new CsvDecoder)
-  require(path.toFile.isDirectory && path.toFile.canRead, s"Invalid or unreadable path $url")
+  require(path.toFile.isDirectory, s"$url is not a directory")
+  require(path.toFile.canRead, s"$url is unreadable")
 
-  override def keys: Seq[String] = path.toFile.listFiles.sortWith(sortFiles).map(_.toPath.getFileName.toString)
-
-  override def read(key: String): Iterable[Trace] = read(key, path.resolve(key).toFile).toIterable
-
-  private def read(key: String, file: File): Option[Trace] = {
-    decoder.decode(key, Files.readAllBytes(file.toPath)) match {
-      case Some(events) => Some(new Trace(file.getName.dropRight(4), key, events))
-      case None => None
-    }
+  override def keys: Seq[String] = {
+    println(path.toFile.listFiles.mkString(", "))
+    path.toFile
+      .listFiles
+      .filter(_.getName.endsWith(".csv"))
+      .map(_.getName.stripSuffix(".csv"))
   }
 
-  private def sortFiles(f1: File, f2: File): Boolean = {
-    val parts1 = f1.getName.dropRight(4).split("-").tail.map(_.toInt)
-    val parts2 = f2.getName.dropRight(4).split("-").tail.map(_.toInt)
-    if (parts1.isEmpty) {
-      true
-    } else if (parts2.isEmpty) {
-      false
-    } else {
-      for (i <- parts1.indices) {
-        if (parts1(i) < parts2(i)) {
-          return true
-        } else if (parts1(i) > parts2(i)) {
-          return false
-        }
-      }
-      true
+  override def read(id: String): Iterable[Trace] = {
+    println(s"reading $id")
+    read(id, path.resolve(s"$id.csv").toFile).toIterable
+  }
+
+  private def read(id: String, file: File): Option[Trace] = {
+    decoder.decode(id, Files.readAllBytes(file.toPath)).flatMap {
+      case Seq() => None
+      case events => Some(new Trace(id, events.head.user, events))
     }
   }
 }
@@ -90,13 +81,15 @@ case class CsvSource(url: String) extends DataSource[Trace] {
  */
 case class CsvSink(url: String) extends DataSink[Trace] {
   private[this] val path = Paths.get(url)
-  require(!path.toFile.exists || (path.toFile.isDirectory && path.toFile.listFiles.isEmpty),
-    s"Non-empty directory: ${path.toAbsolutePath}")
+  if (!path.toFile.exists) {
+    Files.createDirectories(path)
+  } else if (path.toFile.isDirectory && path.toFile.listFiles.nonEmpty) {
+    throw new IllegalArgumentException(s"Non-empty directory: ${path.toAbsolutePath}")
+  }
   private[this] val encoder = new CsvEncoder
   private[this] val NL = "\n".getBytes(Charsets.UTF_8)
 
-  override def write(key: String, elements: Iterator[Trace]): Unit = {
-    Files.createDirectories(path.resolve(key))
+  override def write(elements: Iterator[Trace]): Unit = {
     elements.foreach { trace =>
       val encodedEvents = trace.events.map(encoder.encode)
       val bytes = if (encodedEvents.isEmpty) {

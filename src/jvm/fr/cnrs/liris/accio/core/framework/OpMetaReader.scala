@@ -59,7 +59,6 @@ class AnnotationOpMetaReader extends OpMetaReader {
         help = maybe(op.help),
         description = maybe(op.description),
         category = op.category,
-        ephemeral = op.ephemeral,
         unstable = op.unstable)
     } catch {
       case e: NoSuchElementException => throw new IllegalOpDefinition(clazz, e)

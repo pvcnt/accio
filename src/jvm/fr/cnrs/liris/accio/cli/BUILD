@@ -1,38 +1,36 @@
 scala_library(
-    name='cli',
-    dependencies=[
-        ':annotations',
-        'src/jvm/fr/cnrs/liris/accio/core/framework',
-        'src/jvm/fr/cnrs/liris/accio/core/pipeline',
-        'src/jvm/fr/cnrs/liris/accio/core/ops/eval',
-        'src/jvm/fr/cnrs/liris/accio/core/ops/transform',
-        'src/jvm/fr/cnrs/liris/accio/core/ops/source',
-        'src/jvm/fr/cnrs/liris/accio/core/io',
-        'src/jvm/fr/cnrs/liris/accio/core/dataset',
-        'src/jvm/fr/cnrs/liris/common/util',
-        'src/jvm/fr/cnrs/liris/common/reflect',
-        'src/jvm/fr/cnrs/liris/common/flags',
-        'src/jvm/fr/cnrs/liris/common/stats',
-        '3rdparty/jvm:scala-logging',
-        '3rdparty/jvm:scala-guice',
-    ],
-    sources=globs('*.scala')
+  name='cli',
+  dependencies=[
+    ':annotations',
+    'src/jvm/fr/cnrs/liris/accio/core/framework',
+    'src/jvm/fr/cnrs/liris/accio/core/pipeline',
+    'src/jvm/fr/cnrs/liris/accio/ops',
+    'src/jvm/fr/cnrs/liris/accio/core/dataset',
+    'src/jvm/fr/cnrs/liris/common/util',
+    'src/jvm/fr/cnrs/liris/common/reflect',
+    'src/jvm/fr/cnrs/liris/common/flags',
+    'src/jvm/fr/cnrs/liris/common/stats',
+    '3rdparty/jvm/google/guava',
+    '3rdparty/jvm:scala-logging',
+    '3rdparty/jvm:scala-guice',
+  ],
+  sources=globs('*.scala')
 )
 
 java_library(
-    name='annotations',
-    sources=globs('*.java')
+  name='annotations',
+  sources=globs('*.java')
 )
 
 jvm_binary(
-    name='bin',
-    dependencies=[
-        ':cli',
-        '3rdparty/jvm:logback',
-    ],
-    resources=[
-        'src/resources/fr/cnrs/liris/accio:logback',
-    ],
-    main='fr.cnrs.liris.accio.cli.AccioAppMain',
-    basename='accio',
+  name='bin',
+  dependencies=[
+    ':cli',
+    '3rdparty/jvm:logback',
+  ],
+  resources=[
+    'src/resources/fr/cnrs/liris/accio:logback',
+  ],
+  main='fr.cnrs.liris.accio.cli.AccioAppMain',
+  basename='accio',
 )
