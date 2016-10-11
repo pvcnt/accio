@@ -33,20 +33,42 @@
 package fr.cnrs.liris.accio.ops
 
 import fr.cnrs.liris.accio.core.dataset.DataFrame
-import fr.cnrs.liris.accio.core.framework._
+import fr.cnrs.liris.accio.core.framework.{Param, _}
 import fr.cnrs.liris.accio.core.model.Trace
-import fr.cnrs.liris.accio.core.framework.Param
 import fr.cnrs.liris.common.geo.Point
+import fr.cnrs.liris.common.util.Requirements._
 
 @Op(
   category = "metric",
-  help = "Compute spatial distortion between two datasets of traces",
-  metrics = Array("min", "max", "stddev", "avg", "median")
-)
+  help = "Compute spatial distortion between two datasets of traces")
 case class SpatialDistortionOp(
-    @Param(help = "Whether to interpolate between points")
-    interpolate: Boolean = true
+  @Param(help = "Whether to interpolate between points")
+  interpolate: Boolean = true
 ) extends Evaluator[SpatialDistortionOp.Input, SpatialDistortionOp.Output] {
+
+
+  override def execute(in: SpatialDistortionOp.Input, ctx: OpContext): SpatialDistortionOp.Output = {
+    val metrics = in.train.zip(in.test).map { case (ref, res) =>
+      requireState(ref.id == res.id, s"Trace mismatch: ${ref.id} / ${res.id}")
+      require(res.isEmpty || ref.size >= 1,
+        s"Cannot evaluate spatial distortion with empty reference trace ${ref.id}")
+      val points = ref.events.map(_.point)
+      val distances = if (interpolate) {
+        evaluateWithInterpolation(points, res)
+      } else {
+        evaluateWithoutInterpolation(points, res)
+      }
+      MetricUtils.descriptiveStats(distances.map(_.meters))
+    }.toArray
+
+    SpatialDistortionOp.Output(
+      min = metrics.map(_.find(_.name == "min").get.value),
+      max = metrics.map(_.find(_.name == "max").get.value),
+      stddev = metrics.map(_.find(_.name == "stddev").get.value),
+      avg = metrics.map(_.find(_.name == "avg").get.value),
+      median = metrics.map(_.find(_.name == "median").get.value))
+  }
+
   override def evaluate(reference: Trace, result: Trace): Seq[Metric] = {
     require(result.isEmpty || reference.size >= 1,
       s"Cannot evaluate spatial distortion with empty reference trace ${reference.id}")
@@ -106,16 +128,14 @@ case class SpatialDistortionOp(
 object SpatialDistortionOp {
 
   case class Input(
-      @In(help = "Train dataset") train: DataFrame[Trace],
-      @In(help = "Test dataset") test: DataFrame[Trace]
-  )
+    @In(help = "Train dataset") train: DataFrame[Trace],
+    @In(help = "Test dataset") test: DataFrame[Trace])
 
   case class Output(
-      @Out(help = "Spatial distortion min") min: DataFrame[Double],
-      @Out(help = "Spatial distortion max") max: DataFrame[Double],
-      @Out(help = "Spatial distortion stddev") stddev: DataFrame[Double],
-      @Out(help = "Spatial distortion avg") avg: DataFrame[Double],
-      @Out(help = "Spatial distortion median") median: DataFrame[Double]
-  )
+    @Out(help = "Spatial distortion min") min: Array[Double],
+    @Out(help = "Spatial distortion max") max: Array[Double],
+    @Out(help = "Spatial distortion stddev") stddev: Array[Double],
+    @Out(help = "Spatial distortion avg") avg: Array[Double],
+    @Out(help = "Spatial distortion median") median: Array[Double])
 
 }

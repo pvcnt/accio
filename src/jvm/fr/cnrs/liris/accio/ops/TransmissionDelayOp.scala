@@ -36,13 +36,22 @@ import com.github.nscala_time.time.Imports._
 import fr.cnrs.liris.accio.core.dataset.DataFrame
 import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.model.Trace
+import fr.cnrs.liris.common.util.Requirements._
 
 @Op(
   category = "metric",
-  help = "Compute transmission delay between two datasets of traces",
-  metrics = Array("value")
-)
+  help = "Compute transmission delay between two datasets of traces")
 case class TransmissionDelayOp() extends Evaluator[TransmissionDelayOp.Input, TransmissionDelayOp.Output] {
+
+  override def execute(in: TransmissionDelayOp.Input, ctx: OpContext): TransmissionDelayOp.Output = {
+    val metrics = in.train.zip(in.test).map { case (ref, res) =>
+      requireState(ref.id == res.id, s"Trace mismatch: ${ref.id} / ${res.id}")
+      (ref.events.last.time to res.events.last.time).millis
+    }.toArray
+
+    TransmissionDelayOp.Output(metrics)
+  }
+
   override def evaluate(reference: Trace, result: Trace): Seq[Metric] = {
     val delay = (reference.events.last.time to result.events.last.time).millis
     Seq(Metric("value", delay))
@@ -52,12 +61,9 @@ case class TransmissionDelayOp() extends Evaluator[TransmissionDelayOp.Input, Tr
 object TransmissionDelayOp {
 
   case class Input(
-      @In(help = "Train dataset") train: DataFrame[Trace],
-      @In(help = "Test dataset") test: DataFrame[Trace]
-  )
+    @In(help = "Train dataset") train: DataFrame[Trace],
+    @In(help = "Test dataset") test: DataFrame[Trace])
 
-  case class Output(
-      @Out(help = "Transmission delay") value: DataFrame[Double]
-  )
+  case class Output(@Out(help = "Transmission delay") value: Array[Long])
 
 }

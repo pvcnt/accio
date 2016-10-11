@@ -36,14 +36,32 @@ import com.github.nscala_time.time.Imports._
 import fr.cnrs.liris.accio.core.dataset.DataFrame
 import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.model.Trace
+import fr.cnrs.liris.common.util.Requirements._
 import org.joda.time.Instant
 
 @Op(
   category = "metric",
-  help = "Compute temporal distortion difference between two datasets of traces",
-  metrics = Array("min", "max", "stddev", "avg", "median")
-)
+  help = "Compute temporal distortion difference between two datasets of traces")
 case class TemporalDistortionOp() extends Evaluator[TemporalDistortionOp.Input, TemporalDistortionOp.Output] {
+
+  override def execute(in: TemporalDistortionOp.Input, ctx: OpContext): TemporalDistortionOp.Output = {
+    val metrics = in.train.zip(in.test).map { case (ref, res) =>
+      requireState(ref.id == res.id, s"Trace mismatch: ${ref.id} / ${res.id}")
+      val (larger, smaller) = if (ref.size > res.size) (ref, res) else (res, ref)
+      val distances = smaller.events.map { rec =>
+        rec.point.distance(interpolate(larger, rec.time)).meters
+      }
+      MetricUtils.descriptiveStats(distances)
+    }.toArray
+
+    TemporalDistortionOp.Output(
+      min = metrics.map(_.find(_.name == "min").get.value),
+      max = metrics.map(_.find(_.name == "max").get.value),
+      stddev = metrics.map(_.find(_.name == "stddev").get.value),
+      avg = metrics.map(_.find(_.name == "avg").get.value),
+      median = metrics.map(_.find(_.name == "median").get.value))
+  }
+
   override def evaluate(reference: Trace, result: Trace): Seq[Metric] = {
     val (larger, smaller) = if (reference.size > result.size) (reference, result) else (result, reference)
     val distances = smaller.events.map { rec =>
@@ -75,16 +93,14 @@ case class TemporalDistortionOp() extends Evaluator[TemporalDistortionOp.Input, 
 object TemporalDistortionOp {
 
   case class Input(
-      @In(help = "Train dataset") train: DataFrame[Trace],
-      @In(help = "Test dataset") test: DataFrame[Trace]
-  )
+    @In(help = "Train dataset") train: DataFrame[Trace],
+    @In(help = "Test dataset") test: DataFrame[Trace])
 
   case class Output(
-      @Out(help = "Temporal distortion min") min: DataFrame[Double],
-      @Out(help = "Temporal distortion max") max: DataFrame[Double],
-      @Out(help = "Temporal distortion stddev") stddev: DataFrame[Double],
-      @Out(help = "Temporal distortion avg") avg: DataFrame[Double],
-      @Out(help = "Temporal distortion median") median: DataFrame[Double]
-  )
+    @Out(help = "Temporal distortion min") min: Array[Double],
+    @Out(help = "Temporal distortion max") max: Array[Double],
+    @Out(help = "Temporal distortion stddev") stddev: Array[Double],
+    @Out(help = "Temporal distortion avg") avg: Array[Double],
+    @Out(help = "Temporal distortion median") median: Array[Double])
 
 }

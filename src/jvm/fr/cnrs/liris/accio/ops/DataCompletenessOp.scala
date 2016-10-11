@@ -35,13 +35,24 @@ package fr.cnrs.liris.accio.ops
 import fr.cnrs.liris.accio.core.dataset.DataFrame
 import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.model.Trace
+import fr.cnrs.liris.common.util.Requirements._
 
 @Op(
   category = "metric",
-  help = "Compute data completeness difference between two datasets of traces",
-  metrics = Array("value")
-)
+  help = "Compute data completeness difference between two datasets of traces")
 case class DataCompletenessOp() extends Evaluator[DataCompletenessOp.Input, DataCompletenessOp.Output] {
+
+  override def execute(in: DataCompletenessOp.Input, ctx: OpContext): DataCompletenessOp.Output = {
+    val metrics = in.train.zip(in.test).map { case (ref, res) =>
+      requireState(ref.id == res.id, s"Trace mismatch: ${ref.id} / ${res.id}")
+      if (res.isEmpty && ref.isEmpty) 1d
+      else if (res.isEmpty) 0d
+      else res.size.toDouble / ref.size
+    }.toArray
+
+    DataCompletenessOp.Output(metrics)
+  }
+
   override def evaluate(reference: Trace, result: Trace): Seq[Metric] = {
     val completeness = if (result.isEmpty && reference.isEmpty) {
       1d
@@ -57,12 +68,9 @@ case class DataCompletenessOp() extends Evaluator[DataCompletenessOp.Input, Data
 object DataCompletenessOp {
 
   case class Input(
-      @In(help = "Train dataset") train: DataFrame[Trace],
-      @In(help = "Test dataset") test: DataFrame[Trace]
-  )
+    @In(help = "Train dataset") train: DataFrame[Trace],
+    @In(help = "Test dataset") test: DataFrame[Trace])
 
-  case class Output(
-      @Out(help = "Data completeness") value: DataFrame[Double]
-  )
+  case class Output(@Out(help = "Data completeness") value: Array[Double])
 
 }

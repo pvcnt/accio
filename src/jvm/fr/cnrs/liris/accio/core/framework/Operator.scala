@@ -7,7 +7,7 @@ import fr.cnrs.liris.accio.core.model.Trace
  * Operators are the basic processing unit of Accio.
  */
 sealed trait Operator[I, O] {
-  //def execute(in: I, ctx: OpContext): O
+  def execute(in: I, ctx: OpContext): O
 }
 
 class OpContext(val env: DatasetEnv)
@@ -23,8 +23,6 @@ trait Source[O] extends Operator[Unit, O] {
    * @param env Dataset environment
    */
   def get(env: DatasetEnv): DataFrame[Trace]
-
-  def execute(in: Unit, ctx: OpContext): O
 }
 
 /**
@@ -38,8 +36,6 @@ trait Analyzer[I, O] extends Operator[I, O] {
    * @return Some metrics
    */
   def analyze(trace: Trace): Seq[Metric]
-
-  def execute(in: I, ctx: OpContext): O
 }
 
 /**
@@ -56,8 +52,6 @@ trait Evaluator[I, O] extends Operator[I, O] {
    * @return Some metrics
    */
   def evaluate(train: Trace, test: Trace): Seq[Metric]
-
-  def execute(in: I, ctx: OpContext): O
 }
 
 /**

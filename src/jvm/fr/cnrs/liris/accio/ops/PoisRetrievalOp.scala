@@ -32,27 +32,45 @@
 
 package fr.cnrs.liris.accio.ops
 
-import com.github.nscala_time.time.Imports._
 import fr.cnrs.liris.accio.core.dataset.DataFrame
-import fr.cnrs.liris.accio.core.framework._
+import fr.cnrs.liris.accio.core.framework.{Param, _}
 import fr.cnrs.liris.accio.core.model.Trace
-import fr.cnrs.liris.accio.core.framework.Param
 import fr.cnrs.liris.common.util.Distance
+import fr.cnrs.liris.common.util.Requirements._
 import fr.cnrs.liris.privamov.clustering.DTClusterer
 
 @Op(
   category = "metric",
-  help = "Compute POIs retrieval difference between two datasets of traces",
-  metrics = Array("precision", "recall", "fscore")
-)
+  help = "Compute POIs retrieval difference between two datasets of traces")
 case class PoisRetrievalOp(
-    @Param(help = "Clustering maximum diameter")
-    diameter: Distance,
-    @Param(help = "Clustering minimum duration")
-    duration: org.joda.time.Duration,
-    @Param(help = "Matching threshold")
-    threshold: Distance
+  @Param(help = "Clustering maximum diameter")
+  diameter: Distance,
+  @Param(help = "Clustering minimum duration")
+  duration: org.joda.time.Duration,
+  @Param(help = "Matching threshold")
+  threshold: Distance
 ) extends Evaluator[PoisRetrievalOp.Input, PoisRetrievalOp.Output] {
+
+
+  override def execute(in: PoisRetrievalOp.Input, ctx: OpContext): PoisRetrievalOp.Output = {
+    val metrics = in.train.zip(in.test).map { case (ref, res) =>
+      requireState(ref.id == res.id, s"Trace mismatch: ${ref.id} / ${res.id}")
+      val refPois = clusterer.cluster(ref.events)
+      val resPois = clusterer.cluster(res.events)
+      val matched = resPois.flatMap { resPoi =>
+        refPois.zipWithIndex.find { case (refPoi, _) =>
+          refPoi.centroid.distance(resPoi.centroid) <= threshold
+        }.map(_._2).toSeq
+      }.toSet.size
+      (MetricUtils.precision(resPois.size, matched), MetricUtils.recall(refPois.size, matched), MetricUtils.fscore(refPois.size, resPois.size, matched))
+    }.toArray
+
+    PoisRetrievalOp.Output(
+      precision = metrics.map(_._1),
+      recall = metrics.map(_._2),
+      fscore = metrics.map(_._3))
+  }
+
   private[this] val clusterer = new DTClusterer(duration, diameter)
 
   override def evaluate(reference: Trace, result: Trace): Seq[Metric] = {
@@ -70,14 +88,12 @@ case class PoisRetrievalOp(
 object PoisRetrievalOp {
 
   case class Input(
-      @In(help = "Train dataset") train: DataFrame[Trace],
-      @In(help = "Test dataset") test: DataFrame[Trace]
-  )
+    @In(help = "Train dataset") train: DataFrame[Trace],
+    @In(help = "Test dataset") test: DataFrame[Trace])
 
   case class Output(
-      @Out(help = "POIs retrieval precision") precision: DataFrame[Double],
-      @Out(help = "POIs retrieval recall") recall: DataFrame[Double],
-      @Out(help = "POIs retrieval F-score") fscore: DataFrame[Double]
-  )
+    @Out(help = "POIs retrieval precision") precision: Array[Double],
+    @Out(help = "POIs retrieval recall") recall: Array[Double],
+    @Out(help = "POIs retrieval F-Score") fscore: Array[Double])
 
 }
