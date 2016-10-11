@@ -63,7 +63,6 @@ class JsonExperimentParser @Inject()(registry: OpRegistry, workflowParser: Workf
     if (root.has("workflow")) {
       getExperiment(path, root)
     } else {
-      logger.warn(s"Implicitly converting a workflow definition into an experiment definition at ${path.toAbsolutePath}")
       val workflow = workflowParser.parse(path).setRuns(root.getInteger("runs").getOrElse(1))
       val id = HashUtils.sha1(UUID.randomUUID().toString)
       new Experiment(
