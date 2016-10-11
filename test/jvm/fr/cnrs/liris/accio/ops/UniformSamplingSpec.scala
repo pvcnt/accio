@@ -9,9 +9,9 @@ class UniformSamplingSpec extends UnitSpec with WithTraceGenerator {
   "UniformSampling" should "downsample traces" in {
     val trace = randomTrace(Me, 100, 10.seconds)
     val runs = 10
-    Seq.fill(runs)(transform(trace, 0.1).size).sum.toDouble shouldBe ((10d * runs) +- (2 * runs))
-    Seq.fill(runs)(transform(trace, 0.5).size).sum.toDouble shouldBe ((50d * runs) +- (2 * runs))
-    Seq.fill(runs)(transform(trace, 0.9).size).sum.toDouble shouldBe ((90d * runs) +- (2 * runs))
+    Seq.fill(runs)(transform(trace, 0.1).size).sum.toDouble shouldBe ((10d * runs) +- (2.5 * runs))
+    Seq.fill(runs)(transform(trace, 0.5).size).sum.toDouble shouldBe ((50d * runs) +- (2.5 * runs))
+    Seq.fill(runs)(transform(trace, 0.9).size).sum.toDouble shouldBe ((90d * runs) +- (2.5 * runs))
   }
 
   it should "handle null probability" in {
