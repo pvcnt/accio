@@ -1,9 +1,5 @@
 package fr.cnrs.liris.accio.core.param
 
-import fr.cnrs.liris.common.reflect.ReflectCaseClass
-
-import scala.reflect.runtime.universe._
-
 /**
  * Encapsulate features for objects parameterizable through their construct arguments.
  *

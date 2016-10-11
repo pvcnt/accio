@@ -32,18 +32,29 @@
 
 package fr.cnrs.liris.accio.ops
 
-import fr.cnrs.liris.accio.core.framework.{Filter, Op}
+import fr.cnrs.liris.accio.core.framework.{Op, Transformer}
 import fr.cnrs.liris.accio.core.model.Trace
 import fr.cnrs.liris.accio.core.param.Param
 
-/**
- * Enforce a minimum number of events in traces. Any trace having less than a given number of events will be discarded.
- */
 @Op(
-  help = "Remove traces having a too small size"
-)
-case class MinSizeOp(
-    @Param(help = "Minimum number of events inside traces") size: Int
-) extends Filter {
-  override def filter(trace: Trace): Boolean = trace.size >= size
+  category = "transform",
+  help = "Enforce a given size on each trace.",
+  description = "Larger traces will be truncated, smaller traces will be discarded.")
+case class EnforceSizeOp(
+  @Param(help = "Maximum number of events in each trace") maxSize: Option[Int],
+  @Param(help = "Minimum number of events in each trace") minSize: Option[Int]
+) extends Transformer {
+
+  override def transform(trace: Trace): Seq[Trace] = {
+    var res = trace
+    maxSize.foreach { size =>
+      if (res.size > size) {
+        res = res.replace(_.take(size))
+      }
+    }
+    minSize match {
+      case None => Seq(res)
+      case Some(size) => if (res.size < size) Seq.empty else Seq(res)
+    }
+  }
 }

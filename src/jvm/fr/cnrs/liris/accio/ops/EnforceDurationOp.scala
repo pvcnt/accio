@@ -32,18 +32,32 @@
 
 package fr.cnrs.liris.accio.ops
 
-import fr.cnrs.liris.accio.core.framework.{Mapper, Op}
+import com.github.nscala_time.time.Imports._
+import fr.cnrs.liris.accio.core.framework.{Mapper, Op, Transformer}
 import fr.cnrs.liris.accio.core.model.Trace
 import fr.cnrs.liris.accio.core.param.Param
 
-/**
- * Enforce a maximum size on traces. Any trace larger than a given threshold will be cut
- * and the subsequent part will be discarded.
- */
-@Op(help = "Truncate traces having a too huge size")
-case class MaxSizeOp(
-    @Param(help = "Maximum size of a trace") size: Int
-) extends Mapper {
+@Op(
+  category = "transform",
+  help = "Enforce a given duration on each trace.",
+  description = "Longer traces will be truncated, shorter traces will be discarded.")
+case class EnforceDurationOp(
+  @Param(help = "Maximum duration of a trace")
+  maxDuration: Option[org.joda.time.Duration],
+  @Param(help = "Minimum duration of a trace")
+  minDuration: Option[org.joda.time.Duration]
+) extends Transformer {
 
-  override def map(trace: Trace): Trace = trace.replace(_.take(size))
+  override def transform(trace: Trace): Seq[Trace] = {
+    var res = trace
+    maxDuration.foreach { duration =>
+      val startAt = res.events.head.time
+      val endAt = startAt + duration
+      res = res.replace(_.takeWhile(r => r.time <= endAt))
+    }
+    minDuration match {
+      case None => Seq(res)
+      case Some(duration) => if (res.duration < duration) Seq.empty else Seq(res)
+    }
+  }
 }
