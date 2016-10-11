@@ -2,7 +2,7 @@ package fr.cnrs.liris.accio.core.pipeline
 
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type
 import com.fasterxml.jackson.annotation.{JsonIgnoreProperties, JsonSubTypes, JsonTypeInfo}
-import fr.cnrs.liris.accio.core.dataset.Dataset
+import fr.cnrs.liris.accio.core.dataset.DataFrame
 import fr.cnrs.liris.accio.core.model.Trace
 import fr.cnrs.liris.common.util.Named
 
@@ -51,7 +51,7 @@ case class StoredDatasetArtifact(name: String, url: String) extends Artifact {
  * @param name Artifact unique name
  * @param data Trace dataset
  */
-case class DatasetArtifact(name: String, data: Dataset[Trace]) extends Artifact {
+case class DatasetArtifact(name: String, data: DataFrame[Trace]) extends Artifact {
   override def ephemeral: Boolean = true
 
   override def `type`: String = "dataset"

@@ -33,13 +33,13 @@
 package fr.cnrs.liris.accio.ops
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.core.dataset.Dataset
+import fr.cnrs.liris.accio.core.dataset.DataFrame
 import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.model.{Poi, Trace}
 import fr.cnrs.liris.accio.core.framework.Param
 import fr.cnrs.liris.accio.ops.PoisAnalyzerOp.{Input, Output}
 import fr.cnrs.liris.common.util.Distance
-import fr.cnrs.liris.privamov.lib.clustering.DTClusterer
+import fr.cnrs.liris.privamov.clustering.DTClusterer
 
 /**
  * Analyzer computing statistics about the POIs that can be extracted from a trace, using a
@@ -89,7 +89,7 @@ case class PoisAnalyzerOp(
 
 object PoisAnalyzerOp {
 
-  case class Input(@In(help = "Input dataset") data: Dataset[Trace])
+  case class Input(@In(help = "Input dataset") data: DataFrame[Trace])
 
   case class Output(
     @Out(help = "POIs counts") count: Array[Long],

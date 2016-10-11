@@ -1,7 +1,7 @@
 junit_tests(
     name='geometry',
     dependencies=[
-        '3rdparty/jvm:scala-logging',
+        '3rdparty/jvm/com/typesafe/scala-logging',
         '3rdparty/jvm:logback',
         'src/jvm/com/google/common/geometry',
         'test/jvm/com/google/common/geometry/testing',

@@ -1,6 +1,6 @@
 package fr.cnrs.liris.accio.ops
 
-import fr.cnrs.liris.accio.core.dataset.{Dataset, DatasetEnv}
+import fr.cnrs.liris.accio.core.dataset.{DataFrame, DatasetEnv}
 import fr.cnrs.liris.accio.core.framework.{Op, OpContext, Out, Source}
 import fr.cnrs.liris.accio.core.io.{CabspottingSource, CsvSource, GeolifeSource}
 import fr.cnrs.liris.accio.core.model.Trace
@@ -22,7 +22,7 @@ case class EventSourceOp(
     Output(get(ctx.env))
   }
 
-  override def get(env: DatasetEnv): Dataset[Trace] = {
+  override def get(env: DatasetEnv): DataFrame[Trace] = {
     val source = kind match {
       case "csv" => CsvSource(FileUtils.replaceHome(url))
       case "cabspotting" => CabspottingSource(FileUtils.replaceHome(url))
@@ -42,6 +42,6 @@ case class EventSourceOp(
 
 object EventSourceOp {
 
-  case class Output(@Out(help = "Source dataset") data: Dataset[Trace])
+  case class Output(@Out(help = "Source dataset") data: DataFrame[Trace])
 
 }

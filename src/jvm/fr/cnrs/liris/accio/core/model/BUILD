@@ -2,7 +2,7 @@ scala_library(
     name='model',
     dependencies=[
         '3rdparty/jvm:scala-time',
-        '3rdparty/jvm:breeze',
+        '3rdparty/jvm/org/scalanlp:breeze',
         'src/jvm/fr/cnrs/liris/common/geo',
         'src/jvm/fr/cnrs/liris/common/util',
     ],

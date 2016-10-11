@@ -7,12 +7,12 @@ scala_library(
     'src/jvm/fr/cnrs/liris/common/geo',
     'src/jvm/fr/cnrs/liris/common/util',
     'src/jvm/fr/cnrs/liris/common/random',
-    'src/jvm/fr/cnrs/liris/privamov/lib/laplace',
-    'src/jvm/fr/cnrs/liris/privamov/lib/clustering',
+    'src/jvm/fr/cnrs/liris/privamov/laplace',
+    'src/jvm/fr/cnrs/liris/privamov/clustering',
     'src/jvm/com/google/common/geometry',
     '3rdparty/jvm:scala-time',
     '3rdparty/jvm:scala-guice',
-    '3rdparty/jvm:breeze',
+    '3rdparty/jvm/org/scalanlp:breeze',
   ],
   sources=globs('*.scala')
 )

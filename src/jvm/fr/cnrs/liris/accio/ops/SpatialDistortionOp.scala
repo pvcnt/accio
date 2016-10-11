@@ -32,7 +32,7 @@
 
 package fr.cnrs.liris.accio.ops
 
-import fr.cnrs.liris.accio.core.dataset.Dataset
+import fr.cnrs.liris.accio.core.dataset.DataFrame
 import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.model.Trace
 import fr.cnrs.liris.accio.core.framework.Param
@@ -106,16 +106,16 @@ case class SpatialDistortionOp(
 object SpatialDistortionOp {
 
   case class Input(
-      @In(help = "Train dataset") train: Dataset[Trace],
-      @In(help = "Test dataset") test: Dataset[Trace]
+      @In(help = "Train dataset") train: DataFrame[Trace],
+      @In(help = "Test dataset") test: DataFrame[Trace]
   )
 
   case class Output(
-      @Out(help = "Spatial distortion min") min: Dataset[Double],
-      @Out(help = "Spatial distortion max") max: Dataset[Double],
-      @Out(help = "Spatial distortion stddev") stddev: Dataset[Double],
-      @Out(help = "Spatial distortion avg") avg: Dataset[Double],
-      @Out(help = "Spatial distortion median") median: Dataset[Double]
+      @Out(help = "Spatial distortion min") min: DataFrame[Double],
+      @Out(help = "Spatial distortion max") max: DataFrame[Double],
+      @Out(help = "Spatial distortion stddev") stddev: DataFrame[Double],
+      @Out(help = "Spatial distortion avg") avg: DataFrame[Double],
+      @Out(help = "Spatial distortion median") median: DataFrame[Double]
   )
 
 }

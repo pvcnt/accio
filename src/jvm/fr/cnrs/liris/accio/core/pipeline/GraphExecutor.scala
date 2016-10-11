@@ -4,7 +4,7 @@ import java.nio.file.Path
 
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
-import fr.cnrs.liris.accio.core.dataset.{Dataset, DatasetEnv}
+import fr.cnrs.liris.accio.core.dataset.{DataFrame, DatasetEnv}
 import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.io.{CsvSink, CsvSource}
 import fr.cnrs.liris.accio.core.model.Trace
@@ -143,7 +143,7 @@ class GraphExecutor @Inject()(env: DatasetEnv, graphBuilder: GraphBuilder, write
     execute(node, inputs, runId, workDir)
   }
 
-  private def execute(node: Node, inputs: Seq[Dataset[Trace]], runId: String, workDir: Path): Seq[Artifact] = {
+  private def execute(node: Node, inputs: Seq[DataFrame[Trace]], runId: String, workDir: Path): Seq[Artifact] = {
     node.operator match {
       case s: Source[_] => execute(s, node.name, inputs, runId, workDir)
       case t: Transformer => execute(t, node.name, inputs, runId, workDir)
@@ -152,12 +152,12 @@ class GraphExecutor @Inject()(env: DatasetEnv, graphBuilder: GraphBuilder, write
     }
   }
 
-  private def execute(source: Source[_], nodeName: String, inputs: Seq[Dataset[Trace]], runId: String, workDir: Path) = {
+  private def execute(source: Source[_], nodeName: String, inputs: Seq[DataFrame[Trace]], runId: String, workDir: Path) = {
     requireState(inputs.isEmpty, s"Source requires no input (got ${inputs.size})")
     Seq(DatasetArtifact(nodeName, source.get(env)))
   }
 
-  private def execute(transformer: Transformer, nodeName: String, inputs: Seq[Dataset[Trace]], runId: String, workDir: Path) = {
+  private def execute(transformer: Transformer, nodeName: String, inputs: Seq[DataFrame[Trace]], runId: String, workDir: Path) = {
     requireState(inputs.size == 1, s"Transformer requires exactly one input (got ${inputs.size})")
     val data = inputs.head.flatMap(transformer.transform)
     val url = workDir.resolve("data").resolve(s"$runId-$nodeName").toAbsolutePath.toString
@@ -165,7 +165,7 @@ class GraphExecutor @Inject()(env: DatasetEnv, graphBuilder: GraphBuilder, write
     Seq(StoredDatasetArtifact(nodeName, url))
   }
 
-  private def execute(analyzer: Analyzer[_, _], nodeName: String, runs: Int, inputs: Seq[Dataset[Trace]]) = {
+  private def execute(analyzer: Analyzer[_, _], nodeName: String, runs: Int, inputs: Seq[DataFrame[Trace]]) = {
     requireState(inputs.size == 1, s"Analyzer requires exactly one input (got ${inputs.size})")
     val metrics = Array.fill(runs) {
       inputs.head.flatMap(trace => analyzer.analyze(trace).map(metric => (trace.id, metric))).toArray
@@ -173,7 +173,7 @@ class GraphExecutor @Inject()(env: DatasetEnv, graphBuilder: GraphBuilder, write
     getDistributions(nodeName, metrics)
   }
 
-  private def execute(evaluator: Evaluator[_, _], nodeName: String, runs: Int, inputs: Seq[Dataset[Trace]]) = {
+  private def execute(evaluator: Evaluator[_, _], nodeName: String, runs: Int, inputs: Seq[DataFrame[Trace]]) = {
     requireState(inputs.size == 2, s"Evaluator requires exactly two inputs (got ${inputs.size})")
     val metrics = inputs.head.zip(inputs.last).flatMap { case (ref, res) =>
       requireState(ref.id == res.id, s"Trace mismatch at $nodeName: ${ref.id} / ${res.id}")

@@ -10,8 +10,8 @@ scala_library(
     'src/jvm/fr/cnrs/liris/common/reflect',
     'src/jvm/fr/cnrs/liris/common/flags',
     'src/jvm/fr/cnrs/liris/common/stats',
-    '3rdparty/jvm/google/guava',
-    '3rdparty/jvm:scala-logging',
+    '3rdparty/jvm/com/google/guava',
+    '3rdparty/jvm/com/typesafe/scala-logging',
     '3rdparty/jvm:scala-guice',
   ],
   sources=globs('*.scala')

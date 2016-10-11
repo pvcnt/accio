@@ -1,9 +1,9 @@
 scala_library(
     name='dataset',
     dependencies=[
-        '3rdparty/jvm:scala-logging',
-        '3rdparty/jvm/google/guava',
-        '3rdparty/jvm/twitter/util:core',
+        '3rdparty/jvm/com/typesafe/scala-logging',
+        '3rdparty/jvm/com/google/guava',
+        '3rdparty/jvm/com/twitter/util:core',
         'src/jvm/fr/cnrs/liris/common/random',
     ],
     sources=globs('*.scala')

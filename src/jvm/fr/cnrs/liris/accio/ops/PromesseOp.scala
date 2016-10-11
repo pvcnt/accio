@@ -33,7 +33,7 @@
 package fr.cnrs.liris.accio.ops
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.core.dataset.Dataset
+import fr.cnrs.liris.accio.core.dataset.DataFrame
 import fr.cnrs.liris.accio.core.framework.{In, Mapper, Op, Out}
 import fr.cnrs.liris.accio.core.model.{Event, Trace}
 import fr.cnrs.liris.accio.core.framework.Param

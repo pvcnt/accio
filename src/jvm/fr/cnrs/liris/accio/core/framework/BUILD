@@ -8,8 +8,9 @@ scala_library(
     'src/jvm/fr/cnrs/liris/common/geo',
     'src/jvm/fr/cnrs/liris/common/util',
     'src/jvm/fr/cnrs/liris/common/reflect',
-    '3rdparty/jvm/twitter/util:core',
-    '3rdparty/jvm/google/guice',
+    '3rdparty/jvm/com/twitter/util:core',
+    '3rdparty/jvm/com/google/guice',
+    '3rdparty/jvm/com/fasterxml/jackson:annotations',
   ],
   sources=globs('*.scala')
 )

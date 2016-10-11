@@ -1,6 +1,6 @@
 package fr.cnrs.liris.accio.core.framework
 
-import fr.cnrs.liris.accio.core.dataset.{Dataset, DatasetEnv}
+import fr.cnrs.liris.accio.core.dataset.{DataFrame, DatasetEnv}
 import fr.cnrs.liris.accio.core.model.Trace
 
 /**
@@ -22,7 +22,7 @@ trait Source[O] extends Operator[Unit, O] {
    *
    * @param env Dataset environment
    */
-  def get(env: DatasetEnv): Dataset[Trace]
+  def get(env: DatasetEnv): DataFrame[Trace]
 
   def execute(in: Unit, ctx: OpContext): O
 }
@@ -86,9 +86,9 @@ trait Transformer extends Operator[TransformerOp.Input, TransformerOp.Output] {
 
 object TransformerOp {
 
-  case class Input(@In(help = "Input dataset") data: Dataset[Trace])
+  case class Input(@In(help = "Input dataset") data: DataFrame[Trace])
 
-  case class Output(@Out(help = "Output dataset") data: Dataset[Trace])
+  case class Output(@Out(help = "Output dataset") data: DataFrame[Trace])
 
 }
 

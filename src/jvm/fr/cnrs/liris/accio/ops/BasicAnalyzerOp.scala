@@ -33,7 +33,7 @@
 package fr.cnrs.liris.accio.ops
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.core.dataset.Dataset
+import fr.cnrs.liris.accio.core.dataset.DataFrame
 import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.model.Trace
 import fr.cnrs.liris.accio.ops.BasicAnalyzerOp._
@@ -68,7 +68,7 @@ case class BasicAnalyzerOp() extends Analyzer[Input, Output] {
 
 object BasicAnalyzerOp {
 
-  case class Input(@In(help = "Input dataset") data: Dataset[Trace])
+  case class Input(@In(help = "Input dataset") data: DataFrame[Trace])
 
   case class Output(
     @Out(help = "Traces sizes") size: Array[Long],

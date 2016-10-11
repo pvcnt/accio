@@ -35,7 +35,7 @@ package fr.cnrs.liris.accio.ops
 import fr.cnrs.liris.accio.core.framework.{Mapper, Op}
 import fr.cnrs.liris.accio.core.model.Trace
 import fr.cnrs.liris.accio.core.framework.Param
-import fr.cnrs.liris.privamov.lib.laplace.Laplace
+import fr.cnrs.liris.privamov.laplace.Laplace
 
 /**
  * Generate locations satisfying geo-indistinguishability properties. The method

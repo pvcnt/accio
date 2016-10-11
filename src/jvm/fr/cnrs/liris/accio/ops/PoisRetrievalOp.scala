@@ -33,12 +33,12 @@
 package fr.cnrs.liris.accio.ops
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.core.dataset.Dataset
+import fr.cnrs.liris.accio.core.dataset.DataFrame
 import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.model.Trace
 import fr.cnrs.liris.accio.core.framework.Param
 import fr.cnrs.liris.common.util.Distance
-import fr.cnrs.liris.privamov.lib.clustering.DTClusterer
+import fr.cnrs.liris.privamov.clustering.DTClusterer
 
 @Op(
   category = "metric",
@@ -70,14 +70,14 @@ case class PoisRetrievalOp(
 object PoisRetrievalOp {
 
   case class Input(
-      @In(help = "Train dataset") train: Dataset[Trace],
-      @In(help = "Test dataset") test: Dataset[Trace]
+      @In(help = "Train dataset") train: DataFrame[Trace],
+      @In(help = "Test dataset") test: DataFrame[Trace]
   )
 
   case class Output(
-      @Out(help = "POIs retrieval precision") precision: Dataset[Double],
-      @Out(help = "POIs retrieval recall") recall: Dataset[Double],
-      @Out(help = "POIs retrieval F-score") fscore: Dataset[Double]
+      @Out(help = "POIs retrieval precision") precision: DataFrame[Double],
+      @Out(help = "POIs retrieval recall") recall: DataFrame[Double],
+      @Out(help = "POIs retrieval F-score") fscore: DataFrame[Double]
   )
 
 }

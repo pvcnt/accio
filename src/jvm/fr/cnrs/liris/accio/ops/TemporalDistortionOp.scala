@@ -33,7 +33,7 @@
 package fr.cnrs.liris.accio.ops
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.core.dataset.Dataset
+import fr.cnrs.liris.accio.core.dataset.DataFrame
 import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.model.Trace
 import org.joda.time.Instant
@@ -75,16 +75,16 @@ case class TemporalDistortionOp() extends Evaluator[TemporalDistortionOp.Input, 
 object TemporalDistortionOp {
 
   case class Input(
-      @In(help = "Train dataset") train: Dataset[Trace],
-      @In(help = "Test dataset") test: Dataset[Trace]
+      @In(help = "Train dataset") train: DataFrame[Trace],
+      @In(help = "Test dataset") test: DataFrame[Trace]
   )
 
   case class Output(
-      @Out(help = "Temporal distortion min") min: Dataset[Double],
-      @Out(help = "Temporal distortion max") max: Dataset[Double],
-      @Out(help = "Temporal distortion stddev") stddev: Dataset[Double],
-      @Out(help = "Temporal distortion avg") avg: Dataset[Double],
-      @Out(help = "Temporal distortion median") median: Dataset[Double]
+      @Out(help = "Temporal distortion min") min: DataFrame[Double],
+      @Out(help = "Temporal distortion max") max: DataFrame[Double],
+      @Out(help = "Temporal distortion stddev") stddev: DataFrame[Double],
+      @Out(help = "Temporal distortion avg") avg: DataFrame[Double],
+      @Out(help = "Temporal distortion median") median: DataFrame[Double]
   )
 
 }

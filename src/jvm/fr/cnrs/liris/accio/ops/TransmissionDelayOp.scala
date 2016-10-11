@@ -33,7 +33,7 @@
 package fr.cnrs.liris.accio.ops
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.core.dataset.Dataset
+import fr.cnrs.liris.accio.core.dataset.DataFrame
 import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.model.Trace
 
@@ -52,12 +52,12 @@ case class TransmissionDelayOp() extends Evaluator[TransmissionDelayOp.Input, Tr
 object TransmissionDelayOp {
 
   case class Input(
-      @In(help = "Train dataset") train: Dataset[Trace],
-      @In(help = "Test dataset") test: Dataset[Trace]
+      @In(help = "Train dataset") train: DataFrame[Trace],
+      @In(help = "Test dataset") test: DataFrame[Trace]
   )
 
   case class Output(
-      @Out(help = "Transmission delay") value: Dataset[Double]
+      @Out(help = "Transmission delay") value: DataFrame[Double]
   )
 
 }
