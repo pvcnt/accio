@@ -56,6 +56,8 @@ trait Evaluator[I, O] extends Operator[I, O] {
    * @return Some metrics
    */
   def evaluate(train: Trace, test: Trace): Seq[Metric]
+
+  def execute(in: I, ctx: OpContext): O
 }
 
 /**

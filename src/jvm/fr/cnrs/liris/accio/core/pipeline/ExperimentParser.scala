@@ -63,7 +63,7 @@ class JsonExperimentParser @Inject()(registry: OpRegistry, workflowParser: Workf
     if (root.has("workflow")) {
       getExperiment(path, root)
     } else {
-      val workflow = workflowParser.parse(path).setRuns(root.getInteger("runs").getOrElse(1))
+      val workflow = workflowParser.parse(path)
       val id = HashUtils.sha1(UUID.randomUUID().toString)
       new Experiment(
         id = id,

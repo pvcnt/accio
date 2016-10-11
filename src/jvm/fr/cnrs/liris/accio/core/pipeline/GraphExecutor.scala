@@ -147,8 +147,8 @@ class GraphExecutor @Inject()(env: DatasetEnv, graphBuilder: GraphBuilder, write
     node.operator match {
       case s: Source[_] => execute(s, node.name, inputs, runId, workDir)
       case t: Transformer => execute(t, node.name, inputs, runId, workDir)
-      case a: Analyzer[_, _] => execute(a, node.name, node.runs, inputs)
-      case e: Evaluator[_, _] => execute(e, node.name, node.runs, inputs)
+      case a: Analyzer[_, _] => execute(a, node.name, inputs)
+      case e: Evaluator[_, _] => execute(e, node.name, inputs)
     }
   }
 
@@ -165,19 +165,17 @@ class GraphExecutor @Inject()(env: DatasetEnv, graphBuilder: GraphBuilder, write
     Seq(StoredDatasetArtifact(nodeName, url))
   }
 
-  private def execute(analyzer: Analyzer[_, _], nodeName: String, runs: Int, inputs: Seq[DataFrame[Trace]]) = {
+  private def execute(analyzer: Analyzer[_, _], nodeName: String, inputs: Seq[DataFrame[Trace]]) = {
     requireState(inputs.size == 1, s"Analyzer requires exactly one input (got ${inputs.size})")
-    val metrics = Array.fill(runs) {
-      inputs.head.flatMap(trace => analyzer.analyze(trace).map(metric => (trace.id, metric))).toArray
-    }.flatten
+    val metrics = inputs.head.flatMap(trace => analyzer.analyze(trace).map(metric => (trace.id, metric))).toArray
     getDistributions(nodeName, metrics)
   }
 
-  private def execute(evaluator: Evaluator[_, _], nodeName: String, runs: Int, inputs: Seq[DataFrame[Trace]]) = {
+  private def execute(evaluator: Evaluator[_, _], nodeName: String, inputs: Seq[DataFrame[Trace]]) = {
     requireState(inputs.size == 2, s"Evaluator requires exactly two inputs (got ${inputs.size})")
     val metrics = inputs.head.zip(inputs.last).flatMap { case (ref, res) =>
       requireState(ref.id == res.id, s"Trace mismatch at $nodeName: ${ref.id} / ${res.id}")
-      Seq.fill(runs)(evaluator.evaluate(ref, res).map(metric => (ref.id, metric))).flatten
+      evaluator.evaluate(ref, res).map(metric => (ref.id, metric))
     }.toArray
     getDistributions(nodeName, metrics)
   }

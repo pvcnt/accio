@@ -57,28 +57,9 @@ case class GraphDef(nodes: Seq[NodeDef]) {
     }
     copy(nodes = newNodes)
   }
-
-  /**
-   * Return a copy of this graph with a minimum number of runs propagated into the nodes that would otherwise run only
-   * one time. For nodes for which an explicit number of runs is already set, this value will not be overriden.
-   *
-   * @param runs Minimum number of runs
-   */
-  def setRuns(runs: Int): GraphDef = {
-    if (runs > 1) {
-      val newNodes = nodes.map { node =>
-        if (node.runs <= 1) {
-          node.copy(runs = math.max(node.runs, runs))
-        } else {
-          node
-        }
-      }
-      copy(nodes = newNodes)
-    } else this
-  }
 }
 
-case class NodeDef(op: String, name: String, paramMap: ParamMap, inputs: Seq[String] = Seq.empty, runs: Int = 1) extends Named {
+case class NodeDef(op: String, name: String, paramMap: ParamMap, inputs: Seq[String] = Seq.empty) extends Named {
   def hasSameStructure(other: NodeDef): Boolean =
     other.op == op && other.name == name && other.inputs == inputs
 }
@@ -95,8 +76,6 @@ class Graph(_nodes: Map[String, Node]) {
 
 case class Node(defn: NodeDef, operator: Operator[_, _], dependencies: Seq[String], successors: Set[String]) extends Named {
   override def name: String = defn.name
-
-  def runs: Int = defn.runs
 }
 
 /**

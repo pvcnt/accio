@@ -86,14 +86,6 @@ case class Workflow(graph: GraphDef, name: Option[String] = None, owner: Option[
    * @param paramMap Override parameters map
    */
   def setParams(paramMap: ParamMap): Workflow = copy(graph = graph.setParams(paramMap))
-
-  /**
-   * Return a copy of this workflow with a number of runs propagated into the graph to nodes that would otherwise
-   * run only one time. For nodes for which an explicit number of runs is already set, this value will not be overriden.
-   *
-   * @param runs Minimum number of runs
-   */
-  def setRuns(runs: Int): Workflow = copy(graph = graph.setRuns(runs))
 }
 
 /**

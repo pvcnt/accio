@@ -54,8 +54,6 @@ case class RunCommandOpts(
   notes: Option[String],
   @Flag(name = "user", help = "User who launched the experiment")
   user: Option[String],
-  @Flag(name = "runs", help = "Experiment runs override")
-  runs: Int = 1,
   @Flag(name = "params", help = "Experiment parameters override")
   params: Option[String])
 
@@ -103,9 +101,6 @@ class RunCommand @Inject()(parser: ExperimentParser, executor: ExperimentExecuto
     }
     opts.user.foreach { user =>
       experiment = experiment.copy(initiator = User.parse(user))
-    }
-    if (opts.runs > 1) {
-      experiment = experiment.copy(workflow = experiment.workflow.setRuns(opts.runs))
     }
     opts.params.foreach { params =>
       val NameRegex = "([^/]+)/(.+)".r

@@ -37,16 +37,24 @@ import fr.cnrs.liris.accio.core.dataset.DataFrame
 import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.model.Trace
 import fr.cnrs.liris.accio.core.framework.Param
+import fr.cnrs.liris.accio.ops.AreaCoverageOp.{Input, Output}
+import fr.cnrs.liris.common.util.Requirements._
 
 @Op(
   category = "metric",
   help = "Compute area coverage difference between two datasets of traces",
-  metrics = Array("precision", "recall", "fscore")
-)
+  metrics = Array("precision", "recall", "fscore"))
 case class AreaCoverageOp(
   @Param(help = "S2 cells levels")
   level: Int
 ) extends Evaluator[AreaCoverageOp.Input, AreaCoverageOp.Output] {
+
+  override def execute(in: Input, ctx: OpContext): Output = {
+    in.train.zip(in.test).flatMap { case (ref, res) =>
+      requireState(ref.id == res.id, s"Trace mismatch: ${ref.id} / ${res.id}")
+      evaluator.evaluate(ref, res).map(metric => (ref.id, metric))).flatten
+    }.toArray
+  }
 
   override def evaluate(reference: Trace, result: Trace): Seq[Metric] = {
     val refCells = getCells(reference, level)

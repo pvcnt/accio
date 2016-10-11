@@ -69,11 +69,7 @@ class JsonWorkflowParser @Inject()(registry: OpRegistry) extends WorkflowParser 
     val owner = root.getString("owner").map(User.parse)
     val nodes = root.child("graph").elements.asScala.map(getNode).toSeq
 
-    var defn = new Workflow(new GraphDef(nodes), name, owner)
-    root.getInteger("runs").foreach { runs =>
-      defn = defn.setRuns(runs)
-    }
-    defn
+    new Workflow(new GraphDef(nodes), name, owner)
   }
 
   private def getNode(node: JsonNode) = {
@@ -83,8 +79,7 @@ class JsonWorkflowParser @Inject()(registry: OpRegistry) extends WorkflowParser 
     val name = node.getString("name").getOrElse(opName)
     val params = getParams(opMeta, name, node.getChild("params"))
     val inputs = getInputs(node.getChild("inputs"))
-    val runs = node.getInteger("runs").getOrElse(1)
-    new NodeDef(opName, name, new ParamMap(params.toMap), inputs, runs)
+    new NodeDef(opName, name, new ParamMap(params.toMap), inputs)
   }
 
   private def getParams(opMeta: OpMeta, name: String, node: Option[JsonNode]) = {
