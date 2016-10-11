@@ -8,28 +8,25 @@ import org.joda.time.{DateTime, Duration}
  * An experiment is a specification about the manner to run one or many variations of a single workflow. It can be
  * either a direct execution of this workflow, an exploration of parameters or an optimization of parameters.
  *
- * @param id           Unique identifier (among all experiments AND runs)
- * @param name         Human-readable name
- * @param workflow     Base workflow
- * @param paramMap     Override parameters map
- * @param exploration  Parameters exploration (cannot be combined with `optimization`)
- * @param optimization Parameters optimization (cannot be combined with `exploration`)
- * @param notes        Some notes
- * @param tags         Some tags
- * @param initiator    User initiating the experiment
+ * @param id          Unique identifier (among all experiments AND runs)
+ * @param name        Human-readable name
+ * @param workflow    Base workflow
+ * @param paramMap    Override parameters map
+ * @param exploration Parameters sweep
+ * @param notes       Some notes
+ * @param tags        Some tags
+ * @param initiator   User initiating the experiment
  */
 case class Experiment(
-    id: String,
-    name: String,
-    workflow: Workflow,
-    paramMap: Option[ParamMap],
-    exploration: Option[Exploration],
-    optimization: Option[Optimization],
-    notes: Option[String],
-    tags: Set[String],
-    initiator: User,
-    report: Option[ExperimentReport] = None) {
-  require(!(exploration.isDefined && optimization.isDefined), "Cannot define both an exploration and an optimization")
+  id: String,
+  name: String,
+  workflow: Workflow,
+  paramMap: Option[ParamMap],
+  exploration: Option[Exploration],
+  notes: Option[String],
+  tags: Set[String],
+  initiator: User,
+  report: Option[ExperimentReport] = None) {
 
   def shortId: String = id.substring(0, 8)
 
@@ -41,20 +38,11 @@ case class Experiment(
 
 case class Exploration(paramGrid: ParamGrid)
 
-case class Optimization(
-    paramGrid: ParamGrid,
-    iters: Int,
-    contraction: Double,
-    objectives: Set[Objective]) {
-  require(iters > 0, s"Number of iterations per step must be strictly positive (got $iters)")
-  require(contraction > 0 && contraction <= 1, s"Contraction factor must be in (0,1] (got $contraction)")
-}
-
 @JsonIgnoreProperties(ignoreUnknown = true)
 case class ExperimentReport(
-    startedAt: DateTime = DateTime.now,
-    completedAt: Option[DateTime] = None,
-    runs: Seq[String] = Seq.empty) {
+  startedAt: DateTime = DateTime.now,
+  completedAt: Option[DateTime] = None,
+  runs: Seq[String] = Seq.empty) {
 
   /**
    * Return whether the execution is completed, either successfully or not.

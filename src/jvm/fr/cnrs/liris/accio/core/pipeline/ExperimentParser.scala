@@ -72,7 +72,6 @@ class JsonExperimentParser @Inject()(registry: OpRegistry, workflowParser: Workf
         workflow = workflow,
         paramMap = None,
         exploration = None,
-        optimization = None,
         notes = None,
         tags = Set.empty,
         initiator = getDefaultUser)
@@ -93,7 +92,6 @@ class JsonExperimentParser @Inject()(registry: OpRegistry, workflowParser: Workf
       }
     }
     val params = root.getChild("params").map(getParamMap(paramDefs, _))
-    val optimization = root.getChild("optimization").map(getOptimization(paramDefs, _))
     val exploration = root.getChild("exploration").map(getExploration(paramDefs, _))
 
     new Experiment(
@@ -102,7 +100,6 @@ class JsonExperimentParser @Inject()(registry: OpRegistry, workflowParser: Workf
       workflow = workflow,
       paramMap = params,
       exploration = exploration,
-      optimization = optimization,
       notes = notes,
       tags = tags,
       initiator = getDefaultUser)
@@ -130,28 +127,6 @@ class JsonExperimentParser @Inject()(registry: OpRegistry, workflowParser: Workf
       workflowParser.parse(Paths.get(FileUtils.replaceHome(str)))
     } else {
       throw new IllegalArgumentException(s"Invalid workflow reference: $str")
-    }
-  }
-
-  private def getOptimization(paramDefs: Seq[ParamDef], node: JsonNode) = {
-    val objectives = node.getChild("objectives")
-        .map(_.elements.asScala.map(getObjective).toSet)
-        .getOrElse(Set.empty)
-    val paramGrid = node.getChild("grid")
-        .map(getParamGrid(paramDefs, _))
-        .getOrElse(ParamGrid.empty)
-    val iters = node.getInteger("iters").getOrElse(1)
-    val contraction = node.getDouble("contraction").getOrElse(.5)
-    new Optimization(paramGrid, iters, contraction, objectives)
-  }
-
-  private def getObjective(node: JsonNode): Objective = {
-    val metric = node.string("metric")
-    val threshold = node.getDouble("threshold")
-    node.string("type") match {
-      case "minimize" => Objective.Minimize(metric, threshold)
-      case "maximize" => Objective.Maximize(metric, threshold)
-      case typ => throw new IllegalArgumentException(s"Unknown objective type: $typ")
     }
   }
 

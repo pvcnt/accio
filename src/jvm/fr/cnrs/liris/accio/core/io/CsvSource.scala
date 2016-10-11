@@ -54,17 +54,15 @@ case class CsvSource(url: String) extends DataSource[Trace] {
   require(path.toFile.canRead, s"$url is unreadable")
 
   override def keys: Seq[String] = {
-    println(path.toFile.listFiles.mkString(", "))
     path.toFile
       .listFiles
       .filter(_.getName.endsWith(".csv"))
       .map(_.getName.stripSuffix(".csv"))
+      .toSeq
+      .sorted
   }
 
-  override def read(id: String): Iterable[Trace] = {
-    println(s"reading $id")
-    read(id, path.resolve(s"$id.csv").toFile).toIterable
-  }
+  override def read(id: String): Iterable[Trace] = read(id, path.resolve(s"$id.csv").toFile).toIterable
 
   private def read(id: String, file: File): Option[Trace] = {
     decoder.decode(id, Files.readAllBytes(file.toPath)).flatMap {
