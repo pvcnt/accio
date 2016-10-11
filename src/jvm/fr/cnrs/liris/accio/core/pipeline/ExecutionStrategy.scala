@@ -1,7 +1,7 @@
 package fr.cnrs.liris.accio.core.pipeline
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import fr.cnrs.liris.accio.core.param.ParamMap
+import fr.cnrs.liris.accio.core.framework.ParamMap
 import org.joda.time.Instant
 
 trait ExecutionStrategy {

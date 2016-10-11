@@ -36,7 +36,7 @@ import com.github.nscala_time.time.Imports._
 import fr.cnrs.liris.accio.core.dataset.Dataset
 import fr.cnrs.liris.accio.core.framework.{In, Mapper, Op, Out}
 import fr.cnrs.liris.accio.core.model.Trace
-import fr.cnrs.liris.accio.core.param.Param
+import fr.cnrs.liris.accio.core.framework.Param
 import org.joda.time.Instant
 
 @Op(

@@ -35,7 +35,7 @@ package fr.cnrs.liris.accio.ops
 import com.github.nscala_time.time.Imports._
 import fr.cnrs.liris.accio.core.framework.Op
 import fr.cnrs.liris.accio.core.model.Event
-import fr.cnrs.liris.accio.core.param.Param
+import fr.cnrs.liris.accio.core.framework.Param
 
 @Op(
   help = "Split traces, when there is a too long duration between consecutive events")

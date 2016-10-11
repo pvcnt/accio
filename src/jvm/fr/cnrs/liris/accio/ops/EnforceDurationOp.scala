@@ -35,7 +35,7 @@ package fr.cnrs.liris.accio.ops
 import com.github.nscala_time.time.Imports._
 import fr.cnrs.liris.accio.core.framework.{Mapper, Op, Transformer}
 import fr.cnrs.liris.accio.core.model.Trace
-import fr.cnrs.liris.accio.core.param.Param
+import fr.cnrs.liris.accio.core.framework.Param
 
 @Op(
   category = "transform",

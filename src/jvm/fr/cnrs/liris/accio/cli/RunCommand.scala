@@ -38,7 +38,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import com.google.inject.Inject
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.framework.OpRegistry
-import fr.cnrs.liris.accio.core.param.ParamMap
+import fr.cnrs.liris.accio.core.framework.ParamMap
 import fr.cnrs.liris.accio.core.pipeline._
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.util.FileUtils

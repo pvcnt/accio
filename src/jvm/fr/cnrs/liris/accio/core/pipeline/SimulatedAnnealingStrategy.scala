@@ -1,7 +1,7 @@
 package fr.cnrs.liris.accio.core.pipeline
 
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.core.param.ParamMap
+import fr.cnrs.liris.accio.core.framework.ParamMap
 import fr.cnrs.liris.common.random.RandomUtils
 import fr.cnrs.liris.privamov.lib.optimization.CoolingSchedule
 

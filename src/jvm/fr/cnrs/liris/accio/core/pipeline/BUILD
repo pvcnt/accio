@@ -1,7 +1,6 @@
 scala_library(
   name='pipeline',
   dependencies=[
-    'src/jvm/fr/cnrs/liris/accio/core/param',
     'src/jvm/fr/cnrs/liris/accio/core/framework',
     'src/jvm/fr/cnrs/liris/accio/core/model',
     'src/jvm/fr/cnrs/liris/accio/core/dataset',

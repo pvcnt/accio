@@ -36,7 +36,7 @@ import com.google.common.geometry.S2CellId
 import fr.cnrs.liris.accio.core.dataset.Dataset
 import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.model.Trace
-import fr.cnrs.liris.accio.core.param.Param
+import fr.cnrs.liris.accio.core.framework.Param
 
 @Op(
   category = "metric",

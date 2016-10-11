@@ -1,4 +1,4 @@
-package fr.cnrs.liris.accio.core.param
+package fr.cnrs.liris.accio.core.framework
 
 import com.google.common.base.MoreObjects
 import fr.cnrs.liris.common.random.RandomUtils

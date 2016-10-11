@@ -34,7 +34,7 @@ package fr.cnrs.liris.accio.ops
 
 import fr.cnrs.liris.accio.core.framework.{Op, Transformer}
 import fr.cnrs.liris.accio.core.model.Trace
-import fr.cnrs.liris.accio.core.param.Param
+import fr.cnrs.liris.accio.core.framework.Param
 
 @Op(
   category = "transform",

@@ -1,4 +1,4 @@
-package fr.cnrs.liris.accio.core.param
+package fr.cnrs.liris.accio.core.framework
 
 class ParamMap(protected val map: Map[String, Any]) {
   /**

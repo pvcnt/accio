@@ -1,4 +1,4 @@
-package fr.cnrs.liris.accio.core.param
+package fr.cnrs.liris.accio.core.framework
 
 import fr.cnrs.liris.testing.UnitSpec
 

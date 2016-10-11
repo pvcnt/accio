@@ -2,7 +2,6 @@ package fr.cnrs.liris.accio.core.framework
 
 import java.util.NoSuchElementException
 
-import fr.cnrs.liris.accio.core.param.Param
 import fr.cnrs.liris.common.reflect.CaseClass
 
 import scala.reflect.ClassTag

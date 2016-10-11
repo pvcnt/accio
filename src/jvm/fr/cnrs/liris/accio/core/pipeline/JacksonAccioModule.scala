@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.databind.ser.std.StdSerializer
 import com.fasterxml.jackson.databind.{DeserializationContext, SerializerProvider}
-import fr.cnrs.liris.accio.core.param.ParamMap
+import fr.cnrs.liris.accio.core.framework.ParamMap
 
 private[pipeline] class JacksonAccioModule extends SimpleModule {
   addSerializer(new ParamMapSerializer)

@@ -36,7 +36,7 @@ import com.github.nscala_time.time.Imports._
 import fr.cnrs.liris.accio.core.dataset.Dataset
 import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.model.{Poi, Trace}
-import fr.cnrs.liris.accio.core.param.Param
+import fr.cnrs.liris.accio.core.framework.Param
 import fr.cnrs.liris.accio.ops.PoisAnalyzerOp.{Input, Output}
 import fr.cnrs.liris.common.util.Distance
 import fr.cnrs.liris.privamov.lib.clustering.DTClusterer

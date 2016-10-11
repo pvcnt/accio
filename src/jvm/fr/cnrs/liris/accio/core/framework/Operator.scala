@@ -2,12 +2,11 @@ package fr.cnrs.liris.accio.core.framework
 
 import fr.cnrs.liris.accio.core.dataset.{Dataset, DatasetEnv}
 import fr.cnrs.liris.accio.core.model.Trace
-import fr.cnrs.liris.accio.core.param.Parameterizable
 
 /**
  * Operators are the basic processing unit of Accio.
  */
-sealed trait Operator[I, O] extends Parameterizable {
+sealed trait Operator[I, O] {
   //def execute(in: I, ctx: OpContext): O
 }
 

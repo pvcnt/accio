@@ -1,7 +1,7 @@
 package fr.cnrs.liris.accio.core.pipeline
 
 import com.fasterxml.jackson.annotation.{JsonIgnoreProperties, JsonProperty}
-import fr.cnrs.liris.accio.core.param.{ParamGrid, ParamMap}
+import fr.cnrs.liris.accio.core.framework.{ParamGrid, ParamMap}
 import org.joda.time.{DateTime, Duration}
 
 /**

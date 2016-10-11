@@ -5,7 +5,7 @@ import fr.cnrs.liris.accio.core.framework.{Op, OpContext, Out, Source}
 import fr.cnrs.liris.accio.core.io.{CabspottingSource, CsvSource, GeolifeSource}
 import fr.cnrs.liris.accio.core.model.Trace
 import fr.cnrs.liris.accio.ops.EventSourceOp._
-import fr.cnrs.liris.accio.core.param.Param
+import fr.cnrs.liris.accio.core.framework.Param
 import fr.cnrs.liris.common.util.FileUtils
 
 @Op(

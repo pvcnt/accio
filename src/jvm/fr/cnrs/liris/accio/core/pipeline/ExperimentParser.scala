@@ -40,7 +40,7 @@ import com.github.nscala_time.time.Imports._
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.core.framework._
-import fr.cnrs.liris.accio.core.param.{ParamGrid, ParamMap}
+import fr.cnrs.liris.accio.core.framework.{ParamGrid, ParamMap}
 import fr.cnrs.liris.accio.core.pipeline.JsonHelper._
 import fr.cnrs.liris.common.util.{Distance, FileUtils, HashUtils}
 import org.joda.time.Instant

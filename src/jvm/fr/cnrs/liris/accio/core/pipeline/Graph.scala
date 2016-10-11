@@ -2,7 +2,7 @@ package fr.cnrs.liris.accio.core.pipeline
 
 import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.framework.{OpMeta, OpRegistry, Operator}
-import fr.cnrs.liris.accio.core.param.ParamMap
+import fr.cnrs.liris.accio.core.framework.ParamMap
 import fr.cnrs.liris.common.util.Named
 
 /**

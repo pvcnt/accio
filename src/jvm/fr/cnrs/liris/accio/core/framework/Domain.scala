@@ -1,4 +1,4 @@
-package fr.cnrs.liris.accio.core.param
+package fr.cnrs.liris.accio.core.framework
 
 trait Domain[T] {
   def size: Long

@@ -2,10 +2,13 @@ scala_library(
   name='framework',
   dependencies=[
     ':annotations',
-    'src/jvm/fr/cnrs/liris/common/util',
     'src/jvm/fr/cnrs/liris/accio/core/model',
-    'src/jvm/fr/cnrs/liris/accio/core/param',
     'src/jvm/fr/cnrs/liris/accio/core/dataset',
+    'src/jvm/fr/cnrs/liris/common/random',
+    'src/jvm/fr/cnrs/liris/common/geo',
+    'src/jvm/fr/cnrs/liris/common/util',
+    'src/jvm/fr/cnrs/liris/common/reflect',
+    '3rdparty/jvm/twitter/util:core',
     '3rdparty/jvm/google/guice',
   ],
   sources=globs('*.scala')

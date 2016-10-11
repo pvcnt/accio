@@ -1,4 +1,4 @@
-package fr.cnrs.liris.accio.core.param;
+package fr.cnrs.liris.accio.core.framework;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

@@ -37,7 +37,7 @@ import java.nio.file.Path
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.framework._
-import fr.cnrs.liris.accio.core.param._
+import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.pipeline.JsonHelper._
 
 import scala.collection.JavaConverters._
