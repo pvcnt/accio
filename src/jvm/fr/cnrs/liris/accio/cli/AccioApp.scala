@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.cli
 import com.google.inject.Guice
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.framework.AccioFinatraJacksonModule
-import fr.cnrs.liris.accio.ops.OpsModule
+import fr.cnrs.liris.privamov.ops.OpsModule
 import fr.cnrs.liris.common.flags._
 
 import scala.util.control.NonFatal

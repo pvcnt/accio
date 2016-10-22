@@ -4,7 +4,7 @@ scala_library(
     ':annotations',
     'src/jvm/fr/cnrs/liris/accio/core/framework',
     'src/jvm/fr/cnrs/liris/accio/core/runtime',
-    'src/jvm/fr/cnrs/liris/accio/ops',
+    'src/jvm/fr/cnrs/liris/privamov/ops',
     'src/jvm/fr/cnrs/liris/common/util',
     'src/jvm/fr/cnrs/liris/common/reflect',
     'src/jvm/fr/cnrs/liris/common/flags',

@@ -2,7 +2,7 @@ scala_library(
     name='testing',
     dependencies=[
         '3rdparty/jvm:scala-time',
-        'src/jvm/fr/cnrs/liris/privamov/model',
+        'src/jvm/fr/cnrs/liris/privamov/core/model',
         'src/jvm/fr/cnrs/liris/common/geo',
     ],
     sources=globs('*.scala'),

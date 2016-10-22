@@ -1,9 +1,0 @@
-scala_library(
-  name='lppm',
-  dependencies=[
-    'src/jvm/fr/cnrs/liris/privamov/model',
-    'src/jvm/fr/cnrs/liris/common/geo',
-    'src/jvm/fr/cnrs/liris/common/util',
-  ],
-  sources=globs('*.scala')
-)

@@ -2,7 +2,7 @@ package fr.cnrs.liris.privamov.testing
 
 import com.github.nscala_time.time.Imports._
 import fr.cnrs.liris.common.geo.LatLng
-import fr.cnrs.liris.privamov.model.{Event, Trace}
+import fr.cnrs.liris.privamov.core.model.{Event, Trace}
 import org.joda.time.Instant
 
 import scala.collection.mutable

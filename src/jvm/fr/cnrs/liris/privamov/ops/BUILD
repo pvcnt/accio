@@ -1,0 +1,19 @@
+scala_library(
+  name='ops',
+  dependencies=[
+    'src/jvm/fr/cnrs/liris/accio/core/api',
+    'src/jvm/fr/cnrs/liris/accio/core/api:annotations',
+    'src/jvm/fr/cnrs/liris/privamov/core/model',
+    'src/jvm/fr/cnrs/liris/privamov/core/sparkle',
+    'src/jvm/fr/cnrs/liris/privamov/core/lppm',
+    'src/jvm/fr/cnrs/liris/privamov/core/clustering',
+    'src/jvm/fr/cnrs/liris/common/geo',
+    'src/jvm/fr/cnrs/liris/common/util',
+    'src/jvm/fr/cnrs/liris/common/random',
+    'src/jvm/fr/cnrs/liris/common/stats',
+    'src/jvm/com/google/common/geometry',
+    '3rdparty/jvm:scala-time',
+    '3rdparty/jvm:scala-guice',
+  ],
+  sources=globs('*.scala')
+)

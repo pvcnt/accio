@@ -1,9 +1,0 @@
-junit_tests(
-    name='ops',
-    dependencies=[
-        'src/jvm/fr/cnrs/liris/accio/ops',
-        'test/jvm/fr/cnrs/liris/privamov/testing',
-        'test/jvm/fr/cnrs/liris/testing',
-    ],
-    sources=globs('*.scala'),
-)
