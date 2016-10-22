@@ -30,6 +30,8 @@ import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
  */
 object AccioModule extends AbstractModule with ScalaModule {
   override def configure(): Unit = {
+    install(AccioFinatraJacksonModule)
+
     ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Class[_ <: Operator[_, _]]] {})
 
     val commands = ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Class[_ <: AccioCommand]] {})

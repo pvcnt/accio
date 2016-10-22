@@ -104,11 +104,13 @@ private class UserDeserializer extends StdDeserializer[User](classOf[User]) {
   }
 }
 
-private class InputDeserializer extends PropertyPresentDeserializer[Input] {
+private class InputDeserializer extends StdDeserializer[Input](classOf[Input]) {
+  private[this] val subTypes = _valueClass.getAnnotation(classOf[JsonSubTypes]).value
+
   override def deserialize(jsonParser: JsonParser, ctx: DeserializationContext): Input = {
     val tree = jsonParser.readValueAsTree[JsonNode]
     if (tree.isObject) {
-      super.deserialize(jsonParser, ctx)
+      PropertyPresentDeserializer.deserialize[Input](tree, subTypes, ctx, jsonParser.getCodec.asInstanceOf[ObjectMapper])
     } else if (tree.isBoolean) {
       ValueInput(tree.asBoolean)
     } else if (tree.isDouble) {
@@ -133,10 +135,14 @@ private class PropertyPresentDeserializer[T: ClassTag] extends StdDeserializer[T
 
   override def deserialize(jsonParser: JsonParser, ctx: DeserializationContext): T = {
     val tree = jsonParser.readValueAsTree[JsonNode]
+    PropertyPresentDeserializer.deserialize[T](tree, subTypes, ctx, jsonParser.getCodec.asInstanceOf[ObjectMapper])
+  }
+}
+
+object PropertyPresentDeserializer {
+  private[framework] def deserialize[T](tree: JsonNode, subTypes: Iterable[JsonSubTypes.Type], ctx: DeserializationContext, mapper: ObjectMapper): T = {
     subTypes.find(subType => tree.has(subType.name)) match {
-      case Some(subType) =>
-        val objectMapper = jsonParser.getCodec.asInstanceOf[ObjectMapper]
-        objectMapper.treeToValue(tree, subType.value).asInstanceOf[T]
+      case Some(subType) => mapper.treeToValue(tree, subType.value).asInstanceOf[T]
       case None => throw ctx.mappingException(s"No required field found when deserializing, expected one of ${subTypes.map(_.name).mkString(", ")}")
     }
   }

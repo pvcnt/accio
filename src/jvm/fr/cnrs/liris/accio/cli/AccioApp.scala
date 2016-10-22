@@ -35,7 +35,7 @@ case class AccioAppLaunchFlags(
 class AccioApp extends StrictLogging {
   def main(args: Array[String]): Unit = {
     val reporter = new StreamReporter(Console.out, useColors = true)
-    val injector = Guice.createInjector(AccioModule, OpsModule, AccioFinatraJacksonModule, FlagsModule)
+    val injector = Guice.createInjector(AccioModule, OpsModule, FlagsModule)
 
     val registry = injector.getInstance(classOf[CommandRegistry])
     val name = args.headOption.getOrElse("help")

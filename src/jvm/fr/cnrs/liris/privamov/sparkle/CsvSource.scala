@@ -38,19 +38,20 @@ import java.nio.file.{Files, Paths}
 import com.github.nscala_time.time.Imports._
 import com.google.common.base.Charsets
 import fr.cnrs.liris.common.geo.LatLng
+import fr.cnrs.liris.common.util.FileUtils
 import fr.cnrs.liris.privamov.model.{Event, Trace}
 import org.joda.time.Instant
 
 /**
  * Mobility traces source reading data from our custom CSV format, with one file per trace.
  *
- * @param url Path to directory where to read
+ * @param uri URI to directory where to read.
  */
-case class CsvSource(url: String) extends DataSource[Trace] {
-  private[this] val path = Paths.get(url)
+case class CsvSource(uri: String) extends DataSource[Trace] {
+  private[this] val path = Paths.get(FileUtils.replaceHome(uri))
   private[this] val decoder = new TextLineDecoder(new CsvDecoder)
-  require(path.toFile.isDirectory, s"$url is not a directory")
-  require(path.toFile.canRead, s"$url is unreadable")
+  require(path.toFile.isDirectory, s"$uri is not a directory")
+  require(path.toFile.canRead, s"$uri is unreadable")
 
   override def keys: Seq[String] = {
     path.toFile
@@ -91,10 +92,10 @@ case class CsvSource(url: String) extends DataSource[Trace] {
 /**
  * Mobility traces sink writing data to our custom CSV format, with one file per trace.
  *
- * @param url Path to directory where to write
+ * @param uri URI to directory where to write.
  */
-case class CsvSink(url: String) extends DataSink[Trace] {
-  private[this] val path = Paths.get(url)
+case class CsvSink(uri: String) extends DataSink[Trace] {
+  private[this] val path = Paths.get(FileUtils.replaceHome(uri))
   if (!path.toFile.exists) {
     Files.createDirectories(path)
   } else if (path.toFile.isDirectory && path.toFile.listFiles.nonEmpty) {

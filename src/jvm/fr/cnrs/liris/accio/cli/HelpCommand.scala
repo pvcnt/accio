@@ -80,9 +80,9 @@ class HelpCommand @Inject()(commandRegistry: CommandRegistry, opRegistry: OpRegi
     }
     out.writeln()
     out.writeln("Getting more help:")
-    out.writeln("  <comment>accio help <command></comment> Print help and options for <command>")
-    out.writeln("  <comment>accio help <operator></comment> Print help and arguments for <operator>")
-    out.writeln("  <comment>accio help list-ops</comment> Print the list of registered operators")
+    out.writeln("  <comment>accio help <command></comment> Print help and options for <command>.")
+    out.writeln("  <comment>accio help <operator></comment> Print help and arguments for <operator>.")
+    out.writeln("  <comment>accio help list-ops</comment> Print the list of registered operators.")
   }
 
   private def printCommand(out: Reporter, meta: CommandMeta) = {
