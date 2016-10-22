@@ -1,47 +1,44 @@
 package fr.cnrs.liris.accio.ops
 
-import fr.cnrs.liris.accio.core.dataset.{DataFrame, DatasetEnv}
-import fr.cnrs.liris.accio.core.framework.{Op, OpContext, Out, Source}
-import fr.cnrs.liris.accio.core.io.{CabspottingSource, CsvSource, GeolifeSource}
-import fr.cnrs.liris.accio.core.model.Trace
-import fr.cnrs.liris.accio.ops.EventSourceOp._
-import fr.cnrs.liris.accio.core.framework.Param
+import com.google.inject.Inject
+import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.common.util.FileUtils
+import fr.cnrs.liris.privamov.sparkle._
 
 @Op(
   category = "source",
-  help = "Read a dataset of traces in CSV format")
-case class EventSourceOp(
-  @Param(help = "Dataset URL") url: String,
-  @Param(help = "Kind of dataset") kind: String = "csv",
-  @Param(help = "Sampling ratio") sample: Option[Double],
-  @Param(help = "Users to include") users: Seq[String] = Seq.empty
-) extends Source[Output] {
+  help = "Read a dataset of traces.")
+class EventSourceOp @Inject()(env: SparkleEnv) extends Operator[EventSourceIn, EventSourceOut] {
 
-  override def execute(in: Unit, ctx: OpContext): Output = {
-    Output(get(ctx.env))
-  }
-
-  override def get(env: DatasetEnv): DataFrame[Trace] = {
-    val source = kind match {
-      case "csv" => CsvSource(FileUtils.replaceHome(url))
-      case "cabspotting" => CabspottingSource(FileUtils.replaceHome(url))
-      case "geolife" => GeolifeSource(FileUtils.replaceHome(url))
-      case _ => throw new IllegalArgumentException(s"Unknown kind: $kind")
+  override def execute(in: EventSourceIn, ctx: OpContext): EventSourceOut = {
+    val source = in.kind match {
+      case "csv" => CsvSource(FileUtils.replaceHome(in.url))
+      case "cabspotting" => CabspottingSource(FileUtils.replaceHome(in.url))
+      case "geolife" => GeolifeSource(FileUtils.replaceHome(in.url))
+      case _ => throw new IllegalArgumentException(s"Unknown kind: ${in.kind}")
     }
-    var data = env.read(source)
-    if (sample.nonEmpty) {
-      data = data.sample(sample.get)
+    val uri = if (in.kind != "csv" || in.sample.nonEmpty || in.users.nonEmpty) {
+      var data = env.read(source)
+      if (in.sample.nonEmpty) {
+        data = data.sample(in.sample.get)
+      }
+      if (in.users.nonEmpty) {
+        data = data.restrict(in.users.toSet)
+      }
+      val uri = ctx.workDir.resolve("data").toAbsolutePath.toString
+      data.write(CsvSink(uri))
+      uri
+    } else {
+      in.url
     }
-    if (users.nonEmpty) {
-      data = data.restrict(users.toSet)
-    }
-    data
+    EventSourceOut(Dataset(uri, format = "csv"))
   }
 }
 
-object EventSourceOp {
+case class EventSourceIn(
+  @Arg(help = "Dataset URL") url: String,
+  @Arg(help = "Kind of dataset") kind: String = "csv",
+  @Arg(help = "Sampling ratio") sample: Option[Double],
+  @Arg(help = "Users to include") users: Seq[String] = Seq.empty)
 
-  case class Output(@Out(help = "Source dataset") data: DataFrame[Trace])
-
-}
+case class EventSourceOut(@Arg(help = "Source dataset") data: Dataset)

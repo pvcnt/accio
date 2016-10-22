@@ -32,19 +32,26 @@
 
 package fr.cnrs.liris.accio.ops
 
-import fr.cnrs.liris.accio.core.framework.Op
-import fr.cnrs.liris.accio.core.model.Event
-import fr.cnrs.liris.accio.core.framework.Param
+import com.google.inject.Inject
+import fr.cnrs.liris.accio.core.api._
+import fr.cnrs.liris.privamov.model.Event
+import fr.cnrs.liris.privamov.sparkle.SparkleEnv
 
-/**
- * Split a trace into multiple traces to ensure a fixed maximum number of events inside each trace.
- */
 @Op(
-  help = "Split traces, ensuring a maximum size for each one"
-)
-case class SizeSplittingOp(
-    @Param(help = "Maximum number of events allowed in each trace") size: Int
-) extends SlidingSplitting {
+  category = "prepare",
+  help = "Split traces, ensuring a maximum size for each one.")
+class SizeSplittingOp @Inject()(env: SparkleEnv) extends Operator[SizeSplittingIn, SizeSplittingOut] with SlidingSplitting with SparkleOperator {
 
-  override protected def split(buffer: Seq[Event], curr: Event): Boolean = buffer.size >= size
+  override def execute(in: SizeSplittingIn, ctx: OpContext): SizeSplittingOut = {
+    val split = (buffer: Seq[Event], curr: Event) => buffer.size >= in.size
+    val output = read(in.data, env).flatMap(transform(_, split))
+    SizeSplittingOut(write(output, ctx.workDir))
+  }
 }
+
+case class SizeSplittingIn(
+  @Arg(help = "Maximum number of events allowed in each trace") size: Int,
+  @Arg(help = "Input dataset") data: Dataset)
+
+case class SizeSplittingOut(
+  @Arg(help = "Output dataset") data: Dataset)

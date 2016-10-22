@@ -1,100 +1,55 @@
+/*
+ * Accio is a program whose purpose is to study location privacy.
+ * Copyright (C) 2016 Vincent Primault <vincent.primault@liris.cnrs.fr>
+ *
+ * Accio is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Accio is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package fr.cnrs.liris.accio.core.framework
 
-import java.util.NoSuchElementException
-
-import fr.cnrs.liris.common.reflect.CaseClass
-
-import scala.reflect.ClassTag
+import fr.cnrs.liris.accio.core.api.Operator
 
 /**
- * Metadata about an operator.
+ * Metadata about an operator, which is its definition plus runtime information.
  *
- * @param defn  Operator definition
- * @param clazz Operator class
+ * @param defn     Operator definition.
+ * @param opClass  Operator class.
+ * @param inClass  Operator's input arguments class.
+ * @param outClass Operator's output arguments class.
  */
-case class OpMeta(defn: OperatorDef, clazz: Class[_ <: Operator[_, _]])
+case class OpMeta(defn: OpDef, opClass: Class[_ <: Operator[_, _]], inClass: Option[Class[_]], outClass: Option[Class[_]])
 
 /**
  * Exception thrown when the definition of an operator is invalid.
  *
- * @param clazz Operator class
- * @param cause Root exception
+ * @param clazz Operator class.
+ * @param cause Root exception.
  */
-class IllegalOpDefinition(clazz: Class[_ <: Operator[_, _]], cause: Throwable)
+class IllegalOpException(clazz: Class[_ <: Operator[_, _]], cause: Throwable)
   extends Exception(s"Illegal definition of operator ${clazz.getName}: ${cause.getMessage}", cause)
 
 /**
- * Metadata readers extract metadata about operators.
+ * A metadata reader extracts metadata about operators.
  */
 trait OpMetaReader {
   /**
    * Read operator metadata from its class specification.
    *
-   * @tparam T Operator type
-   * @return Operator metadata
-   * @throws IllegalOpDefinition If the operator definition is invalid
+   * @param clazz Operator class.
+   * @return Operator metadata.
+   * @throws IllegalOpException If the operator definition is invalid.
    */
-  @throws[IllegalOpDefinition]
-  def read[T <: Operator[_, _] : ClassTag]: OpMeta = read(implicitly[ClassTag[T]].runtimeClass.asInstanceOf[Class[T]])
-
+  @throws[IllegalOpException]
   def read[T <: Operator[_, _]](clazz: Class[T]): OpMeta
-}
-
-/**
- * Reads operator metadata from annotations found on this operator type.
- */
-class AnnotationOpMetaReader extends OpMetaReader {
-  override def read[T <: Operator[_, _]](clazz: Class[T]): OpMeta = {
-    val defn = try {
-      val refl = CaseClass(clazz)
-      require(refl.isAnnotated[Op], s"Operator must be annotated with @Op")
-      val op = refl.annotation[Op]
-      val name = if (op.name.nonEmpty) op.name else clazz.getSimpleName.stripSuffix("Op")
-      OperatorDef(
-        name = name,
-        params = getParams(refl),
-        inputs = getInputs(refl),
-        outputs = getOutputs(refl, op),
-        help = maybe(op.help),
-        description = maybe(op.description),
-        category = op.category,
-        unstable = op.unstable)
-    } catch {
-      case e: NoSuchElementException => throw new IllegalOpDefinition(clazz, e)
-      case e: IllegalArgumentException => throw new IllegalOpDefinition(clazz, e)
-    }
-    OpMeta(defn, clazz)
-  }
-
-  private def getParams(refl: CaseClass) =
-    refl.fields.map { field =>
-      require(field.isAnnotated[Param], s"Operator parameter ${field.name} must be annotated with @Param")
-      val param = field.annotation[Param]
-      val tpe = if (field.isOption) field.scalaType.typeArguments.head else field.scalaType
-      ParamDef(field.name, ParamType(tpe), maybe(param.help), field.defaultValue, field.isOption)
-    }
-
-  private def getInputs(refl: CaseClass): Seq[InputDef] =
-    refl.runtimeClass match {
-      case t if classOf[Transformer].isAssignableFrom(t) => Seq(InputDef("data", Some("Input dataset of traces")))
-      case t if classOf[Analyzer[_, _]].isAssignableFrom(t) => Seq(InputDef("data", Some("Input dataset of traces")))
-      case t if classOf[Evaluator[_, _]].isAssignableFrom(t) => Seq(
-        InputDef("train", Some("Training dataset of traces")),
-        InputDef("test", Some("Testing dataset of traces")))
-      case _ => Seq.empty[InputDef]
-    }
-
-  private def getOutputs(refl: CaseClass, op: Op): Seq[OutputDef] =
-    refl.runtimeClass match {
-      case t if classOf[Transformer].isAssignableFrom(t) =>
-        Seq(OutputDef("data", "dataset", Some("Output dataset of traces")))
-      case t if classOf[Analyzer[_, _]].isAssignableFrom(t) =>
-        op.metrics.map(name => OutputDef(name, "distribution", None)).toSeq
-      case t if classOf[Evaluator[_, _]].isAssignableFrom(t) =>
-        op.metrics.map(name => OutputDef(name, "distribution", None)).toSeq
-      case t if classOf[Source[_]].isAssignableFrom(t) =>
-        Seq(OutputDef("data", "dataset", Some("Source dataset of traces")))
-    }
-
-  private def maybe(str: String) = if (str.isEmpty) None else Some(str)
 }

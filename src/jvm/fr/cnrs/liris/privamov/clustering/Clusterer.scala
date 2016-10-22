@@ -33,7 +33,7 @@
 package fr.cnrs.liris.privamov.clustering
 
 import com.google.common.base.MoreObjects
-import fr.cnrs.liris.accio.core.model.{Event, Trace}
+import fr.cnrs.liris.privamov.model.{Event, Trace}
 import fr.cnrs.liris.common.geo.Point
 
 /**

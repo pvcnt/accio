@@ -33,21 +33,28 @@
 package fr.cnrs.liris.accio.ops
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.core.framework.Op
-import fr.cnrs.liris.accio.core.model.Event
-import fr.cnrs.liris.accio.core.framework.Param
+import com.google.inject.Inject
+import fr.cnrs.liris.accio.core.api._
+import fr.cnrs.liris.privamov.model.Event
+import fr.cnrs.liris.privamov.sparkle.SparkleEnv
 
-/**
- * Enforce a minimum duration between two consecutive events in a trace. If the duration is
- * less than a given threshold, events will be discarded until the next point that fulfill
- * the minimum duration requirement.
- */
 @Op(
-  help = "Enforce a minimum duration between two consecutive events in traces"
-)
-case class TemporalSamplingOp(
-    @Param(help = "Minimum duration between two consecutive events")
-    duration: org.joda.time.Duration
-) extends SlidingSampling {
-  override protected def sample(prev: Event, curr: Event): Boolean = (prev.time to curr.time).duration >= duration
+  category = "prepare",
+  help = "Enforce a minimum duration between two consecutive events in traces.",
+  description = "If the duration is less than a given threshold, events will be discarded until the next point " +
+    "that fulfills the minimum duration requirement.")
+class TemporalSamplingOp @Inject()(env: SparkleEnv) extends Operator[TemporalSamplingIn, TemporalSamplingOut] with SlidingSampling with SparkleOperator {
+
+  override def execute(in: TemporalSamplingIn, ctx: OpContext): TemporalSamplingOut = {
+    val sample = (prev: Event, curr: Event) => (prev.time to curr.time).duration >= in.duration
+    val output = read(in.data, env).map(transform(_, sample))
+    TemporalSamplingOut(write(output, ctx.workDir))
+  }
 }
+
+case class TemporalSamplingIn(
+  @Arg(help = "Minimum duration between two consecutive events") duration: org.joda.time.Duration,
+  @Arg(help = "Input dataset") data: Dataset)
+
+case class TemporalSamplingOut(
+  @Arg(help = "Output dataset") data: Dataset)

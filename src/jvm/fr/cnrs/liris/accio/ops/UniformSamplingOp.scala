@@ -32,23 +32,34 @@
 
 package fr.cnrs.liris.accio.ops
 
-import fr.cnrs.liris.accio.core.framework.{Mapper, Op}
-import fr.cnrs.liris.accio.core.model.Trace
-import fr.cnrs.liris.accio.core.framework.Param
+import com.google.inject.Inject
+import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.common.random.SamplingUtils
+import fr.cnrs.liris.privamov.model.Trace
+import fr.cnrs.liris.privamov.sparkle.SparkleEnv
 
 /**
  * Perform a uniform sampling on traces, keeping each event with a given probability.
  */
 @Op(
-  help = "Uniformly sample events inside traces"
-)
-case class UniformSamplingOp(
-    @Param(help = "Probability to keep each event")
-    probability: Double
-) extends Mapper {
-  require(probability >= 0 && probability <= 1, s"Probability must be in [0, 1] (got $probability)")
+  category = "prepare",
+  help = "Uniformly sample events inside traces.")
+class UniformSamplingOp @Inject()(env: SparkleEnv) extends Operator[UniformSamplingIn, UniformSamplingOut] with SparkleOperator {
 
-  override def map(trace: Trace): Trace =
+  override def execute(in: UniformSamplingIn, ctx: OpContext): UniformSamplingOut = {
+    val output = read(in.data, env).map(transform(_, in.probability))
+    UniformSamplingOut(write(output, ctx.workDir))
+  }
+
+  private def transform(trace: Trace, probability: Double): Trace =
     trace.replace(SamplingUtils.sampleUniform(trace.events, probability))
 }
+
+case class UniformSamplingIn(
+  @Arg(help = "Probability to keep each event") probability: Double,
+  @Arg(help = "Input dataset") data: Dataset) {
+  require(probability >= 0 && probability <= 1, s"Probability must be in [0, 1] (got $probability)")
+}
+
+case class UniformSamplingOut(
+  @Arg(help = "Output dataset") data: Dataset)

@@ -32,89 +32,25 @@
 
 package fr.cnrs.liris.accio.ops
 
-import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.core.dataset.DataFrame
-import fr.cnrs.liris.accio.core.framework.{In, Mapper, Op, Out}
-import fr.cnrs.liris.accio.core.model.{Event, Trace}
-import fr.cnrs.liris.accio.core.framework.Param
+import com.google.inject.Inject
+import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.common.util.Distance
+import fr.cnrs.liris.privamov.lppm.SpeedSmoothing
+import fr.cnrs.liris.privamov.sparkle.SparkleEnv
 
-import scala.collection.mutable
-
-/**
- * An implementation of the speed smoothing algorithm.
- *
- * Vincent Primault, Sonia Ben Mokhtar, Cédric Lauradoux, Lionel Brunie. Time Distortion
- * Anonymization for the Publication of Mobility Data with High Utility. In Proceedings of
- * TrustCom'15.
- */
 @Op(
   category = "lppm",
-  help = "Enforce speed smoothing guarantees on traces"
-)
-case class PromesseOp(
-    @Param(help = "Distance to enforce between two consecutive points") epsilon: Distance
-) extends Mapper {
+  help = "Enforce speed smoothing guarantees on traces.")
+class PromesseOp @Inject()(env: SparkleEnv) extends Operator[PromesseIn, PromesseOut] with SparkleOperator {
 
-  override def map(trace: Trace): Trace =
-    if (trace.isEmpty) {
-      trace.empty
-    } else if (epsilon == Distance.Zero) {
-      trace
-    } else {
-      // We sample events to keep those at a distance of exactly `epsilon` from the previous one.
-      // Sampled locations will be interpolated linearly between the two nearest reported
-      // locations. This way there will be the same distance between two consecutive events.
-      val sampled = sample(trace.events)
-
-      // The time to "spend" will be uniformely allocated. This way there will be the same
-      // duration between two consecutive events.
-      trace.replace(allocate(sampled))
-    }
-
-  private def sample(events: Seq[Event]) = {
-    var sampled = mutable.ListBuffer.empty[Event]
-    var prev: Option[Event] = None
-    for (event <- events) {
-      if (prev.isDefined) {
-        var d = event.point.distance(prev.get.point)
-        while (d >= epsilon) {
-          // Generate as many points as needed to get from previous to current location by steps
-          // of epsilon.
-          val ratio = epsilon.meters / d.meters
-          val newPoint = prev.get.point.interpolate(event.point, ratio)
-          sampled += event.copy(point = newPoint)
-
-          prev = Some(event.copy(point = newPoint))
-          d = event.point.distance(prev.get.point)
-        }
-      } else {
-        //First iteration, keep true location and time.
-        sampled += event
-        prev = Some(event)
-      }
-    }
-    // We skip the potential first and last stay to maximize utility (there will likely be a stay
-    // that will "consume" time budget) and sightly protect start and end points.
-    if (sampled.nonEmpty) {
-      sampled = sampled.drop(1)
-    }
-    if (sampled.nonEmpty) {
-      sampled = sampled.dropRight(1)
-    }
-    sampled
+  override def execute(in: PromesseIn, ctx: OpContext): PromesseOut = {
+    val output = read(in.data, env).map(SpeedSmoothing.transform(_, in.epsilon))
+    PromesseOut(write(output, ctx.workDir))
   }
-
-  private def allocate(sampled: Seq[Event]) =
-    if (sampled.size <= 2) {
-      sampled
-    } else {
-      val from = sampled.head.time
-      val timeSpent = (from to sampled.last.time).millis
-      val interval = timeSpent.toDouble / (sampled.size - 1)
-      sampled.zipWithIndex.map { case (event, idx) =>
-        val shift = math.ceil(idx * interval).toInt
-        event.copy(time = from + shift)
-      }
-    }
 }
+
+case class PromesseIn(
+  @Arg(help = "Distance to enforce between two consecutive points") epsilon: Distance,
+  @Arg(help = "Input dataset") data: Dataset)
+
+case class PromesseOut(@Arg(help = "Output dataset") data: Dataset)

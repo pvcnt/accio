@@ -1,18 +1,19 @@
 scala_library(
   name='ops',
   dependencies=[
-    'src/jvm/fr/cnrs/liris/accio/core/model',
-    'src/jvm/fr/cnrs/liris/accio/core/framework',
-    'src/jvm/fr/cnrs/liris/accio/core/io',
+    'src/jvm/fr/cnrs/liris/accio/core/api',
+    'src/jvm/fr/cnrs/liris/accio/core/api:annotations',
+    'src/jvm/fr/cnrs/liris/privamov/model',
+    'src/jvm/fr/cnrs/liris/privamov/sparkle',
+    'src/jvm/fr/cnrs/liris/privamov/lppm',
+    'src/jvm/fr/cnrs/liris/privamov/clustering',
     'src/jvm/fr/cnrs/liris/common/geo',
     'src/jvm/fr/cnrs/liris/common/util',
     'src/jvm/fr/cnrs/liris/common/random',
-    'src/jvm/fr/cnrs/liris/privamov/laplace',
-    'src/jvm/fr/cnrs/liris/privamov/clustering',
+    'src/jvm/fr/cnrs/liris/common/stats',
     'src/jvm/com/google/common/geometry',
     '3rdparty/jvm:scala-time',
     '3rdparty/jvm:scala-guice',
-    '3rdparty/jvm/org/scalanlp:breeze',
   ],
   sources=globs('*.scala')
 )

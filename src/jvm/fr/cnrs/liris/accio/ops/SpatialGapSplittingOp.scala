@@ -32,22 +32,27 @@
 
 package fr.cnrs.liris.accio.ops
 
-import fr.cnrs.liris.accio.core.framework.Op
-import fr.cnrs.liris.accio.core.model.Event
-import fr.cnrs.liris.accio.core.framework.Param
+import com.google.inject.Inject
+import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.common.util.Distance
+import fr.cnrs.liris.privamov.model.Event
+import fr.cnrs.liris.privamov.sparkle.SparkleEnv
 
-/**
- * Split a trace into two traces if there is a distance greater than some threshold between two
- * consecutive events.
- */
 @Op(
-  help = "Split traces, when there is a too huge distance between consecutive events"
-)
-case class SpatialGapSplittingOp(
-    @Param(help = "Maximum distance between two consecutive events") distance: Distance
-) extends SlidingSplitting {
+  category = "prepare",
+  help = "Split traces, when there is a too huge distance between consecutive events.")
+class SpatialGapSplittingOp @Inject()(env: SparkleEnv) extends Operator[SpatialGapSplittingIn, SpatialGapSplittingOut] with SlidingSplitting with SparkleOperator {
 
-  override protected def split(buffer: Seq[Event], curr: Event): Boolean =
-    buffer.last.point.distance(curr.point) >= distance
+  override def execute(in: SpatialGapSplittingIn, ctx: OpContext): SpatialGapSplittingOut = {
+    val split = (buffer: Seq[Event], curr: Event) => buffer.last.point.distance(curr.point) >= in.distance
+    val output = read(in.data, env).flatMap(transform(_, split))
+    SpatialGapSplittingOut(write(output, ctx.workDir))
+  }
 }
+
+case class SpatialGapSplittingIn(
+  @Arg(help = "Maximum distance between two consecutive events") distance: Distance,
+  @Arg(help = "Input dataset") data: Dataset)
+
+case class SpatialGapSplittingOut(
+  @Arg(help = "Output dataset") data: Dataset)

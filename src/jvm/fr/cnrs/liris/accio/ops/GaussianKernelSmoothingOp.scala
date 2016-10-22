@@ -33,37 +33,48 @@
 package fr.cnrs.liris.accio.ops
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.core.dataset.DataFrame
-import fr.cnrs.liris.accio.core.framework.{In, Mapper, Op, Out}
-import fr.cnrs.liris.accio.core.model.Trace
-import fr.cnrs.liris.accio.core.framework.Param
+import com.google.inject.Inject
+import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.common.geo.Point
+import fr.cnrs.liris.privamov.model.{Event, Trace}
+import fr.cnrs.liris.privamov.sparkle.{CsvSink, CsvSource, SparkleEnv}
 
-/**
- * Applies gaussian kernel smoothing on a trace, attenuating the impact of noisy observations.
- */
 @Op(
-  help = "Applies gaussian kernel smoothing on traces"
-)
-case class GaussianKernelSmoothingOp(
-    @Param(help = "Bandwidth") omega: org.joda.time.Duration
-) extends Mapper {
-  override def map(trace: Trace): Trace =
-    trace.replace(_.map { event =>
-      var ks = 0d
-      var x = 0d
-      var y = 0d
-      for (i <- trace.events.indices) {
-        val k = gaussianKernel(event.time.millis, trace.events(i).time.millis)
-        ks += k
-        x += k * trace.events(i).point.x
-        y += k * trace.events(i).point.y
-      }
-      x /= ks
-      y /= ks
-      event.copy(point = Point(x, y))
-    })
+  category = "prepare",
+  help = "Apply gaussian kernel smoothing on traces.",
+  description = "Apply gaussian kernel smoothing on a trace, attenuating the impact of noisy observations.")
+class GaussianKernelSmoothingOp @Inject()(env: SparkleEnv) extends Operator[GaussianKernelSmoothingIn, GaussianKernelSmoothingOut] {
 
-  private def gaussianKernel(t1: Long, t2: Long): Double =
+  override def execute(in: GaussianKernelSmoothingIn, ctx: OpContext): GaussianKernelSmoothingOut = {
+    val data = env.read(CsvSource(in.data.uri))
+    val uri = ctx.workDir.resolve("data").toAbsolutePath.toString
+    data.map(transform(_, in.omega)).write(CsvSink(uri))
+    GaussianKernelSmoothingOut(Dataset(uri, format = "csv"))
+  }
+
+  private def transform(trace: Trace, omega: Duration): Trace = trace.replace(_.map(transform(_, trace, omega)))
+
+  private def transform(event: Event, trace: Trace, omega: Duration) = {
+    var ks = 0d
+    var x = 0d
+    var y = 0d
+    for (i <- trace.events.indices) {
+      val k = gaussianKernel(event.time.millis, trace.events(i).time.millis, omega)
+      ks += k
+      x += k * trace.events(i).point.x
+      y += k * trace.events(i).point.y
+    }
+    x /= ks
+    y /= ks
+    event.copy(point = Point(x, y))
+  }
+
+  private def gaussianKernel(t1: Long, t2: Long, omega: Duration): Double =
     Math.exp(-Math.pow(t1 - t2, 2) / (2 * omega.millis * omega.millis))
 }
+
+case class GaussianKernelSmoothingIn(
+  @Arg(help = "Bandwidth") omega: org.joda.time.Duration,
+  @Arg(help = "Input dataset") data: Dataset)
+
+case class GaussianKernelSmoothingOut(@Arg(help = "Output dataset") data: Dataset)

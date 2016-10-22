@@ -1,10 +1,27 @@
+/*
+ * Accio is a program whose purpose is to study location privacy.
+ * Copyright (C) 2016 Vincent Primault <vincent.primault@liris.cnrs.fr>
+ *
+ * Accio is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Accio is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package fr.cnrs.liris.common.geo
 
-import com.google.common.base.MoreObjects
-import com.google.common.geometry.{S1Angle, S2LatLng, S2Point}
+import com.google.common.geometry.{S1Angle, S2, S2LatLng, S2Point}
 import fr.cnrs.liris.common.util.Distance
 
-sealed trait Location {
+trait Location extends Serializable {
   def distance(other: Location): Distance
 
   def translate(angle: S1Angle, distance: Distance): Location
@@ -42,7 +59,7 @@ class LatLng(private val inner: S2LatLng) extends Location {
     val lon1 = inner.lngRadians
     val lat2 = math.asin(
       math.sin(lat1) * math.cos(angularDistance) +
-          math.cos(lat1) * math.sin(angularDistance) * math.cos(angle.radians))
+        math.cos(lat1) * math.sin(angularDistance) * math.cos(angle.radians))
     val lon2 = lon1 + math.atan2(
       math.sin(angle.radians) * math.sin(angularDistance) * math.cos(lat1),
       math.cos(angularDistance) - math.sin(lat1) * math.sin(lat2))
@@ -57,11 +74,14 @@ class LatLng(private val inner: S2LatLng) extends Location {
 
   def toS2: S2LatLng = inner
 
-  override def toString: String =
-    MoreObjects.toStringHelper(this)
-        .add("lat", lat)
-        .add("lng", lng)
-        .toString
+  override def equals(other: Any): Boolean = other match {
+    case ll: LatLng => ll.inner == inner
+    case _ => false
+  }
+
+  override def hashCode: Int = inner.hashCode
+
+  override def toString: String = s"${lat.degrees},${lng.degrees}"
 }
 
 object LatLng {
@@ -180,9 +200,9 @@ object Point {
    * @return Farthest point with distance to reference point
    */
   def farthest(ref: Point, locs: Iterable[Point]): PointWithDistance =
-    locs.zipWithIndex.map { case (pt, idx) =>
-      new PointWithDistance(pt, idx, pt.distance(ref))
-    }.maxBy(_.distance)
+  locs.zipWithIndex.map { case (pt, idx) =>
+    PointWithDistance(pt, idx, pt.distance(ref))
+  }.maxBy(_.distance)
 
   /**
    * Exact computation of the diameter of a set of points. It computes
@@ -213,3 +233,13 @@ object Point {
 }
 
 case class PointWithDistance(point: Point, idx: Int, distance: Distance)
+
+private object Mercator {
+  def x2lng(x: Double): S1Angle = S1Angle.radians(x / LatLng.EarthRadius.meters)
+
+  def lng2x(lng: S1Angle): Double = lng.radians * LatLng.EarthRadius.meters
+
+  def y2lat(y: Double): S1Angle = S1Angle.radians(2 * math.atan(math.exp(y / LatLng.EarthRadius.meters)) - S2.M_PI_2)
+
+  def lat2y(lat: S1Angle): Double = Math.log(Math.tan(S2.M_PI_4 + lat.radians / 2)) * LatLng.EarthRadius.meters
+}

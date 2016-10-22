@@ -33,25 +33,27 @@
 package fr.cnrs.liris.accio.ops
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.core.framework.Op
-import fr.cnrs.liris.accio.core.model.Event
-import fr.cnrs.liris.accio.core.framework.Param
+import com.google.inject.Inject
+import fr.cnrs.liris.accio.core.api._
+import fr.cnrs.liris.privamov.model.Event
+import fr.cnrs.liris.privamov.sparkle.SparkleEnv
 
 @Op(
-  help = "Split traces, ensuring a maximum duration for each one")
-case class DurationSplittingOp(
-    @Param(help = "Maximum duration of each trace")
-    duration: org.joda.time.Duration
-) extends SlidingSplitting {
+  category = "prepare",
+  help = "Split traces, ensuring a maximum duration for each one.")
+class DurationSplittingOp @Inject()(env: SparkleEnv) extends Operator[DurationSplittingIn, DurationSplittingOut]
+                                                             with SlidingSplitting with SparkleOperator {
 
-  override protected def split(buffer: Seq[Event], curr: Event): Boolean = {
-    try {
-      (buffer.head.time to curr.time).duration >= duration
-    } catch {
-      case e: Exception =>
-        println(buffer.head)
-        println(curr)
-        throw e
-    }
+  override def execute(in: DurationSplittingIn, ctx: OpContext): DurationSplittingOut = {
+    val split = (buffer: Seq[Event], curr: Event) => (buffer.head.time to curr.time).duration >= in.duration
+    val output = read(in.data, env).flatMap(transform(_, split))
+    DurationSplittingOut(write(output, ctx.workDir))
   }
 }
+
+case class DurationSplittingIn(
+  @Arg(help = "Maximum duration of each trace") duration: org.joda.time.Duration,
+  @Arg(help = "Input dataset") data: Dataset)
+
+case class DurationSplittingOut(
+  @Arg(help = "Output dataset") data: Dataset)

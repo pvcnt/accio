@@ -33,46 +33,30 @@
 package fr.cnrs.liris.accio.ops
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.core.dataset.DataFrame
-import fr.cnrs.liris.accio.core.framework._
-import fr.cnrs.liris.accio.core.model.Trace
-import fr.cnrs.liris.accio.ops.BasicAnalyzerOp._
+import com.google.inject.Inject
+import fr.cnrs.liris.accio.core.api._
+import fr.cnrs.liris.privamov.sparkle.{CsvSource, SparkleEnv}
 
-/**
- * An analyzer computing basic statistics about a trace: its size, length and duration.
- */
 @Op(
-  help = "Compute basic statistics about traces",
-  category = "metric",
-  metrics = Array("size", "length", "duration")
-)
-case class BasicAnalyzerOp() extends Analyzer[Input, Output] {
-  override def execute(in: Input, ctx: OpContext): Output = {
-    val metrics = in.data.map { trace =>
-      (trace.size, trace.length.meters, trace.duration.seconds)
+  help = "Compute basic statistics about traces.",
+  category = "metric")
+class BasicAnalyzerOp @Inject()(env: SparkleEnv) extends Operator[BasicAnalyzerIn, BasicAnalyzerOut] {
+
+  override def execute(in: BasicAnalyzerIn, ctx: OpContext): BasicAnalyzerOut = {
+    val data = env.read(CsvSource(in.data.uri))
+    val metrics = data.map { trace =>
+      trace.id -> (trace.size, trace.length.meters, trace.duration.seconds)
     }.toArray
-
-    Output(
-      size = metrics.map(_._1.toLong),
-      length = metrics.map(_._2),
-      duration = metrics.map(_._3))
-  }
-
-  override def analyze(trace: Trace): Seq[Metric] = {
-    Seq(
-      Metric("size", trace.size),
-      Metric("length", trace.length.meters),
-      Metric("duration", trace.duration.seconds))
+    BasicAnalyzerOut(
+      size = metrics.map { case (k, v) => k -> v._1.toLong }.toMap,
+      length = metrics.map { case (k, v) => k -> v._2 }.toMap,
+      duration = metrics.map { case (k, v) => k -> v._3 }.toMap)
   }
 }
 
-object BasicAnalyzerOp {
+case class BasicAnalyzerIn(@Arg(help = "Input dataset") data: Dataset)
 
-  case class Input(@In(help = "Input dataset") data: DataFrame[Trace])
-
-  case class Output(
-    @Out(help = "Traces sizes") size: Array[Long],
-    @Out(help = "Traces lengths") length: Array[Double],
-    @Out(help = "Traces durations") duration: Array[Long])
-
-}
+case class BasicAnalyzerOut(
+  @Arg(help = "Trace size") size: Map[String, Long],
+  @Arg(help = "Trace length") length: Map[String, Double],
+  @Arg(help = "Trace duration") duration: Map[String, Long])

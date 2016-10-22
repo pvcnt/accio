@@ -32,20 +32,25 @@
 
 package fr.cnrs.liris.accio.ops
 
-import fr.cnrs.liris.accio.core.framework.{Op, Transformer}
-import fr.cnrs.liris.accio.core.model.Trace
-import fr.cnrs.liris.accio.core.framework.Param
+import com.google.inject.Inject
+import fr.cnrs.liris.accio.core.api._
+import fr.cnrs.liris.privamov.model.Trace
+import fr.cnrs.liris.privamov.sparkle.{CsvSink, CsvSource, SparkleEnv}
 
 @Op(
-  category = "transform",
+  category = "prepare",
   help = "Enforce a given size on each trace.",
   description = "Larger traces will be truncated, smaller traces will be discarded.")
-case class EnforceSizeOp(
-  @Param(help = "Maximum number of events in each trace") maxSize: Option[Int],
-  @Param(help = "Minimum number of events in each trace") minSize: Option[Int]
-) extends Transformer {
+class EnforceSizeOp @Inject()(env: SparkleEnv) extends Operator[EnforceSizeIn, EnforceSizeOut] {
 
-  override def transform(trace: Trace): Seq[Trace] = {
+  override def execute(in: EnforceSizeIn, ctx: OpContext): EnforceSizeOut = {
+    val data = env.read(CsvSource(in.data.uri))
+    val uri = ctx.workDir.resolve("data").toAbsolutePath.toString
+    data.flatMap(transform(_, in.minSize, in.maxSize)).write(CsvSink(uri))
+    EnforceSizeOut(Dataset(uri, format = "csv"))
+  }
+
+  private def transform(trace: Trace, minSize: Option[Int], maxSize: Option[Int]): Seq[Trace] = {
     var res = trace
     maxSize.foreach { size =>
       if (res.size > size) {
@@ -58,3 +63,11 @@ case class EnforceSizeOp(
     }
   }
 }
+
+case class EnforceSizeIn(
+  @Arg(help = "Minimum number of events in each trace") minSize: Option[Int],
+  @Arg(help = "Maximum number of events in each trace") maxSize: Option[Int],
+  @Arg(help = "Input dataset") data: Dataset)
+
+case class EnforceSizeOut(
+  @Arg(help = "Output dataset") data: Dataset)

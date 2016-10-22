@@ -35,7 +35,7 @@ package fr.cnrs.liris.privamov.clustering
 import com.google.common.base.Preconditions.checkArgument
 import fr.cnrs.liris.common.util.Distance
 import fr.cnrs.liris.common.geo.Point
-import fr.cnrs.liris.accio.core.model.Event
+import fr.cnrs.liris.privamov.model.Event
 
 import scala.collection.mutable
 

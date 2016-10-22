@@ -33,22 +33,25 @@
 package fr.cnrs.liris.accio.ops
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.core.framework.{Mapper, Op, Transformer}
-import fr.cnrs.liris.accio.core.model.Trace
-import fr.cnrs.liris.accio.core.framework.Param
+import com.google.inject.Inject
+import fr.cnrs.liris.accio.core.api._
+import fr.cnrs.liris.privamov.model.Trace
+import fr.cnrs.liris.privamov.sparkle.{CsvSink, CsvSource, SparkleEnv}
 
 @Op(
-  category = "transform",
+  category = "prepare",
   help = "Enforce a given duration on each trace.",
   description = "Longer traces will be truncated, shorter traces will be discarded.")
-case class EnforceDurationOp(
-  @Param(help = "Maximum duration of a trace")
-  maxDuration: Option[org.joda.time.Duration],
-  @Param(help = "Minimum duration of a trace")
-  minDuration: Option[org.joda.time.Duration]
-) extends Transformer {
+class EnforceDurationOp @Inject()(env: SparkleEnv) extends Operator[EnforceDurationIn, EnforceDurationOut] {
 
-  override def transform(trace: Trace): Seq[Trace] = {
+  override def execute(in: EnforceDurationIn, ctx: OpContext): EnforceDurationOut = {
+    val data = env.read(CsvSource(in.data.uri))
+    val uri = ctx.workDir.resolve("data").toAbsolutePath.toString
+    data.flatMap(transform(_, in.minDuration, in.maxDuration)).write(CsvSink(uri))
+    EnforceDurationOut(Dataset(uri, format = "csv"))
+  }
+
+  private def transform(trace: Trace, minDuration: Option[Duration], maxDuration: Option[Duration]): Seq[Trace] = {
     var res = trace
     maxDuration.foreach { duration =>
       val startAt = res.events.head.time
@@ -61,3 +64,11 @@ case class EnforceDurationOp(
     }
   }
 }
+
+case class EnforceDurationIn(
+  @Arg(help = "Minimum duration of a trace") minDuration: Option[org.joda.time.Duration],
+  @Arg(help = "Maximum duration of a trace") maxDuration: Option[org.joda.time.Duration],
+  @Arg(help = "Input dataset") data: Dataset)
+
+case class EnforceDurationOut(
+  @Arg(help = "Output dataset") data: Dataset)

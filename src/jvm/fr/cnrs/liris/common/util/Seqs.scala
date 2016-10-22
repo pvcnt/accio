@@ -50,4 +50,10 @@ object Seqs {
     }
     input.foldRight(zss)(fun)
   }
+
+  def index[T, U](input: Seq[(T, U)]): Map[T, Seq[U]] =
+    input.groupBy(_._1).map { case (k, v) => k -> v.map(_._2) }
+
+  def index[T, U](input: Set[(T, U)]): Map[T, Set[U]] =
+    input.groupBy(_._1).map { case (k, v) => k -> v.map(_._2) }
 }

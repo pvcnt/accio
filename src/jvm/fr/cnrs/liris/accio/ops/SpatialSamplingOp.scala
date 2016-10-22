@@ -32,23 +32,28 @@
 
 package fr.cnrs.liris.accio.ops
 
-import fr.cnrs.liris.accio.core.framework.Op
-import fr.cnrs.liris.accio.core.model.Event
-import fr.cnrs.liris.accio.core.framework.Param
+import com.google.inject.Inject
+import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.common.util.Distance
+import fr.cnrs.liris.privamov.model.Event
+import fr.cnrs.liris.privamov.sparkle.SparkleEnv
 
-/**
- * Enforce a minimum distance between two consecutive events in a trace. If the distance is
- * less than a given threshold, records will be discarded until the next point that fulfill
- * the minimum distance requirement.
- */
 @Op(
-  help = "Enforce a minimum distance between two consecutive events in traces"
-)
-case class SpatialSamplingOp(
-    @Param(help = "Minimum distance between two consecutive events") distance: Distance
-) extends SlidingSampling {
+  category = "prepare",
+  help = "Enforce a minimum distance between two consecutive events in traces.",
+  description = "If the distance is less than a given threshold, records will be discarded until the next point " +
+    "that fulfills the minimum distance requirement.")
+class SpatialSamplingOp @Inject()(env: SparkleEnv) extends Operator[SpatialSamplingIn, SpatialSamplingOut] with SlidingSampling with SparkleOperator {
 
-  override protected def sample(prev: Event, curr: Event): Boolean =
-    prev.point.distance(curr.point) >= distance
+  override def execute(in: SpatialSamplingIn, ctx: OpContext): SpatialSamplingOut = {
+    val sample = (prev: Event, curr: Event) => prev.point.distance(curr.point) >= in.distance
+    val output = read(in.data, env).map(transform(_, sample))
+    SpatialSamplingOut(write(output, ctx.workDir))
+  }
 }
+
+case class SpatialSamplingIn(
+  @Arg(help = "Minimum distance between two consecutive events") distance: Distance,
+  @Arg(help = "Input dataset") data: Dataset)
+
+case class SpatialSamplingOut(@Arg(help = "Output dataset") data: Dataset)

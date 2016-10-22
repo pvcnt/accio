@@ -32,10 +32,6 @@
 
 package fr.cnrs.liris.accio.ops
 
-import breeze.stats.DescriptiveStats._
-import breeze.stats._
-import fr.cnrs.liris.accio.core.framework.Metric
-
 private[ops] object MetricUtils {
   def fscore(reference: Int, result: Int, matched: Int): Double = {
     val precision = this.precision(result, matched)
@@ -55,22 +51,5 @@ private[ops] object MetricUtils {
   def recall(reference: Int, matched: Int): Double = {
     require(matched <= reference, s"Matched points must be less than reference points (got $matched and $reference)")
     if (reference != 0) matched.toDouble / reference else 0
-  }
-
-  def informationRetrieval(reference: Int, result: Int, matched: Int): Seq[Metric] = {
-    Seq(
-      Metric("precision", precision(result, matched)),
-      Metric("recall", recall(reference, matched)),
-      Metric("fscore", fscore(reference, result, matched)))
-  }
-
-  def descriptiveStats(values: Seq[Double]): Seq[Metric] = {
-    def maybe(fn: => Double) = if (values.nonEmpty) fn else 0d
-    Seq(
-      Metric("min", maybe(values.min)),
-      Metric("max", maybe(values.max)),
-      Metric("stddev", maybe(stddev(values))),
-      Metric("avg", maybe(mean(values))),
-      Metric("median", maybe(percentile(values, p = .5))))
   }
 }

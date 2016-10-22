@@ -1,4 +1,5 @@
-VERSION = '2.7.4'
+# In Sync with Finatra's version.
+VERSION = '2.6.5'
 
 jar_library(
   name='core',
@@ -8,6 +9,11 @@ jar_library(
 jar_library(
   name='annotations',
   jars=[jar('com.fasterxml.jackson.core', 'jackson-annotations', VERSION)]
+)
+
+jar_library(
+  name='databind',
+  jars=[jar('com.fasterxml.jackson.core', 'jackson-databind', VERSION)]
 )
 
 jar_library(

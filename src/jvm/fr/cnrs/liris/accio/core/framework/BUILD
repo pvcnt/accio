@@ -1,21 +1,21 @@
 scala_library(
   name='framework',
   dependencies=[
-    ':annotations',
-    'src/jvm/fr/cnrs/liris/accio/core/model',
-    'src/jvm/fr/cnrs/liris/accio/core/dataset',
-    'src/jvm/fr/cnrs/liris/common/random',
+    'src/jvm/fr/cnrs/liris/accio/core/api',
+    'src/jvm/fr/cnrs/liris/accio/core/api:annotations',
     'src/jvm/fr/cnrs/liris/common/geo',
     'src/jvm/fr/cnrs/liris/common/util',
     'src/jvm/fr/cnrs/liris/common/reflect',
-    '3rdparty/jvm/com/twitter/util:core',
     '3rdparty/jvm/com/google/guice',
+    '3rdparty/jvm:scala-time',
+    '3rdparty/jvm:scala-guice',
     '3rdparty/jvm/com/fasterxml/jackson:annotations',
+    '3rdparty/jvm/com/fasterxml/jackson:core',
+    '3rdparty/jvm/com/fasterxml/jackson:scala',
+    '3rdparty/jvm/com/fasterxml/jackson:joda',
+    '3rdparty/jvm/com/twitter/util:core',
+    '3rdparty/jvm/com/twitter/finatra:jackson',
+    #'3rdparty/jvm/com/typesafe/scala-logging',
   ],
   sources=globs('*.scala')
-)
-
-java_library(
-  name='annotations',
-  sources=globs('*.java')
 )

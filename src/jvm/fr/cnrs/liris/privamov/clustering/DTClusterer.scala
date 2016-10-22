@@ -33,7 +33,7 @@
 package fr.cnrs.liris.privamov.clustering
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.core.model.Event
+import fr.cnrs.liris.privamov.model.Event
 import fr.cnrs.liris.common.util.Distance
 
 import scala.collection.mutable

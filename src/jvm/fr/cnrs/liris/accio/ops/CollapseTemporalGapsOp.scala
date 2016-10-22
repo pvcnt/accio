@@ -33,29 +33,34 @@
 package fr.cnrs.liris.accio.ops
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.core.dataset.DataFrame
-import fr.cnrs.liris.accio.core.framework.{In, Mapper, Op, Out}
-import fr.cnrs.liris.accio.core.model.Trace
-import fr.cnrs.liris.accio.core.framework.Param
+import com.google.inject.Inject
+import fr.cnrs.liris.accio.core.api._
+import fr.cnrs.liris.privamov.model.Trace
+import fr.cnrs.liris.privamov.sparkle.{CsvSink, CsvSource, SparkleEnv}
 import org.joda.time.Instant
 
 @Op(
-  help = "Collapse temporal gaps between days",
-  description = "It removes empty days by shifting data to fill those empty days."
-)
-case class CollapseTemporalGapsOp(
-    @Param(help = "Start date for all traces") startAt: Instant
-) extends Mapper {
-  private[this] val startAtDate = new Instant(startAt.millis).toDateTime.withTimeAtStartOfDay
+  category = "prepare",
+  help = "Collapse temporal gaps between days.",
+  description = "Removes empty days by shifting data to fill those empty days.")
+class CollapseTemporalGapsOp @Inject()(env: SparkleEnv) extends Operator[CollapseTemporalGapsIn, CollapseTemporalGapsOut] {
 
-  override def map(trace: Trace): Trace = {
+  override def execute(in: CollapseTemporalGapsIn, ctx: OpContext): CollapseTemporalGapsOut = {
+    val startAt = new Instant(in.startAt.millis).toDateTime.withTimeAtStartOfDay
+    val data = env.read(CsvSource(in.data.uri))
+    val uri = ctx.workDir.resolve("data").toAbsolutePath.toString
+    data.map(transform(_, startAt)).write(CsvSink(uri))
+    CollapseTemporalGapsOut(Dataset(uri, format = "csv"))
+  }
+
+  private def transform(trace: Trace, startAt: DateTime) = {
     trace.replace { events =>
       var shift = 0L
       var prev: Option[DateTime] = None
       events.map { event =>
         val time = event.time.toDateTime.withTimeAtStartOfDay
         if (prev.isEmpty) {
-          shift = (time to startAtDate).duration.days
+          shift = (time to startAt).duration.days
         } else if (time != prev.get) {
           val days = (prev.get to time).duration.days
           shift += days - 1
@@ -71,3 +76,10 @@ case class CollapseTemporalGapsOp(
     }
   }
 }
+
+case class CollapseTemporalGapsIn(
+  @Arg(help = "Start date for all traces") startAt: Instant,
+  @Arg(help = "Input dataset") data: Dataset)
+
+case class CollapseTemporalGapsOut(
+  @Arg(help = "Output dataset") data: Dataset)

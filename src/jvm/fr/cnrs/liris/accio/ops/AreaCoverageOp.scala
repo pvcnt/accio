@@ -33,55 +33,45 @@
 package fr.cnrs.liris.accio.ops
 
 import com.google.common.geometry.S2CellId
-import fr.cnrs.liris.accio.core.dataset.DataFrame
-import fr.cnrs.liris.accio.core.framework._
-import fr.cnrs.liris.accio.core.model.Trace
-import fr.cnrs.liris.accio.core.framework.Param
+import com.google.inject.Inject
+import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.common.util.Requirements._
+import fr.cnrs.liris.privamov.model.Trace
+import fr.cnrs.liris.privamov.sparkle.SparkleEnv
 
 @Op(
   category = "metric",
   help = "Compute area coverage difference between two datasets of traces")
-case class AreaCoverageOp(
-  @Param(help = "S2 cells levels")
-  level: Int
-) extends Evaluator[AreaCoverageOp.Input, AreaCoverageOp.Output] {
+class AreaCoverageOp @Inject()(env: SparkleEnv) extends Operator[AreaCoverageIn, AreaCoverageOut] with SparkleOperator {
 
-  override def execute(in: AreaCoverageOp.Input, ctx: OpContext): AreaCoverageOp.Output = {
-    val metrics = in.train.zip(in.test).map { case (ref, res) =>
-      requireState(ref.id == res.id, s"Trace mismatch: ${ref.id} / ${res.id}")
-      val refCells = getCells(ref, level)
-      val resCells = getCells(res, level)
-      val matched = resCells.intersect(refCells).size
-      (MetricUtils.precision(resCells.size, matched), MetricUtils.recall(refCells.size, matched), MetricUtils.fscore(refCells.size, resCells.size, matched))
-    }.toArray
-
-    AreaCoverageOp.Output(
-      precision = metrics.map(_._1),
-      recall = metrics.map(_._2),
-      fscore = metrics.map(_._3))
+  override def execute(in: AreaCoverageIn, ctx: OpContext): AreaCoverageOut = {
+    val train = read(in.train, env)
+    val test = read(in.test, env)
+    val metrics = train.zip(test).map { case (ref, res) => evaluate(ref, res, in.level) }.toArray
+    AreaCoverageOut(
+      precision = metrics.map { case (k, v) => k -> v._1 }.toMap,
+      recall = metrics.map { case (k, v) => k -> v._2 }.toMap,
+      fscore = metrics.map { case (k, v) => k -> v._3 }.toMap)
   }
 
-  override def evaluate(reference: Trace, result: Trace): Seq[Metric] = {
-    val refCells = getCells(reference, level)
-    val resCells = getCells(result, level)
+  private def evaluate(ref: Trace, res: Trace, level: Int) = {
+    requireState(ref.id == res.id, s"Trace mismatch: ${ref.id} / ${res.id}")
+    val refCells = getCells(ref, level)
+    val resCells = getCells(res, level)
     val matched = resCells.intersect(refCells).size
-    MetricUtils.informationRetrieval(refCells.size, resCells.size, matched)
+    (ref.id, (MetricUtils.precision(resCells.size, matched), MetricUtils.recall(refCells.size, matched), MetricUtils.fscore(refCells.size, resCells.size, matched)))
   }
 
   private def getCells(trace: Trace, level: Int) =
     trace.events.map(rec => S2CellId.fromLatLng(rec.point.toLatLng.toS2).parent(level)).toSet
 }
 
-object AreaCoverageOp {
+case class AreaCoverageIn(
+  @Arg(help = "S2 cells levels") level: Int,
+  @Arg(help = "Train dataset") train: Dataset,
+  @Arg(help = "Test dataset") test: Dataset)
 
-  case class Input(
-    @In(help = "Train dataset") train: DataFrame[Trace],
-    @In(help = "Test dataset") test: DataFrame[Trace])
-
-  case class Output(
-    @Out(help = "Area coverage precision") precision: Array[Double],
-    @Out(help = "Area coverage recall") recall: Array[Double],
-    @Out(help = "Area coverage F-score") fscore: Array[Double])
-
-}
+case class AreaCoverageOut(
+  @Arg(help = "Area coverage precision") precision: Map[String, Double],
+  @Arg(help = "Area coverage recall") recall: Map[String, Double],
+  @Arg(help = "Area coverage F-score") fscore: Map[String, Double])

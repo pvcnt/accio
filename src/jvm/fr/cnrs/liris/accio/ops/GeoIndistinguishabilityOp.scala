@@ -32,30 +32,31 @@
 
 package fr.cnrs.liris.accio.ops
 
-import fr.cnrs.liris.accio.core.framework.{Mapper, Op}
-import fr.cnrs.liris.accio.core.model.Trace
-import fr.cnrs.liris.accio.core.framework.Param
-import fr.cnrs.liris.privamov.laplace.Laplace
+import com.google.inject.Inject
+import fr.cnrs.liris.accio.core.api._
+import fr.cnrs.liris.privamov.lppm.Laplace
+import fr.cnrs.liris.privamov.sparkle.SparkleEnv
 
-/**
- * Generate locations satisfying geo-indistinguishability properties. The method
- * used here is the one presented by the authors of the paper and consists in
- * adding noise following a double-exponential distribution.
- *
- * Miguel E. Andrés, Nicolás E. Bordenabe, Konstantinos Chatzikokolakis and
- * Catuscia Palamidessi. 2013. Geo-indistinguishability: differential privacy for
- * location-based systems. In Proceedings of CCS'13.
- */
 @Op(
-  help = "Enforce geo-indistinguishability guarantees on traces",
   category = "lppm",
-  unstable = true
-)
-case class GeoIndistinguishabilityOp(
-    @Param(help = "Privacy budget") epsilon: Double = 0.001
-) extends Mapper {
-  require(epsilon > 0, s"Epsilon must be strictly positive (got $epsilon)")
+  help = "Enforce geo-indistinguishability guarantees on traces.",
+  description = "Generate locations satisfying geo-indistinguishability properties. The method used here is the one " +
+    "presented by the authors of the paper and consists in adding noise following a double-exponential distribution.")
+class GeoIndistinguishabilityOp @Inject()(env: SparkleEnv) extends Operator[GeoIndistinguishabilityIn, GeoIndistinguishabilityOut] with SparkleOperator {
 
-  override def map(trace: Trace): Trace =
-    trace.map(event => event.copy(point = Laplace.noise(epsilon, event.point)))
+  override def execute(in: GeoIndistinguishabilityIn, ctx: OpContext): GeoIndistinguishabilityOut = {
+    val output = read(in.data, env).map(Laplace.transform(_, in.epsilon))
+    GeoIndistinguishabilityOut(write(output, ctx.workDir))
+  }
+
+  override def isUnstable(in: GeoIndistinguishabilityIn): Boolean = true
 }
+
+case class GeoIndistinguishabilityIn(
+  @Arg(help = "Privacy budget") epsilon: Double = 0.001,
+  @Arg(help = "Input dataset") data: Dataset) {
+  require(epsilon > 0, s"Epsilon must be strictly positive (got $epsilon)")
+}
+
+case class GeoIndistinguishabilityOut(
+  @Arg(help = "Output dataset") data: Dataset)

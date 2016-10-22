@@ -1,0 +1,10 @@
+scala_library(
+  name='runtime',
+  dependencies=[
+    'src/jvm/fr/cnrs/liris/accio/core/api',
+    'src/jvm/fr/cnrs/liris/accio/core/framework',
+    '3rdparty/jvm/com/typesafe/scala-logging',
+    '3rdparty/jvm:scala-guice',
+  ],
+  sources=globs('*.scala')
+)

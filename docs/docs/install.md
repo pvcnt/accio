@@ -72,6 +72,15 @@ $ java -Xmx8G -jar accio.jar <command> <options>...
 You can also compile Accio by yourself from the source.
 It is only needed if you want to be up-to-date with HEAD version, or want to develop Accio.
 [Pants](http://pantsbuild.org) is the build tool used for this purpose.
+Please follow the appropriate [installation instructions](http://www.pantsbuild.org/install.html) to get Pants running.
+In a nutshell, you will need the following:
+
+  * Platforms: Linux or Mac OS X;
+  * Python: 2.7.x;
+  * C: a C compiler, system headers, Python headers;
+  * Java: JDK 7 or later.
+
+If all requirements are met, the `./pants` script should bootstrap itself.
 To compile Accio from source, you will need to get the source from the Git repository and build it:
 
 ```bash

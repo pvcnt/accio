@@ -3,9 +3,8 @@ scala_library(
   dependencies=[
     ':annotations',
     'src/jvm/fr/cnrs/liris/accio/core/framework',
-    'src/jvm/fr/cnrs/liris/accio/core/pipeline',
+    'src/jvm/fr/cnrs/liris/accio/core/runtime',
     'src/jvm/fr/cnrs/liris/accio/ops',
-    'src/jvm/fr/cnrs/liris/accio/core/dataset',
     'src/jvm/fr/cnrs/liris/common/util',
     'src/jvm/fr/cnrs/liris/common/reflect',
     'src/jvm/fr/cnrs/liris/common/flags',

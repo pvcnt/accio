@@ -1,7 +1,7 @@
 package fr.cnrs.liris.accio.ops
 
 import com.google.inject.TypeLiteral
-import fr.cnrs.liris.accio.core.framework.Operator
+import fr.cnrs.liris.accio.core.api.Operator
 import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
 
 object OpsModule extends ScalaModule {

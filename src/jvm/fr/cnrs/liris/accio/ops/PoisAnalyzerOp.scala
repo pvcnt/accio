@@ -33,70 +33,49 @@
 package fr.cnrs.liris.accio.ops
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.core.dataset.DataFrame
-import fr.cnrs.liris.accio.core.framework._
-import fr.cnrs.liris.accio.core.model.{Poi, Trace}
-import fr.cnrs.liris.accio.core.framework.Param
-import fr.cnrs.liris.accio.ops.PoisAnalyzerOp.{Input, Output}
+import com.google.inject.Inject
+import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.common.util.Distance
 import fr.cnrs.liris.privamov.clustering.DTClusterer
+import fr.cnrs.liris.privamov.model.{Poi, Trace}
+import fr.cnrs.liris.privamov.sparkle.{CsvSource, SparkleEnv}
 
-/**
- * Analyzer computing statistics about the POIs that can be extracted from a trace, using a
- * classical DJ-clustering algorithm.
- */
 @Op(
   help = "Compute statistics about points of interest",
-  category = "metric",
-  metrics = Array("count", "size", "duration", "size_ratio", "duration_ratio"))
-case class PoisAnalyzerOp(
-  @Param(help = "Clustering maximum diameter")
-  diameter: Distance,
-  @Param(help = "Clustering minimum duration")
-  duration: org.joda.time.Duration
-) extends Analyzer[Input, Output] {
+  description = "Compute statistics about the POIs that can be extracted from a trace, using a classical DJ-clustering algorithm.",
+  category = "metric")
+class PoisAnalyzerOp @Inject()(env: SparkleEnv) extends Operator[PoisAnalyzerIn, PoisAnalyzerOut] {
 
-  private[this] val clusterer = new DTClusterer(duration, diameter)
-
-  override def execute(in: Input, ctx: OpContext): Output = {
-    val metrics = in.data.map { trace =>
-      val pois = clusterer.cluster(trace.events).map(c => Poi(c.events))
-      val sizeInPoi = pois.map(_.size).sum
-      val durationInPoi = pois.map(_.duration.seconds).sum
-      (pois.size, sizeInPoi, durationInPoi, sizeInPoi.toDouble / trace.size, durationInPoi.toDouble / trace.duration.seconds)
-    }.toArray
-
-    Output(
-      count = metrics.map(_._1.toLong),
-      size = metrics.map(_._2.toLong),
-      duration = metrics.map(_._3.toLong),
-      sizeRatio = metrics.map(_._4),
-      durationRatio = metrics.map(_._5))
+  override def execute(in: PoisAnalyzerIn, ctx: OpContext): PoisAnalyzerOut = {
+    val data = env.read(CsvSource(in.data.uri))
+    val clusterer = new DTClusterer(in.duration, in.diameter)
+    val metrics = data.map { trace => evaluate(trace, clusterer) }.toArray
+    PoisAnalyzerOut(
+      count = metrics.map { case (k, v) => k -> v._1.toLong }.toMap,
+      size = metrics.map { case (k, v) => k -> v._2.toLong }.toMap,
+      duration = metrics.map { case (k, v) => k -> v._3.toLong }.toMap,
+      sizeRatio = metrics.map { case (k, v) => k -> v._4 }.toMap,
+      durationRatio = metrics.map { case (k, v) => k -> v._5 }.toMap)
   }
 
-  override def analyze(trace: Trace): Seq[Metric] = {
+  private def evaluate(trace: Trace, clusterer: DTClusterer) = {
     val pois = clusterer.cluster(trace.events).map(c => Poi(c.events))
     val sizeInPoi = pois.map(_.size).sum
     val durationInPoi = pois.map(_.duration.seconds).sum
-    Seq(
-      Metric("count", pois.size),
-      Metric("size", sizeInPoi),
-      Metric("duration", durationInPoi),
-      Metric("size_ratio", sizeInPoi.toDouble / trace.size),
-      Metric("duration_ratio", durationInPoi.toDouble / trace.duration.seconds))
+    trace.id -> (pois.size, sizeInPoi, durationInPoi, sizeInPoi.toDouble / trace.size, durationInPoi.toDouble / trace.duration.seconds)
   }
 }
 
-object PoisAnalyzerOp {
+case class PoisAnalyzerIn(
+  @Arg(help = "Clustering maximum diameter")
+  diameter: Distance,
+  @Arg(help = "Clustering minimum duration")
+  duration: org.joda.time.Duration,
+  @Arg(help = "Input dataset") data: Dataset)
 
-  case class Input(@In(help = "Input dataset") data: DataFrame[Trace])
-
-  case class Output(
-    @Out(help = "POIs counts") count: Array[Long],
-    @Out(help = "POIs sizes") size: Array[Long],
-    @Out(help = "POIs durations") duration: Array[Long],
-    @Out(help = "POIs size ratios") sizeRatio: Array[Double],
-    @Out(help = "POIs duration ratios") durationRatio: Array[Double]
-  )
-
-}
+case class PoisAnalyzerOut(
+  @Arg(help = "POIs count") count: Map[String, Long],
+  @Arg(help = "POIs size") size: Map[String, Long],
+  @Arg(help = "POIs duration") duration: Map[String, Long],
+  @Arg(help = "POIs size ratio") sizeRatio: Map[String, Double],
+  @Arg(help = "POIs duration ratio") durationRatio: Map[String, Double])

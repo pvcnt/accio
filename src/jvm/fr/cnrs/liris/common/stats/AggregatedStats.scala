@@ -36,17 +36,20 @@ import breeze.stats.DescriptiveStats._
 import breeze.stats._
 
 case class AggregatedStats(
-    n: Long,
-    min: Double,
-    max: Double,
-    avg: Double,
-    stddev: Double,
-    p25: Double,
-    p50: Double,
-    p75: Double,
-    p90: Double,
-    p95: Double,
-    p99: Double) {
+  n: Long,
+  min: Double,
+  max: Double,
+  avg: Double,
+  stddev: Double,
+  p25: Double,
+  p50: Double,
+  p75: Double,
+  p90: Double,
+  p95: Double,
+  p99: Double) {
+
+  def median: Double = p50
+
   def range: Double = max - min
 }
 
@@ -55,7 +58,9 @@ object AggregatedStats {
 
   def apply(dist: Distribution[Double]): AggregatedStats = apply(dist.values)
 
-  def apply(values: Seq[Double]): AggregatedStats =
+  def apply(values: Seq[Double]): AggregatedStats = apply(values.toArray)
+
+  def apply(values: Array[Double]): AggregatedStats = {
     if (values.isEmpty) {
       empty
     } else {
@@ -70,7 +75,7 @@ object AggregatedStats {
         p75 = percentile(values, .75),
         p90 = percentile(values, .90),
         p95 = percentile(values, .95),
-        p99 = percentile(values, .99)
-      )
+        p99 = percentile(values, .99))
     }
+  }
 }

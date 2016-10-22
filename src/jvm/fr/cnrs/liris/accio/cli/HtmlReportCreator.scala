@@ -1,33 +1,19 @@
 /*
- * Copyright LIRIS-CNRS (2016)
- * Contributors: Vincent Primault <vincent.primault@liris.cnrs.fr>
+ * Accio is a program whose purpose is to study location privacy.
+ * Copyright (C) 2016 Vincent Primault <vincent.primault@liris.cnrs.fr>
  *
- * This software is a computer program whose purpose is to study location privacy.
+ * Accio is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * This software is governed by the CeCILL-B license under French law and
- * abiding by the rules of distribution of free software. You can use,
- * modify and/ or redistribute the software under the terms of the CeCILL-B
- * license as circulated by CEA, CNRS and INRIA at the following URL
- * "http://www.cecill.info".
+ * Accio is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * As a counterpart to the access to the source code and rights to copy,
- * modify and redistribute granted by the license, users are provided only
- * with a limited warranty and the software's author, the holder of the
- * economic rights, and the successive licensors have only limited liability.
- *
- * In this respect, the user's attention is drawn to the risks associated
- * with loading, using, modifying and/or developing or reproducing the
- * software by the user in light of its specific status of free software,
- * that may mean that it is complicated to manipulate, and that also
- * therefore means that it is reserved for developers and experienced
- * professionals having in-depth computer knowledge. Users are therefore
- * encouraged to load and test the software's suitability as regards their
- * requirements in conditions enabling the security of their systems and/or
- * data to be ensured and, more generally, to use and operate it in the
- * same conditions as regards security.
- *
- * The fact that you are presently reading this means that you have had
- * knowledge of the CeCILL-B license and that you accept its terms.
+ * You should have received a copy of the GNU General Public License
+ * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package fr.cnrs.liris.accio.cli
@@ -36,14 +22,14 @@ import java.io.PrintStream
 import java.util.concurrent.atomic.AtomicInteger
 
 import fr.cnrs.liris.accio.cli.HtmlPrinter._
-import fr.cnrs.liris.accio.core.pipeline._
+import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.common.stats.{AggregatedStats, Distribution}
 import fr.cnrs.liris.common.util.MathUtils.roundAt4
 
 /**
  * Report about serialized events in a human-readable HTML format.
  */
-class HtmlReportCreator(showArtifacts: Set[String] = Set.empty, showParameters: Set[String] = Set.empty, showGraph: Boolean = false) {
+class HtmlReportCreator(showArtifacts: Set[String] = Set.empty) {
   private[this] val idGenerator = new AtomicInteger(0)
   private[this] val cdfNbSteps = 100
 
@@ -67,19 +53,9 @@ class HtmlReportCreator(showArtifacts: Set[String] = Set.empty, showParameters: 
 
   private def printNav(out: PrintStream) = {
     out.tag("ul", "class", "nav nav-tabs") {
-      if (showGraph) {
-        out.tag("li") {
-          out.element("a", "href", "#tab-graph", "data-toggle", "tab", "Execution graph")
-        }
-      }
       if (showArtifacts.nonEmpty) {
         out.tag("li", "class", "active") {
           out.element("a", "href", "#tab-evals", "data-toggle", "tab", "Artifacts")
-        }
-      }
-      if (showParameters.nonEmpty) {
-        out.tag("li") {
-          out.element("a", "href", "#tab-params", "data-toggle", "tab", "Parameters")
         }
       }
     }
@@ -87,24 +63,12 @@ class HtmlReportCreator(showArtifacts: Set[String] = Set.empty, showParameters: 
 
   private def printContent(out: PrintStream, reportStats: ReportStatistics) = {
     out.tag("div", "class", "tab-content") {
-      if (showGraph) {
-        out.tag("div", "class", "tab-pane active", "id", "tab-graph") {
-          reportStats.runs.head.graph
-        }
-      }
       if (showArtifacts.nonEmpty) {
         out.tag("div", "class", "tab-pane active", "id", "tab-evals") {
           reportStats
-              .artifacts
-              .filter { case (name, _) => showArtifacts.contains(name) }
-              .foreach { case (name, artifacts) => printArtifacts(out, name, artifacts) }
-        }
-        if (showParameters.nonEmpty) {
-          out.tag("div", "class", "tab-pane", "id", "tab-params") {
-            out.tag("div", "class", "row") {
-              reportStats.similarGraphs.filter(_.size > 1).foreach(printParameters(out, _))
-            }
-          }
+            .artifacts
+            .filter { case (name, _) => showArtifacts.contains(name) }
+            .foreach { case (name, artifacts) => printArtifacts(out, name, artifacts) }
         }
       }
     }
@@ -112,39 +76,34 @@ class HtmlReportCreator(showArtifacts: Set[String] = Set.empty, showParameters: 
 
   private def printArtifacts(out: PrintStream, name: String, artifacts: Map[String, Artifact]) = {
     if (artifacts.nonEmpty) {
-      artifacts.head._2 match {
-        case _: ScalarArtifact =>
-          require(artifacts.values.forall(_.isInstanceOf[ScalarArtifact]))
-        case _: DistributionArtifact =>
-          require(artifacts.values.forall(_.isInstanceOf[DistributionArtifact]))
-          printDistributionArtifacts(out, name, normalizeArtifacts[DistributionArtifact](artifacts))
+      artifacts.head._2.kind match {
+        case DataType.List(DataType.Double) =>
+          printDistributionArtifacts(out, name, normalizeArtifacts[Seq[Double]](artifacts))
+        case DataType.Map(_, DataType.Double) =>
+          printDistributionArtifacts(out, name, normalizeArtifacts[Map[Any, Double]](artifacts).mapValues(_.values.toSeq))
+        case DataType.List(DataType.Long) =>
+          printDistributionArtifacts(out, name, normalizeArtifacts[Seq[Long]](artifacts).mapValues(_.map(_.toDouble)))
+        case DataType.Map(_, DataType.Long) =>
+          printDistributionArtifacts(out, name, normalizeArtifacts[Map[Any, Long]](artifacts).mapValues(_.values.map(_.toDouble).toSeq))
         case _ => // Nothing to display.
       }
     }
   }
 
-  private def normalizeArtifacts[T <: Artifact](artifacts: Map[String, Any]): Map[String, T] = {
+  private def normalizeArtifacts[T](artifacts: Map[String, Artifact]): Map[String, T] = {
     val multiplePrefixes = artifacts.keySet.map(_.split("/").head).size > 1
     artifacts.map { case (name, art) =>
       val key = if (multiplePrefixes) name else name.split("/").tail.mkString("/")
-      key -> art
-    }.asInstanceOf[Map[String, T]]
-  }
-
-  private def printDistributionArtifacts(out: PrintStream, title: String, artifacts: Map[String, DistributionArtifact]) = {
-    val distributions = artifacts.map { case (name, art) => name -> Distribution(art.values) }
-    printDistributions(out, title, distributions)
-    artifacts.foreach { case (name, dist) =>
-      printStats(out, AggregatedStats(dist.values), Some(name))
+      key -> art.value.asInstanceOf[T]
     }
   }
 
-  private def printParameters(out: PrintStream, graphs: Seq[GraphDef]) = {
-    val params = graphs
-        .flatMap(_.nodes)
-        .flatMap(node => node.paramMap.toSeq.map { case (name, value) => s"${node.name}/$name" -> value })
-        .groupBy(_._1)
-        .map { case (name, values) => name -> values.map(_._2) }
+  private def printDistributionArtifacts(out: PrintStream, title: String, artifacts: Map[String, Seq[Double]]) = {
+    val distributions = artifacts.map { case (name, values) => name -> Distribution(values) }
+    printDistributions(out, title, distributions)
+    artifacts.foreach { case (name, values) =>
+      printStats(out, AggregatedStats(values), Some(name))
+    }
   }
 
   private def printCategoricalParameter(out: PrintStream, title: String, dist: Distribution[String]): Unit = {
@@ -156,7 +115,7 @@ class HtmlReportCreator(showArtifacts: Set[String] = Set.empty, showParameters: 
         val seq = dist.toSeq
         out.println("(function() {")
         out.println("var data = [{")
-        out.println(s" labels:[${seq.map(_._1).map(quote(_)).mkString(",")}],")
+        out.println(s" labels:[${seq.map(_._1).map(quote).mkString(",")}],")
         out.println(s" values:[${seq.map(_._2).mkString(",")}],")
         out.println(" type:'pie'")
         out.println("}];")

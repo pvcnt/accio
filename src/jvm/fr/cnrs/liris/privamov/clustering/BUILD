@@ -2,7 +2,7 @@ scala_library(
   name='clustering',
   dependencies=[
     '3rdparty/jvm/com/google/guava',
-    'src/jvm/fr/cnrs/liris/accio/core/model',
+    'src/jvm/fr/cnrs/liris/privamov/model',
     'src/jvm/fr/cnrs/liris/common/geo',
     'src/jvm/fr/cnrs/liris/common/util',
   ],

@@ -4,7 +4,7 @@ scala_library(
     'src/jvm/com/google/common/geometry',
     'src/jvm/fr/cnrs/liris/common/util',
   ],
-  sources=['Mercator.scala', 'BoundingBox.scala', 'Location.scala']
+  sources=['BoundingBox.scala', 'Location.scala']
 )
 
 scala_library(

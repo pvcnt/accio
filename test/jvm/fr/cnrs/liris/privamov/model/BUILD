@@ -1,0 +1,12 @@
+junit_tests(
+    name='model',
+    dependencies=[
+        'src/jvm/fr/cnrs/liris/privamov/model',
+        'src/jvm/fr/cnrs/liris/privamov/model:json',
+        'src/jvm/fr/cnrs/liris/common/geo',
+        'src/jvm/fr/cnrs/liris/common/geo:json',
+        'test/jvm/fr/cnrs/liris/privamov/testing',
+        'test/jvm/fr/cnrs/liris/testing',
+    ],
+    sources=globs('*.scala'),
+)

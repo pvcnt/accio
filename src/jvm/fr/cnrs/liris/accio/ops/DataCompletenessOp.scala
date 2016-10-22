@@ -32,45 +32,38 @@
 
 package fr.cnrs.liris.accio.ops
 
-import fr.cnrs.liris.accio.core.dataset.DataFrame
-import fr.cnrs.liris.accio.core.framework._
-import fr.cnrs.liris.accio.core.model.Trace
+import com.google.inject.Inject
+import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.common.util.Requirements._
+import fr.cnrs.liris.privamov.model.Trace
+import fr.cnrs.liris.privamov.sparkle.{CsvSource, SparkleEnv}
 
 @Op(
   category = "metric",
-  help = "Compute data completeness difference between two datasets of traces")
-case class DataCompletenessOp() extends Evaluator[DataCompletenessOp.Input, DataCompletenessOp.Output] {
+  help = "Compute data completeness difference between two datasets of traces.")
+class DataCompletenessOp @Inject()(env: SparkleEnv) extends Operator[DataCompletenessIn, DataCompletenessOut] {
 
-  override def execute(in: DataCompletenessOp.Input, ctx: OpContext): DataCompletenessOp.Output = {
-    val metrics = in.train.zip(in.test).map { case (ref, res) =>
-      requireState(ref.id == res.id, s"Trace mismatch: ${ref.id} / ${res.id}")
+  override def execute(in: DataCompletenessIn, ctx: OpContext): DataCompletenessOut = {
+    val train = env.read(CsvSource(in.train.uri))
+    val test = env.read(CsvSource(in.test.uri))
+    val values = train.zip(test).map { case (ref, res) => evaluate(ref, res) }.toArray
+    DataCompletenessOut(values.toMap)
+  }
+
+  private def evaluate(ref: Trace, res: Trace) = {
+    requireState(ref.id == res.id, s"Trace mismatch: ${ref.id} / ${res.id}")
+    val value = {
       if (res.isEmpty && ref.isEmpty) 1d
       else if (res.isEmpty) 0d
       else res.size.toDouble / ref.size
-    }.toArray
-
-    DataCompletenessOp.Output(metrics)
-  }
-
-  override def evaluate(reference: Trace, result: Trace): Seq[Metric] = {
-    val completeness = if (result.isEmpty && reference.isEmpty) {
-      1d
-    } else if (result.isEmpty) {
-      0d
-    } else {
-      result.size.toDouble / reference.size
     }
-    Seq(Metric("value", completeness))
+    res.id -> value
   }
 }
 
-object DataCompletenessOp {
+case class DataCompletenessIn(
+  @Arg(help = "Train dataset") train: Dataset,
+  @Arg(help = "Test dataset") test: Dataset)
 
-  case class Input(
-    @In(help = "Train dataset") train: DataFrame[Trace],
-    @In(help = "Test dataset") test: DataFrame[Trace])
-
-  case class Output(@Out(help = "Data completeness") value: Array[Double])
-
-}
+case class DataCompletenessOut(
+  @Arg(help = "Data completeness") value: Map[String, Double])
