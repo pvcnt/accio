@@ -57,13 +57,17 @@ object RandomUtils {
   /**
    * Draw a random element from a sequence.
    *
-   * @param xs A non-empty sequence
+   * @param xs   A non-empty sequence
+   * @param seed Seed.
    * @tparam T Sequence elements' type
    */
-  def randomElement[T](xs: Seq[T]): T = {
+  def randomElement[T](xs: Seq[T], seed: Long = random.nextLong): T = {
     require(xs.nonEmpty, "Cannot draw a random element from an empty collection")
-    if (xs.size == 1) xs.head else {
-      xs(random.nextInt(xs.size))
+    if (xs.size == 1) {
+      xs.head
+    } else {
+      val rnd = new Random(seed)
+      xs(rnd.nextInt(xs.size))
     }
   }
 
@@ -75,6 +79,8 @@ object RandomUtils {
    */
   def randomElement[T](xs: Array[T]): T = randomElement(xs.toSeq)
 
+  def randomElement[T](xs: Array[T], seed: Long): T = randomElement(xs.toSeq, seed)
+
   /**
    * Shuffle the elements of a collection into a random order, returning the
    * result in a new collection. Unlike [[scala.util.Random.shuffle]], this method
@@ -85,7 +91,7 @@ object RandomUtils {
    * @tparam T Traversable elements' type
    */
   def randomize[T: ClassTag](input: TraversableOnce[T], rand: Random = new Random): Seq[T] =
-    randomizeInPlace(input.toArray, rand).toSeq
+  randomizeInPlace(input.toArray, rand).toSeq
 
   /**
    * Shuffle the elements of an array into a random order, modifying the

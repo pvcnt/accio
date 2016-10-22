@@ -7,11 +7,12 @@ import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
 object OpsModule extends ScalaModule {
   override def configure(): Unit = {
     val ops = ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Class[_ <: Operator[_, _]]] {})
-    ops.addBinding.toInstance(classOf[EventSourceOp])
     ops.addBinding.toInstance(classOf[CollapseTemporalGapsOp])
-    ops.addBinding.toInstance(classOf[GaussianKernelSmoothingOp])
+    ops.addBinding.toInstance(classOf[CountQueriesDistortionOp])
     ops.addBinding.toInstance(classOf[EnforceDurationOp])
     ops.addBinding.toInstance(classOf[EnforceSizeOp])
+    ops.addBinding.toInstance(classOf[EventSourceOp])
+    ops.addBinding.toInstance(classOf[GaussianKernelSmoothingOp])
     ops.addBinding.toInstance(classOf[SpatialSamplingOp])
     ops.addBinding.toInstance(classOf[DurationSplittingOp])
     ops.addBinding.toInstance(classOf[SizeSplittingOp])

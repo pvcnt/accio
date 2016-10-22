@@ -33,11 +33,14 @@
 package fr.cnrs.liris.privamov.core.sparkle
 
 import com.google.common.base.MoreObjects
-import fr.cnrs.liris.common.random.SamplingUtils
+import com.typesafe.scalalogging.LazyLogging
+import fr.cnrs.liris.common.random._
 
+import scala.collection.mutable
 import scala.reflect._
+import scala.util.Random
 
-abstract class DataFrame[T: ClassTag](val env: SparkleEnv) {
+abstract class DataFrame[T: ClassTag](val env: SparkleEnv) extends LazyLogging {
   val elementClassTag = implicitly[ClassTag[T]]
 
   def keys: Seq[String]
@@ -49,7 +52,26 @@ abstract class DataFrame[T: ClassTag](val env: SparkleEnv) {
   def restrict(keys: Iterable[String]): DataFrame[T] =
     new RestrictDataFrame(this, this.keys.intersect(keys.toSeq))
 
-  def sample(proba: Double): DataFrame[T] = new SampleDataFrame(this, proba)
+  /**
+   * Return a sampled subset of this RDD.
+   *
+   * @param withReplacement Whether elements can be sampled multiple times (replaced when sampled out).
+   * @param fraction        Expected size of the sample as a fraction of this collection's size.
+   *                        Without replacement: probability that each element is chosen; fraction must be [0, 1].
+   *                        With replacement: expected number of times each element is chosen; fraction must be >= 0.
+   * @param seed            Seed for the random number generator.
+   */
+  final def sample(
+    withReplacement: Boolean,
+    fraction: Double,
+    seed: Long = RandomUtils.random.nextLong): DataFrame[T] = {
+    require(fraction >= 0.0, s"Negative fraction value: $fraction")
+    if (withReplacement) {
+      new SampleDataFrame[T](this, new PoissonSampler[T](fraction), seed)
+    } else {
+      new SampleDataFrame[T](this, new BernoulliSampler[T](fraction), seed)
+    }
+  }
 
   def filter(fn: T => Boolean): DataFrame[T] = new FilterDataFrame(this, fn)
 
@@ -71,13 +93,84 @@ abstract class DataFrame[T: ClassTag](val env: SparkleEnv) {
 
   def toArray: Array[T] = env.submit[T, Array[T]](this, keys, (_, it) => it.toArray).flatten
 
+  /**
+   * Return a fixed-size sampled subset of this data frame in an array
+   *
+   * @param withReplacement Whether sampling is done with replacement.
+   * @param num             Size of the returned sample.
+   * @param seed            Seed for the random number generator.
+   */
+  final def takeSample(
+    withReplacement: Boolean,
+    num: Int,
+    seed: Long = RandomUtils.random.nextLong): Array[T] = {
+    val numStDev = 10.0
+    require(num >= 0, s"Negative number of elements requested: $num")
+    require(num <= (Int.MaxValue - (numStDev * math.sqrt(Int.MaxValue)).toInt),
+      s"Cannot support a sample size > Int.MaxValue - $numStDev * math.sqrt(Int.MaxValue)")
+
+    if (num == 0) {
+      Array.empty
+    } else {
+      val initialCount = count()
+      if (initialCount == 0) {
+        Array.empty
+      } else {
+        val rand = new Random(seed)
+        if (!withReplacement && num >= initialCount) {
+          RandomUtils.randomizeInPlace(toArray, rand)
+        } else {
+          val fraction = SamplingUtils.computeFractionForSampleSize(num, initialCount, withReplacement)
+          var samples = sample(withReplacement, fraction, rand.nextInt()).toArray
+
+          // If the first sample didn't turn out large enough, keep trying to take samples;
+          // this shouldn't happen often because we use a big multiplier for the initial size
+          var numIters = 0
+          while (samples.length < num) {
+            logger.warn(s"Needed to re-sample due to insufficient sample size. Repeat #$numIters")
+            samples = sample(withReplacement, fraction, rand.nextInt()).toArray
+            numIters += 1
+          }
+          RandomUtils.randomizeInPlace(samples, rand).take(num)
+        }
+      }
+    }
+  }
+
+  final def take(n: Int): Array[T] = {
+    if (keys.isEmpty) {
+      Array.empty
+    } else {
+      var results = mutable.ArrayBuffer.empty[T] ++ load(Some(keys.head)).toSeq
+      var splitsUsed = 1
+      var splitsEstimate = Math.ceil(n.toDouble / results.size).toInt
+      while (results.size < n && splitsUsed < keys.size) {
+        val coll = mutable.Map[String, Seq[T]]()
+        env.submit(this, keys.slice(splitsUsed, splitsEstimate), (key: String, it: Iterator[T]) => {
+          val result = load(Some(key)).toSeq
+          coll synchronized {
+            coll(key) = result
+          }
+        })
+        results ++= coll.toSeq.sortBy(_._1).flatMap(_._2)
+        splitsUsed = splitsEstimate
+        splitsEstimate += Math.ceil(n.toDouble / results.size / splitsUsed).toInt
+      }
+      if (results.size <= n) {
+        results.toArray
+      } else {
+        results.take(n).toArray
+      }
+    }
+  }
+
   def first(): T = {
     val keysIt = keys.iterator
     var res: Option[T] = None
     while (res.isEmpty && keysIt.hasNext) {
       res = env.submit[T, Option[T]](this, Seq(keysIt.next()), (_, it) => if (it.hasNext) Some(it.next()) else None)
-          .headOption
-          .flatten
+        .headOption
+        .flatten
     }
     res.get
   }
@@ -88,12 +181,12 @@ abstract class DataFrame[T: ClassTag](val env: SparkleEnv) {
 
   override def toString: String =
     MoreObjects.toStringHelper(this)
-        .addValue(elementClassTag)
-        .toString
+      .addValue(elementClassTag)
+      .toString
 }
 
 private[sparkle] class RestrictDataFrame[T: ClassTag](inner: DataFrame[T], override val keys: Seq[String])
-    extends DataFrame[T](inner.env) {
+  extends DataFrame[T](inner.env) {
   override def load(label: Option[String]): Iterator[T] = label match {
     case Some(key) => if (keys.contains(key)) inner.load(Some(key)) else Iterator.empty
     case None => keys.map(key => load(Some(key))).fold(Iterator.empty)(_ ++ _)
@@ -101,40 +194,51 @@ private[sparkle] class RestrictDataFrame[T: ClassTag](inner: DataFrame[T], overr
 }
 
 private[sparkle] class FilterDataFrame[T: ClassTag](inner: DataFrame[T], fn: T => Boolean)
-    extends DataFrame[T](inner.env) {
+  extends DataFrame[T](inner.env) {
   override def keys: Seq[String] = inner.keys
 
   override def load(label: Option[String]): Iterator[T] = inner.load(label).filter(fn)
 }
 
-private[sparkle] class SampleDataFrame[T: ClassTag](inner: DataFrame[T], proba: Double)
-    extends DataFrame[T](inner.env) {
-  require(proba >= 0 && proba <= 1, s"Sampling probability must be in [0,1] (got $proba)")
+private[sparkle] class SampleDataFrame[T: ClassTag](inner: DataFrame[T], sampler: RandomSampler[T, T], seed: Long)
+  extends DataFrame[T](inner.env) {
+  private[this] val seeds = {
+    val random = new Random(seed)
+    inner.keys.map(key => key -> random.nextLong).toMap
+  }
 
-  override val keys = SamplingUtils.sampleUniform(inner.keys, proba)
+  override def keys: Seq[String] = inner.keys
 
   override def load(label: Option[String]): Iterator[T] = {
-    require(label.isEmpty || keys.contains(label.get))
-    inner.load(label)
+    label match {
+      case Some(key) => sample(key)
+      case None => keys.iterator.flatMap(sample)
+    }
+  }
+
+  private def sample(key: String) = {
+    val aSampler = sampler.clone
+    aSampler.setSeed(seeds(key))
+    aSampler.sample(inner.load(Some(key)))
   }
 }
 
 private[sparkle] class MapDataFrame[T, U: ClassTag](inner: DataFrame[T], fn: T => U)
-    extends DataFrame[U](inner.env) {
+  extends DataFrame[U](inner.env) {
   override def keys: Seq[String] = inner.keys
 
   override def load(label: Option[String]): Iterator[U] = inner.load(label).map(fn)
 }
 
 private[sparkle] class FlatMapDataFrame[T, U: ClassTag](inner: DataFrame[T], fn: T => Iterable[U])
-    extends DataFrame[U](inner.env) {
+  extends DataFrame[U](inner.env) {
   override def keys: Seq[String] = inner.keys
 
   override def load(label: Option[String]): Iterator[U] = inner.load(label).flatMap(fn)
 }
 
 private[sparkle] class UnionDataFrame[T: ClassTag](datasets: Iterable[DataFrame[T]], env: SparkleEnv)
-    extends DataFrame[T](env) {
+  extends DataFrame[T](env) {
   override def keys: Seq[String] = datasets.flatMap(_.keys).toSeq.distinct.sorted
 
   override def load(label: Option[String]): Iterator[T] =
@@ -142,7 +246,7 @@ private[sparkle] class UnionDataFrame[T: ClassTag](datasets: Iterable[DataFrame[
 }
 
 private[sparkle] class ZipDataFrame[T: ClassTag, U: ClassTag](first: DataFrame[T], other: DataFrame[U])
-    extends DataFrame[(T, U)](first.env) {
+  extends DataFrame[(T, U)](first.env) {
   override def keys: Seq[String] = first.keys
 
   override def load(label: Option[String]): Iterator[(T, U)] =
