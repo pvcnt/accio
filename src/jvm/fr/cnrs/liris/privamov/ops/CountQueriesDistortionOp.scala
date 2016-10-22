@@ -31,7 +31,7 @@ import org.apache.commons.math3.random.RandomDataGenerator
 import org.joda.time.{Duration, Interval}
 
 @Op(
-  category = "eval",
+  category = "metric",
   help = "Evaluate count query distortion between to datasets.")
 class CountQueriesDistortionOp @Inject()(env: SparkleEnv) extends Operator[CountQueriesDistortionIn, CountQueriesDistortionOut] with SparkleOperator {
 
