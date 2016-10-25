@@ -26,7 +26,8 @@ package fr.cnrs.liris.accio.core.framework
  * @param parent Parent experiment identifier
  * @param graph  Graph being executed
  * @param name   Human-readable name
- * @param idx    Execution order of this run when scheduled to run muliple times.
+ * @param idx    Execution order of this run when scheduled to run multiple times.
+ * @param seed   Seed used by pseudo-random operators.
  * @param report Execution report
  */
 case class Run(
@@ -35,6 +36,7 @@ case class Run(
   graph: Graph,
   name: Option[String],
   idx: Int,
+  seed: Long,
   report: Option[RunReport] = None) {
 
   def shortId: String = id.substring(0, 8)

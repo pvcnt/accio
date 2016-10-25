@@ -38,21 +38,25 @@ import fr.cnrs.liris.common.random.SamplingUtils
 import fr.cnrs.liris.privamov.core.model.Trace
 import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 
-/**
- * Perform a uniform sampling on traces, keeping each event with a given probability.
- */
+import scala.util.Random
+
 @Op(
   category = "prepare",
-  help = "Uniformly sample events inside traces.")
+  help = "Uniformly sample events inside traces.",
+  description = "Perform a uniform sampling on traces, keeping each event with a given probability.")
 class UniformSamplingOp @Inject()(env: SparkleEnv) extends Operator[UniformSamplingIn, UniformSamplingOut] with SparkleOperator {
 
   override def execute(in: UniformSamplingIn, ctx: OpContext): UniformSamplingOut = {
-    val output = read(in.data, env).map(transform(_, in.probability))
+    val input = read(in.data, env)
+    val rnd = new Random(ctx.seed)
+    val seeds = input.keys.map(key => key -> rnd.nextLong()).toMap
+    val output = input.map(trace => transform(trace, in.probability, seeds(trace.id)))
     UniformSamplingOut(write(output, ctx.workDir))
   }
 
-  private def transform(trace: Trace, probability: Double): Trace =
-    trace.replace(SamplingUtils.sampleUniform(trace.events, probability))
+  private def transform(trace: Trace, probability: Double, seed: Long): Trace = {
+    trace.replace(SamplingUtils.sampleUniform(trace.events, probability, seed))
+  }
 }
 
 case class UniformSamplingIn(

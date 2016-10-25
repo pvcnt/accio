@@ -27,6 +27,7 @@ import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.common.util.{HashUtils, Seqs}
 
 import scala.collection.mutable
+import scala.util.Random
 
 class LocalExperimentExecutor @Inject()(workflowExecutor: GraphExecutor, repository: ReportRepository, opRegistry: OpRegistry)
   extends ExperimentExecutor with LazyLogging {
@@ -34,6 +35,7 @@ class LocalExperimentExecutor @Inject()(workflowExecutor: GraphExecutor, reposit
   override def execute(experiment: Experiment, workDir: Path, progressReporter: ExperimentProgressReporter): ExperimentReport = {
     repository.write(workDir, experiment)
     var report = new ExperimentReport
+    val rnd = new Random(experiment.seed)
 
     progressReporter.onStart(experiment)
 
@@ -44,7 +46,8 @@ class LocalExperimentExecutor @Inject()(workflowExecutor: GraphExecutor, reposit
         val runId = HashUtils.sha1(UUID.randomUUID().toString)
         logger.trace(s"Starting execution of workflow run $runId: $graph")
         report = report.addRun(runId)
-        val run = Run(runId, experiment.id, graph, Some(name), idx)
+        val seed = rnd.nextLong()
+        val run = Run(id = runId, parent = experiment.id, graph = graph, name = Some(name), idx = idx, seed = seed)
         repository.write(workDir, experiment.copy(report = Some(report)))
         workflowExecutor.execute(run, workDir, progressReporter)
         logger.trace(s"Completed execution of workflow run $runId")

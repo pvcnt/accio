@@ -6,14 +6,14 @@ import fr.cnrs.liris.privamov.testing.WithTraceGenerator
 import fr.cnrs.liris.testing.UnitSpec
 
 class UniformSamplingOpSpec extends UnitSpec with WithTraceGenerator with WithSparkleEnv {
-  behavior of "UniformSampling"
+  behavior of "UniformSamplingOp"
 
   it should "downsample traces" in {
     val trace = randomTrace(Me, 100, 10.seconds)
-    val runs = 10
-    Seq.fill(runs)(transform(Seq(trace), 0.1).map(_.size).sum).sum.toDouble shouldBe ((10d * runs) +- (3 * runs))
-    Seq.fill(runs)(transform(Seq(trace), 0.5).map(_.size).sum).sum.toDouble shouldBe ((50d * runs) +- (3 * runs))
-    Seq.fill(runs)(transform(Seq(trace), 0.9).map(_.size).sum).sum.toDouble shouldBe ((90d * runs) +- (3 * runs))
+    // Seed is fixed, no need for multiple runs.
+    transform(Seq(trace), 0.1).map(_.size).sum.toDouble shouldBe (10d +- 3)
+    transform(Seq(trace), 0.5).map(_.size).sum.toDouble shouldBe (50d +- 3)
+    transform(Seq(trace), 0.9).map(_.size).sum.toDouble shouldBe (90d +- 3)
   }
 
   it should "handle null probability" in {

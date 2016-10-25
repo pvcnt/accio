@@ -36,21 +36,20 @@ import com.github.nscala_time.time.Imports._
 import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.privamov.core.model.Trace
-import fr.cnrs.liris.privamov.core.sparkle.{CsvSink, CsvSource, SparkleEnv}
+import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 import org.joda.time.Instant
 
 @Op(
   category = "prepare",
   help = "Collapse temporal gaps between days.",
   description = "Removes empty days by shifting data to fill those empty days.")
-class CollapseTemporalGapsOp @Inject()(env: SparkleEnv) extends Operator[CollapseTemporalGapsIn, CollapseTemporalGapsOut] {
+class CollapseTemporalGapsOp @Inject()(env: SparkleEnv) extends Operator[CollapseTemporalGapsIn, CollapseTemporalGapsOut] with SparkleOperator {
 
   override def execute(in: CollapseTemporalGapsIn, ctx: OpContext): CollapseTemporalGapsOut = {
     val startAt = new Instant(in.startAt.millis).toDateTime.withTimeAtStartOfDay
-    val data = env.read(CsvSource(in.data.uri))
-    val uri = ctx.workDir.resolve("data").toAbsolutePath.toString
-    data.map(transform(_, startAt)).write(CsvSink(uri))
-    CollapseTemporalGapsOut(Dataset(uri, format = "csv"))
+    val input = read(in.data, env)
+    val output = write(input.map(transform(_, startAt)), ctx.workDir)
+    CollapseTemporalGapsOut(output)
   }
 
   private def transform(trace: Trace, startAt: DateTime) = {

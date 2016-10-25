@@ -22,6 +22,7 @@ import java.nio.file.Paths
 import java.util.UUID
 
 import com.google.inject.Inject
+import fr.cnrs.liris.common.random.RandomUtils
 import fr.cnrs.liris.common.util.{FileUtils, HashUtils}
 
 /**
@@ -93,6 +94,7 @@ final class ExperimentFactory @Inject()(parser: ExperimentParser, workflowFactor
         runs = math.max(1, defn.runs),
         notes = defn.notes,
         tags = defn.tags,
+        seed = defn.seed.getOrElse(RandomUtils.random.nextLong()),
         params = defn.params)
     } else {
       val workflow = workflowFactory.create(uri, user)
@@ -107,6 +109,7 @@ final class ExperimentFactory @Inject()(parser: ExperimentParser, workflowFactor
         runs = 1,
         notes = None,
         tags = Set.empty,
+        seed = RandomUtils.random.nextLong(),
         params = Map.empty)
     }
   }

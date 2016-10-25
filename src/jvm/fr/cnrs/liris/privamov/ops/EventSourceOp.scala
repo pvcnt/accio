@@ -8,7 +8,7 @@ import fr.cnrs.liris.privamov.core.sparkle._
 @Op(
   category = "source",
   help = "Read a dataset of traces.")
-class EventSourceOp @Inject()(env: SparkleEnv) extends Operator[EventSourceIn, EventSourceOut] {
+class EventSourceOp @Inject()(env: SparkleEnv) extends Operator[EventSourceIn, EventSourceOut] with SparkleOperator {
 
   override def execute(in: EventSourceIn, ctx: OpContext): EventSourceOut = {
     val source = in.kind match {
@@ -17,7 +17,7 @@ class EventSourceOp @Inject()(env: SparkleEnv) extends Operator[EventSourceIn, E
       case "geolife" => GeolifeSource(FileUtils.replaceHome(in.url))
       case _ => throw new IllegalArgumentException(s"Unknown kind: ${in.kind}")
     }
-    val uri = if (in.kind != "csv" || in.sample.nonEmpty || in.users.nonEmpty) {
+    val output = if (in.kind != "csv" || in.sample.nonEmpty || in.users.nonEmpty) {
       var data = env.read(source)
       if (in.sample.nonEmpty) {
         data = data.sample(withReplacement = false, in.sample.get)
@@ -25,13 +25,11 @@ class EventSourceOp @Inject()(env: SparkleEnv) extends Operator[EventSourceIn, E
       if (in.users.nonEmpty) {
         data = data.restrict(in.users.toSet)
       }
-      val uri = ctx.workDir.resolve("data").toAbsolutePath.toString
-      data.write(CsvSink(uri))
-      uri
+      write(data, ctx.workDir)
     } else {
-      in.url
+      Dataset(in.url, format = "csv")
     }
-    EventSourceOut(Dataset(uri, format = "csv"))
+    EventSourceOut(output)
   }
 }
 

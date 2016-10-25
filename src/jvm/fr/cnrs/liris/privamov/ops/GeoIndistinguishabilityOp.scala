@@ -37,6 +37,8 @@ import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.privamov.core.lppm.Laplace
 import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 
+import scala.util.Random
+
 @Op(
   category = "lppm",
   help = "Enforce geo-indistinguishability guarantees on traces.",
@@ -45,7 +47,10 @@ import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 class GeoIndistinguishabilityOp @Inject()(env: SparkleEnv) extends Operator[GeoIndistinguishabilityIn, GeoIndistinguishabilityOut] with SparkleOperator {
 
   override def execute(in: GeoIndistinguishabilityIn, ctx: OpContext): GeoIndistinguishabilityOut = {
-    val output = read(in.data, env).map(Laplace.transform(_, in.epsilon))
+    val input = read(in.data, env)
+    val rnd = new Random(ctx.seed)
+    val seeds = input.keys.map(key => key -> rnd.nextLong()).toMap
+    val output = input.map(trace => new Laplace(seeds(trace.id)).transform(trace, in.epsilon))
     GeoIndistinguishabilityOut(write(output, ctx.workDir))
   }
 

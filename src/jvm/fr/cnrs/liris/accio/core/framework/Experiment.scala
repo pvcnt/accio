@@ -32,6 +32,7 @@ import com.twitter.finatra.validation.Min
  * @param notes    Some notes.
  * @param tags     Some tags.
  * @param params   Parameters sweep.
+ * @param seed     Seed used by pseudo-random operators.
  * @param report
  */
 case class Experiment(
@@ -43,6 +44,7 @@ case class Experiment(
   notes: Option[String],
   tags: Set[String],
   params: Map[Reference, Exploration],
+  seed: Long,
   report: Option[ExperimentReport] = None) {
 
   def shortId: String = id.substring(0, 8)
@@ -55,4 +57,5 @@ case class ExperimentDef(
   notes: Option[String] = None,
   tags: Set[String] = Set.empty,
   @Min(1) runs: Int = 1,
+  seed: Option[Long] = None,
   params: Map[Reference, Exploration] = Map.empty)

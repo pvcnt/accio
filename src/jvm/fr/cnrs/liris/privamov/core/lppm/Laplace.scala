@@ -35,14 +35,21 @@ package fr.cnrs.liris.privamov.core.lppm
 import com.google.common.geometry.S1Angle
 import fr.cnrs.liris.privamov.core.model.Trace
 import fr.cnrs.liris.common.geo.{LatLng, Point}
+import fr.cnrs.liris.common.random.RandomUtils
 import fr.cnrs.liris.common.util.Distance
+
+import scala.util.Random
 
 /**
  * Miguel E. Andrés, Nicolás E. Bordenabe, Konstantinos Chatzikokolakis and
  * Catuscia Palamidessi. 2013. Geo-indistinguishability: differential privacy for
  * location-based systems. In Proceedings of CCS'13.
+ *
+ * @param seed
  */
-object Laplace {
+class Laplace(seed: Long = RandomUtils.random.nextLong) {
+  private[this] val rnd = new Random(seed)
+
   def transform(trace: Trace, epsilon: Double): Trace = trace.map(rec => rec.copy(point = noise(epsilon, rec.point)))
 
   /**
@@ -52,15 +59,15 @@ object Laplace {
    * @return A geo-indistinguishable version of this point
    */
   def noise(epsilon: Double, point: Point): Point = {
-    val azimuth = math.toDegrees(math.random * 2 * math.Pi)
-    val z = math.random
+    val azimuth = math.toDegrees(rnd.nextDouble() * 2 * math.Pi)
+    val z = rnd.nextDouble()
     val distance = inverseCumulativeGamma(epsilon, z)
     point.translate(S1Angle.degrees(azimuth), distance)
   }
 
   def noise(epsilon: Double, point: LatLng): LatLng = {
-    val azimuth = math.toDegrees(math.random * 2 * math.Pi)
-    val z = math.random
+    val azimuth = math.toDegrees(rnd.nextDouble() * 2 * math.Pi)
+    val z = rnd.nextDouble()
     val distance = inverseCumulativeGamma(epsilon, z)
     point.translate(S1Angle.degrees(azimuth), distance)
   }

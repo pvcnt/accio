@@ -6,6 +6,7 @@ scala_library(
     'src/jvm/fr/cnrs/liris/common/geo',
     'src/jvm/fr/cnrs/liris/common/util',
     'src/jvm/fr/cnrs/liris/common/reflect',
+    'src/jvm/fr/cnrs/liris/common/random',
     '3rdparty/jvm/com/google/guice',
     '3rdparty/jvm:scala-time',
     '3rdparty/jvm:scala-guice',

@@ -29,7 +29,7 @@ trait WithSparkleEnv extends FlatSpec with SparkleOpSpec with BeforeAndAfter {
   protected[this] def ctx: OpContext = {
     val workDir = Files.createTempDirectory("accio-test-")
     workDir.toFile.deleteOnExit()
-    new OpContext(123, workDir)
+    new OpContext(-7590331047132310476L, workDir)
   }
 
   before {
