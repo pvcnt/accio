@@ -37,7 +37,7 @@ class JsonReportRepository @Inject()(mapper: FinatraObjectMapper) extends Report
   override def write(workDir: Path, experiment: Experiment): Unit = {
     val os = new FileOutputStream(workDir.resolve(s"experiment-${experiment.id}.json").toFile)
     try {
-      mapper.writeValue(experiment, os)
+      mapper.prettyObjectMapper.writeValue(os, experiment)
     } finally {
       os.close()
     }
@@ -46,7 +46,7 @@ class JsonReportRepository @Inject()(mapper: FinatraObjectMapper) extends Report
   override def write(workDir: Path, run: Run): Unit = {
     val os = new FileOutputStream(workDir.resolve(s"run-${run.id}.json").toFile)
     try {
-      mapper.writeValue(run, os)
+      mapper.prettyObjectMapper.writeValue(os, run)
     } finally {
       os.close()
     }
