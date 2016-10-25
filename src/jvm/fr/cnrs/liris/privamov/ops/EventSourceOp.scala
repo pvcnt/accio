@@ -19,8 +19,8 @@ class EventSourceOp @Inject()(env: SparkleEnv) extends Operator[EventSourceIn, E
     }
     val output = if (in.kind != "csv" || in.sample.nonEmpty || in.users.nonEmpty) {
       var data = env.read(source)
-      if (in.sample.nonEmpty) {
-        data = data.sample(withReplacement = false, in.sample.get)
+      in.sample.foreach { sample =>
+        data = data.sample(withReplacement = false, sample, ctx.seed)
       }
       if (in.users.nonEmpty) {
         data = data.restrict(in.users.toSet)
