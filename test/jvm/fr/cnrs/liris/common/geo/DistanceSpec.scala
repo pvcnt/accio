@@ -1,4 +1,4 @@
-package fr.cnrs.liris.common.util
+package fr.cnrs.liris.common.geo
 
 import fr.cnrs.liris.testing.UnitSpec
 

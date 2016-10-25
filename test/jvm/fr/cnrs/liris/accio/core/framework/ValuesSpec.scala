@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.core.framework
 
 import fr.cnrs.liris.accio.core.api.Dataset
 import fr.cnrs.liris.common.geo.LatLng
-import fr.cnrs.liris.common.util.Distance
+import fr.cnrs.liris.common.geo.Distance
 import fr.cnrs.liris.testing.UnitSpec
 import org.joda.time.{Duration, Instant}
 

@@ -44,8 +44,8 @@ object Reference {
   /**
    * Parse a string into a dependency.
    *
-   * @param str String to parse
-   * @throws IllegalArgumentException If the string is not formatted as a dependency
+   * @param str String to parse.
+   * @throws IllegalArgumentException If the string is not formatted as a valid reference.
    */
   @throws[IllegalArgumentException]
   def parse(str: String): Reference = str.split(Delimiter) match {

@@ -24,7 +24,7 @@ import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.common.geo.{BoundingBox, Point}
 import fr.cnrs.liris.common.random.RandomUtils
-import fr.cnrs.liris.common.util.Distance
+import fr.cnrs.liris.common.geo.Distance
 import fr.cnrs.liris.privamov.core.model.Trace
 import fr.cnrs.liris.privamov.core.sparkle.{DataFrame, SparkleEnv}
 import org.apache.commons.math3.random.RandomDataGenerator

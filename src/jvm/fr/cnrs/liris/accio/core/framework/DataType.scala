@@ -113,7 +113,7 @@ object DataType {
   }
 
   /**
-   * A distance data type, mapped to a [[fr.cnrs.liris.common.util.Distance]].
+   * A distance data type, mapped to a [[fr.cnrs.liris.common.geo.Distance]].
    */
   case object Distance extends DataType {
     override def typeDescription: String = "distance"

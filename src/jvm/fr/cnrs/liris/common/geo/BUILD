@@ -2,9 +2,8 @@ scala_library(
   name='geo',
   dependencies=[
     'src/jvm/com/google/common/geometry',
-    'src/jvm/fr/cnrs/liris/common/util',
   ],
-  sources=['BoundingBox.scala', 'Location.scala']
+  sources=['BoundingBox.scala', 'Location.scala', 'Distance.scala', 'conversions.scala']
 )
 
 scala_library(

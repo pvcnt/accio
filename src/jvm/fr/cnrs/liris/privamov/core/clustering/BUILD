@@ -1,10 +1,9 @@
 scala_library(
   name='clustering',
   dependencies=[
-    '3rdparty/jvm/com/google/guava',
     'src/jvm/fr/cnrs/liris/privamov/core/model',
     'src/jvm/fr/cnrs/liris/common/geo',
-    'src/jvm/fr/cnrs/liris/common/util',
+    '3rdparty/jvm/com/google/guava',
   ],
   sources=globs('*.scala')
 )

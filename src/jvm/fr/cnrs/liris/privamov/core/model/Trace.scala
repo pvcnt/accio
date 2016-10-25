@@ -20,7 +20,7 @@ package fr.cnrs.liris.privamov.core.model
 
 import com.github.nscala_time.time.Imports._
 import com.google.common.base.MoreObjects
-import fr.cnrs.liris.common.util.Distance
+import fr.cnrs.liris.common.geo.Distance
 
 /**
  * A trace is a list of events belonging to a single user.

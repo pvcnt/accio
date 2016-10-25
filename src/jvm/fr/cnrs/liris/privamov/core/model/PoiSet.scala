@@ -35,7 +35,7 @@ package fr.cnrs.liris.privamov.core.model
 import breeze.stats.DescriptiveStats
 import com.google.common.base.MoreObjects
 import fr.cnrs.liris.common.geo.Point
-import fr.cnrs.liris.common.util.Distance
+import fr.cnrs.liris.common.geo.Distance
 
 /**
  * A set of POIs belonging to a single user. This is essentially a wrapper around a basic set, providing some

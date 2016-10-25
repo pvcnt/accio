@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.core.framework
 import com.twitter.util.{Duration => TwitterDuration}
 import fr.cnrs.liris.accio.core.api.{Dataset, Image}
 import fr.cnrs.liris.common.geo.{LatLng, Location}
-import fr.cnrs.liris.common.util.Distance
+import fr.cnrs.liris.common.geo.Distance
 import org.joda.time.{Instant, Duration => JodaDuration}
 
 /**

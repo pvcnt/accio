@@ -36,7 +36,7 @@ import java.util.Objects
 
 import com.github.nscala_time.time.Imports._
 import fr.cnrs.liris.common.geo.Point
-import fr.cnrs.liris.common.util.Distance
+import fr.cnrs.liris.common.geo.Distance
 import org.joda.time.Instant
 
 /**

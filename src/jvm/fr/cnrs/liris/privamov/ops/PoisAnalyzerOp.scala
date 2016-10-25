@@ -35,7 +35,7 @@ package fr.cnrs.liris.privamov.ops
 import com.github.nscala_time.time.Imports._
 import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.api._
-import fr.cnrs.liris.common.util.Distance
+import fr.cnrs.liris.common.geo.Distance
 import fr.cnrs.liris.privamov.core.clustering.DTClusterer
 import fr.cnrs.liris.privamov.core.model.{Poi, Trace}
 import fr.cnrs.liris.privamov.core.sparkle.{CsvSource, SparkleEnv}

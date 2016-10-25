@@ -20,7 +20,7 @@ package fr.cnrs.liris.privamov.core.clustering
 
 import com.google.common.base.Preconditions.checkArgument
 import fr.cnrs.liris.common.geo.Point
-import fr.cnrs.liris.common.util.Distance
+import fr.cnrs.liris.common.geo.Distance
 import fr.cnrs.liris.privamov.core.model.Event
 
 import scala.collection.mutable

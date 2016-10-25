@@ -19,7 +19,7 @@
 package fr.cnrs.liris.privamov.core.clustering
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.common.util.Distance
+import fr.cnrs.liris.common.geo.Distance
 import fr.cnrs.liris.privamov.core.model.Event
 
 import scala.collection.mutable

@@ -3,7 +3,7 @@ package fr.cnrs.liris.privamov.ops
 import breeze.linalg.{DenseVector, max, min}
 import breeze.stats._
 import com.google.common.geometry.S1Angle
-import fr.cnrs.liris.common.util.Distance
+import fr.cnrs.liris.common.geo.Distance
 import fr.cnrs.liris.privamov.core.model.Trace
 import fr.cnrs.liris.privamov.testing.WithTraceGenerator
 import fr.cnrs.liris.testing.UnitSpec

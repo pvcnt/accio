@@ -23,7 +23,7 @@ import java.util.NoSuchElementException
 import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.common.geo.Location
 import fr.cnrs.liris.common.reflect.{CaseClass, PlainClass, ScalaType}
-import fr.cnrs.liris.common.util.Distance
+import fr.cnrs.liris.common.geo.Distance
 import fr.cnrs.liris.common.util.StringUtils.maybe
 import org.joda.time.{Duration, Instant}
 

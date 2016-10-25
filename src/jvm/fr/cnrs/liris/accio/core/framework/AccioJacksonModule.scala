@@ -28,7 +28,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeType
 import com.fasterxml.jackson.databind.ser.std.StdSerializer
 import com.twitter.finatra.json.modules.FinatraJacksonModule
 import com.twitter.util.{Duration => TwitterDuration}
-import fr.cnrs.liris.common.util.Distance
+import fr.cnrs.liris.common.geo.Distance
 
 import scala.reflect.ClassTag
 

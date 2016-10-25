@@ -1,69 +1,51 @@
 /*
- * Copyright LIRIS-CNRS (2016)
- * Contributors: Vincent Primault <vincent.primault@liris.cnrs.fr>
+ * Accio is a program whose purpose is to study location privacy.
+ * Copyright (C) 2016 Vincent Primault <vincent.primault@liris.cnrs.fr>
  *
- * This software is a computer program whose purpose is to study location privacy.
+ * Accio is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * This software is governed by the CeCILL-B license under French law and
- * abiding by the rules of distribution of free software. You can use,
- * modify and/ or redistribute the software under the terms of the CeCILL-B
- * license as circulated by CEA, CNRS and INRIA at the following URL
- * "http://www.cecill.info".
+ * Accio is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * As a counterpart to the access to the source code and rights to copy,
- * modify and redistribute granted by the license, users are provided only
- * with a limited warranty and the software's author, the holder of the
- * economic rights, and the successive licensors have only limited liability.
- *
- * In this respect, the user's attention is drawn to the risks associated
- * with loading, using, modifying and/or developing or reproducing the
- * software by the user in light of its specific status of free software,
- * that may mean that it is complicated to manipulate, and that also
- * therefore means that it is reserved for developers and experienced
- * professionals having in-depth computer knowledge. Users are therefore
- * encouraged to load and test the software's suitability as regards their
- * requirements in conditions enabling the security of their systems and/or
- * data to be ensured and, more generally, to use and operate it in the
- * same conditions as regards security.
- *
- * The fact that you are presently reading this means that you have had
- * knowledge of the CeCILL-B license and that you accept its terms.
+ * You should have received a copy of the GNU General Public License
+ * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.common.util
+package fr.cnrs.liris.common.geo
 
 /**
  * Value object representing a distance in various units. However, the internal representation
  * of a distance is done in meters.
  *
- * @param meters A distance in meters
+ * @param meters Distance value in meters.
  */
 case class Distance(meters: Double) extends Ordered[Distance] {
   /**
-   * Return the distance in kilometers.
-   *
-   * @return A distance in kilometers
+   * Return the distance value in kilometers.
    */
   def kilometers: Double = meters / Distance.KmToMeters
 
   /**
-   * Return the distance in miles.
-   *
-   * @return A distance in miles
+   * Return the distance value in miles.
    */
   def miles: Double = meters / Distance.MileToMeters
 
   /**
    * Check if this distance corresponds to a finite one.
    *
-   * @return True if the distance is finite, false otherwise
+   * @return True if the distance is finite, false otherwise.
    */
   def isFinite: Boolean = !meters.isInfinite
 
   /**
    * Check if this distance corresponds to an infinite one.
    *
-   * @return True if the distance is infinite, false otherwise
+   * @return True if the distance is infinite, false otherwise.
    */
   def isInfinite: Boolean = meters.isInfinite
 
@@ -101,8 +83,8 @@ object Distance {
   /**
    * Parse a string into a distance.
    *
-   * @param str A string to parse
-   * @return A new distance
+   * @param str String to parse.
+   * @throws IllegalArgumentException If the string is not formatted as a valid distance.
    */
   def parse(str: String): Distance = str.split("\\.") match {
     case Array(v, u) => new Distance(v.toDouble * factor(u))
@@ -113,24 +95,21 @@ object Distance {
   /**
    * Create a distance from a value in meters.
    *
-   * @param meters A distance in meters
-   * @return A new distance
+   * @param meters Distance value in meters.
    */
   def meters(meters: Double): Distance = new Distance(meters)
 
   /**
    * Create a distance from a value in kilometers.
    *
-   * @param kilometers A distance in kilometers
-   * @return A new distance
+   * @param kilometers Distance value in kilometers.
    */
   def kilometers(kilometers: Double): Distance = new Distance(kilometers * KmToMeters)
 
   /**
    * Create a distance from a value in miles.
    *
-   * @param miles A distance in miles
-   * @return A new distance
+   * @param miles Distance value in miles.
    */
   def miles(miles: Double): Distance = new Distance(miles * MileToMeters)
 
@@ -139,7 +118,6 @@ object Distance {
     if (lower.endsWith("s")) {
       lower = lower.dropRight(1)
     }
-
     lower match {
       case "meter" => 1d
       case "kilometer" => KmToMeters

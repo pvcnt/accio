@@ -21,7 +21,7 @@ package fr.cnrs.liris.privamov.core.lppm
 import com.google.common.geometry.S1Angle
 import fr.cnrs.liris.common.geo.{LatLng, Point}
 import fr.cnrs.liris.common.random.RandomUtils
-import fr.cnrs.liris.common.util.Distance
+import fr.cnrs.liris.common.geo.Distance
 import fr.cnrs.liris.privamov.core.model.Trace
 
 import scala.util.Random
