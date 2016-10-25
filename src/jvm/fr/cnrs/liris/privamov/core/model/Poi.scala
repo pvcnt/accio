@@ -45,12 +45,12 @@ import org.joda.time.Instant
  *
  * There is no concept of "empty POI", if a POI exists it means that it is useful.
  *
- * @param user     A user
- * @param centroid Centroid of this POI
- * @param size     Number of events forming this POI
- * @param start    First time the user has been inside inside this POI
- * @param end      Last time the user has been inside inside this POI
- * @param diameter Diameter of this POI (i.e., the distance between the two farthest points)
+ * @param user     User identnfier.
+ * @param centroid Centroid of this POI.
+ * @param size     Number of events forming this POI.
+ * @param start    First time the user has been inside inside this POI.
+ * @param end      Last time the user has been inside inside this POI.
+ * @param diameter Diameter of this POI (i.e., the distance between the two farthest points).
  */
 case class Poi(
   user: String,
@@ -59,10 +59,9 @@ case class Poi(
   start: Instant,
   end: Instant,
   diameter: Distance) {
+
   /**
    * Return the total amount of time spent inside this POI.
-   *
-   * @return A duration
    */
   def duration: Duration = (start to end).duration
 
@@ -70,8 +69,8 @@ case class Poi(
    * We consider two POIs are the same if they belong to the same user and are defined by the same centroid during
    * the same time window (we do not consider the other attributes).
    *
-   * @param that Another object
-   * @return True if they represent the same POI, false otherwise
+   * @param that Another object.
+   * @return True if they represent the same POI, false otherwise.
    */
   override def equals(that: Any): Boolean = that match {
     case p: Poi => p.user == user && p.centroid == centroid && p.start == start && p.end == end
@@ -104,7 +103,7 @@ object Poi {
    * @param time  Timestamp
    */
   def apply(user: String, point: Point, time: Instant): Poi =
-    Poi(user, point, 1, time, time, Distance.meters(10))
+  Poi(user, point, 1, time, time, Distance.meters(10))
 
   /**
    * Create a POI from a single event. Its duration will be zero and its diameter arbitrarily fixed to 10 meters.

@@ -44,7 +44,7 @@ import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 class PromesseOp @Inject()(env: SparkleEnv) extends Operator[PromesseIn, PromesseOut] with SparkleOperator {
 
   override def execute(in: PromesseIn, ctx: OpContext): PromesseOut = {
-    val output = read(in.data, env).map(SpeedSmoothing.transform(_, in.epsilon))
+    val output = read(in.data, env).map(new SpeedSmoothing(in.epsilon).transform(_))
     PromesseOut(write(output, ctx.workDir))
   }
 }

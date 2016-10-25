@@ -1,40 +1,26 @@
 /*
- * Copyright LIRIS-CNRS (2016)
- * Contributors: Vincent Primault <vincent.primault@liris.cnrs.fr>
+ * Accio is a program whose purpose is to study location privacy.
+ * Copyright (C) 2016 Vincent Primault <vincent.primault@liris.cnrs.fr>
  *
- * This software is a computer program whose purpose is to study location privacy.
+ * Accio is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * This software is governed by the CeCILL-B license under French law and
- * abiding by the rules of distribution of free software. You can use,
- * modify and/ or redistribute the software under the terms of the CeCILL-B
- * license as circulated by CEA, CNRS and INRIA at the following URL
- * "http://www.cecill.info".
+ * Accio is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * As a counterpart to the access to the source code and rights to copy,
- * modify and redistribute granted by the license, users are provided only
- * with a limited warranty and the software's author, the holder of the
- * economic rights, and the successive licensors have only limited liability.
- *
- * In this respect, the user's attention is drawn to the risks associated
- * with loading, using, modifying and/or developing or reproducing the
- * software by the user in light of its specific status of free software,
- * that may mean that it is complicated to manipulate, and that also
- * therefore means that it is reserved for developers and experienced
- * professionals having in-depth computer knowledge. Users are therefore
- * encouraged to load and test the software's suitability as regards their
- * requirements in conditions enabling the security of their systems and/or
- * data to be ensured and, more generally, to use and operate it in the
- * same conditions as regards security.
- *
- * The fact that you are presently reading this means that you have had
- * knowledge of the CeCILL-B license and that you accept its terms.
+ * You should have received a copy of the GNU General Public License
+ * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package fr.cnrs.liris.privamov.core.clustering
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.privamov.core.model.Event
 import fr.cnrs.liris.common.util.Distance
+import fr.cnrs.liris.privamov.core.model.Event
 
 import scala.collection.mutable
 
@@ -46,8 +32,8 @@ import scala.collection.mutable
  * R. Hariharan and K. Toyama. Project Lachesis: parsing and modeling
  * location histories. Geographic Information Science, 2004.
  *
- * @param minDuration Minimum amount of time spent inside a stay
- * @param maxDiameter Maximum diameter of a stay (in meters)
+ * @param minDuration Minimum amount of time spent inside a stay.
+ * @param maxDiameter Maximum diameter of a stay.
  */
 class DTClusterer(minDuration: Duration, maxDiameter: Distance) extends Clusterer {
   override def cluster(events: Seq[Event]): Seq[Cluster] = {
@@ -61,11 +47,11 @@ class DTClusterer(minDuration: Duration, maxDiameter: Distance) extends Clustere
   /**
    * Recursive clustering routine.
    *
-   * @param event     Current event
-   * @param candidate Current list of tuples being a candidate stay
-   * @param clusters  Current list of clusters
+   * @param event     Current event.
+   * @param candidate Current list of tuples being a candidate stay.
+   * @param clusters  Current list of clusters.
    */
-  private def doCluster(event: Event, candidate: mutable.ListBuffer[Event], clusters: mutable.ListBuffer[Cluster]): Unit =
+  private def doCluster(event: Event, candidate: mutable.ListBuffer[Event], clusters: mutable.ListBuffer[Cluster]): Unit = {
     if (candidate.isEmpty || isInDiameter(event, candidate)) {
       candidate += event
     } else if (handleCandidate(candidate, clusters)) {
@@ -74,26 +60,26 @@ class DTClusterer(minDuration: Duration, maxDiameter: Distance) extends Clustere
       candidate.remove(0)
       doCluster(event, candidate, clusters)
     }
+  }
 
   /**
-   * Check if a event can be added to a candidate cluster without breaking the
-   * distance requirement.
+   * Check if a event can be added to a candidate cluster without breaking the distance requirement.
    *
-   * @param event     Event to test
-   * @param candidate Collection of events
-   * @return True if the tuple can be safely added, false other
+   * @param event     Event to test.
+   * @param candidate Collection of events.
+   * @return True if the tuple can be safely added, false other.
    */
   private def isInDiameter(event: Event, candidate: Seq[Event]) =
-    candidate.forall(_.point.distance(event.point) <= maxDiameter)
+  candidate.forall(_.point.distance(event.point) <= maxDiameter)
 
   /**
    * Check if a cluster is valid w.r.t. the time threshold.
    *
-   * @param candidate Current candidate cluster
-   * @param clusters  Current list of clusters
-   * @return True if the stay is valid, false otherwise
+   * @param candidate Current candidate cluster.
+   * @param clusters  Current list of clusters.
+   * @return True if the stay is valid, false otherwise.
    */
-  private def handleCandidate(candidate: mutable.ListBuffer[Event], clusters: mutable.ListBuffer[Cluster]) =
+  private def handleCandidate(candidate: mutable.ListBuffer[Event], clusters: mutable.ListBuffer[Cluster]) = {
     if (candidate.size <= 1) {
       false
     } else if ((candidate.head.time to candidate.last.time).duration < minDuration) {
@@ -103,4 +89,5 @@ class DTClusterer(minDuration: Duration, maxDiameter: Distance) extends Clustere
       candidate.clear()
       true
     }
+  }
 }

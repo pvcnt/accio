@@ -50,7 +50,7 @@ class GeoIndistinguishabilityOp @Inject()(env: SparkleEnv) extends Operator[GeoI
     val input = read(in.data, env)
     val rnd = new Random(ctx.seed)
     val seeds = input.keys.map(key => key -> rnd.nextLong()).toMap
-    val output = input.map(trace => new Laplace(seeds(trace.id)).transform(trace, in.epsilon))
+    val output = input.map(trace => new Laplace(in.epsilon, seeds(trace.id)).transform(trace))
     GeoIndistinguishabilityOut(write(output, ctx.workDir))
   }
 
