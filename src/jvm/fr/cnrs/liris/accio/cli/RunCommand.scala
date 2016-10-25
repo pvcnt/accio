@@ -58,10 +58,6 @@ class RunCommand @Inject()(experimentFactory: ExperimentFactory, executor: Exper
       ExitCode.CommandLineError
     } else {
       val workDir = getWorkDir(opts)
-
-      //TODO: parameter sweep.
-      //TODO: number of runs.
-
       val startedAt = System.currentTimeMillis()
       out.writeln(s"Writing progress in <comment>${workDir.toAbsolutePath}</comment>")
       val progressReporter = new ConsoleGraphProgressReporter(out)
@@ -89,23 +85,20 @@ class RunCommand @Inject()(experimentFactory: ExperimentFactory, executor: Exper
     opts.runs.foreach { runs =>
       experiment = experiment.copy(runs = runs)
     }
-    /*opts.params.foreach { params =>
-      val NameRegex = "([^/]+)/(.+)".r
+    opts.params.foreach { params =>
       val ParamRegex = "([^=]+)=(.+)".r
       val map = params.trim.split(" ").map {
-        case ParamRegex(name, value) => name match {
-          case NameRegex(nodeName, paramName) =>
-            val maybeNode = experiment.workflow.graph.nodes.find(_.name == nodeName)
-            require(maybeNode.isDefined, s"Unknown node: $nodeName")
-            val maybeParamDef = opRegistry(maybeNode.get.op).defn.params.find(_.name == paramName)
-            require(maybeParamDef.isDefined, s"Unknown param: ${maybeNode.get.op}/$paramName")
-            name -> Params.parse(maybeParamDef.get.typ, value)
-          case _ => throw new IllegalArgumentException(s"Invalid param name: $name")
-        }
+        case ParamRegex(name, value) =>
+          val ref = Reference.parse(name)
+          val maybeNode = experiment.workflow.graph.get(ref.node)
+          require(maybeNode.isDefined, s"Unknown node: $ref")
+          val maybeArgDef = opRegistry(maybeNode.get.op).defn.inputs.find(_.name == ref.port)
+          require(maybeArgDef.isDefined, s"Unknown port: $ref")
+          ref -> SingletonExploration(Values.parse(value, maybeArgDef.get.kind))
         case str => throw new IllegalArgumentException(s"Invalid param (expected key=value): $str")
       }.toMap
-      experiment = experiment.setParams(new ParamMap(map))
-    }*/
+      experiment = experiment.copy(params = experiment.params ++ map)
+    }
     executor.execute(experiment, workDir, progressReporter)
   }
 

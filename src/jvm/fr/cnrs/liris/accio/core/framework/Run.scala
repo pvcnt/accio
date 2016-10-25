@@ -24,8 +24,9 @@ package fr.cnrs.liris.accio.core.framework
  *
  * @param id     Unique identifier (among all runs AND experiments)
  * @param parent Parent experiment identifier
- * @param name   Human-readable name
  * @param graph  Graph being executed
+ * @param name   Human-readable name
+ * @param idx    Execution order of this run when scheduled to run muliple times.
  * @param report Execution report
  */
 case class Run(
@@ -33,6 +34,7 @@ case class Run(
   parent: String,
   graph: Graph,
   name: Option[String],
+  idx: Int,
   report: Option[RunReport] = None) {
 
   def shortId: String = id.substring(0, 8)

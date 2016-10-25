@@ -97,8 +97,6 @@ case class ReidentificationIn(
   diameter: Distance,
   @Arg(help = "Clustering minimum duration")
   duration: org.joda.time.Duration,
-  @Arg(help = "Matching threshold")
-  threshold: Distance,
   @Arg(help = "Train dataset")
   train: Dataset,
   @Arg(help = "Test dataset")

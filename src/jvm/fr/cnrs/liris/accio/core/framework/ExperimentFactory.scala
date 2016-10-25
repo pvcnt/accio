@@ -93,8 +93,7 @@ final class ExperimentFactory @Inject()(parser: ExperimentParser, workflowFactor
         runs = math.max(1, defn.runs),
         notes = defn.notes,
         tags = defn.tags,
-        params = defn.params,
-        exploration = defn.exploration)
+        params = defn.params)
     } else {
       val workflow = workflowFactory.create(uri, user)
       // Use filename (without extension) as name.
@@ -108,8 +107,7 @@ final class ExperimentFactory @Inject()(parser: ExperimentParser, workflowFactor
         runs = 1,
         notes = None,
         tags = Set.empty,
-        params = Map.empty,
-        exploration = None)
+        params = Map.empty)
     }
   }
 }

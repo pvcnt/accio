@@ -24,11 +24,11 @@ import java.util.UUID
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.core.framework._
-import fr.cnrs.liris.common.util.HashUtils
+import fr.cnrs.liris.common.util.{HashUtils, Seqs}
 
 import scala.collection.mutable
 
-class LocalExperimentExecutor @Inject()(workflowExecutor: GraphExecutor, repository: ReportRepository)
+class LocalExperimentExecutor @Inject()(workflowExecutor: GraphExecutor, repository: ReportRepository, opRegistry: OpRegistry)
   extends ExperimentExecutor with LazyLogging {
 
   override def execute(experiment: Experiment, workDir: Path, progressReporter: ExperimentProgressReporter): ExperimentReport = {
@@ -40,15 +40,15 @@ class LocalExperimentExecutor @Inject()(workflowExecutor: GraphExecutor, reposit
     val scheduled = mutable.Queue.empty[(String, Graph)] ++ explore(experiment)
     while (scheduled.nonEmpty) {
       val (name, graph) = scheduled.dequeue()
-      val runId = HashUtils.sha1(UUID.randomUUID().toString)
-      logger.trace(s"Starting execution of workflow run $runId: $graph")
-      report = report.addRun(runId)
-      val run = Run(runId, experiment.id, graph, Some(name))
-      repository.write(workDir, experiment.copy(report = Some(report)))
-
-      workflowExecutor.execute(run, workDir, progressReporter)
-
-      logger.trace(s"Completed execution of workflow run $runId")
+      for (idx <- 0 until experiment.runs) {
+        val runId = HashUtils.sha1(UUID.randomUUID().toString)
+        logger.trace(s"Starting execution of workflow run $runId: $graph")
+        report = report.addRun(runId)
+        val run = Run(runId, experiment.id, graph, Some(name), idx)
+        repository.write(workDir, experiment.copy(report = Some(report)))
+        workflowExecutor.execute(run, workDir, progressReporter)
+        logger.trace(s"Completed execution of workflow run $runId")
+      }
     }
 
     report = report.complete()
@@ -60,14 +60,18 @@ class LocalExperimentExecutor @Inject()(workflowExecutor: GraphExecutor, reposit
   }
 
   private def explore(experiment: Experiment): Seq[(String, Graph)] = {
-    val graph = experiment.workflow.graph.setParams(experiment.params)
-    Seq((experiment.name, graph))
-    /*if (experiment.exploration.isDefined) {
-      experiment.exploration.get.paramGrid.toSeq.map { params =>
-        (params.toString, graphDef.setParams(params))
+    val graph = experiment.workflow.graph
+    if (experiment.params.nonEmpty) {
+      val allValues = experiment.params.map { case (ref, explo) =>
+        val argDef = opRegistry(graph(ref.node).op).defn.inputs.find(_.name == ref.port).get
+        Values.expand(explo, argDef.kind).map(v => ref -> v)
+      }.toSeq
+      Seqs.crossProduct(allValues).map { params =>
+        val name = params.map { case (k, v) => s"$k=$v" }.mkString(" ")
+        (name, graph.setParams(params.toMap))
       }
     } else {
       Seq((experiment.name, graph))
-    }*/
+    }
   }
 }

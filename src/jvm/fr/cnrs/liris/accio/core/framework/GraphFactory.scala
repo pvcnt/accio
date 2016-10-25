@@ -55,18 +55,31 @@ class GraphFactory @Inject()(opRegistry: OpRegistry) {
     // We now connect nodes together. Input dependencies are already defined in [[createNode]], we only have to
     // wire output dependencies correctly.
     val wiredNodes: Set[Node] = freeNodes.values.map { node =>
-      node.inputs.values.foreach {
-        case ReferenceInput(ref) =>
-          // Check input is defined for a valid operator and port.
-          // We could do it sooner, but we are sure here that all op names are valid.
-          freeNodes.get(ref.node) match {
-            case None => throw new IllegalGraphException(s"Unknown input predecessor: $ref")
-            case Some(otherNode) =>
-              if (!opRegistry(otherNode.op).defn.outputs.exists(_.name == ref.port)) {
-                throw new IllegalGraphException(s"Unknown input predecessor port: $ref")
-              }
-          }
-        case _ => // Nothing to check here.
+      node.inputs.foreach { case (thisPort, in) =>
+        val thisOp = opRegistry(node.op).defn
+        thisOp.inputs.find(_.name == thisPort) match {
+          case None => throw new IllegalGraphException(s"Unknown port: ${node.name}/$thisPort")
+          case Some(thisArg) =>
+            in match {
+              case ReferenceInput(ref) =>
+                // Check input is defined for a valid operator and port.
+                // We could do it sooner, but we are sure here that all op names are valid.
+                freeNodes.get(ref.node) match {
+                  case None => throw new IllegalGraphException(s"Unknown input predecessor: $ref")
+                  case Some(otherNode) =>
+                    val otherOp = opRegistry(otherNode.op).defn
+                    otherOp.outputs.find(_.name == ref.port) match {
+                      case None => throw new IllegalGraphException(s"Unknown input predecessor port: $ref")
+                      case Some(otherArg) =>
+                        //TODO: allow compatible types (e.g. byte can be converted into int).
+                        if (otherArg.kind != thisArg.kind) {
+                          throw new IllegalGraphException(s"Data type mismatch: ${otherNode.name}/${ref.port} (${otherArg.kind}) => ${node.name}/$thisPort (${thisArg.kind})")
+                        }
+                    }
+                }
+              case _ => // Nothing to check here.
+            }
+        }
       }
 
       // Look for all nodes consuming outputs of this one and connect them.

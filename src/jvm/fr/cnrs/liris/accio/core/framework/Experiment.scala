@@ -24,15 +24,14 @@ import com.twitter.finatra.validation.Min
  * An experiment is a specification about the manner to run one or many variations of a single workflow. It can be
  * either a direct execution of this workflow, an exploration of parameters or an optimization of parameters.
  *
- * @param id          Unique identifier (among all experiments AND runs).
- * @param name        Human-readable name.
- * @param workflow    Base workflow.
- * @param owner       User initiating the experiment.
+ * @param id       Unique identifier (among all experiments AND runs).
+ * @param name     Human-readable name.
+ * @param workflow Base workflow.
+ * @param owner    User initiating the experiment.
  * @param runs
- * @param notes       Some notes.
- * @param tags        Some tags.
- * @param params      Override parameters.
- * @param exploration Parameters sweep.
+ * @param notes    Some notes.
+ * @param tags     Some tags.
+ * @param params   Parameters sweep.
  * @param report
  */
 case class Experiment(
@@ -43,8 +42,7 @@ case class Experiment(
   runs: Int,
   notes: Option[String],
   tags: Set[String],
-  params: Map[Reference, Any],
-  exploration: Option[Exploration],
+  params: Map[Reference, Exploration],
   report: Option[ExperimentReport] = None) {
 
   def shortId: String = id.substring(0, 8)
@@ -57,5 +55,4 @@ case class ExperimentDef(
   notes: Option[String] = None,
   tags: Set[String] = Set.empty,
   @Min(1) runs: Int = 1,
-  params: Map[Reference, Any] = Map.empty,
-  exploration: Option[Exploration] = None)
+  params: Map[Reference, Exploration] = Map.empty)
