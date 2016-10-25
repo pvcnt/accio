@@ -13,6 +13,9 @@ scala_library(
     '3rdparty/jvm/com/typesafe/scala-logging',
     '3rdparty/jvm:scala-guice',
   ],
+  excludes = [
+    exclude(org='com.twitter.finatra', name='finatra-scalap-compiler-deps_2.11')
+  ],
   sources=globs('*.scala')
 )
 

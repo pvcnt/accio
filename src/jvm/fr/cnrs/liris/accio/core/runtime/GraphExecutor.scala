@@ -172,7 +172,7 @@ class GraphExecutor @Inject()(graphFactory: GraphFactory, repository: ReportRepo
           node.inputs.get(argDef.name) match {
             case None => throw new IllegalArgumentException(s"Missing input: ${node.name}/${argDef.name}")
             case Some(ValueInput(value)) => value
-            case Some(ReferenceInput(ref)) => outputs(ref).value
+            case Some(ReferenceInput(ref)) => if (argDef.isOptional) Some(outputs(ref).value) else outputs(ref).value
           }
         }
         inClass.getConstructors.head.newInstance(ctorArgs.map(_.asInstanceOf[AnyRef]): _*)

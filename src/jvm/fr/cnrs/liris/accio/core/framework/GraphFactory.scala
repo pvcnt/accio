@@ -165,7 +165,7 @@ class GraphFactory @Inject()(opRegistry: OpRegistry) {
       case e: IllegalArgumentException =>
         throw new IllegalGraphException(s"Invalid value for ${argDef.kind} input ${nodeDef.name}/${argDef.name}: ${inputDef.value}", e)
     }
-    ValueInput(correctedValue)
+    ValueInput(if (argDef.isOptional) Some(correctedValue) else correctedValue)
   }
 
   private def detectCycles(graph: Graph): Set[Seq[String]] = {
