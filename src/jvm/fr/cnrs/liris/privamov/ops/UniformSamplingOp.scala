@@ -34,7 +34,7 @@ package fr.cnrs.liris.privamov.ops
 
 import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.api._
-import fr.cnrs.liris.common.random.SamplingUtils
+import fr.cnrs.liris.common.random.RandomUtils
 import fr.cnrs.liris.privamov.core.model.Trace
 import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 
@@ -55,7 +55,7 @@ class UniformSamplingOp @Inject()(env: SparkleEnv) extends Operator[UniformSampl
   }
 
   private def transform(trace: Trace, probability: Double, seed: Long): Trace = {
-    trace.replace(SamplingUtils.sampleUniform(trace.events, probability, seed))
+    trace.replace(RandomUtils.sampleUniform(trace.events, probability, seed))
   }
 }
 

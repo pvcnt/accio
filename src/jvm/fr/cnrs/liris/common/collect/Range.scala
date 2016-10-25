@@ -1,5 +1,14 @@
 package fr.cnrs.liris.common.collect
 
+/**
+ * Partial port of Guava's own Range class to Scala, in order to support [[Ordering]]s instead of [[Comparable]]s.
+ *
+ * @param getLowerEndpoint Lower endpoint, if any.
+ * @param lowerBoundType   Lower bound type.
+ * @param getUpperEndpoint Upper endpoint, if any.
+ * @param upperBoundType   Upper bound type.
+ * @tparam T Type of elements inside this range.
+ */
 case class Range[T: Ordering] private(getLowerEndpoint: Option[T], lowerBoundType: BoundType, getUpperEndpoint: Option[T], upperBoundType: BoundType) extends Serializable {
 
   import scala.math.Ordered.orderingToOrdered
@@ -14,11 +23,12 @@ case class Range[T: Ordering] private(getLowerEndpoint: Option[T], lowerBoundTyp
 
   def upperEndpoint: T = getUpperEndpoint.get
 
-  def isEmpty: Boolean =
+  def isEmpty: Boolean = {
     getLowerEndpoint.isDefined &&
       getUpperEndpoint.isDefined &&
       lowerEndpoint == upperEndpoint &&
       lowerBoundType != upperBoundType
+  }
 
   def contains(value: T): Boolean = {
     (!hasLowerBound || (lowerBoundType == BoundType.Closed && lowerEndpoint <= value || lowerEndpoint < value)) &&
@@ -103,6 +113,9 @@ case class Range[T: Ordering] private(getLowerEndpoint: Option[T], lowerBoundTyp
   }
 }
 
+/**
+ * Factory of [[Range]].
+ */
 object Range {
   def range[T: Ordering](lower: T, lowerType: BoundType, upper: T, upperType: BoundType): Range[T] =
     new Range(Some(lower), lowerType, Some(upper), upperType)
@@ -140,12 +153,21 @@ object Range {
   def all[T: Ordering]: Range[T] = new Range(None, BoundType.Open, None, BoundType.Open)
 }
 
+/**
+ * Bound types for range.
+ */
 sealed trait BoundType
 
 object BoundType {
 
+  /**
+   * Open bound type.
+   */
   case object Open extends BoundType
 
+  /**
+   * Closed bound type.
+   */
   case object Closed extends BoundType
 
 }

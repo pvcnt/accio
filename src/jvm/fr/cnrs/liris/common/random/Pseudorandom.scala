@@ -25,7 +25,7 @@ trait Pseudorandom {
   /**
    * Set random seed.
    *
-   * @param seed A seed
+   * @param seed Seed.
    */
-  def setSeed(seed: Long)
+  def setSeed(seed: Long): Unit
 }

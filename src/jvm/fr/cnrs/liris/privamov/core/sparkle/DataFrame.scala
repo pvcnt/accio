@@ -120,7 +120,7 @@ abstract class DataFrame[T: ClassTag](val env: SparkleEnv) extends LazyLogging {
         if (!withReplacement && num >= initialCount) {
           RandomUtils.randomizeInPlace(toArray, rand)
         } else {
-          val fraction = SamplingUtils.computeFractionForSampleSize(num, initialCount, withReplacement)
+          val fraction = RandomUtils.computeFractionForSampleSize(num, initialCount, withReplacement)
           var samples = sample(withReplacement, fraction, rand.nextInt()).toArray
 
           // If the first sample didn't turn out large enough, keep trying to take samples;

@@ -1,6 +1,5 @@
+// Comes from the Apache Spark project, subject to the following license:
 /*
- * This code comes from the Apache Spark project and is subject to the following license.
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -25,10 +24,10 @@ import java.util.{Random => JavaRandom}
 import scala.util.hashing.MurmurHash3
 
 /**
- * This class implements a XORShift random number generator algorithm
+ * This class implements a XORShift random number generator algorithm.
  * Source: Marsaglia, G. (2003). Xorshift RNGs. Journal of Statistical Software, Vol. 8, Issue 14.
  *
- * This implementation is approximately 3.5 times faster than [[java.common.random]], partly
+ * This implementation is approximately 3.5 times faster than [[java.util.Random]], partly
  * because of the algorithm, but also due to renouncing thread safety. JDK's implementation uses
  * an AtomicLong seed, this class uses a regular Long. We can forgo( thread safety since we use a
  * new instance of the RNG for each thread.
@@ -56,13 +55,13 @@ private[random] class XORShiftRandom(init: Long) extends JavaRandom(init) {
   }
 }
 
-object XORShiftRandom {
+private[random] object XORShiftRandom {
   /**
    * Hash seeds to have 0/1 bits throughout.
    *
    * @param seed A seed
    */
-  private def hashSeed(seed: Long): Long = {
+  def hashSeed(seed: Long): Long = {
     val bytes = ByteBuffer.allocate(java.lang.Long.SIZE).putLong(seed).array()
     val lowBits = MurmurHash3.bytesHash(bytes)
     val highBits = MurmurHash3.bytesHash(bytes, lowBits)
