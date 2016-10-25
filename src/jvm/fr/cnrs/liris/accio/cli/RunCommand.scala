@@ -38,6 +38,8 @@ case class RunCommandOpts(
   notes: Option[String],
   @Flag(name = "runs", help = "Number of runs override")
   runs: Option[Int],
+  @Flag(name = "seed", help = "Seed to use for pseudo-random operators")
+  seed: Option[Long],
   @Flag(name = "user", help = "User who launched the experiment")
   user: Option[String],
   @Flag(name = "params", help = "Experiment parameters override")
@@ -84,6 +86,9 @@ class RunCommand @Inject()(experimentFactory: ExperimentFactory, executor: Exper
     }
     opts.runs.foreach { runs =>
       experiment = experiment.copy(runs = runs)
+    }
+    opts.seed.foreach { seed =>
+      experiment = experiment.copy(seed = seed)
     }
     opts.params.foreach { params =>
       val ParamRegex = "([^=]+)=(.+)".r
