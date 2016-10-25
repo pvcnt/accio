@@ -41,9 +41,10 @@ class PoisReidentOp @Inject()(env: SparkleEnv) extends Operator[Reidentification
   override def execute(in: ReidentificationIn, ctx: OpContext): ReidentificationOut = {
     val trainDs = read(in.train, env)
     val testDs = read(in.test, env)
-    val clusterer = new DTClusterer(in.duration, in.diameter)
-    val trainPois = getPois(trainDs, clusterer)
-    val testPois = getPois(trainDs, clusterer)
+    val trainClusterer = new DTClusterer(in.duration, in.diameter)
+    val testClusterer = new DTClusterer(in.testDuration.getOrElse(in.duration), in.testDiameter.getOrElse(in.diameter))
+    val trainPois = getPois(trainDs, trainClusterer)
+    val testPois = getPois(testDs, testClusterer)
 
     val distances = getDistances(trainPois, testPois)
     val matches = getMatches(distances)
@@ -97,6 +98,10 @@ case class ReidentificationIn(
   diameter: Distance,
   @Arg(help = "Clustering minimum duration")
   duration: org.joda.time.Duration,
+  @Arg(help = "Override the clustering maximum diameter to use with the test dataset only")
+  testDiameter: Option[Distance],
+  @Arg(help = "Override the clustering minimum duration to use with the test dataset only")
+  testDuration: Option[org.joda.time.Duration],
   @Arg(help = "Train dataset")
   train: Dataset,
   @Arg(help = "Test dataset")
