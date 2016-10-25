@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION = '2.2.0'
+VERSION = '2.5.0'
 
 jar_library(name='http', jars=[scala_jar('com.twitter', 'finatra-http', VERSION)])
 jar_library(name='httpclient', jars=[scala_jar('com.twitter', 'finatra-httpclient', VERSION)])
