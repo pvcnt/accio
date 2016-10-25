@@ -156,6 +156,24 @@ class GraphFactorySpec extends UnitSpec {
     expected.getMessage shouldBe "No root found"
   }
 
+  it should "detect inconsistent data types" in {
+    val graphDef = GraphDef(Seq(
+      NodeDef(
+        op = "FirstSimple",
+        customName = Some("First"),
+        inputs = Map(
+          "foo" -> ValueInput(42))),
+      NodeDef(
+        op = "FirstSimple",
+        customName = Some("Second"),
+        inputs = Map(
+          "foo" -> ReferenceInput(Reference("First", "data"))))))
+    val expected = intercept[IllegalGraphException] {
+      factory.create(graphDef)
+    }
+    expected.getMessage shouldBe "Data type mismatch: First/data (dataset) => Second/foo (integer)"
+  }
+
   it should "detect cycles" in {
     val graphDef = GraphDef(Seq(
       NodeDef(
