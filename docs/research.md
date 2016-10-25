@@ -14,7 +14,7 @@ Our own Accio is a tool whose purpose is to execute mobility data processing pip
 
 Vincent Primault, Antoine Boutet, Sonia Ben Mokhtar and Lionel Brunie.
 ALP: Adaptive Location Privacy.
-In *Proceedings of the 35h Symposium on Reliable Distributed Systems (SRDS)*, September 2016, Budapest, Hungary (to appear).
+In *Proceedings of the 35h Symposium on Reliable Distributed Systems (SRDS)*, September 2016, Budapest, Hungary.
 
 ## Acknowledgements
 
