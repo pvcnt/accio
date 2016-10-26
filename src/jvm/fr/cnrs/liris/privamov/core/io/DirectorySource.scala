@@ -18,29 +18,26 @@
 
 package fr.cnrs.liris.privamov.core.io
 
+import java.nio.file.{Files, Paths}
+
 /**
- * A source is responsible for reading elements. Each element is identified by a unique key.
+ * A data source generating one key per file inside a given directory. It is *not* recursive.
  *
+ * @param url       Path to the directory.
+ * @param extension Only consider files with this extension.
+ * @param decoder   Decoder to apply on each file.
  * @tparam T Elements' type.
  */
-trait DataSource[T] {
-  def keys: Seq[String]
+class DirectorySource[T](url: String, extension: String, decoder: Decoder[T]) extends DataSource[T] {
+  private[this] val path = Paths.get(url)
+  require(path.toFile.isDirectory, s"Not a directory: $url")
 
-  def read(key: String): Option[T]
-}
+  override final def keys: Seq[String] =
+    path.toFile
+      .listFiles
+      .filter(_.getName.endsWith(extension))
+      .map(_.toPath.getFileName.toString.dropRight(extension.length))
 
-/**
- * A decoder converts a binary (record) into a plain object.
- *
- * @tparam T Plain object type
- */
-trait Decoder[T] {
-  /**
-   * Decodes a binary record into an object.
-   *
-   * @param key   Key associated with the file containing this record
-   * @param bytes Binary content
-   * @return Plain object
-   */
-  def decode(key: String, bytes: Array[Byte]): Option[T]
+  override final def read(key: String): Option[T] =
+    decoder.decode(key, Files.readAllBytes(path.resolve(s"$key$extension")))
 }
