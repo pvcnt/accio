@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.privamov.core.sparkle
+package fr.cnrs.liris.privamov.core.io
 
 import fr.cnrs.liris.common.geo.LatLng
 import fr.cnrs.liris.privamov.core.model.Poi

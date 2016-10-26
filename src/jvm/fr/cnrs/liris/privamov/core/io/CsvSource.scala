@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.privamov.core.sparkle
+package fr.cnrs.liris.privamov.core.io
 
 import java.io.File
 import java.nio.file.{Files, Paths}
@@ -49,7 +49,7 @@ case class CsvSource(uri: String) extends DataSource[Trace] {
 
   }
 
-  override def read(id: String): Iterable[Trace] = Seq(read(id, path.resolve(s"$id.csv").toFile))
+  override def read(id: String): Option[Trace] = Some(read(id, path.resolve(s"$id.csv").toFile))
 
   private def read(id: String, file: File): Trace = {
     val events = decoder.decode(id, Files.readAllBytes(file.toPath)).getOrElse(Seq.empty).sortBy(_.time)
@@ -90,7 +90,7 @@ case class CsvSink(uri: String) extends DataSink[Trace] {
   private[this] val encoder = new CsvEncoder
   private[this] val NL = "\n".getBytes(Charsets.UTF_8)
 
-  override def write(elements: Iterator[Trace]): Unit = {
+  override def write(elements: TraversableOnce[Trace]): Unit = {
     elements.foreach { trace =>
       val encodedEvents = trace.events.map(encoder.encode)
       val bytes = if (encodedEvents.isEmpty) {

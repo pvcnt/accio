@@ -20,10 +20,10 @@ package fr.cnrs.liris.common.random
 
 import java.util.Random
 
-import scala.reflect.ClassTag
-import scala.collection.mutable.ArrayBuffer
-
 import org.apache.commons.math3.distribution.PoissonDistribution
+
+import scala.collection.mutable.ArrayBuffer
+import scala.reflect.ClassTag
 
 /**
  * A pseudorandom sampler. It is possible to change the sampled item type. For example, we might
@@ -80,8 +80,8 @@ object RandomSampler {
 /**
  * A sampler based on Bernoulli trials for partitioning a data sequence.
  *
- * @param lb lower bound of the acceptance range
- * @param ub upper bound of the acceptance range
+ * @param lb         lower bound of the acceptance range
+ * @param ub         upper bound of the acceptance range
  * @param complement whether to use the complement of the range specified, default to false
  * @tparam T item type
  */
@@ -170,20 +170,16 @@ class BernoulliSampler[T: ClassTag](fraction: Double) extends RandomSampler[T, T
 /**
  * A sampler for sampling with replacement, based on values drawn from Poisson distribution.
  *
- * @param fraction the sampling fraction (with replacement)
- * @param useGapSamplingIfPossible if true, use gap sampling when sampling ratio is low.
- * @tparam T item type
+ * @param fraction                 Sampling fraction (with replacement).
+ * @param useGapSamplingIfPossible Whether to use gap sampling when sampling ratio is low.
+ * @tparam T Elements' type.
  */
-class PoissonSampler[T: ClassTag](
-  fraction: Double,
-  useGapSamplingIfPossible: Boolean) extends RandomSampler[T, T] {
+class PoissonSampler[T: ClassTag](fraction: Double, useGapSamplingIfPossible: Boolean) extends RandomSampler[T, T] {
 
   def this(fraction: Double) = this(fraction, useGapSamplingIfPossible = true)
 
-  /** Epsilon slop to avoid failure from floating point jitter. */
-  require(
-    fraction >= (0.0 - RandomSampler.roundingEpsilon),
-    s"Sampling fraction ($fraction) must be >= 0")
+  // Epsilon slop to avoid failure from floating point jitter.
+  require(fraction >= (0.0 - RandomSampler.roundingEpsilon), s"Sampling fraction ($fraction) must be >= 0")
 
   // PoissonDistribution throws an exception when fraction <= 0
   // If fraction is <= 0, Iterator.empty is used below, so we can use any placeholder value.

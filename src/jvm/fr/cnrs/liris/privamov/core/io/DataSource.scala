@@ -16,17 +16,22 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.privamov.core.sparkle
+package fr.cnrs.liris.privamov.core.io
 
 import java.nio.charset.Charset
 import java.nio.file.{Files, Paths}
 
 import com.google.common.base.Charsets
 
+/**
+ * A source is responsible for reading elements.
+ *
+ * @tparam T Elements' type.
+ */
 trait DataSource[T] {
   def keys: Seq[String]
 
-  def read(key: String): Iterable[T]
+  def read(key: String): Option[T]
 }
 
 /**
@@ -51,8 +56,8 @@ class DirectorySource[T](url: String, extension: String, decoder: Decoder[T]) ex
   override final def keys: Seq[String] =
     path.toFile.listFiles.map(_.toPath.getFileName.toString.dropRight(extension.length))
 
-  override final def read(key: String): Iterable[T] =
-    decoder.decode(key, Files.readAllBytes(path.resolve(s"$key$extension"))).toIterable
+  override final def read(key: String): Option[T] =
+    decoder.decode(key, Files.readAllBytes(path.resolve(s"$key$extension")))
 }
 
 class TextLineDecoder[T](decoder: Decoder[T], headerLines: Int = 0, charset: Charset = Charsets.UTF_8) extends Decoder[Seq[T]] {

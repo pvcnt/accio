@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.privamov.core.sparkle
+package fr.cnrs.liris.privamov.core.io
 
 import java.nio.file.{Files, Path, Paths}
 
@@ -43,9 +43,9 @@ case class CabspottingSource(url: String) extends DataSource[Trace] {
     .toSeq
     .sorted
 
-  override def read(key: String): Iterable[Trace] = {
+  override def read(key: String): Option[Trace] = {
     val events = decoder.decode(key, Files.readAllBytes(path.resolve(s"new_$key.txt"))).getOrElse(Seq.empty)
-    if (events.nonEmpty) Iterable(Trace(events)) else Iterable.empty
+    if (events.nonEmpty) Some(Trace(events)) else None
   }
 }
 

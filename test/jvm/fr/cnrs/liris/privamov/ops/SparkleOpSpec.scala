@@ -3,8 +3,9 @@ package fr.cnrs.liris.privamov.ops
 import java.nio.file.Files
 
 import fr.cnrs.liris.accio.core.api.{Dataset, OpContext}
+import fr.cnrs.liris.privamov.core.io.{CsvSink, CsvSource}
 import fr.cnrs.liris.privamov.core.model.Trace
-import fr.cnrs.liris.privamov.core.sparkle.{CsvSink, CsvSource, SparkleEnv}
+import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 import org.scalatest.{BeforeAndAfter, FlatSpec}
 
 trait SparkleOpSpec {

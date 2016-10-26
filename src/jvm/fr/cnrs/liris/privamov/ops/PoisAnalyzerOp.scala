@@ -38,16 +38,16 @@ import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.common.geo.Distance
 import fr.cnrs.liris.privamov.core.clustering.DTClusterer
 import fr.cnrs.liris.privamov.core.model.{Poi, Trace}
-import fr.cnrs.liris.privamov.core.sparkle.{CsvSource, SparkleEnv}
+import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 
 @Op(
   help = "Compute statistics about points of interest",
   description = "Compute statistics about the POIs that can be extracted from a trace, using a classical DJ-clustering algorithm.",
   category = "metric")
-class PoisAnalyzerOp @Inject()(env: SparkleEnv) extends Operator[PoisAnalyzerIn, PoisAnalyzerOut] {
+class PoisAnalyzerOp @Inject()(env: SparkleEnv) extends Operator[PoisAnalyzerIn, PoisAnalyzerOut] with SparkleOperator {
 
   override def execute(in: PoisAnalyzerIn, ctx: OpContext): PoisAnalyzerOut = {
-    val data = env.read(CsvSource(in.data.uri))
+    val data = read(in.data, env)
     val clusterer = new DTClusterer(in.duration, in.diameter)
     val metrics = data.map { trace => evaluate(trace, clusterer) }.toArray
     PoisAnalyzerOut(

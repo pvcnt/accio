@@ -21,6 +21,7 @@ package fr.cnrs.liris.privamov.ops
 import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.common.util.FileUtils
+import fr.cnrs.liris.privamov.core.io.{CabspottingSource, CsvSource, GeolifeSource}
 import fr.cnrs.liris.privamov.core.sparkle._
 
 @Op(
@@ -35,20 +36,20 @@ class EventSourceOp @Inject()(env: SparkleEnv) extends Operator[EventSourceIn, E
       case "geolife" => GeolifeSource(FileUtils.replaceHome(in.url))
       case _ => throw new IllegalArgumentException(s"Unknown kind: ${in.kind}")
     }
-    val output = if (in.kind != "csv" || in.sample.nonEmpty || in.users.nonEmpty) {
+    val output = if (willWrite(in)) {
       var data = env.read(source)
-      in.sample.foreach { sample =>
-        data = data.sample(withReplacement = false, sample, ctx.seed)
-      }
       if (in.users.nonEmpty) {
         data = data.restrict(in.users.toSet)
       }
+      in.sample.foreach { sample =>
+        data = data.sample(withReplacement = false, fraction = sample, seed = ctx.seed)
+      }
       write(data, ctx.workDir)
-    } else {
-      Dataset(in.url, format = "csv")
-    }
+    } else Dataset(in.url, format = "csv")
     EventSourceOut(output)
   }
+
+  private def willWrite(in: EventSourceIn) = in.kind != "csv" || in.sample.nonEmpty || in.users.nonEmpty
 }
 
 case class EventSourceIn(

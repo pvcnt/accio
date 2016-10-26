@@ -37,19 +37,18 @@ import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.common.geo.Point
 import fr.cnrs.liris.privamov.core.model.{Event, Trace}
-import fr.cnrs.liris.privamov.core.sparkle.{CsvSink, CsvSource, SparkleEnv}
+import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 
 @Op(
   category = "prepare",
   help = "Apply gaussian kernel smoothing on traces.",
   description = "Apply gaussian kernel smoothing on a trace, attenuating the impact of noisy observations.")
-class GaussianKernelSmoothingOp @Inject()(env: SparkleEnv) extends Operator[GaussianKernelSmoothingIn, GaussianKernelSmoothingOut] {
+class GaussianKernelSmoothingOp @Inject()(env: SparkleEnv) extends Operator[GaussianKernelSmoothingIn, GaussianKernelSmoothingOut] with SparkleOperator {
 
   override def execute(in: GaussianKernelSmoothingIn, ctx: OpContext): GaussianKernelSmoothingOut = {
-    val data = env.read(CsvSource(in.data.uri))
-    val uri = ctx.workDir.resolve("data").toAbsolutePath.toString
-    data.map(transform(_, in.omega)).write(CsvSink(uri))
-    GaussianKernelSmoothingOut(Dataset(uri, format = "csv"))
+    val data = read(in.data, env)
+    val output = write(data.map(transform(_, in.omega)), ctx.workDir)
+    GaussianKernelSmoothingOut(output)
   }
 
   private def transform(trace: Trace, omega: Duration): Trace = trace.replace(_.map(transform(_, trace, omega)))

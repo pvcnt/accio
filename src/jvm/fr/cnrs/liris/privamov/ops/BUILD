@@ -7,6 +7,7 @@ scala_library(
     'src/jvm/fr/cnrs/liris/privamov/core/sparkle',
     'src/jvm/fr/cnrs/liris/privamov/core/lppm',
     'src/jvm/fr/cnrs/liris/privamov/core/clustering',
+    'src/jvm/fr/cnrs/liris/privamov/core/io',
     'src/jvm/fr/cnrs/liris/common/geo',
     'src/jvm/fr/cnrs/liris/common/util',
     'src/jvm/fr/cnrs/liris/common/random',

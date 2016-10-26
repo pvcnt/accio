@@ -22,6 +22,7 @@ import java.util.concurrent.Executors
 
 import com.google.common.base.Stopwatch
 import com.typesafe.scalalogging.StrictLogging
+import fr.cnrs.liris.privamov.core.io.DataSource
 
 import scala.collection.immutable.ListMap
 import scala.concurrent.duration.Duration
@@ -73,7 +74,7 @@ private class ParallelCollectionDataFrame[T: ClassTag](data: Map[String, Seq[T]]
 }
 
 /**
- * A dataset loading its data on the fly using a data source.
+ * A dataframe loading its data on the fly using a data source.
  *
  * @param source Data source
  * @tparam T Type of elements being read
@@ -81,11 +82,15 @@ private class ParallelCollectionDataFrame[T: ClassTag](data: Map[String, Seq[T]]
 private class SourceDataFrame[T: ClassTag](source: DataSource[T], env: SparkleEnv) extends DataFrame[T](env) {
   override lazy val keys: Seq[String] = {
     val w = Stopwatch.createStarted()
-    println("reading keys")
     val k = source.keys
-    println(s"finished reading keys ${w}")
+    println(s"read keys in $w")
     k
   }
 
-  override def load(key: String): Iterator[T] = source.read(key).iterator
+  override def load(key: String): Iterator[T] = {
+    val w = Stopwatch.createStarted()
+    val it = source.read(key).iterator
+    println(s"read key '$key' in $w")
+    it
+  }
 }

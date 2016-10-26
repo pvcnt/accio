@@ -35,19 +35,18 @@ package fr.cnrs.liris.privamov.ops
 import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.privamov.core.model.Trace
-import fr.cnrs.liris.privamov.core.sparkle.{CsvSink, CsvSource, SparkleEnv}
+import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 
 @Op(
   category = "prepare",
   help = "Enforce a given size on each trace.",
   description = "Larger traces will be truncated, smaller traces will be discarded.")
-class EnforceSizeOp @Inject()(env: SparkleEnv) extends Operator[EnforceSizeIn, EnforceSizeOut] {
+class EnforceSizeOp @Inject()(env: SparkleEnv) extends Operator[EnforceSizeIn, EnforceSizeOut] with SparkleOperator {
 
   override def execute(in: EnforceSizeIn, ctx: OpContext): EnforceSizeOut = {
-    val data = env.read(CsvSource(in.data.uri))
-    val uri = ctx.workDir.resolve("data").toAbsolutePath.toString
-    data.flatMap(transform(_, in.minSize, in.maxSize)).write(CsvSink(uri))
-    EnforceSizeOut(Dataset(uri, format = "csv"))
+    val data = read(in.data, env)
+    val output = write(data.flatMap(transform(_, in.minSize, in.maxSize)), ctx.workDir)
+    EnforceSizeOut(output)
   }
 
   private def transform(trace: Trace, minSize: Option[Int], maxSize: Option[Int]): Seq[Trace] = {

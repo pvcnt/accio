@@ -35,15 +35,15 @@ package fr.cnrs.liris.privamov.ops
 import com.github.nscala_time.time.Imports._
 import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.api._
-import fr.cnrs.liris.privamov.core.sparkle.{CsvSource, SparkleEnv}
+import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 
 @Op(
   help = "Compute basic statistics about traces.",
   category = "metric")
-class BasicAnalyzerOp @Inject()(env: SparkleEnv) extends Operator[BasicAnalyzerIn, BasicAnalyzerOut] {
+class BasicAnalyzerOp @Inject()(env: SparkleEnv) extends Operator[BasicAnalyzerIn, BasicAnalyzerOut] with SparkleOperator {
 
   override def execute(in: BasicAnalyzerIn, ctx: OpContext): BasicAnalyzerOut = {
-    val data = env.read(CsvSource(in.data.uri))
+    val data = read(in.data, env)
     val metrics = data.map { trace =>
       trace.id -> (trace.size, trace.length.meters, trace.duration.seconds)
     }.toArray

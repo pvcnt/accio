@@ -16,23 +16,34 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.privamov.core.sparkle
+package fr.cnrs.liris.privamov.core.io
 
+/**
+ * A sink is responsible for persisting elements. If they need to be read back later, you need to implement a
+ * matching [[DataSource]].
+ *
+ * @tparam T Elements' type.
+ */
 trait DataSink[T] {
-  def write(elements: Iterator[T]): Unit
+  /**
+   * Persist some elements.
+   *
+   * @param elements Elements to write.
+   */
+  def write(elements: TraversableOnce[T]): Unit
 }
 
 /**
- * An encoder converts a plain object into a (binary) record.
+ * An encoder converts a plain object into bytes.
  *
- * @tparam T Plain object type
+ * @tparam T Object type.
  */
 trait Encoder[T] {
   /**
-   * Encodes an object into a binary record.
+   * Encode an object into a sequence of bytes.
    *
-   * @param obj Plain object
-   * @return Binary content
+   * @param obj Plain object.
+   * @return Binary content.
    */
   def encode(obj: T): Array[Byte]
 }

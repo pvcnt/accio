@@ -21,6 +21,7 @@ package fr.cnrs.liris.privamov.core.sparkle
 import com.google.common.base.MoreObjects
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.common.random._
+import fr.cnrs.liris.privamov.core.io.DataSink
 
 import scala.collection.mutable
 import scala.reflect._
@@ -48,6 +49,7 @@ abstract class DataFrame[T: ClassTag](val env: SparkleEnv) extends LazyLogging {
     withReplacement: Boolean,
     fraction: Double,
     seed: Long = RandomUtils.random.nextLong): DataFrame[T] = {
+
     require(fraction >= 0.0, s"Negative fraction value: $fraction")
     if (withReplacement) {
       new SampleDataFrame[T](this, new PoissonSampler[T](fraction), seed)

@@ -36,19 +36,18 @@ import com.github.nscala_time.time.Imports._
 import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.privamov.core.model.Trace
-import fr.cnrs.liris.privamov.core.sparkle.{CsvSink, CsvSource, SparkleEnv}
+import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 
 @Op(
   category = "prepare",
   help = "Enforce a given duration on each trace.",
   description = "Longer traces will be truncated, shorter traces will be discarded.")
-class EnforceDurationOp @Inject()(env: SparkleEnv) extends Operator[EnforceDurationIn, EnforceDurationOut] {
+class EnforceDurationOp @Inject()(env: SparkleEnv) extends Operator[EnforceDurationIn, EnforceDurationOut] with SparkleOperator {
 
   override def execute(in: EnforceDurationIn, ctx: OpContext): EnforceDurationOut = {
-    val data = env.read(CsvSource(in.data.uri))
-    val uri = ctx.workDir.resolve("data").toAbsolutePath.toString
-    data.flatMap(transform(_, in.minDuration, in.maxDuration)).write(CsvSink(uri))
-    EnforceDurationOut(Dataset(uri, format = "csv"))
+    val data = read(in.data, env)
+    val output = write(data.flatMap(transform(_, in.minDuration, in.maxDuration)), ctx.workDir)
+    EnforceDurationOut(output)
   }
 
   private def transform(trace: Trace, minDuration: Option[Duration], maxDuration: Option[Duration]): Seq[Trace] = {

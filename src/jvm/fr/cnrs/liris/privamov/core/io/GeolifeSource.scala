@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.privamov.core.sparkle
+package fr.cnrs.liris.privamov.core.io
 
 import java.nio.file.{Files, Path, Paths}
 
@@ -46,9 +46,9 @@ case class GeolifeSource(url: String) extends DataSource[Trace] {
       .toSeq
       .sorted
 
-  override def read(key: String): Iterable[Trace] = {
+  override def read(key: String): Option[Trace] = {
     val events = path.resolve("Trajectory").toFile.listFiles.sortBy(_.getName).flatMap(file => read(key, file.toPath))
-    if (events.nonEmpty) Iterable(Trace(events)) else Iterable.empty
+    if (events.nonEmpty) Some(Trace(events)) else None
   }
 
   private def read(key: String, path: Path) =

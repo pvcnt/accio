@@ -36,16 +36,16 @@ import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.common.util.Requirements._
 import fr.cnrs.liris.privamov.core.model.Trace
-import fr.cnrs.liris.privamov.core.sparkle.{CsvSource, SparkleEnv}
+import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 
 @Op(
   category = "metric",
   help = "Compute data completeness difference between two datasets of traces.")
-class DataCompletenessOp @Inject()(env: SparkleEnv) extends Operator[DataCompletenessIn, DataCompletenessOut] {
+class DataCompletenessOp @Inject()(env: SparkleEnv) extends Operator[DataCompletenessIn, DataCompletenessOut] with SparkleOperator {
 
   override def execute(in: DataCompletenessIn, ctx: OpContext): DataCompletenessOut = {
-    val train = env.read(CsvSource(in.train.uri))
-    val test = env.read(CsvSource(in.test.uri))
+    val train = read(in.train, env)
+    val test = read(in.test, env)
     val values = train.zip(test).map { case (ref, res) => evaluate(ref, res) }.toArray
     DataCompletenessOut(values.toMap)
   }
