@@ -30,6 +30,7 @@ The source code will be located under the `/vagrant` folder, with tools to compi
 
 The source code is hosted on [a private repository on GitHub](https://github.com/pvcnt/location-privacy).
 You can directly clone the repository to get the latest version of the source code.
+
 ```bash
 $ git clone git@github.com:pvcnt/location-privacy.git
 ```
@@ -43,6 +44,7 @@ All the development is done on the `master` branch, and releases are tagged.
 Accio is compiled using the [Pants](http://pantsbuild.org) build tool.
 Pants is usually not installed globally but rather once per repository.
 If all requirements are fulfilled, you should be able to bootstrap Pants automatically by calling it from the sources root.
+
 ```bash
 $ cd /path/to/accio
 $ ./pants -V
@@ -56,6 +58,7 @@ If you need more help about Pants, you can read the appropriate [installation in
 
 Pants is used to produce executable JAR files for Accio, which will appear in the `dist/` folder.
 You can build the main executable using the following command.
+
 ```bash
 $ ./pants binary src/jvm/fr/cnrs/liris/accio/cli:bin
 ```
@@ -65,6 +68,7 @@ If the compilation is successful, an `accio.jar` JAR will appear in the `dist/` 
 ## Running Accio
 
 When developing, you can also run Accio directly, which involves recompiling changed files on-the-fly before.
+
 ```bash
 $ ./pants run src/jvm/fr/cnrs/liris/accio/cli:bin -- command line arguments to accio
 ```
