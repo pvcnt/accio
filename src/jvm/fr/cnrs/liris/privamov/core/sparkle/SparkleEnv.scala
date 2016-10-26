@@ -1,7 +1,26 @@
+/*
+ * Accio is a program whose purpose is to study location privacy.
+ * Copyright (C) 2016 Vincent Primault <vincent.primault@liris.cnrs.fr>
+ *
+ * Accio is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Accio is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package fr.cnrs.liris.privamov.core.sparkle
 
 import java.util.concurrent.Executors
 
+import com.google.common.base.Stopwatch
 import com.typesafe.scalalogging.StrictLogging
 
 import scala.collection.immutable.ListMap
@@ -39,9 +58,9 @@ class SparkleEnv(level: Int) extends StrictLogging {
     if (keys.isEmpty) {
       Array.empty
     } else if (keys.size == 1) {
-      Array(processor(keys.head, dataset.load(Some(keys.head))))
+      Array(processor(keys.head, dataset.load(keys.head)))
     } else {
-      val futures = keys.map(key => Future(processor(key, dataset.load(Some(key)))))
+      val futures = keys.map(key => Future(processor(key, dataset.load(key))))
       Await.result[Array[U]](Future.sequence(futures).map(_.toArray), Duration.Inf)
     }
   }
@@ -50,10 +69,7 @@ class SparkleEnv(level: Int) extends StrictLogging {
 private class ParallelCollectionDataFrame[T: ClassTag](data: Map[String, Seq[T]], env: SparkleEnv) extends DataFrame[T](env) {
   override def keys: Seq[String] = data.keySet.toSeq
 
-  override def load(label: Option[String]): Iterator[T] = label match {
-    case Some(key) => if (data.contains(key)) data(key).iterator else Iterator.empty
-    case None => data.values.iterator.map(_.iterator).flatten
-  }
+  override def load(key: String): Iterator[T] = if (data.contains(key)) data(key).iterator else Iterator.empty
 }
 
 /**
@@ -63,10 +79,13 @@ private class ParallelCollectionDataFrame[T: ClassTag](data: Map[String, Seq[T]]
  * @tparam T Type of elements being read
  */
 private class SourceDataFrame[T: ClassTag](source: DataSource[T], env: SparkleEnv) extends DataFrame[T](env) {
-  override def keys: Seq[String] = source.keys
-
-  override def load(label: Option[String]): Iterator[T] = label match {
-    case Some(key) => source.read(key).iterator
-    case None => keys.flatMap(source.read).iterator
+  override lazy val keys: Seq[String] = {
+    val w = Stopwatch.createStarted()
+    println("reading keys")
+    val k = source.keys
+    println(s"finished reading keys ${w}")
+    k
   }
+
+  override def load(key: String): Iterator[T] = source.read(key).iterator
 }

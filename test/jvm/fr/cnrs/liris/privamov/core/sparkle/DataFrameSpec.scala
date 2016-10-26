@@ -6,7 +6,10 @@ import org.scalatest.BeforeAndAfter
 import scala.collection.mutable
 import scala.reflect._
 
-class DatasetSpec extends UnitSpec with BeforeAndAfter {
+/**
+ * Unit tests for [[DataFrame]].
+ */
+class DataFrameSpec extends UnitSpec with BeforeAndAfter {
   private[this] var env: SparkleEnv = null
 
   before {
@@ -18,8 +21,10 @@ class DatasetSpec extends UnitSpec with BeforeAndAfter {
     env = null
   }
 
+  behavior of "DataFrame"
+
   // Basic/meta operations.
-  "Dataset" should "return its elements' type" in {
+  it should "return its elements' type" in {
     val data = env.parallelize("foo" -> Seq(1, 2, 3), "bar" -> Seq(4, 5))
     data.elementClassTag shouldBe classTag[Int]
   }
@@ -31,14 +36,8 @@ class DatasetSpec extends UnitSpec with BeforeAndAfter {
 
   it should "load a single key" in {
     val data = env.parallelize("foo" -> Seq(1, 2, 3), "bar" -> Seq(4, 5))
-    data.load(Some("foo")).toSeq shouldBe Seq(1, 2, 3)
-    data.load(Some("bar")).toSeq shouldBe Seq(4, 5)
-  }
-
-  it should "load everything" in {
-    val data = env.parallelize("foo" -> Seq(1, 2, 3), "bar" -> Seq(4, 5))
-    data.load(None).toSeq shouldBe Seq(1, 2, 3, 4, 5)
-    data.load().toSeq shouldBe Seq(1, 2, 3, 4, 5)
+    data.load("foo").toSeq shouldBe Seq(1, 2, 3)
+    data.load("bar").toSeq shouldBe Seq(4, 5)
   }
 
   // Transformation operations.
@@ -63,9 +62,7 @@ class DatasetSpec extends UnitSpec with BeforeAndAfter {
     data.restrict(Set("barfoo")).toArray shouldBe Array(5, 6, 7)
     data.restrict(Set("barfoo", "invalid_key")).toArray shouldBe Array(5, 6, 7)
     data.restrict(Set("invalid_key")).toArray shouldBe Array.empty[Int]
-
-    data.restrict(Set("foo", "bar")).load(Some("invalid_key")) shouldBe Iterator.empty
-    data.restrict(Set("foo", "bar")).load(None).toArray shouldBe Array(1, 2, 3)
+    data.restrict(Set("foo", "bar")).load("invalid_key") shouldBe Iterator.empty
   }
 
   it should "zip with another dataset with same keys and same size" in {
