@@ -93,7 +93,7 @@ class GraphExecutor @Inject()(graphFactory: GraphFactory, repository: ReportRepo
       }
 
       try {
-        val artifacts = execute(run.id, run.graph, node, outputs.toMap, workDir)
+        val artifacts = execute(run.id, run.seed, run.graph, node, outputs.toMap, workDir)
         report = report.completeNode(node.name, artifacts.values.toSeq)
         outputs ++= artifacts
       } catch {
@@ -146,8 +146,8 @@ class GraphExecutor @Inject()(graphFactory: GraphFactory, repository: ReportRepo
       case NonFatal(e) => logger.error(s"Unable to write report for run ${run.id}", e)
     }
 
-  private def execute(runId: String, graph: Graph, node: Node, outputs: Map[Reference, Artifact], workDir: Path): Map[Reference, Artifact] = {
-    val ctx = new OpContext(Random.nextLong, workDir.resolve("data").resolve(s"$runId-${node.name}"))
+  private def execute(runId: String, seed: Long, graph: Graph, node: Node, outputs: Map[Reference, Artifact], workDir: Path): Map[Reference, Artifact] = {
+    val ctx = new OpContext(seed, workDir.resolve("data").resolve(s"$runId-${node.name}"))
     val operator = createOp(node)
     execute(operator, node, outputs, ctx)
   }
