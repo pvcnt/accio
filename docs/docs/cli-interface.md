@@ -13,7 +13,7 @@ Accio comes with a command line interface allowing to run experiments and analyz
 
 The `accio run` command is used to launch experiments.
 It requires one or many arguments specifying paths to files containing experiment definitions.
-These files must be JSON files formatted according to the [definition language](definition-language.html).
+These files must be JSON files formatted according to the [definition language](workflows.html).
 You can specify files containing either a experiment definition or a workflow definition (which will be implicitly converted into an experiment).
 
 ### Experiment execution
@@ -67,10 +67,11 @@ Parameters are space-separated. Parameter names are references, written in the s
 It will take precedence over parameters defined inside a workflow, but execution strategies may still override them later (e.g., if this parameter is being optimized).
 
 
-## Generating reports
-
 ## Built-in documentation
 
 Accio comes with built-in documentation.
-`accio help` enumerates all available commands and their options.
-`accio ops` enumerates all available operators, their inputs, parameters and outputs.
+
+  * `accio help` enumerates all available commands and their options.
+  * `accio help <command>` provides detailed information about a given command.
+  * `accio help list-ops` enumerates all available operators, their inputs and outputs.
+  * `accio help <operator>` provides detailed information about a given operator.

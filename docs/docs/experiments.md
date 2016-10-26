@@ -4,66 +4,10 @@ nav: docs
 title: Workflows & experiments definition
 ---
 
-This section covers how to define workflows and experiments easily as JSON documents.
+This section covers how to define experiments easily as JSON documents.
 
 * TOC
 {:toc}
-
-## Workflow definition
-
-A workflow is a JSON object formed of the following fields.
-
-| Name | Description | Type | Required |
-|:-----|:------------|:-----|:---------|
-| name | A human-readable name. | string | false |
-| owner | Person owning the workflow. It can include an email address between chevrons. | string | false |
-| runs | Default number of runs for each node. It can be overriden on a per-node basis. | integer | false |
-| graph | Nodes composing the workflow graph. The order in which nodes are defined does not matter. | object[] | true |
-| graph[*].op | Operator name. | string | required |
-| graph[*].name | Node name. By default it will be the operator's name. | string | optional |
-| graph[*].inputs | Names of nodes acting as inputs of this node. | string[] | false |
-| graph[*].params | Mapping between parameter names and values. All parameters without a default value should be specified. | object | false |
-| graph[*].runs | Number of times this node should be ran. It is only useful for nodes producing metrics. If it is defined here, the value takes precedence over the global runs value. Results of different runs will be aggregated together (i.e., distributions resulting from all runs will be merged). | integer | false |
-{: class="table table-striped"}
-
-Here is an example of a simple workflow's definition:
-
-```json
-{
-  "name": "Geo-indistinguishability workflow",
-  "owner": "John Doe <john.doe@gmail.com>",
-  "graph": [
-    {
-      "op": "EventSource",
-      "params": {
-        "url": "/path/to/my/dataset"
-      }
-    },
-    {
-      "op": "GeoIndistinguishability",
-      "inputs": ["EventSource"],
-      "params": {
-        "epsilon": "0.001"
-      }
-    },
-    {
-      "op": "PoisRetrieval",
-      "name": "privacy",
-      "inputs": ["EventSource", "GeoIndistinguishability"],
-      "params": {
-        "diameter": "200.meters",
-        "duration": "15.minutes",
-        "threshold": "100.meters"
-      }
-    },
-    {
-      "op": "SpatialDistortion",
-      "name": "utility",
-      "inputs": ["EventSource", "GeoIndistinguishability"]
-    }
-  ]
-}
-```
 
 ## Experiment definition
 
@@ -117,11 +61,6 @@ Here is an example of a simple experiment definition:
   }
 }
 ```
-
-### Implicit conversion from a workflow to an experiment
-
-Any workflow can be implicitly converted into an experiment whose goal is simply to run the workflow as-is.
-You cannot run optimizations of explorations this way, but you can still define metadata through command line arguments (cf. [CLI interface](cli-interface.html) documentation).
 
 ## Parameters
 

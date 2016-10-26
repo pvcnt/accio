@@ -7,18 +7,18 @@ title: Installing Accio
 * TOC
 {:toc}
 
-## System requirements
+## Requirements
 
 The following are required to run Accio:
 
-  * Platforms: Linux or Mac OS X;
-  * Java: JDK 8 or later.
+  * Linux or Mac OS X.
+  * Java 8.
 
-## Use a binary distribution
+## Using a binary distribution
 
 The most straightforward way to install Accio is to fetch a binary release.
 
-### Install dependencies
+### Installing dependencies
 
 Before running Accio, you need to install the Java runtime on your machine.
 The exact procedure depends on the platform.
@@ -48,11 +48,11 @@ JDK 8 can be downloaded from [Oracle's JDK Page](http://www.oracle.com/technetwo
 Look for "Mac OS X x64" under "Java SE Development Kit".
 This will download a DMG image with an install wizard.
 
-### Run via a wrapper script
+### Running via a wrapper script
 
 TODO.
 
-### Run via a JAR
+### Running via a JAR
 
 You can also get the latest version of Accio as a pre-compiled JAR from [GitHub releases](https://github.com/pvcnt/location-privacy/releases).
 You should then be able to run it the usual way:
@@ -69,28 +69,4 @@ $ java -Xmx8G -jar accio.jar <command> <options>...
 
 ## Compiling from source
 
-You can also compile Accio by yourself from the source.
-It is only needed if you want to be up-to-date with HEAD version, or want to develop Accio.
-[Pants](http://pantsbuild.org) is the build tool used for this purpose.
-Please follow the appropriate [installation instructions](http://www.pantsbuild.org/install.html) to get Pants running.
-In a nutshell, you will need the following:
-
-  * Platforms: Linux or Mac OS X;
-  * Python: 2.7.x;
-  * C: a C compiler, system headers, Python headers;
-  * Java: JDK 7 or later.
-
-If all requirements are met, the `./pants` script should bootstrap itself.
-To compile Accio from source, you will need to get the source from the Git repository and build it:
-
-```bash
-$ git clone git@github.com:pvcnt/location-privacy.git
-$ cd location-privacy
-$ ./pants binary src/jvm/fr/cnrs/liris/accio/cli:bin
-```
-
-If the compilation is successful, an `accio.jar` JAR will appear in the `dist/` folder.
-
-To compile from source, you might need additional dependencies.
-Alternatively, if you have [Vagrant](https://www.vagrantup.com) and [VirtualBox](https://www.virtualbox.org) installed on your machine, you can launch a development environment via `vagrant up`.
-The source code will be located under `/vagrant`, with tools to compile and launch it already installed.
+If you wish to develop Accio, or just live on the edge and use the latest available source code (possibly very unstable!), you can also [compile Accio from source](contribute/compiling.html).
