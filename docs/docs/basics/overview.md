@@ -9,6 +9,7 @@ It allows to easily define and run experiments, and provides tools to analyse th
 Although it is designed as a generic tool for any scientific workflow, it has been successfully applied to study location privacy.
 
 Accio comes with several elements: 
+
   * an API to implement operators;
   * a workflow and experiment description format;
   * an execution engine, scheduling and executing the experiment;
@@ -17,4 +18,4 @@ Accio comes with several elements:
 
 We also provide a complete set of operators designed to study location privacy.
 
-You can learn more about [the concepts behind Accio](concepts.html) or jump to [installation instructions](intalling.html).
+You can learn more about [the concepts behind Accio](concepts.html) or jump to [installation instructions](installing.html).

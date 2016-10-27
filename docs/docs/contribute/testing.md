@@ -13,6 +13,7 @@ Before, make sure your development environment is ready and that you are able to
 ## Running unit tests
 
 The following command can be used to run all unit tests.
+
 ```bash
 $ ./pants test test/:: 
 ```
@@ -20,6 +21,7 @@ $ ./pants test test/::
 The later command will compile all modules for which there are some tests and run the associated tests.
 You can also use the following command, which is the actual one being used by our continuous integration system.
 The main difference is that in addition of running tests, all the modules will be compiled, independently on whether there are actually some tests associated with them.
+
 ```bash
 $ ./pants test ::
 ```

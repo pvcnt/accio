@@ -36,7 +36,7 @@ It means that given some inputs **and a seed**, unstable operators are expected 
 
 A *workflow* is a directed acyclic graph, whose nodes are instances of operators. 
 
-![Example of a workflow](../images/workflow.png)
+![Example of a workflow](../../images/workflow.png)
 
 The above workflow is formed of four nodes, each with its own inputs (in orange) and outputs (in purple).
 The `Source` node is the root node (i.e., it has no input from another node).
