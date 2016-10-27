@@ -25,7 +25,16 @@ import com.google.inject.{Inject, Singleton}
 import com.twitter.finatra.json.FinatraObjectMapper
 
 @Singleton
-class JsonReportRepository @Inject()(mapper: FinatraObjectMapper) extends ReportRepository {
+class FileReportRepository @Inject()(mapper: FinatraObjectMapper) extends ReportRepository {
+  override def list(workDir: Path): Seq[String] =
+    workDir.toFile
+      .listFiles
+      .toSeq
+      .filter(f => f.getName.startsWith("experiment-") && f.getName.endsWith(".json"))
+      .sortBy(_.lastModified)
+      .map(_.getName.stripPrefix("experiment-").stripSuffix(".json"))
+      .reverse
+
   override def readExperiment(workDir: Path, id: String): Experiment = {
     mapper.parse[Experiment](new FileInputStream(workDir.resolve(s"experiment-$id.json").toFile))
   }

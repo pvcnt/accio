@@ -21,6 +21,8 @@ package fr.cnrs.liris.accio.core.framework
 import java.nio.file.Path
 
 trait ReportRepository {
+  def list(workDir: Path): Seq[String]
+
   def write(workDir: Path, experiment: Experiment): Unit
 
   def write(workDir: Path, run: Run): Unit

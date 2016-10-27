@@ -30,6 +30,7 @@ import com.twitter.finatra.json.modules.FinatraJacksonModule
 import com.twitter.util.{Duration => TwitterDuration}
 import fr.cnrs.liris.common.geo.Distance
 
+import scala.collection.JavaConverters._
 import scala.reflect.ClassTag
 
 object AccioFinatraJacksonModule extends FinatraJacksonModule {
@@ -82,13 +83,13 @@ private class DataTypeDeserializer extends StdDeserializer[DataType](classOf[Dat
 
 private class GraphDefDeserializer extends StdDeserializer[GraphDef](classOf[GraphDef]) {
   override def deserialize(jsonParser: JsonParser, deserializationContext: DeserializationContext): GraphDef = {
-    GraphDef(jsonParser.readValueAs(new TypeReference[Seq[NodeDef]] {}))
+    GraphDef(jsonParser.readValueAs[Seq[NodeDef]](new TypeReference[Seq[NodeDef]] {}))
   }
 }
 
 private class GraphDeserializer extends StdDeserializer[Graph](classOf[Graph]) {
   override def deserialize(jsonParser: JsonParser, deserializationContext: DeserializationContext): Graph = {
-    Graph(jsonParser.readValueAs(new TypeReference[Seq[Node]] {}))
+    Graph(jsonParser.readValueAs[Seq[Node]](new TypeReference[Seq[Node]] {}).toSet)
   }
 }
 
@@ -111,16 +112,26 @@ private class InputDeserializer extends StdDeserializer[Input](classOf[Input]) {
     val tree = jsonParser.readValueAsTree[JsonNode]
     if (tree.isObject) {
       PropertyPresentDeserializer.deserialize[Input](tree, subTypes, ctx, jsonParser.getCodec.asInstanceOf[ObjectMapper])
-    } else if (tree.isBoolean) {
-      ValueInput(tree.asBoolean)
+    } else {
+      ValueInput(toPojo(tree))
+    }
+  }
+
+  private def toPojo(tree: JsonNode): Any = {
+    if (tree.isBoolean) {
+      tree.asBoolean
     } else if (tree.isDouble) {
-      ValueInput(tree.asDouble)
+      tree.asDouble
     } else if (tree.isInt) {
-      ValueInput(tree.asInt)
+      tree.asInt
     } else if (tree.isLong) {
-      ValueInput(tree.asLong)
+      tree.asLong
     } else if (tree.isTextual) {
-      ValueInput(tree.asText)
+      tree.asText
+    } else if (tree.isArray) {
+      tree.elements.asScala.toArray.map(toPojo)
+    } else if (tree.isObject) {
+      tree.fields.asScala.map(kv => kv.getKey -> toPojo(kv.getValue)).toMap
     } else {
       throw new InputParsingException(tree.getNodeType)
     }

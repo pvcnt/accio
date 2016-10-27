@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.cli
 
-import com.google.inject.{AbstractModule, Provides, TypeLiteral}
+import com.google.inject.{AbstractModule, Provides, Singleton, TypeLiteral}
 import fr.cnrs.liris.accio.core.api.Operator
 import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.runtime.{ExperimentExecutor, LocalExperimentExecutor}
@@ -43,10 +43,11 @@ object AccioModule extends AbstractModule with ScalaModule {
     bind[ExperimentParser].to[JsonExperimentParser]
     bind[WorkflowParser].to[JsonWorkflowParser]
     bind[ExperimentExecutor].to[LocalExperimentExecutor]
-    bind[ReportRepository].to[JsonReportRepository]
+    bind[ReportRepository].to[FileReportRepository]
   }
 
   @Provides
+  @Singleton
   def providesSparkleEnv: SparkleEnv = {
     new SparkleEnv(math.max(1, sys.runtime.availableProcessors() - 1))
   }
