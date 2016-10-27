@@ -44,23 +44,6 @@ case class CsvSink(uri: String) extends DataSink[Trace] {
     elements.foreach { trace =>
       val encodedEvents = trace.events.map(encoder.encode)
       val bytes = foldLines(encodedEvents)
-      /*val file = new RandomAccessFile(path.resolve(s"${trace.id}.csv").toFile, "rw")
-      try {
-        val channel = file.getChannel
-        try {
-          val buffer = ByteBuffer.allocate(bytes.length)
-          buffer.put(bytes)
-          buffer.flip()
-          channel.write(buffer)
-        } finally {
-          channel.close()
-        }
-      } catch {
-        case NonFatal(e) => e.printStackTrace()
-      }
-      finally {
-        file.close()
-      }*/
       Files.write(path.resolve(s"${trace.id}.csv"), bytes)
     }
   }
