@@ -1,0 +1,149 @@
+/**
+ * Layout.
+ */
+html, body {
+    height: 100%;
+}
+
+body {
+    padding-top: 70px;
+}
+
+footer {
+    margin-top: 15px;
+    border-top: 1px solid #eee;
+    padding: 10px;
+    text-align: center;
+}
+
+footer a {
+    margin-left: 10px;
+}
+
+/**
+ * Common styles.
+ */
+.align-right {
+    text-align: right;
+}
+
+.center {
+  text-align: center;
+}
+
+.accio-title {
+    margin-top: 0;
+    font-size: 26px;
+}
+
+.accio-title img {
+    margin-right: 10px;
+}
+
+/**
+ * Views of an object.
+ */
+.accio-view-label {
+    color: #5F5F5F;
+}
+
+.accio-actions {
+  margin-bottom: 15px;
+}
+
+.accio-actions a, .accio-actions button {
+    margin-right: 15px;
+}
+
+.accio-actions > a:last-child, .accio-actions > button:last-child {
+    margin-right: 0;
+}
+
+.accio-view-panel .panel-title a:hover {
+    cursor: pointer;
+}
+
+.accio-view-panel-graph .panel-body {
+    padding: 0;
+}
+
+.accio-view-panel-graph h3 button {
+    margin-left: 15px;
+}
+
+/**
+ * Lists of objects.
+ */
+ .accio-list-nav {
+   padding-top: 15px;
+   border-top: 1px solid #e7e7e7;
+   margin-top: 25px;
+   margin-bottom: 15px;
+ }
+
+.accio-list-table, .accio-list-table table {
+    margin-bottom: 0;
+}
+
+.accio-list-table .progress {
+    margin: 0;
+}
+
+/**
+ * Runs.
+ */
+.accio-summary-resize {
+  /*position: relative;
+  top: -10px;*/
+}
+
+.accio-run-nodes-tree .row {
+    padding: 1px;
+}
+
+.accio-run-param-required {
+  color: red;
+}
+
+/**
+ * Homepage.
+ */
+.home-banner {
+    margin-top: -20px;
+    background-color: #99B9DC;
+    color: white;
+    padding: 30px;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.home-banner p {
+    font-size: 1.4em;
+}
+
+.home-banner h1 {
+    font-size: 32px;
+    margin-bottom: 25px;
+}
+
+.home-box {
+    text-align: center;
+    border: 1px solid white;
+    padding: 25px;
+}
+
+.home-box a {
+    color: black;
+    display: block;
+}
+
+.home-box a:hover {
+    color: black;
+    text-decoration: none;
+}
+
+.home-box:hover {
+    background-color: #e7e7e7;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+}
