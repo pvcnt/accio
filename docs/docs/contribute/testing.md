@@ -14,7 +14,7 @@ Before, make sure your development environment is ready and that you are able to
 
 The following command can be used to run all unit tests.
 ```bash
-$ ./pants test test:: 
+$ ./pants test test/:: 
 ```
 
 The later command will compile all modules for which there are some tests and run the associated tests.

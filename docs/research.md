@@ -4,17 +4,26 @@ nav: research
 layout: default
 ---
 
-<h1 class="section-title">{{ page.title }}</h1>
+<h1 class="page-title">{{ page.title }}</h1>
 
-Accio is a research project developed by the [DRIM team](https://liris.cnrs.fr/drim/) of the [LIRIS laboratory](https://liris.cnrs.fr), within the [Priva'Mov project](https://privamov.liris.cnrs.fr).
+Accio is a research project developed by the [DRIM team](https://liris.cnrs.fr/drim/) of the [LIRIS laboratory](https://liris.cnrs.fr), in Lyon (France).
+It originated from the [Priva'Mov project](https://privamov.liris.cnrs.fr).
+It is currently being used to conduct research by the LIRIS and the [GIPSA-lab](http://www.gipsa-lab.fr/) in Grenoble (France).
+
 It is named after the spell *Accio* in the Harry Potter books, whose goal is to make a remote object fly towards the spell caster.
-Our own Accio is a tool whose purpose is to execute mobility data processing pipelines and get handy results in a timely and convenient manner.
+Our own Accio is a tool whose purpose is to execute a scientific workflow and get handy results in a timely and convenient manner.
 
 ## Publications
+
+Sophie Cerf, Bogdan Robu, Nicolas Marchand, Antoine Boutet, Vincent Primault, et al.
+Toward an Easy Configuration of Location Privacy Protection Mechanisms.
+In *Proceedings of Middleware Posters and Demos*, Dec 2016, Trento, Italy. 2016.
+&lt;[hal-01376640](https://hal.archives-ouvertes.fr/hal-01376640)&gt;
 
 Vincent Primault, Antoine Boutet, Sonia Ben Mokhtar and Lionel Brunie.
 ALP: Adaptive Location Privacy.
 In *Proceedings of the 35h Symposium on Reliable Distributed Systems (SRDS)*, September 2016, Budapest, Hungary.
+&lt;[hal-01370447](https://hal.archives-ouvertes.fr/hal-01370447)&gt;
 
 ## Acknowledgements
 

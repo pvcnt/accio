@@ -20,6 +20,7 @@ By convention, all operators' names finish with the "Op" suffix (that is later a
 
 You may need to add some dependencies to the `BUILD` file if you wish to add new libraries.
 The following Accio-related dependencies must be included in any module containing operator implementations:
+
   * `src/jvm/fr/cnrs/liris/accio/core/api` contains interfaces and standard data types
   * `src/jvm/fr/cnrs/liris/accio/core/api:annotations` contains Java annotations.
 

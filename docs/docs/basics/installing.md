@@ -4,22 +4,17 @@ nav: docs
 title: Installing Accio
 ---
 
+The most straightforward way to install Accio is to fetch a binary release.
+Because Accio is developed in Java, those releases should be compatible with all platforms Java is available on, although Windows support has not been tested.
+ 
+If you wish to develop Accio, or just live on the edge and use the latest available source code, you can also [compile Accio from source](contribute/compiling.html).
+
 * TOC
 {:toc}
 
-## Requirements
+## 1. Install Java
 
-The following are required to run Accio:
-
-  * Linux or Mac OS X.
-  * Java 8.
-
-## Using a binary distribution
-
-The most straightforward way to install Accio is to fetch a binary release.
-
-### Installing dependencies
-
+The only requirement to run Accio is to have a JDK for Java 8.
 Before running Accio, you need to install the Java runtime on your machine.
 The exact procedure depends on the platform.
 
@@ -48,14 +43,13 @@ JDK 8 can be downloaded from [Oracle's JDK Page](http://www.oracle.com/technetwo
 Look for "Mac OS X x64" under "Java SE Development Kit".
 This will download a DMG image with an install wizard.
 
-### Running via a wrapper script
+## 2. Fetch a binary
 
-TODO.
+You can download the latest version of Accio as a pre-compiled JAR from [GitHub releases](https://github.com/pvcnt/location-privacy/releases).
 
-### Running via a JAR
+## 3. Run it!
 
-You can also get the latest version of Accio as a pre-compiled JAR from [GitHub releases](https://github.com/pvcnt/location-privacy/releases).
-You should then be able to run it the usual way:
+You should then be able to run the downloaded JAR the usual way:
 
 ```bash
 $ java -jar accio.jar <command> <options>...
@@ -67,6 +61,3 @@ When running experiments, you may need to tune JVM memory options, like increasi
 $ java -Xmx8G -jar accio.jar <command> <options>...
 ```
 
-## Compiling from source
-
-If you wish to develop Accio, or just live on the edge and use the latest available source code (possibly very unstable!), you can also [compile Accio from source](contribute/compiling.html).

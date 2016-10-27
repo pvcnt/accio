@@ -1,7 +1,7 @@
 ---
 layout: documentation
 nav: docs
-title: Command line interface
+title: Command line reference
 ---
 
 Accio comes with a command line interface allowing to run experiments and analyze their results.
