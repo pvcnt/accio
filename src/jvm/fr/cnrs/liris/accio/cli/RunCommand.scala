@@ -73,7 +73,9 @@ class RunCommand @Inject()(experimentFactory: ExperimentFactory, executor: Exper
   }
 
   private def make(opts: RunCommandOpts, workDir: Path, experimentUri: String, progressReporter: ExperimentProgressReporter) = {
-    val user = opts.user.map(User.parse).getOrElse(User(sys.props("user.name")))
+    val user = opts.user.map(User.parse) // Flag.
+      .orElse(sys.env.get("ACCIO_USER").map(User.apply(_, None))) // Environment variable.
+      .getOrElse(User(sys.props("user.name"))) // Session login.
     var experiment = experimentFactory.create(experimentUri, user)
     opts.name.foreach { name =>
       experiment = experiment.copy(name = name)
