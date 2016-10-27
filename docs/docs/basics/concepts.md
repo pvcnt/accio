@@ -36,7 +36,7 @@ It means that given some inputs **and a seed**, unstable operators are expected 
 
 A *workflow* is a directed acyclic graph, whose nodes are instances of operators. 
 
-![Example of a workflow](../../images/workflow.png)
+![Example workflow](../../images/workflow.png)
 
 The above workflow is formed of four nodes, each with its own inputs (in orange) and outputs (in purple).
 The `Source` node is the root node (i.e., it has no input from another node).
@@ -44,6 +44,15 @@ It accepts one input, `uri` and produces one output, `data`.
 This output is then consumed as an input by nodes `Geo-I`, `Coverage` and `Distortion`.
 It becomes clear that some inputs are fed from the output of another node (e.g, the `data` input of `Geo-I`), while some other are directly specified through a constant (e.g, the `epsilon` input of `Geo-I`).
 
-While operators need to be implemented by developers, workflows can be defined very simply thanks to the [workflow definition language](../usage/wokflows.html).
+While operators need to be implemented by developers, workflows can be defined very simply thanks to the [workflow definition language](../usage/workflows.html).
 
 ## Experiments and runs
+
+Workflows are instantiated through experiments.
+An experiment defines the way to launched one or several workflows in a row, with some variations.
+Each instance of a workflow is called a run; runs are then aggregated into experiments.
+An experiment can be as simple as a single run of a given workflow, or as complex as thousand runs, each one being a variation of the same workflow (e.g., to perform a parameter sweep).
+
+Experiments and runs are identified with a globally unique identifier, which means there should not be two identical identifiers even experiments where launched on different machines.
+
+Experiments can also be easily defined thanks to the [experiment definition language](../usage/experiments.html).
