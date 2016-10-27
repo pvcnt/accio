@@ -45,11 +45,7 @@ abstract class DataFrame[T: ClassTag](val env: SparkleEnv) extends LazyLogging {
    *                        With replacement: expected number of times each element is chosen; fraction must be >= 0.
    * @param seed            Seed for the random number generator.
    */
-  final def sample(
-    withReplacement: Boolean,
-    fraction: Double,
-    seed: Long = RandomUtils.random.nextLong): DataFrame[T] = {
-
+  final def sample(withReplacement: Boolean, fraction: Double, seed: Long = RandomUtils.random.nextLong): DataFrame[T] = {
     require(fraction >= 0.0, s"Negative fraction value: $fraction")
     if (withReplacement) {
       new SampleDataFrame[T](this, new PoissonSampler[T](fraction), seed)
@@ -163,17 +159,17 @@ abstract class DataFrame[T: ClassTag](val env: SparkleEnv) extends LazyLogging {
   final def foreach(fn: T => Unit): Unit = env.submit[T, Unit](this, keys, (_, it) => it.foreach(fn))
 
   final def write(sink: DataSink[T]): Unit = env.submit[T, Unit](this, keys, (key, it) => sink.write(it))
-
-  override def toString: String =
-    MoreObjects.toStringHelper(this)
-      .addValue(elementClassTag)
-      .toString
 }
 
 private[sparkle] class RestrictDataFrame[T: ClassTag](inner: DataFrame[T], override val keys: Seq[String])
   extends DataFrame[T](inner.env) {
 
   override def load(key: String): Iterator[T] = if (keys.contains(key)) inner.load(key) else Iterator.empty
+
+  override def toString: String =
+    MoreObjects.toStringHelper(this)
+      .addValue(inner)
+      .toString
 }
 
 private[sparkle] class FilterDataFrame[T: ClassTag](inner: DataFrame[T], fn: T => Boolean)
@@ -182,6 +178,11 @@ private[sparkle] class FilterDataFrame[T: ClassTag](inner: DataFrame[T], fn: T =
   override def keys: Seq[String] = inner.keys
 
   override def load(key: String): Iterator[T] = inner.load(key).filter(fn)
+
+  override def toString: String =
+    MoreObjects.toStringHelper(this)
+      .addValue(inner)
+      .toString
 }
 
 private[sparkle] class SampleDataFrame[T: ClassTag](inner: DataFrame[T], sampler: RandomSampler[T, T], seed: Long)
@@ -199,6 +200,11 @@ private[sparkle] class SampleDataFrame[T: ClassTag](inner: DataFrame[T], sampler
     aSampler.setSeed(seeds(key))
     aSampler.sample(inner.load(key))
   }
+
+  override def toString: String =
+    MoreObjects.toStringHelper(this)
+      .addValue(inner)
+      .toString
 }
 
 private[sparkle] class MapDataFrame[T, U: ClassTag](inner: DataFrame[T], fn: T => U)
@@ -207,6 +213,11 @@ private[sparkle] class MapDataFrame[T, U: ClassTag](inner: DataFrame[T], fn: T =
   override def keys: Seq[String] = inner.keys
 
   override def load(key: String): Iterator[U] = inner.load(key).map(fn)
+
+  override def toString: String =
+    MoreObjects.toStringHelper(this)
+      .addValue(inner)
+      .toString
 }
 
 private[sparkle] class FlatMapDataFrame[T, U: ClassTag](inner: DataFrame[T], fn: T => Iterable[U])
@@ -215,15 +226,25 @@ private[sparkle] class FlatMapDataFrame[T, U: ClassTag](inner: DataFrame[T], fn:
   override def keys: Seq[String] = inner.keys
 
   override def load(key: String): Iterator[U] = inner.load(key).flatMap(fn)
+
+  override def toString: String =
+    MoreObjects.toStringHelper(this)
+      .addValue(inner)
+      .toString
 }
 
-private[sparkle] class UnionDataFrame[T: ClassTag](datasets: Iterable[DataFrame[T]], env: SparkleEnv)
+private[sparkle] class UnionDataFrame[T: ClassTag](frames: Iterable[DataFrame[T]], env: SparkleEnv)
   extends DataFrame[T](env) {
 
-  override def keys: Seq[String] = datasets.flatMap(_.keys).toSeq.distinct.sorted
+  override def keys: Seq[String] = frames.flatMap(_.keys).toSeq.distinct.sorted
 
   override def load(key: String): Iterator[T] =
-    datasets.map(_.load(key)).foldLeft(Iterator.empty: Iterator[T])(_ ++ _)
+    frames.map(_.load(key)).foldLeft(Iterator.empty: Iterator[T])(_ ++ _)
+
+  override def toString: String =
+    MoreObjects.toStringHelper(this)
+      .addValue(frames.mkString(", "))
+      .toString
 }
 
 private[sparkle] class ZipDataFrame[T: ClassTag, U: ClassTag](first: DataFrame[T], other: DataFrame[U])
@@ -232,4 +253,10 @@ private[sparkle] class ZipDataFrame[T: ClassTag, U: ClassTag](first: DataFrame[T
   override def keys: Seq[String] = first.keys
 
   override def load(key: String): Iterator[(T, U)] = first.load(key).zip(other.load(key))
+
+  override def toString: String =
+    MoreObjects.toStringHelper(this)
+      .addValue(first)
+      .addValue(other)
+      .toString
 }

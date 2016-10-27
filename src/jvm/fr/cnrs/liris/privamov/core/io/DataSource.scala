@@ -24,8 +24,18 @@ package fr.cnrs.liris.privamov.core.io
  * @tparam T Elements' type.
  */
 trait DataSource[T] {
+  /**
+   * Return the list of the keys of elements available in this data source. Each key should be present only once,
+   * but the list should be ordered in a deterministic order.
+   */
   def keys: Seq[String]
 
+  /**
+   * Read the element associated with a given key, if any.
+   *
+   * @param key Key.
+   * @return The element stored under that key, if any.
+   */
   def read(key: String): Option[T]
 }
 

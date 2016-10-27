@@ -22,7 +22,7 @@ import java.io.File
 import java.nio.file.{Files, Paths}
 
 import com.github.nscala_time.time.Imports._
-import com.google.common.base.Charsets
+import com.google.common.base.{Charsets, MoreObjects}
 import fr.cnrs.liris.common.geo.LatLng
 import fr.cnrs.liris.common.util.FileUtils
 import fr.cnrs.liris.privamov.core.model.{Event, Trace}
@@ -31,7 +31,7 @@ import org.joda.time.Instant
 /**
  * Mobility traces source reading data from our custom CSV format, with one file per trace.
  *
- * @param uri URI to directory where to read.
+ * @param uri Path to the directory from where to read.
  */
 case class CsvSource(uri: String) extends DataSource[Trace] {
   private[this] val path = Paths.get(FileUtils.replaceHome(uri))
@@ -51,8 +51,14 @@ case class CsvSource(uri: String) extends DataSource[Trace] {
 
   override def read(id: String): Option[Trace] = Some(read(id, path.resolve(s"$id.csv").toFile))
 
+  override def toString: String =
+    MoreObjects.toStringHelper(this)
+      .add("uri", uri)
+      .toString
+
   private def read(id: String, file: File): Trace = {
-    val events = decoder.decode(id, Files.readAllBytes(file.toPath)).getOrElse(Seq.empty).sortBy(_.time)
+    val bytes = Files.readAllBytes(file.toPath)
+    val events = decoder.decode(id, bytes).getOrElse(Seq.empty).sortBy(_.time)
     Trace(id, events)
   }
 
@@ -76,36 +82,6 @@ case class CsvSource(uri: String) extends DataSource[Trace] {
 }
 
 /**
- * Mobility traces sink writing data to our custom CSV format, with one file per trace.
- *
- * @param uri URI to directory where to write.
- */
-case class CsvSink(uri: String) extends DataSink[Trace] {
-  private[this] val path = Paths.get(FileUtils.replaceHome(uri))
-  if (!path.toFile.exists) {
-    Files.createDirectories(path)
-  } else if (path.toFile.isDirectory && path.toFile.listFiles.nonEmpty) {
-    throw new IllegalArgumentException(s"Non-empty directory: ${path.toAbsolutePath}")
-  }
-  private[this] val encoder = new CsvEncoder
-  private[this] val NL = "\n".getBytes(Charsets.UTF_8)
-
-  override def write(elements: TraversableOnce[Trace]): Unit = {
-    elements.foreach { trace =>
-      val encodedEvents = trace.events.map(encoder.encode)
-      val bytes = if (encodedEvents.isEmpty) {
-        Array.empty[Byte]
-      } else if (encodedEvents.size == 1) {
-        encodedEvents.head
-      } else {
-        encodedEvents.tail.fold(encodedEvents.head)(_ ++ NL ++ _)
-      }
-      Files.write(path.resolve(s"${trace.id}.csv"), bytes)
-    }
-  }
-}
-
-/**
  * Decoder for our custom CSV format handling events.
  */
 class CsvDecoder extends Decoder[Event] {
@@ -123,15 +99,5 @@ class CsvDecoder extends Decoder[Event] {
       val point = LatLng.degrees(lat, lng).toPoint
       Some(Event(user, point, new Instant(time)))
     }
-  }
-}
-
-/**
- * Encoder for our custom CSV format handling events.
- */
-class CsvEncoder extends Encoder[Event] {
-  override def encode(obj: Event): Array[Byte] = {
-    val latLng = obj.point.toLatLng
-    s"${obj.user},${latLng.lat.degrees},${latLng.lng.degrees},${obj.time.millis}".getBytes(Charsets.UTF_8)
   }
 }

@@ -20,6 +20,7 @@ package fr.cnrs.liris.privamov.core.io
 
 import java.nio.file.{Files, Path, Paths}
 
+import com.google.common.base.MoreObjects
 import fr.cnrs.liris.common.geo.LatLng
 import fr.cnrs.liris.privamov.core.model.{Event, Trace}
 import org.joda.time.Instant
@@ -29,12 +30,14 @@ import scala.sys.process._
 /**
  * Support for the [[http://crawdad.org/epfl/mobility/20090224/ Cabspotting dataset]].
  * Each trace is stored inside its own file, newest events first.
+ *
+ * @param uri Path to the directory from where to read.
  */
-case class CabspottingSource(url: String) extends DataSource[Trace] {
-  private[this] val path = Paths.get(url)
+case class CabspottingSource(uri: String) extends DataSource[Trace] {
+  private[this] val path = Paths.get(uri)
   private[this] val decoder = new TextLineDecoder(new CabspottingDecoder)
-  require(path.toFile.isDirectory, s"$url is not a directory")
-  require(path.toFile.canRead, s"$url is unreadable")
+  require(path.toFile.isDirectory, s"$uri is not a directory")
+  require(path.toFile.canRead, s"$uri is unreadable")
 
   override lazy val keys = path.toFile
     .listFiles
@@ -47,6 +50,11 @@ case class CabspottingSource(url: String) extends DataSource[Trace] {
     val events = decoder.decode(key, Files.readAllBytes(path.resolve(s"new_$key.txt"))).getOrElse(Seq.empty)
     if (events.nonEmpty) Some(Trace(events)) else None
   }
+
+  override def toString: String =
+    MoreObjects.toStringHelper(this)
+      .add("uri", uri)
+      .toString
 }
 
 /**

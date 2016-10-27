@@ -140,11 +140,9 @@ class BernoulliCellSampler[T](lb: Double, ub: Double, complement: Boolean = fals
  * @tparam T item type
  */
 class BernoulliSampler[T: ClassTag](fraction: Double) extends RandomSampler[T, T] {
-
-  /** epsilon slop to avoid failure from floating point jitter */
+  // Epsilon slop to avoid failure from floating point jitter.
   require(
-    fraction >= (0.0 - RandomSampler.roundingEpsilon)
-      && fraction <= (1.0 + RandomSampler.roundingEpsilon),
+    fraction >= (0.0 - RandomSampler.roundingEpsilon) && fraction <= (1.0 + RandomSampler.roundingEpsilon),
     s"Sampling fraction ($fraction) must be on interval [0, 1]")
 
   private val rng: Random = RandomSampler.newDefaultRNG
@@ -159,7 +157,7 @@ class BernoulliSampler[T: ClassTag](fraction: Double) extends RandomSampler[T, T
     } else if (fraction <= RandomSampler.defaultMaxGapSamplingFraction) {
       new GapSamplingIterator(items, fraction, rng, RandomSampler.rngEpsilon)
     } else {
-      items.filter { _ => rng.nextDouble() <= fraction }
+      items.filter(_ => rng.nextDouble() <= fraction)
     }
   }
 
@@ -174,10 +172,7 @@ class BernoulliSampler[T: ClassTag](fraction: Double) extends RandomSampler[T, T
  * @param useGapSamplingIfPossible Whether to use gap sampling when sampling ratio is low.
  * @tparam T Elements' type.
  */
-class PoissonSampler[T: ClassTag](fraction: Double, useGapSamplingIfPossible: Boolean) extends RandomSampler[T, T] {
-
-  def this(fraction: Double) = this(fraction, useGapSamplingIfPossible = true)
-
+class PoissonSampler[T: ClassTag](fraction: Double, useGapSamplingIfPossible: Boolean = true) extends RandomSampler[T, T] {
   // Epsilon slop to avoid failure from floating point jitter.
   require(fraction >= (0.0 - RandomSampler.roundingEpsilon), s"Sampling fraction ($fraction) must be >= 0")
 
