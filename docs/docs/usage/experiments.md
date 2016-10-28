@@ -1,98 +1,113 @@
 ---
 layout: documentation
 nav: docs
-title: Workflows & experiments definition
+title: Experiment definition
 ---
 
-This section covers how to define experiments easily as JSON documents.
+This section covers how to easily define experiments as JSON documents.
 
 * TOC
 {:toc}
 
-## Experiment definition
+## JSON document.
 
 An experiment is a JSON object formed of the following fields.
 
 | Name | Description | Type | Required |
 |:-----|:------------|:-----|:---------|
+| workflow | Workflow to execute. | string | true |
 | name | A human-readable name. | string | false |
 | notes | Some free text notes. | string | false |
-| tags | Some tags. | string[] |  false |
-| workflow | Path to a workflow definition file. It can be either a relative (starting with `./`), home relative (starting with `~`) or absolute (starting with `/`) path. | string | true |
-| runs | Override the default number of runs for each node. | integer | false |
-| params | Mapping between fully qualified names of parameters to override and new values. | object | false|
-| exploration | Exploration configuration. | object | false |
-| exploration.params | Mapping between fully qualified names of parameters to override and domains of values. | object | true |
-| optimization | Optimization configuration. | object | false |
-| optimization.grid | Mapping between fully qualified names of parameters to override and domains of values. | object | true |
-| optimization.iters | Number of steps per temperature value. | integer | false |
-| optimization.contraction | Contraction of the domain when choosing a new value. | double | false |
-| optimization.objectives | Optimization objectives. | object[] | true |
-| optimization.objectives[*].type | Objective type: "minimize" or "optimize". | string | true |
-| optimization.objectives[*].metric | Objective metric. It is the fully qualified name of an artifact. | string | true |
-| optimization.objectives[*].threshold | Objective threshold. | double | false |
+| tags | Some tags, used when searching for experiments. | string[] |  false |
+| owner | Person owning the experiment. It can include an email address between chevrons. | string | false |
+| runs | Number of times to run each graph (default: 1). | integer | false |
+| seed | Initial seed to be used for deterministic reproduction of results. | number | false |
+| params | Mapping between names of parameters to override and new values. | object | false |
 {: class="table table-striped"}
 
-Here is an example of a simple experiment definition:
+Here is an example of a simple experiment definition.
 
 ```json
 {
-  "workflow": "./geoind-workflow.json",
+  "workflow": "./my-awesome-workflow.json",
   "runs": 3,
   "name": "My brand new experiment",
   "tags": ["brand", "new"],
-  "optimization": {
-    "grid": {
-      "GeoIndistinguishability/epsilon": {
-        "ranges": [[1,0.01,0.001], [0.01,0.001,0.00001]]
-      }
-    },
-    "objectives": [
-      {
-        "type": "minimize",
-        "metric": "privacy/fscore"
-      },
-      {
-        "type": "minimize",
-        "metric": "utility/avg",
-        "threshold": 500
-      }
-    ]
+  "params": {
+    "GeoIndistinguishability/epsilon": {
+      "from": 0.00001,
+      "to": 1,
+      "log": true
+    }
   }
 }
 ```
 
-## Parameters
+## Specifying a workflow
 
-### Parameters values
+The workflow to be executed is specified under the `workflow` key.
+It is a path to a [workflow definition file](workflows.html), which can be either a relative (starting with `./`), home relative (starting with `~`) or absolute (starting with `/`) path.
 
-  * **integer:** JSON integer number.
-  * **long:** JSON long number.
-  * **double:** JSON float number.
-  * **string:** JSON string.
-  * **boolean:** JSON boolean.
-  * **string list:** JSON array of strings.
-  * **distance:** JSON string, formatted as `<quantity>.<unit>`, where `<quantity>` is a number and `<unit>` one of "meters", "kilometers" or "miles", either singular or plural.
-  * **duration:** JSON string, formatted as `<quantity>.<unit>`, where `<quantity>` is a number and `<unit>` one of "millis", "seconds", "minutes", "hours" or "days", either singular or plural.
-  * **timestamp:** JSON string, formatted with respect to[ISO 8601](https://www.w3.org/TR/NOTE-datetime), e.g., "2016-06-22T11:28:32Z".
+## Specifying parameters
 
-### Parameters ranges
+When defining an experiment, you can override any input of any node specified in the workflow graph.
+You can either specify a single value or multiple values for any parameter, triggering the execution of multiple versions of the same original workflow.
+Accio supports three ways to specify parameters: single value, list of values and range of values.
 
-When defining an exploration, you can define ranges of parameters to explore.
+### Single value
+ 
+To override a parameter with a single value, you have to use a JSON object whose only key is `value` mapped to the new value for the parameter.
+The value should be specified using the same format as for [workflow input values](workflows.html#input-values).
+For example:
 
-  * **integer:** JSON array, either `[from, to, step]` or `[from, to]` (in the latter the step is assumed to be 1). Elements are JSON integers. Boundaries are inclusive.
-  * **long:** JSON array, either `[from, to, step]` or `[from, to]` (in the latter the step is assumed to be 1). Elements are JSON longs. Boundaries are inclusive.
-  * **double:** JSON array, `[from, to, step]`. Elements are JSON floats. Boundaries are inclusive.
-  * **distance:** JSON array, `[from, to, step]`. Elements are JSON strings formatted as distances. Boundaries are inclusive.
-  * **duration:** JSON array, `[from, to, step]`. Elements are JSON strings formatted as durations. Boundaries are inclusive.
-  * **timestamp:** JSON array, `[from, to, step]`. `from` and `to` are JSON strings formatted as timetamps, `step` is a string formatted as a duration. Boundaries are inclusive.
-  * **string:** not applicable.
-  * **boolean:** not applicable.
-  * **string list:** not applicable.
+```json
+{
+  "params": {
+    "GeoIndistinguishability/epsilon": {
+      "value": 0.001
+    }
+  }
+}
+```
 
-### Parameters references
+### List of values
+ 
+To override a parameter with a list of values, you have to use a JSON object whose only key is `values` mapped to a JSON array with all values taken by the parameter.
+The order of values has no importance.
+Values should be specified using the same format as for [workflow input values](workflows.html#input-values).
+For example:
 
-When you need to refer to a parameter, you have two options.
-When inside the context of a node, you can use directly its name, for example `distance`.
-When outside of the context of a node (e.g., when defining global parameters overrides), you must use its fully qualified name.
-Fully qualified names are built with the node name, a slash '/' separator and the parameter name, e.g., `PoisRetrieval/distance`.
+```json
+{
+  "params": {
+    "GeoIndistinguishability/epsilon": {
+      "values": [1, 0.1, 0.001, 0.0001]
+    }
+  }
+}
+```
+
+### Range of values
+ 
+To override a parameter with a range of values, you have to use a JSON object with keys `from`, `to` and `step`, mapped respectively to the first value (inclusive) taken by the parameter, the last value (inclusive) taken by the parameter and the increment between two consecutive values.
+The first value (under the `from` key) must be lower than the last value (under the `to` key). 
+Values should be specified using the same format as for [workflow input values](workflows.html#input-values).
+For example:
+
+```json
+{
+  "params": {
+    "GeoIndistinguishability/epsilon": {
+      "from": 0.0001,
+      "to": 1
+    }
+  }
+}
+```
+
+Not all data types may be specified as a range of values.
+Only the following data types are supported: byte, short, integer, long, double, distance, duration, timestamp.
+For the timestamp data type, the first and last values are specified as timestamps, whereas the step between consecutive values is specified as a duration.
+For all other data types, the first, last and step values are all specified in the nomminal data type.
+
+You can also specify logarithmic progressions by setting one of the `log`, `log2` or `log10` keys (mutually exclusive) to `true`, to obtain a logarithmic progression respectively in base e, 2 or 10.

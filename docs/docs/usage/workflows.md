@@ -4,7 +4,7 @@ nav: docs
 title: Workflow definition
 ---
 
-This section covers how to define workflows easily as JSON documents.
+This section covers how to easily define workflows as JSON documents.
 
 * TOC
 {:toc}
@@ -102,7 +102,7 @@ Values are specified differently depending on their type.
 | list | JSON array of any other allowed type. |
 | set | JSON array of any other allowed type. |
 | map | JSON object of any other allowed type. |
-| dataset, image | Cannot be specified as JSON. You need to use a dedicated operator for that purpose (e.g., *EventSourceOp*). |
+| dataset | Cannot be specified as JSON. |
 | image | Cannot be specified as JSON. |
 {: class="table table-striped"}
 
