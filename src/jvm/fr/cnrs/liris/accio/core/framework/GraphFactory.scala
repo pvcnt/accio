@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.core.framework
 
-import com.google.inject.Inject
+import com.google.inject.{Inject, Singleton}
 import fr.cnrs.liris.common.util.Seqs
 
 /**
@@ -34,7 +34,8 @@ class IllegalGraphException(message: String, cause: Throwable = null) extends Ex
  *
  * @param opRegistry Operator registry.
  */
-class GraphFactory @Inject()(opRegistry: OpRegistry) {
+@Singleton
+final class GraphFactory @Inject()(opRegistry: OpRegistry) {
   /**
    * Create a new graph.
    *

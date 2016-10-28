@@ -26,7 +26,7 @@ import fr.cnrs.liris.testing.UnitSpec
 class DataTypeSpec extends UnitSpec {
   behavior of "DataType"
 
-  it should "be parsable" in {
+  it should "parse simple types" in {
     DataType.parse("byte") shouldBe DataType.Byte
     DataType.parse("short") shouldBe DataType.Short
     DataType.parse("integer") shouldBe DataType.Integer
@@ -63,6 +63,10 @@ class DataTypeSpec extends UnitSpec {
     DataType.parse("map(location,  double)") shouldBe DataType.Map(DataType.Location, DataType.Double)
     DataType.parse("map(location,double )") shouldBe DataType.Map(DataType.Location, DataType.Double)
     DataType.parse("map(location,double  )") shouldBe DataType.Map(DataType.Location, DataType.Double)
+  }
+
+  it should "parse nested types" in {
+    DataType.parse("map(string,map(integer,location))") shouldBe DataType.Map(DataType.String, DataType.Map(DataType.Integer, DataType.Location))
   }
 
   it should "return a parsable string representation" in {

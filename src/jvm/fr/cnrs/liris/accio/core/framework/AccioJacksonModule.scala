@@ -33,6 +33,9 @@ import fr.cnrs.liris.common.geo.Distance
 import scala.collection.JavaConverters._
 import scala.reflect.ClassTag
 
+/**
+ * Accio integration with Jackson. Configures Jackson to be able to (de)serialize all needed objects.
+ */
 object AccioFinatraJacksonModule extends FinatraJacksonModule {
   override protected val serializationInclusion = JsonInclude.Include.NON_ABSENT
 
@@ -49,6 +52,7 @@ private object AccioJacksonModule extends SimpleModule {
   addSerializer(new TwitterDurationSerializer)
   addDeserializer(classOf[TwitterDuration], new TwitterDurationDeserializer)
   addDeserializer(classOf[Reference], new ReferenceDeserializer)
+  addKeyDeserializer(classOf[Reference], new ReferenceKeyDeserializer)
   addDeserializer(classOf[DataType], new DataTypeDeserializer)
   addDeserializer(classOf[User], new UserDeserializer)
   addDeserializer(classOf[GraphDef], new GraphDefDeserializer)
@@ -96,6 +100,12 @@ private class GraphDeserializer extends StdDeserializer[Graph](classOf[Graph]) {
 private class ReferenceDeserializer extends StdDeserializer[Reference](classOf[Reference]) {
   override def deserialize(jsonParser: JsonParser, deserializationContext: DeserializationContext): Reference = {
     Reference.parse(jsonParser.getValueAsString)
+  }
+}
+
+private class ReferenceKeyDeserializer extends KeyDeserializer {
+  override def deserializeKey(s: String, deserializationContext: DeserializationContext): AnyRef = {
+    Reference.parse(s)
   }
 }
 

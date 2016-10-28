@@ -21,8 +21,9 @@ package fr.cnrs.liris.accio.core.framework
 import com.twitter.finatra.validation.Min
 
 /**
- * An experiment is a specification about the manner to run one or many variations of a single workflow. It can be
- * either a direct execution of this workflow, an exploration of parameters or an optimization of parameters.
+ * An experiment is the execution of one or several variations of a single workflow. The actual execution of a
+ * workflow takes place inside [[Run]]s, which are then aggregated into an experiment. An experiment can specify
+ * some parameters, which allow to override inputs of some nodes.
  *
  * @param id       Unique identifier (among all experiments AND runs).
  * @param name     Human-readable name.
@@ -31,8 +32,8 @@ import com.twitter.finatra.validation.Min
  * @param runs
  * @param notes    Some notes.
  * @param tags     Some tags.
- * @param params   Parameters sweep.
- * @param seed     Seed used by pseudo-random operators.
+ * @param params   Parameters override.
+ * @param seed     Seed used by unstable operators.
  * @param report
  */
 case class Experiment(

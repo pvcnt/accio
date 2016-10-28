@@ -25,13 +25,13 @@ package fr.cnrs.liris.accio.core.framework
  * @param owner User owning this workflow.
  * @param name  Human-readable name.
  */
-case class Workflow(graph: Graph, owner: User, name: Option[String]) {
-  /**
-   * Return a copy of this workflow with new parameters propagated into the graph.
-   *
-   * @param params Override parameters map.
-   */
-  def setParams(params: Map[Reference, Any]): Workflow = copy(graph = graph.setParams(params))
-}
+case class Workflow(graph: Graph, owner: User, name: Option[String])
 
+/**
+ * Definition of workflow.
+ *
+ * @param graph Definition of the graph of operators.
+ * @param owner User owning this workflow.
+ * @param name  Human-readable name.
+ */
 case class WorkflowDef(graph: GraphDef, owner: Option[User] = None, name: Option[String] = None)

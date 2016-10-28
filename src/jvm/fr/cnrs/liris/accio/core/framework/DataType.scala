@@ -38,9 +38,9 @@ sealed trait DataType {
  * List of available [[DataType]]s and factory for [[DataType]].
  */
 object DataType {
-  private[this] val ListRegex = "^list\\s*\\(\\s*([a-z]+)\\s*\\)$".r
-  private[this] val SetRegex = "^set\\s*\\(\\s*([a-z]+)\\s*\\)$".r
-  private[this] val MapRegex = "^map\\s*\\(\\s*([a-z]+),\\s*([a-z]+)\\s*\\)$".r
+  private[this] val ListRegex = "^list\\s*\\(\\s*(.+?)\\s*\\)$".r // Reluctant quantifier (i.e., not greedy).
+  private[this] val SetRegex = "^set\\s*\\(\\s*(.+?)\\s*\\)$".r   // Reluctant quantifier (i.e., not greedy).
+  private[this] val MapRegex = "^map\\s*\\(\\s*(.+?),\\s*(.+?)\\s*\\)$".r // Reluctant quantifiers (i.e., not greedy).
 
   /**
    * A Java/Scala byte data type.
@@ -172,7 +172,7 @@ object DataType {
    * @param str String to parse.
    * @throws IllegalArgumentException If the string does not represent a valid data type.
    */
-  def parse(str: String): DataType = str match {
+  def parse(str: String): DataType = str.toLowerCase.trim match {
     case "byte" => Byte
     case "short" => Short
     case "integer" => Integer

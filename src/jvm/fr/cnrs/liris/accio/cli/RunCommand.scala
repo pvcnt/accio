@@ -137,6 +137,7 @@ private class ConsoleGraphProgressReporter(out: Reporter, width: Int = 80) exten
   override def onGraphComplete(run: Run, successful: Boolean): Unit = synchronized {
     out.write(s"    ${" " * length}\r")
     length = 0
+    progress.set(0)
   }
 
   override def onNodeStart(run: Run, node: Node): Unit = synchronized {

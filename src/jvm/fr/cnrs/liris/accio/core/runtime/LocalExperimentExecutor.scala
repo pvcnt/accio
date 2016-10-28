@@ -19,39 +19,27 @@
 package fr.cnrs.liris.accio.core.runtime
 
 import java.nio.file.Path
-import java.util.UUID
 
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.core.framework._
-import fr.cnrs.liris.common.util.{HashUtils, Seqs}
 
-import scala.collection.mutable
-import scala.util.Random
-
-class LocalExperimentExecutor @Inject()(workflowExecutor: GraphExecutor, repository: ReportRepository, opRegistry: OpRegistry)
+class LocalExperimentExecutor @Inject()(graphExecutor: GraphExecutor, repository: ReportRepository, runFactory: RunFactory)
   extends ExperimentExecutor with LazyLogging {
 
   override def execute(experiment: Experiment, workDir: Path, progressReporter: ExperimentProgressReporter): ExperimentReport = {
     repository.write(workDir, experiment)
     var report = new ExperimentReport
-    val rnd = new Random(experiment.seed)
 
     progressReporter.onStart(experiment)
 
-    val scheduled = mutable.Queue.empty[(String, Graph)] ++ explore(experiment)
-    while (scheduled.nonEmpty) {
-      val (name, graph) = scheduled.dequeue()
-      for (idx <- 0 until experiment.runs) {
-        val runId = HashUtils.sha1(UUID.randomUUID().toString)
-        logger.trace(s"Starting execution of workflow run $runId: $graph")
-        report = report.addRun(runId)
-        val seed = rnd.nextLong()
-        val run = Run(id = runId, parent = experiment.id, graph = graph, name = Some(name), idx = idx, seed = seed)
-        repository.write(workDir, experiment.copy(report = Some(report)))
-        workflowExecutor.execute(run, workDir, progressReporter)
-        logger.trace(s"Completed execution of workflow run $runId")
-      }
+    val runs = runFactory.create(experiment)
+    runs.foreach { run =>
+      logger.trace(s"Starting execution of workflow run ${run.id}: ${run.graph}")
+      report = report.addRun(run.id)
+      repository.write(workDir, experiment.copy(report = Some(report)))
+      graphExecutor.execute(run, workDir, progressReporter)
+      logger.trace(s"Completed execution of workflow run ${run.id}")
     }
 
     report = report.complete()
@@ -60,21 +48,5 @@ class LocalExperimentExecutor @Inject()(workflowExecutor: GraphExecutor, reposit
     logger.trace(s"Completed execution of experiment ${experiment.id}")
 
     report
-  }
-
-  private def explore(experiment: Experiment): Seq[(String, Graph)] = {
-    val graph = experiment.workflow.graph
-    if (experiment.params.nonEmpty) {
-      val allValues = experiment.params.map { case (ref, explo) =>
-        val argDef = opRegistry(graph(ref.node).op).defn.inputs.find(_.name == ref.port).get
-        Values.expand(explo, argDef.kind).map(v => ref -> v)
-      }.toSeq
-      Seqs.crossProduct(allValues).map { params =>
-        val name = params.map { case (k, v) => s"$k=$v" }.mkString(" ")
-        (name, graph.setParams(params.toMap))
-      }
-    } else {
-      Seq((experiment.name, graph))
-    }
   }
 }

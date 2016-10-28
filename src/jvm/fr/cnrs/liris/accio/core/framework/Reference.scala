@@ -53,6 +53,8 @@ object Reference {
       require(node.nonEmpty, s"Invalid reference, empty node name: $str")
       require(port.nonEmpty, s"Invalid reference, empty port name: $str")
       Reference(node, port)
-    case _ => throw new IllegalArgumentException(s"Invalid reference: $str")
+    case _ =>
+      println(s"----- illegal ref: $str")
+      throw new IllegalArgumentException(s"Invalid reference: $str")
   }
 }
