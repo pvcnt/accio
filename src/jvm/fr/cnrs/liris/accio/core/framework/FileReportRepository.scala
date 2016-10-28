@@ -35,12 +35,12 @@ class FileReportRepository @Inject()(mapper: FinatraObjectMapper) extends Report
       .map(_.getName.stripPrefix("experiment-").stripSuffix(".json"))
       .reverse
 
-  override def readExperiment(workDir: Path, id: String): Experiment = {
-    mapper.parse[Experiment](new FileInputStream(workDir.resolve(s"experiment-$id.json").toFile))
+  override def readExperiment(workDir: Path, id: String): Option[Experiment] = {
+    read[Experiment](workDir.resolve(s"experiment-$id.json"))
   }
 
-  override def readRun(workDir: Path, id: String): Run = {
-    mapper.parse[Run](new FileInputStream(workDir.resolve(s"run-$id.json").toFile))
+  override def readRun(workDir: Path, id: String): Option[Run] = {
+    read[Run](workDir.resolve(s"run-$id.json"))
   }
 
   override def write(workDir: Path, experiment: Experiment): Unit = {
@@ -58,6 +58,20 @@ class FileReportRepository @Inject()(mapper: FinatraObjectMapper) extends Report
       mapper.prettyObjectMapper.writeValue(os, run)
     } finally {
       os.close()
+    }
+  }
+
+  private def read[T: Manifest](path: Path): Option[T] = {
+    val file = path.toFile
+    if (file.exists) {
+      val fis = new FileInputStream(file)
+      try {
+        Some(mapper.parse[T](fis))
+      } finally {
+        fis.close()
+      }
+    } else {
+      None
     }
   }
 }

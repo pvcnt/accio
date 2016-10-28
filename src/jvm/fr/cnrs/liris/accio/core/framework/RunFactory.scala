@@ -57,6 +57,7 @@ final class RunFactory @Inject()(opRegistry: OpRegistry) {
     if (params.nonEmpty) {
       val allValues = params.map { case (ref, explo) =>
         val argDef = opRegistry(graph(ref.node).op).defn.inputs.find(_.name == ref.port).get
+        //TODO: take into account logarithmic progressions.
         Values.expand(explo, argDef.kind).map(v => ref -> v)
       }.toSeq
       Seqs.crossProduct(allValues).map { params =>

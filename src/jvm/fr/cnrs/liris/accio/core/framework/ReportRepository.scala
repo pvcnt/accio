@@ -27,7 +27,7 @@ trait ReportRepository {
 
   def write(workDir: Path, run: Run): Unit
 
-  def readExperiment(workDir: Path, id: String): Experiment
+  def readExperiment(workDir: Path, id: String): Option[Experiment]
 
-  def readRun(workDir: Path, id: String): Run
+  def readRun(workDir: Path, id: String): Option[Run]
 }

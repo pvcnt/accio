@@ -35,15 +35,15 @@ case class GetRunRequest(@RouteParam id: String)
 class ApiController @Inject()(repository: ReportRepository) extends Controller {
   private[this] val workDir = Paths.get(sys.props("user.home")).resolve("data/experiments")
 
-  get("/experiment") { req: ListExperimentsRequest =>
+  get("/api/experiment") { req: ListExperimentsRequest =>
     repository.list(workDir)
   }
 
-  get("/experiment/:id") { req: GetExperimentRequest =>
+  get("/api/experiment/:id") { req: GetExperimentRequest =>
     repository.readExperiment(workDir, req.id)
   }
 
-  get("/run/:id") { req: GetRunRequest =>
+  get("/api/run/:id") { req: GetRunRequest =>
     repository.readRun(workDir, req.id)
   }
 }

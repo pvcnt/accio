@@ -47,7 +47,7 @@ class VisualizeCommand @Inject()(repository: ReportRepository) extends AccioComm
       workDir.toFile.list
         .filter(_.startsWith("run-"))
         .map(_.drop(4).dropRight(5))
-        .map(id => repository.readRun(workDir, id))
+        .flatMap(id => repository.readRun(workDir, id))
     }
     val opts = flags.as[VisualizeFlags]
     val reportStats = new ReportStatistics(reports)
