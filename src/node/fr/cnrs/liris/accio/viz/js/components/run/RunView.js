@@ -25,7 +25,7 @@ let RunView = React.createClass({
   },
 
   render: function () {
-    const run = this.props.run;
+    const {run} = this.props;
 
     const summaryPanels =
       filter(run.per_node, nodeRun => {
@@ -66,7 +66,7 @@ let RunView = React.createClass({
 
         <RunStatusPanel run={run}/>
 
-        <RunDetailsPanel run={run}/>
+        <RunDetailsPanel run={run} experiment={this.props.experiment}/>
 
         <LazyPanel header={<h3>Run graph</h3>}
                    className="accio-view-panel accio-view-panel-graph"
@@ -82,7 +82,8 @@ let RunView = React.createClass({
 });
 
 RunView.propTypes = {
-  run: React.PropTypes.object.isRequired
+  run: React.PropTypes.object.isRequired,
+  experiment: React.PropTypes.object.isRequired
 };
 
 export default RunView;

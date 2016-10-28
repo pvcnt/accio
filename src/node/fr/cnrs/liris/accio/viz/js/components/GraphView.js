@@ -1,7 +1,7 @@
 import React from "React";
 import d3plus from "d3plus";
 import {uniqueId} from "lodash";
-import {map, flatMap, mapKeys, keys, identity, filter, head, uniqid} from "lodash";
+import {map, flatMap, fromPairs, toPairs, keys, identity, filter, head, uniqid} from "lodash";
 
 let GraphView = React.createClass({
   getDefaultProps: function () {
@@ -11,13 +11,13 @@ let GraphView = React.createClass({
   },
 
   _updateGraph: function () {
-    const nodes = this.props.graph.nodes.map(node => {
-      const params = mapKeys(node.params, (value, key) => 'param:' + key);
+    const nodes = this.props.graph.map(node => {
+      const params = fromPairs(filter(toPairs(node.inputs, (kv) => kv[1].value)).map(kv => ['in:' + kv[0], kv[1].value]));
       let color = '#5bc0de'; // Bootstrap's "info" style
-      if (this.props.run) {
-        const stats = head(filter(this.props.run.per_node, (node) => node.name === node.name));
-        if (stats.completed) {
-          color = (stats.is_successful)
+      if (this.props.report) {
+        const stats = head(filter(this.props.report.node_stats, (node) => node.name === node.name));
+        if (stats.completed_at) {
+          color = (stats.successful)
             ? '#5cb85c'  // Bootstrap's "success" style
             : '#d9534f'; // Bootstrap's "danger" style
         } else {
@@ -26,13 +26,14 @@ let GraphView = React.createClass({
       }
       return Object.assign({name: node.name, op: node.op, color: color}, params);
     });
-    const links = flatMap(this.props.graph.nodes, node => {
-      return map(node.inputs, (value, key) => {
-        const source = value.substring(0, value.indexOf("/"));
-        return {source: source, target: node.name};
+    const links = flatMap(this.props.graph, node => {
+      return map(filter(node.inputs, (input) => input.reference), (input, key) => {
+        const source = input.reference.substring(0, input.reference.indexOf("/"));
+        const port = input.reference.substring(input.reference.indexOf("/") + 1);
+        return {source, target: node.name, port};
       });
     });
-    let allParams = flatMap(this.props.graph.nodes, node => keys(node.params)).map(key => 'param:' + key);
+    let allParams = flatMap(this.props.graph, node => filter(toPairs(node.inputs, (kv) => kv[1].value)).map(kv => 'in:' + kv[0]));
     allParams.unshift('op');
 
     const domNode = document.getElementById(this.props.id);
@@ -68,7 +69,7 @@ let GraphView = React.createClass({
 });
 
 GraphView.propTypes = {
-  graph: React.PropTypes.object.isRequired,
+  graph: React.PropTypes.arrayOf(React.PropTypes.object).isRequired,
   run: React.PropTypes.object,
   height: React.PropTypes.number.isRequired
 };

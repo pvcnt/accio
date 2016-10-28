@@ -20,11 +20,10 @@ package fr.cnrs.liris.accio.core.framework
 
 import com.fasterxml.jackson.annotation.{JsonInclude, JsonSubTypes}
 import com.fasterxml.jackson.core.`type`.TypeReference
-import com.fasterxml.jackson.core.{JsonGenerator, JsonParser, JsonProcessingException}
+import com.fasterxml.jackson.core.{JsonGenerator, JsonParser}
 import com.fasterxml.jackson.databind._
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 import com.fasterxml.jackson.databind.module.SimpleModule
-import com.fasterxml.jackson.databind.node.JsonNodeType
 import com.fasterxml.jackson.databind.ser.std.StdSerializer
 import com.twitter.finatra.json.modules.FinatraJacksonModule
 import com.twitter.util.{Duration => TwitterDuration}
@@ -63,13 +62,13 @@ private object AccioJacksonModule extends SimpleModule {
 
 private class DistanceSerializer extends StdSerializer[Distance](classOf[Distance]) {
   override def serialize(obj: Distance, jsonGenerator: JsonGenerator, serializerProvider: SerializerProvider): Unit = {
-    jsonGenerator.writeObject(obj.toString)
+    jsonGenerator.writeString(obj.toString)
   }
 }
 
 private class TwitterDurationSerializer extends StdSerializer[TwitterDuration](classOf[TwitterDuration]) {
   override def serialize(obj: TwitterDuration, jsonGenerator: JsonGenerator, serializerProvider: SerializerProvider): Unit = {
-    jsonGenerator.writeObject(obj.inMillis)
+    jsonGenerator.writeNumber(obj.inMillis)
   }
 }
 
@@ -123,11 +122,11 @@ private class InputDeserializer extends StdDeserializer[Input](classOf[Input]) {
     if (tree.isObject) {
       PropertyPresentDeserializer.deserialize[Input](tree, subTypes, ctx, jsonParser.getCodec.asInstanceOf[ObjectMapper])
     } else {
-      ValueInput(toPojo(tree))
+      ValueInput(toPojo(tree, ctx))
     }
   }
 
-  private def toPojo(tree: JsonNode): Any = {
+  private def toPojo(tree: JsonNode, ctx: DeserializationContext): Any = {
     if (tree.isBoolean) {
       tree.asBoolean
     } else if (tree.isDouble) {
@@ -139,16 +138,13 @@ private class InputDeserializer extends StdDeserializer[Input](classOf[Input]) {
     } else if (tree.isTextual) {
       tree.asText
     } else if (tree.isArray) {
-      tree.elements.asScala.toArray.map(toPojo)
+      tree.elements.asScala.toArray.map(toPojo(_, ctx))
     } else if (tree.isObject) {
-      tree.fields.asScala.map(kv => kv.getKey -> toPojo(kv.getValue)).toMap
+      tree.fields.asScala.map(kv => kv.getKey -> toPojo(kv.getValue, ctx)).toMap
     } else {
-      throw new InputParsingException(tree.getNodeType)
+      ctx.mappingException(s"Invalid node type for an input: ${tree.getNodeType}")
     }
   }
-
-  private class InputParsingException(nodeType: JsonNodeType) extends JsonProcessingException(s"Invalid node type for an input: $nodeType")
-
 }
 
 private class PropertyPresentDeserializer[T: ClassTag] extends StdDeserializer[T](implicitly[ClassTag[T]].runtimeClass) {

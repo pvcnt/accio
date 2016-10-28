@@ -6,11 +6,17 @@ import Spinner from "react-spinkit";
 
 let RunViewContainer = React.createClass({
   getInitialState: function () {
-    return {data: null};
+    return {
+      run: null,
+      experiment: null,
+    };
   },
 
   _loadData: function (props) {
-    xhr('/api/run/' + props.params.id).then(data => this.setState({data: data}));
+    xhr('/api/run/' + props.params.id).then(run => {
+      this.setState({run});
+      xhr('/api/experiment/' + run.parent).then(experiment => this.setState({experiment}));
+    });
   },
 
   componentWillReceiveProps: function (nextProps) {
@@ -24,8 +30,8 @@ let RunViewContainer = React.createClass({
   },
 
   render: function () {
-    return (null !== this.state.data)
-      ? <RunView run={this.state.data} {...this.props}/>
+    return (null !== this.state.run && null !== this.state.experiment)
+      ? <RunView {...this.state} {...this.props}/>
       : <Grid><Spinner spinnerName="three-bounce"/></Grid>;
   }
 });

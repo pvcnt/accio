@@ -23,7 +23,7 @@ var AppController = React.createClass({
 
           </Nav>
           <Nav pullRight>
-            <NavItem href="https://pvcnt.github.io/accio/">Help</NavItem>
+            <NavItem href="https://pvcnt.github.io/location-privacy/">Help</NavItem>
             <Navbar.Text>
               <Glyphicon glyph="user"/> vincent
             </Navbar.Text>

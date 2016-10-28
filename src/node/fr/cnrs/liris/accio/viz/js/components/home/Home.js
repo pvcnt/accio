@@ -11,7 +11,7 @@ let HomePage = React.createClass({
       <div>
         <div className="home-banner">
           <h1>Power your experiments</h1>
-          <p>Accio is a location-privacy experimentation platform.</p>
+          <p>Accio is a scientific experimentation platform.</p>
         </div>
         <Grid>
           <Row>
@@ -36,12 +36,12 @@ let HomePage = React.createClass({
             <Col sm={3} className="home-box">
               <Link to="/runs/create">
                 <img src="/images/keyboard-128px.png"/>
-                <h3>Launch new run</h3>
-                <p>Pick an existing workflow and create one or many new runs.</p>
+                <h3>Launch a new run</h3>
+                <p>Pick an existing workflow and create an experiment based on it.</p>
               </Link>
             </Col>
             <Col sm={3} className="home-box">
-              <Link to="#">
+              <Link to="/config">
                 <img src="/images/gear-128px.png"/>
                 <h3>Configuration</h3>
                 <p>View Accio status.</p>

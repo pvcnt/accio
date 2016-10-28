@@ -1,5 +1,5 @@
 {
-  "name": "accio-ui",
+  "name": "accio-viz",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -38,7 +38,6 @@
     "babel-preset-react": "^6.5.0",
     "babelify": "^7.3.0",
     "browserify": "^13.0.1",
-    "budo": "^7.1.0",
     "coffeeify": "^2.0.1",
     "cssify": "^1.0.3",
     "eslint": "^3.2.2",

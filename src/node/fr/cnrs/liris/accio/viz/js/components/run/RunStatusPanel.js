@@ -19,15 +19,15 @@ let RunStatusPanel = React.createClass({
   },
 
   _getState: function (status) {
-    if (status.completed) {
-      const millis = status.completed - status.started;
+    if (status.completed_at) {
+      const millis = status.completed_at - status.started_at;
       return {
         duration: moment.duration(millis).humanize(),
-        text: (status.is_successful) ? 'successful' : 'errored',
-        glyph: (status.is_successful) ? 'ok' : 'remove',
+        text: (status.successful) ? 'successful' : 'errored',
+        glyph: (status.successful) ? 'ok' : 'remove',
       };
-    } else if (status.started) {
-      const millis = moment().valueOf() - status.started;
+    } else if (status.started_at) {
+      const millis = moment().valueOf() - status.started_at;
       return {
         duration: moment.duration(millis).humanize(),
         text: 'running',
@@ -44,25 +44,25 @@ let RunStatusPanel = React.createClass({
 
   render: function () {
     const run = this.props.run;
-    const runState = this._getState(run);
+    const runState = this._getState(run.report);
 
-    const nodeTreeRows = run.per_node.map((node, idx) => {
+    const nodeTreeRows = run.report.node_stats.map((node, idx) => {
       const nodeState = this._getState(node);
       const label = (node.completed)
-        ? <Label bsStyle={(node.is_successful) ? 'success' : 'danger'}>Ran for {nodeState.duration}</Label>
+        ? <Label bsStyle={(node.successful) ? 'success' : 'danger'}>Ran for {nodeState.duration}</Label>
         : <Label bsStyle="info">Running for {nodeState.duration}</Label>;
-      const showError = (node.completed && !node.is_successful)
+      const showError = (node.completed && !node.successful)
         ? (
         <span>
         <Glyphicon glyph="warning-sign"/>
-        <a href="#" onClick={e => this._handleErrorModalShow(e, node.node, node.error)}>Show exception details</a>
+        <a href="#" onClick={e => this._handleErrorModalShow(e, node.name, node.error)}>Show exception details</a>
       </span>
       ) : null;
 
       return (
         <Row key={idx}>
-          <Col sm={3}><Glyphicon glyph={nodeState.glyph}/> {node.node}</Col>
-          <Col sm={9}><Badge>x {node.variants}</Badge> {label} {showError}</Col>
+          <Col sm={3}><Glyphicon glyph={nodeState.glyph}/> {node.name}</Col>
+          <Col sm={9}>{label} {showError}</Col>
         </Row>
       );
     });

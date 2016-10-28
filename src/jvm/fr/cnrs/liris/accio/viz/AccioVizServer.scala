@@ -47,7 +47,7 @@ class AccioVizServer extends HttpServer {
   override def configureHttp(router: HttpRouter) = {
     router
       .filter[CorsFilter](beforeRouting = true)
-      .filter[CommonFilters]
+      //.filter[CommonFilters]
       .add[HealthController]
       .add[ApiController]
       .add[AssetController]
