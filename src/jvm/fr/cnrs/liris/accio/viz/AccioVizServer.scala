@@ -39,7 +39,7 @@ object AccioVizServerMain extends AccioVizServer
 class AccioVizServer extends HttpServer {
   loadLogbackConfig()
   readDtab()
-  
+
   override def jacksonModule = AccioFinatraJacksonModule
 
   override def modules = Seq(AccioModule)
@@ -50,6 +50,7 @@ class AccioVizServer extends HttpServer {
       .filter[CommonFilters]
       .add[HealthController]
       .add[ApiController]
+      .add[AssetController]
   }
 
   private def readDtab() = {
