@@ -3,6 +3,7 @@ scala_library(
   dependencies=[
     'src/jvm/fr/cnrs/liris/accio/core/framework',
     '3rdparty/jvm/com/twitter/finatra:http',
+    '3rdparty/jvm:logback',
   ],
   sources=globs('*.scala')
 )
@@ -10,11 +11,10 @@ scala_library(
 jvm_binary(
   name='bin',
   dependencies=[
-    '3rdparty/jvm:logback',
     ':viz',
   ],
   resources=[
-    'src/resources/fr/cnrs/liris/privamov/svc:logback',
+    'src/resources/fr/cnrs/liris/accio/viz',
   ],
   main='fr.cnrs.liris.accio.viz.AccioVizServerMain',
   basename='accio-viz',

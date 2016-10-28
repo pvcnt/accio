@@ -1,4 +1,4 @@
 resources(
-  name='logback',
+  name='viz',
   sources=['logback.xml']
 )

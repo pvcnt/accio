@@ -31,7 +31,7 @@ jvm_binary(
     '3rdparty/jvm:logback',
   ],
   resources=[
-    'src/resources/fr/cnrs/liris/accio:logback',
+    'src/resources/fr/cnrs/liris/accio/cli',
   ],
   main='fr.cnrs.liris.accio.cli.AccioAppMain',
   basename='accio',

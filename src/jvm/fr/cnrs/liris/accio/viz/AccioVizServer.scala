@@ -18,18 +18,67 @@
 
 package fr.cnrs.liris.accio.viz
 
+import java.io.InputStreamReader
+
+import ch.qos.logback.classic.LoggerContext
+import ch.qos.logback.classic.joran.JoranConfigurator
+import ch.qos.logback.core.joran.spi.JoranException
+import ch.qos.logback.core.util.StatusPrinter
+import com.google.common.io.CharStreams
+import com.twitter.finagle.Dtab
 import com.twitter.finatra.http.HttpServer
+import com.twitter.finatra.http.filters.CommonFilters
 import com.twitter.finatra.http.routing.HttpRouter
 import fr.cnrs.liris.accio.core.framework.AccioFinatraJacksonModule
+import org.slf4j.LoggerFactory
+
+import scala.collection.JavaConverters._
 
 object AccioVizServerMain extends AccioVizServer
 
 class AccioVizServer extends HttpServer {
+  loadLogbackConfig()
+  readDtab()
+  
   override def jacksonModule = AccioFinatraJacksonModule
 
   override def modules = Seq(AccioModule)
 
   override def configureHttp(router: HttpRouter) = {
-    router.add[ApiController]
+    router
+      .filter[CorsFilter](beforeRouting = true)
+      .filter[CommonFilters]
+      .add[HealthController]
+      .add[ApiController]
+  }
+
+  private def readDtab() = {
+    val is = getClass.getClassLoader.getResourceAsStream(s"fr/cnrs/liris/accio/viz/dtab.txt")
+    if (null != is) {
+      val content = CharStreams.readLines(new InputStreamReader(is)).asScala.mkString("")
+      is.close()
+      val dtab = Dtab.read(content)
+      Dtab.base = dtab
+      logger.info(s"Read Dtab.base from resource: $dtab")
+    }
+  }
+
+  private def loadLogbackConfig() = {
+    val is = getClass.getClassLoader.getResourceAsStream(s"fr/cnrs/liris/accio/viz/logback.xml")
+    if (null != is) {
+      // We assume SLF4J is bound to logback in the current environment.
+      val ctx = LoggerFactory.getILoggerFactory.asInstanceOf[LoggerContext]
+      try {
+        val configurator = new JoranConfigurator
+        configurator.setContext(ctx)
+        // Call context.reset() to clear any previous configuration, e.g. default
+        // configuration. For multi-step configuration, omit calling context.reset().
+        ctx.reset()
+        configurator.doConfigure(is)
+      } catch {
+        case e: JoranException => // StatusPrinter will handle this.
+      }
+      StatusPrinter.printInCaseOfErrorsOrWarnings(ctx)
+    }
   }
 }
