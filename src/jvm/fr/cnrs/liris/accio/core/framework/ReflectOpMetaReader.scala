@@ -21,9 +21,8 @@ package fr.cnrs.liris.accio.core.framework
 import java.util.NoSuchElementException
 
 import fr.cnrs.liris.accio.core.api._
-import fr.cnrs.liris.common.geo.Location
+import fr.cnrs.liris.common.geo.{Distance, Location}
 import fr.cnrs.liris.common.reflect.{CaseClass, PlainClass, ScalaType}
-import fr.cnrs.liris.common.geo.Distance
 import fr.cnrs.liris.common.util.StringUtils.maybe
 import org.joda.time.{Duration, Instant}
 
@@ -95,7 +94,7 @@ class ReflectOpMetaReader extends OpMetaReader {
     case c if c == classOf[Long] || c == classOf[java.lang.Long] => DataType.Long
     case c if c == classOf[Double] || c == classOf[java.lang.Double] => DataType.Double
     case c if c == classOf[String] => DataType.String
-    case c if c == classOf[Location] => DataType.Location
+    case c if classOf[Location].isAssignableFrom(c) => DataType.Location
     case c if c == classOf[Instant] => DataType.Timestamp
     case c if c == classOf[Duration] => DataType.Duration
     case c if c == classOf[Distance] => DataType.Distance
