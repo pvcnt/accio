@@ -6,9 +6,9 @@ layout: default
 
 <h1 class="page-title">{{ page.title }}</h1>
 
-Accio is a research project developed by the [DRIM team](https://liris.cnrs.fr/drim/) of the [LIRIS laboratory](https://liris.cnrs.fr), in Lyon (France).
-It originated from the [Priva'Mov project](https://privamov.liris.cnrs.fr).
-It is currently being used to conduct research by the LIRIS and the [GIPSA-lab](http://www.gipsa-lab.fr/) in Grenoble (France).
+Accio is a research project developed at the [LIRIS laboratory](https://liris.cnrs.fr) (Lyon, France).
+It originated from the [Priva'Mov project](https://privamov.liris.cnrs.fr), whose purpose was to collect mobility data in order to study location privacy.
+Accio is currently being used by the [DRIM team](https://liris.cnrs.fr/drim/) at the LIRIS and by the [SYSCO team](http://www.gipsa-lab.grenoble-inp.fr/sysco/accueil-sysco.php) at the [GIPSA laboratory](http://www.gipsa-lab.fr/) (Grenoble, France).
 
 It is named after the spell *Accio* in the Harry Potter books, whose goal is to make a remote object fly towards the spell caster.
 Our own Accio is a tool whose purpose is to execute a scientific workflow and get handy results in a timely and convenient manner.
