@@ -1,6 +1,6 @@
 ---
-layout: documentation
-nav: docs
+layout: accio
+nav: accio
 title: Compiling Accio
 ---
 
@@ -20,6 +20,7 @@ The following dependencies must be met in order to compile Accio:
   * [Java 8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) is required to run both Pants and Accio.
   * [Python 2.7.x](https://www.python.org/) and its development headers are required by Pants (*not* Python 3.x).
   * [gcc/G++](https://gcc.gnu.org/) is required by Pants.
+  * [Node 3.9.5](https://nodejs.org/en/) is required if you want to develop Accio's web interface.
   * [Git](https://git-scm.com/) is needed to keep Accio's source code up-to-date.
   * Internet access is required to download dependencies both for Pants and Accio.
   

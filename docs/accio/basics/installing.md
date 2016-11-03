@@ -1,6 +1,6 @@
 ---
-layout: documentation
-nav: docs
+layout: accio
+nav: accio
 title: Installing Accio
 ---
 

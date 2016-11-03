@@ -1,7 +1,7 @@
 ---
-layout: documentation
-nav: docs
-title: Location privacy data model
+layout: privacy
+nav: privacy
+title: Data model
 ---
 
 Accio supports a simple data model for studying location privacy.

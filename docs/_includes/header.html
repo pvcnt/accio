@@ -4,8 +4,11 @@
       <a href="{{ "/" | prepend: site.baseurl }}" class="navbar-brand">{{ site.title }}</a>
     </div>
     <ul class="nav navbar-nav pull-right">
-      <li{% if page.nav == "docs" %} class="active"{% endif %}>
-        <a href="{{ "/docs/basics/overview.html" | prepend: site.baseurl }}">Docs</a>
+      <li{% if page.nav == "accio" %} class="active"{% endif %}>
+        <a href="{{ "/accio/basics/overview.html" | prepend: site.baseurl }}">Accio Docs</a>
+      </li>
+      <li{% if page.nav == "privacy" %} class="active"{% endif %}>
+      <a href="{{ "/privacy/overview.html" | prepend: site.baseurl }}">Privacy Docs</a>
       </li>
       <li{% if page.nav == "research" %} class="active"{% endif %}>
       <a href="{{ "/research.html" | prepend: site.baseurl }}">Research</a>

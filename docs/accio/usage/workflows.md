@@ -1,6 +1,6 @@
 ---
-layout: documentation
-nav: docs
+layout: accio
+nav: accio
 title: Workflow definition
 ---
 
@@ -98,7 +98,7 @@ Values are specified differently depending on their type.
 | distance | JSON string, formatted as `<quantity>.<unit>`, where `<quantity>` is a number and `<unit>` one of "meters", "kilometers" or "miles", either singular or plural. |
 | duration | JSON string, formatted as `<quantity>.<unit>`, where `<quantity>` is a number and `<unit>` one of "millis", "seconds", "minutes", "hours" or "days", either singular or plural. |
 | timestamp | JSON string, formatted with respect to [ISO 8601](https://www.w3.org/TR/NOTE-datetime), e.g., "2016-06-22T11:28:32Z". |
-| location | JSON string, formatted as `<latitude>,<longitude>` where `<latitude>` and `<longitude>` are numbers. |
+| location | JSON string, formatted as `<latitude>,<longitude>` where `<latitude>` and `<longitude>` are numbers and expressed in degrees. |
 | list | JSON array of any other allowed type. |
 | set | JSON array of any other allowed type. |
 | map | JSON object of any other allowed type. |

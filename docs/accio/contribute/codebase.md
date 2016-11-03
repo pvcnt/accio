@@ -1,28 +1,15 @@
 ---
-layout: documentation
-nav: docs
+layout: accio
+nav: accio
 title: Code organization
 ---
 
 This page contains more information for people willing to contribute to Accio.
 It gives an overview of the code layout and pointers to help you getting ready into contributing to Accio.
+A good place to start is reading [compilation instructions](compiling.html), to have an overview of languages and tools used.
 
 * TOC
 {:toc}
-
-## Languages and tools
-
-  * [Scala 2.11](http://www.scala-lang.org/) is used to write almost all of Accio code.
-  Scala is a language running on the JVM that provides access to both object oriented and functional paradigms.
-  Small parts of code can be written in Java 8, such as runtime annotations that cannot be written directly in Scala.
-  Although we use a lot of Java libraries, mainly through Maven, the codebase cannot be used from Java
-  * [Pants](http://www.pantsbuild.org) is the build tool used to compile Accio's backend.
-  * [Node 3.9.5](https://nodejs.org/en/) is used for writing Accio's web interface.
-  * [Yarn](https://yarnpkg.com) is used for managing Node dependencies.
-  You can find more information about setting up Pants in the page about [compiling](compiling.html).
-  * [Git](https://git-scm.com/) is used for source control management.
-  Source code is hosted [on GitHub](https://github.com).
-  * [Jekyll](https://jekyllrb.com) is used to generate these docs, which are then published on [GitHub Pages](https://pages.github.com).
 
 ## Repository layout
 
@@ -87,3 +74,12 @@ We use it because it is well integrated with Scala and allows us to build REST A
 The server also serves the user interface as static files.
 
 On the client side, we use [Javascript ES6](https://babeljs.io/docs/learn-es2015/), transpiled thanks to Babel and [ReactJS](https://facebook.github.io/react/) to build user interfaces.
+
+## Writing tests
+
+A good practice is to write unit tests for your code.
+Tests are written using [ScalaTest](http://www.scalatest.org), a testing framework designed for Scala.
+We use the *FlatSpec* testing style, where all tests are described with sentences such as "An empty Graph should have size 0".
+You can extend the `fr.cnrs.liris.testing.UnitSpec` class to get started quickly writing your own tests.
+
+Keep in mind that all the code is tested at each push or pull request, so you want all the tests to be green at all time!
