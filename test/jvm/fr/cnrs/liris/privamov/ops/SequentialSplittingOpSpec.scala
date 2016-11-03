@@ -36,7 +36,7 @@ class SequentialSplittingOpSpec extends UnitSpec with WithTraceGenerator with Wi
     assertTraceIsSplit(trace2, out1.find(_.user == Him).get, out2.find(_.user == Him).get, 75)
   }
 
-  it should "split an empty dataset into two empty datasets" in {
+  it should "split a dataset with an empty trace into two datasets with an empty trace" in {
     val trace = Trace.empty(Me)
     val (out1, out2) = transform(Seq(trace), 50)
     out1 should have size 1
