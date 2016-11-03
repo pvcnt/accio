@@ -12,7 +12,8 @@ Documentation can be added on operator level and port level, to describe how the
 
 ## In-code documentation
 
-As introduced in the page about [implementing a custom operator](operators.html), the first step is to annotation operators and ports with appropriate annotations.
+As introduced in the page about [implementing a custom operator](operator.html), the first step is to annotation operators and ports with appropriate annotations.
+In addition of providing essential information for the Accio framework, these annotations also allow to document your operators directly in the code.
 
 ### Annotating operators
 
