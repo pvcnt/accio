@@ -20,14 +20,27 @@ package fr.cnrs.liris.accio.cli
 
 import fr.cnrs.liris.accio.core.framework.{Artifact, Run}
 
+/**
+ * Aggregate data about several runs.
+ *
+ * @param runs Non-empty list of runs to aggregate.
+ */
 class ReportStatistics(val runs: Seq[Run]) {
-  require(runs.nonEmpty, "You must provide some runs to aggregate")
+  require(runs.nonEmpty, "You must provide some runs to aggregate, got none.")
 
   /**
    * Return all artifacts as a map with names as keys and artifacts keyed by run name/id as value.
    */
-  def artifacts: Map[String, Map[String, Artifact]] =
-    runs.flatMap { run => run.report.map(_.artifacts.map(art => run.name.getOrElse(run.id) -> art)).getOrElse(Seq.empty[(String, Artifact)]) }
-        .groupBy(_._2.name)
-        .map { case (id, group) => id -> group.toMap }
+  def artifacts: Map[String, Map[String, Artifact]] = {
+    // First group all artifacts by run name (or run id if the name is not defined).
+    val artifactsByRun = runs.flatMap { run =>
+      run.report
+        .map(_.artifacts.map(art => run.name.getOrElse(run.id) -> art))
+        .getOrElse(Seq.empty[(String, Artifact)])
+    }
+    // Then group artifacts by their name.
+    artifactsByRun
+      .groupBy(_._2.name)
+      .map { case (id, group) => id -> group.toMap }
+  }
 }

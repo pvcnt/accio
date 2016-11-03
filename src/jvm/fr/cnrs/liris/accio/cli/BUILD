@@ -9,9 +9,9 @@ scala_library(
     'src/jvm/fr/cnrs/liris/common/reflect',
     'src/jvm/fr/cnrs/liris/common/flags',
     'src/jvm/fr/cnrs/liris/common/stats',
-    '3rdparty/jvm/com/google/guava',
     '3rdparty/jvm/com/typesafe/scala-logging',
     '3rdparty/jvm:scala-guice',
+    '3rdparty/jvm:logback',
   ],
   excludes = [
     exclude(org='com.twitter.finatra', name='finatra-scalap-compiler-deps_2.11')
@@ -28,7 +28,6 @@ jvm_binary(
   name='bin',
   dependencies=[
     ':cli',
-    '3rdparty/jvm:logback',
   ],
   resources=[
     'src/resources/fr/cnrs/liris/accio/cli',

@@ -24,8 +24,7 @@ import com.google.inject.{Inject, Singleton}
 import fr.cnrs.liris.accio.core.api.Operator
 
 /**
- * The operator registry stores all operators known to Accio. It is immutable, all operators should be
- * registered when the object is created.
+ * Stores all operators known to Accio. It is immutable, all operators should be registered when the object is created.
  *
  * @param reader  Operator metadata reader.
  * @param classes Classes containing operator implementations.
@@ -45,22 +44,22 @@ class OpRegistry @Inject()(reader: OpMetaReader, classes: Set[Class[_ <: Operato
   /**
    * Check whether the registry contains an operator with given name.
    *
-   * @param name Operator name
+   * @param name Operator name.
    */
   def contains(name: String): Boolean = index.contains(name)
 
   /**
-   * Return operator definition for the given operator name, if it exists.
+   * Return operator metadata for the given operator name, if it exists.
    *
-   * @param name Operator name
+   * @param name Operator name.
    */
   def get(name: String): Option[OpMeta] = index.get(name)
 
   /**
-   * Return operator definition for the given operator name.
+   * Return operator metadata for the given operator name.
    *
-   * @param name Operator name
-   * @throws NoSuchElementException If there is no operator for the given name
+   * @param name Operator name.
+   * @throws NoSuchElementException If there is no operator with the given name.
    */
   @throws[NoSuchElementException]
   def apply(name: String): OpMeta = index(name)

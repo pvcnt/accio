@@ -28,7 +28,7 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Command {
+public @interface Cmd {
     /**
      * Name of this command, as the user would type it.
      */

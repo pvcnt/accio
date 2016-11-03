@@ -45,7 +45,7 @@ case class RunCommandOpts(
   @Flag(name = "params", help = "Experiment parameters override")
   params: Option[String])
 
-@Command(
+@Cmd(
   name = "run",
   flags = Array(classOf[RunCommandOpts]),
   help = "Execute an Accio workflow.",

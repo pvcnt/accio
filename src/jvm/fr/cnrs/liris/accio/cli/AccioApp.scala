@@ -20,56 +20,37 @@ package fr.cnrs.liris.accio.cli
 
 import com.google.inject.Guice
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.core.framework.AccioFinatraJacksonModule
-import fr.cnrs.liris.privamov.ops.OpsModule
+import fr.cnrs.liris.accio.core.framework.FrameworkModule
+import fr.cnrs.liris.accio.core.runtime.LocalRuntimeModule
 import fr.cnrs.liris.common.flags._
-
-import scala.util.control.NonFatal
+import fr.cnrs.liris.privamov.ops.OpsModule
 
 object AccioAppMain extends AccioApp
 
-case class AccioAppLaunchFlags(
-  @Flag(name = "cores", help = "Number of cores to use")
-  cores: Int = 0)
+/**
+ * Core flags used at the Accio-level. Commands may define additional flags.
+ *
+ * @param logLevel Logging level.
+ */
+case class AccioOpts(
+  @Flag(name = "logging", help = "Logging level")
+  logLevel: String = "warn")
 
+/**
+ * Entry point of the Accio command line application. Very little is done here, it is the job of [[AccioCommand]]s
+ * to actually handle the payload.
+ */
 class AccioApp extends StrictLogging {
   def main(args: Array[String]): Unit = {
+    // Change the path of logback's configuration file to match Pants resource naming.
+    sys.props("logback.configurationFile") = "fr/cnrs/liris/accio/cli/logback.xml"
+
     val reporter = new StreamReporter(Console.out, useColors = true)
-    val injector = Guice.createInjector(AccioModule, OpsModule, FlagsModule)
+    val injector = Guice.createInjector(FlagsModule, FrameworkModule, CliModule, OpsModule, LocalRuntimeModule)
+    val dispatcher = injector.getInstance(classOf[AccioCommandDispatcher])
+    val exitCode = dispatcher.exec(args, reporter)
 
-    val registry = injector.getInstance(classOf[CommandRegistry])
-    val name = args.headOption.getOrElse("help")
-    val meta = registry.get(name) match {
-      case None =>
-        reporter.writeln(s"<error>Unknown command '$name'</error>")
-        registry("help")
-      case Some(m) => m
-    }
-    val parserFactory = injector.getInstance(classOf[FlagsParserFactory])
-    val flags = parseFlags(parserFactory, meta, args.drop(1))
-    val command = injector.getInstance(meta.clazz)
-
-    val exitCode = try {
-      command.execute(flags, reporter)
-    } catch {
-      case e: IllegalArgumentException =>
-        reporter.writeln(s"<error>${e.getMessage.stripPrefix("requirement failed:").trim}</error>")
-        ExitCode.RuntimeError
-      case e: RuntimeException =>
-        reporter.writeln(s"<error>${e.getMessage}</error>")
-        ExitCode.RuntimeError
-      case NonFatal(e) =>
-        reporter.writeln(s"<error>${e.getMessage}</error>")
-        e.getStackTrace.foreach(elem => reporter.writeln(s"  <error>$elem</error>"))
-        ExitCode.InternalError
-    }
-
+    logger.info(s"Terminating Accio client: ${exitCode.name}")
     sys.exit(exitCode.code)
-  }
-
-  private def parseFlags(parserFactory: FlagsParserFactory, meta: CommandMeta, args: Seq[String]): FlagsProvider = {
-    val parser = parserFactory.create(meta.defn.allowResidue, meta.defn.flags: _*)
-    parser.parseAndExitUponError(args)
-    parser
   }
 }

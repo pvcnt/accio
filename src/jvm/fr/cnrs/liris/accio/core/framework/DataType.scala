@@ -32,6 +32,16 @@ sealed trait DataType {
    * Return a human-readable description for what valus of this type represent.
    */
   def typeDescription: String
+
+  /**
+   * Specifies whether this data type behaves like a numeric type.
+   */
+  def isNumeric: Boolean = false
+
+  /**
+   * Specifies whether this data type behaves like a collection.
+   */
+  def isCollection: Boolean = false
 }
 
 /**
@@ -47,6 +57,8 @@ object DataType {
    */
   case object Byte extends DataType {
     override def typeDescription: String = "byte"
+
+    override def isNumeric: Boolean = true
   }
 
   /**
@@ -54,6 +66,8 @@ object DataType {
    */
   case object Short extends DataType {
     override def typeDescription: String = "short"
+
+    override def isNumeric: Boolean = true
   }
 
   /**
@@ -61,6 +75,8 @@ object DataType {
    */
   case object Integer extends DataType {
     override def typeDescription: String = "integer"
+
+    override def isNumeric: Boolean = true
   }
 
   /**
@@ -68,6 +84,8 @@ object DataType {
    */
   case object Long extends DataType {
     override def typeDescription: String = "long"
+
+    override def isNumeric: Boolean = true
   }
 
   /**
@@ -75,6 +93,8 @@ object DataType {
    */
   case object Double extends DataType {
     override def typeDescription: String = "float"
+
+    override def isNumeric: Boolean = true
   }
 
   /**
@@ -110,6 +130,8 @@ object DataType {
    */
   case object Duration extends DataType {
     override def typeDescription: String = "duration"
+
+    override def isNumeric: Boolean = true
   }
 
   /**
@@ -117,6 +139,8 @@ object DataType {
    */
   case object Distance extends DataType {
     override def typeDescription: String = "distance"
+
+    override def isNumeric: Boolean = true
   }
 
   /**
@@ -139,9 +163,11 @@ object DataType {
   case class List(of: DataType) extends DataType {
     override def toString: String = s"list($of)"
 
-    override def typeDescription: String = {
-      s"list of ${of.typeDescription}s"
-    }
+    override def typeDescription: String = s"list of ${of.typeDescription}s"
+
+    override def isNumeric: Boolean = !of.isCollection && of.isNumeric
+
+    override def isCollection: Boolean = true
   }
 
   /**
@@ -150,9 +176,11 @@ object DataType {
   case class Set(of: DataType) extends DataType {
     override def toString: String = s"set($of)"
 
-    override def typeDescription: String = {
-      s"set of ${of.typeDescription}s"
-    }
+    override def typeDescription: String = s"set of ${of.typeDescription}s"
+
+    override def isNumeric: Boolean = !of.isCollection && of.isNumeric
+
+    override def isCollection: Boolean = true
   }
 
   /**
@@ -164,6 +192,10 @@ object DataType {
     override def typeDescription: String = {
       s"map of ${ofKeys.typeDescription}s => ${ofValues.typeDescription}s"
     }
+
+    override def isNumeric: Boolean = !ofValues.isCollection && ofValues.isNumeric
+
+    override def isCollection: Boolean = true
   }
 
   /**

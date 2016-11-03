@@ -18,27 +18,24 @@
 
 package fr.cnrs.liris.accio.cli
 
-import java.io.{FileOutputStream, PrintStream}
 import java.nio.file.Paths
-import java.util.UUID
 
 import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.framework.ReportRepository
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
-import fr.cnrs.liris.common.util.HashUtils
 
-case class VisualizeFlags(
-  @Flag(name = "html", help = "Generate an HTML report")
-  html: Boolean = false,
+case class ExportFlags(
+  @Flag(name = "sep", help = "Separator to use")
+  separator: String = ",",
   @Flag(name = "artifacts", help = "Specify a comma-separated list of artifacts to take into account")
-  artifacts: String = "ALL")
+  artifacts: String = "NUMERIC")
 
 @Cmd(
-  name = "visualize",
-  flags = Array(classOf[VisualizeFlags]),
-  help = "Generate interactive graphs.",
+  name = "export",
+  flags = Array(classOf[ExportFlags]),
+  help = "Generate CSV reports.",
   allowResidue = true)
-class VisualizeCommand @Inject()(repository: ReportRepository) extends AccioCommand {
+class ExportCommand @Inject()(repository: ReportRepository) extends AccioCommand {
 
   override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     val reports = flags.residue.flatMap { path =>
@@ -49,18 +46,21 @@ class VisualizeCommand @Inject()(repository: ReportRepository) extends AccioComm
         .map(_.drop(4).dropRight(5))
         .flatMap(id => repository.readRun(workDir, id))
     }
-    val opts = flags.as[VisualizeFlags]
+    val opts = flags.as[ExportFlags]
     val reportStats = new ReportStatistics(reports)
     val artifacts = if (opts.artifacts == "ALL") {
-      reportStats.artifacts.keySet
+      reportStats.artifacts
+    } else if (opts.artifacts == "NUMERIC") {
+      reportStats.artifacts.map { case (name, arts) => name -> arts.filter { case (k, v) => v.kind.isNumeric } }
     } else {
-      opts.artifacts.split(",").map(_.trim).toSet
+      val validNames = opts.artifacts.split(",").map(_.trim).toSet
+      reportStats.artifacts.filter { case (name, _) => validNames.contains(name) }
     }
-    val reportCreator = new HtmlReportCreator(showArtifacts = artifacts)
-    val uid = HashUtils.sha1(UUID.randomUUID().toString).substring(0, 8)
-    val outputPath = Paths.get(s"report-$uid.html")
-    reportCreator.print(reportStats, new PrintStream(new FileOutputStream(outputPath.toFile)))
-    out.writeln(s"Report written to <comment>${outputPath.toAbsolutePath}</comment>")
+
+    artifacts.foreach { case (artifactName, arts) =>
+
+    }
+
     ExitCode.Success
   }
 }

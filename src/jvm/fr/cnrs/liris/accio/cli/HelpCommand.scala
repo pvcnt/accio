@@ -24,11 +24,12 @@ import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.reflect.CaseClass
 import fr.cnrs.liris.common.util.StringUtils
 
-@Command(
+@Cmd(
   name = "help",
   help = "Display built-in Accio help.",
+  description = "Prints a help page for the given command or topic, or, if nothing is specified, prints the index of available commands.",
   allowResidue = true)
-class HelpCommand @Inject()(commandRegistry: CommandRegistry, opRegistry: OpRegistry) extends AccioCommand {
+class HelpCommand @Inject()(commandRegistry: CmdRegistry, opRegistry: OpRegistry) extends AccioCommand {
 
   override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     flags.residue match {
@@ -71,7 +72,7 @@ class HelpCommand @Inject()(commandRegistry: CommandRegistry, opRegistry: OpRegi
     out.writeln()
     out.writeln("<info>Available commands:</info>")
     val maxLength = commandRegistry.commands.filterNot(_.defn.hidden).map(_.defn.name.length).max
-    commandRegistry.commands.foreach { command =>
+    commandRegistry.commands.toSeq.sortBy(_.defn.name).foreach { command =>
       val padding = " " * (maxLength - command.defn.name.length)
       out.writeln(s"  <comment>${command.defn.name}</comment>$padding ${command.defn.help}")
     }

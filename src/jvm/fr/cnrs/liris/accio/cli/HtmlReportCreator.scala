@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.cli
 import java.io.PrintStream
 import java.util.concurrent.atomic.AtomicInteger
 
-import fr.cnrs.liris.accio.cli.HtmlPrinter._
+import fr.cnrs.liris.common.util.HtmlPrinter._
 import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.common.stats.{AggregatedStats, Distribution}
 import fr.cnrs.liris.common.util.MathUtils.roundAt4

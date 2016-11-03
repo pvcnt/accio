@@ -26,24 +26,15 @@ import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
 
 /**
- * Guice module providing bindings for Accio CLi application.
+ * Guice module providing specific bindings for the Accio CLI application.
  */
-object AccioModule extends AbstractModule with ScalaModule {
+object CliModule extends AbstractModule with ScalaModule {
   override def configure(): Unit = {
-    install(AccioFinatraJacksonModule)
-
-    ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Class[_ <: Operator[_, _]]] {})
-
     val commands = ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Class[_ <: AccioCommand]] {})
     commands.addBinding.toInstance(classOf[RunCommand])
     commands.addBinding.toInstance(classOf[VisualizeCommand])
+    commands.addBinding.toInstance(classOf[ExportCommand])
     commands.addBinding.toInstance(classOf[HelpCommand])
-
-    bind[OpMetaReader].to[ReflectOpMetaReader]
-    bind[ExperimentParser].to[JsonExperimentParser]
-    bind[WorkflowParser].to[JsonWorkflowParser]
-    bind[ExperimentExecutor].to[LocalExperimentExecutor]
-    bind[ReportRepository].to[FileReportRepository]
   }
 
   @Provides

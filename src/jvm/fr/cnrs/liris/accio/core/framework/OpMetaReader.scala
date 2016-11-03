@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.core.framework
 import fr.cnrs.liris.accio.core.api.Operator
 
 /**
- * Metadata about an operator, which is its definition plus runtime information.
+ * Metadata about an operator, i.e., its definition plus runtime information.
  *
  * @param defn     Operator definition.
  * @param opClass  Operator class.
