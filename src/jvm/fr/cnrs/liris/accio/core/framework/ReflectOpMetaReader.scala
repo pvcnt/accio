@@ -18,11 +18,13 @@
 
 package fr.cnrs.liris.accio.core.framework
 
+import java.io.IOException
 import java.util.NoSuchElementException
 
 import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.common.geo.{Distance, Location}
 import fr.cnrs.liris.common.reflect.{CaseClass, PlainClass, ScalaType}
+import fr.cnrs.liris.common.util.ResourceFileLoader
 import fr.cnrs.liris.common.util.StringUtils.maybe
 import org.joda.time.{Duration, Instant}
 
@@ -44,7 +46,7 @@ class ReflectOpMetaReader extends OpMetaReader {
             inputs = inRefl.map(getInputs).getOrElse(Seq.empty),
             outputs = outRefl.map(getOutputs).getOrElse(Seq.empty),
             help = maybe(op.help),
-            description = maybe(op.description),
+            description = maybe(op.description).map(loadDescription(_, clazz)),
             category = op.category,
             deprecation = maybe(op.deprecation))
           OpMeta(defn, clazz, inRefl.map(_.runtimeClass), outRefl.map(_.runtimeClass))
@@ -53,6 +55,20 @@ class ReflectOpMetaReader extends OpMetaReader {
       case e: NoSuchElementException => throw new IllegalOpException(clazz, e)
       case e: IllegalArgumentException => throw new IllegalOpException(clazz, e)
     }
+
+  private def loadDescription(description: String, clazz: Class[_]) = {
+    if (description.startsWith("resource:")) {
+      val resourceName = description.substring("resource:".length)
+      try {
+        ResourceFileLoader.loadResource(clazz, resourceName)
+      } catch {
+        case e: IOException =>
+          throw new IllegalStateException(s"Failed to load help resource '$resourceName': ${e.getMessage}", e)
+      }
+    } else {
+      description
+    }
+  }
 
   private def getInRefl(opRefl: PlainClass): Option[CaseClass] = {
     val typ = opRefl.scalaType.baseClass(classOf[Operator[_, _]]).typeArgs.head

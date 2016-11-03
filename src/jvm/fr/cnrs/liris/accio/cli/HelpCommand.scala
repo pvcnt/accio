@@ -18,9 +18,6 @@
 
 package fr.cnrs.liris.accio.cli
 
-import java.io.InputStreamReader
-
-import com.google.common.io.CharStreams
 import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.framework.{OpMeta, OpRegistry}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
@@ -130,23 +127,20 @@ class HelpCommand @Inject()(commandRegistry: CommandRegistry, opRegistry: OpRegi
   }
 
   private def printOp(out: Reporter, meta: OpMeta) = {
-    out.write(s"<comment>${meta.defn.name}</comment> (${meta.defn.category})")
+    out.writeln(s"<comment>${meta.defn.name}</comment> (${meta.defn.category})")
     out.writeln()
-    out.writeln()
+    meta.defn.deprecation.foreach { deprecation =>
+      out.writeln(s"<error>Deprecated: $deprecation</error>")
+      out.writeln()
+    }
     meta.defn.help.foreach { help =>
       out.writeln(help)
       out.writeln()
     }
     meta.defn.description.foreach { description =>
-      val text = if (description.startsWith("resource:")) {
-        CharStreams.toString(new InputStreamReader(meta.opClass.getResourceAsStream(description.substring(9))))
-      } else {
-        description
-      }
-      out.writeln(StringUtils.paragraphFill(text, 80))
+      out.writeln(StringUtils.paragraphFill(description, 80))
       out.writeln()
     }
-
     printOpInputs(out, meta)
     printOpOutputs(out, meta)
   }

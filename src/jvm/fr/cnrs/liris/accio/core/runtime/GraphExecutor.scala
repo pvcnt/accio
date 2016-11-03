@@ -160,6 +160,9 @@ class GraphExecutor @Inject()(graphFactory: GraphFactory, repository: ReportRepo
 
   def createOp(node: Node): Operator[_, _] = {
     val opMeta = opRegistry(node.op)
+    opMeta.defn.deprecation.foreach { deprecation =>
+      logger.warn(s"Using a deprecated operator ${opMeta.defn.name}: $deprecation")
+    }
     injector.getInstance(opMeta.opClass)
   }
 

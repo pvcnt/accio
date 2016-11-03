@@ -7,8 +7,8 @@ import fr.cnrs.liris.testing.UnitSpec
 /**
  * Unit tests for [[SequentialSplittingOp]].
  */
-class SplitSequentiallyOpSpec extends UnitSpec with WithTraceGenerator with WithSparkleEnv {
-  behavior of "SplitSequentially"
+class SequentialSplittingOpSpec extends UnitSpec with WithTraceGenerator with WithSparkleEnv {
+  behavior of "SequentialSplittingOp"
 
   it should "split a trace with an even number of events without losing any of them" in {
     val trace = randomTrace(Me, 150)
@@ -36,7 +36,7 @@ class SplitSequentiallyOpSpec extends UnitSpec with WithTraceGenerator with With
     assertTraceIsSplit(trace2, out1.find(_.user == Him).get, out2.find(_.user == Him).get, 75)
   }
 
-  it should "split an empty trace into two empty traces" in {
+  it should "split an empty dataset into two empty datasets" in {
     val trace = Trace.empty(Me)
     val (out1, out2) = transform(Seq(trace), 50)
     out1 should have size 1
@@ -44,7 +44,7 @@ class SplitSequentiallyOpSpec extends UnitSpec with WithTraceGenerator with With
     assertTraceIsSplit(trace, out1.head, out2.head, 0)
   }
 
-  it should "split an empty iterator into two empty iterators" in {
+  it should "split an empty dataset into two empty datasets" in {
     val (out1, out2) = transform(Seq.empty, .5)
     out1 should have size 0
     out2 should have size 0

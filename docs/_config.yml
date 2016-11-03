@@ -9,3 +9,5 @@ nav: index
 
 # Build settings
 markdown: kramdown
+gems:
+  - jemoji

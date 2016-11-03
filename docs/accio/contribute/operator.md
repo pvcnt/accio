@@ -85,7 +85,6 @@ This operator has two integer input ports, `a` and `b` that will get multiplied 
 A bunch of new things are worth noting.
 
   * Input and output arguments must be annotated with an `@Arg` annotation.
-  It has a single `help` optional argument which allows to describe the goal of this port.
   * All arguments of the input class must be mapped to ports, whereas some arguments of the output class may be left apart.
   In this case you will not annotate them with `@Arg` and they will be ignored by Accio.
   * Input and output arguments must be of one of the authorized data types in Accio.
@@ -128,3 +127,9 @@ Your operators may have dependencies to other objects.
 For that purpose, we provide integration with the [Guice](https://github.com/google/guice) dependency injection framework.
 All operators are created using a Guice injector, which mean you can use usual `@Inject` (and other) annotations to have your dependencies automatically injected.
 You may also need to modify the `OpsModule` Guice module to wire any new interface to its implementation.
+
+### Documenting your operators
+
+Operator and port annotations come with various options useful to document them.
+It can even be used to automatically generate a documentation ready to be integrated on a web site.
+You can learn more about this topic on the [dedicated page](documenting.html).
