@@ -29,13 +29,13 @@ class ReportStatistics(val runs: Seq[Run]) {
   require(runs.nonEmpty, "You must provide some runs to aggregate, got none.")
 
   /**
-   * Return all artifacts as a map with names as keys and artifacts keyed by run name/id as value.
+   * Return all artifacts as a map with names as keys and artifacts keyed by run id as value.
    */
   def artifacts: Map[String, Map[String, Artifact]] = {
-    // First group all artifacts by run name (or run id if the name is not defined).
+    // First group all artifacts by run id.
     val artifactsByRun = runs.flatMap { run =>
       run.report
-        .map(_.artifacts.map(art => run.name.getOrElse(run.id) -> art))
+        .map(_.artifacts.map(art => run.id -> art))
         .getOrElse(Seq.empty[(String, Artifact)])
     }
     // Then group artifacts by their name.

@@ -37,20 +37,16 @@ sealed trait DataType {
    * Specifies whether this data type behaves like a numeric type.
    */
   def isNumeric: Boolean = false
-
-  /**
-   * Specifies whether this data type behaves like a collection.
-   */
-  def isCollection: Boolean = false
 }
 
 /**
  * List of available [[DataType]]s and factory for [[DataType]].
  */
 object DataType {
-  private[this] val ListRegex = "^list\\s*\\(\\s*(.+?)\\s*\\)$".r // Reluctant quantifier (i.e., not greedy).
-  private[this] val SetRegex = "^set\\s*\\(\\s*(.+?)\\s*\\)$".r   // Reluctant quantifier (i.e., not greedy).
-  private[this] val MapRegex = "^map\\s*\\(\\s*(.+?),\\s*(.+?)\\s*\\)$".r // Reluctant quantifiers (i.e., not greedy).
+  // In the three following regex, +? is a so-called reluctant quantifier (i.e., not greedy).
+  private[this] val ListRegex = "^list\\s*\\(\\s*(.+?)\\s*\\)$".r
+  private[this] val SetRegex = "^set\\s*\\(\\s*(.+?)\\s*\\)$".r
+  private[this] val MapRegex = "^map\\s*\\(\\s*(.+?),\\s*(.+?)\\s*\\)$".r
 
   /**
    * A Java/Scala byte data type.
@@ -165,9 +161,7 @@ object DataType {
 
     override def typeDescription: String = s"list of ${of.typeDescription}s"
 
-    override def isNumeric: Boolean = !of.isCollection && of.isNumeric
-
-    override def isCollection: Boolean = true
+    override def isNumeric: Boolean = of.isNumeric
   }
 
   /**
@@ -178,9 +172,7 @@ object DataType {
 
     override def typeDescription: String = s"set of ${of.typeDescription}s"
 
-    override def isNumeric: Boolean = !of.isCollection && of.isNumeric
-
-    override def isCollection: Boolean = true
+    override def isNumeric: Boolean = of.isNumeric
   }
 
   /**
@@ -193,9 +185,7 @@ object DataType {
       s"map of ${ofKeys.typeDescription}s => ${ofValues.typeDescription}s"
     }
 
-    override def isNumeric: Boolean = !ofValues.isCollection && ofValues.isNumeric
-
-    override def isCollection: Boolean = true
+    override def isNumeric: Boolean = ofValues.isNumeric
   }
 
   /**

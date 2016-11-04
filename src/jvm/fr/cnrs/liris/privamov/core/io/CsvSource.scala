@@ -46,7 +46,6 @@ case class CsvSource(uri: String) extends DataSource[Trace] {
       .map(_.getName.stripSuffix(".csv"))
       .toSeq
       .sortWith(sort)
-
   }
 
   override def read(id: String): Option[Trace] = Some(read(id, path.resolve(s"$id.csv").toFile))

@@ -179,7 +179,7 @@ object Values {
     case _ => throwInvalidTypeException(DataType.Set(of), rawValue)
   }
 
-  def asMap(rawValue: Any, ofKeys: DataType, ofValues: DataType): Map[_, _] = rawValue match {
+  def asMap(rawValue: Any, ofKeys: DataType, ofValues: DataType): Map[Any, Any] = rawValue match {
     case map: Map[_, _] => map.map { case (k, v) => as(k, ofKeys) -> as(v, ofValues) }
     case _ => throwInvalidTypeException(DataType.Map(ofKeys, ofValues), rawValue)
   }
