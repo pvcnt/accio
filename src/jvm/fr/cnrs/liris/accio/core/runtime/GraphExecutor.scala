@@ -189,7 +189,7 @@ class GraphExecutor @Inject()(graphFactory: GraphFactory, repository: ReportRepo
       case Some(outClass) =>
         opMeta.defn.outputs.map { argDef =>
           val value = outClass.getMethod(argDef.name).invoke(out)
-          Reference(node.name, argDef.name) -> Artifact(argDef.name, argDef.kind, value)
+          Reference(node.name, argDef.name) -> Artifact(s"${node.name}/${argDef.name}", argDef.kind, value)
         }.toMap
     }
   }
