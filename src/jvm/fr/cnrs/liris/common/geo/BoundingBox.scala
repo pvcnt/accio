@@ -40,4 +40,14 @@ case class BoundingBox(lower: Point, upper: Point) {
   }
 
   def intersects(other: BoundingBox): Boolean = contains(other.lower) || contains(other.upper)
+
+  def union(other: BoundingBox): BoundingBox = {
+    val minX = math.min(lower.x, other.lower.x)
+    val minY = math.min(lower.y, other.lower.y)
+    val maxX = math.min(upper.x, other.upper.x)
+    val maxY = math.min(upper.y, other.upper.y)
+    BoundingBox(Point(minX, minY), Point(maxX, maxY))
+  }
+
+  def diagonal: Distance = lower.distance(upper)
 }

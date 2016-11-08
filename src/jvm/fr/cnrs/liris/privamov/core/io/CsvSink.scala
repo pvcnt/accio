@@ -22,20 +22,24 @@ import java.nio.file.{Files, Paths}
 
 import com.github.nscala_time.time.Imports._
 import com.google.common.base.Charsets
+import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.common.util.FileUtils
 import fr.cnrs.liris.privamov.core.model.{Event, Trace}
 
 /**
  * Mobility traces sink writing data to our custom CSV format, with one file per trace.
  *
- * @param uri Path to the directory where to write.
+ * @param uri                     Path to the directory where to write.
+ * @param failOnNonEmptyDirectory Whether to fail is specified directory exists and is not empty.
  */
-case class CsvSink(uri: String) extends DataSink[Trace] {
+case class CsvSink(uri: String, failOnNonEmptyDirectory: Boolean = true) extends DataSink[Trace] with LazyLogging {
   private[this] val path = Paths.get(FileUtils.replaceHome(uri))
   if (!path.toFile.exists) {
     Files.createDirectories(path)
-  } else if (path.toFile.isDirectory && path.toFile.listFiles.nonEmpty) {
+  } else if (path.toFile.isDirectory && path.toFile.listFiles.nonEmpty && failOnNonEmptyDirectory) {
     throw new IllegalArgumentException(s"Non-empty directory: ${path.toAbsolutePath}")
+  } else if (path.toFile.isFile) {
+    throw new IllegalArgumentException(s"${path.toAbsolutePath} already exists and is a file")
   }
   private[this] val encoder = new CsvEncoder
   private[this] val NL = "\n".getBytes(Charsets.UTF_8)

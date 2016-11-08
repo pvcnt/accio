@@ -20,7 +20,7 @@ package fr.cnrs.liris.privamov.core.model
 
 import com.github.nscala_time.time.Imports._
 import com.google.common.base.MoreObjects
-import fr.cnrs.liris.common.geo.Distance
+import fr.cnrs.liris.common.geo.{BoundingBox, Distance, Point}
 
 /**
  * A trace is a list of events belonging to a single user.
@@ -79,6 +79,17 @@ case class Trace private(id: String, user: String, events: Seq[Event]) {
    */
   def durations: Seq[Duration] =
   events.sliding(2).map(rs => (rs.head.time to rs.last.time).duration).toSeq
+
+  /**
+   * Return the minimal bounding box encompassing all points of this trace.
+   */
+  def boundingBox: BoundingBox = {
+    val minX = events.map(_.point.x).min
+    val maxX = events.map(_.point.x).max
+    val minY = events.map(_.point.y).min
+    val maxY = events.map(_.point.y).max
+    BoundingBox(Point(minX, minY), Point(maxX, maxY))
+  }
 
   /**
    * Return a new trace after applying a given function on each event.

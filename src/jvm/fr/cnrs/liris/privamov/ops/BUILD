@@ -16,5 +16,8 @@ scala_library(
     '3rdparty/jvm:scala-time',
     '3rdparty/jvm:scala-guice',
   ],
-  sources=globs('*.scala')
+  sources=globs('*.scala'),
+  resources=[
+    'src/resources/fr/cnrs/liris/privamov/ops:w4m',
+  ]
 )
