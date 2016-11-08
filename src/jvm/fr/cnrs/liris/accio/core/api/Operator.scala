@@ -21,8 +21,9 @@ package fr.cnrs.liris.accio.core.api
 import java.nio.file.Path
 
 /**
- * An operator is the basic processing unit of Accio. It takes a typed input and produces a type output.
- * Input and output types must be case classes, whose fields are one of the allowed types.
+ * An operator is the basic processing unit of Accio. It takes a typed input and produces a type output. Input and
+ * output types must be case classes, whose fields are one of the allowed types. All operators should be annotated
+ * with the [[Op]] annotation.
  *
  * @tparam In  Inputs type
  * @tparam Out Outputs type

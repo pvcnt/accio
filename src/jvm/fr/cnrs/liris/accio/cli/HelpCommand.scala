@@ -29,7 +29,7 @@ import fr.cnrs.liris.common.util.StringUtils
   help = "Display built-in Accio help.",
   description = "Prints a help page for the given command or topic, or, if nothing is specified, prints the index of available commands.",
   allowResidue = true)
-class HelpCommand @Inject()(commandRegistry: CmdRegistry, opRegistry: OpRegistry) extends AccioCommand {
+class HelpCommand @Inject()(commandRegistry: CmdRegistry, opRegistry: OpRegistry) extends Command {
 
   override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     flags.residue match {

@@ -47,7 +47,7 @@ case class ExportOpts(
   flags = Array(classOf[ExportOpts]),
   help = "Generate text reports from run artifacts.",
   allowResidue = true)
-class ExportCommand @Inject()(repository: ReportRepository) extends AccioCommand {
+class ExportCommand @Inject()(repository: ReportRepository) extends Command {
 
   override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     val startedAt = System.currentTimeMillis()

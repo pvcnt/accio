@@ -37,7 +37,7 @@ case class AccioOpts(
   logLevel: String = "warn")
 
 /**
- * Entry point of the Accio command line application. Very little is done here, it is the job of [[AccioCommand]]s
+ * Entry point of the Accio command line application. Very little is done here, it is the job of [[Command]]s
  * to actually handle the payload.
  */
 class AccioApp extends StrictLogging {
@@ -47,7 +47,7 @@ class AccioApp extends StrictLogging {
 
     val reporter = new StreamReporter(Console.out, useColors = true)
     val injector = Guice.createInjector(FlagsModule, FrameworkModule, CliModule, OpsModule, LocalRuntimeModule)
-    val dispatcher = injector.getInstance(classOf[AccioCommandDispatcher])
+    val dispatcher = injector.getInstance(classOf[CommandDispatcher])
     val exitCode = dispatcher.exec(args, reporter)
 
     logger.info(s"Terminating Accio client: ${exitCode.name}")

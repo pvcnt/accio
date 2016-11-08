@@ -38,7 +38,7 @@ case class VisualizeFlags(
   flags = Array(classOf[VisualizeFlags]),
   help = "Generate interactive graphs.",
   allowResidue = true)
-class VisualizeCommand @Inject()(repository: ReportRepository) extends AccioCommand {
+class VisualizeCommand @Inject()(repository: ReportRepository) extends Command {
 
   override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     val reports = flags.residue.flatMap { path =>

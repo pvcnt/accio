@@ -30,7 +30,7 @@ import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
  */
 object CliModule extends AbstractModule with ScalaModule {
   override def configure(): Unit = {
-    val commands = ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Class[_ <: AccioCommand]] {})
+    val commands = ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Class[_ <: Command]] {})
     commands.addBinding.toInstance(classOf[RunCommand])
     commands.addBinding.toInstance(classOf[VisualizeCommand])
     commands.addBinding.toInstance(classOf[ExportCommand])

@@ -21,9 +21,11 @@ package fr.cnrs.liris.accio.cli
 import fr.cnrs.liris.common.flags.FlagsProvider
 
 /**
- * Executable command being registered into the Accio application.
+ * A command that is part of a command-line application. Applications are divided into commands which can be invoked
+ * independently. Commands contain the executable part of any application. All commands should be annotated with the
+ * [[Cmd]] annotation.
  */
-trait AccioCommand {
+trait Command {
   /**
    * Execute this command.
    *

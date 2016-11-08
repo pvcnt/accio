@@ -51,7 +51,7 @@ case class RunCommandOpts(
   help = "Execute an Accio workflow.",
   allowResidue = true)
 class RunCommand @Inject()(experimentFactory: ExperimentFactory, executor: ExperimentExecutor, opRegistry: OpRegistry)
-  extends AccioCommand with StrictLogging {
+  extends Command with StrictLogging {
 
   def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     val opts = flags.as[RunCommandOpts]

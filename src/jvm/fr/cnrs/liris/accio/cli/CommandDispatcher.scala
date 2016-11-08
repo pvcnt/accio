@@ -27,13 +27,13 @@ import org.slf4j.LoggerFactory
 import scala.util.control.NonFatal
 
 /**
- * Command dispatcher is responsible for discovering the command to execute, instantiating it and executing it.
+ * The command dispatcher is responsible for discovering the command to execute, instantiating it and executing it.
  *
  * @param cmdRegistry   Command registry.
  * @param parserFactory Parser factory.
- * @param injector      Guice injector.
+ * @param injector      Guice injector (used to create injectable commands).
  */
-class AccioCommandDispatcher @Inject()(cmdRegistry: CmdRegistry, parserFactory: FlagsParserFactory, injector: Injector) extends StrictLogging {
+class CommandDispatcher @Inject()(cmdRegistry: CmdRegistry, parserFactory: FlagsParserFactory, injector: Injector) extends StrictLogging {
   /**
    * Execute the appropriate command given some arguments.
    *

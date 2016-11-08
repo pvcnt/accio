@@ -29,7 +29,7 @@ import fr.cnrs.liris.common.reflect.Annotations
  * @param defn     Command definition.
  * @param cmdClass Command class.
  */
-case class CommandMeta(defn: Cmd, cmdClass: Class[_ <: AccioCommand])
+case class CommandMeta(defn: Cmd, cmdClass: Class[_ <: Command])
 
 /**
  * Stores all commands known to the Accio CLI application. It is immutable, all commands should be registered when
@@ -38,7 +38,7 @@ case class CommandMeta(defn: Cmd, cmdClass: Class[_ <: AccioCommand])
  * @param classes Classes containing command implementations.
  */
 @Singleton
-class CmdRegistry @Inject()(classes: Set[Class[_ <: AccioCommand]]) {
+class CmdRegistry @Inject()(classes: Set[Class[_ <: Command]]) {
   private[this] val index = classes.map { clazz =>
     val annotations = clazz.getAnnotations
     require(Annotations.exists[Cmd](annotations), "Commands must be annotated with @Cmd")
