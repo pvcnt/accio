@@ -70,6 +70,10 @@ final class RunFactory @Inject()(opRegistry: OpRegistry) {
   }
 
   private def expandRuns(repeat: Int, name: String, graph: Graph): Seq[(String, Graph)] = {
-    Seq.tabulate(repeat)(idx => (s"$name#${idx + 1}", graph))
+    if (repeat <= 1) {
+      Seq((name, graph))
+    } else {
+      Seq.tabulate(repeat)(idx => (s"$name#${idx + 1}", graph))
+    }
   }
 }
