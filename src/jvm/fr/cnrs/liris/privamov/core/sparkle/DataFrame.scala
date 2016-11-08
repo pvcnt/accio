@@ -250,7 +250,7 @@ private[sparkle] class UnionDataFrame[T: ClassTag](frames: Iterable[DataFrame[T]
 private[sparkle] class ZipDataFrame[T: ClassTag, U: ClassTag](first: DataFrame[T], other: DataFrame[U])
   extends DataFrame[(T, U)](first.env) {
 
-  override def keys: Seq[String] = first.keys
+  override def keys: Seq[String] = first.keys.intersect(other.keys)
 
   override def load(key: String): Iterator[(T, U)] = first.load(key).zip(other.load(key))
 
