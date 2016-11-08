@@ -21,31 +21,37 @@ package fr.cnrs.liris.accio.cli
 import java.nio.file.{Files, Paths}
 import java.util.UUID
 
+import breeze.stats._
 import com.google.inject.Inject
-import fr.cnrs.liris.accio.core.framework.{Artifact, DataType, ReportRepository, Values}
+import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
-import fr.cnrs.liris.common.util.HashUtils
+import fr.cnrs.liris.common.geo.Distance
+import fr.cnrs.liris.common.util.{HashUtils, Seqs, StringUtils}
+import org.joda.time.Duration
 
 import scala.collection.JavaConverters._
 
 case class ExportOpts(
-  @Flag(name = "sep", help = "Separator to use in generated files")
-  separator: String = ",",
-  @Flag(name = "artifacts", help = "Specify a comma-separated list of artifacts to take into account, or ALL for " +
+  @Flag(name = "separator", help = "Separator to use in generated files")
+  separator: String = " ",
+  @Flag(name = "artifacts", help = "Comma-separated list of artifacts to take into account, or ALL for " +
     "all of them, or NUMERIC for only those of a numeric type")
   artifacts: String = "NUMERIC",
-  @Flag(name = "runs", help = "Specify a comma-separated list of runs/experiments to take into account")
-  runs: String = "")
+  @Flag(name = "runs", help = "Comma-separated list of runs/experiments to take into account")
+  runs: Option[String],
+  @Flag(name = "aggregate", help = "Whether to aggregate multiple runs of the same graph")
+  aggregate: Boolean = true)
 
 @Cmd(
   name = "export",
   flags = Array(classOf[ExportOpts]),
-  help = "Generate CSV reports.",
+  help = "Generate text reports from run artifacts.",
   allowResidue = true)
 class ExportCommand @Inject()(repository: ReportRepository) extends AccioCommand {
 
   override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
-    val reports = flags.residue.flatMap { path =>
+    val startedAt = System.currentTimeMillis()
+    val runs = flags.residue.flatMap { path =>
       val workDir = Paths.get(path)
       require(workDir.toFile.exists, s"Directory ${workDir.toAbsolutePath} does not exist")
       workDir.toFile.list
@@ -54,24 +60,23 @@ class ExportCommand @Inject()(repository: ReportRepository) extends AccioCommand
         .flatMap(id => repository.readRun(workDir, id))
     }
     val opts = flags.as[ExportOpts]
-    val reportStats = new ReportStatistics(reports)
-    val artifacts = filterRuns(filterArtifacts(reportStats.artifacts, opts.artifacts), opts.runs)
+    val reportStats = new ReportStatistics(runs)
+    val artifacts = maybeAggregate(filterEmpty(filterRuns(filterArtifacts(reportStats.artifacts, opts.artifacts), opts.runs)), runs, opts.aggregate)
 
     val uid = HashUtils.sha1(UUID.randomUUID().toString).substring(0, 8)
     val outDir = Paths.get(s"export-$uid")
     Files.createDirectories(outDir)
     artifacts.foreach { case (artifactName, arts) =>
       val lines = if (arts.nonEmpty) {
-        val header = asHeader(arts.values.head.kind)
-        val rows = arts.flatMap { case (runId, artifact) =>
-          asString(artifact.kind, artifact.value).map(items => Seq(runId) ++ items)
-        }
+        val header = asHeader(arts.head.kind)
+        val rows = arts.flatMap(artifact => asString(artifact.kind, artifact.value))
         (Seq(header) ++ rows).map(_.mkString(opts.separator))
       } else Seq.empty[String]
-      Files.write(outDir.resolve(s"${artifactName.replace("/", "__")}.csv"), lines.asJava)
+      Files.write(outDir.resolve(s"${artifactName.replace("/", "-")}.csv"), lines.asJava)
     }
 
-    out.writeln(s"Export written to <comment>${outDir.toAbsolutePath}</comment>")
+    val duration = System.currentTimeMillis() - startedAt
+    out.writeln(s"Done in ${duration / 1000}s. Export in <comment>${outDir.toAbsolutePath}</comment>")
     ExitCode.Success
   }
 
@@ -79,24 +84,60 @@ class ExportCommand @Inject()(repository: ReportRepository) extends AccioCommand
     if (filter == "ALL") {
       artifacts
     } else if (filter == "NUMERIC") {
-      artifacts
-        .map { case (name, arts) => name -> arts.filter { case (k, v) => v.kind.isNumeric } }
-        .filter { case (_, arts) => arts.nonEmpty }
+      artifacts.map { case (name, arts) => name -> arts.filter { case (k, v) => v.kind.isNumeric } }
     } else {
       val validNames = filter.split(",").map(_.trim).toSet
       artifacts.filter { case (name, _) => validNames.contains(name) }
     }
   }
 
-  private def filterRuns(artifacts: Map[String, Map[String, Artifact]], filter: String): Map[String, Map[String, Artifact]] = {
+  private def filterRuns(artifacts: Map[String, Map[String, Artifact]], filter: Option[String]): Map[String, Map[String, Artifact]] = {
     if (filter.isEmpty) {
       artifacts
     } else {
-      val validIds = filter.split(",").map(_.trim).toSet
-      artifacts
-        .map { case (name, arts) => name -> arts.filter { case (runId, _) => validIds.exists(id => runId.startsWith(id)) } }
-        .filter { case (_, arts) => arts.nonEmpty }
+      val validIds = StringUtils.explode(filter, ",")
+      artifacts.map { case (name, arts) => name -> arts.filter { case (runId, _) => validIds.exists(id => runId.startsWith(id)) } }
     }
+  }
+
+  private def filterEmpty(artifacts: Map[String, Map[String, Artifact]]): Map[String, Map[String, Artifact]] =
+    artifacts.filter { case (_, arts) => arts.nonEmpty }
+
+  private def maybeAggregate(artifacts: Map[String, Map[String, Artifact]], runs: Seq[Run], agg: Boolean): Map[String, Seq[Artifact]] = {
+    if (agg) {
+      val runsIndex = runs.map(run => run.id -> run).toMap
+      artifacts.map { case (name, arts) =>
+        // We group artifacts coming from the execution of the same graph.
+        val groupedArtifacts = arts.toSeq.groupBy { case (runId, art) => runsIndex(runId).graph }
+        // We then aggregate artifacts coming from the execution of the same graph. For now we only support mean aggregation.
+        val aggregatedArtifacts = groupedArtifacts.map { case (_, similarArts) => aggregate(similarArts.map(_._2)) }.toSeq
+        name -> aggregatedArtifacts
+      }
+    } else {
+      artifacts.map { case (name, arts) => name -> arts.values.toSeq }
+    }
+  }
+
+  private def aggregate(artifacts: Seq[Artifact]): Artifact = {
+    val name = artifacts.head.name
+    val kind = artifacts.head.kind
+    Artifact(name, kind, aggregate(kind, artifacts.map(_.value)))
+  }
+
+  private def aggregate(kind: DataType, values: Seq[Any]): Any = kind match {
+    case DataType.Byte => mean(values.map(Values.asDouble))
+    case DataType.Short => mean(values.map(Values.asDouble))
+    case DataType.Integer => mean(values.map(Values.asDouble))
+    case DataType.Double => mean(values.map(Values.asDouble))
+    case DataType.Long => mean(values.map(Values.asDouble))
+    case DataType.Distance => Distance.meters(mean(values.map(Values.asDistance(_).meters)))
+    case DataType.Duration => Duration.millis(mean(values.map(Values.asDuration(_).getMillis.toDouble)).round)
+    case DataType.List(of) => aggregate(of, values.flatMap(Values.asList(_, of)))
+    case DataType.Set(of) => aggregate(of, values.flatMap(Values.asSet(_, of)))
+    case DataType.Map(ofKeys, ofValues) =>
+      val valuesByKey = Seqs.index(values.flatMap(Values.asMap(_, ofKeys, ofValues)))
+      valuesByKey.map { case (k, vs) => k -> aggregate(ofValues, vs) }
+    case _ => throw new IllegalArgumentException(s"Cannot aggregate $kind values")
   }
 
   private def asHeader(kind: DataType): Seq[String] = kind match {

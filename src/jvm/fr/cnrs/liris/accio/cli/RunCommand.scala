@@ -59,13 +59,14 @@ class RunCommand @Inject()(experimentFactory: ExperimentFactory, executor: Exper
       out.writeln("<error>Specify one or multiple files to run as arguments</error>")
       ExitCode.CommandLineError
     } else {
-      val workDir = getWorkDir(opts)
       val startedAt = System.currentTimeMillis()
+      val workDir = getWorkDir(opts)
       out.writeln(s"Writing progress in <comment>${workDir.toAbsolutePath}</comment>")
       val progressReporter = new ConsoleGraphProgressReporter(out)
       flags.residue.foreach { url =>
         make(opts, workDir, url, progressReporter)
       }
+
       val duration = System.currentTimeMillis() - startedAt
       out.writeln(s"Done in ${duration / 1000}s. Reports in <comment>${workDir.toAbsolutePath}</comment>")
       ExitCode.Success

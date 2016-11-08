@@ -167,13 +167,13 @@ object Values {
     case _ => throwInvalidTypeException(DataType.Dataset, rawValue)
   }
 
-  def asList(rawValue: Any, of: DataType): Seq[_] = rawValue match {
+  def asList(rawValue: Any, of: DataType): Seq[Any] = rawValue match {
     case arr: Array[_] => arr.map(as(_, of)).toSeq
     case seq: Seq[_] => seq.map(as(_, of))
     case _ => throwInvalidTypeException(DataType.List(of), rawValue)
   }
 
-  def asSet(rawValue: Any, of: DataType): Set[_] = rawValue match {
+  def asSet(rawValue: Any, of: DataType): Set[Any] = rawValue match {
     case arr: Array[_] => arr.map(as(_, of)).toSet
     case set: Set[_] => set.map(as(_, of))
     case _ => throwInvalidTypeException(DataType.Set(of), rawValue)

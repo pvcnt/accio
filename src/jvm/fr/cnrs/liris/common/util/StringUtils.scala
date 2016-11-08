@@ -71,4 +71,11 @@ object StringUtils {
   }
 
   def maybe(str: String): Option[String] = if (str.isEmpty) None else Some(str)
+
+  def explode(str: String, delimiter: String): Set[String] = str.split(delimiter).map(_.trim).toSet
+
+  def explode(str: String): Set[String] = explode(str, ",")
+
+  def explode(str: Option[String], delimiter: String): Set[String] =
+    str.map(explode(_, delimiter)).getOrElse(Set.empty[String])
 }
