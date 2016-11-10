@@ -274,6 +274,40 @@ Enforce speed smoothing guarantees on traces.
 | `data` | dataset | Output dataset |
 {: class="table table-striped"}
 
+### Wait4Me
+
+:hammer: Implemented in `fr.cnrs.liris.privamov.ops.Wait4MeOp`
+
+Time-tolerant k-anonymization
+
+| Input name | Type | Description |
+|:-----------|:-----|:------------|
+| `data` | dataset | Input dataset |
+| `k` | integer | Anonymity level |
+| `delta` | distance | Uncertainty |
+| `radiusMax` | distance; optional | Initial maximum radius used in clustering |
+| `trashMax` | float; optional; default: 0.1 | Global maximum trash size, in percentage of the dataset size |
+| `chunk` | boolean; optional; default: false | Whether to chunk the input dataset |
+{: class="table table-striped"}
+
+| Output name | Type | Description |
+|:------------|:-----|:------------|
+| `data` | dataset | Output dataset |
+| `trashSize` | integer | Trash_size |
+| `trashedPoints` | long | Number of trashed points |
+| `discernibility` | long | Discernibility metric |
+| `totalXyTranslations` | distance | Total XY translations |
+| `totalTimeTranslations` | duration | Total time translations |
+| `xyTranslationsCount` | integer | XY translation count |
+| `timeTranslationsCount` | integer | Time translation count |
+| `createdPoints` | integer | Number of created points |
+| `deletedPoints` | integer | Number of deleted points |
+| `meanSpatialTraceTranslation` | distance | Mean spatial translation (per trace) |
+| `meanTemporalTraceTranslation` | duration | Mean temporal translation (per trace) |
+| `meanSpatialPointTranslation` | distance | Mean spatial translation (per point) |
+| `meanTemporalPointTranslation` | duration | Mean temporal translation (per point) |
+{: class="table table-striped"}
+
 ## Prepare operators
 
 ### CollapseTemporalGaps

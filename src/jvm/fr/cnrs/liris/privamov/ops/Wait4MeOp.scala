@@ -193,9 +193,9 @@ case class Wait4MeOut(
   @Arg(help = "Number of created points") createdPoints: Int,
   @Arg(help = "Number of deleted points") deletedPoints: Int,
   @Arg(help = "Mean spatial translation (per trace)") meanSpatialTraceTranslation: Distance,
-  @Arg(help = "Mean temporal translation(per trace)") meanTemporalTraceTranslation: Duration,
+  @Arg(help = "Mean temporal translation (per trace)") meanTemporalTraceTranslation: Duration,
   @Arg(help = "Mean spatial translation (per point)") meanSpatialPointTranslation: Distance,
-  @Arg(help = "Mean temporal translation(per point)") meanTemporalPointTranslation: Duration)
+  @Arg(help = "Mean temporal translation (per point)") meanTemporalPointTranslation: Duration)
 
 private class W4MSink(uri: String, keysIndex: Map[String, Int]) extends DataSink[Trace] {
   val path = Paths.get(uri)
