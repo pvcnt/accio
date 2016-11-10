@@ -18,6 +18,8 @@
 
 package fr.cnrs.liris.accio.cli
 
+import java.nio.file.Path
+
 import com.google.inject.Guice
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.framework.FrameworkModule
@@ -34,7 +36,11 @@ object AccioAppMain extends AccioApp
  */
 case class AccioOpts(
   @Flag(name = "logging", help = "Logging level")
-  logLevel: String = "warn")
+  logLevel: String = "warn",
+  @Flag(name = "acciorc", help = "Path to the .acciorc configuration file")
+  accioRcPath: Option[Path],
+  @Flag(name = "config")
+  accioRcConfig: Option[String])
 
 /**
  * Entry point of the Accio command line application. Very little is done here, it is the job of [[Command]]s

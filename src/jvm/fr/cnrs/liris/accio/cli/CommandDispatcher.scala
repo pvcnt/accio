@@ -18,10 +18,12 @@
 
 package fr.cnrs.liris.accio.cli
 
+import java.nio.file.Path
+
 import ch.qos.logback.classic.{Level, Logger}
 import com.google.inject.{Inject, Injector}
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.common.flags.{FlagsParserFactory, FlagsProvider}
+import fr.cnrs.liris.common.flags.{FlagsParserFactory, Priority}
 import org.slf4j.LoggerFactory
 
 import scala.util.control.NonFatal
@@ -43,26 +45,39 @@ class CommandDispatcher @Inject()(cmdRegistry: CmdRegistry, parserFactory: Flags
    */
   def exec(args: Seq[String], out: Reporter): ExitCode = {
     val registry = injector.getInstance(classOf[CmdRegistry])
-    val name = args.headOption.getOrElse("help")
-    val meta = registry.get(name) match {
+
+    val cmdNamePos = args.indexWhere(s => !s.startsWith("-"))
+    val (commonArgs, cmdName, otherArgs) = if (cmdNamePos > -1) {
+      (args.take(cmdNamePos), args(cmdNamePos), args.drop(cmdNamePos + 1))
+    } else {
+      (args, "help", Seq.empty[String])
+    }
+
+    val meta = registry.get(cmdName) match {
       case None =>
-        out.writeln(s"<error>Unknown command '$name'</error>")
+        out.writeln(s"<error>Unknown command '$cmdName'</error>")
         registry("help")
       case Some(m) => m
     }
-    val flags = parseFlags(meta, args.drop(1))
-    val coreOpts = flags.as[AccioOpts]
+
+    val parser = parserFactory.create(meta.defn.allowResidue, meta.defn.flags ++ Seq(classOf[AccioOpts]): _*)
+    parser.parseAndExitUponError(commonArgs)
+    val commonOpts = parser.as[AccioOpts]
+
+    val accioRcArgs = parseAccioRc(commonOpts.accioRcPath, commonOpts.accioRcConfig, cmdName)
+    parser.parseAndExitUponError(accioRcArgs, Priority.RcFile)
+    parser.parseAndExitUponError(otherArgs)
 
     // Configure logging level for Accio- and Privamov-related code. Other logging configuration is done in an ordinary
     // logback.xml loaded at the very beginning of the main.
-    val logLevel = Level.toLevel(coreOpts.logLevel)
+    val logLevel = Level.toLevel(commonOpts.logLevel)
     LoggerFactory.getLogger("fr.cnrs.liris.accio").asInstanceOf[Logger].setLevel(logLevel)
     LoggerFactory.getLogger("fr.cnrs.liris.privamov").asInstanceOf[Logger].setLevel(logLevel)
     logger.info(s"Set logging level: $logLevel")
 
     try {
       val command = injector.getInstance(meta.cmdClass)
-      command.execute(flags, out)
+      command.execute(parser, out)
     } catch {
       case e: IllegalArgumentException =>
         out.writeln(s"<error>${e.getMessage.stripPrefix("requirement failed: ")}</error>")
@@ -76,9 +91,8 @@ class CommandDispatcher @Inject()(cmdRegistry: CmdRegistry, parserFactory: Flags
     }
   }
 
-  private def parseFlags(meta: CommandMeta, args: Seq[String]): FlagsProvider = {
-    val parser = parserFactory.create(meta.defn.allowResidue, meta.defn.flags ++ Seq(classOf[AccioOpts]): _*)
-    parser.parseAndExitUponError(args)
-    parser
+  private def parseAccioRc(customPath: Option[Path], config: Option[String], cmdName: String): Seq[String] = {
+    val parser = new AccioRcParser
+    parser.parse(customPath, config, cmdName)
   }
 }
