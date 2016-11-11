@@ -9,18 +9,18 @@ This section covers how to easily define workflows as JSON documents.
 * TOC
 {:toc}
 
-## JSON document
+## JSON schema
 
 A workflow is a JSON object formed of the following fields.
 
-| Name | Description | Type | Required |
-|:-----|:------------|:-----|:---------|
-| name | A human-readable name. | string | false |
-| owner | Person owning the workflow. It can include an email address between chevrons. | string | false |
-| graph | Nodes composing the workflow graph. The order in which nodes are defined does not matter. | object[] | true |
-| graph[*].op | Operator name. | string | required |
-| graph[*].name | Node name. By default it will be the operator's name. | string | optional |
-| graph[*].inputs | Mapping between input names and their values. All parameters without a default value should be specified. | object | false | 
+| Name | Type | Description |
+|:-----|:-----|:------------|
+| name | string; optional | A human-readable name. |
+| owner | string; optional | Person owning the workflow. It can include an email address between chevrons. |
+| graph | object[]; required | Nodes composing the workflow graph. The order in which nodes are defined does not matter. |
+| graph[*].op | string; required | Operator name. |
+| graph[*].name | string; optional | Node name. By default it will be the operator's name. |
+| graph[*].inputs | object; optional | Mapping between input names and their values. All parameters without a default value should be specified. | 
 {: class="table table-striped"}
 
 Here is an example of a simple workflow's definition:
@@ -39,7 +39,7 @@ Here is an example of a simple workflow's definition:
     {
       "op": "GeoIndistinguishability",
       "inputs": {
-        "epsilon": {"value": "0.001"},
+        "epsilon": {"param": "epsilon"},
         "data": {"reference": "EventSource/data"}
       }
     },
@@ -79,9 +79,9 @@ All nodes have to form a directed acyclic graph (DAG), which will be enforced at
 
 ## Specifying inputs
 
-Inputs can be either specified as constants or as references to some output of another node. 
+An input can be either specified as a constant value, as a reference to the output of another node or as a reference to a parameter. 
 
-### Input values
+### Constant value
 
 You may directly specify the value of an input as a constant by providing a JSON object with a `value` key and the constant as a value.
 Values are specified differently depending on their type.
@@ -132,9 +132,9 @@ and:
 
 It may be needed sometimes to use the explicit form to disambiguate, especially if your input is a map.
 
-### Input references
+### Reference
 
-Inputs can also be provided by the output of another node, in which case there will be a dependency between the two nodes.
+Inputs can be filled by the output of another node, in which case there will be a dependency between the two nodes.
 You may reference another node by providing a JSON object with a `reference` key and the full name of the output as a value.
  
 ```json
@@ -146,5 +146,24 @@ You may reference another node by providing a JSON object with a `reference` key
 }
 ```
 
-References are formed of a node name and a port (an output port in this case) name, separated by a slash ('/').
-Please be careful to specify the node name and not the operator case when the two are different.
+References are formed of a node name and an output port name, separated by a slash ('/').
+Please be careful to specify the node name and not the operator name when the two are different.
+
+### Parameter
+
+Inputs can be filled by the value of a workflow parameter.
+Parameters are useful to let the user vary some parameters are runtime, possibly affecting multiple ports at once.
+You may reference a parameter by providing a JSON object with a `param` key and the name of the parameter as a value.
+You do not need to explicitly create parameters before using them.
+However, you must ensure that a given parameter is used only on ports of the same data type (e.g., you cannot use a parameter on an integer port and then on a distance port).
+Parameter names are global to a workflow and therefore not namespaced.
+
+```json
+{
+  "op": "GeoIndistinguishability",
+  "inputs": {
+    "epsilon": {"param": "epsilon"},
+    "data": {"reference": "EventSource/data"}
+  }
+}
+```

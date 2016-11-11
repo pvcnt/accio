@@ -13,7 +13,7 @@ Accio comes with a command line interface allowing to run experiments and analyz
 
 The `accio run` command is used to launch experiments.
 It requires one or many arguments specifying paths to files containing experiment definitions.
-These files must be JSON files formatted according to the [definition language](workflows.html).
+These files must be JSON files formatted according to the [definition language](experiments.html).
 You can specify files containing either a experiment definition or a workflow definition (which will be implicitly converted into an experiment).
 
 ### Experiment execution
@@ -33,38 +33,35 @@ Outputs of several experiments can be stored in the same directory, names of fil
 `-name="My experiment name"`
 
 Overrides the experiment name at runtime, when launching it.
-It will replace the value specified in the definition file.
+It will replace the value specified in the experiment definition.
 
 `-tags="tag1 tag2"`
 
 Overrides the experiment tags at runtime, when launching it.
 Tags are space-separated, heading or trailing whitespaces are ignored.
-It will replace the value specified in the definition file.
+Those tags will be added to those specified in the experiment definition.
 
 `-notes="Some notes to remember why I ran this experiment"`
 
 Overrides the experiment notes at runtime, when launching it.
-It will replace the value specified in the definition file.
+It will replace the value specified in the experiment definition.
 
-`-runs=3`
+`-repeat=3`
 
-Overrides the experiment number of runs at runtime, when launching it.
-It will replace the value specified in the definition file.
+Overrides the number of times each run will be executed.
+It will replace the value specified in the experiment definition.
 
 `-user="John Doe <john.doe@gmail.com>"`
 
 Specifies the user who ran the experiment.
 It can include an email address between chevrons.
-If this option is not specified, the person who launched an experiment is automatically recorded by using two sources:
+If this option is not specified, the person who launched an experiment is automatically inferred by using the current shell login.
 
-  * The environment variable `ACCIO_USER`, which contains the user in the same allowed format.
-  * The current shell user, in which case no email address can be inferred.
+`-params="epsilon=0.002 distance=30.meters"`
 
-`-params="node1/epsilon=0.002 node2/distance=30.meters"`
-
-Overrides some parameters at runtime, when launching the experiment.
-Parameters are space-separated. Parameter names are references, written in the same manner than inside [workflow definitions](/definition-language.html).
-It will take precedence over parameters defined inside a workflow, but execution strategies may still override them later (e.g., if this parameter is being optimized).
+Overrides some workflow parameters at runtime, when launching the experiment.
+Parameters are space-separated.
+They will take precedence over parameters defined inside a workflow.
 
 
 ## Built-in documentation

@@ -17,7 +17,7 @@ Read a dataset of traces.
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `url` | string | Dataset URL |
+| `url` | string; required | Dataset URL |
 | `kind` | string; optional; default: csv | Kind of dataset |
 | `sample` | float; optional | Sampling ratio |
 | `users` | list of strings; optional; default: List() | Users to include |
@@ -38,9 +38,9 @@ Compute area coverage difference between two datasets of traces
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `level` | integer | S2 cells levels |
-| `train` | dataset | Train dataset |
-| `test` | dataset | Test dataset |
+| `level` | integer; required | S2 cells levels |
+| `train` | dataset; required | Train dataset |
+| `test` | dataset; required | Test dataset |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
@@ -58,7 +58,7 @@ Compute basic statistics about traces.
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `data` | dataset | Input dataset |
+| `data` | dataset; required | Input dataset |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
@@ -81,8 +81,8 @@ Evaluate count query distortion between to datasets.
 | `maxSize` | distance; optional; default: 2000.0.meters | Maximum size of the generated queries' geographical area |
 | `minDuration` | duration; optional; default: PT7200S | Minimum duration of the generated queries' temporal window |
 | `maxDuration` | duration; optional; default: PT14400S | Maximum duration of the generated queries' temporal window |
-| `train` | dataset | Train dataset |
-| `test` | dataset | Test dataset |
+| `train` | dataset; required | Train dataset |
+| `test` | dataset; required | Test dataset |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
@@ -98,8 +98,8 @@ Compute data completeness difference between two datasets of traces.
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `train` | dataset | Train dataset |
-| `test` | dataset | Test dataset |
+| `train` | dataset; required | Train dataset |
+| `test` | dataset; required | Test dataset |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
@@ -117,9 +117,9 @@ Compute statistics about the POIs that can be extracted from a trace, using a cl
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `diameter` | distance | Clustering maximum diameter |
-| `duration` | duration | Clustering minimum duration |
-| `data` | dataset | Input dataset |
+| `diameter` | distance; required | Clustering maximum diameter |
+| `duration` | duration; required | Clustering minimum duration |
+| `data` | dataset; required | Input dataset |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
@@ -139,12 +139,12 @@ Re-identification attack using POIs a the discriminating information.
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `diameter` | distance | Clustering maximum diameter |
-| `duration` | duration | Clustering minimum duration |
+| `diameter` | distance; required | Clustering maximum diameter |
+| `duration` | duration; required | Clustering minimum duration |
 | `testDiameter` | distance; optional | Override the clustering maximum diameter to use with the test dataset only |
 | `testDuration` | duration; optional | Override the clustering minimum duration to use with the test dataset only |
-| `train` | dataset | Train dataset |
-| `test` | dataset | Test dataset |
+| `train` | dataset; required | Train dataset |
+| `test` | dataset; required | Test dataset |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
@@ -162,11 +162,11 @@ Compute POIs retrieval difference between two datasets of traces
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `diameter` | distance | Clustering maximum diameter |
-| `duration` | duration | Clustering minimum duration |
-| `threshold` | distance | Matching threshold |
-| `train` | dataset | Train dataset |
-| `test` | dataset | Test dataset |
+| `diameter` | distance; required | Clustering maximum diameter |
+| `duration` | duration; required | Clustering minimum duration |
+| `threshold` | distance; required | Matching threshold |
+| `train` | dataset; required | Train dataset |
+| `test` | dataset; required | Test dataset |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
@@ -185,8 +185,8 @@ Compute spatial distortion between two datasets of traces
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
 | `interpolate` | boolean; optional; default: true | Whether to interpolate between points |
-| `train` | dataset | Train dataset |
-| `test` | dataset | Test dataset |
+| `train` | dataset; required | Train dataset |
+| `test` | dataset; required | Test dataset |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
@@ -206,8 +206,8 @@ Compute temporal distortion difference between two datasets of traces
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `train` | dataset | Train dataset |
-| `test` | dataset | Test dataset |
+| `train` | dataset; required | Train dataset |
+| `test` | dataset; required | Test dataset |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
@@ -227,8 +227,8 @@ Compute transmission delay between two datasets of traces
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `train` | dataset | Train dataset |
-| `test` | dataset | Test dataset |
+| `train` | dataset; required | Train dataset |
+| `test` | dataset; required | Test dataset |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
@@ -249,7 +249,7 @@ Generate locations satisfying geo-indistinguishability properties. The method us
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
 | `epsilon` | float; optional; default: 0.001 | Privacy budget |
-| `data` | dataset | Input dataset |
+| `data` | dataset; required | Input dataset |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
@@ -265,8 +265,8 @@ Enforce speed smoothing guarantees on traces.
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `epsilon` | distance | Distance to enforce between two consecutive points |
-| `data` | dataset | Input dataset |
+| `epsilon` | distance; required | Distance to enforce between two consecutive points |
+| `data` | dataset; required | Input dataset |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
@@ -282,9 +282,9 @@ Time-tolerant k-anonymization
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `data` | dataset | Input dataset |
-| `k` | integer | Anonymity level |
-| `delta` | distance | Uncertainty |
+| `data` | dataset; required | Input dataset |
+| `k` | integer; required | Anonymity level |
+| `delta` | distance; required | Uncertainty |
 | `radiusMax` | distance; optional | Initial maximum radius used in clustering |
 | `trashMax` | float; optional; default: 0.1 | Global maximum trash size, in percentage of the dataset size |
 | `chunk` | boolean; optional; default: false | Whether to chunk the input dataset |
@@ -320,8 +320,8 @@ Removes empty days by shifting data to fill those empty days.
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `startAt` | timestamp | Start date for all traces |
-| `data` | dataset | Input dataset |
+| `startAt` | timestamp; required | Start date for all traces |
+| `data` | dataset; required | Input dataset |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
@@ -337,8 +337,8 @@ Split traces, ensuring a maximum duration for each one.
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `duration` | duration | Maximum duration of each trace |
-| `data` | dataset | Input dataset |
+| `duration` | duration; required | Maximum duration of each trace |
+| `data` | dataset; required | Input dataset |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
@@ -358,7 +358,7 @@ Longer traces will be truncated, shorter traces will be discarded.
 |:-----------|:-----|:------------|
 | `minDuration` | duration; optional | Minimum duration of a trace |
 | `maxDuration` | duration; optional | Maximum duration of a trace |
-| `data` | dataset | Input dataset |
+| `data` | dataset; required | Input dataset |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
@@ -378,7 +378,7 @@ Larger traces will be truncated, smaller traces will be discarded.
 |:-----------|:-----|:------------|
 | `minSize` | integer; optional | Minimum number of events in each trace |
 | `maxSize` | integer; optional | Maximum number of events in each trace |
-| `data` | dataset | Input dataset |
+| `data` | dataset; required | Input dataset |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
@@ -396,8 +396,8 @@ Apply gaussian kernel smoothing on a trace, attenuating the impact of noisy obse
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `omega` | duration | Bandwidth |
-| `data` | dataset | Input dataset |
+| `omega` | duration; required | Bandwidth |
+| `data` | dataset; required | Input dataset |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
@@ -413,10 +413,10 @@ Split traces sequentially, according to chronological order.
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `percentBegin` | float | Percentage of events at which a trace begins |
-| `percentEnd` | float | Percentage of events at which a trace ends |
+| `percentBegin` | float; required | Percentage of events at which a trace begins |
+| `percentEnd` | float; required | Percentage of events at which a trace ends |
 | `complement` | boolean; optional; default: false | Whether to take the complement trace |
-| `data` | dataset | Input dataset |
+| `data` | dataset; required | Input dataset |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
@@ -432,8 +432,8 @@ Split traces, ensuring a maximum size for each one.
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `size` | integer | Maximum number of events allowed in each trace |
-| `data` | dataset | Input dataset |
+| `size` | integer; required | Maximum number of events allowed in each trace |
+| `data` | dataset; required | Input dataset |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
@@ -449,8 +449,8 @@ Split traces, when there is a too huge distance between consecutive events.
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `distance` | distance | Maximum distance between two consecutive events |
-| `data` | dataset | Input dataset |
+| `distance` | distance; required | Maximum distance between two consecutive events |
+| `data` | dataset; required | Input dataset |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
@@ -468,8 +468,8 @@ If the distance is less than a given threshold, records will be discarded until 
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `distance` | distance | Minimum distance between two consecutive events |
-| `data` | dataset | Input dataset |
+| `distance` | distance; required | Minimum distance between two consecutive events |
+| `data` | dataset; required | Input dataset |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
@@ -485,8 +485,8 @@ Split traces, when there is a too long duration between consecutive events.
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `duration` | duration | Maximum duration between two consecutive events |
-| `data` | dataset | Input dataset |
+| `duration` | duration; required | Maximum duration between two consecutive events |
+| `data` | dataset; required | Input dataset |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
@@ -504,8 +504,8 @@ If the duration is less than a given threshold, events will be discarded until t
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `duration` | duration | Minimum duration between two consecutive events |
-| `data` | dataset | Input dataset |
+| `duration` | duration; required | Minimum duration between two consecutive events |
+| `data` | dataset; required | Input dataset |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
@@ -523,8 +523,8 @@ Perform a uniform sampling on traces, keeping each event with a given probabilit
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `probability` | float | Probability to keep each event |
-| `data` | dataset | Input dataset |
+| `probability` | float; required | Probability to keep each event |
+| `data` | dataset; required | Input dataset |
 {: class="table table-striped"}
 
 | Output name | Type | Description |

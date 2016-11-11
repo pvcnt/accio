@@ -62,71 +62,8 @@ class AccioDocgen extends StrictLogging {
         sys.exit(1)
     }
 
-    val docgen = injector.getInstance(classOf[DocumentationGenerator])
+    val docgen = injector.getInstance(classOf[MarkdownDocgen])
     docgen.generate(flags)
     println(s"Done in ${elapsed().inSeconds} seconds.")
-  }
-}
-
-class DocumentationGenerator @Inject()(opRegistry: OpRegistry) {
-  def generate(flags: AccioDocgenFlags): Unit = {
-    val out = new BufferedOutputStream(new FileOutputStream(flags.out.toFile))
-    writeIntro(out, flags)
-    opRegistry.ops.groupBy(_.defn.category).foreach { case (category, ops) =>
-      out.write(s"## ${category.capitalize} operators\n\n".getBytes)
-      ops.toSeq.sortBy(_.defn.name).foreach { opMeta =>
-        writeOp(out, opMeta)
-      }
-    }
-
-    out.close()
-  }
-
-  private def writeIntro(out: OutputStream, flags: AccioDocgenFlags) = {
-    out.write("---\n".getBytes)
-    out.write(s"layout: ${flags.layout}\n".getBytes)
-    out.write(s"nav: ${flags.nav}\n".getBytes)
-    out.write(s"title: ${flags.title}\n".getBytes)
-    out.write("---\n\n".getBytes)
-
-    if (flags.toc) {
-      out.write("* TOC\n{:toc}\n\n".getBytes)
-    }
-  }
-
-  private def writeOp(out: OutputStream, opMeta: OpMeta) = {
-    out.write(s"### ${opMeta.defn.name}\n\n".getBytes)
-    out.write(s":hammer: Implemented in `${opMeta.opClass.getName}`\n\n".getBytes)
-    opMeta.defn.deprecation.foreach { deprecation =>
-      out.write(s":broken_heart: **Deprecated:** $deprecation\n\n".getBytes)
-    }
-    opMeta.defn.help.foreach { help =>
-      out.write(s"$help\n\n".getBytes)
-    }
-    opMeta.defn.description.foreach { description =>
-      out.write(s"$description\n\n".getBytes)
-    }
-    if (opMeta.defn.inputs.nonEmpty) {
-      out.write("| Input name | Type | Description |\n".getBytes)
-      out.write("|:-----------|:-----|:------------|\n".getBytes)
-      opMeta.defn.inputs.foreach { argDef =>
-        out.write(s"| `${argDef.name}` | ${argDef.kind.typeDescription}".getBytes)
-        if (argDef.defaultValue.isDefined && argDef.defaultValue.get != None) {
-          out.write(s"; optional; default: ${argDef.defaultValue.get}".getBytes)
-        } else if (argDef.isOptional) {
-          out.write("; optional".getBytes)
-        }
-        out.write(s" | ${argDef.help.getOrElse("-")} |\n".getBytes)
-      }
-      out.write("{: class=\"table table-striped\"}\n\n".getBytes)
-    }
-    if (opMeta.defn.outputs.nonEmpty) {
-      out.write("| Output name | Type | Description |\n".getBytes)
-      out.write("|:------------|:-----|:------------|\n".getBytes)
-      opMeta.defn.outputs.foreach { argDef =>
-        out.write(s"| `${argDef.name}` | ${argDef.kind.typeDescription} | ${argDef.help.getOrElse("-")} |\n".getBytes)
-      }
-      out.write("{: class=\"table table-striped\"}\n\n".getBytes)
-    }
   }
 }

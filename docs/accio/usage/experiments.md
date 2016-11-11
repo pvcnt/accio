@@ -9,20 +9,20 @@ This section covers how to easily define experiments as JSON documents.
 * TOC
 {:toc}
 
-## JSON document.
+## JSON schema
 
 An experiment is a JSON object formed of the following fields.
 
-| Name | Description | Type | Required |
-|:-----|:------------|:-----|:---------|
-| workflow | Workflow to execute. | string | true |
-| name | A human-readable name. | string | false |
-| notes | Some free text notes. | string | false |
-| tags | Some tags, used when searching for experiments. | string[] |  false |
-| owner | Person owning the experiment. It can include an email address between chevrons. | string | false |
-| runs | Number of times to run each graph (default: 1). | integer | false |
-| seed | Initial seed to be used for deterministic reproduction of results. | number | false |
-| params | Mapping between names of parameters to override and new values. | object | false |
+| Name | Type | Description |
+|:-----|:-----|:------------|
+| workflow | string; required | Workflow to execute. |
+| name | string; optional | A human-readable name. |
+| notes | string; optional | Some free text notes. |
+| tags | string[]; optional | Some tags, used when searching for experiments. |
+| owner | string; optional | Person owning the experiment. It can include an email address between chevrons. |
+| repeat | integer; optional; default: 1 | Number of times to repeat each run. |
+| seed | long; optional | Initial seed to be used for deterministic reproduction of results. |
+| params | object; optional | Mapping between parameter names and their values. |
 {: class="table table-striped"}
 
 Here is an example of a simple experiment definition.
@@ -34,7 +34,7 @@ Here is an example of a simple experiment definition.
   "name": "My brand new experiment",
   "tags": ["brand", "new"],
   "params": {
-    "GeoIndistinguishability/epsilon": {
+    "epsilon": {
       "from": 0.00001,
       "to": 1,
       "log": true
@@ -50,9 +50,10 @@ It is a path to a [workflow definition file](workflows.html), which can be eithe
 
 ## Specifying parameters
 
-When defining an experiment, you can override any input of any node specified in the workflow graph.
+When defining an experiment, you can specify values for parameters.
+You must specify a value for all parameters, except if they are only used by optional inputs.
 You can either specify a single value or multiple values for any parameter, triggering the execution of multiple versions of the same original workflow.
-Accio supports three ways to specify parameters: single value, list of values and range of values.
+Accio currently supports three ways to specify parameters: single value, list of values and range of values.
 
 ### Single value
  
@@ -63,7 +64,7 @@ For example:
 ```json
 {
   "params": {
-    "GeoIndistinguishability/epsilon": {
+    "epsilon": {
       "value": 0.001
     }
   }
@@ -80,7 +81,7 @@ For example:
 ```json
 {
   "params": {
-    "GeoIndistinguishability/epsilon": {
+    "epsilon": {
       "values": [1, 0.1, 0.001, 0.0001]
     }
   }
@@ -97,7 +98,7 @@ For example:
 ```json
 {
   "params": {
-    "GeoIndistinguishability/epsilon": {
+    "epsilon": {
       "from": 0.0001,
       "to": 1
     }
