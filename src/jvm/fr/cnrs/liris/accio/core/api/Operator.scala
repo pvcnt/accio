@@ -56,8 +56,19 @@ trait Operator[In, Out] {
 /**
  * Execution context of an operator.
  *
- * @param seed     Random seed used by unstable operators.
+ * @param _seed    Seed used by an unstable operator, if it is the case.
  * @param workDir  Working directory where data can be written.
  * @param nodeName Name of the node being executed.
  */
-class OpContext(val seed: Long, val workDir: Path, val nodeName: String)
+class OpContext(_seed: Option[Long], val workDir: Path, val nodeName: String) {
+  /**
+   * Return the seed to use for an unstable operator.
+   *
+   * @throws IllegalStateException If the operator is not declared as unstable.
+   */
+  @throws[IllegalStateException]
+  def seed: Long = _seed match {
+    case None => throw new IllegalStateException("Operator is not declared as unstable, cannot access the seed")
+    case Some(s) => s
+  }
+}

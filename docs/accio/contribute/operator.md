@@ -29,8 +29,6 @@ The following Accio-related dependencies must be included in any module containi
 Then, you will need to implement the `Operator[In,Out]` interface, which mainly defines an `execute(In, OpContext)` methods.
 
 ```scala
-package fr.cnrs.liris.privamov.ops
-
 import fr.cnrs.liris.accio.core.api._
 
 @Op(
@@ -52,6 +50,10 @@ Still a few things are worth noting.
   You may override this by explicitly specifying a `name` argument.
   * This operator has no input and no output, indicated with the `Unit` type argument (first is for input, second for output).
 
+**The execution of any operator must be deterministic and reproducible.**
+In other words, given some inputs, it should always produce the exact same outputs.
+It means the implementation must not use any source of external randomness such as `scala.util.Random` or current system time.
+
 ## 3. Define the inputs and outputs
 
 Because an operator without any input or output is not exactly very useful, we will see how to define that.
@@ -62,8 +64,6 @@ Inputs and outputs are defined with Scala case classes, each constructor argumen
 By convention the input class is named after the operator suffixed with "In" (instead of "Op") and the output class is named after the operator suffixed with "Out" (instead of "Op").
 
 ```scala
-package fr.cnrs.liris.privamov.ops
-
 import fr.cnrs.liris.accio.core.api._
 
 @Op(
@@ -71,7 +71,6 @@ import fr.cnrs.liris.accio.core.api._
   help = "An operator that multiplies a number by another one")
 class MultiplyOp extends Operator[MultiplyIn, MultiplyOut] {
   override def execute(in: MultiplyIn, ctx: OpContext): MultiplyOut = {
-    println("My operator is running and doing something now")
     MultiplyOut(in.a * in.b)
   }
 }
@@ -100,8 +99,6 @@ Operators are registered by their class name (not an instance of them).
 You simply need to add a new line to register your operator.
 
 ```scala
-package fr.cnrs.liris.privamov.ops
-
 import com.google.inject.TypeLiteral
 import fr.cnrs.liris.accio.core.api.Operator
 import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
@@ -133,3 +130,46 @@ You may also need to modify the `OpsModule` Guice module to wire any new interfa
 Operator and port annotations come with various options useful to document them.
 It can even be used to automatically generate a documentation ready to be integrated on a web site.
 You can learn more about this topic on the [dedicated page](documenting.html).
+
+### Working with randomness
+
+It was said previously that the execution of operators must be perfectly deterministic.
+But some operators need to perform random operators, such as sampling or adding noise.
+Of course this is possible with Accio, if you respect some simple rules.
+
+First, you need to declare your operator as *unstable*.
+It means that its implementation perform random operations.
+To do that, you must override the `isUnstable` method, that receives the inputs of the operator (before it is executed) and must decide whether it is unstable.
+It means that you can mark an operator as unstable depending on its actual inputs.
+
+The **only** source of randomness that you can use now is the one provided by the `OpContext.seed` field.
+This field contains a long that can be used in `scala.util.Random` and other sources of randomness as a seed.
+This seed has been initialized either randomly, or from the master seed that has been specified when launching the experiment.
+It allows to reproduce experiments by using the exact same source of randomness.
+Other sources of randomness, such as system time, should still be banished in order to allow reproducibility of results.
+Be careful to keep your `isUnstable` implementation consistent with your `execute` implementation.
+Operators not declared as unstable will not have access to this seed and an exception will be raised.
+
+```scala
+import fr.cnrs.liris.accio.core.api._
+import scala.util.Random
+
+@Op(
+  category = "numeric",
+  help = "An operator that multiplies a number by another one and optionally adds a number")
+class MultiplyOp extends Operator[MultiplyIn, MultiplyOut] {
+  override def execute(in: MultiplyIn, ctx: OpContext): MultiplyOut = {
+    val plus = if (in.add) {
+      val rnd = new Random(ctx.seed)
+      rnd.nextDouble()
+    } else 0d
+    MultiplyOut(in.a * in.b + plus)
+  }
+  
+  override def isUnstable(in: MultiplyIn): Boolean = in.add  
+}
+
+case class MultiplyIn(@Arg a: Int, @Arg b: Int, @Arg add: Boolean)
+
+case class MultiplyOut(@Arg c: Int)
+```

@@ -147,13 +147,14 @@ class GraphExecutor @Inject()(graphFactory: GraphFactory, repository: ReportRepo
     }
 
   private def execute(runId: String, seed: Long, params: Map[String, Any], node: Node, outputs: Map[Reference, Artifact], workDir: Path): Map[Reference, Artifact] = {
-    val ctx = new OpContext(seed, workDir.resolve("data").resolve(s"$runId-${node.name}"), node.name)
     val operator = createOp(node)
-    execute(operator, params, node, outputs, ctx)
+    execute(operator, params, seed, runId: String, workDir, node, outputs)
   }
 
-  private def execute[In, Out](operator: Operator[In, Out], params: Map[String, Any], node: Node, outputs: Map[Reference, Artifact], ctx: OpContext): Map[Reference, Artifact] = {
+  private def execute[In, Out](operator: Operator[In, Out], params: Map[String, Any], seed: Long, runId: String, workDir: Path, node: Node, outputs: Map[Reference, Artifact]): Map[Reference, Artifact] = {
     val in = createInput(node, params, outputs).asInstanceOf[In]
+    val maybeSeed = if (operator.isUnstable(in)) Some(seed) else None
+    val ctx = new OpContext(maybeSeed, workDir.resolve("data").resolve(s"$runId-${node.name}"), node.name)
     val out = operator.execute(in, ctx)
     extractArtifacts(node, out)
   }
