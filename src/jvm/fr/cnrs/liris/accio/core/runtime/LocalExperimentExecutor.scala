@@ -35,10 +35,10 @@ class LocalExperimentExecutor @Inject()(graphExecutor: GraphExecutor, repository
 
     val runs = runFactory.create(experiment)
     runs.foreach { run =>
-      logger.trace(s"Starting execution of workflow run ${run.id}: ${run.graph}")
+      logger.trace(s"Starting execution of workflow run ${run.id}")
       report = report.addRun(run.id)
       repository.write(workDir, experiment.copy(report = Some(report)))
-      graphExecutor.execute(run, workDir, progressReporter)
+      graphExecutor.execute(run, experiment.workflow, workDir, progressReporter)
       logger.trace(s"Completed execution of workflow run ${run.id}")
     }
 

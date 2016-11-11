@@ -23,28 +23,28 @@ import com.twitter.finatra.validation.Min
 /**
  * An experiment is the execution of one or several variations of a single workflow. The actual execution of a
  * workflow takes place inside [[Run]]s, which are then aggregated into an experiment. An experiment can specify
- * some parameters, which allow to override inputs of some nodes.
+ * some parameters, which allow to specify values for some ports.
  *
  * @param id       Unique identifier (among all experiments AND runs).
  * @param name     Human-readable name.
- * @param workflow Base workflow.
+ * @param workflow Workflow being executed.
  * @param owner    User initiating the experiment.
- * @param runs
+ * @param repeat   Number of times to repeat each run.
  * @param notes    Some notes.
  * @param tags     Some tags.
  * @param params   Parameters override.
  * @param seed     Seed used by unstable operators.
- * @param report
+ * @param report   Execution report.
  */
 case class Experiment(
   id: String,
   name: String,
   workflow: Workflow,
   owner: User,
-  runs: Int,
+  repeat: Int,
   notes: Option[String],
   tags: Set[String],
-  params: Map[Reference, Exploration],
+  params: Map[String, Exploration],
   seed: Long,
   report: Option[ExperimentReport] = None) {
 
@@ -57,6 +57,6 @@ case class ExperimentDef(
   owner: Option[User] = None,
   notes: Option[String] = None,
   tags: Set[String] = Set.empty,
-  @Min(1) runs: Int = 1,
+  @Min(1) repeat: Int = 1,
   seed: Option[Long] = None,
-  params: Map[Reference, Exploration] = Map.empty)
+  params: Map[String, Exploration] = Map.empty)

@@ -26,35 +26,36 @@ import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.runtime.{ExperimentExecutor, ExperimentProgressReporter}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
+import fr.cnrs.liris.common.util.StringUtils
 
-case class RunCommandOpts(
+case class RunOptions(
   @Flag(name = "workdir", help = "Working directory where to write reports and artifacts")
   workDir: Option[String],
-  @Flag(name = "name", help = "Experiment name override")
+  @Flag(name = "name", help = "Experiment name")
   name: Option[String],
-  @Flag(name = "tags", help = "Space-separated experiment tags override")
+  @Flag(name = "tags", help = "Space-separated experiment tags")
   tags: Option[String],
-  @Flag(name = "notes", help = "Experiment notes override")
+  @Flag(name = "notes", help = "Experiment notes")
   notes: Option[String],
-  @Flag(name = "runs", help = "Number of runs override")
-  runs: Option[Int],
-  @Flag(name = "seed", help = "Seed to use for pseudo-random operators")
+  @Flag(name = "repeat", help = "Number of times to repeat each run")
+  repeat: Option[Int],
+  @Flag(name = "seed", help = "Seed to use for unstable operators")
   seed: Option[Long],
   @Flag(name = "user", help = "User who launched the experiment")
   user: Option[String],
-  @Flag(name = "params", help = "Experiment parameters override")
+  @Flag(name = "params", help = "Experiment parameters")
   params: Option[String])
 
 @Cmd(
   name = "run",
-  flags = Array(classOf[RunCommandOpts]),
+  flags = Array(classOf[RunOptions]),
   help = "Execute an Accio workflow.",
   allowResidue = true)
 class RunCommand @Inject()(experimentFactory: ExperimentFactory, executor: ExperimentExecutor, opRegistry: OpRegistry)
   extends Command with StrictLogging {
 
   def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
-    val opts = flags.as[RunCommandOpts]
+    val opts = flags.as[RunOptions]
     if (flags.residue.isEmpty) {
       out.writeln("<error>Specify one or multiple files to run as arguments</error>")
       ExitCode.CommandLineError
@@ -73,44 +74,28 @@ class RunCommand @Inject()(experimentFactory: ExperimentFactory, executor: Exper
     }
   }
 
-  private def make(opts: RunCommandOpts, workDir: Path, experimentUri: String, progressReporter: ExperimentProgressReporter) = {
-    val user = opts.user.map(User.parse) // Flag.
-      .orElse(sys.env.get("ACCIO_USER").map(User.apply(_, None))) // Environment variable.
-      .getOrElse(User(sys.props("user.name"))) // Session login.
-    var experiment = experimentFactory.create(experimentUri, user)
-    opts.name.foreach { name =>
-      experiment = experiment.copy(name = name)
-    }
-    opts.tags.foreach { tags =>
-      experiment = experiment.copy(tags = tags.split(" ").map(_.trim).toSet)
-    }
-    opts.notes.foreach { notes =>
-      experiment = experiment.copy(notes = Some(notes))
-    }
-    opts.runs.foreach { runs =>
-      experiment = experiment.copy(runs = runs)
-    }
-    opts.seed.foreach { seed =>
-      experiment = experiment.copy(seed = seed)
-    }
-    opts.params.foreach { params =>
-      val ParamRegex = "([^=]+)=(.+)".r
-      val map = params.trim.split(" ").map {
-        case ParamRegex(name, value) =>
-          val ref = Reference.parse(name)
-          val maybeNode = experiment.workflow.graph.get(ref.node)
-          require(maybeNode.isDefined, s"Unknown node: $ref")
-          val maybeArgDef = opRegistry(maybeNode.get.op).defn.inputs.find(_.name == ref.port)
-          require(maybeArgDef.isDefined, s"Unknown port: $ref")
-          ref -> SingletonExploration(Values.parse(value, maybeArgDef.get.kind))
-        case str => throw new IllegalArgumentException(s"Invalid param (expected key=value): $str")
-      }.toMap
-      experiment = experiment.copy(params = experiment.params ++ map)
-    }
+  private def make(opts: RunOptions, workDir: Path, experimentUri: String, progressReporter: ExperimentProgressReporter) = {
+    val expArgs = ExperimentArgs(
+      owner = opts.user.map(User.parse),
+      name = opts.name,
+      notes = opts.notes,
+      tags = StringUtils.explode(opts.tags, ","),
+      repeat = opts.repeat,
+      seed = opts.seed,
+      params = opts.params.map(parseParams).getOrElse(Map.empty))
+    val experiment = experimentFactory.create(experimentUri, expArgs)
     executor.execute(experiment, workDir, progressReporter)
   }
 
-  private def getWorkDir(opts: RunCommandOpts) =
+  private def parseParams(params: String): Map[String, String] = {
+    val ParamRegex = "([^=]+)=(.+)".r
+    params.trim.split(" ").map {
+      case ParamRegex(paramName, value) => paramName -> value
+      case str => throw new IllegalArgumentException(s"Invalid param (expected key=value): $str")
+    }.toMap
+  }
+
+  private def getWorkDir(opts: RunOptions) =
     opts.workDir match {
       case Some(dir) =>
         val path = Paths.get(dir)
@@ -132,7 +117,7 @@ private class ConsoleGraphProgressReporter(out: Reporter, width: Int = 80) exten
   override def onComplete(experiment: Experiment): Unit = {}
 
   override def onGraphStart(run: Run): Unit = synchronized {
-    out.writeln(s"  Run ${run.shortId}: <info>${run.name.getOrElse("(anonymous)")}</info>")
+    out.writeln(s"  Run ${run.shortId}: <info>${run.name}</info>")
   }
 
   override def onGraphComplete(run: Run, successful: Boolean): Unit = synchronized {
@@ -143,7 +128,8 @@ private class ConsoleGraphProgressReporter(out: Reporter, width: Int = 80) exten
 
   override def onNodeStart(run: Run, node: Node): Unit = synchronized {
     val i = progress.incrementAndGet
-    val str = s"    ${node.name}: $i/${run.graph.size}"
+    //val str = s"    ${node.name}: $i/${run.graph.size}"
+    val str = s"    ${node.name}"
     out.write(str)
     if (str.length < length) {
       out.write(" " * (length - str.length))

@@ -18,14 +18,43 @@
 
 package fr.cnrs.liris.accio.core.framework
 
+import com.fasterxml.jackson.annotation.JsonProperty
+
 /**
  * A workflow is a named graph of operators.
  *
- * @param graph Graph of operators.
- * @param owner User owning this workflow.
- * @param name  Human-readable name.
+ * @param graph  Graph of operators.
+ * @param owner  User owning this workflow.
+ * @param name   Human-readable name.
+ * @param params Workflow parameters.
  */
-case class Workflow(graph: Graph, owner: User, name: Option[String])
+case class Workflow(graph: Graph, owner: User, name: Option[String], params: Set[Param])
+
+/**
+ * A parameter is a workflow-level input. A parameter can be used in multiple ports, as long as they are of the same
+ * data type.
+ *
+ * @param name       Parameter name.
+ * @param kind       Data type.
+ * @param isOptional Whether it is optional and does not have to be specified.
+ * @param ports      References to ports using this parameter.
+ */
+case class Param(name: String, @JsonProperty("type") kind: DataType, isOptional: Boolean, ports: Set[Reference])
+
+/**
+ * Utils for [[Param]].
+ */
+object Param {
+  /**
+   * Pattern for valid param names.
+   */
+  val NamePattern = "[a-zA-Z0-9_]+"
+
+  /**
+   * Regex for valid param names.
+   */
+  val NameRegex = ("^" + NamePattern + "$").r
+}
 
 /**
  * Definition of workflow.

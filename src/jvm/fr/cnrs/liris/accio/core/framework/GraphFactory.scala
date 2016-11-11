@@ -51,7 +51,7 @@ final class GraphFactory @Inject()(opRegistry: OpRegistry) {
     }
 
     // We first create the nodes without specifying any output.
-    val freeNodes = graphDef.nodes.map { nodeDef => nodeDef.name -> createNode(nodeDef) }.toMap
+    val freeNodes = graphDef.nodes.map(nodeDef => nodeDef.name -> createNode(nodeDef)).toMap
 
     // We now connect nodes together. Input dependencies are already defined in [[createNode]], we only have to
     // wire output dependencies correctly.
@@ -154,6 +154,7 @@ final class GraphFactory @Inject()(opRegistry: OpRegistry) {
         }
         case Some(in: ValueInput) => getValueInput(in, nodeDef, argDef)
         case Some(in: ReferenceInput) => in
+        case Some(in: ParamInput) => in
       }
       argDef.name -> value
     }.toMap

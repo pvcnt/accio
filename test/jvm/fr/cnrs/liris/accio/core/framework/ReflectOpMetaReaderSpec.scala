@@ -177,11 +177,18 @@ class ReflectOperatorMetaReaderSpec extends UnitSpec {
     reader.read(classOf[NonAnnotatedOutOp]).opClass shouldBe classOf[NonAnnotatedOutOp]
   }
 
-  it should "detect unsupported param type" in {
+  it should "detect unsupported data type" in {
     val expected = intercept[IllegalOpException] {
       reader.read(classOf[InvalidParamOp])
     }
     expected.getMessage should endWith(": Unsupported data type: scala.collection.Iterator[java.lang.Integer]")
+  }
+
+  it should "detect optional fields to have a default value" in {
+    val expected = intercept[IllegalOpException] {
+      reader.read(classOf[OptionalWithDefaultValueOp])
+    }
+    expected.getMessage should endWith(": Input i cannot be optional with a default value")
   }
 
   private def assertMandatoryInput(defn: OpDef, name: String, kind: DataType): Unit =
@@ -300,16 +307,23 @@ private class InvalidParamOp extends Operator[InvalidParamIn, Unit] {
   override def execute(in: InvalidParamIn, ctx: OpContext): Unit = {}
 }
 
-private case class NonAnnotatedInIn(@Arg i: Int, s: String)
+private case class NonAnnotatedIn(@Arg i: Int, s: String)
 
 @Op
-private class NonAnnotatedInOp extends Operator[NonAnnotatedInIn, Unit] {
-  override def execute(in: NonAnnotatedInIn, ctx: OpContext): Unit = {}
+private class NonAnnotatedInOp extends Operator[NonAnnotatedIn, Unit] {
+  override def execute(in: NonAnnotatedIn, ctx: OpContext): Unit = {}
 }
 
-private case class NonAnnotatedOutOut(@Arg i: Int, s: String)
+private case class NonAnnotatedOut(@Arg i: Int, s: String)
 
 @Op
-private class NonAnnotatedOutOp extends Operator[Unit, NonAnnotatedOutOut] {
-  override def execute(in: Unit, ctx: OpContext): NonAnnotatedOutOut = NonAnnotatedOutOut(0, "foo")
+private class NonAnnotatedOutOp extends Operator[Unit, NonAnnotatedOut] {
+  override def execute(in: Unit, ctx: OpContext): NonAnnotatedOut = NonAnnotatedOut(0, "foo")
+}
+
+private case class OptionalWithDefaultValueIn(@Arg i: Option[Int] = Some(2))
+
+@Op
+private class OptionalWithDefaultValueOp extends Operator[OptionalWithDefaultValueIn, Unit] {
+  override def execute(in: OptionalWithDefaultValueIn, ctx: OpContext): Unit = {}
 }

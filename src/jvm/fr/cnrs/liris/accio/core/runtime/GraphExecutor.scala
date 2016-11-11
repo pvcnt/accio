@@ -26,7 +26,6 @@ import fr.cnrs.liris.accio.core.api.{OpContext, Operator}
 import fr.cnrs.liris.accio.core.framework._
 
 import scala.collection.mutable
-import scala.util.Random
 import scala.util.control.NonFatal
 
 trait GraphProgressReporter {
@@ -63,14 +62,15 @@ class GraphExecutor @Inject()(graphFactory: GraphFactory, repository: ReportRepo
    * Execute a given run. Artifacts and reports will be written inside a working directory, and a progress reporter
    * will receive updates about the graph execution progress.
    *
-   * @param run              Run to execute
-   * @param workDir          Working directory where to write artifacts and reports
-   * @param progressReporter Reporter receiving progress updates
-   * @return Final report
+   * @param run              Run to execute.
+   * @param workflow         Workflow to execute.
+   * @param workDir          Working directory where to write artifacts and reports.
+   * @param progressReporter Reporter receiving progress updates.
+   * @return Final execution report.
    */
-  def execute(run: Run, workDir: Path, progressReporter: GraphProgressReporter = NoGraphProgressReporter): RunReport = {
+  def execute(run: Run, workflow: Workflow, workDir: Path, progressReporter: GraphProgressReporter = NoGraphProgressReporter): RunReport = {
     val outputs = mutable.Map.empty[Reference, Artifact]
-    val scheduled = mutable.Queue.empty[Node] ++ run.graph.roots // Initially schedule graph roots
+    val scheduled = mutable.Queue.empty[Node] ++ workflow.graph.roots // Initially schedule graph roots
     var lastError: Option[Throwable] = None
     var report = new RunReport
 
@@ -93,7 +93,7 @@ class GraphExecutor @Inject()(graphFactory: GraphFactory, repository: ReportRepo
       }
 
       try {
-        val artifacts = execute(run.id, run.seed, run.graph, node, outputs.toMap, workDir)
+        val artifacts = execute(run.id, run.seed, run.params, node, outputs.toMap, workDir)
         report = report.completeNode(node.name, artifacts.values.toSeq)
         outputs ++= artifacts
       } catch {
@@ -113,7 +113,7 @@ class GraphExecutor @Inject()(graphFactory: GraphFactory, repository: ReportRepo
       // Then we can schedule next steps to take.
       if (lastError.isEmpty) {
         // If the node was successfully executed, we schedule its successors for which all dependencies are available.
-        scheduled ++= node.successors.map(run.graph(_)).filter(_.dependencies.forall(outputs.contains))
+        scheduled ++= node.successors.map(workflow.graph(_)).filter(_.dependencies.forall(outputs.contains))
       } else {
         // Otherwise we clear the remaining scheduled nodes to exit the loop.
         scheduled.clear()
@@ -131,8 +131,8 @@ class GraphExecutor @Inject()(graphFactory: GraphFactory, repository: ReportRepo
     lastError.foreach(e => logger.error(s"Error while executing run ${run.id}", e))
 
     // Last verification that all nodes had a chance to run.
-    if (report.successful && report.nodeStats.size != run.graph.size) {
-      val missing = run.graph.nodes.map(_.name).diff(report.nodeStats.map(_.name))
+    if (report.successful && report.nodeStats.size != workflow.graph.size) {
+      val missing = workflow.graph.nodes.map(_.name).diff(report.nodeStats.map(_.name))
       throw new IllegalStateException(s"Some nodes were never executed: ${missing.mkString(", ")}")
     }
 
@@ -146,19 +146,19 @@ class GraphExecutor @Inject()(graphFactory: GraphFactory, repository: ReportRepo
       case NonFatal(e) => logger.error(s"Unable to write report for run ${run.id}", e)
     }
 
-  private def execute(runId: String, seed: Long, graph: Graph, node: Node, outputs: Map[Reference, Artifact], workDir: Path): Map[Reference, Artifact] = {
+  private def execute(runId: String, seed: Long, params: Map[String, Any], node: Node, outputs: Map[Reference, Artifact], workDir: Path): Map[Reference, Artifact] = {
     val ctx = new OpContext(seed, workDir.resolve("data").resolve(s"$runId-${node.name}"))
     val operator = createOp(node)
-    execute(operator, node, outputs, ctx)
+    execute(operator, params, node, outputs, ctx)
   }
 
-  private def execute[In, Out](operator: Operator[In, Out], node: Node, outputs: Map[Reference, Artifact], ctx: OpContext): Map[Reference, Artifact] = {
-    val in = createInput(node, outputs).asInstanceOf[In]
+  private def execute[In, Out](operator: Operator[In, Out], params: Map[String, Any], node: Node, outputs: Map[Reference, Artifact], ctx: OpContext): Map[Reference, Artifact] = {
+    val in = createInput(node, params, outputs).asInstanceOf[In]
     val out = operator.execute(in, ctx)
     extractArtifacts(node, out)
   }
 
-  def createOp(node: Node): Operator[_, _] = {
+  private def createOp(node: Node): Operator[_, _] = {
     val opMeta = opRegistry(node.op)
     opMeta.defn.deprecation.foreach { deprecation =>
       logger.warn(s"Using a deprecated operator ${opMeta.defn.name}: $deprecation")
@@ -166,7 +166,7 @@ class GraphExecutor @Inject()(graphFactory: GraphFactory, repository: ReportRepo
     injector.getInstance(opMeta.opClass)
   }
 
-  def createInput(node: Node, outputs: Map[Reference, Artifact]): Any = {
+  private def createInput(node: Node, params: Map[String, Any], outputs: Map[Reference, Artifact]): Any = {
     val opMeta = opRegistry(node.op)
     opMeta.inClass match {
       case None => Unit.box(Unit)
@@ -176,13 +176,14 @@ class GraphExecutor @Inject()(graphFactory: GraphFactory, repository: ReportRepo
             case None => throw new IllegalArgumentException(s"Missing input: ${node.name}/${argDef.name}")
             case Some(ValueInput(value)) => value
             case Some(ReferenceInput(ref)) => if (argDef.isOptional) Some(outputs(ref).value) else outputs(ref).value
+            case Some(ParamInput(paramName)) => if (argDef.isOptional) Some(params(paramName)) else params(paramName)
           }
         }
         inClass.getConstructors.head.newInstance(ctorArgs.map(_.asInstanceOf[AnyRef]): _*)
     }
   }
 
-  def extractArtifacts(node: Node, out: Any): Map[Reference, Artifact] = {
+  private def extractArtifacts(node: Node, out: Any): Map[Reference, Artifact] = {
     val opMeta = opRegistry(node.op)
     opMeta.outClass match {
       case None => Map.empty

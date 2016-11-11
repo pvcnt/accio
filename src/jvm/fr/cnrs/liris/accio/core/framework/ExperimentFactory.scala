@@ -34,24 +34,24 @@ import fr.cnrs.liris.common.util.{FileUtils, HashUtils}
 class IllegalExperimentException(message: String, cause: Throwable = null) extends RuntimeException(message, cause)
 
 /**
- * Parser for [[ExperimentDef]]s.
+ * Arguments used to specify or override properties when creating experiments.
+ *
+ * @param owner  Experiment owner.
+ * @param name   Experiment name.
+ * @param notes  Some notes.
+ * @param tags   Some additional tags.
+ * @param repeat Number of times each run will be repeated.
+ * @param seed   Seed used by unstable operators.
+ * @param params Additional parameter values, no yet parsed.
  */
-trait ExperimentParser {
-  /**
-   * Parse a file into an experiment definition.
-   *
-   * @param uri URI to an experiment definition.
-   */
-  def parse(uri: String): ExperimentDef
-
-  /**
-   * Check whether a given URI could be read as an experiment definition.
-   *
-   * @param uri URI to (possibly) an experiment definition.
-   * @return True if it could be read as an experiment definition, false otherwise
-   */
-  def canRead(uri: String): Boolean
-}
+case class ExperimentArgs(
+  owner: Option[User] = None,
+  name: Option[String] = None,
+  notes: Option[String] = None,
+  tags: Set[String] = Set.empty,
+  repeat: Option[Int] = None,
+  seed: Option[Long] = None,
+  params: Map[String, String] = Map.empty)
 
 /**
  * Factory for [[Experiment]]s.
@@ -60,57 +60,143 @@ final class ExperimentFactory @Inject()(parser: ExperimentParser, workflowFactor
   /**
    * Create an experiment.
    *
-   * @param uri  URI to an experiment definition.
-   * @param user User creating this experiment.
+   * @param uri  URI to an experiment or workflow definition.
+   * @param args Experiment arguments.
    * @throws IllegalExperimentException If the experiment definition is invalid.
+   * @throws IllegalWorkflowException   If the workflow definition is invalid.
    */
   @throws[IllegalExperimentException]
-  def create(uri: String, user: User): Experiment = {
-    val path = Paths.get(FileUtils.replaceHome(uri))
-    // Generate a random identifier for each experiment.
-    val id = HashUtils.sha1(UUID.randomUUID().toString)
-
+  @throws[IllegalWorkflowException]
+  def create(uri: String, args: ExperimentArgs): Experiment = {
     if (parser.canRead(uri)) {
-      val defn = parser.parse(uri)
-
-      // Experiment contains URI to workflow, get and parse its content.
-      val workflowUri = if (defn.workflow.startsWith("./")) {
-        path.resolveSibling(defn.workflow.substring(2)).toString
-      } else {
-        defn.workflow
-      }
-      val workflow = workflowFactory.create(workflowUri, user)
-
-      // Use name provided in the definition, or filename (without extension) otherwise.
-      val name = defn.name.getOrElse(FileUtils.removeExtension(path.getFileName.toString))
-      // Use owner provided in the definition, or current user otherwise.
-      val owner = defn.owner.getOrElse(user)
-
-      Experiment(
-        id = id,
-        name = name,
-        workflow = workflow,
-        owner = owner,
-        runs = math.max(1, defn.runs),
-        notes = defn.notes,
-        tags = defn.tags,
-        seed = defn.seed.getOrElse(RandomUtils.random.nextLong()),
-        params = defn.params)
+      createFromExperiment(uri, args)
     } else {
-      val workflow = workflowFactory.create(uri, user)
-      // Use filename (without extension) as name.
-      val name = FileUtils.removeExtension(path.getFileName.toString)
+      createFromWorkflow(uri, args)
+    }
+  }
 
-      Experiment(
-        id = id,
-        name = name,
-        workflow = workflow,
-        owner = user,
-        runs = 1,
-        notes = None,
-        tags = Set.empty,
-        seed = RandomUtils.random.nextLong(),
-        params = Map.empty)
+  /**
+   * Create an experiment from an experiment definition. The experiment definition contains a link to the workflow
+   * definition. Properties can be overriden by experiment arguments, that take precedence.
+   *
+   * @param uri  URI to an experiment definition.
+   * @param args Experiment arguments.
+   * @throws IllegalExperimentException If the experiment definition is invalid.
+   * @throws IllegalWorkflowException   If the workflow definition is invalid.
+   */
+  private def createFromExperiment(uri: String, args: ExperimentArgs) = {
+    val user = args.owner.getOrElse(getDefaultUser)
+    val defn = parser.parse(uri)
+
+    // Parse and create the workflow from the uri specified in the workflow definition.
+    val workflowUri = if (defn.workflow.startsWith("./")) {
+      val path = Paths.get(FileUtils.replaceHome(uri))
+      path.resolveSibling(defn.workflow.substring(2)).toString
+    } else {
+      defn.workflow
+    }
+    val workflow = workflowFactory.create(workflowUri, user)
+
+    // Check that all non-optional workflow parameters are defined.
+    val missingParams = workflow.params.filterNot(_.isOptional).map(_.name).diff(defn.params.keySet)
+    if (missingParams.nonEmpty) {
+      throw new IllegalExperimentException(s"Non-optional parameters are unspecified: ${missingParams.mkString(", ")}")
+    }
+
+    val name = args.name.orElse(defn.name).getOrElse(getDefaultName(uri))
+    val repeat = math.max(1, args.repeat.getOrElse(defn.repeat))
+    val seed = args.seed.orElse(defn.seed).getOrElse(RandomUtils.random.nextLong())
+    val notes = args.notes.orElse(defn.notes)
+    val tags = defn.tags ++ args.tags // Argument tags are added to definition tags.
+    val params = defn.params ++ parseParams(args.params, workflow) // Argument parameters take precedence over definition parameters.
+
+    Experiment(
+      id = generateId(),
+      name = name,
+      workflow = workflow,
+      owner = user,
+      repeat = repeat,
+      notes = notes,
+      tags = tags,
+      seed = seed,
+      params = params)
+  }
+
+  /**
+   * Create an experiment directly from a workflow definition and experiment arguments.
+   *
+   * @param uri  URI to a workflow definition.
+   * @param args Experiment arguments.
+   * @throws IllegalExperimentException If the experiment definition is invalid.
+   * @throws IllegalWorkflowException   If the workflow definition is invalid.
+   */
+  private def createFromWorkflow(uri: String, args: ExperimentArgs) = {
+    val user = args.owner.getOrElse(getDefaultUser)
+
+    // Parse and create the workflow from its uri.
+    val workflow = workflowFactory.create(uri, user)
+
+    // Check that all non-optional workflow parameters are defined.
+    val missingParams = workflow.params.filterNot(_.isOptional).map(_.name).diff(args.params.keySet)
+    if (missingParams.nonEmpty) {
+      throw new IllegalExperimentException(s"Non-optional parameters are unspecified: ${missingParams.mkString(", ")}")
+    }
+
+    val name = args.name.getOrElse(getDefaultName(uri))
+    val repeat = args.repeat.map(math.max(1, _)).getOrElse(1)
+    val seed = args.seed.getOrElse(RandomUtils.random.nextLong())
+
+    Experiment(
+      id = generateId(),
+      name = name,
+      workflow = workflow,
+      owner = user,
+      repeat = repeat,
+      notes = args.notes,
+      tags = args.tags,
+      seed = seed,
+      params = parseParams(args.params, workflow))
+  }
+
+  /**
+   * Generate a random identifier for each experiment.
+   */
+  private def generateId() = HashUtils.sha1(UUID.randomUUID().toString)
+
+  /**
+   * Return the default user, which is inferred from the shell login (with no email address.
+   */
+  private def getDefaultUser = User(sys.props("user.name"))
+
+  /**
+   * Return the default name for an experiment, which is inferred from the filename portion in its uri.
+   *
+   * @param uri URI to an experiment or workflow definition.
+   */
+  private def getDefaultName(uri: String) =
+    FileUtils.removeExtension(Paths.get(FileUtils.replaceHome(uri)).getFileName.toString)
+
+  /**
+   * Parse and validate parameters for a given workflow.
+   *
+   * @param params   Parameters map (with parameter values as unparsed strings).
+   * @param workflow Workflow.
+   * @throws IllegalExperimentException If the parameter name is unknown or its value is invalid.
+   */
+  private def parseParams(params: Map[String, String], workflow: Workflow) = {
+    params.map { case (paramName, value) =>
+      val maybeParam = workflow.params.find(_.name == paramName)
+      maybeParam match {
+        case None => throw new IllegalExperimentException(s"Unknown param: $paramName")
+        case Some(param) =>
+          val parsedValue = try {
+            Values.parse(value, param.kind)
+          } catch {
+            case e: IllegalArgumentException =>
+              throw new IllegalExperimentException(s"Invalid value for param $paramName: $value", e)
+          }
+          paramName -> SingletonExploration(parsedValue)
+      }
     }
   }
 }

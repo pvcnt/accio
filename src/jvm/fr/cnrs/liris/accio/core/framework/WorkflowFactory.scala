@@ -19,6 +19,7 @@
 package fr.cnrs.liris.accio.core.framework
 
 import com.google.inject.Inject
+import fr.cnrs.liris.common.util.Seqs
 
 /**
  * Exception thrown if a workflow is incorrectly defined.
@@ -29,32 +30,13 @@ import com.google.inject.Inject
 class IllegalWorkflowException(message: String, cause: Throwable = null) extends RuntimeException(message, cause)
 
 /**
- * Parser for [[WorkflowDef]]s.
- */
-trait WorkflowParser {
-  /**
-   * Parse a file into a workflow definition.
-   *
-   * @param uri URI to a workflow definition.
-   */
-  def parse(uri: String): WorkflowDef
-
-  /**
-   * Check whether a given URI could be read as a workflow definition.
-   *
-   * @param uri URI to (possibly) a workflow definition.
-   * @return True if it could be read as a workflow definition, false otherwise.
-   */
-  def canRead(uri: String): Boolean
-}
-
-/**
  * Factory for [[Workflow]]s.
  *
  * @param parser       Workflow parser.
  * @param graphFactory Graph factory.
+ * @param opRegistry   Operator registry.
  */
-final class WorkflowFactory @Inject()(parser: WorkflowParser, graphFactory: GraphFactory) {
+final class WorkflowFactory @Inject()(parser: WorkflowParser, graphFactory: GraphFactory, opRegistry: OpRegistry) {
   /**
    * Create a workflow.
    *
@@ -66,16 +48,58 @@ final class WorkflowFactory @Inject()(parser: WorkflowParser, graphFactory: Grap
   def create(uri: String, user: User): Workflow = {
     val defn = parser.parse(uri)
 
-    // Create (and validate) the graph associated with the workflow. This is the main source of errors.
+    // We create (and validate) the graph associated with the workflow. This is the main source of errors.
     val graph = try {
       graphFactory.create(defn.graph)
     } catch {
       case e: IllegalGraphException => throw new IllegalWorkflowException(e.getMessage)
     }
 
+    // We extract parameters from the ports where they are used.
+    val params = getParams(graph)
+
     // Use owner provided in the definition, or current user otherwise.
     val owner = defn.owner.getOrElse(user)
 
-    Workflow(name = defn.name, graph = graph, owner = owner)
+    Workflow(name = defn.name, graph = graph, owner = owner, params = params)
+  }
+
+  /**
+   * Extract parameters that are used inside a graph and validae they are correctly used.
+   *
+   * @param graph Correct graph.
+   */
+  private def getParams(graph: Graph) = {
+    // First we extract all references to parameters with their names and references to ports where they are used.
+    val paramUsages = Seqs.index(graph.nodes.flatMap { node =>
+      node.inputs.flatMap { case (inputName, input) =>
+        input match {
+          case ParamInput(paramName) => Seq((paramName, Reference(node.name, inputName)))
+          case _ => Seq.empty
+        }
+      }
+    })
+
+    // Then we aggregate these usages into single parameters, and check they are correct.
+    paramUsages.map { case (paramName, ports) =>
+      // We check param name is valid.
+      if (Param.NameRegex.findFirstIn(paramName).isEmpty) {
+        throw new IllegalWorkflowException(s"Invalid param name: $paramName (must match ${Param.NamePattern})")
+      }
+
+      // We are guaranteed here, from the graph construction, that the node and port names are valid.
+      val inputs = ports.map(ref => opRegistry(graph(ref.node).op).defn.inputs.find(_.name == ref.port).get)
+
+      // We check the parameter is homogeneous, i.e., it is used in ports of the same type.
+      val dataTypes = inputs.map(_.kind)
+      if (dataTypes.size > 1) {
+        throw new IllegalWorkflowException(s"Param $paramName is used in heterogeneous input types: ${dataTypes.mkString(", ")}")
+      }
+
+      // Parameter is optional only if used only in optional ports.
+      val isOptional = inputs.forall(_.isOptional)
+
+      Param(paramName, dataTypes.head, isOptional, ports)
+    }.toSet
   }
 }

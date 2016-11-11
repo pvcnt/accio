@@ -85,6 +85,15 @@ class ReflectOpMetaReader extends OpMetaReader {
       field.getAnnotation[Arg] match {
         case None => throw new IllegalArgumentException(s"Input ${field.name} must be annotated with @Arg")
         case Some(in) =>
+          // To simplify some already too much complicated cases, we forbid to have optional inputs (i.e., of type
+          // Option[_]) with a default value (i.e., Some(...)). It unnecessarily complicate things and later checks.
+          // Either an input is optional and does not come with a default value, either an input is mandatory and
+          // comes possibly with a default value.
+          //
+          // Impl. note: Option[_] fields do have a default value, which is none, hence the check that this default
+          // value is defined and equals None.
+          require(!field.isOption || field.defaultValue.contains(None), s"Input ${field.name} cannot be optional with a default value")
+
           val tpe = if (field.isOption) field.scalaType.typeArguments.head else field.scalaType
           InputArgDef(
             name = field.name,

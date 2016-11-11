@@ -137,6 +137,7 @@ case class Node private[framework](
     case n: Node => n.name == name && n.op == op && n.inputs == inputs && n.outputs == outputs
     case _ => false
   }
+
   // I can't tell why it is necessary to explicitly specify that. I always thought it was case classes' default
   // behavior to compare each field for equality, but apparently not. If I do not overwrite this method, nodes with
   // different inputs appear as equal, which is obviously not the case. :o
@@ -156,34 +157,6 @@ object Node {
    */
   val NameRegex = ("^" + NamePattern + "$").r
 }
-
-/**
- * An input for a node.
- */
-@JsonSubTypes(Array(
-  new JsonSubTypes.Type(value = classOf[ValueInput], name = "value"),
-  new JsonSubTypes.Type(value = classOf[ReferenceInput], name = "reference")))
-@JsonIgnoreProperties(ignoreUnknown = true)
-sealed trait Input
-
-/**
- * Input defined by a constant value.
- *
- * Note: default value of [[None]] is required because [[None]] values are serialized in JSON as null, despite
- * the default Jackson inclusion policy (I guess the Any type messes it up). If no default value is set, you will
- * get "field is required" errors every time an optional value is deserialized. This is not ideal, but it is the best
- * workaround I could figure out.
- *
- * @param value Input value.
- */
-case class ValueInput(value: Any = None) extends Input
-
-/**
- * Input coming from the output of another node.
- *
- * @param reference Reference to an output port.
- */
-case class ReferenceInput(reference: Reference) extends Input
 
 /**
  * Definition of a graph. Definitions must be converted into [[Graph]]'s in order to be executed.
@@ -209,3 +182,40 @@ case class NodeDef(
    */
   override def name: String = customName.getOrElse(op)
 }
+
+/**
+ * An input for a port of a node. It specifies where the value for a given port comes from.
+ */
+@JsonSubTypes(Array(
+  new JsonSubTypes.Type(value = classOf[ValueInput], name = "value"),
+  new JsonSubTypes.Type(value = classOf[ReferenceInput], name = "reference"),
+  new JsonSubTypes.Type(value = classOf[ParamInput], name = "param")))
+@JsonIgnoreProperties(ignoreUnknown = true)
+sealed trait Input
+
+/**
+ * Input defined by a constant value.
+ *
+ * Note: default value of [[None]] is required because [[None]] values are serialized in JSON as null, despite
+ * the default Jackson inclusion policy (I guess the Any type messes it up). If no default value is set, you will
+ * get "field is required" errors every time an optional value is deserialized. This is not ideal, but it is the best
+ * workaround I could figure out.
+ *
+ * @param value Input value.
+ */
+case class ValueInput(value: Any = None) extends Input
+
+/**
+ * Input coming from the output of another node.
+ *
+ * @param reference Reference to an output port.
+ */
+case class ReferenceInput(reference: Reference) extends Input
+
+/**
+ * Input coming from a workflow parameter. Several ports can use the same parameter name, although they should be
+ * of the same data type.
+ *
+ * @param param Workflow parameter name.
+ */
+case class ParamInput(param: String) extends Input

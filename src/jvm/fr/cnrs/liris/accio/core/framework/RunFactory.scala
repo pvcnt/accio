@@ -39,41 +39,40 @@ final class RunFactory @Inject()(opRegistry: OpRegistry) {
    */
   def create(experiment: Experiment): Seq[Run] = {
     val rnd = new Random(experiment.seed)
-    expand(experiment).map { case (name, graph) =>
+    expand(experiment).map { case (name, params) =>
       val runId = HashUtils.sha1(UUID.randomUUID().toString)
       val seed = rnd.nextLong()
-      Run(id = runId, parent = experiment.id, graph = graph, name = Some(name), seed = seed)
+      Run(id = runId, parent = experiment.id, name = name, seed = seed, params = params)
     }
   }
 
-  private def expand(experiment: Experiment): Seq[(String, Graph)] = {
-    expandParams(experiment.params, experiment.name, experiment.workflow.graph)
-      .flatMap { case (name, graph) =>
-        expandRuns(experiment.runs, name, graph)
-      }
+  private def expand(experiment: Experiment): Seq[(String, Map[String, Any])] = {
+    expandParams(experiment.params, experiment.name, experiment.workflow)
+      .flatMap { case (name, params) => expandRuns(experiment.repeat, name, params) }
   }
 
-  private def expandParams(params: Map[Reference, Exploration], name: String, graph: Graph): Seq[(String, Graph)] = {
+  private def expandParams(params: Map[String, Exploration], name: String, workflow: Workflow): Seq[(String, Map[String, Any])] = {
     if (params.nonEmpty) {
-      val allValues = params.map { case (ref, explo) =>
-        val argDef = opRegistry(graph(ref.node).op).defn.inputs.find(_.name == ref.port).get
+      val allValues = params.map { case (paramName, explo) =>
+        // We are guaranteed that the param exist, because of the workflow construction.
+        val param = workflow.params.find(_.name == paramName).get
         //TODO: take into account logarithmic progressions.
-        Values.expand(explo, argDef.kind).map(v => ref -> v)
+        Values.expand(explo, param.kind).map(v => (paramName, v))
       }.toSeq
       Seqs.crossProduct(allValues).map { params =>
         val runName = name + ":" + params.map { case (k, v) => s"$k=$v" }.mkString(",")
-        (runName, graph.setParams(params.toMap))
+        (runName, params.toMap)
       }
     } else {
-      Seq((name, graph))
+      Seq((name, Map.empty[String, Any]))
     }
   }
 
-  private def expandRuns(repeat: Int, name: String, graph: Graph): Seq[(String, Graph)] = {
+  private def expandRuns(repeat: Int, name: String, params: Map[String, Any]): Seq[(String, Map[String, Any])] = {
     if (repeat <= 1) {
-      Seq((name, graph))
+      Seq((name, params))
     } else {
-      Seq.tabulate(repeat)(idx => (s"$name#${idx + 1}", graph))
+      Seq.tabulate(repeat)(idx => (s"$name#${idx + 1}", params))
     }
   }
 }

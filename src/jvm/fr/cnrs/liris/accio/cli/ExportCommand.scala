@@ -31,7 +31,7 @@ import org.joda.time.Duration
 
 import scala.collection.JavaConverters._
 
-case class ExportOpts(
+case class ExportOptions(
   @Flag(name = "separator", help = "Separator to use in generated files")
   separator: String = " ",
   @Flag(name = "artifacts", help = "Comma-separated list of artifacts to take into account, or ALL for " +
@@ -44,7 +44,7 @@ case class ExportOpts(
 
 @Cmd(
   name = "export",
-  flags = Array(classOf[ExportOpts]),
+  flags = Array(classOf[ExportOptions]),
   help = "Generate text reports from run artifacts.",
   allowResidue = true)
 class ExportCommand @Inject()(repository: ReportRepository) extends Command {
@@ -59,7 +59,7 @@ class ExportCommand @Inject()(repository: ReportRepository) extends Command {
         .map(_.drop(4).dropRight(5))
         .flatMap(id => repository.readRun(workDir, id))
     }
-    val opts = flags.as[ExportOpts]
+    val opts = flags.as[ExportOptions]
     val reportStats = new ReportStatistics(runs)
     val artifacts = maybeAggregate(filterEmpty(filterRuns(filterArtifacts(reportStats.artifacts, opts.artifacts), opts.runs)), runs, opts.aggregate)
 
@@ -104,7 +104,7 @@ class ExportCommand @Inject()(repository: ReportRepository) extends Command {
     artifacts.filter { case (_, arts) => arts.nonEmpty }
 
   private def maybeAggregate(artifacts: Map[String, Map[String, Artifact]], runs: Seq[Run], agg: Boolean): Map[String, Seq[Artifact]] = {
-    if (agg) {
+    /*if (agg) {
       val runsIndex = runs.map(run => run.id -> run).toMap
       artifacts.map { case (name, arts) =>
         // We group artifacts coming from the execution of the same graph.
@@ -113,9 +113,9 @@ class ExportCommand @Inject()(repository: ReportRepository) extends Command {
         val aggregatedArtifacts = groupedArtifacts.map { case (_, similarArts) => aggregate(similarArts.map(_._2)) }.toSeq
         name -> aggregatedArtifacts
       }
-    } else {
+    } else {*/
       artifacts.map { case (name, arts) => name -> arts.values.toSeq }
-    }
+    //}
   }
 
   private def aggregate(artifacts: Seq[Artifact]): Artifact = {
