@@ -56,7 +56,8 @@ trait Operator[In, Out] {
 /**
  * Execution context of an operator.
  *
- * @param seed    Random seed used by unstable operators.
- * @param workDir Working directory where data can be written.
+ * @param seed     Random seed used by unstable operators.
+ * @param workDir  Working directory where data can be written.
+ * @param nodeName Name of the node being executed.
  */
-class OpContext(val seed: Long, val workDir: Path)
+class OpContext(val seed: Long, val workDir: Path, val nodeName: String)

@@ -147,7 +147,7 @@ class GraphExecutor @Inject()(graphFactory: GraphFactory, repository: ReportRepo
     }
 
   private def execute(runId: String, seed: Long, params: Map[String, Any], node: Node, outputs: Map[Reference, Artifact], workDir: Path): Map[Reference, Artifact] = {
-    val ctx = new OpContext(seed, workDir.resolve("data").resolve(s"$runId-${node.name}"))
+    val ctx = new OpContext(seed, workDir.resolve("data").resolve(s"$runId-${node.name}"), node.name)
     val operator = createOp(node)
     execute(operator, params, node, outputs, ctx)
   }
