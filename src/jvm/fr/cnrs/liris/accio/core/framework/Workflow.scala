@@ -28,7 +28,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
  * @param name   Human-readable name.
  * @param params Workflow parameters.
  */
-case class Workflow(graph: Graph, owner: User, name: Option[String], params: Set[Param])
+case class Workflow(graph: Graph, owner: User, name: String, params: Set[Param])
 
 /**
  * A parameter is a workflow-level input. A parameter can be used in multiple ports, as long as they are of the same

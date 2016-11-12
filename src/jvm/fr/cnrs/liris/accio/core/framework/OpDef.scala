@@ -75,7 +75,8 @@ object OpDef {
  * @param isOptional   Whether this parameter is optional and does not have to be specified.
  * @param defaultValue Default value taken by this input if none is specified.
  */
-case class InputArgDef(name: String,
+case class InputArgDef(
+  name: String,
   help: Option[String],
   @JsonProperty("type") kind: DataType,
   isOptional: Boolean,

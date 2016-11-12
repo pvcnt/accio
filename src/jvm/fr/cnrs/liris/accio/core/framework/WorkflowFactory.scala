@@ -18,8 +18,10 @@
 
 package fr.cnrs.liris.accio.core.framework
 
+import java.nio.file.Paths
+
 import com.google.inject.Inject
-import fr.cnrs.liris.common.util.Seqs
+import fr.cnrs.liris.common.util.{FileUtils, Seqs}
 
 /**
  * Exception thrown if a workflow is incorrectly defined.
@@ -55,51 +57,56 @@ final class WorkflowFactory @Inject()(parser: WorkflowParser, graphFactory: Grap
       case e: IllegalGraphException => throw new IllegalWorkflowException(e.getMessage)
     }
 
-    // We extract parameters from the ports where they are used.
     val params = getParams(graph)
-
-    // Use owner provided in the definition, or current user otherwise.
     val owner = defn.owner.getOrElse(user)
+    val name = defn.name.getOrElse(getDefaultName(uri))
 
-    Workflow(name = defn.name, graph = graph, owner = owner, params = params)
+    Workflow(name = name, graph = graph, owner = owner, params = params)
   }
 
   /**
-   * Extract parameters that are used inside a graph and validae they are correctly used.
+   * Extract parameters that are used inside a graph and validate they are correctly used.
    *
    * @param graph Correct graph.
    */
   private def getParams(graph: Graph) = {
+    case class ParamUsage(ref: Reference, defaultValue: Option[Any], inputDef: InputArgDef)
+
     // First we extract all references to parameters with their names and references to ports where they are used.
     val paramUsages = Seqs.index(graph.nodes.flatMap { node =>
-      node.inputs.flatMap { case (inputName, input) =>
-        input match {
-          case ParamInput(paramName) => Seq((paramName, Reference(node.name, inputName)))
-          case _ => Seq.empty
-        }
+      node.inputs.flatMap {
+        case (inputName, ParamInput(paramName, defaultValue)) =>
+          val argDef = opRegistry(graph(node.name).op).defn.inputs.find(_.name == inputName).get
+          Some(paramName -> ParamUsage(Reference(node.name, inputName), defaultValue, argDef))
+        case _ => None
       }
     })
 
     // Then we aggregate these usages into single parameters, and check they are correct.
-    paramUsages.map { case (paramName, ports) =>
+    paramUsages.map { case (paramName, usages) =>
       // We check param name is valid.
       if (Param.NameRegex.findFirstIn(paramName).isEmpty) {
         throw new IllegalWorkflowException(s"Invalid param name: $paramName (must match ${Param.NamePattern})")
       }
 
-      // We are guaranteed here, from the graph construction, that the node and port names are valid.
-      val inputs = ports.map(ref => opRegistry(graph(ref.node).op).defn.inputs.find(_.name == ref.port).get)
-
       // We check the parameter is homogeneous, i.e., it is used in ports of the same type.
-      val dataTypes = inputs.map(_.kind)
+      val dataTypes = usages.map(_.inputDef).map(_.kind)
       if (dataTypes.size > 1) {
         throw new IllegalWorkflowException(s"Param $paramName is used in heterogeneous input types: ${dataTypes.mkString(", ")}")
       }
 
-      // Parameter is optional only if used only in optional ports.
-      val isOptional = inputs.forall(_.isOptional)
+      // Parameter is optional only if used only in optional ports or if a default value is available each time.
+      val isOptional = usages.forall(usage => usage.defaultValue.isDefined || usage.inputDef.isOptional)
 
-      Param(paramName, dataTypes.head, isOptional, ports)
+      Param(paramName, dataTypes.head, isOptional, usages.map(_.ref))
     }.toSet
   }
+
+  /**
+   * Return the default name for a workflow, which is inferred from the filename portion in its uri.
+   *
+   * @param uri URI to a workflow definition.
+   */
+  private def getDefaultName(uri: String) =
+    FileUtils.removeExtension(Paths.get(FileUtils.replaceHome(uri)).getFileName.toString)
 }

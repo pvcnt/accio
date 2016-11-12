@@ -167,3 +167,14 @@ Parameter names are global to a workflow and therefore not namespaced.
   }
 }
 ```
+
+You may also define a default value for the input port, under the `default_value` key.
+This way, if the parameter is not filled when launching the workflow, this default value will be used.
+It means when using a parameter, you have three possible sources for the actual port value, in order of precedence:
+
+  * the parameter value, specified when launching the workflow;
+  * the parameter default value, specified when creating the workflow;
+  * the port default value, specified when creating the operator.
+
+Please note that despite the fact parameters are global, the parameter default value is specified on a per-port basis.
+It means that until the parameter value is explicitly specified when launching the workflow, ports depending on the same parameter may have different values (depending on the parameter or operator default values).

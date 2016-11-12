@@ -216,6 +216,12 @@ case class ReferenceInput(reference: Reference) extends Input
  * Input coming from a workflow parameter. Several ports can use the same parameter name, although they should be
  * of the same data type.
  *
- * @param param Workflow parameter name.
+ * A default value can be specified on a per-port basis. It could be more logical to specify it at the workflow-level,
+ * since all ports using the same parameter will have the same value once the parameter is specified. But this is
+ * consistent with the way default values are already specified, which can let different ports linked to the same
+ * parameter have different values.
+ *
+ * @param param        Workflow parameter name.
+ * @param defaultValue Default value to be taken if the parameter is left unspecified.
  */
-case class ParamInput(param: String) extends Input
+case class ParamInput(param: String, defaultValue: Option[Any] = None) extends Input

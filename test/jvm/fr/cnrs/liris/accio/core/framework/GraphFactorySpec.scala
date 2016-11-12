@@ -27,8 +27,8 @@ import fr.cnrs.liris.testing.UnitSpec
 class GraphFactorySpec extends UnitSpec {
   val factory = {
     val reader = new ReflectOpMetaReader
-    val registry = new OpRegistry(reader, Set(classOf[FirstSimpleOp], classOf[SecondSimpleOp], classOf[ThirdSimpleOp]))
-    new GraphFactory(registry)
+    val opRegistry = new OpRegistry(reader, Set(classOf[FirstSimpleOp], classOf[SecondSimpleOp], classOf[ThirdSimpleOp]))
+    new GraphFactory(opRegistry)
   }
 
   behavior of "GraphFactory"
@@ -213,29 +213,29 @@ class GraphFactorySpec extends UnitSpec {
   }
 }
 
-private case class FirstSimpleIn(@Arg foo: Int)
+private[framework] case class FirstSimpleIn(@Arg foo: Int)
 
-private case class FirstSimpleOut(@Arg data: Dataset)
+private[framework] case class FirstSimpleOut(@Arg data: Dataset)
 
 @Op
-private class FirstSimpleOp extends Operator[FirstSimpleIn, FirstSimpleOut] {
+private[framework] class FirstSimpleOp extends Operator[FirstSimpleIn, FirstSimpleOut] {
   override def execute(in: FirstSimpleIn, ctx: OpContext): FirstSimpleOut = FirstSimpleOut(Dataset("/dev/null", "csv"))
 }
 
-private case class SecondSimpleIn(@Arg dbl: Double, @Arg str: String = "something", @Arg data: Dataset)
+private[framework] case class SecondSimpleIn(@Arg dbl: Double, @Arg str: String = "something", @Arg data: Dataset)
 
-private case class SecondSimpleOut(@Arg data: Dataset)
+private[framework] case class SecondSimpleOut(@Arg data: Dataset)
 
 @Op
-private class SecondSimpleOp extends Operator[SecondSimpleIn, SecondSimpleOut] {
+private[framework] class SecondSimpleOp extends Operator[SecondSimpleIn, SecondSimpleOut] {
   override def execute(in: SecondSimpleIn, ctx: OpContext): SecondSimpleOut = SecondSimpleOut(in.data)
 }
 
-private case class ThirdSimpleIn(@Arg data1: Dataset, @Arg data2: Dataset)
+private[framework] case class ThirdSimpleIn(@Arg data1: Dataset, @Arg data2: Dataset)
 
-private case class ThirdSimpleOut(@Arg data: Dataset)
+private[framework] case class ThirdSimpleOut(@Arg data: Dataset)
 
 @Op
-private class ThirdSimpleOp extends Operator[ThirdSimpleIn, ThirdSimpleOut] {
+private[framework] class ThirdSimpleOp extends Operator[ThirdSimpleIn, ThirdSimpleOut] {
   override def execute(in: ThirdSimpleIn, ctx: OpContext): ThirdSimpleOut = ThirdSimpleOut(in.data2)
 }

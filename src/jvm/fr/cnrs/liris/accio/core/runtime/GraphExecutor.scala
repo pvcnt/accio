@@ -24,6 +24,7 @@ import com.google.inject.{Inject, Injector}
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.core.api.{OpContext, Operator}
 import fr.cnrs.liris.accio.core.framework._
+import fr.cnrs.liris.common.util.Requirements.requireState
 
 import scala.collection.mutable
 import scala.util.control.NonFatal
@@ -177,7 +178,10 @@ class GraphExecutor @Inject()(graphFactory: GraphFactory, repository: ReportRepo
             case None => throw new IllegalArgumentException(s"Missing input: ${node.name}/${argDef.name}")
             case Some(ValueInput(value)) => value
             case Some(ReferenceInput(ref)) => if (argDef.isOptional) Some(outputs(ref).value) else outputs(ref).value
-            case Some(ParamInput(paramName)) => if (argDef.isOptional) Some(params(paramName)) else params(paramName)
+            case Some(ParamInput(paramName, defaultValue)) =>
+              val v = params.get(paramName).orElse(defaultValue)
+              requireState(v.isDefined, s"There should be either a $paramName param or a default value for ${node.name}/${argDef.name}")
+              v.get
           }
         }
         inClass.getConstructors.head.newInstance(ctorArgs.map(_.asInstanceOf[AnyRef]): _*)

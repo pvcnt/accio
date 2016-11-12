@@ -152,22 +152,22 @@ final class GraphFactory @Inject()(opRegistry: OpRegistry) {
           case Some(defaultValue) => ValueInput(defaultValue)
           case None => throw new IllegalGraphException(s"No value for input: ${nodeDef.name}/${argDef.name}")
         }
-        case Some(in: ValueInput) => getValueInput(in, nodeDef, argDef)
+        case Some(in: ValueInput) => ValueInput(correctValue(in.value, nodeDef, argDef))
         case Some(in: ReferenceInput) => in
-        case Some(in: ParamInput) => in
+        case Some(in: ParamInput) => ParamInput(in.param, in.defaultValue.map(correctValue(_, nodeDef, argDef)))
       }
       argDef.name -> value
     }.toMap
   }
 
-  private def getValueInput(inputDef: ValueInput, nodeDef: NodeDef, argDef: InputArgDef) = {
+  private def correctValue(rawValue: Any, nodeDef: NodeDef, argDef: InputArgDef) = {
     val correctedValue = try {
-      Values.as(inputDef.value, argDef.kind)
+      Values.as(rawValue, argDef.kind)
     } catch {
       case e: IllegalArgumentException =>
-        throw new IllegalGraphException(s"Invalid value for ${argDef.kind} input ${nodeDef.name}/${argDef.name}: ${inputDef.value}", e)
+        throw new IllegalGraphException(s"Invalid value for ${argDef.kind} input ${nodeDef.name}/${argDef.name}: $rawValue", e)
     }
-    ValueInput(if (argDef.isOptional) Some(correctedValue) else correctedValue)
+    if (argDef.isOptional) Some(correctedValue) else correctedValue
   }
 
   private def detectCycles(graph: Graph): Set[Seq[String]] = {
