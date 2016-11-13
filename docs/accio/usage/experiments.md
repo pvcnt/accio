@@ -71,6 +71,19 @@ For example:
 }
 ```
 
+Similarly to what can be done when specifying an input value as a constant, you can get a rid of the intermediate JSON object and map directly the single value to the parameter name.
+The following code is equivalent to the previous one:
+
+```json
+{
+  "params": {
+    "epsilon": 0.001
+  }
+}
+```
+
+It may be needed sometimes to use the explicit form to disambiguate, especially if your input is a map.
+
 ### List of values
  
 To override a parameter with a list of values, you have to use a JSON object whose only key is `values` mapped to a JSON array with all values taken by the parameter.

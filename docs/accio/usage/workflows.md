@@ -84,7 +84,7 @@ An input can be either specified as a constant value, as a reference to the outp
 ### Constant value
 
 You may directly specify the value of an input as a constant by providing a JSON object with a `value` key and the constant as a value.
-Values are specified differently depending on their type.
+Values are specified differently depending on their type, following the specification in the next table.
 
 | Data type | JSON format |
 |:----------|:------------|
@@ -106,9 +106,7 @@ Values are specified differently depending on their type.
 | image | Cannot be specified as JSON. |
 {: class="table table-striped"}
 
-There is a shortcut when specifying an input as a constant.
-You can get a rid of the intermediate JSON object and map directly the constant to the input name.
-Both forms are equivalent:
+For example:
 
 ```json
 {
@@ -119,7 +117,8 @@ Both forms are equivalent:
 }
 ```
 
-and:
+As a shortcut when specifying an input as a constant, you can get a rid of the intermediate JSON object and map directly the constant to the input name.
+The following code is equivalent to the previous one:
 
 ```json
 {

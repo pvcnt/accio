@@ -57,7 +57,8 @@ private object AccioJacksonModule extends SimpleModule {
   addDeserializer(classOf[GraphDef], new GraphDefDeserializer)
   addDeserializer(classOf[Graph], new GraphDeserializer)
   addDeserializer(classOf[Input], new InputDeserializer)
-  addDeserializer(classOf[Exploration], new PropertyPresentDeserializer[Exploration])
+  addDeserializer(classOf[Exploration], new ExplorationDeserializer)
+  //addDeserializer(classOf[Exploration], new PropertyPresentDeserializer[Exploration])
 }
 
 private class DistanceSerializer extends StdSerializer[Distance](classOf[Distance]) {
@@ -78,17 +79,6 @@ private class TwitterDurationDeserializer extends StdDeserializer[TwitterDuratio
   }
 }
 
-private class DataTypeDeserializer extends StdDeserializer[DataType](classOf[DataType]) {
-  override def deserialize(jsonParser: JsonParser, deserializationContext: DeserializationContext): DataType = {
-    val strValue = jsonParser.getValueAsString
-    try {
-      DataType.parse(strValue)
-    } catch {
-      case e: IllegalArgumentException => throw new InvalidFormatException(e.getMessage, strValue, classOf[DataType])
-    }
-  }
-}
-
 private class GraphDefDeserializer extends StdDeserializer[GraphDef](classOf[GraphDef]) {
   override def deserialize(jsonParser: JsonParser, deserializationContext: DeserializationContext): GraphDef = {
     GraphDef(jsonParser.readValueAs[Seq[NodeDef]](new TypeReference[Seq[NodeDef]] {}))
@@ -98,6 +88,17 @@ private class GraphDefDeserializer extends StdDeserializer[GraphDef](classOf[Gra
 private class GraphDeserializer extends StdDeserializer[Graph](classOf[Graph]) {
   override def deserialize(jsonParser: JsonParser, deserializationContext: DeserializationContext): Graph = {
     Graph(jsonParser.readValueAs[Seq[Node]](new TypeReference[Seq[Node]] {}).toSet)
+  }
+}
+
+private class DataTypeDeserializer extends StdDeserializer[DataType](classOf[DataType]) {
+  override def deserialize(jsonParser: JsonParser, deserializationContext: DeserializationContext): DataType = {
+    val strValue = jsonParser.getValueAsString
+    try {
+      DataType.parse(strValue)
+    } catch {
+      case e: IllegalArgumentException => throw new InvalidFormatException(e.getMessage, strValue, classOf[DataType])
+    }
   }
 }
 
@@ -129,13 +130,44 @@ private class InputDeserializer extends StdDeserializer[Input](classOf[Input]) {
   override def deserialize(jsonParser: JsonParser, ctx: DeserializationContext): Input = {
     val tree = jsonParser.readValueAsTree[JsonNode]
     if (tree.isObject) {
-      PropertyPresentDeserializer.deserialize[Input](tree, subTypes, ctx, jsonParser.getCodec.asInstanceOf[ObjectMapper])
+      JacksonUtils.deserialize[Input](tree, subTypes, ctx, jsonParser.getCodec.asInstanceOf[ObjectMapper])
     } else {
-      ValueInput(toPojo(tree, ctx))
+      ValueInput(JacksonUtils.toPojo(tree, ctx))
+    }
+  }
+}
+
+private class ExplorationDeserializer extends StdDeserializer[Exploration](classOf[Exploration]) {
+  private[this] val subTypes = _valueClass.getAnnotation(classOf[JsonSubTypes]).value
+
+  override def deserialize(jsonParser: JsonParser, ctx: DeserializationContext): Exploration = {
+    val tree = jsonParser.readValueAsTree[JsonNode]
+    if (tree.isObject) {
+      JacksonUtils.deserialize[Exploration](tree, subTypes, ctx, jsonParser.getCodec.asInstanceOf[ObjectMapper])
+    } else {
+      SingletonExploration(JacksonUtils.toPojo(tree, ctx))
+    }
+  }
+}
+
+private class PropertyPresentDeserializer[T: ClassTag] extends StdDeserializer[T](implicitly[ClassTag[T]].runtimeClass) {
+  private[this] val subTypes = _valueClass.getAnnotation(classOf[JsonSubTypes]).value
+
+  override def deserialize(jsonParser: JsonParser, ctx: DeserializationContext): T = {
+    val tree = jsonParser.readValueAsTree[JsonNode]
+    JacksonUtils.deserialize[T](tree, subTypes, ctx, jsonParser.getCodec.asInstanceOf[ObjectMapper])
+  }
+}
+
+private object JacksonUtils {
+  def deserialize[T](tree: JsonNode, subTypes: Iterable[JsonSubTypes.Type], ctx: DeserializationContext, mapper: ObjectMapper): T = {
+    subTypes.find(subType => tree.has(subType.name)) match {
+      case Some(subType) => mapper.treeToValue(tree, subType.value).asInstanceOf[T]
+      case None => throw ctx.mappingException(s"No required field found when deserializing, expected one of ${subTypes.map(_.name).mkString(", ")}")
     }
   }
 
-  private def toPojo(tree: JsonNode, ctx: DeserializationContext): Any = {
+  def toPojo(tree: JsonNode, ctx: DeserializationContext): Any = {
     if (tree.isBoolean) {
       tree.asBoolean
     } else if (tree.isDouble) {
@@ -152,24 +184,6 @@ private class InputDeserializer extends StdDeserializer[Input](classOf[Input]) {
       tree.fields.asScala.map(kv => kv.getKey -> toPojo(kv.getValue, ctx)).toMap
     } else {
       ctx.mappingException(s"Invalid node type for an input: ${tree.getNodeType}")
-    }
-  }
-}
-
-private class PropertyPresentDeserializer[T: ClassTag] extends StdDeserializer[T](implicitly[ClassTag[T]].runtimeClass) {
-  private[this] val subTypes = _valueClass.getAnnotation(classOf[JsonSubTypes]).value
-
-  override def deserialize(jsonParser: JsonParser, ctx: DeserializationContext): T = {
-    val tree = jsonParser.readValueAsTree[JsonNode]
-    PropertyPresentDeserializer.deserialize[T](tree, subTypes, ctx, jsonParser.getCodec.asInstanceOf[ObjectMapper])
-  }
-}
-
-object PropertyPresentDeserializer {
-  private[framework] def deserialize[T](tree: JsonNode, subTypes: Iterable[JsonSubTypes.Type], ctx: DeserializationContext, mapper: ObjectMapper): T = {
-    subTypes.find(subType => tree.has(subType.name)) match {
-      case Some(subType) => mapper.treeToValue(tree, subType.value).asInstanceOf[T]
-      case None => throw ctx.mappingException(s"No required field found when deserializing, expected one of ${subTypes.map(_.name).mkString(", ")}")
     }
   }
 }
