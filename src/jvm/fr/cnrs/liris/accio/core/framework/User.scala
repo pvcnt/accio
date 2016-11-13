@@ -38,8 +38,13 @@ object User {
   private[this] val UserRegex = "(.+)<(.+)>".r
 
   /**
+   * Return the default user, inferred from the shell user login. It has no email address
+   */
+  val Default = User(sys.props("user.name"))
+
+  /**
    * Parse a string into a user.
-   * If it includes an email address, it should have the following format: "User name <handle@domain.tld>".
+   * If it includes an email address, it should have the following format: `User name <handle@domain.tld>`.
    *
    * @param str String to parse
    */

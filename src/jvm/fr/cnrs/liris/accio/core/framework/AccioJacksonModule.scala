@@ -23,6 +23,7 @@ import com.fasterxml.jackson.core.`type`.TypeReference
 import com.fasterxml.jackson.core.{JsonGenerator, JsonParser}
 import com.fasterxml.jackson.databind._
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer
+import com.fasterxml.jackson.databind.exc.InvalidFormatException
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.databind.ser.std.StdSerializer
 import com.twitter.finatra.json.modules.FinatraJacksonModule
@@ -51,7 +52,6 @@ private object AccioJacksonModule extends SimpleModule {
   addSerializer(new TwitterDurationSerializer)
   addDeserializer(classOf[TwitterDuration], new TwitterDurationDeserializer)
   addDeserializer(classOf[Reference], new ReferenceDeserializer)
-  addKeyDeserializer(classOf[Reference], new ReferenceKeyDeserializer)
   addDeserializer(classOf[DataType], new DataTypeDeserializer)
   addDeserializer(classOf[User], new UserDeserializer)
   addDeserializer(classOf[GraphDef], new GraphDefDeserializer)
@@ -80,7 +80,12 @@ private class TwitterDurationDeserializer extends StdDeserializer[TwitterDuratio
 
 private class DataTypeDeserializer extends StdDeserializer[DataType](classOf[DataType]) {
   override def deserialize(jsonParser: JsonParser, deserializationContext: DeserializationContext): DataType = {
-    DataType.parse(jsonParser.getValueAsString)
+    val strValue = jsonParser.getValueAsString
+    try {
+      DataType.parse(strValue)
+    } catch {
+      case e: IllegalArgumentException => throw new InvalidFormatException(e.getMessage, strValue, classOf[DataType])
+    }
   }
 }
 
@@ -98,19 +103,23 @@ private class GraphDeserializer extends StdDeserializer[Graph](classOf[Graph]) {
 
 private class ReferenceDeserializer extends StdDeserializer[Reference](classOf[Reference]) {
   override def deserialize(jsonParser: JsonParser, deserializationContext: DeserializationContext): Reference = {
-    Reference.parse(jsonParser.getValueAsString)
-  }
-}
-
-private class ReferenceKeyDeserializer extends KeyDeserializer {
-  override def deserializeKey(s: String, deserializationContext: DeserializationContext): AnyRef = {
-    Reference.parse(s)
+    val strValue = jsonParser.getValueAsString
+    try {
+      Reference.parse(strValue)
+    } catch {
+      case e: IllegalArgumentException => throw new InvalidFormatException(e.getMessage, strValue, classOf[Reference])
+    }
   }
 }
 
 private class UserDeserializer extends StdDeserializer[User](classOf[User]) {
   override def deserialize(jsonParser: JsonParser, deserializationContext: DeserializationContext): User = {
-    User.parse(jsonParser.getValueAsString)
+    val strValue = jsonParser.getValueAsString
+    try {
+      User.parse(strValue)
+    } catch {
+      case e: IllegalArgumentException => throw new InvalidFormatException(e.getMessage, strValue, classOf[User])
+    }
   }
 }
 

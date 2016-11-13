@@ -70,7 +70,7 @@ object Reporter {
     "comment" -> Console.YELLOW,
     "info" -> Console.GREEN,
     "question" -> Console.CYAN_B,
-    "error" -> (Console.WHITE_B + Console.RED_B))
+    "error" -> Console.RED)
 
   def apply(out: PrintStream, useColors: Boolean = true): Reporter =
     new StreamReporter(out, useColors)

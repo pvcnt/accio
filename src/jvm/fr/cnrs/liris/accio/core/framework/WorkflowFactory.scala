@@ -23,13 +23,16 @@ import java.nio.file.Paths
 import com.google.inject.Inject
 import fr.cnrs.liris.common.util.{FileUtils, Seqs}
 
+import scala.util.control.NonFatal
+
 /**
  * Exception thrown if a workflow is incorrectly defined.
  *
- * @param message Error message
- * @param cause   Root cause
+ * @param uri     URI to the workflow definition.
+ * @param message Error message.
+ * @param cause   Root cause, if any.
  */
-class IllegalWorkflowException(message: String, cause: Throwable = null) extends RuntimeException(message, cause)
+class IllegalWorkflowException(uri: String, message: String, cause: Throwable = null) extends RuntimeException(message, cause)
 
 /**
  * Factory for [[Workflow]]s.
@@ -48,16 +51,20 @@ final class WorkflowFactory @Inject()(parser: WorkflowParser, graphFactory: Grap
    */
   @throws[IllegalWorkflowException]
   def create(uri: String, user: User): Workflow = {
-    val defn = parser.parse(uri)
+    val defn = try {
+      parser.parse(uri)
+    } catch {
+      case NonFatal(e) => throw new IllegalWorkflowException(uri, "JSON syntax error", e)
+    }
 
     // We create (and validate) the graph associated with the workflow. This is the main source of errors.
     val graph = try {
       graphFactory.create(defn.graph)
     } catch {
-      case e: IllegalGraphException => throw new IllegalWorkflowException(e.getMessage)
+      case e: IllegalGraphException => throw new IllegalWorkflowException(uri, e.getMessage, e.getCause)
     }
 
-    val params = getParams(graph)
+    val params = getParams(uri, graph)
     val owner = defn.owner.getOrElse(user)
     val name = defn.name.getOrElse(getDefaultName(uri))
 
@@ -67,9 +74,10 @@ final class WorkflowFactory @Inject()(parser: WorkflowParser, graphFactory: Grap
   /**
    * Extract parameters that are used inside a graph and validate they are correctly used.
    *
+   * @param uri  URI to the workflow definition.
    * @param graph Correct graph.
    */
-  private def getParams(graph: Graph) = {
+  private def getParams(uri: String, graph: Graph) = {
     case class ParamUsage(ref: Reference, defaultValue: Option[Any], inputDef: InputArgDef)
 
     // First we extract all references to parameters with their names and references to ports where they are used.
@@ -86,13 +94,13 @@ final class WorkflowFactory @Inject()(parser: WorkflowParser, graphFactory: Grap
     paramUsages.map { case (paramName, usages) =>
       // We check param name is valid.
       if (Param.NameRegex.findFirstIn(paramName).isEmpty) {
-        throw new IllegalWorkflowException(s"Invalid param name: $paramName (must match ${Param.NamePattern})")
+        throw new IllegalWorkflowException(uri, s"Invalid param name: $paramName (must match ${Param.NamePattern})")
       }
 
       // We check the parameter is homogeneous, i.e., it is used in ports of the same type.
       val dataTypes = usages.map(_.inputDef).map(_.kind)
       if (dataTypes.size > 1) {
-        throw new IllegalWorkflowException(s"Param $paramName is used in heterogeneous input types: ${dataTypes.mkString(", ")}")
+        throw new IllegalWorkflowException(uri, s"Param $paramName is used in heterogeneous input types: ${dataTypes.mkString(", ")}")
       }
 
       // Parameter is optional only if used only in optional ports or if a default value is available each time.

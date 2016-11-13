@@ -31,7 +31,7 @@ case class ExitCode(code: Int, name: String)
  */
 object ExitCode {
   val Success = ExitCode(0, "SUCCESS")
-  val ParsingFailure = ExitCode(1, "PARSING_FAILURE")
+  val ValidateFailure = ExitCode(1, "VALIDATE_FAILURE")
   val CommandLineError = ExitCode(2, "COMMAND_LINE_ERROR")
   val RuntimeError = ExitCode(3, "RUNTIME_ERROR")
   val InternalError = ExitCode(4, "INTERNAL_ERROR")
