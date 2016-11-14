@@ -36,6 +36,8 @@ import scala.collection.mutable
  * @param maxDiameter Maximum diameter of a stay.
  */
 class DTClusterer(minDuration: Duration, maxDiameter: Distance) extends Clusterer {
+  require(maxDiameter > Distance.Zero, s"maxDiameter must be > 0 (got $maxDiameter)")
+
   override def cluster(events: Seq[Event]): Seq[Cluster] = {
     val clusters = mutable.ListBuffer.empty[Cluster]
     val candidate = mutable.ListBuffer.empty[Event]
@@ -85,7 +87,7 @@ class DTClusterer(minDuration: Duration, maxDiameter: Distance) extends Clustere
     } else if ((candidate.head.time to candidate.last.time).duration < minDuration) {
       false
     } else {
-      clusters += new Cluster(candidate.toSet)
+      clusters += new Cluster(candidate.toList)
       candidate.clear()
       true
     }

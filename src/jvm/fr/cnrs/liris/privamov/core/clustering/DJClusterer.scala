@@ -18,9 +18,7 @@
 
 package fr.cnrs.liris.privamov.core.clustering
 
-import com.google.common.base.Preconditions.checkArgument
-import fr.cnrs.liris.common.geo.Point
-import fr.cnrs.liris.common.geo.Distance
+import fr.cnrs.liris.common.geo.{Distance, Point}
 import fr.cnrs.liris.privamov.core.model.Event
 
 import scala.collection.mutable
@@ -33,20 +31,20 @@ import scala.collection.mutable
  * In GIS 2004.
  */
 class DJClusterer(epsilon: Distance, minPoints: Int) extends Clusterer {
-  checkArgument(minPoints > 0)
-  checkArgument(epsilon.meters > 0)
+  require(minPoints > 0, s"minPoints must be > 0 (got $minPoints)")
+  require(epsilon > Distance.Zero, s"Epsilon must be > 0 (got $epsilon)")
 
   override def cluster(events: Seq[Event]): Seq[Cluster] = {
     var clusters = mutable.ListBuffer.empty[Cluster]
     for (event <- events) {
       val neighborhood = neighbors(event.point, events)
       if (neighborhood.length >= minPoints) {
-        val newCluster = mutable.HashSet.empty[Event]
+        val newCluster = mutable.ListBuffer.empty[Event]
         newCluster ++= neighborhood
         val intersecting = clusters.filter(cluster => cluster.events.intersect(newCluster).nonEmpty)
         intersecting.foreach(cluster => newCluster ++= cluster.events)
         clusters = clusters.diff(intersecting)
-        clusters += new Cluster(newCluster.toSet)
+        clusters += new Cluster(newCluster.toList)
       }
     }
     clusters

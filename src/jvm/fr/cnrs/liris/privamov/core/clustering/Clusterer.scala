@@ -21,6 +21,7 @@ package fr.cnrs.liris.privamov.core.clustering
 import com.google.common.base.MoreObjects
 import fr.cnrs.liris.common.geo.Point
 import fr.cnrs.liris.privamov.core.model.{Event, Trace}
+import org.joda.time.Duration
 
 /**
  * A clusterer creates clusters of points from a sequence of events.
@@ -46,13 +47,32 @@ trait Clusterer extends Serializable {
 /**
  * A cluster is formed of a set of events.
  *
- * @param events Set of events.
+ * @param events List of temporally-ordered events.
  */
-class Cluster(val events: Set[Event]) extends Serializable {
+class Cluster private[clustering](val events: Seq[Event]) {
+  require(events.nonEmpty, "Cannot create a cluster of empty events")
+
   /**
-   * Compute the centroid of this cluster.
+   * Return the centroid of this cluster.
    */
   lazy val centroid = Point.centroid(events.map(_.point))
+
+  /**
+   * Return the total duration spent inside his cluster.
+   */
+  lazy val duration = new Duration(events.head.time, events.last.time)
+
+  /**
+   * Return the diameter of this cluster.
+   */
+  lazy val diameter = Point.exactDiameter(events.map(_.point))
+
+  override def equals(other: Any): Boolean = other match {
+    case c: Cluster => c.events == events
+    case _ => false
+  }
+
+  override def hashCode: Int = events.hashCode
 
   override def toString: String =
     MoreObjects.toStringHelper(this)
@@ -64,7 +84,7 @@ class Cluster(val events: Set[Event]) extends Serializable {
  * A clusterer creating a cluster for each input event.
  */
 object IdentityClusterer extends Clusterer {
-  override def cluster(events: Seq[Event]): Seq[Cluster] = events.map(event => new Cluster(Set(event)))
+  override def cluster(events: Seq[Event]): Seq[Cluster] = events.map(event => new Cluster(Seq(event)))
 }
 
 /**
