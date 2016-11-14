@@ -32,7 +32,7 @@ import fr.cnrs.liris.common.util.{FileUtils, HashUtils}
  * @param message Error message.
  * @param cause   Root cause.
  */
-class IllegalExperimentException(uri: String, message: String, cause: Throwable = null) extends RuntimeException(message, cause)
+class IllegalExperimentException(val uri: String, message: String, cause: Throwable = null) extends RuntimeException(message, cause)
 
 /**
  * Arguments used to specify or override properties when creating experiments.

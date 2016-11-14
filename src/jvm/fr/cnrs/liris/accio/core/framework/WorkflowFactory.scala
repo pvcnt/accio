@@ -32,7 +32,7 @@ import scala.util.control.NonFatal
  * @param message Error message.
  * @param cause   Root cause, if any.
  */
-class IllegalWorkflowException(uri: String, message: String, cause: Throwable = null) extends RuntimeException(message, cause)
+class IllegalWorkflowException(val uri: String, message: String, cause: Throwable = null) extends RuntimeException(message, cause)
 
 /**
  * Factory for [[Workflow]]s.

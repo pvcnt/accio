@@ -65,7 +65,7 @@ class RunCommand @Inject()(experimentFactory: ExperimentFactory, executor: Exper
       out.writeln(s"Writing progress in <comment>${workDir.toAbsolutePath}</comment>")
       val progressReporter = new ConsoleGraphProgressReporter(out)
       flags.residue.foreach { url =>
-        make(opts, workDir, url, progressReporter)
+        make(opts, workDir, url, progressReporter, out)
       }
 
       val duration = System.currentTimeMillis() - startedAt
@@ -74,7 +74,7 @@ class RunCommand @Inject()(experimentFactory: ExperimentFactory, executor: Exper
     }
   }
 
-  private def make(opts: RunOptions, workDir: Path, experimentUri: String, progressReporter: ExperimentProgressReporter) = {
+  private def make(opts: RunOptions, workDir: Path, experimentUri: String, progressReporter: ExperimentProgressReporter, out: Reporter) = {
     val expArgs = ExperimentArgs(
       owner = opts.user.map(User.parse),
       name = opts.name,
@@ -83,8 +83,19 @@ class RunCommand @Inject()(experimentFactory: ExperimentFactory, executor: Exper
       repeat = opts.repeat,
       seed = opts.seed,
       params = opts.params.map(parseParams).getOrElse(Map.empty))
-    val experiment = experimentFactory.create(experimentUri, expArgs)
-    executor.execute(experiment, workDir, progressReporter)
+    try {
+      val experiment = experimentFactory.create(experimentUri, expArgs)
+      executor.execute(experiment, workDir, progressReporter)
+    } catch {
+      case e: IllegalExperimentException =>
+        out.writeln(s"<error>Invalid experiment definition: ${e.uri}</error>")
+        out.writeln(s"<error>${e.getMessage}</error>")
+        out.writeln(s"<error>Try 'accio validate ${e.uri}' for more information.</error>")
+      case e: IllegalWorkflowException =>
+        out.writeln(s"<error>Invalid workflow definition: ${e.uri}</error>")
+        out.writeln(s"<error>${e.getMessage}</error>")
+        out.writeln(s"<error>Try 'accio validate ${e.uri}' for more information.</error>")
+    }
   }
 
   private def parseParams(params: String): Map[String, String] = {
