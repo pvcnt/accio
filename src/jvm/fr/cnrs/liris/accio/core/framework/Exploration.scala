@@ -34,13 +34,13 @@ import org.joda.time.{Instant, Duration => JodaDuration}
 @JsonIgnoreProperties(ignoreUnknown = true)
 sealed trait Exploration {
   /**
-   * Expand an exploration into a list of values, w.r.t. a given data type.
+   * Expand an exploration into a set of values, w.r.t. a given data type.
    *
    * @param kind Data type.
    * @throws IllegalArgumentException If it cannot be expanded w.r.t. the given data type.
    */
   @throws[IllegalArgumentException]
-  def expand(kind: DataType): Seq[Any]
+  def expand(kind: DataType): Set[Any]
 }
 
 /**
@@ -50,7 +50,7 @@ sealed trait Exploration {
  * @param value New parameter's value.
  */
 case class SingletonExploration(value: Any) extends Exploration {
-  override def expand(kind: DataType): Seq[Any] = Seq(Values.as(value, kind))
+  override def expand(kind: DataType): Set[Any] = Set(Values.as(value, kind))
 }
 
 /**
@@ -59,7 +59,7 @@ case class SingletonExploration(value: Any) extends Exploration {
  * @param values List of values taken by the parameter.
  */
 case class ListExploration(values: Set[Any]) extends Exploration {
-  override def expand(kind: DataType): Seq[Any] = values.map(Values.as(_, kind)).toSeq
+  override def expand(kind: DataType): Set[Any] = values.map(Values.as(_, kind))
 }
 
 /**
@@ -73,47 +73,43 @@ case class ListExploration(values: Set[Any]) extends Exploration {
  * @param log2  Whether to follow a logarithmic progression (base 2).
  */
 case class RangeExploration(from: Any, to: Any, step: Any, log: Boolean = false, log10: Boolean = false, log2: Boolean = false) extends Exploration with LazyLogging {
-  override def expand(kind: DataType): Seq[Any] = kind match {
+  override def expand(kind: DataType): Set[Any] = kind match {
     case DataType.Byte =>
       checkNotLogarithmic(kind)
-      Values.asByte(from) to Values.asByte(to) by Values.asByte(step)
+      (Values.asByte(from) to Values.asByte(to) by Values.asByte(step)).toSet
     case DataType.Short =>
       checkNotLogarithmic(kind)
-      Values.asShort(from) to Values.asShort(to) by Values.asShort(step)
+      (Values.asShort(from) to Values.asShort(to) by Values.asShort(step)).toSet
     case DataType.Integer =>
       checkNotLogarithmic(kind)
-      Values.asInteger(from) to Values.asInteger(to) by Values.asInteger(step)
+      (Values.asInteger(from) to Values.asInteger(to) by Values.asInteger(step)).toSet
     case DataType.Long =>
-      checkLogarithmic()
-      val lFrom = applyLog(Values.asLong(from))
-      val lTo = applyLog(Values.asLong(to))
-      val lStep = applyLog(Values.asLong(step, kind))
-      (lFrom to lTo by lStep).map(v => reverseLog(v).round)
+      checkNotLogarithmic(kind)
+      (Values.asLong(from) to Values.asLong(to) by Values.asLong(step)).toSet
     case DataType.Double =>
       checkLogarithmic()
       val dFrom = applyLog(Values.asDouble(from))
       val dTo = applyLog(Values.asDouble(to))
       val dStep = applyLog(Values.asDouble(step))
-      (dFrom to dTo by dStep).map(reverseLog)
+      (dFrom to dTo by dStep).map(reverseLog).toSet
     case DataType.Distance =>
       checkLogarithmic()
       val dFrom = applyLog(Values.asDistance(from).meters)
       val dTo = applyLog(Values.asDistance(to).meters)
       val dStep = applyLog(Values.asDistance(step).meters)
-      (dFrom to dTo by dStep).map(v => Distance.meters(reverseLog(v)))
+      (dFrom to dTo by dStep).map(v => Distance.meters(reverseLog(v))).toSet
     case DataType.Duration =>
       checkLogarithmic()
       val dFrom = applyLog(Values.asDuration(from).getMillis)
       val dTo = applyLog(Values.asDuration(to).getMillis)
       val dStep = applyLog(Values.asDuration(step).getMillis)
-      (dFrom to dTo by dStep).map(v => new JodaDuration(reverseLog(v).round))
+      (dFrom to dTo by dStep).map(v => new JodaDuration(reverseLog(v).round)).toSet
     case DataType.Timestamp =>
-      // Technically we could do a logarithmic progression here, but it seems meaningless.
       checkNotLogarithmic(kind)
       val tFrom = Values.asTimestamp(from).getMillis
       val tTo = Values.asTimestamp(to).getMillis
       val dStep = Values.asDuration(step).getMillis
-      (tFrom to tTo by dStep).map(new Instant(_))
+      (tFrom to tTo by dStep).map(new Instant(_)).toSet
     case _ => throw new IllegalArgumentException(s"Cannot generate a range of $kind")
   }
 

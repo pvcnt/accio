@@ -21,13 +21,13 @@ package fr.cnrs.liris.accio.core.framework
 import fr.cnrs.liris.testing.UnitSpec
 
 /**
- * Unit tests for [[SingletonExploration]].
+ * Unit tests for [[ListExploration]].
  */
-class SingletonExplorationSpec extends UnitSpec {
-  behavior of "SingletonExploration"
+class ListExplorationSpec extends UnitSpec {
+  behavior of "ListExploration"
 
-  it should "expand into a single integer" in {
-    val explo = SingletonExploration(10)
-    explo.expand(DataType.Integer) should contain theSameElementsAs Set(10)
+  it should "expand into a list of integers" in {
+    val explo = ListExploration(Set(10, 11, 12))
+    explo.expand(DataType.Integer) should contain theSameElementsAs Set(10, 11, 12)
   }
 }
