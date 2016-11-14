@@ -16,7 +16,7 @@ scala_library(
     '3rdparty/jvm/com/fasterxml/jackson:joda',
     '3rdparty/jvm/com/twitter/util:core',
     '3rdparty/jvm/com/twitter/finatra:jackson',
-    #'3rdparty/jvm/com/typesafe/scala-logging',
+    '3rdparty/jvm/com/typesafe/scala-logging',
   ],
   sources=globs('*.scala')
 )

@@ -56,8 +56,7 @@ final class RunFactory @Inject()(opRegistry: OpRegistry) {
       val allValues = params.map { case (paramName, explo) =>
         // We are guaranteed that the param exist, because of the workflow construction.
         val param = workflow.params.find(_.name == paramName).get
-        //TODO: take into account logarithmic progressions.
-        Values.expand(explo, param.kind).map(v => (paramName, v))
+        explo.expand(param.kind).map(v => (paramName, v))
       }.toSeq
       Seqs.crossProduct(allValues).map { params =>
         val runName = name + ":" + params.map { case (k, v) => s"$k=$v" }.mkString(",")

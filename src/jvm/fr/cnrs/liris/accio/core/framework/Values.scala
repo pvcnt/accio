@@ -284,44 +284,6 @@ object Values {
     case _ => None
   }
 
-  /**
-   * Expand an exploration into a list of values to explore, w.r.t. a given parameter type.
-   *
-   * @param explo Exploration definition
-   * @param kind  Parameter type
-   * @throws IllegalArgumentException If it cannot be expanded w.r.t. the given parameter type
-   * @return List of values to explore
-   */
-  @throws[IllegalArgumentException]
-  def expand(explo: Exploration, kind: DataType): Seq[Any] = explo match {
-    case SingletonExploration(value) => Seq(as(value, kind))
-    case ListExploration(values) => values.map(as(_, kind)).toSeq
-    case RangeExploration(from, to, step, log, log2, log10) =>
-      kind match {
-        case DataType.Byte => asByte(from) to asByte(to) by asByte(step)
-        case DataType.Short => asShort(from) to asShort(to) by asShort(step)
-        case DataType.Integer => asInteger(from) to asInteger(to) by asInteger(step)
-        case DataType.Long => asLong(from) to asLong(to) by asLong(step, kind)
-        case DataType.Double => asDouble(from) to asDouble(to) by asDouble(step)
-        case DataType.Distance =>
-          val dFrom = asDistance(from).meters
-          val dTo = asDistance(to).meters
-          val dStep = asDistance(step).meters
-          (dFrom to dTo by dStep).map(Distance.meters)
-        case DataType.Duration =>
-          val dFrom = asDuration(from).getMillis
-          val dTo = asDuration(to).getMillis
-          val dStep = asDuration(step).getMillis
-          (dFrom to dTo by dStep).map(new JodaDuration(_))
-        case DataType.Timestamp =>
-          val tFrom = asTimestamp(from).getMillis
-          val tTo = asTimestamp(to).getMillis
-          val dStep = asDuration(step).getMillis
-          (tFrom to tTo by dStep).map(new Instant(_))
-        case _ => throw new IllegalArgumentException(s"Cannot generate a range of $kind")
-      }
-  }
-
   private def throwInvalidTypeException(kind: DataType, rawValue: Any) =
     throw new IllegalArgumentException(s"Invalid $kind value: ${rawValue.getClass.getName}")
 }
