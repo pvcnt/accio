@@ -18,9 +18,12 @@
 
 package fr.cnrs.liris.accio.core.framework
 
+import java.nio.file.{FileSystems, Paths}
+
 import com.fasterxml.jackson.annotation.{JsonIgnoreProperties, JsonSubTypes}
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.common.geo.Distance
+import fr.cnrs.liris.common.util.FileUtils
 import org.joda.time.{Instant, Duration => JodaDuration}
 
 /**
@@ -29,7 +32,8 @@ import org.joda.time.{Instant, Duration => JodaDuration}
 @JsonSubTypes(Array(
   new JsonSubTypes.Type(value = classOf[SingletonExploration], name = "value"),
   new JsonSubTypes.Type(value = classOf[ListExploration], name = "values"),
-  new JsonSubTypes.Type(value = classOf[RangeExploration], name = "from")
+  new JsonSubTypes.Type(value = classOf[RangeExploration], name = "from"),
+  new JsonSubTypes.Type(value = classOf[GlobExploration], name = "glob")
 ))
 @JsonIgnoreProperties(ignoreUnknown = true)
 sealed trait Exploration {
@@ -128,8 +132,18 @@ case class RangeExploration(from: Any, to: Any, step: Any, log: Boolean = false,
   }
 
   private def applyLog(d: Double) =
-    if (log) math.log(d) else if (log10) math.log10(d) else if (log2) math.log(d) / math.log(2)  else d
+    if (log) math.log(d) else if (log10) math.log10(d) else if (log2) math.log(d) / math.log(2) else d
 
   private def reverseLog(d: Double) =
     if (log) math.pow(math.E, d) else if (log10) math.pow(10, d) else if (log2) math.pow(2, d) else d
+}
+
+case class GlobExploration(glob: String) extends Exploration {
+  override def expand(kind: DataType): Set[Any] = {
+    val pos = glob.lastIndexOf('/')
+    val path = Paths.get(FileUtils.replaceHome(glob.substring(0, pos)))
+    val pathMatcher = FileSystems.getDefault.getPathMatcher(glob.substring(pos + 1))
+    val matchingPaths = path.toFile.list.map(path.resolve).filter(pathMatcher.matches)
+    matchingPaths.map(_.toAbsolutePath.toString).toSet
+  }
 }
