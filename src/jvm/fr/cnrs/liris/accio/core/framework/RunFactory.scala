@@ -54,7 +54,7 @@ final class RunFactory @Inject()(opRegistry: OpRegistry) {
   private def expandParams(params: Map[String, Exploration], name: String, workflow: Workflow): Seq[(String, Map[String, Any])] = {
     if (params.nonEmpty) {
       val allValues = params.map { case (paramName, explo) =>
-        // We are guaranteed that the param exist, because of the workflow construction.
+        // We are guaranteed that the param exists, because of the experiment construction.
         val param = workflow.params.find(_.name == paramName).get
         explo.expand(param.kind).map(v => (paramName, v)).toSeq
       }.toSeq

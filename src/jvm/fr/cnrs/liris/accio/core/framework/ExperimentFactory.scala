@@ -98,6 +98,12 @@ final class ExperimentFactory @Inject()(parser: ExperimentParser, workflowFactor
     }
     val workflow = workflowFactory.create(workflowUri, user)
 
+    // Check that parameters referenced actually exist.
+    val unknownParams = defn.params.keySet.diff(workflow.params.map(_.name))
+    if (unknownParams.nonEmpty) {
+      throw new IllegalExperimentException(uri, s"Unknown parameters: ${unknownParams.mkString(", ")}")
+    }
+
     // Check that all non-optional workflow parameters are defined.
     val missingParams = workflow.params.filterNot(_.isOptional).map(_.name).diff(defn.params.keySet)
     if (missingParams.nonEmpty) {

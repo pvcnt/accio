@@ -82,11 +82,8 @@ class CommandDispatcher @Inject()(cmdRegistry: CmdRegistry, parserFactory: Flags
       case e: IllegalArgumentException =>
         out.writeln(s"<error>${e.getMessage.stripPrefix("requirement failed: ")}</error>")
         ExitCode.RuntimeError
-      case e: RuntimeException =>
-        out.writeln(s"<error>${e.getMessage}</error>")
-        ExitCode.RuntimeError
       case NonFatal(e) =>
-        e.printStackTrace()
+        logger.error("Uncaught exception", e)
         ExitCode.InternalError
     }
   }
