@@ -36,38 +36,43 @@ import java.io.File
 import java.nio.file.Path
 
 /**
- * Helpers to deal with files and paths.
+ * Helpers dealing with files and paths.
  */
 object FileUtils {
   /**
-   * Recursively delete anything at a given path, if it exists.
+   * Recursively delete anything at a given path, if it exists. It does not produce any error if the path does
+   * not exist.
    *
-   * @param path A path
+   * @param path Path to delete.
    */
-  def safeDelete(path: Path): Unit = {
-    val file = path.toFile
-    if (!file.exists()) {
-      return
-    }
+  def safeDelete(path: Path): Unit = safeDelete(path.toFile)
 
-    def clean(file: File): Unit = {
-      if (file.isDirectory) {
-        file.listFiles().foreach(clean)
+  /**
+   * Delete a file a recursively delete a directory, if it exists. It does not produce any error if the file or
+   * directory does not exist.
+   *
+   * @param file File or directory to delete.
+   */
+  def safeDelete(file: File): Unit = {
+    if (file.exists()) {
+      def clean(file: File): Unit = {
+        if (file.isDirectory) {
+          file.listFiles().foreach(clean)
+        }
+        file.delete()
       }
-      file.delete()
+      clean(file)
     }
-
-    clean(file)
   }
 
   /**
-   * Replace an initial tilde '~' in a URL by the current user's home directory. If a tilde is
-   * found elsewhere, it will not be replaced.
+   * Replace an initial tilde '~' in a URI by the current user's home directory. If a tilde is found elsewhere, it
+   * will not be replaced.
    *
-   * @param url A URL
+   * @param uri URI.
    */
-  def replaceHome(url: String): String =
-    if (url.startsWith("~")) sys.props("user.home") + url.drop(1) else url
+  def replaceHome(uri: String): String =
+  if (uri.startsWith("~")) sys.props("user.home") + uri.drop(1) else uri
 
   def removeExtension(filename: String): String = {
     val pos = filename.lastIndexOf('.')

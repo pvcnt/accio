@@ -23,17 +23,21 @@ import com.google.common.base.Charsets
 import com.google.common.io.ByteStreams
 
 /**
- * A little utility to load resources (property files) from jars or
- * the classpath. Recommended for longer texts that do not fit nicely into
- * a piece of Java code - e.g. a template for a lengthy email.
+ * A little utility to load resources (property files) from jars or the classpath. Recommended for longer texts that
+ * do not fit nicely into a piece of Java code - e.g. a template for a lengthy email.
  */
 object ResourceFileLoader {
   /**
    * Loads a text resource that is located in a directory on the Java classpath that
-   * corresponds to the package of <code>relativeToClass</code> using UTF8 encoding.
+   * corresponds to the package of `relativeToClass` using UTF8 encoding.
    * E.g.
-   * <code>loadResource(Class.forName("com.google.foo.Foo", "bar.txt"))</code>
-   * will look for <code>com/google/foo/bar.txt</code> in the classpath.
+   * <code>loadResource(classOf[com.google.foo.Foo], "bar.txt"))</code>
+   * will look for `com/google/foo/bar.txt` in the classpath.
+   *
+   * @param relativeToClass Where to look for the resource.
+   * @param resourceName    Resource name, next to the class.
+   * @throws IOException If the resource cannot be found.
+   * @return Resource, decoded as an UTF-8 string.
    */
   @throws[IOException]
   def loadResource(relativeToClass: Class[_], resourceName: String): String = {

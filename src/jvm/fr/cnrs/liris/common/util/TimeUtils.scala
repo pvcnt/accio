@@ -18,22 +18,27 @@
 
 package fr.cnrs.liris.common.util
 
+import com.twitter.util.Duration
+
 /**
- * Very simple interface to help dealing with named objects, whose name uniquely identifies them
- * among all instances of this class.
+ * Helpers dealing with time and duration.
  */
-trait Named {
+object TimeUtils {
   /**
-   * Return this object's name, which should be unique among all instances.
+   * Convert a duration to a user-friendly string representation.
    *
-   * @return A name
+   * @param time Duration.
    */
-  def name: String
-
-  override def hashCode: Int = name.hashCode
-
-  override def equals(other: Any): Boolean = other match {
-    case o: Named => o.name == name
-    case _ => false
+  def prettyTime(time: Duration): String = {
+    val ms = time.inMillis.toDouble
+    if (ms < 10.0) {
+      f"$ms%.2f ms"
+    } else if (ms < 100.0) {
+      f"$ms%.1f ms"
+    } else if (ms < 1000.0) {
+      f"$ms%.0f ms"
+    } else {
+      f"${ms / 1000}%.3f s"
+    }
   }
 }
