@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import com.google.inject.Inject
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.framework._
-import fr.cnrs.liris.accio.core.runtime.{ExperimentExecutor, ExperimentProgressReporter}
+import fr.cnrs.liris.accio.core.runtime.{ExperimentExecutor, ProgressReporter}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.util.StringUtils
 
@@ -63,7 +63,7 @@ class RunCommand @Inject()(experimentFactory: ExperimentFactory, executor: Exper
       val startedAt = System.currentTimeMillis()
       val workDir = getWorkDir(opts)
       out.writeln(s"Writing progress in <comment>${workDir.toAbsolutePath}</comment>")
-      val progressReporter = new ConsoleGraphProgressReporter(out)
+      val progressReporter = new ConsoleProgressReporter(out)
       flags.residue.foreach { url =>
         make(opts, workDir, url, progressReporter, out)
       }
@@ -74,7 +74,7 @@ class RunCommand @Inject()(experimentFactory: ExperimentFactory, executor: Exper
     }
   }
 
-  private def make(opts: RunOptions, workDir: Path, experimentUri: String, progressReporter: ExperimentProgressReporter, out: Reporter) = {
+  private def make(opts: RunOptions, workDir: Path, experimentUri: String, progressReporter: ProgressReporter, out: Reporter) = {
     val expArgs = ExperimentArgs(
       owner = opts.user.map(User.parse),
       name = opts.name,
@@ -117,7 +117,7 @@ class RunCommand @Inject()(experimentFactory: ExperimentFactory, executor: Exper
     }
 }
 
-private class ConsoleGraphProgressReporter(out: Reporter, width: Int = 80) extends ExperimentProgressReporter {
+private class ConsoleProgressReporter(out: Reporter, width: Int = 80) extends ProgressReporter {
   private[this] val progress = new AtomicInteger
   private[this] var length = 0
 
@@ -131,7 +131,7 @@ private class ConsoleGraphProgressReporter(out: Reporter, width: Int = 80) exten
     out.writeln(s"  Run ${run.shortId}: <info>${run.name}</info>")
   }
 
-  override def onGraphComplete(run: Run, successful: Boolean): Unit = synchronized {
+  override def onGraphComplete(run: Run): Unit = synchronized {
     out.write(s"    ${" " * length}\r")
     length = 0
     progress.set(0)
@@ -149,5 +149,5 @@ private class ConsoleGraphProgressReporter(out: Reporter, width: Int = 80) exten
     length = str.length
   }
 
-  override def onNodeComplete(run: Run, node: Node, successful: Boolean): Unit = {}
+  override def onNodeComplete(run: Run, node: Node): Unit = {}
 }

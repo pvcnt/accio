@@ -26,6 +26,6 @@ import net.codingwell.scalaguice.ScalaModule
  */
 object LocalRuntimeModule extends AbstractModule with ScalaModule {
   override def configure(): Unit = {
-    bind[ExperimentExecutor].to[LocalExperimentExecutor]
+    //bind[ExperimentExecutor].to[LocalExperimentExecutor]
   }
 }

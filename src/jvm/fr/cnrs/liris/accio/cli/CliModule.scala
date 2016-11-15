@@ -19,9 +19,6 @@
 package fr.cnrs.liris.accio.cli
 
 import com.google.inject.{AbstractModule, Provides, Singleton, TypeLiteral}
-import fr.cnrs.liris.accio.core.api.Operator
-import fr.cnrs.liris.accio.core.framework._
-import fr.cnrs.liris.accio.core.runtime.{ExperimentExecutor, LocalExperimentExecutor}
 import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
 
