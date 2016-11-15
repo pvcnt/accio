@@ -163,7 +163,12 @@ class Wait4MeOp @Inject()(env: SparkleEnv) extends Operator[Wait4MeIn, Wait4MeOu
   private def copyBinary(tmpDir: Path, chunk: Boolean) = {
     val jarBinary = s"fr/cnrs/liris/privamov/ops/${getPlatform}_w4m_LST${if (chunk) "_chunk" else ""}"
     val localBinary = tmpDir.resolve("program")
-    Resources.copy(Resources.getResource(jarBinary), new FileOutputStream(localBinary.toFile))
+    val fos = new FileOutputStream(localBinary.toFile)
+    try {
+      Resources.copy(Resources.getResource(jarBinary), fos)
+    } finally {
+      fos.close()
+    }
     localBinary.toFile.setExecutable(true)
     localBinary
   }
