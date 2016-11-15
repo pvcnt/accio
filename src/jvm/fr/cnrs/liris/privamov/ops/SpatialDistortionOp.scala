@@ -74,9 +74,13 @@ class SpatialDistortionOp @Inject()(env: SparkleEnv) extends Operator[SpatialDis
 
   private def evaluateWithInterpolation(reference: Seq[Point], result: Trace) = {
     result.events.map { event =>
-      val (a, b) = nearestLine(event.point, reference)
-      val projected = if (a == b) a else projectToLine(event.point, a, b)
-      event.point.distance(projected)
+      if (reference.size == 1) {
+        event.point.distance(reference.head)
+      } else {
+        val (a, b) = nearestLine(event.point, reference)
+        val projected = if (a == b) a else projectToLine(event.point, a, b)
+        event.point.distance(projected)
+      }
     }
   }
 
