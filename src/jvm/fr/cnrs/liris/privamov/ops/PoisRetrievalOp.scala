@@ -36,7 +36,7 @@ import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.common.geo.Distance
 import fr.cnrs.liris.common.util.Requirements._
-import fr.cnrs.liris.privamov.core.clustering.DTClusterer
+import fr.cnrs.liris.privamov.core.clustering.{Cluster, DTClusterer}
 import fr.cnrs.liris.privamov.core.model.Trace
 import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 
@@ -60,12 +60,15 @@ class PoisRetrievalOp @Inject()(env: SparkleEnv) extends Operator[PoisRetrievalI
     requireState(ref.id == res.id, s"Trace mismatch: ${ref.id} / ${res.id}")
     val refPois = clusterer.cluster(ref.events)
     val resPois = clusterer.cluster(res.events)
-    val matched = resPois.flatMap { resPoi =>
-      refPois.zipWithIndex.find { case (refPoi, _) =>
-        refPoi.centroid.distance(resPoi.centroid) <= threshold
-      }.map(_._2).toSeq
-    }.toSet.size
+    val matched = resPois.flatMap(resPoi => remap(resPoi, refPois, threshold)).distinct.size
     ref.id -> (MetricUtils.precision(resPois.size, matched), MetricUtils.recall(refPois.size, matched), MetricUtils.fscore(refPois.size, resPois.size, matched))
+  }
+
+  private def remap(resPoi: Cluster, refPois: Seq[Cluster], threshold: Distance) = {
+    val matchingPois = refPois.zipWithIndex
+      .map { case (refPoi, idx) => (idx, refPoi.centroid.distance(resPoi.centroid)) }
+      .filter { case (_, d) => d <= threshold }
+    if (matchingPois.nonEmpty) Some(matchingPois.minBy(_._2)._1) else None
   }
 }
 
