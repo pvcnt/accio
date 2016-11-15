@@ -4,7 +4,8 @@ nav: privacy
 title: Data model
 ---
 
-Accio supports a simple data model for studying location privacy.
+We propose a simple data model for studying location privacy.
+We use some of the vocabulary introduced in the paper [Quantifying Loction Privacy](https://infoscience.epfl.ch/record/164572/) (Shokri, Reza, Theodorakopoulos, Georgios, Le Boudec, Jean-Yves and Hubaux, Jean-Pierre; published in Proceedings of the 2011 Symposium on Security and Privacy).
 
 ## Events
 An event is the smallest piece of information in our model.
