@@ -280,6 +280,8 @@ Enforce speed smoothing guarantees on traces.
 
 Time-tolerant k-anonymization
 
+Wrapper around the implementation of the Wait4Me algorithm provided by their authors.
+
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
 | `data` | dataset; required | Input dataset |
@@ -397,6 +399,25 @@ Apply gaussian kernel smoothing on a trace, attenuating the impact of noisy obse
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
 | `omega` | duration; required | Bandwidth |
+| `data` | dataset; required | Input dataset |
+{: class="table table-striped"}
+
+| Output name | Type | Description |
+|:------------|:-----|:------------|
+| `data` | dataset | Output dataset |
+{: class="table table-striped"}
+
+### ModuloSampling
+
+:hammer: Implemented in `fr.cnrs.liris.privamov.ops.ModuloSamplingOp`
+
+Regularly sample events inside traces using the modulo operator.
+
+It will ensure that the final number of events is exactly (+/- 1) the one required, and that events are regularly sampled (i.e., one out of x).
+
+| Input name | Type | Description |
+|:-----------|:-----|:------------|
+| `n` | integer; required | Number of events to keep |
 | `data` | dataset; required | Input dataset |
 {: class="table table-striped"}
 

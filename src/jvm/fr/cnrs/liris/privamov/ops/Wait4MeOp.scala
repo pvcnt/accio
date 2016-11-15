@@ -44,6 +44,7 @@ import scala.collection.mutable
  */
 @Op(
   help = "Time-tolerant k-anonymization",
+  description = "Wrapper around the implementation of the Wait4Me algorithm provided by their authors.",
   category = "lppm")
 class Wait4MeOp @Inject()(env: SparkleEnv) extends Operator[Wait4MeIn, Wait4MeOut] with SparkleOperator {
 
@@ -81,9 +82,17 @@ class Wait4MeOp @Inject()(env: SparkleEnv) extends Operator[Wait4MeIn, Wait4MeOu
 
       // We convert our dataset to the format required by W4M.
       val w4mInputUri = tmpDir.resolve("data.txt").toAbsolutePath.toString
-      input.write(new W4MSink(w4mInputUri, input.keys.zipWithIndex.toMap))
+      input.map(trace => limit(trace)).write(new W4MSink(w4mInputUri, input.keys.zipWithIndex.toMap))
 
-      val process = new ProcessBuilder(localBinary.toAbsolutePath.toString, w4mInputUri, "out", in.k.toString, in.delta.meters.toString, radiusMax.meters.toString, trashMax.toString, "10")
+      val process = new ProcessBuilder(
+        localBinary.toAbsolutePath.toString,
+        w4mInputUri,
+        "out", /* output files prefix */
+        in.k.toString,
+        in.delta.meters.toString,
+        radiusMax.meters.toString,
+        trashMax.toString,
+        "10" /* "if no idea enter 10" as suggested by paper's authors */)
         .directory(tmpDir.toFile)
         .redirectErrorStream(true)
         .redirectOutput(ProcessBuilder.Redirect.to(tmpDir.resolve("stdout").toFile))
@@ -97,7 +106,7 @@ class Wait4MeOp @Inject()(env: SparkleEnv) extends Operator[Wait4MeIn, Wait4MeOu
 
       // We convert back the result into a conventional dataset format.
       val w4mOutputPath = tmpDir.resolve(f"out_${in.k}_${"%.3f".formatLocal(Locale.ENGLISH, in.delta.meters)}.txt").toAbsolutePath
-      val output = writeOutput(input.keys , w4mOutputPath, ctx.workDir)
+      val output = writeOutput(input.keys, w4mOutputPath, ctx.workDir)
 
       // We extract metrics from the captured stdout. This is quite ugly, but this works.
       // After header and progress information, result looks like:
@@ -140,6 +149,17 @@ class Wait4MeOp @Inject()(env: SparkleEnv) extends Operator[Wait4MeIn, Wait4MeOu
     }
   }
 
+  private def limit(trace: Trace) = {
+    // Because of the binary code we use (provided by the authors), each trace is limited to 10000 events. We enforce
+    // here this limit by sampling larger traces using the modulo operator.
+    if (trace.size > Wait4MeOp.MaxTraceSize) {
+      val modulo = trace.size.toDouble / Wait4MeOp.MaxTraceSize
+      trace.replace(_.zipWithIndex.filter { case (_, idx) => (idx % modulo) < 1 }.map(_._1).take(Wait4MeOp.MaxTraceSize))
+    } else {
+      trace
+    }
+  }
+
   private def copyBinary(tmpDir: Path, chunk: Boolean) = {
     val jarBinary = s"fr/cnrs/liris/privamov/ops/${getPlatform}_w4m_LST${if (chunk) "_chunk" else ""}"
     val localBinary = tmpDir.resolve("program")
@@ -171,6 +191,10 @@ class Wait4MeOp @Inject()(env: SparkleEnv) extends Operator[Wait4MeIn, Wait4MeOu
     }
     Dataset(outputUri, format = "csv")
   }
+}
+
+object Wait4MeOp {
+  private val MaxTraceSize = 10000
 }
 
 case class Wait4MeIn(

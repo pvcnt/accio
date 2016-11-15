@@ -49,6 +49,8 @@ class EventSourceOp @Inject()(env: SparkleEnv) extends Operator[EventSourceIn, E
     EventSourceOut(output)
   }
 
+  override def isUnstable(in: EventSourceIn): Boolean = in.sample.isDefined
+
   private def willWrite(in: EventSourceIn) = in.kind != "csv" || in.sample.nonEmpty || in.users.nonEmpty
 }
 

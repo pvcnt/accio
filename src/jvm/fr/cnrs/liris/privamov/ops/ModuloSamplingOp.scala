@@ -20,38 +20,38 @@ package fr.cnrs.liris.privamov.ops
 
 import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.api._
-import fr.cnrs.liris.common.random.RandomUtils
 import fr.cnrs.liris.privamov.core.model.Trace
 import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 
-import scala.util.Random
-
 @Op(
   category = "prepare",
-  help = "Uniformly sample events inside traces.",
-  description = "Perform a uniform sampling on traces, keeping each event with a given probability.")
-class UniformSamplingOp @Inject()(env: SparkleEnv) extends Operator[UniformSamplingIn, UniformSamplingOut] with SparkleOperator {
+  help = "Regularly sample events inside traces using the modulo operator.",
+  description = "It will ensure that the final number of events is exactly (+/- 1) the one required, and that events are regularly sampled (i.e., one out of x).")
+class ModuloSamplingOp @Inject()(env: SparkleEnv) extends Operator[ModuloSamplingIn, ModuloSamplingOut] with SparkleOperator {
 
-  override def execute(in: UniformSamplingIn, ctx: OpContext): UniformSamplingOut = {
+  override def execute(in: ModuloSamplingIn, ctx: OpContext): ModuloSamplingOut = {
     val input = read(in.data, env)
-    val rnd = new Random(ctx.seed)
-    val seeds = input.keys.map(key => key -> rnd.nextLong()).toMap
-    val output = input.map(trace => transform(trace, in.probability, seeds(trace.id)))
-    UniformSamplingOut(write(output, ctx.workDir))
+    val output = input.map(trace => transform(trace, in.n))
+    ModuloSamplingOut(write(output, ctx.workDir))
   }
 
-  override def isUnstable(in: UniformSamplingIn): Boolean = true
-
-  private def transform(trace: Trace, probability: Double, seed: Long): Trace = {
-    trace.replace(RandomUtils.sampleUniform(trace.events, probability, seed))
+  private def transform(trace: Trace, n: Int) = {
+    if (trace.size <= n) {
+      trace
+    } else {
+      val modulo = trace.size.toDouble / n
+      // We add an additional take(n) just in case some floating point operation gave an inadequate result, but it is
+      // theoretically unnecessary.
+      trace.replace(_.zipWithIndex.filter { case (_, idx) => (idx % modulo) < 1 }.map(_._1).take(n))
+    }
   }
 }
 
-case class UniformSamplingIn(
-  @Arg(help = "Probability to keep each event") probability: Double,
+case class ModuloSamplingIn(
+  @Arg(help = "Number of events to keep") n: Int,
   @Arg(help = "Input dataset") data: Dataset) {
-  require(probability >= 0 && probability <= 1, s"Probability must be in [0, 1] (got $probability)")
+  require(n >= 0, s"n must be >0 = (got $n)")
 }
 
-case class UniformSamplingOut(
+case class ModuloSamplingOut(
   @Arg(help = "Output dataset") data: Dataset)

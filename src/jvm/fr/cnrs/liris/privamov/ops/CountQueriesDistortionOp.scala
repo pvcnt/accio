@@ -46,6 +46,8 @@ class CountQueriesDistortionOp @Inject()(env: SparkleEnv) extends Operator[Count
     CountQueriesDistortionOut(values)
   }
 
+  override def isUnstable(in: CountQueriesDistortionIn): Boolean = true
+
   private def compute(refCount: Long, resCount: Long): Double = {
     if (0 == refCount) resCount
     else Math.abs(refCount - resCount).toDouble / refCount
