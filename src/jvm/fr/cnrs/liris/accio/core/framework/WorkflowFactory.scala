@@ -66,9 +66,9 @@ final class WorkflowFactory @Inject()(parser: WorkflowParser, graphFactory: Grap
 
     val params = getParams(uri, graph)
     val owner = defn.owner.getOrElse(user)
-    val name = defn.name.getOrElse(getDefaultName(uri))
+    val id = defn.id.getOrElse(getDefaultId(uri))
 
-    Workflow(name = name, graph = graph, owner = owner, params = params)
+    Workflow(id = id, name = defn.name, graph = graph, owner = owner, params = params)
   }
 
   /**
@@ -111,10 +111,10 @@ final class WorkflowFactory @Inject()(parser: WorkflowParser, graphFactory: Grap
   }
 
   /**
-   * Return the default name for a workflow, which is inferred from the filename portion in its uri.
+   * Return the default identifier for a workflow, which is inferred from the filename portion in its uri.
    *
    * @param uri URI to a workflow definition.
    */
-  private def getDefaultName(uri: String) =
+  private def getDefaultId(uri: String) =
     FileUtils.removeExtension(Paths.get(FileUtils.replaceHome(uri)).getFileName.toString)
 }

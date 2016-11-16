@@ -23,12 +23,13 @@ import com.fasterxml.jackson.annotation.JsonProperty
 /**
  * A workflow is a named graph of operators.
  *
+ * @param id     Workflow unique identifier.
  * @param graph  Graph of operators.
  * @param owner  User owning this workflow.
  * @param name   Human-readable name.
  * @param params Workflow parameters.
  */
-case class Workflow(graph: Graph, owner: User, name: String, params: Set[Param])
+case class Workflow(id: String, graph: Graph, owner: User, name: Option[String], params: Set[Param])
 
 /**
  * A parameter is a workflow-level input. A parameter can be used in multiple ports, as long as they are of the same
@@ -60,7 +61,8 @@ object Param {
  * Definition of workflow.
  *
  * @param graph Definition of the graph of operators.
+ * @param id    Workflow unique identifier.
  * @param owner User owning this workflow.
  * @param name  Human-readable name.
  */
-case class WorkflowDef(graph: GraphDef, owner: Option[User] = None, name: Option[String] = None)
+case class WorkflowDef(graph: GraphDef, id: Option[String] = None, owner: Option[User] = None, name: Option[String] = None)
