@@ -141,7 +141,7 @@ case class RangeExploration(from: Any, to: Any, step: Any, log: Boolean = false,
 case class GlobExploration(glob: String) extends Exploration {
   override def expand(kind: DataType): Set[Any] = {
     val pos = glob.lastIndexOf('/')
-    val path = Paths.get(FileUtils.replaceHome(glob.substring(0, pos)))
+    val path =  FileUtils.expandPath(glob.substring(0, pos))
     val pathMatcher = FileSystems.getDefault.getPathMatcher(glob.substring(pos + 1))
     val matchingPaths = path.toFile.list.map(path.resolve).filter(pathMatcher.matches)
     matchingPaths.map(_.toAbsolutePath.toString).toSet

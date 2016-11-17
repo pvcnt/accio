@@ -56,42 +56,46 @@ case class ExportOptions(
 class ExportCommand @Inject()(repository: ReportRepository) extends Command {
 
   override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
-    val elapsed = Stopwatch.start()
-    val runs = flags.residue.flatMap { path =>
-      val workDir = Paths.get(path)
-      require(workDir.toFile.exists, s"Directory ${workDir.toAbsolutePath} does not exist")
-      workDir.toFile.list
-        .filter(_.startsWith("run-"))
-        .map(_.drop(4).dropRight(5))
-        .flatMap(id => repository.readRun(workDir, id))
-    }
-    val opts = flags.as[ExportOptions]
-    val aggRuns = new AggregatedRuns(runs).filter(StringUtils.explode(opts.runs, ","))
-    val aggArtifacts = aggRuns.artifacts.filter(StringUtils.explode(opts.artifacts))
-
-    val workDir = getWorkDir(opts)
-
-    if (opts.split) {
-      aggArtifacts.split.foreach { list =>
-        val label = list.params.map { case (k, v) => s"$k=$v" }.mkString(",")
-        write(list, workDir.resolve(label), opts)
-      }
+    if (flags.residue.isEmpty) {
+      out.writeln("<error>Specify one or multiple directories as argument.</error>")
+      ExitCode.CommandLineError
     } else {
-      write(aggArtifacts, workDir, opts)
-    }
+      val opts = flags.as[ExportOptions]
+      val elapsed = Stopwatch.start()
 
-    out.writeln(s"Export available in <comment>${workDir.toAbsolutePath}</comment>")
-    out.writeln(s"Done in ${TimeUtils.prettyTime(elapsed())}.")
-    ExitCode.Success
+      val workDir = getWorkDir(opts)
+      out.writeln(s"Writing export to <comment>${workDir.toAbsolutePath}</comment>")
+
+      val artifacts = getArtifacts(flags.residue, opts)
+      if (opts.split) {
+        artifacts.split.foreach { list =>
+          val label = list.params.map { case (k, v) => s"$k=$v" }.mkString(",")
+          write(list, workDir.resolve(label), opts)
+        }
+      } else {
+        write(artifacts, workDir, opts)
+      }
+
+      out.writeln(s"Done in ${TimeUtils.prettyTime(elapsed())}.")
+      ExitCode.Success
+    }
   }
 
-  private def getWorkDir(opts: ExportOptions): Path =
-    opts.workDir match {
-      case Some(dir) => Paths.get(FileUtils.replaceHome(dir))
-      case None =>
-        val uid = HashUtils.sha1(UUID.randomUUID().toString).substring(0, 8)
-        Paths.get(s"accio-export-$uid")
+  private def getWorkDir(opts: ExportOptions): Path = opts.workDir match {
+    case Some(dir) => FileUtils.expandPath(dir)
+    case None =>
+      val uid = HashUtils.sha1(UUID.randomUUID().toString).substring(0, 8)
+      Paths.get(s"accio-export-$uid")
+  }
+
+  private def getArtifacts(residue: Seq[String], opts: ExportOptions): ArtifactList = {
+    val runs = residue.flatMap { uri =>
+      val path = FileUtils.expandPath(uri)
+      repository.listRuns(path).flatMap(repository.readRun(path, _))
     }
+    val aggRuns = new AggregatedRuns(runs).filter(StringUtils.explode(opts.runs, ","))
+    aggRuns.artifacts.filter(StringUtils.explode(opts.artifacts))
+  }
 
   private def write(list: ArtifactList, workDir: Path, opts: ExportOptions): Unit = {
     Files.createDirectories(workDir)

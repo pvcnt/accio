@@ -91,7 +91,7 @@ final class ExperimentFactory @Inject()(parser: ExperimentParser, workflowFactor
 
     // Parse and create the workflow from the uri specified in the workflow definition.
     val workflowUri = if (defn.workflow.startsWith("./")) {
-      val path = Paths.get(FileUtils.replaceHome(uri))
+      val path = FileUtils.expandPath(uri)
       path.resolveSibling(defn.workflow.substring(2)).toString
     } else {
       defn.workflow
@@ -177,8 +177,7 @@ final class ExperimentFactory @Inject()(parser: ExperimentParser, workflowFactor
    *
    * @param uri URI to an experiment or workflow definition.
    */
-  private def getDefaultName(uri: String) =
-    FileUtils.removeExtension(Paths.get(FileUtils.replaceHome(uri)).getFileName.toString)
+  private def getDefaultName(uri: String) = FileUtils.removeExtension(FileUtils.expandPath(uri).getFileName.toString)
 
   /**
    * Parse and validate parameters for a given workflow.

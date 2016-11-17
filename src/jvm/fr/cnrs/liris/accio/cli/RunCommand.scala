@@ -57,14 +57,15 @@ class RunCommand @Inject()(experimentFactory: ExperimentFactory, executor: Exper
   extends Command with StrictLogging {
 
   def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
-    val opts = flags.as[RunOptions]
     if (flags.residue.isEmpty) {
-      out.writeln("<error>Specify one or multiple files to run as arguments</error>")
+      out.writeln("<error>Specify one or multiple files to run as argument.</error>")
       ExitCode.CommandLineError
     } else {
+      val opts = flags.as[RunOptions]
       val elapsed = Stopwatch.start()
+
       val workDir = getWorkDir(opts)
-      out.writeln(s"Writing progress in <comment>${workDir.toAbsolutePath}</comment>")
+      out.writeln(s"Writing progress to <comment>${workDir.toAbsolutePath}</comment>")
 
       val reporter = new ConsoleProgressReporter(out)
       flags.residue.foreach { url =>
@@ -111,7 +112,7 @@ class RunCommand @Inject()(experimentFactory: ExperimentFactory, executor: Exper
   private def getWorkDir(opts: RunOptions) =
     opts.workDir match {
       case Some(uri) =>
-        val path = Paths.get(FileUtils.replaceHome(uri))
+        val path = FileUtils.expandPath(uri)
         if (path.toFile.exists) {
           require(path.toFile.isDirectory, s"${path.toAbsolutePath} is not a directory")
           require(path.toFile.canWrite, s"Cannot write to ${path.toAbsolutePath}")

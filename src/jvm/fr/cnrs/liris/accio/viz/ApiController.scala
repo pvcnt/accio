@@ -36,7 +36,7 @@ class ApiController @Inject()(repository: ReportRepository) extends Controller {
   private[this] val workDir = Paths.get(sys.props("user.home")).resolve("data/experiments")
 
   get("/api/experiment") { req: ListExperimentsRequest =>
-    repository.list(workDir)
+    repository.listExperiments(workDir)
   }
 
   get("/api/experiment/:id") { req: GetExperimentRequest =>

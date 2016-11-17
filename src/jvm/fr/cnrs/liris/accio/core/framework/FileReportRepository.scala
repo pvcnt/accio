@@ -26,7 +26,8 @@ import com.twitter.finatra.json.FinatraObjectMapper
 
 @Singleton
 class FileReportRepository @Inject()(mapper: FinatraObjectMapper) extends ReportRepository {
-  override def list(workDir: Path): Seq[String] =
+  override def listExperiments(workDir: Path): Seq[String] = {
+    require(workDir.toFile.exists, s"Directory ${workDir.toAbsolutePath} does not exist")
     workDir.toFile
       .listFiles
       .toSeq
@@ -34,6 +35,18 @@ class FileReportRepository @Inject()(mapper: FinatraObjectMapper) extends Report
       .sortBy(_.lastModified)
       .map(_.getName.stripPrefix("experiment-").stripSuffix(".json"))
       .reverse
+  }
+
+  override def listRuns(workDir: Path): Seq[String] = {
+    require(workDir.toFile.exists, s"Directory ${workDir.toAbsolutePath} does not exist")
+    workDir.toFile
+      .listFiles
+      .toSeq
+      .filter(f => f.getName.startsWith("run-") && f.getName.endsWith(".json"))
+      .sortBy(_.lastModified)
+      .map(_.getName.stripPrefix("run-").stripSuffix(".json"))
+      .reverse
+  }
 
   override def readExperiment(workDir: Path, id: String): Option[Experiment] = {
     read[Experiment](workDir.resolve(s"experiment-$id.json"))

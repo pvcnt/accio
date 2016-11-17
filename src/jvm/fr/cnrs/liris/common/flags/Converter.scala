@@ -102,7 +102,7 @@ class DoubleConverter extends Converter[Double] {
 }
 
 class PathConverter extends Converter[Path] {
-  override def convert(str: String): Path = Paths.get(FileUtils.replaceHome(str))
+  override def convert(str: String): Path = FileUtils.expandPath(str)
 
   override def typeDescription: String = "a path"
 }

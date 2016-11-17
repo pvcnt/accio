@@ -18,8 +18,6 @@
 
 package fr.cnrs.liris.accio.core.framework
 
-import java.nio.file.Paths
-
 import com.google.inject.Inject
 import fr.cnrs.liris.common.util.{FileUtils, Seqs}
 
@@ -115,6 +113,5 @@ final class WorkflowFactory @Inject()(parser: WorkflowParser, graphFactory: Grap
    *
    * @param uri URI to a workflow definition.
    */
-  private def getDefaultId(uri: String) =
-    FileUtils.removeExtension(Paths.get(FileUtils.replaceHome(uri)).getFileName.toString)
+  private def getDefaultId(uri: String) = FileUtils.removeExtension(FileUtils.expandPath(uri).getFileName.toString)
 }
