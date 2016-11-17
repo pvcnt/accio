@@ -16,24 +16,23 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.cli
+package fr.cnrs.liris.accio.core.reporting
 
 import java.io.PrintStream
 import java.util.concurrent.atomic.AtomicInteger
 
 import fr.cnrs.liris.common.util.HtmlPrinter._
 import fr.cnrs.liris.accio.core.framework._
-import fr.cnrs.liris.common.stats.{AggregatedStats, Distribution}
 import fr.cnrs.liris.common.util.MathUtils.roundAt4
 
 /**
- * Report about serialized events in a human-readable HTML format.
+ * Report about artifacts in a human-readable HTML format.
  */
-/*class HtmlReportCreator(showArtifacts: Set[String] = Set.empty) {
+/*class HtmlReportCreator {
   private[this] val idGenerator = new AtomicInteger(0)
   private[this] val cdfNbSteps = 100
 
-  def print(reportStats: ReportStatistics, out: PrintStream): Unit = {
+  def print(artifacts: ArtifactList, out: PrintStream): Unit = {
     out.tag("html") {
       out.tag("head") {
         out.element("meta", "charset", "utf-8")
@@ -45,7 +44,7 @@ import fr.cnrs.liris.common.util.MathUtils.roundAt4
       out.tag("body") {
         out.tag("div", "class", "container") {
           printNav(out)
-          printContent(out, reportStats)
+          printContent(out, artifacts)
         }
       }
     }
@@ -53,38 +52,31 @@ import fr.cnrs.liris.common.util.MathUtils.roundAt4
 
   private def printNav(out: PrintStream) = {
     out.tag("ul", "class", "nav nav-tabs") {
-      if (showArtifacts.nonEmpty) {
-        out.tag("li", "class", "active") {
-          out.element("a", "href", "#tab-evals", "data-toggle", "tab", "Artifacts")
-        }
+      out.tag("li", "class", "active") {
+        out.element("a", "href", "#tab-evals", "data-toggle", "tab", "Artifacts")
       }
     }
   }
 
-  private def printContent(out: PrintStream, reportStats: ReportStatistics) = {
+  private def printContent(out: PrintStream, artifacts: ArtifactList) = {
     out.tag("div", "class", "tab-content") {
-      if (showArtifacts.nonEmpty) {
-        out.tag("div", "class", "tab-pane active", "id", "tab-evals") {
-          reportStats
-            .artifacts
-            .filter { case (name, _) => showArtifacts.contains(name) }
-            .foreach { case (name, artifacts) => printArtifacts(out, name, artifacts) }
-        }
+      out.tag("div", "class", "tab-pane active", "id", "tab-evals") {
+        artifacts.groups.foreach(printArtifacts(out, _))
       }
     }
   }
 
-  private def printArtifacts(out: PrintStream, name: String, artifacts: Map[String, Artifact]) = {
-    if (artifacts.nonEmpty) {
-      artifacts.head._2.kind match {
+  private def printArtifacts(out: PrintStream, group: ArtifactGroup) = {
+    if (group.nonEmpty) {
+      group.kind match {
         case DataType.List(DataType.Double) =>
-          printDistributionArtifacts(out, name, normalizeArtifacts[Seq[Double]](artifacts))
+          printDistributionArtifacts(out, group.name, normalizeArtifacts[Seq[Double]](group.values))
         case DataType.Map(_, DataType.Double) =>
-          printDistributionArtifacts(out, name, normalizeArtifacts[Map[Any, Double]](artifacts).mapValues(_.values.toSeq))
+          printDistributionArtifacts(out, group.name, normalizeArtifacts[Map[Any, Double]](artifacts).mapValues(_.values.toSeq))
         case DataType.List(DataType.Long) =>
-          printDistributionArtifacts(out, name, normalizeArtifacts[Seq[Long]](artifacts).mapValues(_.map(_.toDouble)))
+          printDistributionArtifacts(out, group.name, normalizeArtifacts[Seq[Long]](artifacts).mapValues(_.map(_.toDouble)))
         case DataType.Map(_, DataType.Long) =>
-          printDistributionArtifacts(out, name, normalizeArtifacts[Map[Any, Long]](artifacts).mapValues(_.values.map(_.toDouble).toSeq))
+          printDistributionArtifacts(out, group.name, normalizeArtifacts[Map[Any, Long]](artifacts).mapValues(_.values.map(_.toDouble).toSeq))
         case _ => // Nothing to display.
       }
     }

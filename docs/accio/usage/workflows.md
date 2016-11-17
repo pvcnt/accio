@@ -72,7 +72,7 @@ This workflow is formed of four nodes, connected together.
 `EventSource` is the only root node (it has no dependency to another node), while `Privacy` and `Utility` are leaf nodes (no other node depend on them).
 The workflow `id` is a unique identifier that should uniquely identify it.
 If none is specified, it will by default be the file name, without its extension (e.g., workflow defined in `/path/to/my_workflow.json` will have `my_workflow` as its default identifier).
-The workflow `name` has no constraint
+The workflow `name` has no constraint, it is only used for information purposes.
 
 ## Specifying nodes
 
