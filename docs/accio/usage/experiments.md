@@ -125,3 +125,9 @@ For the timestamp data type, the first and last values are specified as timestam
 For all other data types, the first, last and step values are all specified in the nomminal data type.
 
 You can also specify logarithmic progressions by setting one of the `log`, `log2` or `log10` keys (mutually exclusive) to `true`, to obtain a logarithmic progression respectively in base e, 2 or 10.
+
+## Validating experiments
+
+Experiment files can be validated thanks to the `accio validate` command, which takes one or several files as arguments.
+This command will not execute files, but only check there are correct and could be executed without any problem.
+In case of an error, it will do its best to provide meaningful information to help you fix errors.

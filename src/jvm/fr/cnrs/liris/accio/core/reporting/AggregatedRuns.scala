@@ -43,7 +43,7 @@ class AggregatedRuns(val runs: Seq[Run]) {
     if (ids.isEmpty) {
       this
     } else {
-      val newRuns = runs.filter(run => ids.contains(run.id) || ids.contains(run.parent))
+      val newRuns = runs.filter(run => ids.exists(run.id.startsWith) || ids.exists(run.parent.startsWith))
       new AggregatedRuns(newRuns)
     }
   }

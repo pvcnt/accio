@@ -21,18 +21,39 @@ package fr.cnrs.liris.accio.core.reporting
 import java.nio.file.{Files, Path, Paths, StandardOpenOption}
 
 import fr.cnrs.liris.accio.core.framework.{DataType, Values}
+
 import scala.collection.JavaConverters._
 
+/**
+ * Options when creating CSV reports.
+ *
+ * @param separator Seperator to use in CSV files.
+ * @param split     Whether to split the reports per combination of workflow parameters.
+ * @param aggregate Whether to aggregate artifact values across multiple runs into a single value.
+ * @param append    Whether to allow appending data to existing files if they already exists
+ */
 case class CsvReportOptions(separator: String, split: Boolean, aggregate: Boolean, append: Boolean)
 
+/**
+ * Create CSV reports from results of previous runs.
+ */
 class CsvReportCreator {
+  /**
+   * Write the values of artifacts in CSV format inside the given directory.
+   *
+   * @param artifacts Artifacts to create a report for.
+   * @param workDir   Directory where to write CSV reports (doesn't have to exist).
+   * @param opts      Report options.
+   */
   def write(artifacts: ArtifactList, workDir: Path, opts: CsvReportOptions): Unit = {
     if (opts.split) {
+      // When splitting, one sub-directory is created per combination of workflow parameters.
       artifacts.split.foreach { list =>
         val label = list.params.map { case (k, v) => s"$k=$v" }.mkString(",")
         doWrite(list, workDir.resolve(label), opts)
       }
     } else {
+      // When not splitting, we write report directory inside the working directory.
       doWrite(artifacts, workDir, opts)
     }
   }

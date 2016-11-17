@@ -182,3 +182,9 @@ It means when using a parameter, you have three possible sources for the actual 
 
 Please note that despite the fact parameters are global, the parameter default value is specified on a per-port basis.
 It means that until the parameter value is explicitly specified when launching the workflow, ports depending on the same parameter may have different values (depending on the parameter or operator default values).
+
+## Validating workflows
+
+Workflows files can be validated thanks to the `accio validate` command, which takes one or several files as arguments.
+This command will not execute files, but only check there are correct and could be executed without any problem.
+In case of an error, it will do its best to provide meaningful information to help you fix errors.

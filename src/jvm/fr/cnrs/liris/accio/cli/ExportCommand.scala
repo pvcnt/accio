@@ -33,16 +33,15 @@ case class ExportOptions(
   workDir: Option[String],
   @Flag(name = "separator", help = "Separator to use in generated files")
   separator: String = " ",
-  @Flag(name = "artifacts", help = "Comma-separated list of artifacts to take into account, or ALL for " +
-    "all of them, or NUMERIC for only those of a numeric type")
+  @Flag(name = "artifacts", help = "Comma-separated list of artifacts to take into account, or NUMERIC for only those of a numeric type")
   artifacts: String = "NUMERIC",
   @Flag(name = "runs", help = "Comma-separated list of runs to take into account")
   runs: Option[String],
   @Flag(name = "split", help = "Whether to split the export by workflow parameters")
   split: Boolean = false,
-  @Flag(name = "aggregate", help = "Whether to aggregate artifact values across multiple runs")
+  @Flag(name = "aggregate", help = "Whether to aggregate artifact values across multiple runs into a single value")
   aggregate: Boolean = false,
-  @Flag(name = "append", help = "Whether to aggregate exported data to existing file if it already exists")
+  @Flag(name = "append", help = "Whether to allow appending data to existing files if they already exists")
   append: Boolean = false)
 
 @Cmd(
