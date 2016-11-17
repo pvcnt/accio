@@ -68,9 +68,7 @@ class RunCommand @Inject()(experimentFactory: ExperimentFactory, executor: Exper
       out.writeln(s"Writing progress to <comment>${workDir.toAbsolutePath}</comment>")
 
       val reporter = new ConsoleProgressReporter(out)
-      flags.residue.foreach { url =>
-        make(opts, workDir, url, reporter, out)
-      }
+      flags.residue.foreach(url => make(opts, workDir, url, reporter, out))
 
       out.writeln(s"Done in ${TimeUtils.prettyTime(elapsed())}.")
       ExitCode.Success

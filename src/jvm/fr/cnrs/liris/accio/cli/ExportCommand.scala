@@ -18,17 +18,15 @@
 
 package fr.cnrs.liris.accio.cli
 
-import java.nio.file.{Files, Path, Paths, StandardOpenOption}
+import java.nio.file.{Path, Paths}
 import java.util.UUID
 
 import com.google.inject.Inject
 import com.twitter.util.Stopwatch
 import fr.cnrs.liris.accio.core.framework._
-import fr.cnrs.liris.accio.core.reporting.{AggregatedRuns, ArtifactList}
+import fr.cnrs.liris.accio.core.reporting.{AggregatedRuns, ArtifactList, CsvReportCreator, CsvReportOptions}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.util.{FileUtils, HashUtils, StringUtils, TimeUtils}
-
-import scala.collection.JavaConverters._
 
 case class ExportOptions(
   @Flag(name = "workdir", help = "Working directory where to write the export")
@@ -67,14 +65,9 @@ class ExportCommand @Inject()(repository: ReportRepository) extends Command {
       out.writeln(s"Writing export to <comment>${workDir.toAbsolutePath}</comment>")
 
       val artifacts = getArtifacts(flags.residue, opts)
-      if (opts.split) {
-        artifacts.split.foreach { list =>
-          val label = list.params.map { case (k, v) => s"$k=$v" }.mkString(",")
-          write(list, workDir.resolve(label), opts)
-        }
-      } else {
-        write(artifacts, workDir, opts)
-      }
+      val reportCreator = new CsvReportCreator
+      val reportCreatorOpts = CsvReportOptions(separator = opts.separator, split = opts.split, aggregate = opts.aggregate, append = opts.append)
+      reportCreator.write(artifacts, workDir, reportCreatorOpts)
 
       out.writeln(s"Done in ${TimeUtils.prettyTime(elapsed())}.")
       ExitCode.Success
@@ -95,60 +88,5 @@ class ExportCommand @Inject()(repository: ReportRepository) extends Command {
     }
     val aggRuns = new AggregatedRuns(runs).filter(StringUtils.explode(opts.runs, ","))
     aggRuns.artifacts.filter(StringUtils.explode(opts.artifacts))
-  }
-
-  private def write(list: ArtifactList, workDir: Path, opts: ExportOptions): Unit = {
-    Files.createDirectories(workDir)
-    list.groups.foreach { group =>
-      val artifacts = if (opts.aggregate) Seq(group.aggregated) else group.toSeq
-      val header = asHeader(group.kind)
-      val rows = artifacts.flatMap(artifact => asString(artifact.kind, artifact.value))
-      val lines = (Seq(header) ++ rows).map(_.mkString(opts.separator))
-      if (opts.append) {
-        val file = Paths.get(s"${group.name.replace("/", "-")}.csv")
-        Files.write(file, lines.asJava, StandardOpenOption.CREATE, StandardOpenOption.APPEND)
-      } else {
-        val file = getFileName(workDir, s"${group.name.replace("/", "-")}", ".csv")
-        Files.write(file, lines.asJava)
-      }
-    }
-  }
-
-  private def getFileName(dirPath: Path, prefix: String, suffix: String) = {
-    var idx = 0
-    var filePath = dirPath.resolve(prefix + suffix)
-    while (!dirPath.toFile.exists) {
-      idx += 1
-      filePath = dirPath.resolve(s"$prefix-$idx$suffix")
-    }
-    filePath
-  }
-
-  private def asHeader(kind: DataType): Seq[String] = kind match {
-    case DataType.List(of) => asHeader(of)
-    case DataType.Set(of) => asHeader(of)
-    case DataType.Map(ofKeys, ofValues) => Seq("key_index", "key") ++ asHeader(ofValues)
-    case DataType.Distance => Seq("value_in_meters")
-    case DataType.Duration => Seq("value_in_millis")
-    case _ => Seq("value")
-  }
-
-  private def asString(kind: DataType, value: Any): Seq[Seq[String]] = kind match {
-    case DataType.List(of) => Values.asList(value, of).flatMap(asString(of, _))
-    case DataType.Set(of) => Values.asSet(value, of).toSeq.flatMap(asString(of, _))
-    case DataType.Map(ofKeys, ofValues) =>
-      val map = Values.asMap(value, ofKeys, ofValues)
-      val keysIndex = map.keys.zipWithIndex.toMap
-      map.toSeq.flatMap { case (k, v) =>
-        val kIdx = keysIndex(k.asInstanceOf[Any]).toString
-        asString(ofKeys, k).flatMap { kStrs =>
-          kStrs.flatMap { kStr =>
-            asString(ofValues, v).map(vStrs => Seq(kIdx, kStr) ++ vStrs)
-          }
-        }
-      }
-    case DataType.Distance => Seq(Seq(Values.asDistance(value).meters.toString))
-    case DataType.Duration => Seq(Seq(Values.asDuration(value).getMillis.toString))
-    case _ => Seq(Seq(Values.as(value, kind).toString))
   }
 }
