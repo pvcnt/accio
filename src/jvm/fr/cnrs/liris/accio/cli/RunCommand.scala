@@ -23,11 +23,12 @@ import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 
 import com.google.inject.Inject
+import com.twitter.util.Stopwatch
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.runtime.{ExperimentExecutor, ProgressReporter}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
-import fr.cnrs.liris.common.util.{HashUtils, StringUtils}
+import fr.cnrs.liris.common.util.{FileUtils, HashUtils, StringUtils, TimeUtils}
 
 case class RunOptions(
   @Flag(name = "workdir", help = "Working directory where to write reports and artifacts")
@@ -61,16 +62,16 @@ class RunCommand @Inject()(experimentFactory: ExperimentFactory, executor: Exper
       out.writeln("<error>Specify one or multiple files to run as arguments</error>")
       ExitCode.CommandLineError
     } else {
-      val startedAt = System.currentTimeMillis()
+      val elapsed = Stopwatch.start()
       val workDir = getWorkDir(opts)
       out.writeln(s"Writing progress in <comment>${workDir.toAbsolutePath}</comment>")
-      val progressReporter = new ConsoleProgressReporter(out)
+
+      val reporter = new ConsoleProgressReporter(out)
       flags.residue.foreach { url =>
-        make(opts, workDir, url, progressReporter, out)
+        make(opts, workDir, url, reporter, out)
       }
 
-      val duration = System.currentTimeMillis() - startedAt
-      out.writeln(s"Done in ${duration / 1000}s. Reports in <comment>${workDir.toAbsolutePath}</comment>")
+      out.writeln(s"Done in ${TimeUtils.prettyTime(elapsed())}.")
       ExitCode.Success
     }
   }
@@ -109,10 +110,14 @@ class RunCommand @Inject()(experimentFactory: ExperimentFactory, executor: Exper
 
   private def getWorkDir(opts: RunOptions) =
     opts.workDir match {
-      case Some(dir) =>
-        val path = Paths.get(dir)
-        require(path.toFile.isDirectory, s"Invalid directory ${path.toAbsolutePath}")
-        require(path.toFile.canWrite, s"Cannot write to ${path.toAbsolutePath}")
+      case Some(uri) =>
+        val path = Paths.get(FileUtils.replaceHome(uri))
+        if (path.toFile.exists) {
+          require(path.toFile.isDirectory, s"${path.toAbsolutePath} is not a directory")
+          require(path.toFile.canWrite, s"Cannot write to ${path.toAbsolutePath}")
+        } else {
+          Files.createDirectories(path)
+        }
         path
       case None =>
         val uid = HashUtils.sha1(UUID.randomUUID().toString).substring(0, 8)
