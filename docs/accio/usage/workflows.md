@@ -15,6 +15,7 @@ A workflow is a JSON object formed of the following fields.
 
 | Name | Type | Description |
 |:-----|:-----|:------------|
+| id | string; optional | A machine unique identifier. |
 | name | string; optional | A human-readable name. |
 | owner | string; optional | Person owning the workflow. It can include an email address between chevrons. |
 | graph | object[]; required | Nodes composing the workflow graph. The order in which nodes are defined does not matter. |
@@ -27,6 +28,7 @@ Here is an example of a simple workflow's definition:
 
 ```json
 {
+  "id": "geoind_workflow",
   "name": "Geo-indistinguishability workflow",
   "owner": "John Doe <john.doe@gmail.com>",
   "graph": [
@@ -68,6 +70,9 @@ Here is an example of a simple workflow's definition:
 
 This workflow is formed of four nodes, connected together.
 `EventSource` is the only root node (it has no dependency to another node), while `Privacy` and `Utility` are leaf nodes (no other node depend on them).
+The workflow `id` is a unique identifier that should uniquely identify it.
+If none is specified, it will by default be the file name, without its extension (e.g., workflow defined in `/path/to/my_workflow.json` will have `my_workflow` as its default identifier).
+The workflow `name` has no constraint
 
 ## Specifying nodes
 

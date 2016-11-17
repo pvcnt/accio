@@ -26,6 +26,7 @@ import fr.cnrs.liris.testing.UnitSpec
 class WorkflowFactorySpec extends UnitSpec {
   val workflows = Map(
     "workflow1" -> WorkflowDef(
+      id = Some("my_workflow"),
       graph = GraphDef(Seq(
         NodeDef(
           op = "FirstSimple",
@@ -39,6 +40,7 @@ class WorkflowFactorySpec extends UnitSpec {
       owner = Some(User("him"))),
 
     "workflow2" -> WorkflowDef(
+      id = Some("workflow2"),
       graph = GraphDef(Seq(
         NodeDef(
           op = "FirstSimple",
@@ -50,6 +52,7 @@ class WorkflowFactorySpec extends UnitSpec {
             "data" -> ReferenceInput(Reference("FirstSimple", "data"))))))),
 
     "invalid_param_workflow" -> WorkflowDef(
+      id = Some("invalid_param_workflow"),
       graph = GraphDef(Seq(
         NodeDef(
           op = "FirstSimple",
@@ -62,6 +65,7 @@ class WorkflowFactorySpec extends UnitSpec {
           inputs = Map("foo" -> ValueInput(42)))))),
 
     "heterogeneous_workflow" -> WorkflowDef(
+      id = Some("heterogeneous_workflow"),
       graph = GraphDef(Seq(
         NodeDef(
           op = "FirstSimple",
@@ -92,7 +96,8 @@ class WorkflowFactorySpec extends UnitSpec {
   it should "create a workflow" in {
     val workflow = workflowFactory.create("workflow1", User("me"))
     workflow.graph shouldBe graphFactory.create(workflows("workflow1").graph)
-    workflow.name shouldBe "my workflow"
+    workflow.id shouldBe "my_workflow"
+    workflow.name shouldBe Some("my workflow")
     workflow.owner shouldBe User("him")
     workflow.params should have size 0
   }
@@ -102,9 +107,9 @@ class WorkflowFactorySpec extends UnitSpec {
     workflow.owner shouldBe User("me")
   }
 
-  it should "fill an empty name" in {
+  it should "fill an empty identifier" in {
     val workflow = workflowFactory.create("/path/to/some_workflow.json", User("me"))
-    workflow.name shouldBe "some_workflow"
+    workflow.id shouldBe "some_workflow"
   }
 
   it should "collect parameters" in {
