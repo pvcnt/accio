@@ -4,16 +4,17 @@ scala_library(
     ':annotations',
     'src/jvm/fr/cnrs/liris/accio/core/framework',
     'src/jvm/fr/cnrs/liris/accio/core/runtime',
+    'src/jvm/fr/cnrs/liris/accio/core/reporting',
     'src/jvm/fr/cnrs/liris/privamov/ops',
     'src/jvm/fr/cnrs/liris/common/util',
     'src/jvm/fr/cnrs/liris/common/reflect',
     'src/jvm/fr/cnrs/liris/common/flags',
-    'src/jvm/fr/cnrs/liris/common/stats',
     '3rdparty/jvm/com/typesafe/scala-logging',
     '3rdparty/jvm:scala-guice',
     '3rdparty/jvm:logback',
   ],
   excludes = [
+    # Conflicts with scalap coming from common/reflect.
     exclude(org='com.twitter.finatra', name='finatra-scalap-compiler-deps_2.11')
   ],
   sources=globs('*.scala')

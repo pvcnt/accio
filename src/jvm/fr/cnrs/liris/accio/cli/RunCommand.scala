@@ -19,6 +19,7 @@
 package fr.cnrs.liris.accio.cli
 
 import java.nio.file.{Files, Path, Paths}
+import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 
 import com.google.inject.Inject
@@ -26,7 +27,7 @@ import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.runtime.{ExperimentExecutor, ProgressReporter}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
-import fr.cnrs.liris.common.util.StringUtils
+import fr.cnrs.liris.common.util.{HashUtils, StringUtils}
 
 case class RunOptions(
   @Flag(name = "workdir", help = "Working directory where to write reports and artifacts")
@@ -113,7 +114,10 @@ class RunCommand @Inject()(experimentFactory: ExperimentFactory, executor: Exper
         require(path.toFile.isDirectory, s"Invalid directory ${path.toAbsolutePath}")
         require(path.toFile.canWrite, s"Cannot write to ${path.toAbsolutePath}")
         path
-      case None => Files.createTempDirectory("accio-")
+      case None =>
+        val uid = HashUtils.sha1(UUID.randomUUID().toString).substring(0, 8)
+        val workDir = Paths.get(s"accio-run-$uid")
+        Files.createDirectories(workDir)
     }
 }
 

@@ -32,7 +32,6 @@ object CliModule extends AbstractModule with ScalaModule {
     commands.addBinding.toInstance(classOf[HelpCommand])
     commands.addBinding.toInstance(classOf[RunCommand])
     commands.addBinding.toInstance(classOf[ValidateCommand])
-    commands.addBinding.toInstance(classOf[VisualizeCommand])
   }
 
   @Provides

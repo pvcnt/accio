@@ -29,7 +29,7 @@ import fr.cnrs.liris.common.util.MathUtils.roundAt4
 /**
  * Report about serialized events in a human-readable HTML format.
  */
-class HtmlReportCreator(showArtifacts: Set[String] = Set.empty) {
+/*class HtmlReportCreator(showArtifacts: Set[String] = Set.empty) {
   private[this] val idGenerator = new AtomicInteger(0)
   private[this] val cdfNbSteps = 100
 
@@ -202,4 +202,4 @@ class HtmlReportCreator(showArtifacts: Set[String] = Set.empty) {
   }
 
   private def quote(str: String) = s"'$str'"
-}
+}*/

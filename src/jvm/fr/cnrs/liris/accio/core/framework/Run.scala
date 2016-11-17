@@ -42,10 +42,16 @@ case class Run(
 
   def shortId: String = id.substring(0, 8)
 
+  override def equals(other: Any): Boolean = other match {
+    case r: Run => r.id == id
+    case _ => false
+  }
+
+  override def hashCode: Int = id.hashCode
+
   override def toString: String =
     MoreObjects.toStringHelper(this)
       .add("id", id)
       .add("name", name)
-      .add("params", params.map { case (k, v) => s"$k=$v" }.mkString(", "))
       .toString
 }
