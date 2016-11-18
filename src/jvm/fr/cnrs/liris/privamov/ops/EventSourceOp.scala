@@ -31,9 +31,9 @@ class EventSourceOp @Inject()(env: SparkleEnv) extends Operator[EventSourceIn, E
 
   override def execute(in: EventSourceIn, ctx: OpContext): EventSourceOut = {
     val source = in.kind match {
-      case "csv" => CsvSource(FileUtils.replaceHome(in.url))
-      case "cabspotting" => CabspottingSource(FileUtils.replaceHome(in.url))
-      case "geolife" => GeolifeSource(FileUtils.replaceHome(in.url))
+      case "csv" => CsvSource(FileUtils.expand(in.url))
+      case "cabspotting" => CabspottingSource(FileUtils.expand(in.url))
+      case "geolife" => GeolifeSource(FileUtils.expand(in.url))
       case _ => throw new IllegalArgumentException(s"Unknown kind: ${in.kind}")
     }
     val output = if (willWrite(in)) {

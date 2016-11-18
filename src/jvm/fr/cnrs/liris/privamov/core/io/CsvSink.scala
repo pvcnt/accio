@@ -33,7 +33,7 @@ import fr.cnrs.liris.privamov.core.model.{Event, Trace}
  * @param failOnNonEmptyDirectory Whether to fail is specified directory exists and is not empty.
  */
 case class CsvSink(uri: String, failOnNonEmptyDirectory: Boolean = true) extends DataSink[Trace] with LazyLogging {
-  private[this] val path = Paths.get(FileUtils.replaceHome(uri))
+  private[this] val path = Paths.get(FileUtils.expand(uri))
   if (!path.toFile.exists) {
     Files.createDirectories(path)
   } else if (path.toFile.isDirectory && path.toFile.listFiles.nonEmpty && failOnNonEmptyDirectory) {

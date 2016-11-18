@@ -57,12 +57,17 @@ object FileUtils {
    *
    * @param uri URI.
    */
-  def replaceHome(uri: String): String =
-  if (uri.startsWith("~")) sys.props("user.home") + uri.drop(1) else uri
-
-  def expandPath(uri: String): Path = {
-    Paths.get(replaceHome(uri))
+  def expand(uri: String): String = {
+    if (uri.startsWith("~/")) {
+      sys.props("user.home") + uri.drop(1)
+    } else if (uri.startsWith("./")) {
+      sys.props("user.dir") + uri.drop(1)
+    } else {
+      uri
+    }
   }
+
+  def expandPath(uri: String): Path = Paths.get(expand(uri))
 
   def removeExtension(filename: String): String = {
     val pos = filename.lastIndexOf('.')

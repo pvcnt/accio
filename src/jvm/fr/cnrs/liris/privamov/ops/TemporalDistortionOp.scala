@@ -67,7 +67,7 @@ class TemporalDistortionOp @Inject()(env: SparkleEnv) extends Operator[TemporalD
     ref.id -> AggregatedStats(distances)
   }
 
-  private def interpolate(trace: Trace, time: Instant) =
+  private def interpolate(trace: Trace, time: Instant) = {
     if (time.isBefore(trace.events.head.time)) {
       trace.events.head.point
     } else if (time.isAfter(trace.events.last.time)) {
@@ -85,6 +85,7 @@ class TemporalDistortionOp @Inject()(env: SparkleEnv) extends Operator[TemporalD
         between.head.point.interpolate(between.last.point, ratio)
       }
     }
+  }
 }
 
 case class TemporalDistortionIn(

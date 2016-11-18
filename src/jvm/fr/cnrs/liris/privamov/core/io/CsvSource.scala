@@ -34,7 +34,7 @@ import org.joda.time.Instant
  * @param uri Path to the directory from where to read.
  */
 case class CsvSource(uri: String) extends DataSource[Trace] {
-  private[this] val path = Paths.get(FileUtils.replaceHome(uri))
+  private[this] val path = Paths.get(FileUtils.expand(uri))
   private[this] val decoder = new TextLineDecoder(new CsvDecoder)
   require(path.toFile.isDirectory, s"$uri is not a directory")
   require(path.toFile.canRead, s"$uri is unreadable")

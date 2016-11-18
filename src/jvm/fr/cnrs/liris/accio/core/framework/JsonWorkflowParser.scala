@@ -41,7 +41,7 @@ class JsonWorkflowParser @Inject()(mapper: FinatraObjectMapper) extends Workflow
   }
 
   private def getFile(uri: String) = {
-    val file = new File(FileUtils.replaceHome(uri))
+    val file = new File(FileUtils.expand(uri))
     require(file.exists && file.isFile, s"${file.getAbsolutePath} does not seem to be a valid file")
     require(file.canRead, s"${file.getAbsolutePath} is not readable")
     file

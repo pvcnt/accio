@@ -1,9 +1,30 @@
+/*
+ * Accio is a program whose purpose is to study location privacy.
+ * Copyright (C) 2016 Vincent Primault <vincent.primault@liris.cnrs.fr>
+ *
+ * Accio is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Accio is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package fr.cnrs.liris.common.util
 
 import java.nio.file.Files
 
 import fr.cnrs.liris.testing.UnitSpec
 
+/**
+ * Unit tests for [[FileUtils]].
+ */
 class FileUtilsSpec extends UnitSpec {
   "FileUtils::safeDelete" should "delete a directory" in {
     val dir = Files.createTempDirectory("FileUtilsSpec-")
@@ -36,8 +57,15 @@ class FileUtilsSpec extends UnitSpec {
     dir.toFile.exists() shouldBe false
   }
 
-  "FileUtils::replaceHome" should "replace an initial '~' with the home directory" in {
-    FileUtils.replaceHome("~/foo/bar") shouldBe sys.props("user.home") + "/foo/bar"
-    FileUtils.replaceHome("abc/~foo/bar") shouldBe "abc/~foo/bar"
+  "FileUtils::expand" should "replace an initial '~/' with the home directory" in {
+    FileUtils.expand("~/foo/bar") shouldBe sys.props("user.home") + "/foo/bar"
+    FileUtils.expand("~foo/bar") shouldBe "~foo/bar"
+    FileUtils.expand("abc/~foo/bar") shouldBe "abc/~foo/bar"
+  }
+
+  it should "replace an initial './' with the current directory" in {
+    FileUtils.expand("./foo/bar") shouldBe sys.props("user.dir") + "/foo/bar"
+    FileUtils.expand(".foo/bar") shouldBe ".foo/bar"
+    FileUtils.expand("abc/./foo/bar") shouldBe "abc/./foo/bar"
   }
 }
