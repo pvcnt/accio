@@ -48,8 +48,7 @@ sealed trait Exploration {
 }
 
 /**
- * An exploration which only explores only a single value. It is mainly useful to override the
- * value of a parameter.
+ * Explores nothing and produces a single value. It is useful to override the value of a parameter.
  *
  * @param value New parameter's value.
  */
@@ -58,7 +57,7 @@ case class SingletonExploration(value: Any) extends Exploration {
 }
 
 /**
- * An exploration which explores a fixed set of values.
+ * Explores a fixed set of values.
  *
  * @param values List of values taken by the parameter.
  */
@@ -67,7 +66,7 @@ case class ListExploration(values: Set[Any]) extends Exploration {
 }
 
 /**
- * An exploration which explores a range of values.
+ * Explores a range of values.
  *
  * @param from  First value taken by the parameter.
  * @param to    Last value taken by the parameter.
@@ -114,7 +113,7 @@ case class RangeExploration(from: Any, to: Any, step: Any, log: Boolean = false,
       val tTo = Values.asTimestamp(to).getMillis
       val dStep = Values.asDuration(step).getMillis
       (tFrom to tTo by dStep).map(new Instant(_)).toSet
-    case _ => throw new IllegalArgumentException(s"Cannot generate a range of $kind")
+    case _ => throw new IllegalArgumentException(s"Cannot generate a range with: $kind")
   }
 
   private def checkLogarithmic() = {
@@ -138,12 +137,21 @@ case class RangeExploration(from: Any, to: Any, step: Any, log: Boolean = false,
     if (log) math.pow(math.E, d) else if (log10) math.pow(10, d) else if (log2) math.pow(2, d) else d
 }
 
+/**
+ * Explores the content of a directory, using the glob syntax.
+ *
+ * @param glob Specification of the paths to return, using the glob syntax. Special characters can only occur
+ *             after the last slash ('/') in the glob string.
+ */
 case class GlobExploration(glob: String) extends Exploration {
-  override def expand(kind: DataType): Set[Any] = {
-    val pos = glob.lastIndexOf('/')
-    val path =  FileUtils.expandPath(glob.substring(0, pos))
-    val pathMatcher = FileSystems.getDefault.getPathMatcher(glob.substring(pos + 1))
-    val matchingPaths = path.toFile.list.map(path.resolve).filter(pathMatcher.matches)
-    matchingPaths.map(_.toAbsolutePath.toString).toSet
+  override def expand(kind: DataType): Set[Any] = kind match {
+    case DataType.String =>
+      val pos = glob.lastIndexOf('/')
+      val path = FileUtils.expandPath(glob.substring(0, pos))
+      val pathMatcher = FileSystems.getDefault.getPathMatcher("glob:" + glob.substring(pos + 1))
+      val matchingNames = path.toFile.list.map(Paths.get(_)).filter(pathMatcher.matches)
+      // What is matched is paths relative to the last directory. We make those paths absolute and strings.
+      matchingNames.map(path.resolve(_).toString).toSet
+    case _ => throw new IllegalArgumentException(s"Cannot glob with: $kind")
   }
 }

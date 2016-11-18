@@ -37,7 +37,41 @@ class RangeExplorationSpec extends UnitSpec {
   }
 
   it should "expand into a log10 range of doubles" in {
-    val explo = RangeExploration(from = 10, to = 10000, step = 10, log10 = true)
-    explo.expand(DataType.Double) should contain theSameElementsAs Set(10, 100, 1000, 10000)
+    val explo1 = RangeExploration(from = 10, to = 10000, step = 10, log10 = true)
+    explo1.expand(DataType.Double) should contain theSameElementsAs Set(10, 100, 1000, 10000)
+
+    val explo2 = RangeExploration(from = 0.00001, to = 1, step = 10, log10 = true)
+    explo2.expand(DataType.Double) should contain theSameElementsAs Set(0.00001, 0.0001, 0.001, 0.01, 0.1, 1)
+  }
+
+  it should "not support locations" in {
+    assertUnsupported(DataType.Location)
+  }
+
+  it should "not support datasets" in {
+    assertUnsupported(DataType.Dataset)
+  }
+
+  it should "not support images" in {
+    assertUnsupported(DataType.Image)
+  }
+
+  it should "not support lists" in {
+    assertUnsupported(DataType.List(DataType.Double))
+  }
+
+  it should "not support sets" in {
+    assertUnsupported(DataType.Set(DataType.Double))
+  }
+
+  it should "not support maps" in {
+    assertUnsupported(DataType.Map(DataType.Double, DataType.Double))
+  }
+
+  private def assertUnsupported(kind: DataType) = {
+    val expected = intercept[IllegalArgumentException] {
+      RangeExploration(null, null, null).expand(kind)
+    }
+    expected.getMessage shouldBe s"Cannot generate a range with: $kind"
   }
 }
