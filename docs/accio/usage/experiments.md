@@ -38,6 +38,9 @@ Here is an example of a simple experiment definition.
       "from": 0.00001,
       "to": 1,
       "log": true
+    },
+    "duration": {
+      "value": "10.seconds"
     }
   }
 }
@@ -53,11 +56,11 @@ It is a path to a [workflow definition file](workflows.html), which can be eithe
 When defining an experiment, you can specify values for parameters.
 You must specify a value for all parameters, except if they are only used by optional inputs.
 You can either specify a single value or multiple values for any parameter, triggering the execution of multiple versions of the same original workflow.
-Accio currently supports three ways to specify parameters: single value, list of values and range of values.
+Accio currently supports several ways to specify parameters, described in the next sections.
 
 ### Single value
  
-To override a parameter with a single value, you have to use a JSON object whose only key is `value` mapped to the new value for the parameter.
+To define a parameter with a single value, you can use a JSON object whose only key is `value`, mapped to the new value for the parameter.
 The value should be specified using the same format as for [workflow input values](workflows.html#input-values).
 For example:
 
@@ -86,7 +89,7 @@ It may be needed sometimes to use the explicit form to disambiguate, especially 
 
 ### List of values
  
-To override a parameter with a list of values, you have to use a JSON object whose only key is `values` mapped to a JSON array with all values taken by the parameter.
+To define a parameter with a list of values, you can use a JSON object whose only key is `values`, mapped to a JSON array with all values taken by the parameter.
 The order of values has no importance.
 Values should be specified using the same format as for [workflow input values](workflows.html#input-values).
 For example:
@@ -103,7 +106,7 @@ For example:
 
 ### Range of values
  
-To override a parameter with a range of values, you have to use a JSON object with keys `from`, `to` and `step`, mapped respectively to the first value (inclusive) taken by the parameter, the last value (inclusive) taken by the parameter and the increment between two consecutive values.
+To define a parameter with a range of values, you can a JSON object with keys `from`, `to` and `step`, mapped respectively to the first value (inclusive) taken by the parameter, the last value (inclusive) taken by the parameter and the increment between two consecutive values.
 The first value (under the `from` key) must be lower than the last value (under the `to` key). 
 Values should be specified using the same format as for [workflow input values](workflows.html#input-values).
 For example:
@@ -122,9 +125,51 @@ For example:
 Not all data types may be specified as a range of values.
 Only the following data types are supported: byte, short, integer, long, double, distance, duration, timestamp.
 For the timestamp data type, the first and last values are specified as timestamps, whereas the step between consecutive values is specified as a duration.
-For all other data types, the first, last and step values are all specified in the nomminal data type.
+For all other data types, the first, last and step values are all specified in the nominal data type.
 
 You can also specify logarithmic progressions by setting one of the `log`, `log2` or `log10` keys (mutually exclusive) to `true`, to obtain a logarithmic progression respectively in base e, 2 or 10.
+Only the following data types are supported for logarithmic progressions: double, distance and duration.
+When following a logarithmic progression, the semantic of the parameters is the following:
+
+1) a list of powers is generated from those parameters, after the logarithm has been applied on them
+2) those powers are exponentiated in the appropriate base to produce values in the required range.
+
+For example:
+
+```json
+{
+  "params": {
+    "epsilon": {
+      "from": 10,
+      "to": 10000,
+      "step": 10,
+      "log10": true
+    }
+  }
+}
+```
+
+will produce values 10, 100, 1000 and 10000.
+
+### Glob
+
+To define a parameter with a list of paths, you can use a JSON object whose only key is `glob`, mapped to a string written using the [glob syntax](https://en.wikipedia.org/wiki/Glob_(programming)#Syntax).
+This exploration will generate one value per path matching your glob string.
+Moreover, the glob string is subject to expansion for the `~` and `./` characters.
+
+For example:
+
+```json
+{
+  "params": {
+    "files": {
+      "glob": "/home/me/my_dataset/*.csv"
+    }
+  }
+}
+```
+
+will produce a value per CSV file in the `/home/me/my_dataset` directory.
 
 ## Validating experiments
 
