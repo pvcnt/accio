@@ -11,30 +11,26 @@ import fr.cnrs.liris.testing.UnitSpec
 class EnforceDurationOpSpec extends UnitSpec with WithTraceGenerator with WithSparkleEnv {
   behavior of "EnforceDurationOp"
 
-  it should "keep traces with a duration equal to threshold" in {
+  it should "keep traces with a duration greater than min threshold" in {
     val trace = randomTrace(Me, size = 15, rate = Duration.standardMinutes(1))
+    transformMinDuration(Seq(trace), Duration.standardMinutes(10)) should contain theSameElementsAs Seq(trace)
     transformMinDuration(Seq(trace), Duration.standardMinutes(14)) should contain theSameElementsAs Seq(trace)
   }
 
-  it should "keep traces with a duration greater than threshold" in {
-    val trace = randomTrace(Me, size = 15, rate = Duration.standardMinutes(1))
-    transformMinDuration(Seq(trace), Duration.standardMinutes(10)) should contain theSameElementsAs Seq(trace)
-  }
-
-  it should "reject traces with a duration lower than threshold" in {
+  it should "reject traces with a duration lower than min threshold" in {
     val trace = randomTrace(Me, size = 15, rate = Duration.standardMinutes(1))
     transformMinDuration(Seq(trace), Duration.standardMinutes(15)) should have size 0
     transformMinDuration(Seq(trace), Duration.standardMinutes(20)) should have size 0
   }
 
-  it should "shorten traces with a duration greater than threshold" in {
+  it should "shorten traces with a duration greater than max threshold" in {
     val trace = randomTrace(Me, size = 15, rate = Duration.standardMinutes(1))
     val data = transformMaxDuration(Seq(trace), Duration.standardSeconds(10 * 60 + 10))
     data should have size 1
     assertTraceIsShortened(trace, data.head, 11)
   }
 
-  it should "keep traces with a duration lower than threshold" in {
+  it should "keep traces with a duration lower than max threshold" in {
     val trace = randomTrace(Me, size = 15, rate = Duration.standardMinutes(1))
     var data = transformMaxDuration(Seq(trace), Duration.standardMinutes(14))
     data should have size 1
@@ -51,13 +47,15 @@ class EnforceDurationOpSpec extends UnitSpec with WithTraceGenerator with WithSp
 
   private def transformMaxDuration(data: Seq[Trace], duration: Duration) = {
     val ds = write(data: _*)
-    val res = new EnforceDurationOp(env).execute(EnforceDurationIn(maxDuration = Some(duration), minDuration = None, data = ds), ctx)
+    val op = new EnforceDurationOp(env, decoders, encoders)
+    val res = op.execute(EnforceDurationIn(maxDuration = Some(duration), minDuration = None, data = ds), ctx)
     read(res.data)
   }
 
   private def transformMinDuration(data: Seq[Trace], duration: Duration) = {
     val ds = write(data: _*)
-    val res = new EnforceDurationOp(env).execute(EnforceDurationIn(minDuration = Some(duration), maxDuration = None, data = ds), ctx)
+    val op = new EnforceDurationOp(env, decoders, encoders)
+    val res = op.execute(EnforceDurationIn(minDuration = Some(duration), maxDuration = None, data = ds), ctx)
     read(res.data)
   }
 }

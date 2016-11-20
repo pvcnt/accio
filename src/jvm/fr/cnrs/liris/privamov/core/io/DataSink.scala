@@ -18,25 +18,28 @@
 
 package fr.cnrs.liris.privamov.core.io
 
+import scala.reflect.ClassTag
+
 /**
  * A sink is responsible for persisting elements. If they need to be read back later, you need to implement a
  * matching [[DataSource]].
  *
- * @tparam T Elements' type.
+ * @tparam T Type of elements being written.
  */
 trait DataSink[T] {
   /**
-   * Persist some elements.
+   * Persist some elements associated with the same key.
    *
+   * @param key Key elements are associated to.
    * @param elements Elements to write.
    */
-  def write(elements: TraversableOnce[T]): Unit
+  def write(key: String, elements: TraversableOnce[T]): Unit
 }
 
 /**
  * An encoder converts a plain object into bytes.
  *
- * @tparam T Object type.
+ * @tparam T Type of elements being written.
  */
 trait Encoder[T] {
   /**
@@ -46,4 +49,9 @@ trait Encoder[T] {
    * @return Binary content.
    */
   def encode(obj: T): Array[Byte]
+
+  /**
+   * Return the class tag of the element being written.
+   */
+  def elementClassTag: ClassTag[T]
 }

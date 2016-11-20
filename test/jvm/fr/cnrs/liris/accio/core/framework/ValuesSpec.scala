@@ -92,7 +92,7 @@ class ValuesSpec extends UnitSpec {
   }
 
   it should "parse strings as dataset" in {
-    Values.parseDataset("csv:/dev/null") shouldBe Dataset("/dev/null", "csv")
-    Values.parse("csv:/dev/null", DataType.Dataset) shouldBe Dataset("/dev/null", "csv")
+    Values.parseDataset("/dev/null") shouldBe Dataset("/dev/null")
+    Values.parse("/dev/null", DataType.Dataset) shouldBe Dataset("/dev/null")
   }
 }

@@ -22,9 +22,9 @@ import java.util.concurrent.atomic.AtomicLong
 
 import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.api._
-import fr.cnrs.liris.common.geo.{BoundingBox, Point}
+import fr.cnrs.liris.common.geo.{BoundingBox, Distance, Point}
 import fr.cnrs.liris.common.random.RandomUtils
-import fr.cnrs.liris.common.geo.Distance
+import fr.cnrs.liris.privamov.core.io.Decoder
 import fr.cnrs.liris.privamov.core.model.Trace
 import fr.cnrs.liris.privamov.core.sparkle.{DataFrame, SparkleEnv}
 import org.apache.commons.math3.random.RandomDataGenerator
@@ -33,11 +33,14 @@ import org.joda.time.{Duration, Interval}
 @Op(
   category = "metric",
   help = "Evaluate count query distortion between to datasets.")
-class CountQueriesDistortionOp @Inject()(env: SparkleEnv) extends Operator[CountQueriesDistortionIn, CountQueriesDistortionOut] with SparkleOperator {
+class CountQueriesDistortionOp @Inject()(
+  override protected val env: SparkleEnv,
+  override protected val decoders: Set[Decoder[_]]
+) extends Operator[CountQueriesDistortionIn, CountQueriesDistortionOut] with SparkleReadOperator {
 
   override def execute(in: CountQueriesDistortionIn, ctx: OpContext): CountQueriesDistortionOut = {
-    val trainDs = read(in.train, env)
-    val testDs = read(in.test, env)
+    val trainDs = read[Trace](in.train)
+    val testDs = read[Trace](in.test)
     val generator = new CountQueryGenerator(trainDs, ctx.seed, in.minSize, in.maxSize, in.minDuration, in.maxDuration)
     val queries = generator.generate(in.n)
     val refCounts = queries.count(trainDs)

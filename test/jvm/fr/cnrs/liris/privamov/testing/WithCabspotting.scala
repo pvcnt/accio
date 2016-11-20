@@ -18,20 +18,18 @@
 
 package fr.cnrs.liris.privamov.testing
 
-import com.google.common.base.Charsets
 import com.google.common.io.Resources
-import fr.cnrs.liris.privamov.core.io.CsvDecoder
+import fr.cnrs.liris.privamov.core.io.CsvTraceDecoder
 import fr.cnrs.liris.privamov.core.model.Trace
 
-import scala.collection.JavaConverters._
-
 trait WithCabspotting {
-  private[this] val decoder = new CsvDecoder
+  // It doesn't work with a val..
+  private def decoder = new CsvTraceDecoder
 
   lazy val abboipTrace = cabspottingTrace("abboip")
 
   def cabspottingTrace(key: String): Trace = {
-    val content = Resources.readLines(Resources.getResource(s"fr/cnrs/liris/privamov/testing/$key.csv"), Charsets.UTF_8).asScala
-    Trace(content.flatMap(line => decoder.decode(key, line.getBytes)))
+    val bytes = Resources.toByteArray(Resources.getResource(s"fr/cnrs/liris/privamov/testing/$key.csv"))
+    decoder.decode(key, bytes).get
   }
 }

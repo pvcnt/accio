@@ -22,6 +22,8 @@ import java.nio.charset.Charset
 
 import com.google.common.base.Charsets
 
+import scala.reflect._
+
 /**
  * A decoder that reads a file as a list of elements, each one being delimited by an end-of-line character ('\n').
  * It therefore assumes textual content.
@@ -31,10 +33,12 @@ import com.google.common.base.Charsets
  * @param charset     Charset to use when decoding a line.
  * @tparam T Elements' type.
  */
-class TextLineDecoder[T](decoder: Decoder[T], headerLines: Int = 0, charset: Charset = Charsets.UTF_8) extends Decoder[Seq[T]] {
+class TextLineDecoder[T: ClassTag](decoder: Decoder[T], headerLines: Int = 0, charset: Charset = Charsets.UTF_8) extends Decoder[Seq[T]] {
   override def decode(key: String, bytes: Array[Byte]): Option[Seq[T]] = {
     val lines = new String(bytes, charset).split("\n").drop(headerLines)
     val elements = lines.flatMap(line => decoder.decode(key, line.getBytes(charset)))
     if (elements.nonEmpty) Some(elements) else None
   }
+
+  override def elementClassTag: ClassTag[Seq[T]] = classTag[Seq[T]]
 }

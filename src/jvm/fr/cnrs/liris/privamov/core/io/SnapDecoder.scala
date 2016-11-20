@@ -19,8 +19,10 @@
 package fr.cnrs.liris.privamov.core.io
 
 import fr.cnrs.liris.common.geo.LatLng
-import fr.cnrs.liris.privamov.core.model.Poi
+import fr.cnrs.liris.privamov.core.model.{Event, Poi}
 import org.joda.time.Instant
+
+import scala.reflect._
 
 class SnapDecoder extends Decoder[Poi] {
   override def decode(key: String, bytes: Array[Byte]): Option[Poi] = {
@@ -36,4 +38,6 @@ class SnapDecoder extends Decoder[Poi] {
       Some(Poi(username, LatLng.degrees(lat, lng).toPoint, time))
     }
   }
+
+  override def elementClassTag: ClassTag[Poi] = classTag[Poi]
 }

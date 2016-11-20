@@ -3,7 +3,7 @@ package fr.cnrs.liris.privamov.ops
 import java.nio.file.Files
 
 import fr.cnrs.liris.accio.core.api.{Dataset, OpContext}
-import fr.cnrs.liris.privamov.core.io.{CsvSink, CsvSource}
+import fr.cnrs.liris.privamov.core.io._
 import fr.cnrs.liris.privamov.core.model.Trace
 import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 import org.scalatest.{BeforeAndAfter, FlatSpec}
@@ -15,17 +15,19 @@ trait SparkleOpSpec {
 
   protected def write(data: Trace*): Dataset = {
     val uri = Files.createTempDirectory("accio-test-").toAbsolutePath.toString
-    env.parallelize(data: _*)(_.id).write(CsvSink(uri))
-    Dataset(uri, "csv")
+    env.parallelize(data: _*)(_.id).write(new CsvSink(uri, new CsvTraceEncoder))
+    Dataset(uri)
   }
 
   protected def read(ds: Dataset): Seq[Trace] = {
-    env.read(CsvSource(ds.uri)).toArray.toSeq
+    env.read(new CsvSource(ds.uri, new CsvTraceDecoder)).toArray.toSeq
   }
 }
 
 trait WithSparkleEnv extends FlatSpec with SparkleOpSpec with BeforeAndAfter {
   protected[this] var env: SparkleEnv = null
+  protected[this] val decoders: Set[Decoder[_]] = Set(new CsvTraceDecoder, new CsvPoiSetDecoder)
+  protected[this] val encoders: Set[Encoder[_]] = Set(new CsvTraceEncoder, new CsvPoiSetEncoder)
 
   protected[this] def ctx: OpContext = {
     val workDir = Files.createTempDirectory("accio-test-")

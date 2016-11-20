@@ -18,10 +18,12 @@
 
 package fr.cnrs.liris.privamov.core.io
 
+import scala.reflect.ClassTag
+
 /**
  * A source is responsible for reading elements. Each element is identified by a unique key.
  *
- * @tparam T Elements' type.
+ * @tparam T Type of elements being read.
  */
 trait DataSource[T] {
   /**
@@ -42,7 +44,7 @@ trait DataSource[T] {
 /**
  * A decoder converts a binary (record) into a plain object.
  *
- * @tparam T Plain object type
+ * @tparam T Type of elements being read.
  */
 trait Decoder[T] {
   /**
@@ -53,4 +55,9 @@ trait Decoder[T] {
    * @return Plain object
    */
   def decode(key: String, bytes: Array[Byte]): Option[T]
+
+  /**
+   * Return the class tag of the element being read.
+   */
+  def elementClassTag: ClassTag[T]
 }

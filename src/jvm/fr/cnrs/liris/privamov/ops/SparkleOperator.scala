@@ -21,19 +21,39 @@ package fr.cnrs.liris.privamov.ops
 import java.nio.file.Path
 
 import fr.cnrs.liris.accio.core.api.Dataset
-import fr.cnrs.liris.privamov.core.io.{CsvSink, CsvSource}
-import fr.cnrs.liris.privamov.core.model.Trace
+import fr.cnrs.liris.privamov.core.io._
+import fr.cnrs.liris.privamov.core.model.Identified
 import fr.cnrs.liris.privamov.core.sparkle.{DataFrame, SparkleEnv}
 
-private[ops] trait SparkleOperator {
-  protected def read(dataset: Dataset, env: SparkleEnv) = {
-    require(dataset.format == "csv", s"Only CSV datasets are supported, got: ${dataset.format}")
-    env.read(CsvSource(dataset.uri))
-  }
+import scala.reflect._
 
-  protected def write(frame: DataFrame[Trace], workDir: Path, port: String = "data") = {
-    val uri = workDir.resolve(port).toAbsolutePath.toString
-    frame.write(CsvSink(uri))
-    Dataset(uri, format = "csv")
+private[ops] trait SparkleOperator extends SparkleReadOperator with SparkleWriteOperator
+
+private[ops] trait SparkleReadOperator {
+  protected def env: SparkleEnv
+
+  protected def decoders: Set[Decoder[_]]
+
+  protected def read[T: ClassTag](dataset: Dataset): DataFrame[T] = {
+    val clazz = classTag[T].runtimeClass
+    decoders.find(decoder => clazz.isAssignableFrom(decoder.elementClassTag.runtimeClass)) match {
+      case None => throw new RuntimeException(s"No decoder available for: ${clazz.getName}")
+      case Some(decoder) => env.read(new CsvSource(dataset.uri, decoder.asInstanceOf[Decoder[T]]))
+    }
+  }
+}
+
+private[ops] trait SparkleWriteOperator {
+  protected def encoders: Set[Encoder[_]]
+
+  protected def write[T <: Identified: ClassTag](frame: DataFrame[T], workDir: Path, port: String = "data") = {
+    val clazz = classTag[T].runtimeClass
+    encoders.find(encoder => clazz.isAssignableFrom(encoder.elementClassTag.runtimeClass)) match {
+      case None => throw new RuntimeException(s"No encoder available for: ${clazz.getName}")
+      case Some(encoder) =>
+        val uri = workDir.resolve(port).toAbsolutePath.toString
+        frame.write(new CsvSink(uri, encoder.asInstanceOf[Encoder[T]]))
+        Dataset(uri)
+    }
   }
 }

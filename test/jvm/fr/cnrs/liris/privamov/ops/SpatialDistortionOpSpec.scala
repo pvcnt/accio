@@ -66,6 +66,7 @@ class SpatialDistortionOpSpec extends UnitSpec with WithTraceGenerator with With
   private def execute(train: Seq[Trace], test: Seq[Trace], interpolate: Boolean) = {
     val trainDs = write(train: _*)
     val testDs = write(test: _*)
-    new SpatialDistortionOp(env).execute(SpatialDistortionIn(train = trainDs, test = testDs, interpolate = interpolate), ctx)
+    val op = new SpatialDistortionOp(env, decoders)
+    op.execute(SpatialDistortionIn(train = trainDs, test = testDs, interpolate = interpolate), ctx)
   }
 }

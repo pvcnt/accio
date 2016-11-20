@@ -219,7 +219,7 @@ private[framework] case class FirstSimpleOut(@Arg data: Dataset)
 
 @Op
 private[framework] class FirstSimpleOp extends Operator[FirstSimpleIn, FirstSimpleOut] {
-  override def execute(in: FirstSimpleIn, ctx: OpContext): FirstSimpleOut = FirstSimpleOut(Dataset("/dev/null", "csv"))
+  override def execute(in: FirstSimpleIn, ctx: OpContext): FirstSimpleOut = FirstSimpleOut(Dataset("/dev/null"))
 }
 
 private[framework] case class SecondSimpleIn(@Arg dbl: Double, @Arg str: String = "something", @Arg data: Dataset)

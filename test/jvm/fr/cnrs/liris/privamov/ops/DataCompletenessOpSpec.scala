@@ -33,6 +33,6 @@ class DataCompletenessOpSpec extends UnitSpec with WithTraceGenerator with WithS
   private def execute(train: Seq[Trace], test: Seq[Trace]) = {
     val trainDs = write(train: _*)
     val testDs = write(test: _*)
-    new DataCompletenessOp(env).execute(DataCompletenessIn(trainDs, testDs), ctx)
+    new DataCompletenessOp(env, decoders).execute(DataCompletenessIn(trainDs, testDs), ctx)
   }
 }

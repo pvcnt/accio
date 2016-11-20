@@ -68,8 +68,9 @@ class SequentialSplittingOpSpec extends UnitSpec with WithTraceGenerator with Wi
 
   private def transform(data: Seq[Trace], percent: Double): (Seq[Trace], Seq[Trace]) = {
     val ds = write(data: _*)
-    val res1 = new SequentialSplittingOp(env).execute(SequentialSplittingIn(percentBegin = 0, percentEnd = percent, complement = false, data = ds), ctx)
-    val res2 = new SequentialSplittingOp(env).execute(SequentialSplittingIn(percentBegin = 0, percentEnd = percent, complement = true, data = ds), ctx)
+    val op = new SequentialSplittingOp(env, decoders, encoders)
+    val res1 = op.execute(SequentialSplittingIn(percentBegin = 0, percentEnd = percent, complement = false, data = ds), ctx)
+    val res2 = op.execute(SequentialSplittingIn(percentBegin = 0, percentEnd = percent, complement = true, data = ds), ctx)
     (read(res1.data), read(res2.data))
   }
 

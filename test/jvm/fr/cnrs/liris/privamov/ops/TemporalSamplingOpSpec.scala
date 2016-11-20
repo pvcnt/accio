@@ -44,7 +44,8 @@ class TemporalSamplingOpSpec extends UnitSpec with WithTraceGenerator with WithS
 
   private def transform(data: Seq[Trace], duration: Duration) = {
     val ds = write(data: _*)
-    val res = new TemporalSamplingOp(env).execute(TemporalSamplingIn(duration = duration, data = ds), ctx)
+    val op = new TemporalSamplingOp(env, decoders, encoders)
+    val res = op.execute(TemporalSamplingIn(duration = duration, data = ds), ctx)
     read(res.data)
   }
 }

@@ -6,7 +6,7 @@ scala_library(
     '3rdparty/jvm:scala-time',
     '3rdparty/jvm/org/scalanlp:breeze',
   ],
-  sources=['Poi.scala', 'PoiSet.scala', 'Event.scala', 'Trace.scala']
+  sources=['Poi.scala', 'PoiSet.scala', 'Event.scala', 'Trace.scala', 'Identified.scala']
 )
 
 scala_library(

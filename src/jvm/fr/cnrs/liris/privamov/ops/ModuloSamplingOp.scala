@@ -20,6 +20,7 @@ package fr.cnrs.liris.privamov.ops
 
 import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.api._
+import fr.cnrs.liris.privamov.core.io.{Decoder, Encoder}
 import fr.cnrs.liris.privamov.core.model.Trace
 import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 
@@ -27,10 +28,14 @@ import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
   category = "prepare",
   help = "Regularly sample events inside traces using the modulo operator.",
   description = "It will ensure that the final number of events is exactly (+/- 1) the one required, and that events are regularly sampled (i.e., one out of x).")
-class ModuloSamplingOp @Inject()(env: SparkleEnv) extends Operator[ModuloSamplingIn, ModuloSamplingOut] with SparkleOperator {
+class ModuloSamplingOp @Inject()(
+  override protected val env: SparkleEnv,
+  override protected val decoders: Set[Decoder[_]],
+  override protected val encoders: Set[Encoder[_]])
+  extends Operator[ModuloSamplingIn, ModuloSamplingOut] with SparkleOperator {
 
   override def execute(in: ModuloSamplingIn, ctx: OpContext): ModuloSamplingOut = {
-    val input = read(in.data, env)
+    val input = read[Trace](in.data)
     val output = input.map(trace => transform(trace, in.n))
     ModuloSamplingOut(write(output, ctx.workDir))
   }

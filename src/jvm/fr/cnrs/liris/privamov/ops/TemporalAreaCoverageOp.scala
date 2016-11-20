@@ -18,6 +18,8 @@
 
 package fr.cnrs.liris.privamov.ops
 
+import java.time.Duration
+
 import com.google.common.geometry.S2CellId
 import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.api._
@@ -29,19 +31,20 @@ import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 @Op(
   category = "metric",
   help = "Compute area coverage difference between two datasets of traces")
-class AreaCoverageOp @Inject()(
+class TemporalAreaCoverageOp @Inject()(
   override protected val env: SparkleEnv,
   override protected val decoders: Set[Decoder[_]])
-  extends Operator[AreaCoverageIn, AreaCoverageOut] with SparkleReadOperator {
+  extends Operator[TemporalAreaCoverageIn, TemporalAreaCoverageOut] with SparkleReadOperator {
 
-  override def execute(in: AreaCoverageIn, ctx: OpContext): AreaCoverageOut = {
+  override def execute(in: TemporalAreaCoverageIn, ctx: OpContext): TemporalAreaCoverageOut = {
     val train = read[Trace](in.train)
     val test = read[Trace](in.test)
     val metrics = train.zip(test).map { case (ref, res) => evaluate(ref, res, in.level) }.toArray
-    AreaCoverageOut(
+    /*TemporalAreaCoverageOut(
       precision = metrics.map { case (k, v) => k -> v._1 }.toMap,
       recall = metrics.map { case (k, v) => k -> v._2 }.toMap,
-      fscore = metrics.map { case (k, v) => k -> v._3 }.toMap)
+      fscore = metrics.map { case (k, v) => k -> v._3 }.toMap)*/
+    null.asInstanceOf[TemporalAreaCoverageOut]
   }
 
   private def evaluate(ref: Trace, res: Trace, level: Int) = {
@@ -56,12 +59,14 @@ class AreaCoverageOp @Inject()(
     trace.events.map(rec => S2CellId.fromLatLng(rec.point.toLatLng.toS2).parent(level)).toSet
 }
 
-case class AreaCoverageIn(
+case class TemporalAreaCoverageIn(
   @Arg(help = "S2 cells levels") level: Int,
   @Arg(help = "Train dataset") train: Dataset,
   @Arg(help = "Test dataset") test: Dataset)
 
-case class AreaCoverageOut(
-  @Arg(help = "Area coverage precision") precision: Map[String, Double],
-  @Arg(help = "Area coverage recall") recall: Map[String, Double],
-  @Arg(help = "Area coverage F-score") fscore: Map[String, Double])
+case class TemporalAreaCoverageOut(
+  @Arg(help = "Spatial distortion min") min: Map[String, Duration],
+  @Arg(help = "Spatial distortion max") max: Map[String, Duration],
+  @Arg(help = "Spatial distortion stddev") stddev: Map[String, Duration],
+  @Arg(help = "Spatial distortion avg") avg: Map[String, Duration],
+  @Arg(help = "Spatial distortion median") median: Map[String, Duration])

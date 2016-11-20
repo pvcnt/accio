@@ -25,6 +25,7 @@ import fr.cnrs.liris.common.geo.LatLng
 import fr.cnrs.liris.privamov.core.model.{Event, Trace}
 import org.joda.time.Instant
 
+import scala.reflect._
 import scala.sys.process._
 
 /**
@@ -100,4 +101,6 @@ class GeolifeDecoder extends Decoder[Event] {
       }
     }
   }
+
+  override def elementClassTag: ClassTag[Event] = classTag[Event]
 }

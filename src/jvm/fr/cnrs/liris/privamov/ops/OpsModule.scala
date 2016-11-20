@@ -20,6 +20,7 @@ package fr.cnrs.liris.privamov.ops
 
 import com.google.inject.TypeLiteral
 import fr.cnrs.liris.accio.core.api.Operator
+import fr.cnrs.liris.privamov.core.io._
 import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
 
 /**
@@ -27,6 +28,23 @@ import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
  */
 object OpsModule extends ScalaModule {
   override def configure(): Unit = {
+    // List of available encoders.
+    val encoders = ScalaMultibinder.newSetBinder[Encoder[_]](binder)
+    encoders.addBinding.to[StringEncoder]
+    encoders.addBinding.to[CsvEventEncoder]
+    encoders.addBinding.to[CsvTraceEncoder]
+    encoders.addBinding.to[CsvPoiEncoder]
+    encoders.addBinding.to[CsvPoiSetEncoder]
+
+    // List of available decoders.
+    val decoders = ScalaMultibinder.newSetBinder[Decoder[_]](binder)
+    decoders.addBinding.to[StringDecoder]
+    decoders.addBinding.to[CsvEventDecoder]
+    decoders.addBinding.to[CsvTraceDecoder]
+    decoders.addBinding.to[CsvPoiDecoder]
+    decoders.addBinding.to[CsvPoiSetDecoder]
+
+    // List of available operators.
     val ops = ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Class[_ <: Operator[_, _]]] {})
     ops.addBinding.toInstance(classOf[AreaCoverageOp])
     ops.addBinding.toInstance(classOf[BasicAnalyzerOp])

@@ -26,7 +26,7 @@ import com.google.common.io.Resources
 import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.common.geo.{Distance, Point}
-import fr.cnrs.liris.privamov.core.io.{CsvSink, DataSink}
+import fr.cnrs.liris.privamov.core.io._
 import fr.cnrs.liris.privamov.core.model.{Event, Trace}
 import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 import org.joda.time.{Duration, Instant}
@@ -46,10 +46,14 @@ import scala.collection.mutable
   help = "Time-tolerant k-anonymization",
   description = "Wrapper around the implementation of the Wait4Me algorithm provided by their authors.",
   category = "lppm")
-class Wait4MeOp @Inject()(env: SparkleEnv) extends Operator[Wait4MeIn, Wait4MeOut] with SparkleOperator {
+class Wait4MeOp @Inject()(
+  override protected val env: SparkleEnv,
+  override protected val decoders: Set[Decoder[_]],
+  override protected val encoders: Set[Encoder[_]])
+  extends Operator[Wait4MeIn, Wait4MeOut] with SparkleOperator {
 
   override def execute(in: Wait4MeIn, ctx: OpContext): Wait4MeOut = {
-    val input = read(in.data, env)
+    val input = read[Trace](in.data)
     if (input.count() == 0) {
       Wait4MeOut(
         data = in.data,
@@ -178,7 +182,7 @@ class Wait4MeOp @Inject()(env: SparkleEnv) extends Operator[Wait4MeIn, Wait4MeOu
     var currIdx: Option[Int] = None
     val events = mutable.ListBuffer.empty[Event]
     val outputUri = workDir.resolve("data").toAbsolutePath.toString
-    val sink = CsvSink(outputUri, failOnNonEmptyDirectory = false)
+    val sink = new CsvSink(outputUri, new CsvTraceEncoder, failOnNonEmptyDirectory = false)
     Files.readAllLines(w4mOutputPath).asScala.foreach { line =>
       val parts = line.trim.split("\t")
       val idx = parts(0).toInt
@@ -194,7 +198,7 @@ class Wait4MeOp @Inject()(env: SparkleEnv) extends Operator[Wait4MeIn, Wait4MeOu
     if (events.nonEmpty) {
       env.parallelize(keysReverseIndex(currIdx.get) -> Seq(Trace(keysReverseIndex(currIdx.get), events.toList))).write(sink)
     }
-    Dataset(outputUri, format = "csv")
+    Dataset(outputUri)
   }
 }
 
@@ -230,7 +234,7 @@ private class W4MSink(uri: String, keysIndex: Map[String, Int]) extends DataSink
   val path = Paths.get(uri)
   Files.createDirectories(path.getParent)
 
-  override def write(elements: TraversableOnce[Trace]): Unit = synchronized {
+  override def write(key: String, elements: TraversableOnce[Trace]): Unit = synchronized {
     val lines = elements.flatMap { trace =>
       trace.events.map { event =>
         s"${keysIndex(trace.id)}\t${event.time.getMillis / 1000}\t${event.point.x}\t${event.point.y}"

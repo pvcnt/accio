@@ -16,24 +16,16 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.api
+package fr.cnrs.liris.privamov.core.io
 
-/**
- * Descriptor of a dataset that can be used as a data type for operators. It is basically just a handle to an URI
- * where the dataset is written.
- *
- * @param uri URI where the dataset is written.
- */
-case class Dataset(uri: String)
+import java.nio.charset.Charset
 
-/**
- * Factory for [[Dataset]].
- */
-object Dataset {
-  /**
-   * Parse a string into a dataset.
-   *
-   * @param str String to parse.
-   */
-  def parse(str: String): Dataset = new Dataset(str)
+import com.google.common.base.Charsets
+
+import scala.reflect._
+
+class StringDecoder(charset: Charset = Charsets.UTF_8) extends Decoder[String] {
+  override def decode(key: String, bytes: Array[Byte]): Option[String] = Some(new String(bytes, charset))
+
+  override def elementClassTag: ClassTag[String] = classTag[String]
 }

@@ -155,7 +155,7 @@ class ReflectOperatorMetaReaderSpec extends UnitSpec {
   it should "support dataset inputs" in {
     val defn = reader.read(classOf[AllDataTypesOp]).defn
     assertMandatoryInput(defn, "data", DataType.Dataset)
-    assertMandatoryInput(defn, "data2", DataType.Dataset, defaultValue = Dataset("/dev/null", "csv"))
+    assertMandatoryInput(defn, "data2", DataType.Dataset, defaultValue = Dataset("/dev/null"))
     assertOptionalInput(defn, "data3", DataType.Dataset)
   }
 
@@ -263,7 +263,7 @@ private case class AllDataTypesIn(
   @Arg map: Map[String, Int],
   @Arg map2: Map[String, Int] = Map("foo" -> 3, "bar" -> 14),
   @Arg data: Dataset,
-  @Arg data2: Dataset = Dataset("/dev/null", "csv"),
+  @Arg data2: Dataset = Dataset("/dev/null"),
   @Arg data3: Option[Dataset])
 
 @Op

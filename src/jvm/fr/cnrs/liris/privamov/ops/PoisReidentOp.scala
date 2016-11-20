@@ -22,6 +22,7 @@ import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.common.geo.Distance
 import fr.cnrs.liris.privamov.core.clustering.DTClusterer
+import fr.cnrs.liris.privamov.core.io.Decoder
 import fr.cnrs.liris.privamov.core.model.{Poi, PoiSet, Trace}
 import fr.cnrs.liris.privamov.core.sparkle.{DataFrame, SparkleEnv}
 
@@ -36,11 +37,14 @@ import fr.cnrs.liris.privamov.core.sparkle.{DataFrame, SparkleEnv}
 @Op(
   category = "metric",
   help = "Re-identification attack using POIs a the discriminating information.")
-class PoisReidentOp @Inject()(env: SparkleEnv) extends Operator[ReidentificationIn, ReidentificationOut] with SparkleOperator {
+class PoisReidentOp @Inject()(
+  override protected val env: SparkleEnv,
+  override protected val decoders: Set[Decoder[_]]
+) extends Operator[ReidentificationIn, ReidentificationOut] with SparkleReadOperator {
 
   override def execute(in: ReidentificationIn, ctx: OpContext): ReidentificationOut = {
-    val trainDs = read(in.train, env)
-    val testDs = read(in.test, env)
+    val trainDs = read[Trace](in.train)
+    val testDs = read[Trace](in.test)
     val trainClusterer = new DTClusterer(in.duration, in.diameter)
     val testClusterer = new DTClusterer(in.testDuration.getOrElse(in.duration), in.testDiameter.getOrElse(in.diameter))
     val trainPois = getPois(trainDs, trainClusterer)

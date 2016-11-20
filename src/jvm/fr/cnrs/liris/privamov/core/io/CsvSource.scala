@@ -18,24 +18,26 @@
 
 package fr.cnrs.liris.privamov.core.io
 
-import java.io.File
 import java.nio.file.{Files, Paths}
 
 import com.github.nscala_time.time.Imports._
 import com.google.common.base.{Charsets, MoreObjects}
-import fr.cnrs.liris.common.geo.LatLng
+import fr.cnrs.liris.common.geo.{Distance, LatLng}
 import fr.cnrs.liris.common.util.FileUtils
-import fr.cnrs.liris.privamov.core.model.{Event, Trace}
+import fr.cnrs.liris.privamov.core.model.{Event, Poi, PoiSet, Trace}
 import org.joda.time.Instant
 
+import scala.reflect._
+
 /**
- * Mobility traces source reading data from our custom CSV format, with one file per trace.
+ * Data source reading data from our CSV format. There is one CSV file per source key.
  *
- * @param uri Path to the directory from where to read.
+ * @param uri     Path to the directory from where to read.
+ * @param decoder Decoder to read elements from each CSV file.
+ * @tparam T Type of elements being read.
  */
-case class CsvSource(uri: String) extends DataSource[Trace] {
+class CsvSource[T: ClassTag](uri: String, decoder: Decoder[T]) extends DataSource[T] {
   private[this] val path = Paths.get(FileUtils.expand(uri))
-  private[this] val decoder = new TextLineDecoder(new CsvDecoder)
   require(path.toFile.isDirectory, s"$uri is not a directory")
   require(path.toFile.canRead, s"$uri is unreadable")
 
@@ -48,18 +50,16 @@ case class CsvSource(uri: String) extends DataSource[Trace] {
       .sortWith(sort)
   }
 
-  override def read(id: String): Option[Trace] = Some(read(id, path.resolve(s"$id.csv").toFile))
+  override def read(id: String): Option[T] = {
+    val bytes = Files.readAllBytes(path.resolve(s"$id.csv"))
+    decoder.decode(id, bytes)
+  }
 
   override def toString: String =
     MoreObjects.toStringHelper(this)
+      .addValue(classTag[T].runtimeClass.getName)
       .add("uri", uri)
       .toString
-
-  private def read(id: String, file: File): Trace = {
-    val bytes = Files.readAllBytes(file.toPath)
-    val events = decoder.decode(id, bytes).getOrElse(Seq.empty).sortBy(_.time)
-    Trace(id, events)
-  }
 
   private def sort(key1: String, key2: String): Boolean = {
     val parts1 = key1.split("-").tail.map(_.toInt)
@@ -81,9 +81,23 @@ case class CsvSource(uri: String) extends DataSource[Trace] {
 }
 
 /**
- * Decoder for our custom CSV format handling events.
+ * Decoder for our CSV format handling traces.
  */
-class CsvDecoder extends Decoder[Event] {
+class CsvTraceDecoder extends Decoder[Trace] {
+  private[this] val decoder = new TextLineDecoder(new CsvEventDecoder)
+
+  override def decode(key: String, bytes: Array[Byte]): Option[Trace] = {
+    val events = decoder.decode(key, bytes).getOrElse(Seq.empty).sortBy(_.time)
+    Some(Trace(key, events))
+  }
+
+  override def elementClassTag: ClassTag[Trace] = classTag[Trace]
+}
+
+/**
+ * Decoder for our CSV format handling events.
+ */
+class CsvEventDecoder extends Decoder[Event] {
   override def decode(key: String, bytes: Array[Byte]): Option[Event] = {
     val line = new String(bytes, Charsets.UTF_8).trim
     val parts = line.split(",")
@@ -99,4 +113,43 @@ class CsvDecoder extends Decoder[Event] {
       Some(Event(user, point, new Instant(time)))
     }
   }
+
+  override def elementClassTag: ClassTag[Event] = classTag[Event]
+}
+
+/**
+ * Decoder for our CSV format handling POIs sets.
+ */
+class CsvPoiSetDecoder extends Decoder[PoiSet] {
+  private[this] val decoder = new TextLineDecoder(new CsvPoiDecoder)
+
+  override def decode(key: String, bytes: Array[Byte]): Option[PoiSet] = {
+    val pois = decoder.decode(key, bytes).getOrElse(Seq.empty)
+    Some(PoiSet(key, pois))
+  }
+
+  override def elementClassTag: ClassTag[PoiSet] = classTag[PoiSet]
+}
+
+/**
+ * Decoder for our CSV format handling POIs.
+ */
+class CsvPoiDecoder extends Decoder[Poi] {
+  override def decode(key: String, bytes: Array[Byte]): Option[Poi] = {
+    val line = new String(bytes, Charsets.UTF_8).trim
+    val parts = line.split(",")
+    if (parts.length < 7) {
+      None
+    } else {
+      val user = parts(0)
+      val point = LatLng.degrees(parts(1).toDouble, parts(2).toDouble).toPoint
+      val size = parts(3).toInt
+      val firstSeen = new Instant(parts(4).toLong)
+      val lastSeen = new Instant(parts(5).toLong)
+      val diameter = Distance.meters(parts(6).toDouble)
+      Some(Poi(user, point, size, firstSeen, lastSeen, diameter))
+    }
+  }
+
+  override def elementClassTag: ClassTag[Poi] = classTag[Poi]
 }

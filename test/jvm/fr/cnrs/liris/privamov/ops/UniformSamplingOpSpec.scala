@@ -34,7 +34,8 @@ class UniformSamplingOpSpec extends UnitSpec with WithTraceGenerator with WithSp
 
   private def transform(data: Seq[Trace], probability: Double) = {
     val ds = write(data: _*)
-    val res = new UniformSamplingOp(env).execute(UniformSamplingIn(probability = probability, data = ds), ctx)
+    val op = new UniformSamplingOp(env, decoders, encoders)
+    val res = op.execute(UniformSamplingIn(probability = probability, data = ds), ctx)
     read(res.data)
   }
 }

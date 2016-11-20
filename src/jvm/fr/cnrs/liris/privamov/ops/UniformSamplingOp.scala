@@ -21,6 +21,7 @@ package fr.cnrs.liris.privamov.ops
 import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.common.random.RandomUtils
+import fr.cnrs.liris.privamov.core.io.{Decoder, Encoder}
 import fr.cnrs.liris.privamov.core.model.Trace
 import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 
@@ -30,10 +31,14 @@ import scala.util.Random
   category = "prepare",
   help = "Uniformly sample events inside traces.",
   description = "Perform a uniform sampling on traces, keeping each event with a given probability.")
-class UniformSamplingOp @Inject()(env: SparkleEnv) extends Operator[UniformSamplingIn, UniformSamplingOut] with SparkleOperator {
+class UniformSamplingOp @Inject()(
+  override protected val env: SparkleEnv,
+  override protected val decoders: Set[Decoder[_]],
+  override protected val encoders: Set[Encoder[_]])
+  extends Operator[UniformSamplingIn, UniformSamplingOut] with SparkleOperator {
 
   override def execute(in: UniformSamplingIn, ctx: OpContext): UniformSamplingOut = {
-    val input = read(in.data, env)
+    val input = read[Trace](in.data)
     val rnd = new Random(ctx.seed)
     val seeds = input.keys.map(key => key -> rnd.nextLong()).toMap
     val output = input.map(trace => transform(trace, in.probability, seeds(trace.id)))

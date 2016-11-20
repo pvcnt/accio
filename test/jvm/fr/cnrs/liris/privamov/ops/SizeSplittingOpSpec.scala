@@ -18,40 +18,39 @@
 
 package fr.cnrs.liris.privamov.ops
 
-import com.github.nscala_time.time.Imports._
 import fr.cnrs.liris.privamov.core.model.Trace
 import fr.cnrs.liris.privamov.testing.WithTraceGenerator
 import fr.cnrs.liris.testing.UnitSpec
 
-import scala.util.Random
-
 /**
- * Unit tests for [[DurationSplittingOp]].
+ * Unit tests for [[SizeSplittingOp]].
  */
-class DurationSplittingOpSpec extends UnitSpec with WithTraceGenerator with WithSparkleEnv {
-  behavior of "DurationSplittingOp"
+class SizeSplittingOpSpec extends UnitSpec with WithTraceGenerator with WithSparkleEnv {
+  behavior of "SizeSplittingOp"
 
-  it should "split by duration" in {
-    val trace = randomTrace(Me, 150, Duration.standardSeconds(Random.nextInt(10)))
-    val res = transform(Seq(trace), Duration.standardSeconds(10))
+  it should "split by size" in {
+    val trace = randomTrace(Me, 150)
+    val res = transform(Seq(trace), 20)
+    res should have size 8
     res.foreach { trace =>
       trace.user shouldBe Me
-      trace.duration.seconds should be <= (10L)
+      trace.size should be <= (20)
     }
     res.flatMap(_.events) should contain theSameElementsInOrderAs trace.events
   }
 
-  it should "handle a duration greater than trace's duration" in {
-    val trace = randomTrace(Me, 60, Duration.standardSeconds(1))
-    val res = transform(Seq(trace), Duration.standardSeconds(100))
+  it should "handle a size greater than trace's size" in {
+    val trace = randomTrace(Me, 60)
+    val res = transform(Seq(trace), 65)
     res should have size 1
     res.head.user shouldBe trace.user
     res.head.events should contain theSameElementsInOrderAs trace.events
   }
 
-  private def transform(data: Seq[Trace], duration: Duration) = {
+  private def transform(data: Seq[Trace], size: Int) = {
     val ds = write(data: _*)
-    val res = new DurationSplittingOp(env, decoders, encoders).execute(DurationSplittingIn(duration = duration, data = ds), ctx)
+    val op = new SizeSplittingOp(env, decoders, encoders)
+    val res = op.execute(SizeSplittingIn(size = size, data = ds), ctx)
     read(res.data)
   }
 }

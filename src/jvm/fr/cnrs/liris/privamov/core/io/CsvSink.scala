@@ -21,18 +21,22 @@ package fr.cnrs.liris.privamov.core.io
 import java.nio.file.{Files, Paths}
 
 import com.github.nscala_time.time.Imports._
-import com.google.common.base.Charsets
+import com.google.common.base.{Charsets, MoreObjects}
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.common.util.FileUtils
-import fr.cnrs.liris.privamov.core.model.{Event, Trace}
+import fr.cnrs.liris.privamov.core.model._
+
+import scala.reflect._
 
 /**
- * Mobility traces sink writing data to our custom CSV format, with one file per trace.
+ * Data sink writing data in our CSV format. There is one CSV file per source key.
  *
  * @param uri                     Path to the directory where to write.
+ * @param encoder                 Encoder to write elements into each CSV file.
  * @param failOnNonEmptyDirectory Whether to fail is specified directory exists and is not empty.
+ * @tparam T Type of elements being written.
  */
-case class CsvSink(uri: String, failOnNonEmptyDirectory: Boolean = true) extends DataSink[Trace] with LazyLogging {
+class CsvSink[T <: Identified : ClassTag](uri: String, encoder: Encoder[T], failOnNonEmptyDirectory: Boolean = true) extends DataSink[T] with LazyLogging {
   private[this] val path = Paths.get(FileUtils.expand(uri))
   if (!path.toFile.exists) {
     Files.createDirectories(path)
@@ -41,18 +45,78 @@ case class CsvSink(uri: String, failOnNonEmptyDirectory: Boolean = true) extends
   } else if (path.toFile.isFile) {
     throw new IllegalArgumentException(s"${path.toAbsolutePath} already exists and is a file")
   }
-  private[this] val encoder = new CsvEncoder
-  private[this] val NL = "\n".getBytes(Charsets.UTF_8)
 
-  override def write(elements: TraversableOnce[Trace]): Unit = {
-    elements.foreach { trace =>
-      val encodedEvents = trace.events.map(encoder.encode)
-      val bytes = foldLines(encodedEvents)
-      Files.write(path.resolve(s"${trace.id}.csv"), bytes)
+  override def write(key: String, elements: TraversableOnce[T]): Unit = {
+    elements.foreach { element =>
+      val bytes = encoder.encode(element)
+      Files.write(path.resolve(s"${element.id}.csv"), bytes)
     }
   }
 
-  private def foldLines(lines: Seq[Array[Byte]]) = {
+  override def toString: String =
+    MoreObjects.toStringHelper(this)
+      .addValue(classTag[T].runtimeClass.getName)
+      .add("uri", uri)
+      .toString
+}
+
+/**
+ * Encoder for our CSV format handling traces.
+ */
+class CsvTraceEncoder extends Encoder[Trace] {
+  private[this] val encoder = new CsvEventEncoder
+
+  override def encode(obj: Trace): Array[Byte] = {
+    val encodedEvents = obj.events.map(encoder.encode)
+    ByteUtils.foldLines(encodedEvents)
+  }
+
+  override def elementClassTag: ClassTag[Trace] = classTag[Trace]
+}
+
+/**
+ * Encoder for our CSV format handling events.
+ */
+class CsvEventEncoder extends Encoder[Event] {
+  override def encode(obj: Event): Array[Byte] = {
+    val latLng = obj.point.toLatLng
+    s"${obj.user},${latLng.lat.degrees},${latLng.lng.degrees},${obj.time.millis}".getBytes(Charsets.UTF_8)
+  }
+
+  override def elementClassTag: ClassTag[Event] = classTag[Event]
+}
+
+/**
+ * Encoder for our CSV format handling POIs sets.
+ */
+class CsvPoiSetEncoder extends Encoder[PoiSet] {
+  private[this] val encoder = new CsvPoiEncoder
+
+  override def encode(obj: PoiSet): Array[Byte] = {
+    val encodedEvents = obj.pois.map(encoder.encode)
+    ByteUtils.foldLines(encodedEvents)
+  }
+
+  override def elementClassTag: ClassTag[PoiSet] = classTag[PoiSet]
+}
+
+/**
+ * Encoder for our CSV format handling POIs.
+ */
+class CsvPoiEncoder extends Encoder[Poi] {
+  override def encode(obj: Poi): Array[Byte] = {
+    val latLng = obj.centroid.toLatLng
+    val fields = Seq(obj.user, latLng.lat.degrees, latLng.lng.degrees, obj.size, obj.firstSeen.millis, obj.lastSeen.millis, obj.diameter.meters)
+    fields.mkString(",").getBytes(Charsets.UTF_8)
+  }
+
+  override def elementClassTag: ClassTag[Poi] = classTag[Poi]
+}
+
+private object ByteUtils {
+  private[this] val NL = "\n".getBytes(Charsets.UTF_8)
+
+  def foldLines(lines: Seq[Array[Byte]]): Array[Byte] = {
     if (lines.isEmpty) {
       // No line, return directly an empty array.
       Array.empty[Byte]
@@ -76,15 +140,5 @@ case class CsvSink(uri: String, failOnNonEmptyDirectory: Boolean = true) extends
       }
       bytes
     }
-  }
-}
-
-/**
- * Encoder for our custom CSV format handling events.
- */
-class CsvEncoder extends Encoder[Event] {
-  override def encode(obj: Event): Array[Byte] = {
-    val latLng = obj.point.toLatLng
-    s"${obj.user},${latLng.lat.degrees},${latLng.lng.degrees},${obj.time.millis}".getBytes(Charsets.UTF_8)
   }
 }

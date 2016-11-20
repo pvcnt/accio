@@ -33,7 +33,7 @@ import fr.cnrs.liris.common.geo.{BoundingBox, Distance, Point}
  * @param user   User identifier.
  * @param events Chronologically ordered events.
  */
-case class Trace private(id: String, user: String, events: Seq[Event]) {
+case class Trace private(id: String, user: String, events: Seq[Event]) extends Identified  {
   /**
    * Check if this trace is empty, i.e., contains no event.
    */
