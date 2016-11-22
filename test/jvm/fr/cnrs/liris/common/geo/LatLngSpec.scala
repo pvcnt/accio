@@ -1,3 +1,21 @@
+/*
+ * Accio is a program whose purpose is to study location privacy.
+ * Copyright (C) 2016 Vincent Primault <vincent.primault@liris.cnrs.fr>
+ *
+ * Accio is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Accio is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package fr.cnrs.liris.common.geo
 
 import com.google.common.geometry.S2LatLng
@@ -33,6 +51,11 @@ class LatLngSpec extends UnitSpec {
       LatLng.degrees(lat1, lng1).distance(LatLng.degrees(lat2, lng2)).meters shouldBe
         closeTo(S2LatLng.fromDegrees(lat1, lng1).getEarthDistance(S2LatLng.fromDegrees(lat2, lng2)), eps)
     }
+
+    // Distance is commutative.
+    val latLng1 = LatLng.degrees(50, -120)
+    val latLng2 = LatLng.degrees(48, -115)
+    latLng1.distance(latLng2) shouldBe latLng2.distance(latLng1)
   }
 
   it should "be convertable to coordinates" in {
@@ -40,6 +63,20 @@ class LatLngSpec extends UnitSpec {
     coords should have size 2
     coords.last shouldBe closeTo(50, eps)
     coords.head shouldBe closeTo(-120, eps)
+  }
+
+  it should "be convertable to a point" in {
+    val latLng1 = LatLng.degrees(50, -120)
+    val latLng2 = LatLng.degrees(50.005, -120.005)
+    val point1 = latLng1.toPoint
+    val point2 = latLng2.toPoint
+
+    // Distance is consistent.
+    //point1.distance(point2).meters shouldBe closeTo(latLng1.distance(latLng2).meters, eps)
+
+    // It can be converted back into the same point.
+    point1.toLatLng.lat.degrees shouldBe closeTo(50, eps)
+    point1.toLatLng.lng.degrees shouldBe closeTo(-120, eps)
   }
 
   it should "be parsable" in {
