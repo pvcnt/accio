@@ -60,7 +60,7 @@ class PoisAnalyzerOp @Inject()(
       }
     }
 
-    val header = Seq("poi_id", "avg_duration_in_millis", "avg_nb_visits", "nb_users", "avg_size", "retrieved").mkString(",")
+    val header = Seq("poi_id", "avg_duration_in_millis", "nb_visits", "nb_users", "avg_size", "retrieved").mkString(",")
     val lines = pois.zipWithIndex.map { case (poi, idx) =>
       val fields = Seq(idx, poi.avgDuration.millis, poi.nbVisits, poi.nbUsers, poi.avgSize, if (poi.retrieved) "1" else "0")
       fields.map(_.toString).mkString(",")
