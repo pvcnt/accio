@@ -31,16 +31,16 @@ import org.joda.time.Instant
 @Op(
   category = "metric",
   help = "Compute temporal distortion difference between two datasets of traces")
-class TemporalDistortionOp @Inject()(
+class SpatioTemporalDistortionOp @Inject()(
   override protected val env: SparkleEnv,
   override protected val decoders: Set[Decoder[_]])
-  extends Operator[TemporalDistortionIn, TemporalDistortionOut] with SparkleReadOperator {
+  extends Operator[SpatioTemporalDistortionIn, SpatioTemporalDistortionOut] with SparkleReadOperator {
 
-  override def execute(in: TemporalDistortionIn, ctx: OpContext): TemporalDistortionOut = {
+  override def execute(in: SpatioTemporalDistortionIn, ctx: OpContext): SpatioTemporalDistortionOut = {
     val train = read[Trace](in.train)
     val test = read[Trace](in.test)
     val metrics = train.zip(test).map { case (ref, res) => evaluate(ref, res) }.toArray
-    TemporalDistortionOut(
+    SpatioTemporalDistortionOut(
       min = metrics.map { case (k, v) => k -> v.min }.toMap,
       max = metrics.map { case (k, v) => k -> v.max }.toMap,
       stddev = metrics.map { case (k, v) => k -> v.stddev }.toMap,
@@ -78,11 +78,11 @@ class TemporalDistortionOp @Inject()(
   }
 }
 
-case class TemporalDistortionIn(
+case class SpatioTemporalDistortionIn(
   @Arg(help = "Train dataset") train: Dataset,
   @Arg(help = "Test dataset") test: Dataset)
 
-case class TemporalDistortionOut(
+case class SpatioTemporalDistortionOut(
   @Arg(help = "Temporal distortion min") min: Map[String, Double],
   @Arg(help = "Temporal distortion max") max: Map[String, Double],
   @Arg(help = "Temporal distortion stddev") stddev: Map[String, Double],

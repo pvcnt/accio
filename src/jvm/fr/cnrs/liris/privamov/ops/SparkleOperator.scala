@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.privamov.ops
 
-import java.nio.file.Path
+import java.nio.file.{Files, Path}
 
 import fr.cnrs.liris.accio.core.api.Dataset
 import fr.cnrs.liris.privamov.core.io._
@@ -46,7 +46,10 @@ private[ops] trait SparkleReadOperator {
 private[ops] trait SparkleWriteOperator {
   protected def encoders: Set[Encoder[_]]
 
-  protected def write[T <: Identified: ClassTag](frame: DataFrame[T], workDir: Path, port: String = "data") = {
+  protected def write[T <: Identified : ClassTag](frame: DataFrame[T], workDir: Path): Dataset =
+    write(frame, workDir, "data")
+
+  protected def write[T <: Identified : ClassTag](frame: DataFrame[T], workDir: Path, port: String): Dataset = {
     val clazz = classTag[T].runtimeClass
     encoders.find(encoder => clazz.isAssignableFrom(encoder.elementClassTag.runtimeClass)) match {
       case None => throw new RuntimeException(s"No encoder available for: ${clazz.getName}")
@@ -54,6 +57,23 @@ private[ops] trait SparkleWriteOperator {
         val uri = workDir.resolve(port).toAbsolutePath.toString
         frame.write(new CsvSink(uri, encoder.asInstanceOf[Encoder[T]]))
         Dataset(uri)
+    }
+  }
+
+  protected def write[T: ClassTag](elements: Seq[T], key: String, workDir: Path): Dataset =
+    write(elements, key, workDir, "data")
+
+  protected def write[T: ClassTag](elements: Seq[T], key: String, workDir: Path, port: String): Dataset = {
+    val clazz = classTag[T].runtimeClass
+    encoders.find(encoder => clazz.isAssignableFrom(encoder.elementClassTag.runtimeClass)) match {
+      case None => throw new RuntimeException(s"No encoder available for: ${clazz.getName}")
+      case Some(encoder) =>
+        val path = workDir.resolve(s"$port/$key.csv").toAbsolutePath
+        val textEncoder = new TextLineEncoder(encoder.asInstanceOf[Encoder[T]])
+        val bytes = textEncoder.encode(elements)
+        Files.createDirectories(path.getParent)
+        Files.write(path, bytes)
+        Dataset(path.toString)
     }
   }
 }

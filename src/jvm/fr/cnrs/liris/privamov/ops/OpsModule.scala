@@ -29,16 +29,16 @@ import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
 object OpsModule extends ScalaModule {
   override def configure(): Unit = {
     // List of available encoders.
-    val encoders = ScalaMultibinder.newSetBinder[Encoder[_]](binder)
-    encoders.addBinding.to[StringEncoder]
+    val encoders = ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Encoder[_]] {})
+    encoders.addBinding.toInstance(new StringEncoder)
     encoders.addBinding.to[CsvEventEncoder]
     encoders.addBinding.to[CsvTraceEncoder]
     encoders.addBinding.to[CsvPoiEncoder]
     encoders.addBinding.to[CsvPoiSetEncoder]
 
     // List of available decoders.
-    val decoders = ScalaMultibinder.newSetBinder[Decoder[_]](binder)
-    decoders.addBinding.to[StringDecoder]
+    val decoders = ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Decoder[_]] {})
+    decoders.addBinding.toInstance(new StringDecoder)
     decoders.addBinding.to[CsvEventDecoder]
     decoders.addBinding.to[CsvTraceDecoder]
     decoders.addBinding.to[CsvPoiDecoder]
@@ -59,7 +59,9 @@ object OpsModule extends ScalaModule {
     ops.addBinding.toInstance(classOf[GeoIndistinguishabilityOp])
     ops.addBinding.toInstance(classOf[ModuloSamplingOp])
     ops.addBinding.toInstance(classOf[PoisAnalyzerOp])
+    ops.addBinding.toInstance(classOf[PoisExtractionOp])
     ops.addBinding.toInstance(classOf[PoisRetrievalOp])
+    ops.addBinding.toInstance(classOf[PoisRetrieval2Op])
     ops.addBinding.toInstance(classOf[PromesseOp])
     ops.addBinding.toInstance(classOf[PoisReidentOp])
     ops.addBinding.toInstance(classOf[SequentialSplittingOp])
@@ -67,7 +69,7 @@ object OpsModule extends ScalaModule {
     ops.addBinding.toInstance(classOf[SpatialGapSplittingOp])
     ops.addBinding.toInstance(classOf[SpatialSamplingOp])
     ops.addBinding.toInstance(classOf[SpatialDistortionOp])
-    ops.addBinding.toInstance(classOf[TemporalDistortionOp])
+    ops.addBinding.toInstance(classOf[SpatioTemporalDistortionOp])
     ops.addBinding.toInstance(classOf[TemporalGapSplittingOp])
     ops.addBinding.toInstance(classOf[TransmissionDelayOp])
     ops.addBinding.toInstance(classOf[TemporalSamplingOp])
