@@ -49,7 +49,14 @@ class CsvReportCreator {
     if (opts.split) {
       // When splitting, one sub-directory is created per combination of workflow parameters.
       artifacts.split.foreach { list =>
-        val label = list.params.map { case (k, v) => s"$k=$v" }.mkString(",")
+        val label = list.params.map { case (k, v) =>
+          var vStr = v.toString
+          if (vStr.contains('/')) {
+            // Remove any slash that would be polluting directory name.
+            vStr = vStr.substring(vStr.lastIndexOf('/') + 1)
+          }
+          s"$k=$vStr"
+        }.mkString(",")
         doWrite(list, workDir.resolve(label), opts)
       }
     } else {
