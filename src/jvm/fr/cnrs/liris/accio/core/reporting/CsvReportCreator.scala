@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.core.reporting
 
 import java.nio.file.{Files, Path, Paths, StandardOpenOption}
 
-import fr.cnrs.liris.accio.core.framework.{DataType, Values}
+import fr.cnrs.liris.accio.core.framework.{DataType, Run, Values}
 
 import scala.collection.JavaConverters._
 
@@ -49,14 +49,7 @@ class CsvReportCreator {
     if (opts.split) {
       // When splitting, one sub-directory is created per combination of workflow parameters.
       artifacts.split.foreach { list =>
-        val label = list.params.map { case (k, v) =>
-          var vStr = v.toString
-          if (vStr.contains('/')) {
-            // Remove any slash that would be polluting directory name.
-            vStr = vStr.substring(vStr.lastIndexOf('/') + 1)
-          }
-          s"$k=$vStr"
-        }.mkString(",")
+        val label = Run.label(list.params)
         doWrite(list, workDir.resolve(label), opts)
       }
     } else {

@@ -171,6 +171,14 @@ For example:
 
 will produce a value per CSV file in the `/home/me/my_dataset` directory.
 
+## Controlling randomness through a seed
+
+Some workflows may include operators marked as *unstable*, which means they need some source of randomness when being executed.
+This randomness is provided through a seed.
+By default, a random seed is generated for each experiment, but you may fix it through the `seed` key.
+If the workflow is not repeated, the same seed will be used for each run.
+If the workflow is repeated, the seed will be used to deterministically produce a different seed for each run with the same combination of parameters.
+
 ## Validating experiments
 
 Experiment files can be validated thanks to the `accio validate` command, which takes one or several files as arguments.

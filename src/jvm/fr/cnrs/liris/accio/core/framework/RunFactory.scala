@@ -38,19 +38,24 @@ final class RunFactory @Inject()(opRegistry: OpRegistry) {
    * @param experiment Experiment.
    */
   def create(experiment: Experiment): Seq[Run] = {
-    val rnd = new Random(experiment.seed)
-    expand(experiment).map { case (name, params) =>
-      val runId = HashUtils.sha1(UUID.randomUUID().toString)
-      val seed = rnd.nextLong()
-      Run(id = runId, parent = experiment.id, name = name, seed = seed, params = params)
-    }
-  }
-
-  private def expand(experiment: Experiment): Seq[(String, Map[String, Any])] = {
     expandParams(experiment.params, experiment.name, experiment.workflow)
-      .flatMap { case (name, params) => expandRuns(experiment.repeat, name, params) }
+      .flatMap { case (name, params) =>
+        expandRuns(experiment.repeat, experiment.seed, name, params)
+      }
+      .map { case (name, params, seed) =>
+        val runId = HashUtils.sha1(UUID.randomUUID().toString)
+        Run(id = runId, parent = experiment.id, name = name, seed = seed, params = params)
+      }
   }
 
+  /**
+   * Expand an experiment to take into account the space of parameters being explored.
+   *
+   * @param params   Experiment parameters.
+   * @param name     Experiment name.
+   * @param workflow Workflow.
+   * @return List of (run name, run parameters).
+   */
   private def expandParams(params: Map[String, Exploration], name: String, workflow: Workflow): Seq[(String, Map[String, Any])] = {
     if (params.nonEmpty) {
       val allValues = params.map { case (paramName, explo) =>
@@ -59,19 +64,29 @@ final class RunFactory @Inject()(opRegistry: OpRegistry) {
         explo.expand(param.kind).map(v => (paramName, v)).toSeq
       }.toSeq
       Seqs.crossProduct(allValues).map { params =>
-        val runName = name + ":" + params.map { case (k, v) => s"$k=$v" }.mkString(",")
-        (runName, params.toMap)
+        val label = Run.label(params)
+        (s"$name:$label", params.toMap)
       }
     } else {
       Seq((name, Map.empty[String, Any]))
     }
   }
 
-  private def expandRuns(repeat: Int, name: String, params: Map[String, Any]): Seq[(String, Map[String, Any])] = {
+  /**
+   * Expand runs to take into account number of times the experiment should be repeated.
+   *
+   * @param repeat Number of times to repeat the experiment.
+   * @param seed   Experiment's seed.
+   * @param name   Run name.
+   * @param params Run parameters.
+   * @return List of (run name, run parameters, run seed).
+   */
+  private def expandRuns(repeat: Int, seed: Long, name: String, params: Map[String, Any]): Seq[(String, Map[String, Any], Long)] = {
     if (repeat <= 1) {
-      Seq((name, params))
+      Seq((name, params, seed))
     } else {
-      Seq.tabulate(repeat)(idx => (s"$name#${idx + 1}", params))
+      val rnd = new Random(seed)
+      Seq.tabulate(repeat)(idx => (s"$name#${idx + 1}", params, rnd.nextLong()))
     }
   }
 }

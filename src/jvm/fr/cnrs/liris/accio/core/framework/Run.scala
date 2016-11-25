@@ -55,3 +55,28 @@ case class Run(
       .add("name", name)
       .toString
 }
+
+object Run {
+  /**
+   * Generate a human-readable label for a list of parameters.
+   *
+   * @param params List of parameters.
+   */
+  def label(params: Seq[(String, Any)]): String = {
+    params.map { case (k, v) =>
+      var vStr = v.toString
+      if (vStr.contains('/')) {
+        // Remove any slash that would be polluting directory name.
+        vStr = vStr.substring(vStr.lastIndexOf('/') + 1)
+      }
+      s"$k=$vStr"
+    }.mkString(",")
+  }
+
+  /**
+   * Generate a human-readable label for a map of parameters.
+   *
+   * @param params Map of parameters.
+   */
+  def label(params: Map[String, Any]): String = label(params.toSeq)
+}

@@ -67,7 +67,7 @@ While operators need to be implemented by developers, workflows can be defined v
 
 Workflows are instantiated through experiments.
 An experiment defines the way to launched one or several workflows in a row, with some variations.
-Each instance of a workflow is called a run; runs are then aggregated into experiments.
+Each instance of a workflow is called a run; each run belong to an experiment, which allows to keep track of runs that where launched together.
 An experiment can be as simple as a single run of a given workflow, or as complex as thousand runs, each one being a variation of the same workflow (e.g., to perform a parameter sweep).
 
 Experiments and runs are identified with a globally unique identifier, which means there should not be two identical identifiers even experiments where launched on different machines.
