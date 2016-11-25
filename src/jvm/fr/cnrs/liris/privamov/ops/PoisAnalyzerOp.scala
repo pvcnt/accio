@@ -18,11 +18,11 @@
 
 package fr.cnrs.liris.privamov.ops
 
-import breeze.stats.mean
 import com.github.nscala_time.time.Imports._
 import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.common.geo.{Distance, Point}
+import fr.cnrs.liris.common.util.MathUtils
 import fr.cnrs.liris.privamov.core.io.{Decoder, Encoder}
 import fr.cnrs.liris.privamov.core.model.{Poi, PoiSet}
 import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
@@ -60,10 +60,27 @@ class PoisAnalyzerOp @Inject()(
       }
     }
 
-    val header = Seq("poi_id", "avg_duration_in_millis", "nb_visits", "nb_users", "avg_size", "retrieved").mkString(",")
-    val lines = pois.zipWithIndex.map { case (poi, idx) =>
-      val fields = Seq(idx, poi.avgDuration.millis, poi.nbVisits, poi.nbUsers, poi.avgSize, if (poi.retrieved) "1" else "0")
-      fields.map(_.toString).mkString(",")
+    val usersIndex = pois.flatMap(_.trainPois.map(_.user)).toSet.zipWithIndex.toMap
+
+    val header = Seq("poi_id", "lat", "lng", "nb_users", "nb_visits", "user_id", "nb_user_visits", "duration_millis", "size", "retrieved").mkString(",")
+    val lines = pois.zipWithIndex.flatMap { case (poi, idx) =>
+      poi.trainPois.map { trainPoi =>
+        val retrieved = poi.testPois.exists(testPoi => testPoi.user == trainPoi.user)
+        val nbUserVisits = poi.trainPois.count(_.user == trainPoi.user)
+        val latLng = poi.centroid.toLatLng
+        val fields = Seq(
+          idx,
+          MathUtils.roundAt6(latLng.lat.degrees),
+          MathUtils.roundAt6(latLng.lng.degrees),
+          poi.nbUsers,
+          poi.nbVisits,
+          usersIndex(trainPoi.user),
+          nbUserVisits,
+          trainPoi.duration.millis,
+          trainPoi.size,
+          if (retrieved) "1" else "0")
+        fields.map(_.toString).mkString(",")
+      }
     }
     val output = write(Seq(header) ++ lines, "pois", ctx.workDir)
 
@@ -72,12 +89,6 @@ class PoisAnalyzerOp @Inject()(
 }
 
 private class AggregatedPoi(val centroid: Point, var trainPois: Seq[Poi], var testPois: Seq[Poi]) {
-  def retrieved: Boolean = testPois.exists(testPoi => trainPois.exists(_.user == testPoi.user))
-
-  def avgDuration: Duration = Duration.millis(mean(trainPois.map(_.duration.getMillis.toDouble)).round)
-
-  def avgSize: Double = mean(trainPois.map(_.size.toDouble))
-
   def nbVisits: Int = trainPois.size
 
   def nbUsers: Int = trainPois.map(_.user).distinct.size
