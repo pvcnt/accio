@@ -44,7 +44,9 @@ class FileDetector extends Detector with LazyLogging {
       DetectedURI(new URI(s"file://${path.replace('\\', '/')}"))
     } else if (path.charAt(0) == '/') {
       DetectedURI(new URI(s"file://$path"))
-    } else DetectedURI(new URI(s"file:///$path"))
+    } else {
+      DetectedURI(new URI(s"file:///$path"))
+    }
   }
 
   private def absolutize(str: String, pwd: Path) = {

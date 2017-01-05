@@ -18,25 +18,17 @@
 
 package fr.cnrs.liris.common.getter
 
-import java.nio.file.{Path, Paths}
+import java.nio.file.Path
 
-class DownloadClient(detector: Detector, getters: Map[String, Getter], decompressors: Map[String, Decompressor], detectPwd: Boolean) {
+class DownloadClient(detectors: Set[Detector], getters: Set[Getter], decompressors: Map[String, Decompressor], guessPwd: Boolean) {
   def download(src: String, dst: Path): Unit = {
-    val pwd = if (detectPwd) sys.props.get("user.dir").map(Paths.get(_)) else None
-    detector.detect(src, pwd) match {
-      case None => throw new DetectorException(s"Invalid source string: $src")
-      case Some(detectedUri) =>
-        // If there is a subdir component, then we download the root separately
-        // and then copy over the proper subdir.
-        /*val tmpDir = if (detectedUri.subdir.isDefined) {
-          Some(Files.createTempDirectory("getter-"))
-        } else None*/
+    val detectedUri = Detector.detect(src, guessPwd, detectors)
+    // If there is a subdir component, then we download the root separately
+    // and then copy over the proper subdir.
+    /*val tmpDir = if (detectedUri.subdir.isDefined) {
+      Some(Files.createTempDirectory("getter-"))
+    } else None*/
 
-        val scheme = detectedUri.getter.getOrElse(detectedUri.rawUri.getScheme)
-        getters.get(scheme) match {
-          case None => throw new IllegalArgumentException(s"Download not supported for scheme '$scheme'")
-          case Some(getter) => getter.get(detectedUri.rawUri, dst)
-        }
-    }
+    Getter.get(detectedUri, dst, getters)
   }
 }

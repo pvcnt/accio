@@ -25,4 +25,6 @@ trait Decompressor {
   // is a directory or single file. src is guaranteed to be a single file
   // that exists. dst is not guaranteed to exist already.
   def decompress(src: String, dst: String): Unit
+
+  def extensions: Set[String]
 }

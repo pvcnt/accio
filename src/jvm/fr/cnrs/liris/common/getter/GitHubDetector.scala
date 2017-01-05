@@ -21,14 +21,12 @@ package fr.cnrs.liris.common.getter
 import java.net.{MalformedURLException, URI, URL}
 import java.nio.file.Path
 
-import com.typesafe.scalalogging.LazyLogging
-
-class GitHubDetector extends Detector with LazyLogging {
+class GitHubDetector extends Detector {
   override def detect(str: String, pwd: Option[Path]): Option[DetectedURI] = {
     if (str.startsWith("github.com/")) {
-      detectHttp(str)
+      Some(detectHttp(str))
     } else if (str.startsWith("git@github.com:")) {
-      detectSsh(str)
+      Some(detectSsh(str))
     } else {
       None
     }
@@ -46,17 +44,13 @@ class GitHubDetector extends Detector with LazyLogging {
       throw new DetectorException(s"GitHub URLs should be github.com/username/repo (got $str)")
     }
 
-    val maybeUrl = try {
-      Some(new URL(s"https://${parts.take(3).mkString("/")}$query"))
+    val url = try {
+      new URL(s"https://${parts.take(3).mkString("/")}$query")
     } catch {
-      case e: MalformedURLException =>
-        logger.error(s"Error parsing GitHub URL", e)
-        None
+      case e: MalformedURLException => throw new DetectorException(s"Error parsing GitHub URL", e)
     }
-    maybeUrl.map { url =>
-      val subdir = if (parts.length > 3) Some(parts.drop(3).mkString("/")) else None
-      DetectedURI(rawUri = url.toURI, getter = Some("git"), subdir = subdir)
-    }
+    val subdir = if (parts.length > 3) Some(parts.drop(3).mkString("/")) else None
+    DetectedURI(rawUri = url.toURI, getter = Some("git"), subdir = subdir)
   }
 
   private def detectSsh(str: String) = {
@@ -70,16 +64,12 @@ class GitHubDetector extends Detector with LazyLogging {
     }
 
     val path = s"/${parts.take(2).mkString("/")}"
-    val maybeUri = try {
-      Some(new URI("ssh", "git", "github.com", -1, path, query, null))
+    val uri = try {
+      new URI("ssh", "git", "github.com", -1, path, query, null)
     } catch {
-      case e: MalformedURLException =>
-        logger.error(s"Error parsing GitHub URL", e)
-        None
+      case e: MalformedURLException => throw new DetectorException(s"Error parsing GitHub URL", e)
     }
-    maybeUri.map { uri =>
-      val subdir = if (parts.length > 2) Some(parts.drop(2).mkString("/")) else None
-      DetectedURI(rawUri = uri, getter = Some("git"), subdir = subdir)
-    }
+    val subdir = if (parts.length > 2) Some(parts.drop(2).mkString("/")) else None
+    DetectedURI(rawUri = uri, getter = Some("git"), subdir = subdir)
   }
 }

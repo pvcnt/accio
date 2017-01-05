@@ -27,8 +27,8 @@ import java.nio.file.{Files, Path, Paths}
  * @param copy Whether to copy of use symlinks.
  */
 class FileGetter(copy: Boolean) extends Getter {
-  override def get(url: URI, dst: Path): Unit = {
-    val srcPath = Paths.get(url.getPath)
+  override def get(src: URI, dst: Path): Unit = {
+    val srcPath = Paths.get(src.getPath)
 
     // The source path must exist and be a directory to be usable.
     if (!srcPath.toFile.exists()) {
@@ -56,4 +56,6 @@ class FileGetter(copy: Boolean) extends Getter {
       Files.copy(srcPath, dst)
     }
   }
+
+  override def schemes: Set[String] = Set("file")
 }

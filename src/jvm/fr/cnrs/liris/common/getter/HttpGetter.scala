@@ -23,7 +23,7 @@ import java.net.URI
 import java.nio.file.{Files, Path}
 
 class HttpGetter extends Getter {
-  override def get(url: URI, dst: Path): Unit = {
+  override def get(src: URI, dst: Path): Unit = {
     // Destination must not already exist.
     if (dst.toFile.exists()) {
       throw new IOException(s"Destination already exists: ${dst.toAbsolutePath}")
@@ -32,11 +32,13 @@ class HttpGetter extends Getter {
     // Create parent directories.
     Files.createDirectories(dst.getParent)
 
-    val os = url.toURL.openStream()
+    val os = src.toURL.openStream()
     try {
       Files.copy(os, dst)
     } finally {
       os.close()
     }
   }
+
+  override def schemes: Set[String] = Set("http", "https")
 }

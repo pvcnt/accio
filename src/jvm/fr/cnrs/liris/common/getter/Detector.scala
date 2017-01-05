@@ -18,19 +18,24 @@
 
 package fr.cnrs.liris.common.getter
 
-import java.net.URI
-import java.nio.file.Path
+import java.net.URISyntaxException
+import java.nio.file.{Path, Paths}
 
 /**
- * Detector infers from a string the getter to use and the associated URI.
+ * Invalid URLs or a URLs with a blank scheme are passed through a detector in order to determine if it is
+ * a shorthand for something else well-known.
  */
 trait Detector {
   /**
    * Detect whether the string matches a known pattern and turn it into a proper URL.
    *
+   * This method should only throw an exception if it is certain that the string corresponds to a pattern it handles
+   * but for some reason it is incorrectly formatted. If the error is recoverable and the string can still be
+   * detected by another detector, [[None]] should be returned without any exception.
+   *
    * @param str String to test.
    * @param pwd Current working directory.
-   * @throws DetectorException If a fatal error occurred when parsing a string.
+   * @throws DetectorException If a fatal error preventing detection occurred.
    * @return Detected URI, if any.
    */
   @throws[DetectorException]
@@ -38,64 +43,46 @@ trait Detector {
 }
 
 /**
- *
- * @param rawUri
- * @param getter
- * @param subdir
+ * Utils for [[Detector]].
  */
-case class DetectedURI(rawUri: URI, getter: Option[String] = None, subdir: Option[String] = None) {
-  override def toString: String = {
-    getter.map(_ + "::").getOrElse("") + rawUri + subdir.map("//" + _).getOrElse("")
+object Detector {
+  @throws[DetectorException]
+  def detect(str: String, guessPwd: Boolean, detectors: Set[Detector]): DetectedURI = {
+    val pwd = if (guessPwd) sys.props.get("user.dir").map(Paths.get(_)) else None
+    val requestedUri = DetectedURI.parse(str)
+    val maybeUri = detectRaw(requestedUri).orElse(detectors.flatMap(detectWith(requestedUri, pwd, _)).headOption)
+    maybeUri match {
+      case None => throw new DetectorException(s"Invalid source string: $str")
+      case Some(uri) => uri
+    }
   }
-}
 
-/**
- * Factory for [[DetectedURI]].
- */
-object DetectedURI {
-  // Regular expression that finds forced getters. This syntax is schema::url, example: git::https://foo.com
-  private[this] val ForcedRegex = "^([A-Za-z0-9]+)::(.+)$".r
-
-  // getForcedGetter takes a source and returns the tuple of the forced
-  // getter and the raw URL (without the force syntax).
-  // SourceDirSubdir takes a source and returns a tuple of the URL without
-  // the subdir and the URL with the subdir.
-  def parse(str: String): DetectedURI = {
-    val (forcedGetter, rawStr) = {
-      val matches = ForcedRegex.findAllMatchIn(str)
-      if (matches.hasNext) {
-        val m = matches.next
-        (Some(m.group(1)), m.group(2))
-      } else {
-        (None, str)
-      }
+  private def detectRaw(requestedUri: DetectedURI) = {
+    try {
+      if (requestedUri.rawUri.getScheme.nonEmpty) Some(requestedUri) else None
+    } catch {
+      case _: URISyntaxException => None
     }
+  }
 
-    val (rawUri, subdir) = {
-      // Calculate an offset to avoid accidentally marking the scheme as the dir.
-      var idx = rawStr.indexOf("://")
-      val offset = if (idx > -1) idx + 3 else 0
+  private def detectWith(requestedUri: DetectedURI, pwd: Option[Path], detector: Detector) = {
+    detector.detect(requestedUri.rawUri.toString, pwd) match {
+      case None => None
+      case Some(detectedUri) =>
+        // If we have a subdir from the detection, then prepend it to our requested subdir.
+        val subdir = detectedUri.subdir.flatMap { detectedDir =>
+          requestedUri.subdir match {
+            case Some(requestedDir) => Some(s"$detectedDir/$requestedDir")
+            case None => Some(detectedDir)
+          }
+        }.orElse(requestedUri.subdir)
 
-      // First see if we even have an explicit subdir
-      idx = rawStr.drop(offset).indexOf("//")
-      if (idx == -1) {
-        (rawStr, None)
-      } else {
-        idx += offset
-        var rawUri = rawStr.take(idx)
-        var subdir = rawStr.drop(idx + 2)
+        // Preserve the forced getter if it exists. We try to use the original set force first, followed by any force
+        // set by the detector.
+        val scheme = requestedUri.getter.orElse(detectedUri.getter)
 
-        // Next, check if we have query parameters and push them onto the URL.
-        idx = subdir.indexOf("?")
-        if (idx > -1) {
-          subdir = subdir.take(idx)
-          rawUri += subdir.drop(idx)
-        }
-        (rawUri, Some(subdir))
-      }
+        Some(detectedUri.copy(getter = scheme, subdir = subdir))
     }
-
-    DetectedURI(new URI(rawUri), forcedGetter, subdir)
   }
 }
 

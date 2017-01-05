@@ -22,12 +22,36 @@ import java.io.IOException
 import java.net.URI
 import java.nio.file.Path
 
-// Getter defines the interface that schemes must implement to download
-// things.
+/**
+ * Getter defines the interface that schemes must implement to download this.
+ */
 trait Getter {
-  // GetFile downloads the give URL into the given path. The URL must
-  // reference a single file. If possible, the Getter should check if
-  // the remote end contains the same file and no-op this operation.
+  /**
+   * GetFile downloads the give URL into the given path. The URL must reference a single file. If possible, the
+   * Getter should check if the remote end contains the same file and no-op this operation.
+   *
+   * @param src Source URI to download.
+   * @param dst Destination path where to write the file.
+   * @throws IOException If something wrong occurred while download the file.
+   */
   @throws[IOException]
-  def get(url: URI, dst: Path): Unit
+  def get(src: URI, dst: Path): Unit
+
+  /**
+   * Return the list of schemes supported by this getter.
+   */
+  def schemes: Set[String]
+}
+
+object Getter {
+  @throws[IOException]
+  @throws[IllegalArgumentException]
+  def get(uri: DetectedURI, dst: Path, getters: Set[Getter]): Unit = {
+    val scheme = uri.getter.getOrElse(uri.rawUri.getScheme)
+    val maybeGetter = getters.find(_.schemes.contains(scheme))
+    maybeGetter match {
+      case None => throw new IllegalArgumentException(s"Download not supported for scheme '$scheme'")
+      case Some(getter) => getter.get(uri.rawUri, dst)
+    }
+  }
 }

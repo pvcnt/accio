@@ -2,8 +2,8 @@ scala_library(
   name='getter',
   dependencies=[
     'src/jvm/fr/cnrs/liris/common/util',
-    '3rdparty/jvm/com/google/guava',
     '3rdparty/jvm/com/typesafe/scala-logging',
+    '3rdparty/jvm:scala-guice',
   ],
   sources=globs('*.scala')
 )

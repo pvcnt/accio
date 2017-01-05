@@ -51,23 +51,19 @@ class S3Detector extends Detector with LazyLogging {
   }
 
   private def detectWithUrl(urlString: String) = {
-    val maybeUrl = try {
-      Some(new URL(urlString))
+    val url = try {
+      new URL(urlString)
     } catch {
-      case e: MalformedURLException =>
-        logger.error(s"Error parsing S3 URL", e)
-        None
+      case e: MalformedURLException => throw new DetectorException(s"Error parsing S3 URL", e)
     }
-    maybeUrl.map { url =>
-      DetectedURI(rawUri = url.toURI, getter = Some("s3"))
-    }
+    DetectedURI(rawUri = url.toURI, getter = Some("s3"))
   }
 
   private def detectPathStyle(region: String, parts: Array[String]) = {
-    detectWithUrl(s"https://$region.amazonaws.com/${parts.mkString("/")}")
+    Some(detectWithUrl(s"https://$region.amazonaws.com/${parts.mkString("/")}"))
   }
 
   private def detectVhostStyle(region: String, bucket: String, parts: Array[String]) = {
-    detectWithUrl(s"https://$region.amazonaws.com/$bucket/${parts.mkString("/")}")
+    Some(detectWithUrl(s"https://$region.amazonaws.com/$bucket/${parts.mkString("/")}"))
   }
 }
