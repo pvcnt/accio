@@ -16,20 +16,26 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.framework
+package fr.cnrs.liris.accio.cli
 
-import java.nio.file.Path
+import com.google.inject.{Inject, Injector, ProvisionException}
 
-trait ReportRepository {
-  def listExperiments(workDir: Path): Seq[String]
-
-  def listRuns(workDir: Path): Seq[String]
-
-  def write(workDir: Path, experiment: Experiment): Unit
-
-  def write(workDir: Path, run: Run): Unit
-
-  def readExperiment(workDir: Path, id: String): Option[Experiment]
-
-  def readRun(workDir: Path, id: String): Option[Run]
+/**
+ * Factory for [[Command]]. The implementation is very short and trivial, however it makes the purpose clearer and
+ * more consistent with other factories. Moreover, as injecting [[Injector]]s is considered a bad practice, it avoids
+ * injecting it in a larger class with much more logic.
+ *
+ * @param injector Guice injector.
+ */
+final class CmdFactory @Inject()(injector: Injector) {
+  /**
+   * Create a new command.
+   *
+   * @param cmdMeta Command metadata.
+   * @throws ProvisionException If an error happens during operator instantiation.
+   */
+  @throws[ProvisionException]
+  def create(cmdMeta: CmdMeta): Command = {
+    injector.getInstance(cmdMeta.cmdClass)
+  }
 }

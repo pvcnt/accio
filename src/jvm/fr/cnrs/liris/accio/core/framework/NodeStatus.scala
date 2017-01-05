@@ -19,38 +19,49 @@
 package fr.cnrs.liris.accio.core.framework
 
 import com.fasterxml.jackson.annotation.{JsonIgnoreProperties, JsonProperty}
+import fr.cnrs.liris.common.util.Named
 import org.joda.time.{DateTime, Duration}
 
+/**
+ * Execution status of a node.
+ *
+ * @param startedAt   Time at which the execution started
+ * @param completedAt Time at which the execution completed
+ * @param successful  Did the execution completed successfully?
+ * @param stdout
+ * @param stderr
+ * @param exitCode
+ * @param exception
+ * @param artifacts
+ * @param metrics     Metrics generated during the execution.
+ */
 @JsonIgnoreProperties(ignoreUnknown = true)
-case class ExperimentReport(
-  startedAt: DateTime = DateTime.now,
-  completedAt: Option[DateTime] = None,
-  runs: Seq[String] = Seq.empty) {
-
-  /**
-   * Return whether the execution is completed, either successfully or not.
-   */
-  @JsonProperty
-  def completed: Boolean = completedAt.nonEmpty
+case class NodeStatus(
+  startedAt: DateTime,
+  completedAt: DateTime,
+  successful: Boolean,
+  stdout: String,
+  stderr: String,
+  exitCode: Int,
+  exception: Option[ExceptionData],
+  artifacts: Seq[Artifact],
+  metrics: Seq[Metric]) {
 
   /**
    * Return the execution duration.
    */
   @JsonProperty
-  def duration: Option[Duration] = completedAt.map(end => Duration.millis(end.getMillis - startedAt.getMillis))
-
-  /**
-   * Return a copy of this report with a new child node.
-   *
-   * @param id Run identifier
-   */
-  @throws[IllegalStateException]
-  def addRun(id: String): ExperimentReport = copy(runs = runs ++ Seq(id))
-
-  /**
-   * Return a copy of this report with the execution marked as completed.
-   *
-   * @param at Time at which the execution completed
-   */
-  def complete(at: DateTime = DateTime.now): ExperimentReport = copy(completedAt = Some(at))
+  def duration: Duration = Duration.millis(completedAt.getMillis - startedAt.getMillis)
 }
+
+case class NodeKey(value: String)
+
+case class Metric(name: String, value: Double)
+
+/**
+ *
+ * @param name
+ * @param kind
+ * @param value
+ */
+case class Artifact(name: String, @JsonProperty("type") kind: DataType, value: Any) extends Named

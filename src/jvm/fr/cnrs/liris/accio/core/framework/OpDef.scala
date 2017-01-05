@@ -19,7 +19,10 @@
 package fr.cnrs.liris.accio.core.framework
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.twitter.util.StorageUnit
 import fr.cnrs.liris.accio.core.api.Operator
+
+import scala.util.matching.Regex
 
 /**
  * Definition of an operator. Actual implementation is done inside an [[Operator]] class.
@@ -39,7 +42,10 @@ case class OpDef(
   description: Option[String],
   inputs: Seq[InputArgDef],
   outputs: Seq[OutputArgDef],
-  deprecation: Option[String])
+  deprecation: Option[String],
+  resource: Resource)
+
+case class Resource(cpu: Double, memory: StorageUnit, disk: StorageUnit)
 
 /**
  * Utils for [[OpDef]].
@@ -53,7 +59,7 @@ object OpDef {
   /**
    * Regex for valid operator names.
    */
-  val NameRegex = ("^" + NamePattern + "$").r
+  val NameRegex: Regex = ("^" + NamePattern + "$").r
 
   /**
    * Pattern for valid port names.
@@ -63,7 +69,7 @@ object OpDef {
   /**
    * Regex for valid port names.
    */
-  val PortRegex = ("^" + PortPattern + "$").r
+  val PortRegex: Regex = ("^" + PortPattern + "$").r
 }
 
 /**

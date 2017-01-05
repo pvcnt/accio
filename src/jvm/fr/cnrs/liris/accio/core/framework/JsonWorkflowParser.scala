@@ -24,26 +24,32 @@ import com.google.inject.Inject
 import com.twitter.finatra.json.FinatraObjectMapper
 import fr.cnrs.liris.common.util.FileUtils
 
+import scala.util.control.NonFatal
+
 /**
  * Parser for workflow definitions stored into JSON files.
  *
  * @param mapper JSON object mapper.
  */
-class JsonWorkflowParser @Inject()(mapper: FinatraObjectMapper) extends WorkflowParser {
+final class JsonWorkflowParser @Inject()(mapper: FinatraObjectMapper) extends WorkflowParser {
   override def parse(uri: String): WorkflowDef = {
-    val file = getFile(uri)
-    mapper.parse[WorkflowDef](new FileInputStream(file))
-  }
-
-  override def canRead(uri: String): Boolean = {
-    val file = getFile(uri)
-    mapper.objectMapper.readTree(file).has("graph")
+    try {
+      val file = getFile(uri)
+      mapper.parse[WorkflowDef](new FileInputStream(file))
+    } catch {
+      case e: IllegalWorkflowException => throw e
+      case NonFatal(e) => throw new IllegalWorkflowException(s"JSON syntax error in $uri", e)
+    }
   }
 
   private def getFile(uri: String) = {
     val file = new File(FileUtils.expand(uri))
-    require(file.exists && file.isFile, s"${file.getAbsolutePath} does not seem to be a valid file")
-    require(file.canRead, s"${file.getAbsolutePath} is not readable")
+    if (!file.exists || !file.isFile) {
+      throw new IllegalWorkflowException(s"$uri does not seem to be a valid file")
+    }
+    if (!file.canRead) {
+      throw new IllegalWorkflowException(s"$uri is not readable")
+    }
     file
   }
 }

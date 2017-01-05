@@ -26,7 +26,7 @@ import com.google.inject.Inject
 import com.twitter.util.Stopwatch
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.framework._
-import fr.cnrs.liris.accio.core.runtime.{ExperimentExecutor, ProgressReporter}
+import fr.cnrs.liris.accio.core.runtime.{RunController, ProgressReporter}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.util.{FileUtils, HashUtils, StringUtils, TimeUtils}
 
@@ -53,7 +53,7 @@ case class RunOptions(
   flags = Array(classOf[RunOptions]),
   help = "Execute an Accio workflow.",
   allowResidue = true)
-class RunCommand @Inject()(experimentFactory: ExperimentFactory, executor: ExperimentExecutor, opRegistry: OpRegistry)
+class RunCommand @Inject()(experimentFactory: ExperimentFactory, executor: RunController, opRegistry: OpRegistry)
   extends Command with StrictLogging {
 
   def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
@@ -136,7 +136,7 @@ private class ConsoleProgressReporter(out: Reporter, width: Int = 80) extends Pr
   override def onComplete(experiment: Experiment): Unit = {}
 
   override def onGraphStart(run: Run): Unit = synchronized {
-    out.writeln(s"  Run ${run.shortId}: <info>${run.name}</info>")
+    out.writeln(s"  Run ${run.id.shorten}: <info>${run.name}</info>")
   }
 
   override def onGraphComplete(run: Run): Unit = synchronized {

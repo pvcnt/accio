@@ -29,7 +29,7 @@ import fr.cnrs.liris.common.reflect.Annotations
  * @param defn     Command definition.
  * @param cmdClass Command class.
  */
-case class CommandMeta(defn: Cmd, cmdClass: Class[_ <: Command])
+case class CmdMeta(defn: Cmd, cmdClass: Class[_ <: Command])
 
 /**
  * Stores all commands known to the Accio CLI application. It is immutable, all commands should be registered when
@@ -43,14 +43,14 @@ class CmdRegistry @Inject()(classes: Set[Class[_ <: Command]]) {
     val annotations = clazz.getAnnotations
     require(Annotations.exists[Cmd](annotations), "Commands must be annotated with @Cmd")
     val defn = Annotations.find[Cmd](annotations).get
-    val meta = CommandMeta(defn, clazz)
+    val meta = CmdMeta(defn, clazz)
     defn.name -> meta
   }.toMap
 
   /**
    * Return all commands known to this registry.
    */
-  def commands: Set[CommandMeta] = index.values.toSet
+  def commands: Set[CmdMeta] = index.values.toSet
 
   /**
    * Check whether the registry contains a command with given name.
@@ -64,7 +64,7 @@ class CmdRegistry @Inject()(classes: Set[Class[_ <: Command]]) {
    *
    * @param name Command name.
    */
-  def get(name: String): Option[CommandMeta] = index.get(name)
+  def get(name: String): Option[CmdMeta] = index.get(name)
 
   /**
    * Return command metadata for the given command name.
@@ -73,5 +73,5 @@ class CmdRegistry @Inject()(classes: Set[Class[_ <: Command]]) {
    * @throws NoSuchElementException If there is no command with the given name.
    */
   @throws[NoSuchElementException]
-  def apply(name: String): CommandMeta = index(name)
+  def apply(name: String): CmdMeta = index(name)
 }

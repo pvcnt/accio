@@ -1,0 +1,9 @@
+scala_library(
+  name='s3',
+  dependencies=[
+    'src/jvm/fr/cnrs/liris/accio/core/framework',
+    '3rdparty/jvm/io/minio',
+    '3rdparty/jvm/com/typesafe/scala-logging',
+  ],
+  sources=globs('*.scala')
+)

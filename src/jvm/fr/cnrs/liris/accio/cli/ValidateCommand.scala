@@ -34,7 +34,7 @@ case class ValidateOptions(
   help = "Validate the syntax of Accio configuration files.",
   flags = Array(classOf[ValidateOptions]),
   allowResidue = true)
-class ValidateCommand @Inject()(experimentFactory: ExperimentFactory, experimentParser: ExperimentParser, workflowFactory: WorkflowFactory, workflowParser: WorkflowParser)
+class ValidateCommand @Inject()(experimentFactory: ExperimentFactory, experimentParser: RunParser, workflowFactory: WorkflowFactory, workflowParser: WorkflowParser)
   extends Command with StrictLogging {
 
   def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
@@ -71,9 +71,9 @@ class ValidateCommand @Inject()(experimentFactory: ExperimentFactory, experiment
    * @return True if the definition is valid, false otherwise.
    */
   private def validate(uri: String, out: Reporter): Boolean = {
-    if (experimentParser.canRead(uri)) {
+    if (experimentParser.supports(uri)) {
       validateExperiment(uri, out)
-    } else if (workflowParser.canRead(uri)) {
+    } else if (workflowParser.supports(uri)) {
       validateWorkflow(uri, out)
     } else {
       out.writeln(s"<error>- Error validating $uri: Neither an experiment or a workflow file.</error>")

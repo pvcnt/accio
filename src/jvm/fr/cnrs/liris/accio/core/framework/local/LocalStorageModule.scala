@@ -16,20 +16,19 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.viz
+package fr.cnrs.liris.accio.core.framework.local
 
-import com.google.inject.{AbstractModule, Provides, Singleton, TypeLiteral}
-import fr.cnrs.liris.accio.core.api.Operator
-import fr.cnrs.liris.accio.core.framework._
-import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
+import com.google.inject.AbstractModule
+import fr.cnrs.liris.accio.core.framework.{ArtifactRepository, RunRepository, WorkflowRepository}
+import net.codingwell.scalaguice.ScalaModule
 
 /**
- * Guice module providing bindings for Accio Viz application.
+ * Guice module provisionning local storage for repositories.
  */
-object AccioModule extends AbstractModule with ScalaModule {
+object LocalStorageModule extends AbstractModule with ScalaModule {
   override def configure(): Unit = {
-    bind[RunParser].to[JsonRunParser]
-    bind[WorkflowParser].to[JsonWorkflowParser]
-    bind[ReportRepository].to[FileReportRepository]
+    bind[RunRepository].to[LocalRunRepository]
+    bind[WorkflowRepository].to[LocalWorkflowRepository]
+    bind[ArtifactRepository].to[LocalArtifactRepository]
   }
 }

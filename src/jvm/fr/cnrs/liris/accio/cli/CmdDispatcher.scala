@@ -18,12 +18,10 @@
 
 package fr.cnrs.liris.accio.cli
 
-import java.nio.file.Path
-
 import ch.qos.logback.classic.{Level, Logger}
-import com.google.inject.{Inject, Injector}
+import com.google.inject.Inject
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.common.flags.{FlagsParserFactory, Priority}
+import fr.cnrs.liris.common.flags.{FlagsParser, Priority}
 import org.slf4j.LoggerFactory
 
 import scala.util.control.NonFatal
@@ -31,11 +29,11 @@ import scala.util.control.NonFatal
 /**
  * The command dispatcher is responsible for discovering the command to execute, instantiating it and executing it.
  *
- * @param cmdRegistry   Command registry.
- * @param parserFactory Parser factory.
- * @param injector      Guice injector (used to create injectable commands).
+ * @param registry Command registry.
+ * @param factory  Command factory.
+ * @param rcParser Accio RC files parser.
  */
-class CommandDispatcher @Inject()(cmdRegistry: CmdRegistry, parserFactory: FlagsParserFactory, injector: Injector) extends StrictLogging {
+class CmdDispatcher @Inject()(registry: CmdRegistry, factory: CmdFactory, rcParser: AccioRcParser) extends StrictLogging {
   /**
    * Execute the appropriate command given some arguments.
    *
@@ -44,8 +42,6 @@ class CommandDispatcher @Inject()(cmdRegistry: CmdRegistry, parserFactory: Flags
    * @return Exit code.
    */
   def exec(args: Seq[String], out: Reporter): ExitCode = {
-    val registry = injector.getInstance(classOf[CmdRegistry])
-
     val cmdNamePos = args.indexWhere(s => !s.startsWith("-"))
     val (commonArgs, cmdName, otherArgs) = if (cmdNamePos > -1) {
       (args.take(cmdNamePos), args(cmdNamePos), args.drop(cmdNamePos + 1))
@@ -60,11 +56,11 @@ class CommandDispatcher @Inject()(cmdRegistry: CmdRegistry, parserFactory: Flags
       case Some(m) => m
     }
 
-    val parser = parserFactory.create(meta.defn.allowResidue, meta.defn.flags ++ Seq(classOf[AccioOpts]): _*)
+    val parser = FlagsParser(meta.defn.allowResidue, meta.defn.flags ++ Seq(classOf[AccioOpts]): _*)
     parser.parseAndExitUponError(commonArgs)
     val commonOpts = parser.as[AccioOpts]
 
-    val accioRcArgs = parseAccioRc(commonOpts.accioRcPath, commonOpts.accioRcConfig, cmdName)
+    val accioRcArgs = rcParser.parse(commonOpts.accioRcPath, commonOpts.accioRcConfig, cmdName)
     parser.parseAndExitUponError(accioRcArgs, Priority.RcFile)
     parser.parseAndExitUponError(otherArgs)
 
@@ -76,7 +72,7 @@ class CommandDispatcher @Inject()(cmdRegistry: CmdRegistry, parserFactory: Flags
     logger.info(s"Set logging level: $logLevel")
 
     try {
-      val command = injector.getInstance(meta.cmdClass)
+      val command = factory.create(meta)
       command.execute(parser, out)
     } catch {
       case e: IllegalArgumentException =>
@@ -86,10 +82,5 @@ class CommandDispatcher @Inject()(cmdRegistry: CmdRegistry, parserFactory: Flags
         logger.error("Uncaught exception", e)
         ExitCode.InternalError
     }
-  }
-
-  private def parseAccioRc(customPath: Option[Path], config: Option[String], cmdName: String): Seq[String] = {
-    val parser = new AccioRcParser
-    parser.parse(customPath, config, cmdName)
   }
 }

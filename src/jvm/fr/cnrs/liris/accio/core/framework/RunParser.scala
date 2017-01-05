@@ -16,20 +16,18 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.viz
-
-import com.google.inject.{AbstractModule, Provides, Singleton, TypeLiteral}
-import fr.cnrs.liris.accio.core.api.Operator
-import fr.cnrs.liris.accio.core.framework._
-import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
+package fr.cnrs.liris.accio.core.framework
 
 /**
- * Guice module providing bindings for Accio Viz application.
+ * Parser for [[RunDef]]s.
  */
-object AccioModule extends AbstractModule with ScalaModule {
-  override def configure(): Unit = {
-    bind[RunParser].to[JsonRunParser]
-    bind[WorkflowParser].to[JsonWorkflowParser]
-    bind[ReportRepository].to[FileReportRepository]
-  }
+trait RunParser {
+  /**
+   * Parse a file into a run definition.
+   *
+   * @param uri URI to a run definition.
+   * @throws IllegalRunException If an error occurred while parsing the run.
+   */
+  @throws[IllegalRunException]
+  def parse(uri: String): RunDef
 }

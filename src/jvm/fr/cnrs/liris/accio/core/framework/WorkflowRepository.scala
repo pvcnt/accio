@@ -19,13 +19,25 @@
 package fr.cnrs.liris.accio.core.framework
 
 trait WorkflowRepository {
-  def list: Seq[String]
+  def find(query: WorkflowQuery): WorkflowList
 
-  def save(workflow: Workflow): Unit
+  def save(workflow: Workflow): Workflow
 
-  def delete(id: String): Unit
+  def delete(id: WorkflowId): Unit
 
-  def get(id: String): Option[Experiment]
+  def get(id: WorkflowId): Option[Workflow]
 
-  def exists(id: String): Boolean
+  def get(id: WorkflowId, version: Int): Option[Workflow]
+
+  def exists(id: WorkflowId): Boolean
+
+  def exists(id: WorkflowId, version: Int): Boolean
 }
+
+case class WorkflowQuery(
+  owner: Option[String] = None,
+  name: Option[String] = None,
+  limit: Option[Int] = None,
+  offset: Option[Int] = None)
+
+case class WorkflowList(results: Seq[Workflow], totalCount: Int)

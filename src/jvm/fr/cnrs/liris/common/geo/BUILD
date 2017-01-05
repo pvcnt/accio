@@ -11,7 +11,7 @@ scala_library(
   dependencies=[
     ':geo',
     '3rdparty/jvm/com/fasterxml/jackson:annotations',
-    '3rdparty/jvm/com/fasterxml/jackson:scala',
+    '3rdparty/jvm/com/fasterxml/jackson:module-scala',
   ],
   sources=['GeoJson.scala']
 )

@@ -34,8 +34,7 @@ object FrameworkModule extends AbstractModule with ScalaModule {
     ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Class[_ <: Operator[_, _]]] {})
 
     bind[OpMetaReader].to[ReflectOpMetaReader]
-    bind[ExperimentParser].to[JsonExperimentParser]
+    bind[RunParser].to[JsonRunParser]
     bind[WorkflowParser].to[JsonWorkflowParser]
-    bind[ReportRepository].to[FileReportRepository]
   }
 }

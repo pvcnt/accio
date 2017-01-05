@@ -18,38 +18,30 @@
 
 package fr.cnrs.liris.accio.core.runtime
 
-import fr.cnrs.liris.accio.core.framework.{Experiment, Node, Run}
+import fr.cnrs.liris.accio.core.framework.{Node, NodeStatus, Run, RunStatus}
 
 /**
- * Receives updates as the execution of an experiment progresses.
+ * Receives updates as the execution of a run progresses.
  */
 trait ProgressReporter {
-  def onStart(experiment: Experiment): Unit
+  def onStart(run: Run): Unit
 
-  def onComplete(experiment: Experiment): Unit
+  def onComplete(run: Run): Unit
 
-  def onGraphStart(run: Run): Unit
+  def onStart(run: Run, node: Node): Unit
 
-  def onGraphComplete(run: Run): Unit
-
-  def onNodeStart(run: Run, node: Node): Unit
-
-  def onNodeComplete(run: Run, node: Node): Unit
+  def onComplete(run: Run, node: Node): Unit
 }
 
 /**
  * A progress reporter doing nothing.
  */
 object NoProgressReporter extends ProgressReporter {
-  override def onStart(experiment: Experiment): Unit = {}
+  override def onStart(run: Run): Unit = {}
 
-  override def onComplete(experiment: Experiment): Unit = {}
+  override def onComplete(run: Run): Unit = {}
 
-  override def onNodeComplete(run: Run, nodeDef: Node): Unit = {}
+  override def onStart(run: Run, nodeDef: Node): Unit = {}
 
-  override def onGraphComplete(run: Run): Unit = {}
-
-  override def onGraphStart(run: Run): Unit = {}
-
-  override def onNodeStart(run: Run, nodeDef: Node): Unit = {}
+  override def onComplete(run: Run, nodeDef: Node): Unit = {}
 }

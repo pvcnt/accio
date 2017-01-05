@@ -55,4 +55,10 @@ public @interface Op {
      * A deprecation message that will be used each time this operator is used in a workflow.
      */
     String deprecation() default "";
+
+    float cpu() default 1;
+
+    String memory() default "256M";
+
+    String disk() default "2G";
 }

@@ -16,13 +16,30 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.framework
+package fr.cnrs.liris.accio.core.runtime
 
-case class ErrorDatum(className: String, message: String, stackTrace: Seq[String], cause: Option[ErrorDatum])
+import java.util.UUID
 
-object ErrorDatum {
-  def apply(e: Throwable): ErrorDatum = {
-    val cause = Option(e.getCause).map(ErrorDatum.apply)
-    ErrorDatum(e.getClass.getName, e.getMessage, e.getStackTrace.map(_.toString), cause)
-  }
+import com.twitter.finatra.domain.WrappedValue
+import fr.cnrs.liris.accio.core.framework.{Node, Run}
+import org.joda.time.DateTime
+
+case class JobId(value: String) extends WrappedValue[String]
+
+object JobId {
+  def random: JobId = JobId(UUID.randomUUID().toString)
+}
+
+case class Job(id: JobId, run: Run, node: Node)
+
+case class JobStatus(createdAt: DateTime, startedAt: Option[DateTime], completedAt: Option[DateTime], exitCode: Option[Int], detailsUrl: Option[String])
+
+trait Scheduler {
+  def schedule(jobs: Seq[Job]): Unit
+
+  def kill(id: JobId): Unit
+
+  def stop(): Unit
+
+  def get(id: JobId): Option[JobStatus]
 }

@@ -18,22 +18,11 @@
 
 package fr.cnrs.liris.accio.core.framework
 
-/**
- * Parser for [[ExperimentDef]]s.
- */
-trait ExperimentParser {
-  /**
-   * Parse a file into an experiment definition.
-   *
-   * @param uri URI to an experiment definition.
-   */
-  def parse(uri: String): ExperimentDef
+case class ExceptionData(className: String, message: String, stackTrace: Seq[String], cause: Option[ExceptionData])
 
-  /**
-   * Check whether a given URI could be read as an experiment definition.
-   *
-   * @param uri URI to (possibly) an experiment definition.
-   * @return True if it could be read as an experiment definition, false otherwise
-   */
-  def canRead(uri: String): Boolean
+object ExceptionData {
+  def apply(e: Throwable): ExceptionData = {
+    val cause = Option(e.getCause).map(ExceptionData.apply)
+    ExceptionData(e.getClass.getName, e.getMessage, e.getStackTrace.map(_.toString), cause)
+  }
 }

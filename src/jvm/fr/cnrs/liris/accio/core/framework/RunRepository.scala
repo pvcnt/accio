@@ -16,20 +16,27 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.viz
+package fr.cnrs.liris.accio.core.framework
 
-import com.google.inject.{AbstractModule, Provides, Singleton, TypeLiteral}
-import fr.cnrs.liris.accio.core.api.Operator
-import fr.cnrs.liris.accio.core.framework._
-import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
+trait RunRepository {
+  def find(query: RunQuery): RunList
 
-/**
- * Guice module providing bindings for Accio Viz application.
- */
-object AccioModule extends AbstractModule with ScalaModule {
-  override def configure(): Unit = {
-    bind[RunParser].to[JsonRunParser]
-    bind[WorkflowParser].to[JsonWorkflowParser]
-    bind[ReportRepository].to[FileReportRepository]
-  }
+  def save(run: Run): Unit
+
+  def delete(id: RunId): Unit
+
+  def get(id: RunId): Option[Run]
+
+  def exists(id: RunId): Boolean
 }
+
+case class RunQuery(
+  workflow: Option[String] = None,
+  cluster: Option[String] = None,
+  owner: Option[User] = None,
+  environment: Option[String] = None,
+  name: Option[String] = None,
+  limit: Option[Int] = None,
+  offset: Option[Int] = None)
+
+case class RunList(results: Seq[Run], totalCount: Int)

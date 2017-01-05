@@ -17,11 +17,16 @@ jar_library(
 )
 
 jar_library(
-  name='scala',
+  name='module-scala',
   jars=[scala_jar('com.fasterxml.jackson.module', 'jackson-module-scala', VERSION)]
 )
 
 jar_library(
-  name='joda',
+  name='datatype-joda',
   jars=[jar('com.fasterxml.jackson.datatype', 'jackson-datatype-joda', VERSION)]
+)
+
+jar_library(
+  name='dataformat-yaml',
+  jars=[jar('com.fasterxml.jackson.dataformat', 'jackson-dataformat-yaml', VERSION)]
 )

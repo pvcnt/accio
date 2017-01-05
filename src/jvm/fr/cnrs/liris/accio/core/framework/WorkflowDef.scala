@@ -16,20 +16,18 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.viz
-
-import com.google.inject.{AbstractModule, Provides, Singleton, TypeLiteral}
-import fr.cnrs.liris.accio.core.api.Operator
-import fr.cnrs.liris.accio.core.framework._
-import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
+package fr.cnrs.liris.accio.core.framework
 
 /**
- * Guice module providing bindings for Accio Viz application.
+ * Definition of workflow.
+ *
+ * @param graph Definition of the graph of operators.
+ * @param id    Workflow unique identifier.
+ * @param owner User owning this workflow.
+ * @param name  Human-readable name.
  */
-object AccioModule extends AbstractModule with ScalaModule {
-  override def configure(): Unit = {
-    bind[RunParser].to[JsonRunParser]
-    bind[WorkflowParser].to[JsonWorkflowParser]
-    bind[ReportRepository].to[FileReportRepository]
-  }
-}
+case class WorkflowDef(
+  id: WorkflowId,
+  graph: GraphDef,
+  owner: Option[User] = None,
+  name: Option[String] = None)

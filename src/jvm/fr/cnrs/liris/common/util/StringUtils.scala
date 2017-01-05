@@ -20,10 +20,15 @@ package fr.cnrs.liris.common.util
 
 import java.text.BreakIterator
 
-import com.google.common.escape.CharEscaperBuilder
+import com.google.common.escape.{CharEscaperBuilder, Escaper}
 
+/**
+ * Utils for dealing with strings and text.
+ */
 object StringUtils {
-  val QuoteEscaper = new CharEscaperBuilder().addEscape('"', "\\\"").addEscape('\\', "\\\\").toEscaper
+  val QuotesEscaper: Escaper = new CharEscaperBuilder().addEscape('"', "\\\"").addEscape('\\', "\\\\").toEscaper
+  val DoubleQuoteEscaper: Escaper = new CharEscaperBuilder().addEscape('"', "\\\"").toEscaper
+  val SingleQuoteEscaper: Escaper = new CharEscaperBuilder().addEscape('\\', "\\\\").toEscaper
 
   /**
    * Paragraph-fill the specified input text, indenting lines to 'indent' and

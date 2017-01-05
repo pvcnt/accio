@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation._
 import fr.cnrs.liris.common.util.Named
 
 import scala.annotation.meta.getter
+import scala.util.matching.Regex
 
 /**
  * An executable graph of operators.
@@ -64,19 +65,6 @@ case class Graph private[framework](@(JsonValue@getter) nodes: Set[Node]) {
    */
   @throws[NoSuchElementException]
   def apply(name: String): Node = index(name)
-
-  /**
-   * Return a copy of this graph with new parameters. Any input of any node can be overriden.
-   *
-   * @param params Mapping between inputs and values (it is the raw value, *not* an [[Input]] instance).
-   */
-  def setParams(params: Map[Reference, Any]): Graph = {
-    val newNodes = nodes.map { node =>
-      val newInputs = params.filter(_._1.node == node.name).map { case (ref, value) => ref.port -> ValueInput(value) }
-      node.copy(inputs = node.inputs ++ newInputs)
-    }
-    copy(nodes = newNodes)
-  }
 }
 
 /**
@@ -155,32 +143,7 @@ object Node {
   /**
    * Regex for valid node names.
    */
-  val NameRegex = ("^" + NamePattern + "$").r
-}
-
-/**
- * Definition of a graph. Definitions must be converted into [[Graph]]'s in order to be executed.
- *
- * @param nodes Definition of nodes forming this graph.
- */
-case class GraphDef(@(JsonValue@getter) nodes: Seq[NodeDef])
-
-/**
- * Definition of a node inside a graph.
- *
- * @param op         Operator name.
- * @param customName Node name (by default it will be the operator name).
- * @param inputs     Inputs of the operator.
- */
-case class NodeDef(
-  op: String,
-  @JsonProperty("name") customName: Option[String] = None,
-  inputs: Map[String, Input] = Map.empty) extends Named {
-
-  /**
-   * Return the actual name of the node.
-   */
-  override def name: String = customName.getOrElse(op)
+  val NameRegex: Regex = ("^" + NamePattern + "$").r
 }
 
 /**

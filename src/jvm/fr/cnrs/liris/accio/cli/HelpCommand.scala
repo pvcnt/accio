@@ -83,7 +83,7 @@ class HelpCommand @Inject()(commandRegistry: CmdRegistry, opRegistry: OpRegistry
     out.writeln("  <comment>accio help list-ops</comment> Print the list of registered operators.")
   }
 
-  private def printCommand(out: Reporter, meta: CommandMeta) = {
+  private def printCommand(out: Reporter, meta: CmdMeta) = {
     out.writeln(s"Usage: accio ${meta.defn.name} <options> ${if (meta.defn.allowResidue) "<arguments>" else ""}")
     out.writeln()
     if (meta.defn.help.nonEmpty) {

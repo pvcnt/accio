@@ -24,9 +24,9 @@ import fr.cnrs.liris.testing.UnitSpec
  * Unit tests for [[WorkflowFactory]].
  */
 class WorkflowFactorySpec extends UnitSpec {
-  val workflows = Map(
+  private val workflows = Map(
     "workflow1" -> WorkflowDef(
-      id = Some("my_workflow"),
+      id = WorkflowId("my_workflow"),
       graph = GraphDef(Seq(
         NodeDef(
           op = "FirstSimple",
@@ -40,7 +40,7 @@ class WorkflowFactorySpec extends UnitSpec {
       owner = Some(User("him"))),
 
     "workflow2" -> WorkflowDef(
-      id = Some("workflow2"),
+      id = WorkflowId("workflow2"),
       graph = GraphDef(Seq(
         NodeDef(
           op = "FirstSimple",
@@ -52,20 +52,14 @@ class WorkflowFactorySpec extends UnitSpec {
             "data" -> ReferenceInput(Reference("FirstSimple", "data"))))))),
 
     "invalid_param_workflow" -> WorkflowDef(
-      id = Some("invalid_param_workflow"),
+      id = WorkflowId("invalid_param_workflow"),
       graph = GraphDef(Seq(
         NodeDef(
           op = "FirstSimple",
           inputs = Map("foo" -> ParamInput("foo/foo")))))),
 
-    "/path/to/some_workflow.json" -> WorkflowDef(
-      graph = GraphDef(Seq(
-        NodeDef(
-          op = "FirstSimple",
-          inputs = Map("foo" -> ValueInput(42)))))),
-
     "heterogeneous_workflow" -> WorkflowDef(
-      id = Some("heterogeneous_workflow"),
+      id = WorkflowId("heterogeneous_workflow"),
       graph = GraphDef(Seq(
         NodeDef(
           op = "FirstSimple",
@@ -77,43 +71,33 @@ class WorkflowFactorySpec extends UnitSpec {
             "data" -> ReferenceInput(Reference("FirstSimple", "data")))))))
   )
 
-  val graphFactory = {
+  private val graphFactory = {
     val reader = new ReflectOpMetaReader
     val opRegistry = new OpRegistry(reader, Set(classOf[FirstSimpleOp], classOf[SecondSimpleOp], classOf[ThirdSimpleOp]))
     new GraphFactory(opRegistry)
   }
 
-  val workflowFactory = {
+  private val workflowFactory = {
     val reader = new ReflectOpMetaReader
     val opRegistry = new OpRegistry(reader, Set(classOf[FirstSimpleOp], classOf[SecondSimpleOp], classOf[ThirdSimpleOp]))
     val graphFactory = new GraphFactory(opRegistry)
-    val parser = new DummyWorkflowParser(workflows)
-    new WorkflowFactory(parser, graphFactory, opRegistry)
+    new WorkflowFactory(graphFactory, opRegistry)
   }
 
   behavior of "WorkflowFactory"
 
   it should "create a workflow" in {
-    val workflow = workflowFactory.create("workflow1", User("me"))
+    val workflow = workflowFactory.create(workflows("workflow1"))
     workflow.graph shouldBe graphFactory.create(workflows("workflow1").graph)
-    workflow.id shouldBe "my_workflow"
+    workflow.id shouldBe WorkflowId("my_workflow")
     workflow.name shouldBe Some("my workflow")
+    workflow.version shouldBe 0
     workflow.owner shouldBe User("him")
     workflow.params should have size 0
   }
 
-  it should "fill an empty owner" in {
-    val workflow = workflowFactory.create("/path/to/some_workflow.json", User("me"))
-    workflow.owner shouldBe User("me")
-  }
-
-  it should "fill an empty identifier" in {
-    val workflow = workflowFactory.create("/path/to/some_workflow.json", User("me"))
-    workflow.id shouldBe "some_workflow"
-  }
-
   it should "collect parameters" in {
-    val workflow = workflowFactory.create("workflow2", User("me"))
+    val workflow = workflowFactory.create(workflows("workflow2"))
     workflow.params should contain theSameElementsAs Set(
       Param("foo", DataType.Integer, isOptional = false, ports = Set(Reference("FirstSimple", "foo"))),
       Param("bar", DataType.Double, isOptional = false, ports = Set(Reference("SecondSimple", "dbl"))))
@@ -121,21 +105,15 @@ class WorkflowFactorySpec extends UnitSpec {
 
   it should "detect heterogeneous data types" in {
     val expected = intercept[IllegalWorkflowException] {
-      workflowFactory.create("heterogeneous_workflow", User("me"))
+      workflowFactory.create(workflows("heterogeneous_workflow"))
     }
     expected.getMessage should startWith("Param foo is used in heterogeneous input types:")
   }
 
   it should "detect invalid param name" in {
     val expected = intercept[IllegalWorkflowException] {
-      workflowFactory.create("invalid_param_workflow", User("me"))
+      workflowFactory.create(workflows("invalid_param_workflow"))
     }
     expected.getMessage should startWith("Invalid param name: foo/foo (must match ")
   }
-}
-
-private[framework] class DummyWorkflowParser(workflows: Map[String, WorkflowDef]) extends WorkflowParser {
-  override def parse(uri: String): WorkflowDef = workflows(uri)
-
-  override def canRead(uri: String): Boolean = workflows.contains(uri)
 }

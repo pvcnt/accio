@@ -24,26 +24,32 @@ import com.google.inject.Inject
 import com.twitter.finatra.json.FinatraObjectMapper
 import fr.cnrs.liris.common.util.FileUtils
 
+import scala.util.control.NonFatal
+
 /**
- * Parser for workflow definitions stored into JSON files.
+ * Parser for run definitions stored into JSON files.
  *
  * @param mapper JSON object mapper.
  */
-class JsonExperimentParser @Inject()(mapper: FinatraObjectMapper) extends ExperimentParser {
-  override def parse(uri: String): ExperimentDef = {
-    val file = getFile(uri)
-    mapper.parse[ExperimentDef](new FileInputStream(file))
-  }
-
-  override def canRead(uri: String): Boolean = {
-    val file = getFile(uri)
-    mapper.objectMapper.readTree(file).has("workflow")
+final class JsonRunParser @Inject()(mapper: FinatraObjectMapper) extends RunParser {
+  override def parse(uri: String): RunDef = {
+    try {
+      val file = getFile(uri)
+      mapper.parse[RunDef](new FileInputStream(file))
+    } catch {
+      case e: IllegalRunException => throw e
+      case NonFatal(e) => throw new IllegalRunException(s"JSON syntax error in $uri", e)
+    }
   }
 
   private def getFile(uri: String) = {
     val file = new File(FileUtils.expand(uri))
-    require(file.exists && file.isFile, s"${file.getAbsolutePath} does not seem to be a valid file")
-    require(file.canRead, s"${file.getAbsolutePath} is not readable")
+    if (!file.exists || !file.isFile) {
+      throw new IllegalRunException(s"$uri does not seem to be a valid file")
+    }
+    if (!file.canRead) {
+      throw new IllegalRunException(s"$uri is not readable")
+    }
     file
   }
 }

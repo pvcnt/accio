@@ -41,7 +41,7 @@ object HashUtils {
    * @param strs Strings to hash.
    */
   def sha1(strs: Iterable[String]): String = {
-    val quoted = strs.toSeq.sorted.map(s => "\"" + StringUtils.QuoteEscaper.escape(s) + "\"")
+    val quoted = strs.toSeq.sorted.map(s => "\"" + StringUtils.QuotesEscaper.escape(s) + "\"")
     sha1(quoted.mkString(","))
   }
 

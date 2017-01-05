@@ -21,6 +21,7 @@ package fr.cnrs.liris.accio.core.framework
 import java.io.IOException
 import java.util.NoSuchElementException
 
+import com.twitter.util.StorageUnit
 import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.common.geo.{Distance, Location}
 import fr.cnrs.liris.common.reflect.{CaseClass, PlainClass, ScalaType}
@@ -41,6 +42,7 @@ class ReflectOpMetaReader extends OpMetaReader {
           val inRefl = getInRefl(opRefl)
           val outRefl = getOutRefl(opRefl)
           val name = if (op.name.nonEmpty) op.name else clazz.getSimpleName.stripSuffix("Op")
+          val resource = Resource(op.cpu, parseStorageUnit(op.memory()), parseStorageUnit(op.disk()))
           val defn = OpDef(
             name = name,
             inputs = inRefl.map(getInputs).getOrElse(Seq.empty),
@@ -48,7 +50,8 @@ class ReflectOpMetaReader extends OpMetaReader {
             help = maybe(op.help),
             description = maybe(op.description).map(loadDescription(_, clazz)),
             category = op.category,
-            deprecation = maybe(op.deprecation))
+            deprecation = maybe(op.deprecation),
+            resource = resource)
           OpMeta(defn, clazz, inRefl.map(_.runtimeClass), outRefl.map(_.runtimeClass))
       }
     } catch {
@@ -136,5 +139,25 @@ class ReflectOpMetaReader extends OpMetaReader {
       val ofValues = getDataType(scalaType.typeArguments.last)
       DataType.Map(ofKeys, ofValues)
     case _ => throw new IllegalArgumentException(s"Unsupported data type: $scalaType")
+  }
+
+  private[this] val StorageUnitRegex = "^(\\d+(?:\\.\\d*)\\s?([a-zA-Z]?)".r
+
+  private def parseStorageUnit(str: String) = str match {
+    case StorageUnitRegex(v, u) =>
+      val vv = v.toLong
+      val uu = u.toLowerCase match {
+        case "" | "b" => 1L
+        case "k" => 1L << 10
+        case "m" => 1L << 20
+        case "g" => 1L << 30
+        case "t" => 1L << 40
+        case "p" => 1L << 50
+        case "e" => 1L << 60
+        case badUnit => throw new NumberFormatException(s"Unrecognized unit $badUnit")
+      }
+      new StorageUnit(vv * uu)
+    case _ =>
+      throw new NumberFormatException(s"invalid storage unit string: $str")
   }
 }

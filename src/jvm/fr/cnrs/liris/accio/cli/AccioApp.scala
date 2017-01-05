@@ -52,8 +52,8 @@ class AccioApp extends StrictLogging {
     sys.props("logback.configurationFile") = "fr/cnrs/liris/accio/cli/logback.xml"
 
     val reporter = new StreamReporter(Console.out, useColors = true)
-    val injector = Guice.createInjector(FlagsModule, FrameworkModule, CliModule, OpsModule, LocalRuntimeModule)
-    val dispatcher = injector.getInstance(classOf[CommandDispatcher])
+    val injector = Guice.createInjector(FrameworkModule, CliModule, OpsModule, LocalRuntimeModule)
+    val dispatcher = injector.getInstance(classOf[CmdDispatcher])
     val exitCode = dispatcher.exec(args, reporter)
 
     logger.info(s"Terminating Accio client: ${exitCode.name}")

@@ -18,8 +18,8 @@
 
 package fr.cnrs.liris.common.util
 
-import java.io.File
-import java.nio.file.{Path, Paths}
+import java.io.{File, IOException}
+import java.nio.file.{Files, Path, Paths}
 
 /**
  * Helpers dealing with files and paths.
@@ -29,7 +29,7 @@ object FileUtils {
    * Recursively delete anything at a given path, if it exists. It does not produce any error if the path does
    * not exist.
    *
-   * @param path Path to delete.
+   * @param path File or directory to delete.
    */
   def safeDelete(path: Path): Unit = safeDelete(path.toFile)
 
@@ -47,15 +47,17 @@ object FileUtils {
         }
         file.delete()
       }
+
       clean(file)
     }
   }
 
   /**
-   * Replace an initial tilde '~' in a URI by the current user's home directory. If a tilde is found elsewhere, it
-   * will not be replaced.
+   * Expand an URI to replace special directories like in standard bash. A leading tilde '~' will be replaced by
+   * user's home directory and a point-slash './' will be replaced by working directory.
    *
    * @param uri URI.
+   * @return Expanded URI.
    */
   def expand(uri: String): String = {
     if (uri.startsWith("~/")) {
@@ -67,10 +69,47 @@ object FileUtils {
     }
   }
 
+  /**
+   * Expand an URI to replace special directories like in standard bash. A leading tilde '~' will be replaced by
+   * user's home directory and a point-slash './' will be replaced by working directory.
+   *
+   * @param uri URI.
+   * @return Path to expanded URI.
+   */
   def expandPath(uri: String): Path = Paths.get(expand(uri))
 
-  def removeExtension(filename: String): String = {
-    val pos = filename.lastIndexOf('.')
-    if (pos > 1) filename.substring(0, pos) else filename
+  /**
+   * Recursively copy the content of a directory into another directory.
+   *
+   * @param src  Source directory to copy (must exist).
+   * @param dest Destination directory where to copy (must not exist).
+   */
+  def recursiveCopy(src: File, dest: File): Unit = recursiveCopy(src.toPath, dest.toPath)
+
+  /**
+   * Recursively copy the content of a directory into another directory.
+   *
+   * @param src  Source directory to copy (must exist).
+   * @param dest Destination directory where to copy (must not exist).
+   */
+  def recursiveCopy(src: Path, dest: Path): Unit = {
+    if (!src.toFile.exists()) {
+      throw new IOException(s"Source ${src.toAbsolutePath} does not exist")
+    }
+    if (!dest.getParent.toFile.canWrite) {
+      throw new IOException(s"Destination parent ${dest.toAbsolutePath} is not writable")
+    }
+    Files.createDirectories(dest.getParent)
+    doRecursiveCopy(src, dest)
+  }
+
+  private def doRecursiveCopy(src: Path, dest: Path): Unit = {
+    require(!dest.toFile.exists(), s"Destination ${dest.toAbsolutePath} already exists")
+    if (src.toFile.isFile) {
+      Files.copy(src, dest)
+    } else {
+      Files.createDirectory(dest)
+      src.toFile.listFiles.foreach(file => doRecursiveCopy(file.toPath, dest.resolve(file.getName)))
+    }
   }
 }

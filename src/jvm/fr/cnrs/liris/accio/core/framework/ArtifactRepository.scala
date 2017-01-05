@@ -19,15 +19,36 @@
 package fr.cnrs.liris.accio.core.framework
 
 /**
- * Parser for [[WorkflowDef]]s.
+ * A repository to store the results of node executions, so called artifacts. Note that despite its name, this
+ * repository store [[Artifact]]s and metadata about node execution (completed [[NodeStatus]]).
  */
-trait WorkflowParser {
+trait ArtifactRepository {
   /**
-   * Parse a file into a workflow definition.
+   * Save the result of a node execution under a given key.
    *
-   * @param uri URI to a workflow definition.
-   * @throws IllegalWorkflowException If an error occurred while parsing the workflow.
+   * @param key    Node key.
+   * @param status Completed node status.
    */
-  @throws[IllegalWorkflowException]
-  def parse(uri: String): WorkflowDef
+  def save(key: NodeKey, status: NodeStatus): Unit
+
+  /**
+   * Return the result of a node execution, if it exists.
+   *
+   * @param key Node key.
+   */
+  def get(key: NodeKey): Option[NodeStatus]
+
+  /**
+   * Check whether the result of a node execution is available.
+   *
+   * @param key Node key.
+   */
+  def exists(key: NodeKey): Boolean
+
+  /**
+   * Remove permanently the result of a node execution.
+   *
+   * @param key Node key.
+   */
+  def delete(key: NodeKey): Unit
 }

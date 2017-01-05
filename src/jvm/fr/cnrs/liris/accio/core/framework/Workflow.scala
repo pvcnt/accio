@@ -19,17 +19,31 @@
 package fr.cnrs.liris.accio.core.framework
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.twitter.finatra.domain.WrappedValue
+import org.joda.time.DateTime
+
+import scala.util.matching.Regex
 
 /**
- * A workflow is a named graph of operators.
+ * A workflow is a basically named graph of operators. A workflow can define parameters, which are workflow-level
+ * inputs allowing to override the value of some node inputs at runtime.
  *
- * @param id     Workflow unique identifier.
- * @param graph  Graph of operators.
- * @param owner  User owning this workflow.
- * @param name   Human-readable name.
- * @param params Workflow parameters.
+ * @param id        Workflow unique identifier.
+ * @param version   Workflow version.
+ * @param name      Human-readable name.
+ * @param createdAt Time at which this version of the workflow was created.
+ * @param owner     User owning this workflow.
+ * @param graph     Graph of operators.
+ * @param params    Workflow parameters.
  */
-case class Workflow(id: String, graph: Graph, owner: User, name: Option[String], params: Set[Param])
+case class Workflow(id: WorkflowId, version: Int, name: Option[String], createdAt: DateTime, owner: User, graph: Graph, params: Set[Param])
+
+/**
+ * Workflow identifier.
+ *
+ * @param value String value.
+ */
+case class WorkflowId(value: String) extends WrappedValue[String]
 
 /**
  * A parameter is a workflow-level input. A parameter can be used in multiple ports, as long as they are of the same
@@ -54,15 +68,5 @@ object Param {
   /**
    * Regex for valid param names.
    */
-  val NameRegex = ("^" + NamePattern + "$").r
+  val NameRegex: Regex = ("^" + NamePattern + "$").r
 }
-
-/**
- * Definition of workflow.
- *
- * @param graph Definition of the graph of operators.
- * @param id    Workflow unique identifier.
- * @param owner User owning this workflow.
- * @param name  Human-readable name.
- */
-case class WorkflowDef(graph: GraphDef, id: Option[String] = None, owner: Option[User] = None, name: Option[String] = None)
