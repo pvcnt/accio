@@ -16,13 +16,13 @@
 
 package fr.cnrs.liris.common.flags
 
-import java.nio.file.{Path, Paths}
+import java.nio.file.Path
 
-import com.google.inject.Inject
 import com.twitter.util.Duration
 import fr.cnrs.liris.common.util.FileUtils
 
-import scala.reflect.ClassTag
+import scala.collection.mutable
+import scala.reflect._
 
 /**
  * A converter is a little helper object that can take a String and turn it into an instance of
@@ -43,13 +43,44 @@ abstract class Converter[T: ClassTag] {
   def valueClass: Class[T] = implicitly[ClassTag[T]].runtimeClass.asInstanceOf[Class[T]]
 }
 
-class StringConverter extends Converter[String] {
+/**
+ * Factory for [[Converter]].
+ */
+object Converter {
+  private[this] val index = mutable.Map.empty[Class[_], Converter[_]]
+  Set(
+    ByteConverter,
+    ShortConverter,
+    IntConverter,
+    LongConverter,
+    DoubleConverter,
+    StringConverter,
+    PathConverter,
+    DurationConverter,
+    BooleanConverter,
+    TriStateConverter
+  ).foreach(register)
+
+  def register(converter: Converter[_]): Unit = {
+    index(converter.valueClass) = converter
+  }
+
+  def get(clazz: Class[_]): Option[Converter[_]] = {
+    index.get(clazz)
+  }
+
+  def get[T: ClassTag]: Option[Converter[T]] = {
+    index.get(classTag[T].runtimeClass).map(_.asInstanceOf[Converter[T]])
+  }
+}
+
+object StringConverter extends Converter[String] {
   override def convert(str: String): String = str
 
   override def typeDescription: String = "a string"
 }
 
-class ByteConverter extends Converter[Byte] {
+object ByteConverter extends Converter[Byte] {
   override def convert(str: String): Byte = try {
     str.toByte
   } catch {
@@ -60,7 +91,7 @@ class ByteConverter extends Converter[Byte] {
 }
 
 
-class ShortConverter extends Converter[Short] {
+object ShortConverter extends Converter[Short] {
   override def convert(str: String): Short = try {
     str.toShort
   } catch {
@@ -71,7 +102,7 @@ class ShortConverter extends Converter[Short] {
 }
 
 
-class IntConverter extends Converter[Int] {
+object IntConverter extends Converter[Int] {
   override def convert(str: String): Int = try {
     str.toInt
   } catch {
@@ -81,7 +112,7 @@ class IntConverter extends Converter[Int] {
   override def typeDescription: String = "an integer"
 }
 
-class LongConverter extends Converter[Long] {
+object LongConverter extends Converter[Long] {
   override def convert(str: String): Long = try {
     str.toLong
   } catch {
@@ -91,7 +122,7 @@ class LongConverter extends Converter[Long] {
   override def typeDescription: String = "a long"
 }
 
-class DoubleConverter extends Converter[Double] {
+object DoubleConverter extends Converter[Double] {
   override def convert(str: String): Double = try {
     str.toDouble
   } catch {
@@ -101,13 +132,13 @@ class DoubleConverter extends Converter[Double] {
   override def typeDescription: String = "a double"
 }
 
-class PathConverter extends Converter[Path] {
+object PathConverter extends Converter[Path] {
   override def convert(str: String): Path = FileUtils.expandPath(str)
 
   override def typeDescription: String = "a path"
 }
 
-class DurationConverter extends Converter[Duration] {
+object DurationConverter extends Converter[Duration] {
   override def convert(str: String): Duration = try {
     Duration.parse(str)
   } catch {
@@ -117,7 +148,7 @@ class DurationConverter extends Converter[Duration] {
   override def typeDescription: String = "a duration"
 }
 
-class BooleanConverter extends Converter[Boolean] {
+object BooleanConverter extends Converter[Boolean] {
   override def convert(str: String): Boolean = str.toLowerCase match {
     case "true" | "t" | "1" | "yes" | "y" => true
     case "false" | "f" | "0" | "no" | "n" => false
@@ -127,10 +158,10 @@ class BooleanConverter extends Converter[Boolean] {
   override def typeDescription: String = "a boolean"
 }
 
-class TriStateConverter @Inject()(boolConverter: BooleanConverter) extends Converter[TriState] {
+object TriStateConverter extends Converter[TriState] {
   override def convert(str: String): TriState = str.toLowerCase match {
     case "auto" => TriState.Auto
-    case _ => if (boolConverter.convert(str)) TriState.Yes else TriState.No
+    case _ => if (BooleanConverter.convert(str)) TriState.Yes else TriState.No
   }
 
   override def typeDescription: String = "a tri-state (auto, yes, no)"

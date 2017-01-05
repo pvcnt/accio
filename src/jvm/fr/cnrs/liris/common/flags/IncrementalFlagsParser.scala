@@ -21,6 +21,15 @@ import fr.cnrs.liris.common.reflect.CaseClassField
 import scala.collection.mutable
 import scala.reflect.runtime.universe._
 
+/**
+ *
+ * This flags parsing implementation has (at least) one design flaw. It allows both '--foo=baz'
+ * and '--foo baz' for all flags except boolean and tristate flags. For these, the 'baz'
+ * in '--foo baz' is not treated as a parameter to the flag, making it is impossible to switch
+ * flags between void/boolean/tristate and everything else without breaking backwards compatibility.
+ *
+ * @param flagsData
+ */
 private[flags] class IncrementalFlagsParser(flagsData: FlagsData) {
   /**
    * Results of parsing the arguments. This map is modified by repeated calls to [[parse()]].

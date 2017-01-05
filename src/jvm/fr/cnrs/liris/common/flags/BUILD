@@ -3,7 +3,6 @@ scala_library(
   dependencies=[
     'src/jvm/fr/cnrs/liris/common/reflect',
     'src/jvm/fr/cnrs/liris/common/util',
-    '3rdparty/jvm:scala-guice',
     '3rdparty/jvm/com/twitter/util:core',
   ],
   java_sources=[

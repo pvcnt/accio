@@ -17,20 +17,32 @@
 
 package fr.cnrs.liris.common.flags
 
-import java.text.BreakIterator
+import java.util.concurrent.ConcurrentHashMap
 
-import fr.cnrs.liris.common.reflect.{CaseClass, CaseClassField}
+import fr.cnrs.liris.common.reflect.{CaseClass, CaseClassField, JavaTypes}
+import fr.cnrs.liris.common.util.StringUtils
+
+import scala.collection.JavaConverters._
+import scala.collection.mutable
+import scala.reflect.{ClassTag, classTag}
+
+/**
+ * Indicates that a flag is declared in more than one class.
+ *
+ * @param message Error message.
+ */
+class DuplicateFlagDeclarationException(message: String) extends RuntimeException(message)
 
 /**
  * An immutable selection of flags data corresponding to a set of flags classes. The data is
  * collected using reflection, which can be expensive. Therefore this class can be used
  * internally to cache the results.
  *
- * @param classes    These are the flags-declaring classes which are annotated with [[Flag]] annotations
- * @param fields     Maps flag name to Flag-annotated field
- * @param converters Mapping from each Flag-annotated field to the proper converter
+ * @param classes    Flags-declaring classes which are annotated with [[Flag]] annotations.
+ * @param fields     Mapping between flag name and Flag-annotated field.
+ * @param converters Mapping between Flag-annotated field and the proper converter.
  */
-final class FlagsData private[flags](
+final class FlagsData private(
   val classes: Map[Class[_], CaseClass],
   val fields: Map[String, CaseClassField],
   val converters: Map[CaseClassField, Converter[_]]) {
@@ -47,9 +59,9 @@ final class FlagsData private[flags](
     fields.values.toSeq
       .groupBy(_.annotation[Flag].category)
       .filter { case (category, _) => DocumentationLevel(category) == DocumentationLevel.Documented }
-      .map { case (category, fields) =>
+      .map { case (category, categoryFields) =>
         val description = categories.getOrElse(category, s"Flags category '$category'")
-        s"\n$description:\n" + fields
+        s"\n$description:\n" + categoryFields
           .sortBy(_.annotation[Flag].name)
           .map(describe(_, verbosity).trim)
           .mkString("\n")
@@ -75,12 +87,12 @@ final class FlagsData private[flags](
     if (verbosity > HelpVerbosity.Medium) {
       sb.append("\n")
       if (annotation.help.nonEmpty) {
-        sb.append(paragraphFill(annotation.help, indent = 4, width = 80))
+        sb.append(StringUtils.paragraphFill(annotation.help, indent = 4, width = 80))
         sb.append('\n')
       }
       if (annotation.expansion.nonEmpty) {
         val expandsMsg = "Expands to: " + annotation.expansion.mkString(" ")
-        sb.append(paragraphFill(expandsMsg, indent = 4, width = 80))
+        sb.append(StringUtils.paragraphFill(expandsMsg, indent = 4, width = 80))
         sb.append('\n')
       }
     }
@@ -91,35 +103,68 @@ final class FlagsData private[flags](
     val name = field.annotation[Flag].name
     if (FlagsParser.isBooleanField(field)) s"[no]$name" else name
   }
+}
+
+/**
+ * Factory for [[FlagsData]].
+ */
+object FlagsData {
+  private[this] val cache = new ConcurrentHashMap[String, FlagsData].asScala
 
   /**
-   * Paragraph-fill the specified input text, indenting lines to 'indent' and
-   * wrapping lines at 'width'.  Returns the formatted result.
+   * Return flags data for the given class. Because create it is expensive, result is cached for further calls.
+   *
+   * @tparam T Flags-declaring type.
    */
-  private def paragraphFill(in: String, width: Int, indent: Int = 0): String = {
-    val indentString = " " * indent
-    val out = new StringBuilder
-    var sep = ""
-    in.split("\n").foreach { paragraph =>
-      val boundary = BreakIterator.getLineInstance // (factory)
-      boundary.setText(paragraph)
-      out.append(sep).append(indentString)
-      var cursor = indent
-      var start = boundary.first()
-      var end = boundary.next()
-      while (end != BreakIterator.DONE) {
-        val word = paragraph.substring(start, end) // (may include trailing space)
-        if (word.length() + cursor > width) {
-          out.append('\n').append(indentString)
-          cursor = indent
+  def apply[T: ClassTag]: FlagsData = apply(classTag[T].runtimeClass)
+
+  /**
+   * Return flags data for the given classes. Because create it is expensive, result is cached for further calls.
+   *
+   * @param classes Flags-declaring classes.
+   */
+  def apply(classes: Class[_]*): FlagsData = {
+    val key = classes.map(_.getName).sorted.mkString("|")
+    cache.getOrElseUpdate(key, create(classes.toSeq))
+  }
+
+  private def create(classes: Seq[Class[_]]): FlagsData = {
+    val classesBuilder = mutable.Map.empty[Class[_], CaseClass]
+    val fieldsBuilder = mutable.Map.empty[String, CaseClassField]
+    val convertersBuilder = mutable.Map.empty[CaseClassField, Converter[_]]
+
+    classes.foreach { clazz =>
+      val refl = CaseClass(clazz)
+      classesBuilder(refl.runtimeClass) = refl
+
+      refl.fields.foreach { field =>
+        require(field.isAnnotated[Flag], "All fields must be annotated with @Flag")
+
+        val flag = field.annotation[Flag]
+        require(flag.name.nonEmpty, "Flag cannot have an empty name")
+
+        val maybeDuplicate = fieldsBuilder.put(flag.name, field)
+        if (maybeDuplicate.isDefined) {
+          throw new DuplicateFlagDeclarationException(
+            s"Duplicate flag '${flag.name}', declared in ${maybeDuplicate.get.parentClass.getName} and ${clazz.getName}")
         }
-        out.append(word)
-        cursor += word.length()
-        start = end
-        end = boundary.next()
+        convertersBuilder(field) = getConverter(field)
       }
-      sep = "\n";
     }
-    out.toString
+    new FlagsData(classesBuilder.toMap, fieldsBuilder.toMap, convertersBuilder.toMap)
+  }
+
+  private def getConverter(field: CaseClassField) = {
+    val fieldType = if (field.isOption) {
+      field.scalaType.typeArguments.head.runtimeClass
+    } else {
+      field.scalaType.runtimeClass
+    }
+    val maybeConverter = Converter.get(fieldType)
+      .orElse(JavaTypes.maybeAsScala(fieldType).flatMap(Converter.get(_)))
+    maybeConverter match {
+      case Some(converter) => converter
+      case None => throw new RuntimeException(s"No converter registered for ${fieldType.getName}")
+    }
   }
 }
