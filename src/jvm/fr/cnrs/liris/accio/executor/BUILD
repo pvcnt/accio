@@ -1,0 +1,11 @@
+scala_library(
+  name='executor',
+  dependencies=[
+    'src/jvm/fr/cnrs/liris/accio/core/api',
+    'src/jvm/fr/cnrs/liris/accio/core/framework',
+    'src/thrift/fr/cnrs/liris/accio',
+    '3rdparty/jvm/com/typesafe/scala-logging',
+    '3rdparty/jvm/com/twitter/finatra:thrift',
+  ],
+  sources=globs('*.scala')
+)
