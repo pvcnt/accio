@@ -28,7 +28,13 @@ object GetterModule extends AbstractModule with ScalaModule {
     detectors.addBinding.to[GitHubDetector]
     detectors.addBinding.to[S3Detector]
 
-    val decompressors = ScalaMapBinder.newMapBinder[String, Decompressor](binder)
+    val decompressors = ScalaMultibinder.newSetBinder[Decompressor](binder)
+    decompressors.addBinding.to[TarDecompressor]
+    decompressors.addBinding.to[GzipDecompressor]
+    decompressors.addBinding.to[Bzip2Decompressor]
+    decompressors.addBinding.to[ZipDecompressor]
+    decompressors.addBinding.to[TarGzipDecompressor]
+    decompressors.addBinding.to[TarBzip2Decompressor]
 
     val getters = ScalaMultibinder.newSetBinder[Getter](binder)
     getters.addBinding.to[FileGetter]
@@ -41,7 +47,7 @@ object GetterModule extends AbstractModule with ScalaModule {
   }
 
   @Provides
-  def providesClient(detectors: Set[Detector], getters: Set[Getter], decompressors: Map[String, Decompressor]): DownloadClient = {
+  def providesClient(detectors: Set[Detector], getters: Set[Getter], decompressors: Set[Decompressor]): DownloadClient = {
     new DownloadClient(detectors, getters, decompressors, guessPwd = true)
   }
 }

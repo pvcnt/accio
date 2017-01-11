@@ -18,29 +18,19 @@
 
 package fr.cnrs.liris.common.getter
 
-import java.io.IOException
-import java.net.URI
-import java.nio.file.Path
-
 /**
- * Getter defines the interface that schemes must implement to download this.
+ * Unit tests for [[TarGzipDecompressor]].
  */
-trait Getter {
-  /**
-   * GetFile downloads the give URL into the given path. The URL must reference a single file. If possible, the
-   * Getter should check if the remote end contains the same file and no-op this operation.
-   *
-   * Destination path is not guaranteed to exist.
-   *
-   * @param src Source URI to download.
-   * @param dst Destination path where to write the file.
-   * @throws IOException If something wrong occurred while download the file.
-   */
-  @throws[IOException]
-  def get(src: URI, dst: Path): Unit
+class TarGzipDecompressorSpec extends ArchiveDecompressorSpec {
+  protected val decompressor = new TarGzipDecompressor(new TarDecompressor, new GzipDecompressor)
 
-  /**
-   * Return the list of schemes supported by this getter.
-   */
-  def schemes: Set[String]
+  behavior of "TarGzipDecompressor"
+
+  it should "decompress a single file" in {
+    assertSingleFile("fr/cnrs/liris/common/getter/single.tar.gz")
+  }
+
+  it should "decompress a tree" in {
+    assertTree("fr/cnrs/liris/common/getter/tree.tar.gz")
+  }
 }

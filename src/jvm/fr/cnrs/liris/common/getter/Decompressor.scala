@@ -18,13 +18,73 @@
 
 package fr.cnrs.liris.common.getter
 
-// Decompressor defines the interface that must be implemented to add
-// support for decompressing a type.
+import java.io._
+import java.nio.file.{Files, Path}
+
+import org.apache.commons.compress.archivers.ArchiveInputStream
+import org.apache.commons.compress.utils.IOUtils
+
+/**
+ * A compressed file format can be decompressed.
+ */
 trait Decompressor {
-  // Decompress should decompress src to dst. dir specifies whether dst
-  // is a directory or single file. src is guaranteed to be a single file
-  // that exists. dst is not guaranteed to exist already.
-  def decompress(src: String, dst: String): Unit
+  /**
+   *
+   * Source path is guaranteed to exist, destination path is not guaranteed to exist.
+   *
+   * @param src
+   * @param dst
+   */
+  def decompress(src: Path, dst: Path): Unit
 
   def extensions: Set[String]
+}
+
+abstract class AbstractFileDecompressor extends Decompressor {
+  override final def decompress(src: Path, dst: Path): Unit = {
+    Files.createDirectories(dst.getParent)
+    val in = createInputStream(new BufferedInputStream(new FileInputStream(src.toFile)))
+    val out = new FileOutputStream(dst.toFile)
+    try {
+      IOUtils.copy(in, out)
+    } finally {
+      try {
+        in.close()
+      } finally {
+        out.close()
+      }
+    }
+  }
+
+  protected def createInputStream(in: InputStream): InputStream
+}
+
+abstract class AbstractArchiveDecompressor extends Decompressor {
+  override final def decompress(src: Path, dst: Path): Unit = {
+    Files.createDirectories(dst)
+    val in = createInputStream(new BufferedInputStream(new FileInputStream(src.toFile)))
+    try {
+      var entry = in.getNextEntry
+      while (null != entry) {
+        val file = dst.resolve(entry.getName).toFile
+        if (entry.isDirectory) {
+          file.mkdirs()
+        } else {
+          file.getParentFile.mkdirs()
+          val out = new BufferedOutputStream(new FileOutputStream(file))
+          try {
+            IOUtils.copy(in, out)
+          } finally {
+            out.close()
+          }
+        }
+        entry = in.getNextEntry
+        //TODO: propagate file permissions.
+      }
+    } finally {
+      in.close()
+    }
+  }
+
+  protected def createInputStream(in: InputStream): ArchiveInputStream
 }

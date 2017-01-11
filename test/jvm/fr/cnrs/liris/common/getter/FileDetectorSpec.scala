@@ -33,19 +33,19 @@ class FileDetectorSpec extends UnitSpec {
 
   it should "detect absolute file URIs" in {
     if (OS.Current == OS.Windows) {
-      assertOk("/foo", Paths.get("/tmp"), "file:///foo", withoutPwd = true)
-      assertOk("C:\\", Paths.get("/tmp"), "file://C:/", withoutPwd = true)
-      assertOk("C:\\?bar=baz", Paths.get("/tmp"), "file://C:/?bar=baz", withoutPwd = true)
+      assertOk("/foo", Paths.get("/opt"), "file:///foo", withoutPwd = true)
+      assertOk("C:\\", Paths.get("/opt"), "file://C:/", withoutPwd = true)
+      assertOk("C:\\?bar=baz", Paths.get("/opt"), "file://C:/?bar=baz", withoutPwd = true)
     } else {
-      assertOk("/foo", Paths.get("/tmp"), "file:///foo", withoutPwd = true)
-      assertOk("/foo?bar=baz", Paths.get("/tmp"), "file:///foo?bar=baz", withoutPwd = true)
+      assertOk("/foo", Paths.get("/opt"), "file:///foo", withoutPwd = true)
+      assertOk("/foo?bar=baz", Paths.get("/opt"), "file:///foo?bar=baz", withoutPwd = true)
     }
   }
 
   it should "detect relative file URIs" in {
-    assertOk("./foo", Paths.get("/tmp"), "file:///tmp/foo", withoutPwd = false)
-    assertOk("./foo?foo=bar", Paths.get("/tmp"), "file:///tmp/foo?foo=bar", withoutPwd = false)
-    assertOk("foo", Paths.get("/tmp"), "file:///tmp/foo", withoutPwd = false)
+    assertOk("./foo", Paths.get("/opt"), "file:///opt/foo", withoutPwd = false)
+    assertOk("./foo?foo=bar", Paths.get("/opt"), "file:///opt/foo?foo=bar", withoutPwd = false)
+    assertOk("foo", Paths.get("/opt"), "file:///opt/foo", withoutPwd = false)
   }
 
   it should "reject relative file URIs without pwd" in {

@@ -18,29 +18,15 @@
 
 package fr.cnrs.liris.common.getter
 
-import java.io.IOException
-import java.net.URI
-import java.nio.file.Path
+import java.io.InputStream
+
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream
 
 /**
- * Getter defines the interface that schemes must implement to download this.
+ * Decompressor handling BZIP2 format.
  */
-trait Getter {
-  /**
-   * GetFile downloads the give URL into the given path. The URL must reference a single file. If possible, the
-   * Getter should check if the remote end contains the same file and no-op this operation.
-   *
-   * Destination path is not guaranteed to exist.
-   *
-   * @param src Source URI to download.
-   * @param dst Destination path where to write the file.
-   * @throws IOException If something wrong occurred while download the file.
-   */
-  @throws[IOException]
-  def get(src: URI, dst: Path): Unit
+class Bzip2Decompressor extends AbstractFileDecompressor {
+  override def extensions: Set[String] = Set("bz", "bz2")
 
-  /**
-   * Return the list of schemes supported by this getter.
-   */
-  def schemes: Set[String]
+  override protected def createInputStream(in: InputStream): InputStream = new BZip2CompressorInputStream(in)
 }

@@ -18,8 +18,7 @@
 
 package fr.cnrs.liris.common.getter
 
-import java.net.URISyntaxException
-import java.nio.file.{Path, Paths}
+import java.nio.file.Path
 
 /**
  * Invalid URLs or a URLs with a blank scheme are passed through a detector in order to determine if it is
@@ -40,50 +39,6 @@ trait Detector {
    */
   @throws[DetectorException]
   def detect(str: String, pwd: Option[Path] = None): Option[DetectedURI]
-}
-
-/**
- * Utils for [[Detector]].
- */
-object Detector {
-  @throws[DetectorException]
-  def detect(str: String, guessPwd: Boolean, detectors: Set[Detector]): DetectedURI = {
-    val pwd = if (guessPwd) sys.props.get("user.dir").map(Paths.get(_)) else None
-    val requestedUri = DetectedURI.parse(str)
-    val maybeUri = detectRaw(requestedUri).orElse(detectors.flatMap(detectWith(requestedUri, pwd, _)).headOption)
-    maybeUri match {
-      case None => throw new DetectorException(s"Invalid source string: $str")
-      case Some(uri) => uri
-    }
-  }
-
-  private def detectRaw(requestedUri: DetectedURI) = {
-    try {
-      if (requestedUri.rawUri.getScheme.nonEmpty) Some(requestedUri) else None
-    } catch {
-      case _: URISyntaxException => None
-    }
-  }
-
-  private def detectWith(requestedUri: DetectedURI, pwd: Option[Path], detector: Detector) = {
-    detector.detect(requestedUri.rawUri.toString, pwd) match {
-      case None => None
-      case Some(detectedUri) =>
-        // If we have a subdir from the detection, then prepend it to our requested subdir.
-        val subdir = detectedUri.subdir.flatMap { detectedDir =>
-          requestedUri.subdir match {
-            case Some(requestedDir) => Some(s"$detectedDir/$requestedDir")
-            case None => Some(detectedDir)
-          }
-        }.orElse(requestedUri.subdir)
-
-        // Preserve the forced getter if it exists. We try to use the original set force first, followed by any force
-        // set by the detector.
-        val scheme = requestedUri.getter.orElse(detectedUri.getter)
-
-        Some(detectedUri.copy(getter = scheme, subdir = subdir))
-    }
-  }
 }
 
 /**
