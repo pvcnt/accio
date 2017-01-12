@@ -28,7 +28,7 @@ class CompletedTaskHandler @Inject()(runRepository: RunRepository)
   @throws[UnknownTaskException]
   @throws[UnknownRunException]
   override def handle(req: CompletedTaskRequest): Future[CompletedTaskResponse] = {
-    runRepository.get(req.taskId) match {
+    /*runRepository.get(req.taskId) match {
       case None => throw new UnknownTaskException(req.taskId)
       case Some(task) =>
         // Mark the task as completed.
@@ -56,8 +56,7 @@ class CompletedTaskHandler @Inject()(runRepository: RunRepository)
         }
 
         //TODO: schedule next nodes! or mark run as completed/failed/...
-
-        Future(CompletedTaskResponse())
-    }
+*/
+    Future(CompletedTaskResponse())
   }
 }

@@ -19,16 +19,17 @@
 namespace java fr.cnrs.liris.accio.core.application.handler
 
 include "fr/cnrs/liris/accio/core/domain/common.thrift"
-include "fr/cnrs/liris/accio/core/domain/task.thrift"
+include "fr/cnrs/liris/accio/core/domain/run.thrift"
 include "fr/cnrs/liris/accio/core/domain/operator.thrift"
 
 struct RegisterExecutorRequest {
   1: required common.TaskId task_id;
-  2: required string hostname;
 }
 
 struct RegisterExecutorResponse {
-  1: required operator.OpPayload payload;
+  1: required common.RunId run_id;
+  2: required string node_name;
+  3: required operator.OpPayload payload;
 }
 
 struct HeartbeatTaskRequest {
@@ -38,13 +39,11 @@ struct HeartbeatTaskRequest {
 struct HeartbeatTaskResponse {
 }
 
-struct UpdateTaskRequest {
-  1: required common.TaskId task_id;
-  2: optional double progress;
-  3: optional list<task.TaskLog> logs;
+struct StreamLogsRequest {
+  1: required list<run.RunLog> logs;
 }
 
-struct UpdateTaskResponse {
+struct StreamLogsResponse {
 }
 
 struct CompletedTaskRequest {

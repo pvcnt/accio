@@ -70,29 +70,9 @@ final class LocalRunRepository @Inject()(mapper: FinatraObjectMapper)
     RunList(results, totalCount)
   }
 
-  override def find(query: TaskQuery): TaskList = {
-    var results = listIds(tasksPath).flatMap(id => get(TaskId(id)))
-
-    // 1. Filter results by specified criteria.
-    query.runId.foreach { runId => results = results.filter(_.runId == runId) }
-    query.status.foreach { status => results = results.filter(_.state.status == status) }
-
-    // 2. Sort the results in descending chronological order.
-    results = results.sortWith((a, b) => a.createdAt < b.createdAt)
-
-    // 3. Count total number of results (before slicing).
-    val totalCount = results.size
-
-    // 4. Slice results w.r.t. to specified offset and limit.
-    query.offset.foreach { offset => results = results.drop(offset) }
-    query.limit.foreach { limit => results = results.take(limit) }
-
-    TaskList(results, totalCount)
-  }
-
-  override def find(query: LogsQuery): Seq[TaskLog] = {
+  override def find(query: LogsQuery): Seq[RunLog] = {
     //TODO
-    var results = Seq.empty[TaskLog]
+    var results = Seq.empty[RunLog]
 
     // 1. Filter results by specified criteria.
     query.classifier.foreach { classifier => results = results.filter(_.classifier == classifier) }
@@ -109,27 +89,18 @@ final class LocalRunRepository @Inject()(mapper: FinatraObjectMapper)
     write(run, getPath(run.id).toFile)
   }
 
-  override def save(task: Task): Unit = {
-    write(task, getPath(task.id).toFile)
-  }
-
-  override def save(logs: Seq[TaskLog]): Unit = {
-    logs.groupBy(_.taskId)
-      .foreach { case (taskId, logs) =>
-        logs.groupBy(_.classifier).foreach { case (classifier, logs) =>
-          val content = logs.map(log => s"${log.createdAt} ${log.message.replace("\n", "\\\\n")}").mkString("\n")
-          Files.write(getSubdir(logsPath, taskId.value.toString).resolve(s"$classifier.txt"), content.getBytes)
-        }
+  override def save(logs: Seq[RunLog]): Unit = {
+    logs.groupBy(_.runId).foreach { case (runId, logs) =>
+      logs.groupBy(_.classifier).foreach { case (classifier, logs) =>
+        val content = logs.map(log => s"${log.createdAt} ${log.message.replace("\n", "\\\\n")}").mkString("\n")
+        Files.write(getSubdir(logsPath, runId.value.toString).resolve(s"$classifier.txt"), content.getBytes)
       }
+    }
   }
 
   override def get(id: RunId): Option[Run] = read[Run](getPath(id).toFile)
 
-  override def get(id: TaskId): Option[Task] = read[Task](getPath(id).toFile)
-
   override def exists(id: RunId): Boolean = getPath(id).toFile.exists()
-
-  override def exists(id: TaskId): Boolean = getPath(id).toFile.exists()
 
   override def delete(id: RunId): Unit = {
     FileUtils.safeDelete(getPath(id))
@@ -137,17 +108,9 @@ final class LocalRunRepository @Inject()(mapper: FinatraObjectMapper)
 
   private def runsPath = config.rootDir.resolve("runs")
 
-  private def tasksPath = config.rootDir.resolve("tasks")
-
   private def logsPath = config.rootDir.resolve("logs")
 
-  private def getPath(id: RunId) = {
-    getSubdir(runsPath, id.value).resolve(s"${id.value}.json")
-  }
-
-  private def getPath(id: TaskId) = {
-    getSubdir(tasksPath, id.value).resolve(s"${id.value}.json")
-  }
+  private def getPath(id: RunId) = getSubdir(runsPath, id.value).resolve(s"${id.value}.json")
 
   private def getSubdir(dir: Path, id: String) = {
     // We create two levels of subdirectories based on run identifier to avoid putting to many files in a single

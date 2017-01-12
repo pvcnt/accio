@@ -28,7 +28,7 @@ class RegisterExecutorHandler @Inject()(runRepository: RunRepository)
   @throws[UnknownTaskException]
   @throws[UnknownRunException]
   override def handle(req: RegisterExecutorRequest): Future[RegisterExecutorResponse] = {
-    runRepository.get(req.taskId) match {
+    /*runRepository.get(req.taskId) match {
       case None => throw new UnknownTaskException(req.taskId)
       case Some(task) =>
         runRepository.get(task.runId) match {
@@ -54,6 +54,7 @@ class RegisterExecutorHandler @Inject()(runRepository: RunRepository)
             }
         }
         Future(RegisterExecutorResponse(task.payload))
-    }
+    }*/
+    ???
   }
 }

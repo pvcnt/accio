@@ -142,7 +142,7 @@ sealed trait Input
  *
  * @param value Input value.
  */
-case class ValueInput(value: Any = None) extends Input
+case class ValueInput(value: Value) extends Input
 
 /**
  * Input coming from the output of another node.

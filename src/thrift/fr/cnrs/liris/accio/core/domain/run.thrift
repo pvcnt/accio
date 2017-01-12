@@ -159,3 +159,11 @@ struct RunTemplate {
   // Identifier of the run this instance has been cloned from.
   13: optional common.RunId cloned_from;
 }
+
+struct RunLog {
+  1: required common.RunId run_id;
+  2: required string node_name;
+  3: required common.Timestamp created_at;
+  4: required string classifier;
+  5: required string message;
+}

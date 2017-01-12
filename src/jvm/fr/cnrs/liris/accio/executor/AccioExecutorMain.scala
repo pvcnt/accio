@@ -18,7 +18,6 @@
 
 package fr.cnrs.liris.accio.executor
 
-import java.net.InetAddress
 import java.nio.file.{Path, Paths}
 
 import com.google.inject.Guice
@@ -33,7 +32,6 @@ import fr.cnrs.liris.privamov.ops.OpsModule
 case class AccioExecutorFlags(
   @Flag(name = "id") taskId: String,
   @Flag(name = "tracker_addr") taskTrackerAddr: String,
-  @Flag(name = "hostname") hostname: String = InetAddress.getLocalHost.getHostName,
   @Flag(name = "workdir") workDir: Path = Paths.get("."))
 
 object AccioExecutorMain extends AccioExecutor

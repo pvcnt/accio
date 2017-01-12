@@ -103,14 +103,15 @@ class OpExecutor @Inject()(opRegistry: RuntimeOpRegistry, opFactory: OpFactory, 
       case None => Unit.box(Unit)
       case Some(inClass) =>
         val ctorArgs = opMeta.defn.inputs.map { argDef =>
-          inputs.get(argDef.name) match {
+          val value = inputs.get(argDef.name) match {
             case None =>
               argDef.defaultValue match {
                 case Some(defaultValue) => Values.decode(defaultValue, argDef.kind)
                 case None => throw new IllegalArgumentException(s"Missing required input: ${argDef.name}")
               }
-            case Some(value) => Values.decode(value, argDef.kind)
+            case Some(v) => Values.decode(v, argDef.kind)
           }
+          if (argDef.isOptional) Some(value) else value
         }
         inClass.getConstructors.head.newInstance(ctorArgs.map(_.asInstanceOf[AnyRef]): _*)
     }

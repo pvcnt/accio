@@ -25,7 +25,7 @@ service TaskTrackerService {
 
   task_tracker.RegisterExecutorResponse register(1: task_tracker.RegisterExecutorRequest req);
 
-  task_tracker.UpdateTaskResponse update(1: task_tracker.UpdateTaskRequest req);
+  task_tracker.StreamLogsResponse stream(1: task_tracker.StreamLogsRequest req);
 
   task_tracker.CompletedTaskResponse completed(1: task_tracker.CompletedTaskRequest req);
 }

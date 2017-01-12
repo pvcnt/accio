@@ -143,20 +143,15 @@ final class GraphFactory @Inject()(opRegistry: OpRegistry) {
           case Some(defaultValue) => ValueInput(defaultValue)
           case None => throw new InvalidGraphException(s"No value for input ${nodeDef.name}/${argDef.name}")
         }
-        case Some(InputDef.Value(v)) => ValueInput(correctValue(v, nodeDef, argDef))
+        case Some(InputDef.Value(v)) =>
+          //TODO: validate type is correct.
+          ValueInput(v)
         case Some(InputDef.Reference(ref)) => ReferenceInput(ref)
         case Some(InputDef.Param(name)) => ParamInput(name)
         case Some(InputDef.UnknownUnionField(_)) => throw new InvalidGraphException(s"Invalid input ${nodeDef.name}/${argDef.name}")
       }
       argDef.name -> value
     }.toMap
-  }
-
-  private def correctValue(value: Value, nodeDef: NodeDef, argDef: ArgDef) = {
-    //TODO: detect correct type.
-    //throw new InvalidGraphException("Invalid value for integer input FirstSimple/foo: bar")
-    val scalaValue = Values.decode(value, argDef.kind)
-    if (argDef.isOptional) Some(scalaValue) else scalaValue
   }
 
   private def detectCycles(graph: Graph): Set[Seq[String]] = {

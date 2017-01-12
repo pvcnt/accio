@@ -28,12 +28,12 @@ import fr.cnrs.liris.accio.thrift.agent.TaskTrackerService
 class ExecutorController @Inject()(trackerClient: TaskTrackerService.FinagledClient, taskExecutor: TaskExecutor) extends LazyLogging {
   def execute(opts: AccioExecutorFlags): Future[Unit] = {
     trackerClient
-      .register(RegisterExecutorRequest(TaskId(opts.taskId), opts.hostname))
+      .register(RegisterExecutorRequest(TaskId(opts.taskId)))
       .transform {
         case Throw(e) =>
           logger.error("Error while registering executor", e)
           Future.Done
-        case Return(resp) => taskExecutor.submit(TaskId(opts.taskId), resp.payload)
+        case Return(resp) => taskExecutor.submit(TaskId(opts.taskId), resp.runId, resp.nodeName, resp.payload)
       }
   }
 }

@@ -22,12 +22,12 @@ import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.core.domain.{RunRepository, UnknownTaskException}
 
-class UpdateTaskHandler @Inject()(runRepository: RunRepository)
-  extends Handler[UpdateTaskRequest, UpdateTaskResponse] {
+class StreamLogsHandler @Inject()(runRepository: RunRepository)
+  extends Handler[StreamLogsRequest, StreamLogsResponse] {
 
   @throws[UnknownTaskException]
-  override def handle(req: UpdateTaskRequest): Future[UpdateTaskResponse] = {
-    runRepository.get(req.taskId) match {
+  override def handle(req: StreamLogsRequest): Future[StreamLogsResponse] = {
+    /*runRepository.get(req.taskId) match {
       case None => throw new UnknownTaskException(req.taskId)
       case Some(task) =>
         req.progress.foreach { progress =>
@@ -37,8 +37,7 @@ class UpdateTaskHandler @Inject()(runRepository: RunRepository)
         }
         req.logs.foreach { logs =>
           runRepository.save(logs)
-        }
-        Future(UpdateTaskResponse())
-    }
+        }*/
+    Future(StreamLogsResponse())
   }
 }

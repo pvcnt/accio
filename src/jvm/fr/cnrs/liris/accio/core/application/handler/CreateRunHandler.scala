@@ -20,17 +20,35 @@ package fr.cnrs.liris.accio.core.application.handler
 
 import com.google.inject.Inject
 import com.twitter.util.Future
+import fr.cnrs.liris.accio.core.application.SchedulerService
 import fr.cnrs.liris.accio.core.domain._
 
-class CreateRunHandler @Inject()(runFactory: RunFactory, runRepository: RunRepository)
+class CreateRunHandler @Inject()(
+  runFactory: RunFactory,
+  runRepository: RunRepository,
+  workflowRepository: WorkflowRepository,
+  scheduler: SchedulerService,
+  graphFactory: GraphFactory)
   extends Handler[CreateRunRequest, CreateRunResponse] {
 
   @throws[InvalidRunException]
   def handle(req: CreateRunRequest): Future[CreateRunResponse] = {
+    // Create and save runs into the repository.
     val runs = runFactory.create(req.template, req.user)
     runs.foreach(runRepository.save)
 
-    // TODO: start the run controller!
+    val maybeWorkflow = workflowRepository.get(runs.head.pkg.workflowId, runs.head.pkg.workflowVersion)
+    maybeWorkflow match {
+      case None => throw new UnknownWorkflowException(runs.head.pkg.workflowId, Some(runs.head.pkg.workflowVersion))
+      case Some(workflow) =>
+        // Schedule root nodes, for all runs (except the parent).
+        val rootNodes = graphFactory.create(workflow.graph).roots
+        runs.filter(_.children.isEmpty).foreach { run =>
+          rootNodes.foreach { node =>
+            scheduler.submit(run, node)
+          }
+        }
+    }
 
     Future(CreateRunResponse(runs.map(_.id)))
   }

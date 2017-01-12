@@ -22,7 +22,7 @@ import com.google.inject.{Inject, Singleton}
 import com.twitter.finagle.Service
 import com.twitter.finatra.thrift.Controller
 import com.twitter.inject.Injector
-import fr.cnrs.liris.accio.core.application.handler.{CompletedTaskHandler, HeartbeatTaskHandler, RegisterExecutorHandler, UpdateTaskHandler}
+import fr.cnrs.liris.accio.core.application.handler.{CompletedTaskHandler, HeartbeatTaskHandler, RegisterExecutorHandler, StreamLogsHandler}
 import fr.cnrs.liris.accio.thrift.agent.TaskTrackerService._
 import fr.cnrs.liris.accio.thrift.agent._
 
@@ -41,9 +41,9 @@ class TaskTrackerThriftController @Inject()(injector: Injector)
     }
   }
 
-  override val update: Service[Update.Args, Update.Result] = {
-    handle(Update) { args: Update.Args =>
-      injector.instance[UpdateTaskHandler].handle(args.req)
+  override val stream: Service[Stream.Args, Stream.Result] = {
+    handle(Stream) { args: Stream.Args =>
+      injector.instance[StreamLogsHandler].handle(args.req)
     }
   }
 

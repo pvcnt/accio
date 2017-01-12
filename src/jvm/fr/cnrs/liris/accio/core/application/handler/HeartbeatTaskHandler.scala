@@ -27,12 +27,12 @@ class HeartbeatTaskHandler @Inject()(runRepository: RunRepository)
 
   @throws[UnknownTaskException]
   override def handle(req: HeartbeatTaskRequest): Future[HeartbeatTaskResponse] = {
-    runRepository.get(req.taskId) match {
+    /*runRepository.get(req.taskId) match {
       case None => throw new UnknownTaskException(req.taskId)
       case Some(task) =>
-        val updatedTask = task.copy(state = task.state.copy(heartbeatAt = Some(System.currentTimeMillis())))
-        runRepository.save(updatedTask)
-        Future(HeartbeatTaskResponse())
-    }
+        //TODO
+
+    }*/
+    Future(HeartbeatTaskResponse())
   }
 }

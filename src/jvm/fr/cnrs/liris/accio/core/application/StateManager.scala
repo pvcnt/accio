@@ -16,34 +16,20 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace java fr.cnrs.liris.accio.core.domain
+package fr.cnrs.liris.accio.core.application
 
-include "fr/cnrs/liris/accio/core/domain/common.thrift"
-include "fr/cnrs/liris/accio/core/domain/operator.thrift"
+import fr.cnrs.liris.accio.core.domain.{Task, TaskId}
 
-enum TaskStatus {
-  SCHEDULED,
-  RUNNING,
-  SUCCESS,
-  FAILED,
-  KILLED,
-  LOST,
+trait StateManager {
+  def acquireLock(key: String): Lock
+
+  def tasks: Set[Task]
+
+  def save(task: Task): Unit
+
+  def get(id: TaskId): Option[Task]
 }
 
-struct TaskState {
-  1: required TaskStatus status;
-  2: optional common.Timestamp started_at;
-  3: optional common.Timestamp heartbeat_at;
-  4: optional common.Timestamp completed_at;
-}
-
-struct Task {
-  1: required common.TaskId id;
-  2: required common.RunId run_id;
-  3: required string node_name;
-  4: required operator.OpPayload payload;
-  5: required string key;
-  6: required string scheduler;
-  7: required common.Timestamp created_at;
-  8: required TaskState state;
+trait Lock {
+  def release(): Unit
 }

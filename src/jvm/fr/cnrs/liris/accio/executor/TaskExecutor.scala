@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import com.google.inject.{Inject, Singleton}
 import com.twitter.util.{Await, ExecutorServiceFuturePool, Future}
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.core.application.handler.{CompletedTaskRequest, HeartbeatTaskRequest, UpdateTaskRequest}
+import fr.cnrs.liris.accio.core.application.handler.{CompletedTaskRequest, HeartbeatTaskRequest, StreamLogsRequest}
 import fr.cnrs.liris.accio.core.application.{OpExecutor, OpExecutorOpts}
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.thrift.agent._
@@ -42,8 +42,8 @@ class TaskExecutor @Inject()(opExecutor: OpExecutor, trackerClient: TaskTrackerS
   private[this] val stopped = new AtomicBoolean(false)
   private[this] val threads = mutable.Set.empty[Thread]
 
-  def submit(taskId: TaskId, payload: OpPayload): Future[Unit] = {
-    threads ++= Set(new HeartbeatThread(taskId), new StreamLogsThread(taskId))
+  def submit(taskId: TaskId, runId: RunId, nodeName: String, payload: OpPayload): Future[Unit] = {
+    threads ++= Set(new HeartbeatThread(taskId), new StreamLogsThread(taskId, runId, nodeName))
     threads.foreach(_.start())
     logger.info(s"Starting execution of task ${taskId.value}")
     pool {
@@ -63,7 +63,7 @@ class TaskExecutor @Inject()(opExecutor: OpExecutor, trackerClient: TaskTrackerS
     }.unit
   }
 
-  private def extractLogs(baos: ByteArrayOutputStream, taskId: TaskId, classifier: String) = {
+  private def extractLogs(baos: ByteArrayOutputStream, runId: RunId, nodeName: String, classifier: String) = {
     val content = new String(baos.toByteArray)
     baos.reset()
     val at = System.currentTimeMillis
@@ -72,17 +72,17 @@ class TaskExecutor @Inject()(opExecutor: OpExecutor, trackerClient: TaskTrackerS
       .toSeq
       .map(_.trim)
       .filter(_.nonEmpty)
-      .map(line => TaskLog(taskId, classifier, at, line))
+      .map(line => RunLog(runId, nodeName, at, classifier, line))
   }
 
-  private class StreamLogsThread(taskId: TaskId) extends Thread {
+  private class StreamLogsThread(taskId: TaskId, runId: RunId, nodeName: String) extends Thread {
     override def run(): Unit = {
       logger.debug("Logs thread started")
       Thread.sleep(2 * 1000)
       while (!stopped.get()) {
-        val logs = extractLogs(stdoutBytes, taskId, "stdout") ++ extractLogs(stderrBytes, taskId, "stderr")
+        val logs = extractLogs(stdoutBytes, runId, nodeName, "stdout") ++ extractLogs(stderrBytes, runId, nodeName, "stderr")
         if (logs.nonEmpty) {
-          val future = trackerClient.update(UpdateTaskRequest(taskId, logs = Some(logs)))
+          val future = trackerClient.stream(StreamLogsRequest(logs))
             .onFailure(e => logger.error("Error while sending logs", e))
             .onSuccess(_ => logger.debug(s"Sent logs for task $taskId (${logs.size} lines)"))
           Await.ready(future)

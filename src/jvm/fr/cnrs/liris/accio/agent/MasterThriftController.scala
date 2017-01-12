@@ -22,9 +22,8 @@ import com.google.inject.{Inject, Singleton}
 import com.twitter.finagle.Service
 import com.twitter.finatra.thrift.Controller
 import com.twitter.inject.Injector
+import fr.cnrs.liris.accio.agent.MasterService._
 import fr.cnrs.liris.accio.core.application.handler._
-import fr.cnrs.liris.accio.thrift.agent.MasterService._
-import fr.cnrs.liris.accio.thrift.agent._
 
 @Singleton
 class MasterThriftController @Inject()(injector: Injector)
