@@ -27,7 +27,7 @@ class CreateRunHandler @Inject()(runFactory: RunFactory, runRepository: RunRepos
 
   @throws[InvalidRunException]
   def handle(req: CreateRunRequest): Future[CreateRunResponse] = {
-    val runs = runFactory.create(req.spec)
+    val runs = runFactory.create(req.template, req.user)
     runs.foreach(runRepository.save)
 
     // TODO: start the run controller!

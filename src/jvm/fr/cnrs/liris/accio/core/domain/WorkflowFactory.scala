@@ -30,37 +30,43 @@ import fr.cnrs.liris.common.util.{HashUtils, Seqs}
  * @param opRegistry   Operator registry.
  */
 final class WorkflowFactory @Inject()(graphFactory: GraphFactory, opRegistry: OpRegistry) {
+  /**
+   * Create a workflow from a workflow template.
+   *
+   * @param template Workflow template.
+   * @param user     User creating the workflow.
+   * @throws InvalidWorkflowException
+   */
   @throws[InvalidWorkflowException]
-  def create(spec: WorkflowSpec, user: User): Workflow = {
-    val graph = getGraph(spec)
-    val params = getParams(graph, spec.params.toSet)
-    val owner = spec.owner.getOrElse(user)
-    val version = spec.version.getOrElse(getVersion(spec.id, spec.name, spec.description, owner, spec.graph, params))
+  def create(template: WorkflowTemplate, user: User): Workflow = {
+    val graph = getGraph(template)
+    val params = getParams(graph, template.params.toSet)
+    val owner = template.owner.getOrElse(user)
+    val version = template.version.getOrElse(defaultVersion(template.id, template.name, template.description, owner, template.graph, params))
     Workflow(
-      id = spec.id,
+      id = template.id,
       version = version,
       createdAt = System.currentTimeMillis(),
-      name = spec.name,
-      description = spec.description,
+      name = template.name,
       owner = owner,
-      graph = spec.graph,
+      graph = template.graph,
       params = params)
   }
 
   /**
    * Create (and validate) the graph associated with the workflow.
    *
-   * @param spec Workflow specification.
+   * @param template Workflow template.
    */
-  private def getGraph(spec: WorkflowSpec) = {
+  private def getGraph(template: WorkflowTemplate) = {
     try {
-      graphFactory.create(spec.graph)
+      graphFactory.create(template.graph)
     } catch {
       case e: InvalidGraphException => throw new InvalidWorkflowException(e.getMessage, e.getCause)
     }
   }
 
-  private def getVersion(id: WorkflowId, name: Option[String], description: Option[String], owner: User, graph: GraphDef, params: Set[ArgDef]) = {
+  private def defaultVersion(id: WorkflowId, name: Option[String], description: Option[String], owner: User, graph: GraphDef, params: Set[ArgDef]) = {
     HashUtils.sha1(Objects.hash(id.value, name.getOrElse(""), description.getOrElse(""), owner, graph, params).toString)
   }
 

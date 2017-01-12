@@ -106,19 +106,3 @@ struct Reference {
   1: required string node;
   2: required string port;
 }
-
-/**
-*  Runs are executed on a given cluster by a given user and inside a given environment. The user is used for
-   * accounting and quotas, the environment for priority-based scheduling. The environment can have one of the
-   * following values (by ascending priority): "devel", "test", "staging", "production".
-**/
-struct Entitlement {
-  // Cluster providing resources.
-  1: required string cluster;
-
-  // Environment.
-  2: required string environment;
-
-  // User.
-  3: required User user;
-}

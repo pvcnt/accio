@@ -47,7 +47,7 @@ class CompletedTaskHandler @Inject()(runRepository: RunRepository)
               var updatedRunState = run.state.copy(nodes = run.state.nodes - nodeState + updatedNodeState)
               if (updatedRunState.nodes.forall(s => Utils.isCompleted(s.status))) {
                 // If all nodes are completed, mark the whole run as completed.
-                if (updatedRunState.nodes.forall(_.status == NodeStatus))
+                //if (updatedRunState.nodes.forall(_.status == NodeStatus))
               }
               runRepository.save(run.copy(state = updatedRunState))
             } else {

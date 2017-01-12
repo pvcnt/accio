@@ -52,9 +52,9 @@ final class LocalRunRepository @Inject()(mapper: FinatraObjectMapper)
     // 1. Filter results by specified criteria.
     query.workflow.foreach { workflow => results = results.filter(_.pkg.workflowId == workflow) }
     query.name.foreach { name => results = results.filter(_.name.contains(name)) }
-    query.cluster.foreach { cluster => results = results.filter(_.entitlement.cluster == cluster) }
-    query.owner.foreach { owner => results = results.filter(_.entitlement.user.name == owner) }
-    query.environment.foreach { environment => results = results.filter(_.entitlement.environment == environment) }
+    query.cluster.foreach { cluster => results = results.filter(_.cluster == cluster) }
+    query.owner.foreach { owner => results = results.filter(_.owner.name == owner) }
+    query.environment.foreach { environment => results = results.filter(_.environment == environment) }
     query.status.foreach { status => results = results.filter(_.state.status == status) }
 
     // 2. Sort the results in descending chronological order.

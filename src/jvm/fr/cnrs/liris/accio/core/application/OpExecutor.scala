@@ -18,12 +18,12 @@
 
 package fr.cnrs.liris.accio.core.application
 
-import java.nio.file.{Files, Path}
+import java.nio.file.Files
 
+import com.google.inject.Inject
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.api.{OpContext, Operator}
-import fr.cnrs.liris.accio.core.domain.{ErrorFactory, OpFactory, RuntimeOpRegistry, Values}
-import fr.cnrs.liris.accio.core.domain.{Artifact, OpPayload, OpResult, Value}
+import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.common.util.FileUtils
 
 import scala.util.control.NonFatal
@@ -36,7 +36,7 @@ case class OpExecutorOpts(useProfiler: Boolean)
  * @param opFactory
  * @param uploader
  */
-class OpExecutor(opRegistry: RuntimeOpRegistry, opFactory: OpFactory, uploader: Uploader) extends StrictLogging {
+class OpExecutor @Inject()(opRegistry: RuntimeOpRegistry, opFactory: OpFactory, uploader: Uploader) extends StrictLogging {
   /**
    * Execute an operator.
    *

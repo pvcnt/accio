@@ -25,13 +25,13 @@ include "fr/cnrs/liris/accio/core/domain/common.thrift"
  */
 union InputDef {
   // If the input value comes from the value of a workflow parameter.
-  1: optional string param;
+  1: string param;
 
   // If the input value comes from the output of another node.
-  2: optional common.Reference reference;
+  2: common.Reference reference;
 
   // If the input value is statically fixed.
-  3: optional common.Value value;
+  3: common.Value value;
 }
 
 /**

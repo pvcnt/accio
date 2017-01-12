@@ -62,6 +62,7 @@ struct Package {
   1: required common.WorkflowId workflow_id;
   2: required string workflow_version;
 }
+
 /**
  * A run is a particular instantiation of a workflow, where everything is well defined (i.e., all workflow parameters
  * have been affected a value).
@@ -83,65 +84,78 @@ struct Run {
   // Specification of the associated workflow.
   2: required Package pkg;
 
-  // Entitlement on which the run is executed.
-  3: required common.Entitlement entitlement;
+  // Cluster providing resources.
+  3: required string cluster;
+
+  // Environment.
+  4: required string environment;
+
+  // User initiating the run.
+  5: required common.User owner;
 
   // Human-readable name.
-  4: optional string name;
+  6: optional string name;
 
   // Notes describing the purpose of the run.
-  5: optional string notes;
+  7: optional string notes;
 
-  // Arbitrary tags helping with run classification.
-  6: required set<string> tags;
+  // Arbitrary tags used when looking for runs.
+  8: required set<string> tags;
 
   // Seed used by unstable operators.
-  7: required i64 seed;
+  9: required i64 seed;
 
   // Values of workflow parameters.
-  8: required map<string, common.Value> params;
+  10: required map<string, common.Value> params;
 
   // Identifier of the run this instance is a child of.
-  9: optional common.RunId parent;
+  11: optional common.RunId parent;
 
   // Identifiers of the runs this instance is a parent of.
-  10: optional set<common.RunId> children;
+  12: optional set<common.RunId> children;
 
   // Identifier of the run this instance has been cloned from.
-  11: optional common.RunId cloned_from;
+  13: optional common.RunId cloned_from;
 
   // Time at which this run has been created.
-  12: required common.Timestamp created_at;
+  14: required common.Timestamp created_at;
 
   // Execution state.
-  13: required RunState state;
+  15: required RunState state;
 }
 
-struct RunSpec {
+struct RunTemplate {
   // Specification of the associated workflow.
   1: required string pkg;
 
+  // Cluster providing resources to execute the run.
+  2: required string cluster;
+
+  // Environment inside which the run is executed.
+  3: optional string environment;
+
+  // User initiating the run.
+  5: optional common.User owner;
+
   // Human-readable name.
-  2: optional string name;
+  6: optional string name;
 
   // Notes describing the purpose of the run.
-  3: optional string notes;
+  7: optional string notes;
 
-  // Arbitrary tags helping with run classification.
-  4: required set<string> tags;
+  // Arbitrary tags used when looking for runs.
+  8: required set<string> tags;
 
   // Seed used by unstable operators.
-  5: optional i64 seed;
+  9: optional i64 seed;
 
   // Values of workflow parameters. There can possibly be many values for a single parameter, which will cause a
   // parameter sweep to be executed.
-  6: required map<string, list<common.Value>> params;
+  11: required map<string, list<common.Value>> params;
 
-  // Number of times to replicate this run.
-  7: optional i32 repeat;
+  // Number of times to repeat each run.
+  12: optional i32 repeat;
 
   // Identifier of the run this instance has been cloned from.
-  8: optional common.RunId cloned_from;
-
-  9: required common.Entitlement entitlement;
+  13: optional common.RunId cloned_from;
 }

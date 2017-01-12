@@ -1,7 +1,6 @@
 scala_library(
   name='agent',
   dependencies=[
-    'src/jvm/fr/cnrs/liris/accio/core/domain',
     'src/jvm/fr/cnrs/liris/accio/core/application',
     'src/jvm/fr/cnrs/liris/accio/core/application/handler',
     'src/thrift/fr/cnrs/liris/accio/agent',

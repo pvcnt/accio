@@ -18,8 +18,6 @@
 
 package fr.cnrs.liris.accio.executor
 
-import java.nio.file.Path
-
 import com.google.inject.{Provides, TypeLiteral}
 import com.twitter.finagle.Thrift
 import fr.cnrs.liris.accio.core.api.Operator
@@ -44,7 +42,7 @@ object ExecutorModule extends ScalaModule {
   }
 
   @Provides
-  def providesOpExecutor(opRegistry: RuntimeOpRegistry, opFactory: OpFactory, uploader: Uploader, @InjectFlag("workdir") workDir: Path): OpExecutor = {
-    new OpExecutor(opRegistry, opFactory, uploader, workDir.resolve("tmp"))
+  def providesOpExecutor(opRegistry: RuntimeOpRegistry, opFactory: OpFactory, uploader: Uploader): OpExecutor = {
+    new OpExecutor(opRegistry, opFactory, uploader)
   }
 }

@@ -35,14 +35,13 @@ struct Workflow {
   // Time at which this version of the workflow was created.
   3: required common.Timestamp created_at;
   4: optional string name;
-  5: optional string description;
-  6: required common.User owner;
-  7: required graph.GraphDef graph;
+  5: required common.User owner;
+  6: required graph.GraphDef graph;
   // Workflow parameters.
-  8: required set<operator.ArgDef> params;
+  7: required set<operator.ArgDef> params;
 }
 
-struct WorkflowSpec {
+struct WorkflowTemplate {
   1: required common.WorkflowId id;
   2: optional string version;
   3: optional string name;

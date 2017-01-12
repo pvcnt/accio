@@ -41,7 +41,7 @@ struct ListOperatorsResponse {
 }
 
 struct PushWorkflowRequest {
-  1: required workflow.WorkflowSpec spec;
+  1: required workflow.WorkflowTemplate template;
   2: required common.User user;
 }
 
@@ -77,7 +77,7 @@ struct DeleteWorkflowResponse {
 }
 
 struct CreateRunRequest {
-  1: required run.RunSpec spec;
+  1: required run.RunTemplate template;
   2: required common.User user;
 }
 
