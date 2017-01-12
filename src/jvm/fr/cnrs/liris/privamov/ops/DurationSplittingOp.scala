@@ -36,7 +36,7 @@ class DurationSplittingOp @Inject()(override protected val env: SparkleEnv,
   override def execute(in: DurationSplittingIn, ctx: OpContext): DurationSplittingOut = {
     val split = (buffer: Seq[Event], curr: Event) => (buffer.head.time to curr.time).duration >= in.duration
     val output = read[Trace](in.data).flatMap(transform(_, split))
-    DurationSplittingOut(write(output, ctx.workDir))
+    DurationSplittingOut(write(output, ctx.sandboxDir))
   }
 }
 

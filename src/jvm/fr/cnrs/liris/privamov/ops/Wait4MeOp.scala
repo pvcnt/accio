@@ -110,7 +110,7 @@ class Wait4MeOp @Inject()(
 
       // We convert back the result into a conventional dataset format.
       val w4mOutputPath = tmpDir.resolve(f"out_${in.k}_${"%.3f".formatLocal(Locale.ENGLISH, in.delta.meters)}.txt").toAbsolutePath
-      val output = writeOutput(input.keys, w4mOutputPath, ctx.workDir)
+      val output = writeOutput(input.keys, w4mOutputPath, ctx.sandboxDir)
 
       // We extract metrics from the captured stdout. This is quite ugly, but this works.
       // After header and progress information, result looks like:

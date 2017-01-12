@@ -37,7 +37,7 @@ class ModuloSamplingOp @Inject()(
   override def execute(in: ModuloSamplingIn, ctx: OpContext): ModuloSamplingOut = {
     val input = read[Trace](in.data)
     val output = input.map(trace => transform(trace, in.n))
-    ModuloSamplingOut(write(output, ctx.workDir))
+    ModuloSamplingOut(write(output, ctx.sandboxDir))
   }
 
   private def transform(trace: Trace, n: Int) = {

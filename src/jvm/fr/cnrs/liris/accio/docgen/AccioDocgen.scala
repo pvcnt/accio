@@ -18,13 +18,10 @@
 
 package fr.cnrs.liris.accio.docgen
 
-import java.io.{BufferedOutputStream, FileOutputStream, OutputStream}
 import java.nio.file.Path
 
-import com.google.inject.{Guice, Inject}
+import com.google.inject.Guice
 import com.twitter.util.Stopwatch
-import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.core.framework.{OpMeta, OpRegistry}
 import fr.cnrs.liris.common.flags._
 import fr.cnrs.liris.privamov.ops.OpsModule
 
@@ -45,12 +42,11 @@ case class AccioDocgenFlags(
 /**
  * Quick and dirty Markdown documentation generator for operators.
  */
-class AccioDocgen extends StrictLogging {
+class AccioDocgen {
   def main(args: Array[String]): Unit = {
     val elapsed = Stopwatch.start()
-    val injector = Guice.createInjector(AccioModule, OpsModule, FlagsModule)
-    val parserFactory = injector.getInstance(classOf[FlagsParserFactory])
-    val parser = parserFactory.create(allowResidue = false, classOf[AccioDocgenFlags])
+    val injector = Guice.createInjector(AccioModule, OpsModule)
+    val parser = FlagsParser[AccioDocgenFlags](allowResidue = false)
     parser.parseAndExitUponError(args)
 
     val flags = try {

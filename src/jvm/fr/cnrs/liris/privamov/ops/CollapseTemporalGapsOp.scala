@@ -39,7 +39,7 @@ class CollapseTemporalGapsOp @Inject()(
   override def execute(in: CollapseTemporalGapsIn, ctx: OpContext): CollapseTemporalGapsOut = {
     val startAt = new Instant(in.startAt.millis).toDateTime.withTimeAtStartOfDay
     val input = read[Trace](in.data)
-    val output = write(input.map(transform(_, startAt)), ctx.workDir)
+    val output = write(input.map(transform(_, startAt)), ctx.sandboxDir)
     CollapseTemporalGapsOut(output)
   }
 

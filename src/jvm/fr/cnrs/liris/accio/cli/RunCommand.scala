@@ -25,8 +25,9 @@ import java.util.concurrent.atomic.AtomicInteger
 import com.google.inject.Inject
 import com.twitter.util.Stopwatch
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.core.framework._
-import fr.cnrs.liris.accio.core.runtime.{RunController, ProgressReporter}
+import fr.cnrs.liris.accio.core.domain.{OpRegistry, _}
+import fr.cnrs.liris.accio.core.runtime.{IllegalWorkflowException, ProgressReporter, RunController}
+import fr.cnrs.liris.accio.core.workflow.{Run, User}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.util.{FileUtils, HashUtils, StringUtils, TimeUtils}
 

@@ -49,7 +49,7 @@ class EventSourceOp @Inject()(
       in.sample.foreach { sample =>
         data = data.sample(withReplacement = false, fraction = sample, seed = ctx.seed)
       }
-      write(data, ctx.workDir)
+      write(data, ctx.sandboxDir)
     } else Dataset(in.url)
     EventSourceOut(output)
   }

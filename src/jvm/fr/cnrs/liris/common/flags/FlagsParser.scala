@@ -171,10 +171,10 @@ class FlagsParser(flagsData: FlagsData, allowResidue: Boolean) extends FlagsProv
       .map(v => s"-${v.name}=${v.unparsedValue}")
 
   override def asListOfEffectiveFlags: Seq[FlagValueDescription] =
-    flagsData.fields.map { case (name, field) =>
+    flagsData.fields.flatMap { case (name, field) =>
       impl.parsedValues.get(field)
         .map(_.asFlagValueDescription(name))
-        .getOrElse(new FlagValueDescription(name, field.defaultValue, Priority.Default, None, None, None))
+        .orElse(field.defaultValue.map(defaultValue => new FlagValueDescription(name, defaultValue, Priority.Default, None, None, None)))
     }.toSeq
 
   override def containsExplicitFlag(name: String): Boolean = {
@@ -196,6 +196,14 @@ object FlagsParser {
    * @tparam T Flags-declaring type.
    */
   def apply[T: ClassTag]: FlagsParser = apply(allowResidue = false, classTag[T].runtimeClass)
+
+  /**
+   * Return a new flags parser for a given class, allowing no residual arguments.
+   *
+   * @param allowResidue Whether residual arguments are allowed.
+   * @tparam T Flags-declaring type.
+   */
+  def apply[T: ClassTag](allowResidue: Boolean): FlagsParser = apply(allowResidue, classTag[T].runtimeClass)
 
   /**
    * Return a new flags parser for given classes, allowing no residual arguments.

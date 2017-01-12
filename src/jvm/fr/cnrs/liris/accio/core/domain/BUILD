@@ -1,0 +1,13 @@
+scala_library(
+  name='domain',
+  dependencies=[
+    'src/jvm/fr/cnrs/liris/accio/core/api',
+    'src/jvm/fr/cnrs/liris/common/geo',
+    'src/jvm/fr/cnrs/liris/common/util',
+    'src/thrift/fr/cnrs/liris/accio/core/domain',
+    '3rdparty/jvm/org/joda/time',
+    '3rdparty/jvm/com/google/guice',
+    '3rdparty/jvm/com/typesafe/scala-logging',
+  ],
+  sources=globs('*.scala')
+)

@@ -22,8 +22,7 @@ import java.nio.file.Path
 
 import com.google.inject.Guice
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.core.framework.FrameworkModule
-import fr.cnrs.liris.accio.core.runtime.LocalRuntimeModule
+import fr.cnrs.liris.accio.core.runtime.FrameworkModule
 import fr.cnrs.liris.common.flags._
 import fr.cnrs.liris.privamov.ops.OpsModule
 

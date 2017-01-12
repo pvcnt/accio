@@ -22,7 +22,8 @@ import com.google.inject.Inject
 import com.twitter.finatra.json.internal.caseclass.exceptions.CaseClassMappingException
 import com.twitter.finatra.validation.ErrorCode._
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.core.framework.{IllegalWorkflowException, _}
+import fr.cnrs.liris.accio.core.runtime.{IllegalWorkflowException, RunParser, WorkflowFactory, WorkflowParser}
+import fr.cnrs.liris.accio.core.workflow.{RunParser, User}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 
 case class ValidateOptions(

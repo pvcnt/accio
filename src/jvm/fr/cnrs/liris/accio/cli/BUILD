@@ -2,9 +2,7 @@ scala_library(
   name='cli',
   dependencies=[
     ':annotations',
-    'src/jvm/fr/cnrs/liris/accio/core/framework',
-    'src/jvm/fr/cnrs/liris/accio/core/runtime',
-    'src/jvm/fr/cnrs/liris/accio/core/reporting',
+    'src/jvm/fr/cnrs/liris/accio/core/domain',
     'src/jvm/fr/cnrs/liris/privamov/ops',
     'src/jvm/fr/cnrs/liris/common/util',
     'src/jvm/fr/cnrs/liris/common/reflect',

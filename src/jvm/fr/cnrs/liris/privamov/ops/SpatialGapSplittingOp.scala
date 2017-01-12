@@ -37,7 +37,7 @@ class SpatialGapSplittingOp @Inject()(
   override def execute(in: SpatialGapSplittingIn, ctx: OpContext): SpatialGapSplittingOut = {
     val split = (buffer: Seq[Event], curr: Event) => buffer.last.point.distance(curr.point) >= in.distance
     val output = read[Trace](in.data).flatMap(transform(_, split))
-    SpatialGapSplittingOut(write(output, ctx.workDir))
+    SpatialGapSplittingOut(write(output, ctx.sandboxDir))
   }
 }
 

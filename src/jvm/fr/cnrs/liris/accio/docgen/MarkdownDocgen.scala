@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.docgen
 import java.io.{BufferedOutputStream, FileOutputStream, OutputStream}
 
 import com.google.inject.Inject
-import fr.cnrs.liris.accio.core.framework.{OpMeta, OpRegistry}
+import fr.cnrs.liris.accio.core.domain.{OpDef, OpRegistry, Utils, Values}
 
 /**
  * Generate documentation for all operators known to a registry in Markdown format.
@@ -37,9 +37,9 @@ class MarkdownDocgen @Inject()(opRegistry: OpRegistry) {
   def generate(flags: AccioDocgenFlags): Unit = {
     val out = new BufferedOutputStream(new FileOutputStream(flags.out.toFile))
     writeIntro(out, flags)
-    opRegistry.ops.groupBy(_.defn.category).foreach { case (category, ops) =>
+    opRegistry.ops.groupBy(_.category).foreach { case (category, ops) =>
       out.write(s"## ${category.capitalize} operators\n\n".getBytes)
-      ops.toSeq.sortBy(_.defn.name).foreach { opMeta =>
+      ops.toSeq.sortBy(_.name).foreach { opMeta =>
         writeOp(out, opMeta)
       }
     }
@@ -59,25 +59,24 @@ class MarkdownDocgen @Inject()(opRegistry: OpRegistry) {
     }
   }
 
-  private def writeOp(out: OutputStream, opMeta: OpMeta) = {
-    out.write(s"### ${opMeta.defn.name}\n\n".getBytes)
-    out.write(s":hammer: Implemented in `${opMeta.opClass.getName}`\n\n".getBytes)
-    opMeta.defn.deprecation.foreach { deprecation =>
+  private def writeOp(out: OutputStream, opDef: OpDef) = {
+    out.write(s"### ${opDef.name}\n\n".getBytes)
+    opDef.deprecation.foreach { deprecation =>
       out.write(s":broken_heart: **Deprecated:** $deprecation\n\n".getBytes)
     }
-    opMeta.defn.help.foreach { help =>
+    opDef.help.foreach { help =>
       out.write(s"$help\n\n".getBytes)
     }
-    opMeta.defn.description.foreach { description =>
+    opDef.description.foreach { description =>
       out.write(s"$description\n\n".getBytes)
     }
-    if (opMeta.defn.inputs.nonEmpty) {
+    if (opDef.inputs.nonEmpty) {
       out.write("| Input name | Type | Description |\n".getBytes)
       out.write("|:-----------|:-----|:------------|\n".getBytes)
-      opMeta.defn.inputs.foreach { argDef =>
-        out.write(s"| `${argDef.name}` | ${argDef.kind.typeDescription}".getBytes)
-        if (argDef.defaultValue.isDefined && argDef.defaultValue.get != None) {
-          out.write(s"; optional; default: ${argDef.defaultValue.get}".getBytes)
+      opDef.inputs.foreach { argDef =>
+        out.write(s"| `${argDef.name}` | ${Utils.describe(argDef.kind)}".getBytes)
+        if (argDef.defaultValue.isDefined) {
+          out.write(s"; optional; default: ${Values.toString(argDef.defaultValue.get, argDef.kind)}".getBytes)
         } else if (argDef.isOptional) {
           out.write("; optional".getBytes)
         } else {
@@ -87,11 +86,11 @@ class MarkdownDocgen @Inject()(opRegistry: OpRegistry) {
       }
       out.write("{: class=\"table table-striped\"}\n\n".getBytes)
     }
-    if (opMeta.defn.outputs.nonEmpty) {
+    if (opDef.outputs.nonEmpty) {
       out.write("| Output name | Type | Description |\n".getBytes)
       out.write("|:------------|:-----|:------------|\n".getBytes)
-      opMeta.defn.outputs.foreach { argDef =>
-        out.write(s"| `${argDef.name}` | ${argDef.kind.typeDescription} | ${argDef.help.getOrElse("-")} |\n".getBytes)
+      opDef.outputs.foreach { argDef =>
+        out.write(s"| `${argDef.name}` | ${Utils.describe(argDef.kind)} | ${argDef.help.getOrElse("-")} |\n".getBytes)
       }
       out.write("{: class=\"table table-striped\"}\n\n".getBytes)
     }

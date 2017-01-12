@@ -38,7 +38,7 @@ class PromesseOp @Inject()(
   override def execute(in: PromesseIn, ctx: OpContext): PromesseOut = {
     val lppm = new SpeedSmoothing(in.epsilon)
     val output = read[Trace](in.data).map(lppm.transform)
-    PromesseOut(write(output, ctx.workDir))
+    PromesseOut(write(output, ctx.sandboxDir))
   }
 }
 

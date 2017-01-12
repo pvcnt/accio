@@ -43,7 +43,7 @@ class GeoIndistinguishabilityOp @Inject()(
     val rnd = new Random(ctx.seed)
     val seeds = input.keys.map(key => key -> rnd.nextLong()).toMap
     val output = input.map(trace => new Laplace(in.epsilon, seeds(trace.id)).transform(trace))
-    GeoIndistinguishabilityOut(write(output, ctx.workDir))
+    GeoIndistinguishabilityOut(write(output, ctx.sandboxDir))
   }
 
   override def isUnstable(in: GeoIndistinguishabilityIn): Boolean = true

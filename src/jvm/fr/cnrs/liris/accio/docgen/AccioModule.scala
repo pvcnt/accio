@@ -20,7 +20,8 @@ package fr.cnrs.liris.accio.docgen
 
 import com.google.inject.{AbstractModule, TypeLiteral}
 import fr.cnrs.liris.accio.core.api.Operator
-import fr.cnrs.liris.accio.core.framework._
+import fr.cnrs.liris.accio.core.application.ReflectOpMetaReader
+import fr.cnrs.liris.accio.core.domain.OpMetaReader
 import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
 
 /**
@@ -28,7 +29,6 @@ import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
  */
 object AccioModule extends AbstractModule with ScalaModule {
   override def configure(): Unit = {
-    //install(AccioFinatraJacksonModule)
     ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Class[_ <: Operator[_, _]]] {})
     bind[OpMetaReader].to[ReflectOpMetaReader]
   }

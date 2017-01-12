@@ -28,7 +28,7 @@ import scala.reflect._
 import scala.util.Random
 
 abstract class DataFrame[T: ClassTag](val env: SparkleEnv) extends LazyLogging {
-  val elementClassTag = implicitly[ClassTag[T]]
+  val elementClassTag: ClassTag[T] = implicitly[ClassTag[T]]
 
   def keys: Seq[String]
 

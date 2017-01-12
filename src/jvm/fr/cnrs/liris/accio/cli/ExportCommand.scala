@@ -23,7 +23,6 @@ import java.util.UUID
 
 import com.google.inject.Inject
 import com.twitter.util.Stopwatch
-import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.reporting.{AggregatedRuns, ArtifactList, CsvReportCreator, CsvReportOptions}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.util.{FileUtils, HashUtils, StringUtils, TimeUtils}

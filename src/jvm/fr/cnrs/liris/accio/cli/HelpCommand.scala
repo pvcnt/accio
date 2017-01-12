@@ -19,7 +19,7 @@
 package fr.cnrs.liris.accio.cli
 
 import com.google.inject.Inject
-import fr.cnrs.liris.accio.core.framework.{OpMeta, OpRegistry}
+import fr.cnrs.liris.accio.core.domain.OpMeta
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.reflect.CaseClass
 import fr.cnrs.liris.common.util.StringUtils

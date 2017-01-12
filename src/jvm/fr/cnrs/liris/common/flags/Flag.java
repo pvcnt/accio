@@ -28,7 +28,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Flag {
     /**
-     * The name of the option ("-name").
+     * The name of the flag ("-name").
      */
     String name();
 

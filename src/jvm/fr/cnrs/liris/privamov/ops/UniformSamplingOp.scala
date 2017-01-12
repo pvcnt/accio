@@ -42,7 +42,7 @@ class UniformSamplingOp @Inject()(
     val rnd = new Random(ctx.seed)
     val seeds = input.keys.map(key => key -> rnd.nextLong()).toMap
     val output = input.map(trace => transform(trace, in.probability, seeds(trace.id)))
-    UniformSamplingOut(write(output, ctx.workDir))
+    UniformSamplingOut(write(output, ctx.sandboxDir))
   }
 
   override def isUnstable(in: UniformSamplingIn): Boolean = true

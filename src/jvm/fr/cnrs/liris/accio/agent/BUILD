@@ -1,0 +1,17 @@
+scala_library(
+  name='agent',
+  dependencies=[
+    'src/jvm/fr/cnrs/liris/accio/core/domain',
+    'src/jvm/fr/cnrs/liris/accio/core/application',
+    'src/jvm/fr/cnrs/liris/accio/core/application/handler',
+    'src/thrift/fr/cnrs/liris/accio/agent',
+
+    '3rdparty/jvm/com/typesafe/scala-logging',
+    '3rdparty/jvm/com/twitter/finatra:thrift',
+    '3rdparty/jvm/com/twitter/finatra:http',
+    '3rdparty/jvm/com/twitter/finatra:httpclient',
+    '3rdparty/jvm/com/twitter/finagle:serversets',
+    '3rdparty/jvm:logback',
+  ],
+  sources=globs('*.scala')
+)

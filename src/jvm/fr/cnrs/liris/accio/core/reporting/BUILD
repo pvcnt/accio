@@ -1,9 +1,0 @@
-scala_library(
-  name='reporting',
-  dependencies=[
-    'src/jvm/fr/cnrs/liris/accio/core/framework',
-    'src/jvm/fr/cnrs/liris/common/util',
-    '3rdparty/jvm/org/scalanlp:breeze',
-  ],
-  sources=globs('*.scala')
-)

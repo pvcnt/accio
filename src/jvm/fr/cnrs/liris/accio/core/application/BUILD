@@ -1,0 +1,12 @@
+scala_library(
+  name='application',
+  dependencies=[
+    'src/jvm/fr/cnrs/liris/accio/core/api',
+    'src/jvm/fr/cnrs/liris/accio/core/api:annotations',
+    'src/jvm/fr/cnrs/liris/accio/core/domain',
+    'src/jvm/fr/cnrs/liris/common/reflect',
+    '3rdparty/jvm/org/scalanlp:breeze',
+    '3rdparty/jvm/com/typesafe/scala-logging',
+  ],
+  sources=globs('*.scala')
+)
