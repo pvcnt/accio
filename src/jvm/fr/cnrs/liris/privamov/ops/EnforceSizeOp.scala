@@ -36,7 +36,7 @@ class EnforceSizeOp @Inject()(
 
   override def execute(in: EnforceSizeIn, ctx: OpContext): EnforceSizeOut = {
     val data = read[Trace](in.data)
-    val output = write(data.flatMap(transform(_, in.minSize, in.maxSize)), ctx.sandboxDir)
+    val output = write(data.flatMap(transform(_, in.minSize, in.maxSize)), ctx.workDir)
     EnforceSizeOut(output)
   }
 

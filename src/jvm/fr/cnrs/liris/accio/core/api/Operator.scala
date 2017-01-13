@@ -56,10 +56,10 @@ trait Operator[In, Out] {
 /**
  * Execution context of an operator.
  *
- * @param _seed      Seed used by an unstable operator, if it is the case.
- * @param sandboxDir Working directory where temporary data can be written. It will be removed after operator completion.
+ * @param _seed   Seed used by an unstable operator, if it is the case.
+ * @param workDir Working directory where temporary data can be written. It will be removed after operator completion.
  */
-class OpContext(_seed: Option[Long], val sandboxDir: Path) {
+class OpContext(_seed: Option[Long], val workDir: Path) {
   /**
    * Return the seed to use for an unstable operator.
    *

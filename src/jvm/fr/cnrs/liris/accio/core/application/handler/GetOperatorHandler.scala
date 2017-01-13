@@ -22,9 +22,14 @@ import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.core.domain.OpRegistry
 
-class GetOperatorHandler @Inject()(opRegistry: OpRegistry) extends Handler[GetOperatorRequest, GetOperatorResponse] {
+/**
+ * Handler retrieving a single operator, if it exists.
+ *
+ * @param opRegistry Operator registry.
+ */
+final class GetOperatorHandler @Inject()(opRegistry: OpRegistry) extends Handler[GetOperatorRequest, GetOperatorResponse] {
   override def handle(req: GetOperatorRequest): Future[GetOperatorResponse] = {
-    val opDef = opRegistry.get(req.name)
-    Future(GetOperatorResponse(opDef))
+    val maybeOpDef = opRegistry.get(req.name)
+    Future(GetOperatorResponse(maybeOpDef))
   }
 }

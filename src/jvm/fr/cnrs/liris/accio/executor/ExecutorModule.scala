@@ -20,25 +20,24 @@ package fr.cnrs.liris.accio.executor
 
 import com.google.inject.{Provides, TypeLiteral}
 import com.twitter.finagle.Thrift
+import fr.cnrs.liris.accio.agent.AgentService
 import fr.cnrs.liris.accio.core.api.Operator
 import fr.cnrs.liris.accio.core.application.{OpExecutor, ReflectOpMetaReader, Uploader}
 import fr.cnrs.liris.accio.core.domain.{OpFactory, OpMetaReader, RuntimeOpRegistry}
-import fr.cnrs.liris.accio.thrift.agent.TaskTrackerService
 import fr.cnrs.liris.common.flags.inject.InjectFlag
 import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
 
 object ExecutorModule extends ScalaModule {
-  override def configure(): Unit = {
+  override protected def configure(): Unit = {
     ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Class[_ <: Operator[_, _]]] {})
     bind[OpMetaReader].to[ReflectOpMetaReader]
   }
 
   @Provides
-  def providesTaskTrackerClient(
-    @InjectFlag("hostname") hostname: String,
-    @InjectFlag("tracker_addr") taskTrackerAddr: String): TaskTrackerService.FinagledClient = {
-    val service = Thrift.newService(taskTrackerAddr)
-    new TaskTrackerService.FinagledClient(service)
+  def providesAgentClient(
+    @InjectFlag("agent_addr") agentAddr: String): AgentService.FinagledClient = {
+    val service = Thrift.newService(agentAddr)
+    new AgentService.FinagledClient(service)
   }
 
   @Provides

@@ -39,7 +39,7 @@ class SpatialSamplingOp @Inject()(
   override def execute(in: SpatialSamplingIn, ctx: OpContext): SpatialSamplingOut = {
     val sample = (prev: Event, curr: Event) => prev.point.distance(curr.point) >= in.distance
     val output = read[Trace](in.data).map(transform(_, sample))
-    SpatialSamplingOut(write(output, ctx.sandboxDir))
+    SpatialSamplingOut(write(output, ctx.workDir))
   }
 }
 

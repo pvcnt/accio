@@ -20,11 +20,20 @@ package fr.cnrs.liris.accio.core.application.handler
 
 import com.google.inject.Inject
 import com.twitter.util.Future
+import fr.cnrs.liris.accio.core.application.StateManager
 import fr.cnrs.liris.accio.core.domain.RunRepository
 
-class DeleteRunHandler @Inject()(runRepository: RunRepository) extends Handler[DeleteRunRequest, DeleteRunResponse] {
+final class DeleteRunHandler @Inject()(runRepository: RunRepository, stateManager: StateManager)
+  extends Handler[DeleteRunRequest, DeleteRunResponse] {
+
   override def handle(req: DeleteRunRequest): Future[DeleteRunResponse] = {
-    runRepository.delete(req.id)
+    val runLock = stateManager.createLock(s"run/${req.id.value}")
+    runLock.lock()
+    try {
+      runRepository.delete(req.id)
+    } finally {
+      runLock.unlock()
+    }
     Future(DeleteRunResponse())
   }
 }

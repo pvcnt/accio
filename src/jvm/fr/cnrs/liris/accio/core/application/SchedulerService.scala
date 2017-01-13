@@ -21,8 +21,15 @@ package fr.cnrs.liris.accio.core.application
 import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.domain._
 
-class SchedulerService @Inject()(scheduler: Scheduler) {
+class SchedulerService @Inject()(scheduler: Scheduler, stateManager: StateManager) {
   def submit(run: Run, node: Node): Task = {
+    val payload = createPayload(run, node)
+    val task = scheduler.submit(run.id, node.name, payload)
+    stateManager.save(task)
+    task
+  }
+
+  private def createPayload(run: Run, node: Node) = {
     val inputs = node.inputs.map { case (portName, input) =>
       val value = input match {
         case ParamInput(paramName) => run.params(paramName)
@@ -39,6 +46,6 @@ class SchedulerService @Inject()(scheduler: Scheduler) {
       }
       portName -> value
     }
-    scheduler.submit(run.id, node.name, OpPayload(node.op, run.seed, inputs))
+    OpPayload(node.op, run.seed, inputs)
   }
 }

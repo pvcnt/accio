@@ -82,7 +82,7 @@ class PoisAnalyzerOp @Inject()(
         fields.map(_.toString).mkString(",")
       }
     }
-    val output = write(Seq(header) ++ lines, "pois", ctx.sandboxDir)
+    val output = write(Seq(header) ++ lines, "pois", ctx.workDir)
 
     PoisAnalyzerOut(output)
   }

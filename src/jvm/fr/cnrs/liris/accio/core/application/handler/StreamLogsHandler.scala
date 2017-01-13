@@ -20,24 +20,20 @@ package fr.cnrs.liris.accio.core.application.handler
 
 import com.google.inject.Inject
 import com.twitter.util.Future
+import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.core.domain.{RunRepository, UnknownTaskException}
 
 class StreamLogsHandler @Inject()(runRepository: RunRepository)
-  extends Handler[StreamLogsRequest, StreamLogsResponse] {
+  extends Handler[StreamLogsRequest, StreamLogsResponse] with LazyLogging {
 
   @throws[UnknownTaskException]
   override def handle(req: StreamLogsRequest): Future[StreamLogsResponse] = {
-    /*runRepository.get(req.taskId) match {
-      case None => throw new UnknownTaskException(req.taskId)
-      case Some(task) =>
-        req.progress.foreach { progress =>
-          //TODO: deal with concurrency issues here.
-          val updatedTask = task.copy(state = task.state.copy(progress = Some(progress)))
-          runRepository.save(updatedTask)
-        }
-        req.logs.foreach { logs =>
-          runRepository.save(logs)
-        }*/
+    val runIds = req.logs.map(_.runId).toSet
+    val unknownRunIds = runIds.filterNot(runRepository.exists)
+    unknownRunIds.foreach { runId =>
+      logger.warn(s"Received logs associated with unknown run ${runId.value}")
+    }
+    runRepository.save(req.logs.filterNot(log => unknownRunIds.contains(log.runId)))
     Future(StreamLogsResponse())
   }
 }

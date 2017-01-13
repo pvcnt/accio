@@ -4,8 +4,7 @@ scala_library(
     'src/jvm/fr/cnrs/liris/accio/core/api',
     'src/jvm/fr/cnrs/liris/accio/core/domain',
     'src/jvm/fr/cnrs/liris/accio/core/application',
-    'src/jvm/fr/cnrs/liris/accio/core/infrastructure',
-    'src/jvm/fr/cnrs/liris/accio/core/infrastructure/uploader/local',
+    'src/jvm/fr/cnrs/liris/accio/core/infra/uploader/local',
     'src/thrift/fr/cnrs/liris/accio/core/domain',
     'src/thrift/fr/cnrs/liris/accio/agent',
 

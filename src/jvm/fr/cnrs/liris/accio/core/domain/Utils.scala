@@ -155,14 +155,6 @@ object Utils {
 
   def toString(ref: Reference): String = s"${ref.node}/${ref.port}"
 
-  def isCompleted(status: TaskStatus): Boolean = status match {
-    case TaskStatus.Success => true
-    case TaskStatus.Failed => true
-    case TaskStatus.Killed => true
-    case TaskStatus.Lost => true
-    case _ => false
-  }
-
   def isCompleted(status: NodeStatus): Boolean = status match {
     case NodeStatus.Success => true
     case NodeStatus.Failed => true

@@ -22,14 +22,6 @@ package fr.cnrs.liris.accio.core.application
  * Trait for objects that are configured after being instantiated. Configuration is done via a custom object, normally
  * a case class.
  *
- * Rationale: usually, configuration is injected through constructors. However, it causes a mix between configuration
- * parameters and dependencies in constructors. While dependencies are usually statically wired (e.g., via Guice
- * modules), configuration parameters tend to be statically defined at runtime by users. Thus, there is no easy way
- * to automatically inject them when using a DI framework and [[javax.inject.Inject]] annotations. With
- * [[Configurable]] classes, only dependencies are injected through constructors, while configuration parameters are
- * set by calling the `initialize` method. This method should be called as soon as possible after
- * object creation, ideally automatically if the DI framework allows it.
- *
  * Developers note: you must not use `config` inside the constructor, as the configuration will not be available at
  * this time, thus resulting in an exception. If you absolutely have to use `config` inside a constructor, use lazy
  * val's to delay evaluation afterwards, when configuration will be available.
@@ -41,10 +33,20 @@ trait Configurable[T] {
 
   def configClass: Class[T]
 
+  /**
+   * Initialize this instance with a given config.
+   *
+   * @param config Configuration object.
+   */
   def initialize(config: T): Unit = {
     _config = Some(config)
   }
 
+  /**
+   * Return current configuration object.
+   *
+   * @throws IllegalStateException If this method is called before this instance has been initialized.
+   */
   protected def config: T = _config match {
     case None => throw new IllegalStateException(s"${getClass.getName} has not been initialized")
     case Some(config) => config

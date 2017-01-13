@@ -45,9 +45,8 @@ final class RunFactory @Inject()(workflowRepository: WorkflowRepository) {
    */
   @throws[InvalidRunException]
   def create(template: RunTemplate, user: User): Seq[Run] = {
-    // Extract the workflow and package.
+    // Extract the workflow.
     val workflow = getWorkflow(template.pkg)
-    val pkg = Package(workflow.id, workflow.version)
 
     // Check that workflow parameters referenced actually exist.
     val unknownParams = template.params.keySet.diff(workflow.params.map(_.name))
@@ -74,16 +73,18 @@ final class RunFactory @Inject()(workflowRepository: WorkflowRepository) {
     val owner = template.owner.getOrElse(user)
     val environment = template.environment.getOrElse(Utils.DefaultEnvironment)
     if (expandedParams.size == 1) {
-      Seq(createSingle(pkg, template.cluster, owner, environment, template.name, template.notes, template.tags.toSet, template.seed, expandedParams.head, template.clonedFrom))
+      Seq(createSingle(workflow, template.cluster, owner, environment, template.name, template.notes,
+        template.tags.toSet, template.seed, expandedParams.head, template.clonedFrom))
     } else {
-      createSweep(pkg, template.cluster, owner, environment, template.name, template.notes, template.tags.toSet, template.seed, expandedParams, repeat, template.clonedFrom)
+      createSweep(workflow, template.cluster, owner, environment, template.name, template.notes, template.tags.toSet,
+        template.seed, expandedParams, repeat, template.clonedFrom)
     }
   }
 
   /**
    * Create a single run (neither a parent or a child). It can however be a cloned run.
    *
-   * @param pkg         Specification of the associated workflow.
+   * @param workflow    Workflow that will be executed.
    * @param cluster     Cluster providing resources to execute the run.
    * @param owner       User initiating the run.
    * @param environment Environment inside which the run is executed.
@@ -95,7 +96,7 @@ final class RunFactory @Inject()(workflowRepository: WorkflowRepository) {
    * @param clonedFrom  Identifier of the run this instance has been cloned from.
    */
   private def createSingle(
-    pkg: Package,
+    workflow: Workflow,
     cluster: String,
     owner: User,
     environment: String,
@@ -108,7 +109,7 @@ final class RunFactory @Inject()(workflowRepository: WorkflowRepository) {
 
     Run(
       id = randomId,
-      pkg = pkg,
+      pkg = Package(workflow.id, workflow.version),
       cluster = cluster,
       owner = owner,
       environment = environment,
@@ -121,13 +122,13 @@ final class RunFactory @Inject()(workflowRepository: WorkflowRepository) {
       children = None,
       clonedFrom = clonedFrom,
       createdAt = System.currentTimeMillis(),
-      state = initialState)
+      state = initialState(workflow.graph))
   }
 
   /**
    * Create several runs representing a parameter sweep.
    *
-   * @param pkg            Specification of the associated workflow.
+   * @param workflow       Workflow that will be executed.
    * @param cluster        Cluster providing resources to execute the run.
    * @param owner          User initiating the run.
    * @param environment    Environment inside which the run is executed.
@@ -141,7 +142,7 @@ final class RunFactory @Inject()(workflowRepository: WorkflowRepository) {
    * @return
    */
   private def createSweep(
-    pkg: Package,
+    workflow: Workflow,
     cluster: String,
     owner: User,
     environment: String,
@@ -153,6 +154,7 @@ final class RunFactory @Inject()(workflowRepository: WorkflowRepository) {
     repeat: Int,
     clonedFrom: Option[RunId]): Seq[Run] = {
 
+    val pkg = Package(workflow.id, workflow.version)
     val actualSeed = seed.getOrElse(Random.nextLong())
     val parentId = randomId
     val now = System.currentTimeMillis()
@@ -174,7 +176,7 @@ final class RunFactory @Inject()(workflowRepository: WorkflowRepository) {
         params = params,
         parent = Some(parentId),
         createdAt = now,
-        state = initialState)
+        state = initialState(workflow.graph))
     }
     val parent = Run(
       id = parentId,
@@ -190,7 +192,7 @@ final class RunFactory @Inject()(workflowRepository: WorkflowRepository) {
       children = Some(children.map(_.id).toSet),
       clonedFrom = clonedFrom,
       createdAt = now,
-      state = initialState)
+      state = initialState(workflow.graph))
     Seq(parent) ++ children
   }
 
@@ -201,8 +203,15 @@ final class RunFactory @Inject()(workflowRepository: WorkflowRepository) {
 
   /**
    * Return initial run state.
+   *
+   * @param graph Graph for which to create state.
    */
-  private def initialState = RunState(progress = 0, status = RunStatus.Scheduled)
+  private def initialState(graph: GraphDef) = {
+    val nodes = graph.nodes.map { node =>
+      NodeState(nodeName = node.name, status = NodeStatus.Waiting)
+    }
+    RunState(progress = 0, status = RunStatus.Scheduled, nodes = nodes)
+  }
 
   /**
    * Return the workflow specified by a package definition.

@@ -35,7 +35,7 @@ class SequentialSplittingOp @Inject()(
 
   override def execute(in: SequentialSplittingIn, ctx: OpContext): SequentialSplittingOut = {
     val output = read[Trace](in.data).map(transform(_, in.percentBegin, in.percentEnd, in.complement))
-    SequentialSplittingOut(write(output, ctx.sandboxDir))
+    SequentialSplittingOut(write(output, ctx.workDir))
   }
 
   private def transform(trace: Trace, percentBegin: Double, percentEnd: Double, complement: Boolean): Trace = {

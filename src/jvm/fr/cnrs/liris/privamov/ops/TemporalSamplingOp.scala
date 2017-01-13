@@ -39,7 +39,7 @@ class TemporalSamplingOp @Inject()(
   override def execute(in: TemporalSamplingIn, ctx: OpContext): TemporalSamplingOut = {
     val sample = (prev: Event, curr: Event) => (prev.time to curr.time).duration >= in.duration
     val output = read[Trace](in.data).map(transform(_, sample))
-    TemporalSamplingOut(write(output, ctx.sandboxDir))
+    TemporalSamplingOut(write(output, ctx.workDir))
   }
 }
 

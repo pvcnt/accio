@@ -1,0 +1,22 @@
+<configuration>
+    <!-- JUL/JDK14 to Logback bridge -->
+    <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
+        <resetJUL>true</resetJUL>
+    </contextListener>
+
+    <!-- Log everything to stdout -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Per-package Config -->
+    <logger name="fr.cnrs.liris" level="info"/>
+    <logger name="com.twitter" level="info"/>
+
+    <!-- Root config -->
+    <root level="warn">
+        <appender-ref ref="STDOUT"/>
+    </root>
+</configuration>

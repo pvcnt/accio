@@ -1,0 +1,13 @@
+scala_library(
+  name='local',
+  dependencies=[
+    'src/jvm/fr/cnrs/liris/accio/core/domain',
+    'src/jvm/fr/cnrs/liris/accio/core/application',
+    'src/jvm/fr/cnrs/liris/accio/core/infra/util',
+    'src/jvm/fr/cnrs/liris/common/util',
+    '3rdparty/jvm/com/twitter/finatra:jackson',
+    '3rdparty/jvm:scala-guice',
+    '3rdparty/jvm/com/typesafe/scala-logging',
+  ],
+  sources=globs('*.scala')
+)

@@ -24,56 +24,18 @@ import com.twitter.util.Time
  * Repository persisting runtime data collected as runs are executed.
  */
 trait RunRepository {
-  /**
-   * Search for runs by some criteria.
-   *
-   * @param query Runs query.
-   * @return List of runs and total number of matching results.
-   */
   def find(query: RunQuery): RunList
 
-  /**
-   * Search for logs by some criteria.
-   *
-   * @param query Logs query.
-   * @return List of logs.
-   */
   def find(query: LogsQuery): Seq[RunLog]
 
-  /**
-   * Save a run. It can either create a new run or update an existing one (which will be overwritten).
-   * This method should be thread-safe.
-   *
-   * @param run Run to save.
-   */
   def save(run: Run): Unit
 
-  /**
-   * Save a list of logs. Logs are append-only.
-   *
-   * @param logs Logs to save.
-   */
   def save(logs: Seq[RunLog]): Unit
 
-  /**
-   * Return a specific run, if it exists.
-   *
-   * @param id Run identifier.
-   */
   def get(id: RunId): Option[Run]
 
-  /**
-   * Check whether a specific run exists.
-   *
-   * @param id Run identifier.
-   */
   def exists(id: RunId): Boolean
 
-  /**
-   * Delete a run. It also deletes associated tasks and logs.
-   *
-   * @param id Run identifier.
-   */
   def delete(id: RunId): Unit
 }
 

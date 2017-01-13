@@ -26,8 +26,6 @@ trait WorkflowRepository {
 
   def save(workflow: Workflow): Unit
 
-  def delete(id: WorkflowId): Unit
-
   def get(id: WorkflowId): Option[Workflow]
 
   def get(id: WorkflowId, version: String): Option[Workflow]

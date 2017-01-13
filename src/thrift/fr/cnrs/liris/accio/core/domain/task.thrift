@@ -24,17 +24,12 @@ include "fr/cnrs/liris/accio/core/domain/operator.thrift"
 enum TaskStatus {
   SCHEDULED,
   RUNNING,
-  SUCCESS,
-  FAILED,
-  KILLED,
-  LOST,
 }
 
 struct TaskState {
   1: required TaskStatus status;
   2: optional common.Timestamp started_at;
   3: optional common.Timestamp heartbeat_at;
-  4: optional common.Timestamp completed_at;
 }
 
 struct Task {

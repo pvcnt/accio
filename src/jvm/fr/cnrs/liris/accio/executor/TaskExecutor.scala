@@ -25,15 +25,15 @@ import java.util.concurrent.atomic.AtomicBoolean
 import com.google.inject.{Inject, Singleton}
 import com.twitter.util.{Await, ExecutorServiceFuturePool, Future}
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.core.application.handler.{CompletedTaskRequest, HeartbeatTaskRequest, StreamLogsRequest}
+import fr.cnrs.liris.accio.agent.AgentService
+import fr.cnrs.liris.accio.core.application.handler.{CompleteTaskRequest, HeartbeatRequest, StreamLogsRequest}
 import fr.cnrs.liris.accio.core.application.{OpExecutor, OpExecutorOpts}
 import fr.cnrs.liris.accio.core.domain._
-import fr.cnrs.liris.accio.thrift.agent._
 
 import scala.collection.mutable
 
 @Singleton
-class TaskExecutor @Inject()(opExecutor: OpExecutor, trackerClient: TaskTrackerService.FinagledClient)
+class TaskExecutor @Inject()(opExecutor: OpExecutor, agentClient: AgentService.FinagledClient)
   extends StrictLogging {
 
   private[this] val pool = new ExecutorServiceFuturePool(Executors.newSingleThreadExecutor)
@@ -54,7 +54,7 @@ class TaskExecutor @Inject()(opExecutor: OpExecutor, trackerClient: TaskTrackerS
         logger.error("Execution of operator raised an unexpected error", e)
         OpResult(-999, Some(ErrorFactory.create(e)))
     }.flatMap { result =>
-      trackerClient.completed(CompletedTaskRequest(taskId, result))
+      agentClient.completeTask(CompleteTaskRequest(taskId, result))
         .onFailure(e => logger.error("Error while marking task as completed", e))
     }.respond { _ =>
       stopped.set(true)
@@ -82,7 +82,7 @@ class TaskExecutor @Inject()(opExecutor: OpExecutor, trackerClient: TaskTrackerS
       while (!stopped.get()) {
         val logs = extractLogs(stdoutBytes, runId, nodeName, "stdout") ++ extractLogs(stderrBytes, runId, nodeName, "stderr")
         if (logs.nonEmpty) {
-          val future = trackerClient.stream(StreamLogsRequest(logs))
+          val future = agentClient.streamLogs(StreamLogsRequest(logs))
             .onFailure(e => logger.error("Error while sending logs", e))
             .onSuccess(_ => logger.debug(s"Sent logs for task $taskId (${logs.size} lines)"))
           Await.ready(future)
@@ -102,7 +102,7 @@ class TaskExecutor @Inject()(opExecutor: OpExecutor, trackerClient: TaskTrackerS
       logger.debug("Heartbeat thread started")
       Thread.sleep(5 * 1000)
       while (!stopped.get()) {
-        val future = trackerClient.heartbeat(HeartbeatTaskRequest(taskId))
+        val future = agentClient.heartbeat(HeartbeatRequest(taskId))
           .onFailure(e => logger.error("Error while marking sending heartbeat", e))
           .onSuccess(_ => logger.debug(s"Sent heartbeat for task $taskId"))
         Await.ready(future)

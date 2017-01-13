@@ -37,7 +37,7 @@ class TemporalGapSplittingOp @Inject()(
   override def execute(in: TemporalGapSplittingIn, ctx: OpContext): TemporalGapSplittingOut = {
     val split = (buffer: Seq[Event], curr: Event) => (buffer.last.time to curr.time).duration >= in.duration
     val output = read[Trace](in.data).flatMap(transform(_, split))
-    TemporalGapSplittingOut(write(output, ctx.sandboxDir))
+    TemporalGapSplittingOut(write(output, ctx.workDir))
   }
 }
 

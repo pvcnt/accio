@@ -42,7 +42,7 @@ class PoisExtractionOp @Inject()(
       val pois = clusterer.cluster(trace).map(cluster => Poi(cluster.events))
       PoiSet(trace.id, pois)
     }
-    PoisExtractionOut(write(output, ctx.sandboxDir))
+    PoisExtractionOut(write(output, ctx.workDir))
   }
 }
 

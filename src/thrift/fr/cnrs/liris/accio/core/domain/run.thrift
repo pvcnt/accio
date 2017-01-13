@@ -34,12 +34,10 @@ enum NodeStatus {
 
 struct NodeState {
   1: required string node_name;
-  2: optional common.Timestamp started_at;
-  3: optional common.Timestamp completed_at;
-  4: required double progress;
-  5: required NodeStatus status;
-  6: required set<common.TaskId> task_ids;
-  7: optional operator.OpResult result;
+  2: required NodeStatus status;
+  3: optional common.Timestamp started_at;
+  4: optional common.Timestamp completed_at;
+  5: optional operator.OpResult result;
 }
 
 enum RunStatus {

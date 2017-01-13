@@ -38,7 +38,7 @@ class GaussianKernelSmoothingOp @Inject()(
 
   override def execute(in: GaussianKernelSmoothingIn, ctx: OpContext): GaussianKernelSmoothingOut = {
     val data = read[Trace](in.data)
-    val output = write(data.map(transform(_, in.omega)), ctx.sandboxDir)
+    val output = write(data.map(transform(_, in.omega)), ctx.workDir)
     GaussianKernelSmoothingOut(output)
   }
 

@@ -1,9 +1,0 @@
-scala_library(
-  name='infrastructure',
-  dependencies=[
-    'src/jvm/fr/cnrs/liris/accio/core/application',
-    '3rdparty/jvm/com/typesafe/scala-logging',
-    '3rdparty/jvm:scala-guice',
-  ],
-  sources=globs('*.scala')
-)

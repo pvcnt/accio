@@ -21,15 +21,19 @@ package fr.cnrs.liris.accio.core.application
 import fr.cnrs.liris.accio.core.domain.{Task, TaskId}
 
 trait StateManager {
-  def acquireLock(key: String): Lock
+  def createLock(key: String): Lock
 
   def tasks: Set[Task]
 
   def save(task: Task): Unit
 
+  def remove(id: TaskId): Unit
+
   def get(id: TaskId): Option[Task]
 }
 
 trait Lock {
-  def release(): Unit
+  def lock(): Unit
+
+  def unlock(): Unit
 }

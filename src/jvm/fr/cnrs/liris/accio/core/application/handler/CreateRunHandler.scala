@@ -23,7 +23,16 @@ import com.twitter.util.Future
 import fr.cnrs.liris.accio.core.application.SchedulerService
 import fr.cnrs.liris.accio.core.domain._
 
-class CreateRunHandler @Inject()(
+/**
+ * Handler for launching a workflow. It create one or several runs, save them and schedule them.
+ *
+ * @param runFactory         Run factory.
+ * @param runRepository      Run repository.
+ * @param workflowRepository Workflow repository.
+ * @param scheduler          Scheduler service.
+ * @param graphFactory       Graph factory.
+ */
+final class CreateRunHandler @Inject()(
   runFactory: RunFactory,
   runRepository: RunRepository,
   workflowRepository: WorkflowRepository,
@@ -37,17 +46,12 @@ class CreateRunHandler @Inject()(
     val runs = runFactory.create(req.template, req.user)
     runs.foreach(runRepository.save)
 
-    val maybeWorkflow = workflowRepository.get(runs.head.pkg.workflowId, runs.head.pkg.workflowVersion)
-    maybeWorkflow match {
-      case None => throw new UnknownWorkflowException(runs.head.pkg.workflowId, Some(runs.head.pkg.workflowVersion))
-      case Some(workflow) =>
-        // Schedule root nodes, for all runs (except the parent).
-        val rootNodes = graphFactory.create(workflow.graph).roots
-        runs.filter(_.children.isEmpty).foreach { run =>
-          rootNodes.foreach { node =>
-            scheduler.submit(run, node)
-          }
-        }
+    // Schedule root nodes, for all runs. Take care not to schedule the parent run (if any).
+    // Workflow does exist, because it has been validate when creating the runs.
+    val workflow = workflowRepository.get(runs.head.pkg.workflowId, runs.head.pkg.workflowVersion).get
+    val rootNodes = graphFactory.create(workflow.graph).roots
+    runs.filter(_.children.isEmpty).foreach { run =>
+      rootNodes.foreach(scheduler.submit(run, _))
     }
 
     Future(CreateRunResponse(runs.map(_.id)))

@@ -1,0 +1,9 @@
+junit_tests(
+  name='test',
+  dependencies=[
+    'test/jvm/fr/cnrs/liris/testing',
+    '3rdparty/jvm/org/elasticsearch:testing',
+    '3rdparty/jvm/com/typesafe/scala-logging',
+  ],
+  sources=globs('*.scala'),
+)

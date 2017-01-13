@@ -23,5 +23,8 @@ import com.twitter.util.Future
 import fr.cnrs.liris.accio.core.domain.RunRepository
 
 class KillRunHandler @Inject()(runRepository: RunRepository) extends Handler[KillRunRequest, KillRunResponse] {
-  override def handle(req: KillRunRequest): Future[KillRunResponse] = ???
+  override def handle(req: KillRunRequest): Future[KillRunResponse] = {
+    //TODO.
+    Future(KillRunResponse())
+  }
 }

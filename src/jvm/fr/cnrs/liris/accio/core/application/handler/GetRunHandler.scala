@@ -22,9 +22,14 @@ import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.core.domain.RunRepository
 
-class GetRunHandler @Inject()(runRepository: RunRepository) extends Handler[GetRunRequest, GetRunResponse] {
+/**
+ * Handler retrieving a single run, if it exists.
+ *
+ * @param repository Run repository.
+ */
+class GetRunHandler @Inject()(repository: RunRepository) extends Handler[GetRunRequest, GetRunResponse] {
   override def handle(req: GetRunRequest): Future[GetRunResponse] = {
-    val maybeRun = runRepository.get(req.id)
+    val maybeRun = repository.get(req.id)
     Future(GetRunResponse(maybeRun))
   }
 }

@@ -22,13 +22,18 @@ import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.core.domain.WorkflowRepository
 
-class GetWorkflowHandler @Inject()(workflowRepository: WorkflowRepository)
+/**
+ * Handler retrieving a single workflow, if it exists.
+ *
+ * @param repository Workflow repository
+ */
+final class GetWorkflowHandler @Inject()(repository: WorkflowRepository)
   extends Handler[GetWorkflowRequest, GetWorkflowResponse] {
 
   override def handle(req: GetWorkflowRequest): Future[GetWorkflowResponse] = {
     val maybeWorkflow = req.version match {
-      case Some(version) => workflowRepository.get(req.id, version)
-      case None => workflowRepository.get(req.id)
+      case Some(version) => repository.get(req.id, version)
+      case None => repository.get(req.id)
     }
     Future(GetWorkflowResponse(maybeWorkflow))
   }

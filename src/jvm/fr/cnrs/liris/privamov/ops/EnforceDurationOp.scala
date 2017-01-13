@@ -37,7 +37,7 @@ class EnforceDurationOp @Inject()(
 
   override def execute(in: EnforceDurationIn, ctx: OpContext): EnforceDurationOut = {
     val data = read[Trace](in.data)
-    val output = write(data.flatMap(transform(_, in.minDuration, in.maxDuration)), ctx.sandboxDir)
+    val output = write(data.flatMap(transform(_, in.minDuration, in.maxDuration)), ctx.workDir)
     EnforceDurationOut(output)
   }
 

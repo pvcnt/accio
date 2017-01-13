@@ -22,7 +22,12 @@ import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.core.domain.{WorkflowQuery, WorkflowRepository}
 
-class ListWorkflowsHandler @Inject()(workflowRepository: WorkflowRepository)
+/**
+ * Handler retrieving workflows matching some search criteria.
+ *
+ * @param repository Workflow repository.
+ */
+class ListWorkflowsHandler @Inject()(repository: WorkflowRepository)
   extends Handler[ListWorkflowsRequest, ListWorkflowsResponse] {
 
   override def handle(req: ListWorkflowsRequest): Future[ListWorkflowsResponse] = {
@@ -31,7 +36,7 @@ class ListWorkflowsHandler @Inject()(workflowRepository: WorkflowRepository)
       owner = req.owner,
       limit = req.limit,
       offset = req.offset)
-    val res = workflowRepository.find(query)
+    val res = repository.find(query)
     Future(ListWorkflowsResponse(res.results, res.totalCount))
   }
 }

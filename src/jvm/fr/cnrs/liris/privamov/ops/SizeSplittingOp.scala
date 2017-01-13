@@ -36,7 +36,7 @@ class SizeSplittingOp @Inject()(
   override def execute(in: SizeSplittingIn, ctx: OpContext): SizeSplittingOut = {
     val split = (buffer: Seq[Event], curr: Event) => buffer.size >= in.size
     val output = read[Trace](in.data).flatMap(transform(_, split))
-    SizeSplittingOut(write(output, ctx.sandboxDir))
+    SizeSplittingOut(write(output, ctx.workDir))
   }
 }
 
