@@ -16,23 +16,21 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.cli
+package fr.cnrs.liris.accio.client
+
+import com.google.inject.{AbstractModule, Provides, Singleton, TypeLiteral}
+import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
+import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
 
 /**
- * A command line exit code.
- *
- * @param code Numerical code.
- * @param name Machine name.
+ * Guice module providing specific bindings for the Accio CLI application.
  */
-case class ExitCode(code: Int, name: String)
-
-/**
- * Factory for [[ExitCode]].
- */
-object ExitCode {
-  val Success = ExitCode(0, "SUCCESS")
-  val ValidateFailure = ExitCode(1, "VALIDATE_FAILURE")
-  val CommandLineError = ExitCode(2, "COMMAND_LINE_ERROR")
-  val RuntimeError = ExitCode(3, "RUNTIME_ERROR")
-  val InternalError = ExitCode(4, "INTERNAL_ERROR")
+object ClientModule extends AbstractModule with ScalaModule {
+  override def configure(): Unit = {
+    val commands = ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Class[_ <: Command]] {})
+    commands.addBinding.toInstance(classOf[ExportCommand])
+    commands.addBinding.toInstance(classOf[HelpCommand])
+    commands.addBinding.toInstance(classOf[RunCommand])
+    commands.addBinding.toInstance(classOf[ValidateCommand])
+  }
 }

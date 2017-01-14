@@ -33,6 +33,10 @@ class ZookeeperStateMgrSpec extends UnitSpec with BeforeAndAfterEach {
     stateMgr.get(Tasks.RunningTask.id) shouldBe None
     stateMgr.save(Tasks.RunningTask)
     stateMgr.get(Tasks.RunningTask.id) shouldBe Some(Tasks.RunningTask)
+
+    val newTask = Tasks.RunningTask.copy(nodeName = "barnode")
+    stateMgr.save(newTask)
+    stateMgr.get(Tasks.RunningTask.id) shouldBe Some(newTask)
   }
 
   it should "list all tasks" in {

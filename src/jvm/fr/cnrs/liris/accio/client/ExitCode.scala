@@ -16,24 +16,23 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.application.handler
+package fr.cnrs.liris.accio.client
 
-import com.google.inject.Inject
-import com.twitter.util.Future
-import fr.cnrs.liris.accio.core.application.StateManager
-import fr.cnrs.liris.accio.core.domain.RunRepository
+/**
+ * A command line exit code.
+ *
+ * @param code Numerical code.
+ * @param name Machine name.
+ */
+case class ExitCode(code: Int, name: String)
 
-final class DeleteRunHandler @Inject()(runRepository: RunRepository, stateManager: StateManager)
-  extends Handler[DeleteRunRequest, DeleteRunResponse] {
-
-  override def handle(req: DeleteRunRequest): Future[DeleteRunResponse] = {
-    val runLock = stateManager.createLock(s"run/${req.id.value}")
-    runLock.lock()
-    try {
-      runRepository.remove(req.id)
-    } finally {
-      runLock.unlock()
-    }
-    Future(DeleteRunResponse())
-  }
+/**
+ * Factory for [[ExitCode]].
+ */
+object ExitCode {
+  val Success = ExitCode(0, "SUCCESS")
+  val ValidateFailure = ExitCode(1, "VALIDATE_FAILURE")
+  val CommandLineError = ExitCode(2, "COMMAND_LINE_ERROR")
+  val RuntimeError = ExitCode(3, "RUNTIME_ERROR")
+  val InternalError = ExitCode(4, "INTERNAL_ERROR")
 }

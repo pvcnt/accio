@@ -18,17 +18,13 @@
 
 package fr.cnrs.liris.accio.core.infra.storage.elastic
 
-import java.net.InetAddress
-
-import com.google.common.net.HostAndPort
 import com.google.inject.Provides
+import com.sksamuel.elastic4s.{ElasticClient, ElasticsearchClientUri}
 import com.twitter.finatra.json.FinatraObjectMapper
 import fr.cnrs.liris.accio.core.application.Configurable
 import fr.cnrs.liris.accio.core.domain.RunRepository
 import net.codingwell.scalaguice.ScalaModule
 import org.elasticsearch.common.settings.Settings
-import org.elasticsearch.common.transport.InetSocketTransportAddress
-import org.elasticsearch.transport.client.PreBuiltTransportClient
 
 /**
  *
@@ -37,7 +33,7 @@ import org.elasticsearch.transport.client.PreBuiltTransportClient
  * @param sniff
  */
 case class ElasticStorageConfig(
-  clusterAddr: Set[String],
+  clusterAddr: String,
   prefix: String,
   sniff: Boolean = true)
 
@@ -55,14 +51,9 @@ final class ElasticStorageModule extends ScalaModule with Configurable[ElasticSt
   }
 
   private lazy val client = {
-    val settings = Settings.builder()
-      .put("client.transport.sniff", config.sniff)
-      .build()
-    val client = new PreBuiltTransportClient(settings)
-    config.clusterAddr.foreach { str =>
-      val hostPort = HostAndPort.fromString(str)
-      client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(hostPort.getHostText), hostPort.getPortOrDefault(9300)))
-    }
+    val settings = Settings.builder().put("client.transport.sniff", config.sniff).build()
+    val uri = ElasticsearchClientUri(s"elasticsearch://${config.clusterAddr}")
+    val client = ElasticClient.transport(settings, uri)
 
     sys.addShutdownHook(client.close())
 

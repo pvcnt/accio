@@ -1,0 +1,9 @@
+junit_tests(
+  name='jackson',
+  dependencies=[
+    'src/jvm/fr/cnrs/liris/accio/core/infra/jackson',
+    'test/jvm/fr/cnrs/liris/testing',
+    'test/thrift/fr/cnrs/liris/accio/core/infra/jackson',
+  ],
+  sources=globs('*.scala'),
+)

@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.cli
+package fr.cnrs.liris.accio.client
 
 import java.nio.file.{Files, Path, Paths}
 import java.util.UUID

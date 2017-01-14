@@ -18,9 +18,10 @@
 
 package fr.cnrs.liris.privamov.ops
 
-import com.google.inject.TypeLiteral
+import com.google.inject.{Provides, Singleton, TypeLiteral}
 import fr.cnrs.liris.accio.core.api.Operator
 import fr.cnrs.liris.privamov.core.io._
+import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
 
 /**
@@ -75,5 +76,12 @@ object OpsModule extends ScalaModule {
     ops.addBinding.toInstance(classOf[TemporalSamplingOp])
     ops.addBinding.toInstance(classOf[UniformSamplingOp])
     ops.addBinding.toInstance(classOf[Wait4MeOp])
+  }
+
+  @Provides
+  @Singleton
+  def providesSparkleEnv: SparkleEnv = {
+    //TODO: make this adapt to number of cores specified by the operator.
+    new SparkleEnv(math.max(1, sys.runtime.availableProcessors() - 1))
   }
 }

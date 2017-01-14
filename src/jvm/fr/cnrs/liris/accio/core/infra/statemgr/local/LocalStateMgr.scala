@@ -20,7 +20,6 @@ package fr.cnrs.liris.accio.core.infra.statemgr.local
 
 import java.nio.file.{Files, Path}
 
-import com.twitter.finatra.json.FinatraObjectMapper
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.application.{Lock, StateManager}
 import fr.cnrs.liris.accio.core.domain.{Task, TaskId}
@@ -31,11 +30,9 @@ import fr.cnrs.liris.common.util.{FileLock, FileUtils}
  * State manager storing data on the local filesystem. Intended for testing or use in single-node development
  * clusters.
  *
- * @param mapper  Object mapper.
  * @param rootDir Root directory under which data will be written.
  */
-final class LocalStateMgr(mapper: FinatraObjectMapper, rootDir: Path)
-  extends LocalStorage(mapper, locking = true) with StateManager with StrictLogging {
+final class LocalStateMgr(rootDir: Path) extends LocalStorage(locking = true) with StateManager with StrictLogging {
 
   override def createLock(key: String): Lock = new LocalLock(key)
 
@@ -53,7 +50,7 @@ final class LocalStateMgr(mapper: FinatraObjectMapper, rootDir: Path)
     logger.debug(s"Removed task ${id.value}")
   }
 
-  override def get(id: TaskId): Option[Task] = read[Task](taskPath(id))
+  override def get(id: TaskId): Option[Task] = read(taskPath(id), Task)
 
   private def locksPath = rootDir.resolve("logs")
 

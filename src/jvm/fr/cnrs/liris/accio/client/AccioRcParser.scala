@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.cli
+package fr.cnrs.liris.accio.client
 
 import java.nio.file.{Files, Path, Paths}
 
@@ -28,7 +28,6 @@ import scala.collection.JavaConverters._
  * Parser for .acciorc files.
  */
 class AccioRcParser extends LazyLogging {
-
   def parse(customPath: Option[Path], config: Option[String], cmdName: String): Seq[String] =
     getAccioRcPath(customPath) match {
       case None => Seq.empty

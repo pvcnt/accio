@@ -21,7 +21,6 @@ package fr.cnrs.liris.accio.core.infra.statemgr.local
 import java.nio.file.Path
 
 import com.google.inject.Provides
-import com.twitter.finatra.json.FinatraObjectMapper
 import fr.cnrs.liris.accio.core.application.{Configurable, StateManager}
 import net.codingwell.scalaguice.ScalaModule
 
@@ -41,7 +40,7 @@ final class LocalStateMgrModule extends ScalaModule with Configurable[LocalState
   override def configure(): Unit = {}
 
   @Provides
-  def providesStateManager(mapper: FinatraObjectMapper): StateManager = {
-    new LocalStateMgr(mapper, config.rootDir)
+  def providesStateManager(): StateManager = {
+    new LocalStateMgr(config.rootDir)
   }
 }

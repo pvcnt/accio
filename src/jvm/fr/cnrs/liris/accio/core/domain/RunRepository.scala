@@ -36,7 +36,7 @@ trait RunRepository {
 
   def exists(id: RunId): Boolean
 
-  def delete(id: RunId): Unit
+  def remove(id: RunId): Unit
 }
 
 /**

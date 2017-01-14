@@ -16,24 +16,20 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.application.handler
+package fr.cnrs.liris.accio.core.infra.jackson
 
-import com.google.inject.Inject
-import com.twitter.util.Future
-import fr.cnrs.liris.accio.core.application.StateManager
-import fr.cnrs.liris.accio.core.domain.RunRepository
+import com.fasterxml.jackson.core.JsonGenerator
+import com.fasterxml.jackson.databind.SerializerProvider
+import com.fasterxml.jackson.databind.ser.std.StdSerializer
+import com.twitter.scrooge.{TArrayByteTransport, ThriftStruct}
+import org.apache.thrift.protocol.TSimpleJSONProtocol
 
-final class DeleteRunHandler @Inject()(runRepository: RunRepository, stateManager: StateManager)
-  extends Handler[DeleteRunRequest, DeleteRunResponse] {
-
-  override def handle(req: DeleteRunRequest): Future[DeleteRunResponse] = {
-    val runLock = stateManager.createLock(s"run/${req.id.value}")
-    runLock.lock()
-    try {
-      runRepository.remove(req.id)
-    } finally {
-      runLock.unlock()
-    }
-    Future(DeleteRunResponse())
+final class ScroogeStructSerializer extends StdSerializer[ThriftStruct](classOf[ThriftStruct]) {
+  override def serialize(t: ThriftStruct, jsonGenerator: JsonGenerator, serializerProvider: SerializerProvider): Unit = {
+    val transport = new TArrayByteTransport
+    val protocol = new TSimpleJSONProtocol.Factory().getProtocol(transport)
+    t.write(protocol)
+    val bytes = transport.toByteArray
+    jsonGenerator.writeRaw(new String(bytes))
   }
 }

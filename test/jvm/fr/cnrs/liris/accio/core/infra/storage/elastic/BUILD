@@ -2,8 +2,10 @@ junit_tests(
   name='elastic',
   dependencies=[
     'src/jvm/fr/cnrs/liris/accio/core/infra/storage/elastic',
+    'src/jvm/fr/cnrs/liris/accio/core/infra/jackson',
     'test/jvm/fr/cnrs/liris/testing',
-    'test/jvm/org/elasticsearch/test',
+    '3rdparty/jvm/com/sksamuel/elastic4s:testkit',
+    '3rdparty/jvm:logback',
   ],
   sources=globs('*.scala'),
 )

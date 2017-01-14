@@ -1,7 +1,7 @@
 junit_tests(
-  name='cli',
+  name='client',
   dependencies=[
-    'src/jvm/fr/cnrs/liris/accio/cli',
+    'src/jvm/fr/cnrs/liris/accio/client',
     'test/jvm/fr/cnrs/liris/testing',
   ],
   sources=globs('*.scala'),

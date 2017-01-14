@@ -26,17 +26,13 @@ import fr.cnrs.liris.accio.core.infra.util.LocalStorage
 import fr.cnrs.liris.common.util.FileUtils
 
 /**
- * A run repository storing runs locally inside JSON files.
+ * A run repository storing runs locally inside binary files. Intended for testing or use in single-node development
+ * clusters. It might have very poor performance because data is not indexed, which results in a sequential scan at
+ * each query.
  *
- * Intended for testing or use in single-node development clusters. It might have very poor performance because data
- * is not indexed, which results in a sequential scan at each query.
- *
- * @param mapper  Object mapper.
  * @param rootDir Root directory under which to store files.
  */
-final class LocalRunRepository(mapper: FinatraObjectMapper, rootDir: Path)
-  extends LocalStorage(mapper, locking = false) with RunRepository {
-
+final class LocalRunRepository(rootDir: Path) extends LocalStorage(locking = false) with RunRepository {
   override def find(query: RunQuery): RunList = {
     var results = listIds(runsPath).flatMap(id => get(RunId(id)))
 
@@ -89,11 +85,11 @@ final class LocalRunRepository(mapper: FinatraObjectMapper, rootDir: Path)
     }
   }
 
-  override def get(id: RunId): Option[Run] = read[Run](runPath(id))
+  override def get(id: RunId): Option[Run] = read(runPath(id), Run)
 
   override def exists(id: RunId): Boolean = runPath(id).toFile.exists()
 
-  override def delete(id: RunId): Unit = {
+  override def remove(id: RunId): Unit = {
     FileUtils.safeDelete(runPath(id))
   }
 

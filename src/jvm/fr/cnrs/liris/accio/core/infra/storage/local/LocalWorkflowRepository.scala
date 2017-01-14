@@ -20,22 +20,19 @@ package fr.cnrs.liris.accio.core.infra.storage.local
 
 import java.nio.file.Path
 
-import com.twitter.finatra.json.FinatraObjectMapper
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.infra.util.LocalStorage
 
 /**
- * A workflow repository storing workflows locally inside JSON files.
+ * A workflow repository storing workflows locally inside binary files. Intended for testing or use in single-node
+ * development clusters. It might have very poor performance because data is not indexed, which results in a
+ * sequential scan at each query.
  *
- * Intended for testing or use in single-node development clusters. It might have very poor performance because data
- * is not indexed, which results in a sequential scan at each query.
- *
- * @param mapper  Object mapper.
  * @param rootDir Root directory under which to store files.
  */
-final class LocalWorkflowRepository(mapper: FinatraObjectMapper, rootDir: Path)
-  extends LocalStorage(mapper, locking = false) with WorkflowRepository with LazyLogging {
+final class LocalWorkflowRepository(rootDir: Path)
+  extends LocalStorage(locking = false) with WorkflowRepository with LazyLogging {
 
   override def find(query: WorkflowQuery): WorkflowList = {
     var results = rootDir.toFile.listFiles.toSeq
@@ -71,7 +68,7 @@ final class LocalWorkflowRepository(mapper: FinatraObjectMapper, rootDir: Path)
   override def get(id: WorkflowId): Option[Workflow] = getLastVersion(id).flatMap(v => get(id, v.toString))
 
   override def get(id: WorkflowId, version: String): Option[Workflow] = {
-    read[Workflow](workflowPath(id, version).toFile)
+    read(workflowPath(id, version).toFile, Workflow)
   }
 
   override def exists(id: WorkflowId): Boolean = getLastVersion(id).isDefined

@@ -18,15 +18,22 @@
 
 package fr.cnrs.liris.accio.core.infra.storage.elastic
 
+import com.sksamuel.elastic4s.ElasticDsl._
+import com.sksamuel.elastic4s.{ElasticClient, ElasticDsl}
 import com.twitter.finatra.json.FinatraObjectMapper
+import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.domain._
-import org.elasticsearch.client.Client
-import org.elasticsearch.index.query.QueryBuilders._
-import org.elasticsearch.search.sort.SortOrder
 
-class ElasticRunRepository(mapper: FinatraObjectMapper, client: Client, prefix: String) extends RunRepository {
+import scala.concurrent.Await
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.Duration
+import scala.util.control.NonFatal
+
+final class ElasticRunRepository(mapper: FinatraObjectMapper, client: ElasticClient, prefix: String)
+  extends RunRepository with StrictLogging {
+
   override def find(query: RunQuery): RunList = {
-    val qb = boolQuery()
+    /*val qb = boolQuery()
     query.cluster.foreach(cluster => qb.filter(termQuery("cluster", cluster)))
     query.environment.foreach(environment => qb.filter(termQuery("environment", environment)))
     query.owner.foreach(owner => qb.filter(termQuery("owner.name", owner)))
@@ -43,12 +50,13 @@ class ElasticRunRepository(mapper: FinatraObjectMapper, client: Client, prefix: 
 
     val resp = searchQuery.get()
     val results = resp.getHits.hits.toSeq.map(hit => mapper.parse[Run](hit.getSourceAsString))
-    RunList(results, resp.getHits.totalHits.toInt)
+    RunList(results, resp.getHits.totalHits.toInt)*/
+    ???
   }
 
   override def find(query: LogsQuery): Seq[RunLog] = {
     //.setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
-    val qb = boolQuery()
+    /*val qb = boolQuery()
       .filter(termQuery("nodeName", query.nodeName))
       .filter(termQuery("runId", query.runId.value))
     query.classifier.foreach(classifier => qb.filter(termQuery("classifier", classifier)))
@@ -61,38 +69,67 @@ class ElasticRunRepository(mapper: FinatraObjectMapper, client: Client, prefix: 
     query.limit.foreach(searchQuery.setSize)
 
     val resp = searchQuery.get()
-    resp.getHits.hits.toSeq.map(hit => mapper.parse[RunLog](hit.getSourceAsString))
+    resp.getHits.hits.toSeq.map(hit => mapper.parse[RunLog](hit.getSourceAsString))*/
+    Seq.empty
   }
 
   override def save(run: Run): Unit = {
     val json = mapper.writeValueAsString(run)
-    client.prepareIndex(runsIndex, runsType, run.id.value)
-      .setSource(json)
-      .get()
+    val f = client.execute {
+      indexInto(runsIndex / runsType) id run.id.value source json
+    }
+    f.onFailure {
+      case e: Throwable => logger.error(s"Error while saving run ${run.id.value}", e)
+    }
+    Await.result(f, Duration.Inf)
   }
 
   override def save(logs: Seq[RunLog]): Unit = {
-    val bulkRequest = client.prepareBulk()
-    logs.foreach { log =>
+    val actions = logs.map { log =>
       val json = mapper.writeValueAsString(log)
-      bulkRequest.add(client.prepareIndex(logsIndex, logsType).setSource(json))
+      indexInto(logsIndex / logsType) source json
     }
-    bulkRequest.get()
+    val f = client.execute(bulk(actions: _*))
+    f.onFailure {
+      case e: Throwable => logger.error(s"Error while saving ${logs.size} logs", e)
+    }
+    Await.result(f, Duration.Inf)
   }
 
   override def get(id: RunId): Option[Run] = {
-    val resp = client.prepareGet(runsIndex, runsType, id.value).get
-    //TODO: handle not found document.
-    Some(mapper.parse[Run](resp.getSourceAsBytes))
+    val f = client.execute {
+      ElasticDsl.get(id.value).from(runsIndex / runsType)
+    }.map { resp =>
+      try {
+        Some(mapper.parse[Run](resp.sourceAsString))
+      } catch {
+        case NonFatal(e) =>
+          logger.error(s"Error while decoding run ${id.value}", e)
+          None
+      }
+    }.recover {
+      case e: Throwable =>
+        logger.error(s"Error while retrieving run ${id.value}", e)
+        None
+    }
+    Await.result(f, Duration.Inf)
   }
 
   override def exists(id: RunId): Boolean = {
-    //TODO
-    true
+    val f = client.execute {
+      ElasticDsl.get(id.value).from(runsIndex / runsType)
+    }.map { _ => true }
+    .recover { case e: Throwable => false }
+    Await.result(f, Duration.Inf)
   }
 
-  override def delete(id: RunId): Unit = {
-    client.prepareDelete(s"$prefix/runs", "default", id.value).get()
+  override def remove(id: RunId): Unit = {
+    client.execute {
+      delete(id.value).from(runsIndex / runsType)
+    }
+    client.execute {
+      deleteIn(logsIndex).by(termQuery("run_id", id.value))
+    }
   }
 
   private def runsIndex = s"${prefix}__runs"

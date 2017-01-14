@@ -41,7 +41,7 @@ jar_library(
 
 jar_library(
   name='scrooge-core',
-  jars=[scala_jar('com.twitter', 'scrooge-core', '4.6.0')],
+  jars=[scala_jar('com.twitter', 'scrooge-core', '4.13.0')],
   dependencies=[
     ':thrift',
   ]

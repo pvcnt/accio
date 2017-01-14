@@ -1,11 +1,12 @@
 scala_library(
-  name='cli',
+  name='client',
   dependencies=[
     ':annotations',
     'src/jvm/fr/cnrs/liris/accio/core/domain',
-    'src/jvm/fr/cnrs/liris/privamov/ops',
+    'src/jvm/fr/cnrs/liris/accio/core/application',
+    'src/thrift/fr/cnrs/liris/accio/agent',
+
     'src/jvm/fr/cnrs/liris/common/util',
-    'src/jvm/fr/cnrs/liris/common/reflect',
     'src/jvm/fr/cnrs/liris/common/flags',
     '3rdparty/jvm/com/typesafe/scala-logging',
     '3rdparty/jvm:scala-guice',
@@ -26,11 +27,11 @@ java_library(
 jvm_binary(
   name='bin',
   dependencies=[
-    ':cli',
+    ':client',
   ],
   resources=[
     'src/resources/fr/cnrs/liris/accio/cli',
   ],
-  main='fr.cnrs.liris.accio.cli.AccioAppMain',
+  main='fr.cnrs.liris.accio.client.AccioClientMain',
   basename='accio',
 )

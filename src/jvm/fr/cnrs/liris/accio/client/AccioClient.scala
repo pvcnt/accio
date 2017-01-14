@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.cli
+package fr.cnrs.liris.accio.client
 
 import java.nio.file.Path
 
@@ -26,7 +26,7 @@ import fr.cnrs.liris.accio.core.runtime.FrameworkModule
 import fr.cnrs.liris.common.flags._
 import fr.cnrs.liris.privamov.ops.OpsModule
 
-object AccioAppMain extends AccioApp
+object AccioClientMain extends AccioClient
 
 /**
  * Core flags used at the Accio-level. Commands may define additional flags.
@@ -45,13 +45,13 @@ case class AccioOpts(
  * Entry point of the Accio command line application. Very little is done here, it is the job of [[Command]]s
  * to actually handle the payload.
  */
-class AccioApp extends StrictLogging {
+class AccioClient extends StrictLogging {
   def main(args: Array[String]): Unit = {
     // Change the path of logback's configuration file to match Pants resource naming.
     sys.props("logback.configurationFile") = "fr/cnrs/liris/accio/cli/logback.xml"
 
     val reporter = new StreamReporter(Console.out, useColors = true)
-    val injector = Guice.createInjector(FrameworkModule, CliModule, OpsModule, LocalRuntimeModule)
+    val injector = Guice.createInjector(FrameworkModule, ClientModule, OpsModule, LocalRuntimeModule)
     val dispatcher = injector.getInstance(classOf[CmdDispatcher])
     val exitCode = dispatcher.exec(args, reporter)
 

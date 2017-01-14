@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.cli
+package fr.cnrs.liris.accio.client
 
 import com.google.inject.Inject
 import com.twitter.finatra.json.internal.caseclass.exceptions.CaseClassMappingException
