@@ -55,22 +55,19 @@ final class ElasticRunRepository(mapper: FinatraObjectMapper, client: ElasticCli
   }
 
   override def find(query: LogsQuery): Seq[RunLog] = {
-    //.setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
-    /*val qb = boolQuery()
-      .filter(termQuery("nodeName", query.nodeName))
-      .filter(termQuery("runId", query.runId.value))
-    query.classifier.foreach(classifier => qb.filter(termQuery("classifier", classifier)))
-    query.since.foreach(since => qb.filter(rangeQuery("createdAt").from(since)))
+    val q = boolQuery()
+      .must(termQuery("node_name", query.nodeName))
+      .must(termQuery("run_id", query.runId.value))
+    query.classifier.foreach(classifier => q.must(termQuery("classifier", classifier)))
+    query.since.foreach(since => q.must(rangeQuery("created_at") from since))
 
-    val searchQuery = client.prepareSearch(logsIndex)
-      .setTypes(logsType)
-      .setQuery(qb)
-      .addSort("createdAt", SortOrder.DESC)
-    query.limit.foreach(searchQuery.setSize)
+    val s = search(logsIndex -> logsType) query q sortBy (field sort "created_at")
+    query.limit.foreach(s.limit)
 
-    val resp = searchQuery.get()
-    resp.getHits.hits.toSeq.map(hit => mapper.parse[RunLog](hit.getSourceAsString))*/
-    Seq.empty
+    val f = client.execute(s).map { resp =>
+      resp.hits.map(hit => mapper.parse[RunLog](hit.sourceAsBytes))
+    }
+    Await.result(f, Duration.Inf)
   }
 
   override def save(run: Run): Unit = {
@@ -119,7 +116,7 @@ final class ElasticRunRepository(mapper: FinatraObjectMapper, client: ElasticCli
     val f = client.execute {
       ElasticDsl.get(id.value).from(runsIndex / runsType)
     }.map { _ => true }
-    .recover { case e: Throwable => false }
+      .recover { case e: Throwable => false }
     Await.result(f, Duration.Inf)
   }
 

@@ -37,7 +37,7 @@ final class LocalStateMgr(rootDir: Path) extends LocalStorage(locking = true) wi
   override def createLock(key: String): Lock = new LocalLock(key)
 
   override def tasks: Set[Task] = {
-    tasksPath.toFile.list.toSet.filter(_.endsWith(".json")).flatMap(filename => get(TaskId(filename)))
+    tasksPath.toFile.listFiles.filter(_.isFile).flatMap(file => get(TaskId(file.getName))).toSet
   }
 
   override def save(task: Task): Unit = {
@@ -58,6 +58,11 @@ final class LocalStateMgr(rootDir: Path) extends LocalStorage(locking = true) wi
 
   private def taskPath(id: TaskId) = tasksPath.resolve(id.value)
 
+  /**
+   * Lock implementation using local files to synchronize. It is *NOT* reentrant.
+   *
+   * @param key Lock key.
+   */
   private class LocalLock(key: String) extends Lock {
     private[this] val fileLock = {
       val path = locksPath.resolve(key)

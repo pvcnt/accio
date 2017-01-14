@@ -3,6 +3,7 @@ scala_library(
     dependencies=[
         '3rdparty/jvm:junit',
         '3rdparty/jvm:scalatest',
+        '3rdparty/jvm:logback',
     ],
     sources=globs('*.scala')
 )

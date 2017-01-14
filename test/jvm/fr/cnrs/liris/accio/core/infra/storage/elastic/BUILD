@@ -5,7 +5,6 @@ junit_tests(
     'src/jvm/fr/cnrs/liris/accio/core/infra/jackson',
     'test/jvm/fr/cnrs/liris/testing',
     '3rdparty/jvm/com/sksamuel/elastic4s:testkit',
-    '3rdparty/jvm:logback',
   ],
   sources=globs('*.scala'),
 )

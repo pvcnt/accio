@@ -46,9 +46,9 @@ private[infra] abstract class LocalStorage(locking: Boolean) {
     }
   }
 
-  protected def read[T: Manifest](file: File, codec: ThriftStructCodec[T]): Option[T] = read(file.toPath, codec)
+  protected def read[T <: ThriftStruct : Manifest](file: File, codec: ThriftStructCodec[T]): Option[T] = read(file.toPath, codec)
 
-  protected def read[T: Manifest](file: Path, codec: ThriftStructCodec[T]): Option[T] = {
+  protected def read[T <: ThriftStruct : Manifest](file: Path, codec: ThriftStructCodec[T]): Option[T] = {
     // We must check is file exists before trying to lock on it, because file lock creates the file if it does not
     // exist yet.
     if (file.toFile.exists) {

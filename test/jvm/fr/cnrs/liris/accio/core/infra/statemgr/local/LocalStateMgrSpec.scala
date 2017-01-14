@@ -16,33 +16,30 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.infra.statemgr.zookeeper
+package fr.cnrs.liris.accio.core.infra.statemgr.local
+
+import java.nio.file.{Files, Path}
 
 import fr.cnrs.liris.accio.core.infra.statemgr.StateMgrSpec
-import org.apache.curator.framework.{CuratorFramework, CuratorFrameworkFactory}
-import org.apache.curator.retry.RetryOneTime
-import org.apache.curator.test.TestingServer
+import fr.cnrs.liris.common.util.FileUtils
 import org.scalatest.BeforeAndAfterEach
 
 /**
- * Unit tests of [[ZookeeperStateMgr]].
+ * Unit tests of [[LocalStateMgr]].
  */
-class ZookeeperStateMgrSpec extends StateMgrSpec with BeforeAndAfterEach {
-  private[this] var zkTestServer: TestingServer = null
-  private[this] var client: CuratorFramework = null
+class LocalStateMgrSpec extends StateMgrSpec with BeforeAndAfterEach {
+  private[this] var tmpDir: Path = null
 
   override protected def beforeEach(): Unit = {
-    zkTestServer = new TestingServer(2181)
-    client = CuratorFrameworkFactory.newClient(zkTestServer.getConnectString, new RetryOneTime(2000))
-    client.start()
+    tmpDir = Files.createTempDirectory("accio-test-")
   }
 
   override protected def afterEach(): Unit = {
-    client.close()
-    zkTestServer.stop()
+    FileUtils.safeDelete(tmpDir)
+    tmpDir = null
   }
 
-  protected def createStateMgr = new ZookeeperStateMgr(client, "/accio")
+  protected def createStateMgr = new LocalStateMgr(tmpDir)
 
-  behavior of "ZookeeperStateMgr"
+  behavior of "LocalStateMgr"
 }

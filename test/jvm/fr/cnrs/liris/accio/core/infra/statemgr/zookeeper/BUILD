@@ -2,10 +2,8 @@ junit_tests(
   name='zookeeper',
   dependencies=[
     'src/jvm/fr/cnrs/liris/accio/core/infra/statemgr/zookeeper',
-    'test/jvm/fr/cnrs/liris/testing',
-    'test/jvm/fr/cnrs/liris/accio/testing',
+    'test/jvm/fr/cnrs/liris/accio/core/infra/statemgr',
     '3rdparty/jvm/org/apache/curator:test',
-    '3rdparty/jvm/com/twitter/util:core',
   ],
   sources=globs('*.scala'),
 )

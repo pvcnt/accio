@@ -20,17 +20,17 @@ package fr.cnrs.liris.accio.core.application
 
 import com.typesafe.scalalogging.StrictLogging
 
-case class Config[T](clazz: Class[_ <: Configurable[T]], config: T)
+class Configurator(configs: Set[_]) extends StrictLogging {
+  private[this] val index: Map[Class[_], _] = configs.map(config => config.getClass -> config).toMap
 
-class Configurator(configs: Seq[Config[_]]) extends StrictLogging {
   def initialize(objs: Any*): Unit =
     objs.foreach {
       case obj: Configurable[_] =>
-        configs.find(_.clazz == obj.getClass) match {
+        index.get(obj.configClass) match {
           case None => logger.error(s"No configuration available for ${obj.getClass.getName}")
           case Some(config) =>
-            initialize(obj, config.config)
-            logger.info(s"Initialized ${obj.getClass.getSimpleName}: ${config.config}")
+            initialize(obj, config)
+            logger.info(s"Initialized ${obj.getClass.getSimpleName}: $config")
         }
       case _ => // Nothing to do.
     }
@@ -41,5 +41,5 @@ class Configurator(configs: Seq[Config[_]]) extends StrictLogging {
 }
 
 object Configurator {
-  def apply(configs: Config[_]*): Configurator = new Configurator(configs)
+  def apply(configs: Any*): Configurator = new Configurator(configs.toSet)
 }

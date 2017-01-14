@@ -1,0 +1,10 @@
+junit_tests(
+  name='local',
+  dependencies=[
+    'src/jvm/fr/cnrs/liris/accio/core/infra/statemgr/local',
+    'src/jvm/fr/cnrs/liris/common/util',
+    'test/jvm/fr/cnrs/liris/accio/core/infra/statemgr',
+    '3rdparty/jvm/com/twitter/util:core',
+  ],
+  sources=globs('*.scala'),
+)
