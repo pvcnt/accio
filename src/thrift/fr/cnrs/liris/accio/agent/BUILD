@@ -3,7 +3,7 @@ java_thrift_library(
   sources=globs('*.thrift'),
   dependencies=[
     'src/thrift/fr/cnrs/liris/accio/core/domain',
-    'src/thrift/fr/cnrs/liris/accio/core/application',
+    'src/thrift/fr/cnrs/liris/accio/core/service',
     '3rdparty/jvm:scrooge-core',
     '3rdparty/jvm/com/twitter/util:core',
     '3rdparty/jvm/com/twitter/finagle:thrift',

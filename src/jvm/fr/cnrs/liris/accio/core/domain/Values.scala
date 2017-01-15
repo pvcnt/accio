@@ -107,12 +107,12 @@ object Values {
       case AtomicType.Long => decodeLong(value)
       case AtomicType.Double => decodeDouble(value)
       case AtomicType.String => decodeString(value)
-      case AtomicType.Boolean => value.booleans.head
+      case AtomicType.Boolean => decodeBoolean(value)
       case AtomicType.Location => LatLng.degrees(value.doubles.head, value.doubles.last)
       case AtomicType.Timestamp => new Instant(value.longs.head)
       case AtomicType.Duration => decodeDuration(value)
       case AtomicType.Distance => decodeDistance(value)
-      case AtomicType.Dataset => Dataset(value.strings.head)
+      case AtomicType.Dataset => decodeDataset(value)
       case AtomicType.List => decodeList(value, kind.args.head)
       case AtomicType.Set => decodeSet(value, kind.args.head)
       case AtomicType.Map => decodeMap(value, kind.args.head, kind.args.last)
@@ -128,7 +128,11 @@ object Values {
 
   def decodeDouble(value: Value): Double = value.doubles.head
 
+  def decodeBoolean(value: Value): Boolean = value.booleans.head
+
   def decodeString(value: Value): String = value.strings.head
+
+  def decodeDataset(value: Value): Dataset = Dataset(value.strings.head)
 
   def decodeList(value: Value, of: AtomicType): Seq[Any] = split(value).map(decode(_, DataType(of)))
 

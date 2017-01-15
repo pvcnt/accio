@@ -21,21 +21,27 @@ package fr.cnrs.liris.accio.core.infra.storage.elastic
 import com.google.inject.Provides
 import com.sksamuel.elastic4s.{ElasticClient, ElasticsearchClientUri}
 import com.twitter.finatra.json.FinatraObjectMapper
-import fr.cnrs.liris.accio.core.application.Configurable
-import fr.cnrs.liris.accio.core.domain.RunRepository
+import com.twitter.util.{Duration => TwitterDuration}
+import fr.cnrs.liris.accio.core.service.Configurable
+import fr.cnrs.liris.accio.core.domain.{RunRepository, WorkflowRepository}
 import net.codingwell.scalaguice.ScalaModule
 import org.elasticsearch.common.settings.Settings
 
+import scala.concurrent.duration.{Duration => ScalaDuration}
+
 /**
+ * Local storage configuration.
  *
- * @param clusterAddr
- * @param prefix
- * @param sniff
+ * @param clusterAddr  Address(es) to Elasticsearch cluster members ("hostname:port[,hostname:port...]").
+ * @param sniff        Whether to "sniff" Elasticsearch cluster members.
+ * @param prefix       Prefix of indices managed by Accio.
+ * @param queryTimeout Timeout of queries sent to Elasticsearch.
  */
 case class ElasticStorageConfig(
   clusterAddr: String,
-  prefix: String,
-  sniff: Boolean = true)
+  sniff: Boolean = true,
+  prefix: String = "accio__",
+  queryTimeout: TwitterDuration = TwitterDuration.fromSeconds(20))
 
 /**
  * Guice module provisioning repositories with storage inside an Elasticsearch cluster.
@@ -47,7 +53,12 @@ final class ElasticStorageModule extends ScalaModule with Configurable[ElasticSt
 
   @Provides
   def providesRunRepository(mapper: FinatraObjectMapper): RunRepository = {
-    new ElasticRunRepository(mapper, client, config.prefix)
+    new ElasticRunRepository(mapper, client, config.prefix, ScalaDuration.fromNanos(config.queryTimeout.inNanoseconds))
+  }
+
+  @Provides
+  def providesWorkflowRepository(mapper: FinatraObjectMapper): WorkflowRepository = {
+    new ElasticWorkflowRepository(mapper, client, config.prefix, ScalaDuration.fromNanos(config.queryTimeout.inNanoseconds))
   }
 
   private lazy val client = {

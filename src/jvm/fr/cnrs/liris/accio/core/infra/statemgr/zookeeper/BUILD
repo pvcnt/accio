@@ -1,7 +1,7 @@
 scala_library(
   name='zookeeper',
   dependencies=[
-    'src/jvm/fr/cnrs/liris/accio/core/application',
+    'src/jvm/fr/cnrs/liris/accio/core/service',
     '3rdparty/jvm:scala-guice',
     '3rdparty/jvm/com/typesafe/scala-logging',
     '3rdparty/jvm/org/apache/curator:framework',

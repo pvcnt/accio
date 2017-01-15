@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.core.infra.statemgr.zookeeper
 
 import com.google.inject.{Provides, Singleton}
 import com.twitter.util.Duration
-import fr.cnrs.liris.accio.core.application.{Configurable, StateManager}
+import fr.cnrs.liris.accio.core.service.{Configurable, StateManager}
 import net.codingwell.scalaguice.ScalaModule
 import org.apache.curator.framework.CuratorFrameworkFactory
 import org.apache.curator.retry.ExponentialBackoffRetry
@@ -35,7 +35,7 @@ import org.apache.curator.retry.ExponentialBackoffRetry
  */
 case class ZookeeperStateMgrConfig(
   zkAddr: String,
-  rootPath: String,
+  rootPath: String = "/accio",
   sessionTimeout: Duration = Duration.fromSeconds(60),
   connectionTimeout: Duration = Duration.fromSeconds(15))
 

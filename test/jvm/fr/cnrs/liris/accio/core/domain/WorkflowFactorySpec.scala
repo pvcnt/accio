@@ -26,7 +26,7 @@ import fr.cnrs.liris.testing.UnitSpec
  */
 class WorkflowFactorySpec extends UnitSpec {
   private val workflows = Map(
-    "workflow1" -> WorkflowSpec(
+    "workflow1" -> WorkflowTemplate(
       id = WorkflowId("my_workflow"),
       graph = GraphDef(Set(
         NodeDef(
@@ -40,10 +40,9 @@ class WorkflowFactorySpec extends UnitSpec {
             "dbl" -> InputDef.Value(Values.encodeDouble(3.14)),
             "data" -> InputDef.Reference(Reference("FirstSimple", "data")))))),
       name = Some("my workflow"),
-      description = Some("a wonderful description"),
       owner = Some(User("him"))),
 
-    "workflow2" -> WorkflowSpec(
+    "workflow2" -> WorkflowTemplate(
       id = WorkflowId("workflow2"),
       graph = GraphDef(Set(
         NodeDef(
@@ -57,7 +56,7 @@ class WorkflowFactorySpec extends UnitSpec {
             "dbl" -> InputDef.Param("bar"),
             "data" -> InputDef.Reference(Reference("FirstSimple", "data"))))))),
 
-    "invalid_param_workflow" -> WorkflowSpec(
+    "invalid_param_workflow" -> WorkflowTemplate(
       id = WorkflowId("invalid_param_workflow"),
       graph = GraphDef(Set(
         NodeDef(
@@ -65,7 +64,7 @@ class WorkflowFactorySpec extends UnitSpec {
           name = "FirstSimple",
           inputs = Map("foo" -> InputDef.Param("foo/foo")))))),
 
-    "heterogeneous_workflow" -> WorkflowSpec(
+    "heterogeneous_workflow" -> WorkflowTemplate(
       id = WorkflowId("heterogeneous_workflow"),
       graph = GraphDef(Set(
         NodeDef(
@@ -91,7 +90,6 @@ class WorkflowFactorySpec extends UnitSpec {
     val workflow = workflowFactory.create(workflows("workflow1"), User("me"))
     workflow.id shouldBe WorkflowId("my_workflow")
     workflow.name shouldBe Some("my workflow")
-    workflow.description shouldBe Some("a wonderful description")
     workflow.owner shouldBe User("him")
     workflow.graph shouldBe workflows("workflow1").graph
     workflow.params should have size 0

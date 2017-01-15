@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.core.infra.scheduler.local
 import java.nio.file.Path
 
 import com.google.inject.Provides
-import fr.cnrs.liris.accio.core.application.{Configurable, Scheduler}
+import fr.cnrs.liris.accio.core.service.{Configurable, Scheduler}
 import fr.cnrs.liris.accio.core.domain.OpRegistry
 import fr.cnrs.liris.common.getter.DownloadClient
 import net.codingwell.scalaguice.ScalaModule
@@ -30,11 +30,11 @@ import net.codingwell.scalaguice.ScalaModule
  * Local scheduler configuration.
  *
  * @param workDir     Working directory.
- * @param trackerAddr Task tracker address.
+ * @param agentAddr   Agent address.
  * @param executorUri URI where to fetch the executor.
  * @param javaHome    Java home to be used when running nodes.
  */
-case class LocalSchedulerConfig(workDir: Path, trackerAddr: String, executorUri: String, javaHome: Option[String])
+case class LocalSchedulerConfig(workDir: Path, agentAddr: String, executorUri: String, javaHome: Option[String])
 
 /**
  * Guice module provisioning a local scheduler.

@@ -1,7 +1,7 @@
 scala_library(
   name='local',
   dependencies=[
-    'src/jvm/fr/cnrs/liris/accio/core/application',
+    'src/jvm/fr/cnrs/liris/accio/core/service',
     'src/jvm/fr/cnrs/liris/common/util',
     '3rdparty/jvm:scala-guice',
   ],

@@ -21,7 +21,7 @@ jar_library(
 
 jar_library(
   name='scala-guice',
-  jars=[scala_jar('net.codingwell', 'scala-guice', '4.0.1')]
+  jars=[scala_jar('net.codingwell', 'scala-guice', '4.1.0')]
 )
 
 jar_library(

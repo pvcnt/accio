@@ -23,35 +23,66 @@ import com.sksamuel.elastic4s.{ElasticClient, ElasticDsl}
 import com.twitter.finatra.json.FinatraObjectMapper
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.domain._
+import org.elasticsearch.index.IndexNotFoundException
+import org.elasticsearch.search.sort.SortOrder
 
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.util.control.NonFatal
 
-final class ElasticRunRepository(mapper: FinatraObjectMapper, client: ElasticClient, prefix: String)
+/**
+ * Run repository persisting data into an Elasticsearch cluster.
+ *
+ * @param mapper       Finatra object mapper.
+ * @param client       Elasticsearch client.
+ * @param prefix       Prefix of indices managed by Accio.
+ * @param queryTimeout Timeout of queries sent to Elasticsearch.
+ */
+final class ElasticRunRepository(
+  mapper: FinatraObjectMapper,
+  client: ElasticClient,
+  prefix: String,
+  queryTimeout: Duration)
   extends RunRepository with StrictLogging {
 
   override def find(query: RunQuery): RunList = {
-    /*val qb = boolQuery()
-    query.cluster.foreach(cluster => qb.filter(termQuery("cluster", cluster)))
-    query.environment.foreach(environment => qb.filter(termQuery("environment", environment)))
-    query.owner.foreach(owner => qb.filter(termQuery("owner.name", owner)))
-    query.status.foreach(status => qb.filter(termQuery("state.status", status)))
-    query.workflow.foreach(workflowId => qb.filter(termQuery("pkg.workflowId", workflowId)))
-    query.name.foreach(name => qb.must(matchQuery("name", name)))
+    var q = boolQuery()
+    query.cluster.foreach { cluster =>
+      q = q.must(termQuery("cluster", cluster))
+    }
+    query.environment.foreach { environment =>
+      q = q.must(termQuery("environment", environment))
+    }
+    query.owner.foreach { owner =>
+      q = q.filter(termQuery("owner.name", owner))
+    }
+    query.status.foreach { status =>
+      q = q.filter(termQuery("state.status", status.value))
+    }
+    query.workflow.foreach { workflowId =>
+      q = q.filter(termQuery("pkg.workflow_id.value", workflowId.value))
+    }
+    query.name.foreach { name =>
+      q = q.must(matchQuery("name", name))
+    }
 
-    val searchQuery = client.prepareSearch(runsIndex)
-      .setTypes(runsType)
-      .setQuery(qb)
-      .addSort("createdAt", SortOrder.DESC)
-    query.limit.foreach(searchQuery.setSize)
-    query.offset.foreach(searchQuery.setFrom)
+    val s = search(runsIndex / runsType)
+      .query(q)
+      .sortBy(fieldSort("created_at").order(SortOrder.DESC))
+      .limit(query.limit)
+      .from(query.offset.getOrElse(0))
 
-    val resp = searchQuery.get()
-    val results = resp.getHits.hits.toSeq.map(hit => mapper.parse[Run](hit.getSourceAsString))
-    RunList(results, resp.getHits.totalHits.toInt)*/
-    ???
+    val f = client.execute(s).map { resp =>
+      val results = resp.hits.toSeq.map(hit => mapper.parse[Run](hit.sourceAsBytes))
+      RunList(results, resp.totalHits.toInt)
+    }.recover {
+      case _: IndexNotFoundException => RunList(Seq.empty, 0)
+      case NonFatal(e) =>
+        logger.error("Error while searching runs", e)
+        RunList(Seq.empty, 0)
+    }
+    Await.result(f, queryTimeout)
   }
 
   override def find(query: LogsQuery): Seq[RunLog] = {
@@ -61,13 +92,20 @@ final class ElasticRunRepository(mapper: FinatraObjectMapper, client: ElasticCli
     query.classifier.foreach(classifier => q.must(termQuery("classifier", classifier)))
     query.since.foreach(since => q.must(rangeQuery("created_at") from since))
 
-    val s = search(logsIndex -> logsType) query q sortBy (field sort "created_at")
-    query.limit.foreach(s.limit)
+    val s = search(logsIndex / logsType)
+      .query(q)
+      .sortBy(fieldSort("created_at"))
+      .limit(query.limit)
 
     val f = client.execute(s).map { resp =>
-      resp.hits.map(hit => mapper.parse[RunLog](hit.sourceAsBytes))
+      resp.hits.toSeq.map(hit => mapper.parse[RunLog](hit.sourceAsBytes))
+    }.recover {
+      case _: IndexNotFoundException => Seq.empty
+      case NonFatal(e) =>
+        logger.error("Error while searching logs", e)
+        Seq.empty
     }
-    Await.result(f, Duration.Inf)
+    Await.result(f, queryTimeout)
   }
 
   override def save(run: Run): Unit = {
@@ -75,10 +113,13 @@ final class ElasticRunRepository(mapper: FinatraObjectMapper, client: ElasticCli
     val f = client.execute {
       indexInto(runsIndex / runsType) id run.id.value source json
     }
+    f.onSuccess {
+      case _ => logger.debug(s"Saved run ${run.id.value}")
+    }
     f.onFailure {
       case e: Throwable => logger.error(s"Error while saving run ${run.id.value}", e)
     }
-    Await.result(f, Duration.Inf)
+    Await.ready(f, queryTimeout)
   }
 
   override def save(logs: Seq[RunLog]): Unit = {
@@ -90,48 +131,58 @@ final class ElasticRunRepository(mapper: FinatraObjectMapper, client: ElasticCli
     f.onFailure {
       case e: Throwable => logger.error(s"Error while saving ${logs.size} logs", e)
     }
-    Await.result(f, Duration.Inf)
+    Await.ready(f, queryTimeout)
   }
 
   override def get(id: RunId): Option[Run] = {
     val f = client.execute {
       ElasticDsl.get(id.value).from(runsIndex / runsType)
     }.map { resp =>
-      try {
+      if (resp.isSourceEmpty) {
+        None
+      } else {
         Some(mapper.parse[Run](resp.sourceAsString))
-      } catch {
-        case NonFatal(e) =>
-          logger.error(s"Error while decoding run ${id.value}", e)
-          None
       }
     }.recover {
+      case _: IndexNotFoundException => None
       case e: Throwable =>
         logger.error(s"Error while retrieving run ${id.value}", e)
         None
     }
-    Await.result(f, Duration.Inf)
+    Await.result(f, queryTimeout)
   }
 
-  override def exists(id: RunId): Boolean = {
+  override def contains(id: RunId): Boolean = {
     val f = client.execute {
       ElasticDsl.get(id.value).from(runsIndex / runsType)
-    }.map { _ => true }
-      .recover { case e: Throwable => false }
-    Await.result(f, Duration.Inf)
+    }.map { resp =>
+      !resp.isSourceEmpty
+    }.recover {
+      case _: IndexNotFoundException => false
+      case e: Throwable =>
+        logger.error(s"Error while retrieving run ${id.value}", e)
+        false
+    }
+    Await.result(f, queryTimeout)
   }
 
   override def remove(id: RunId): Unit = {
-    client.execute {
+    val f = client.execute {
       delete(id.value).from(runsIndex / runsType)
+    }.flatMap { _ =>
+      client.execute {
+        deleteIn(logsIndex).by(termQuery("run_id.value", id.value))
+      }
     }
-    client.execute {
-      deleteIn(logsIndex).by(termQuery("run_id", id.value))
+    f.onSuccess {
+      case _ => logger.debug(s"Removed run ${id.value}")
     }
+    Await.ready(f, queryTimeout)
   }
 
-  private def runsIndex = s"${prefix}__runs"
+  private def runsIndex = s"${prefix}runs"
 
-  private def logsIndex = s"${prefix}__logs"
+  private def logsIndex = s"${prefix}logs"
 
   private def runsType = "default"
 

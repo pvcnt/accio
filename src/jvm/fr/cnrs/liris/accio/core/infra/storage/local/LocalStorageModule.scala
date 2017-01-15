@@ -21,8 +21,7 @@ package fr.cnrs.liris.accio.core.infra.storage.local
 import java.nio.file.Path
 
 import com.google.inject.{AbstractModule, Provides}
-import com.twitter.finatra.json.FinatraObjectMapper
-import fr.cnrs.liris.accio.core.application.Configurable
+import fr.cnrs.liris.accio.core.service.Configurable
 import fr.cnrs.liris.accio.core.domain.{RunRepository, WorkflowRepository}
 import net.codingwell.scalaguice.ScalaModule
 
@@ -42,12 +41,12 @@ final class LocalStorageModule extends AbstractModule with ScalaModule with Conf
   override def configure(): Unit = {}
 
   @Provides
-  def providesRunRepository(mapper: FinatraObjectMapper): RunRepository = {
-    new LocalRunRepository(mapper, config.rootDir.resolve("runs"))
+  def providesRunRepository: RunRepository = {
+    new LocalRunRepository(config.rootDir.resolve("runs"))
   }
 
   @Provides
-  def providesWorkflowRepository(mapper: FinatraObjectMapper): WorkflowRepository = {
-    new LocalWorkflowRepository(mapper, config.rootDir.resolve("workflows"))
+  def providesWorkflowRepository: WorkflowRepository = {
+    new LocalWorkflowRepository(config.rootDir.resolve("workflows"))
   }
 }

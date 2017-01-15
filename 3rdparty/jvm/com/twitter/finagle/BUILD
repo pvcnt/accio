@@ -14,7 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION = '6.39.0'
+# In Sync with Finatra's version.
+VERSION = '6.41.0'
 
 jar_library(name='http', jars=[scala_jar('com.twitter', 'finagle-http', VERSION)])
 jar_library(name='thrift', jars=[scala_jar('com.twitter', 'finagle-thrift', VERSION)])

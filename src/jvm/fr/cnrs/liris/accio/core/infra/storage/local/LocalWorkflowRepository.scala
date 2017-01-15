@@ -18,11 +18,12 @@
 
 package fr.cnrs.liris.accio.core.infra.storage.local
 
-import java.nio.file.Path
+import java.nio.file.{Files, Path}
 
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.infra.util.LocalStorage
+import fr.cnrs.liris.common.util.FileUtils
 
 /**
  * A workflow repository storing workflows locally inside binary files. Intended for testing or use in single-node
@@ -41,53 +42,47 @@ final class LocalWorkflowRepository(rootDir: Path)
       .flatMap(dirname => get(WorkflowId(dirname)))
 
     // 1. Filter results by specified criteria.
-    query.owner.foreach { owner => results = results.filter(_.owner == owner) }
+    query.owner.foreach { owner => results = results.filter(_.owner.name == owner) }
     query.name.foreach { name => results = results.filter(_.name.contains(name)) }
 
     // 2. Sort the results in descending chronological order (after filtering and before slicing).
-    results = results.sortWith((a, b) => a.createdAt < b.createdAt)
+    results = results.sortWith((a, b) => a.createdAt > b.createdAt)
 
     // 3. Count total number of results (before slicing).
     val totalCount = results.size
 
     // 4. Slice results w.r.t. to specified offset and limit.
     query.offset.foreach { offset => results = results.drop(offset) }
-    query.limit.foreach { limit => results = results.take(limit) }
+    results = results.take(query.limit)
 
     WorkflowList(results, totalCount)
   }
 
   override def save(workflow: Workflow): Unit = {
-    if (exists(workflow.id, workflow.version)) {
+    if (contains(workflow.id, workflow.version)) {
       logger.info(s"Workflow ${workflow.id} @ ${workflow.version} already exists")
     } else {
       write(workflow, workflowPath(workflow.id, workflow.version).toFile)
+      FileUtils.safeDelete(latestPath(workflow.id))
+      Files.createSymbolicLink(latestPath(workflow.id), workflowPath(workflow.id, workflow.version))
     }
   }
 
-  override def get(id: WorkflowId): Option[Workflow] = getLastVersion(id).flatMap(v => get(id, v.toString))
+  override def get(id: WorkflowId): Option[Workflow] = read(latestPath(id), Workflow)
 
   override def get(id: WorkflowId, version: String): Option[Workflow] = {
     read(workflowPath(id, version).toFile, Workflow)
   }
 
-  override def exists(id: WorkflowId): Boolean = getLastVersion(id).isDefined
+  override def contains(id: WorkflowId): Boolean = latestPath(id).toFile.exists
 
-  override def exists(id: WorkflowId, version: String): Boolean = {
+  override def contains(id: WorkflowId, version: String): Boolean = {
     workflowPath(id, version).toFile.exists
   }
 
-  private def workflowPath(id: WorkflowId) = rootDir.resolve(id.value)
+  private def workflowPath(id: WorkflowId): Path = rootDir.resolve(id.value)
 
-  private def workflowPath(id: WorkflowId, version: String) = rootDir.resolve(id.value).resolve(s"$version.json")
+  private def workflowPath(id: WorkflowId, version: String): Path = workflowPath(id).resolve(s"v$version.json")
 
-  private def getLastVersion(id: WorkflowId): Option[String] = {
-    //TODO
-    val dir = workflowPath(id).toFile
-    if (dir.exists()) {
-      dir.list.filter(_.endsWith(".json")).map(_.toInt).sorted.lastOption.map(_.toString)
-    } else {
-      None
-    }
-  }
+  private def latestPath(id: WorkflowId): Path = workflowPath(id).resolve(s"latest.json")
 }

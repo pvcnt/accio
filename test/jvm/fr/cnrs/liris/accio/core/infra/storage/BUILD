@@ -1,0 +1,9 @@
+junit_tests(
+  name='storage',
+  dependencies=[
+    'src/jvm/fr/cnrs/liris/accio/core/service',
+    'test/jvm/fr/cnrs/liris/accio/testing',
+    'test/jvm/fr/cnrs/liris/testing',
+  ],
+  sources=globs('*.scala'),
+)

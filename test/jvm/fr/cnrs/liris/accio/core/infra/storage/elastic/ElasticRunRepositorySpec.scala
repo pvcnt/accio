@@ -1,38 +1,51 @@
+/*
+ * Accio is a program whose purpose is to study location privacy.
+ * Copyright (C) 2016 Vincent Primault <vincent.primault@liris.cnrs.fr>
+ *
+ * Accio is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Accio is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package fr.cnrs.liris.accio.core.infra.storage.elastic
+
+import java.util.concurrent.TimeUnit
 
 import com.google.inject.Guice
 import com.sksamuel.elastic4s.testkit.ElasticSugar
 import com.twitter.finatra.json.FinatraObjectMapper
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.infra.jackson.AccioFinatraJacksonModule
-import fr.cnrs.liris.testing.UnitSpec
+import fr.cnrs.liris.accio.core.infra.storage.RunRepositorySpec
 
-import scala.collection.{Map, Set}
+import scala.concurrent.duration.Duration
 
-class ElasticRunRepositorySpec extends UnitSpec with ElasticSugar {
-  private val repository = {
-    val injector = Guice.createInjector(AccioFinatraJacksonModule)
-    new ElasticRunRepository(injector.getInstance(classOf[FinatraObjectMapper]), client, "accio")
+/**
+ * Unit tests of [[ElasticRunRepository]].
+ */
+class ElasticRunRepositorySpec extends RunRepositorySpec with ElasticSugar {
+  private[this] var i = 0
+  private[this] val injector = Guice.createInjector(AccioFinatraJacksonModule)
+
+  override protected def createRepository: RunRepository = {
+    // The node is node teared down at each test, which means data persists. We use a different indice each time to
+    // start from a clean slate at each test.
+    i += 1
+    new ElasticRunRepository(injector.getInstance(classOf[FinatraObjectMapper]), client, s"accio$i", Duration.create(5, TimeUnit.SECONDS))
+  }
+
+  override protected def refreshBeforeSearch(): Unit = {
+    refreshAll()
   }
 
   behavior of "ElasticRunRepository"
-
-  it should "save a run" in {
-    val run = Run(
-      id = RunId("foobar"),
-      pkg = Package(WorkflowId("my_workflow"), "v1"),
-      cluster = "local",
-      environment = "devel",
-      owner = User("m"),
-      name = Some("foo bar workflow"),
-      notes = Some("awesome workflow!"),
-      tags = Set("foo", "bar"),
-      seed = 1234,
-      params = Map.empty,
-      createdAt = System.currentTimeMillis(),
-      state = RunState(status = RunStatus.Scheduled, progress = 0))
-    repository.save(run)
-
-    repository.get(RunId("foobar")) shouldBe Some(run)
-  }
 }

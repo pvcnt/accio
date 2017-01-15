@@ -18,20 +18,19 @@
 
 package fr.cnrs.liris.accio.executor
 
-import com.google.inject.{Provides, TypeLiteral}
+import java.nio.file.Path
+
+import com.google.inject.Provides
 import com.twitter.finagle.Thrift
 import fr.cnrs.liris.accio.agent.AgentService
-import fr.cnrs.liris.accio.core.api.Operator
-import fr.cnrs.liris.accio.core.application.{OpExecutor, ReflectOpMetaReader, Uploader}
-import fr.cnrs.liris.accio.core.domain.{OpFactory, OpMetaReader, RuntimeOpRegistry}
+import fr.cnrs.liris.accio.core.service.{OpExecutor, Uploader}
+import fr.cnrs.liris.accio.core.domain.{OpFactory, RuntimeOpRegistry}
 import fr.cnrs.liris.common.flags.inject.InjectFlag
-import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
+import fr.cnrs.liris.common.getter.DownloadClient
+import net.codingwell.scalaguice.ScalaModule
 
 object ExecutorModule extends ScalaModule {
-  override protected def configure(): Unit = {
-    ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Class[_ <: Operator[_, _]]] {})
-    bind[OpMetaReader].to[ReflectOpMetaReader]
-  }
+  override protected def configure(): Unit = {}
 
   @Provides
   def providesAgentClient(
@@ -41,7 +40,7 @@ object ExecutorModule extends ScalaModule {
   }
 
   @Provides
-  def providesOpExecutor(opRegistry: RuntimeOpRegistry, opFactory: OpFactory, uploader: Uploader): OpExecutor = {
-    new OpExecutor(opRegistry, opFactory, uploader)
+  def providesOpExecutor(opRegistry: RuntimeOpRegistry, opFactory: OpFactory, uploader: Uploader, downloader: DownloadClient, @InjectFlag("workdir") workDir: Path): OpExecutor = {
+    new OpExecutor(opRegistry, opFactory, uploader, downloader, workDir)
   }
 }

@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.core.infra.jackson
 
-import com.fasterxml.jackson.core.JsonParser
+import com.fasterxml.jackson.core.{JsonParser, JsonProcessingException}
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 import com.fasterxml.jackson.databind.{DeserializationContext, JsonNode}
 import com.twitter.scrooge.{ThriftStruct, ThriftStructCodec, ThriftStructFieldInfo}
@@ -26,6 +26,8 @@ import org.apache.thrift.protocol.TType
 
 import scala.collection.JavaConverters._
 import scala.reflect._
+
+class ThriftProtocolException(message: String) extends JsonProcessingException(message)
 
 final class ScroogeStructDeserializer[T <: ThriftStruct : ClassTag](codec: ThriftStructCodec[T]) extends StdDeserializer[T](classTag[T].runtimeClass.asInstanceOf[Class[T]]) {
   override def deserialize(jp: JsonParser, ctx: DeserializationContext): T = {
@@ -52,7 +54,7 @@ final class ScroogeStructDeserializer[T <: ThriftStruct : ClassTag](codec: Thrif
       case _ if clazz == classOf[Long] => str.toLong
       case _ if clazz == classOf[String] => str
       case _ if clazz == classOf[Double] => str.toDouble
-      case unsupported => throw new RuntimeException(s"Unsupported key class: $unsupported")
+      case unsupported => throw new ThriftProtocolException(s"Unsupported key class: $unsupported")
     }
   }
 
@@ -69,7 +71,7 @@ final class ScroogeStructDeserializer[T <: ThriftStruct : ClassTag](codec: Thrif
         } else if (fieldInfo.tfield.`type` == TType.MAP) {
           collection.Map.empty
         } else {
-          throw new RuntimeException(s"No value nor default value for field ${fieldInfo.tfield.name}")
+          throw new ThriftProtocolException(s"No value nor default value for field ${fieldInfo.tfield.name}")
         }
     }
 
@@ -105,7 +107,7 @@ final class ScroogeStructDeserializer[T <: ThriftStruct : ClassTag](codec: Thrif
           key -> value
         }.toSeq
         collection.Map(items: _*)
-      case unknown => throw new RuntimeException(s"Unknown type: $unknown")
+      case unknown => throw new ThriftProtocolException(s"Unknown type: $unknown")
     }
     if (fieldInfo.isOptional) Some(value) else value
   }

@@ -14,7 +14,12 @@
 # You should have received a copy of the GNU General Public License
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION = '2.5.0'
+# When you update this version, please make sure you update other libraries that are included here, to
+# avoid dependency hell. Known dependencies that must stay in sync:
+#   - com/twitter/finagle
+#   - com/twitter/util
+#   - com/fasterxml/jackson
+VERSION = '2.7.0'
 
 jar_library(name='http', jars=[scala_jar('com.twitter', 'finatra-http', VERSION)])
 jar_library(name='httpclient', jars=[scala_jar('com.twitter', 'finatra-httpclient', VERSION)])

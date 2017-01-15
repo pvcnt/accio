@@ -20,7 +20,6 @@ package fr.cnrs.liris.accio.core.domain
 
 import java.util.Objects
 
-import com.google.inject.Inject
 import fr.cnrs.liris.common.util.{HashUtils, Seqs}
 
 /**
@@ -29,7 +28,7 @@ import fr.cnrs.liris.common.util.{HashUtils, Seqs}
  * @param graphFactory Graph factory.
  * @param opRegistry   Operator registry.
  */
-final class WorkflowFactory @Inject()(graphFactory: GraphFactory, opRegistry: OpRegistry) {
+final class WorkflowFactory(graphFactory: GraphFactory, opRegistry: OpRegistry) {
   /**
    * Create a workflow from a workflow template.
    *
@@ -42,7 +41,7 @@ final class WorkflowFactory @Inject()(graphFactory: GraphFactory, opRegistry: Op
     val graph = getGraph(template)
     val params = getParams(graph, template.params.toSet)
     val owner = template.owner.getOrElse(user)
-    val version = template.version.getOrElse(defaultVersion(template.id, template.name, template.description, owner, template.graph, params))
+    val version = template.version.getOrElse(defaultVersion(template.id, template.name, owner, template.graph, params))
     Workflow(
       id = template.id,
       version = version,
@@ -66,15 +65,24 @@ final class WorkflowFactory @Inject()(graphFactory: GraphFactory, opRegistry: Op
     }
   }
 
-  private def defaultVersion(id: WorkflowId, name: Option[String], description: Option[String], owner: User, graph: GraphDef, params: Set[ArgDef]) = {
-    HashUtils.sha1(Objects.hash(id.value, name.getOrElse(""), description.getOrElse(""), owner, graph, params).toString)
+  /**
+   * Compute a version key by creating a hash workflow fields that identify whether to workflows are identical.
+   *
+   * @param id     Workflow identifier.
+   * @param name   Name.
+   * @param owner  Owner.
+   * @param graph  Graph definition.
+   * @param params Workflow parameters.
+   */
+  private def defaultVersion(id: WorkflowId, name: Option[String], owner: User, graph: GraphDef, params: Set[ArgDef]) = {
+    HashUtils.sha1(Objects.hash(id.value, name.getOrElse(""), owner, graph, params).toString)
   }
 
   /**
    * Validate workflow parameters are correctly used.
    *
-   * @param graph
-   * @param params
+   * @param graph  Graph definition.
+   * @param params Workflow parameters.
    */
   private def getParams(graph: Graph, params: Set[ArgDef]) = {
     case class ParamUsage(ref: Reference, argDef: ArgDef)

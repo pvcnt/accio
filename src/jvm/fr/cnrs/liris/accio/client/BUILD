@@ -3,7 +3,7 @@ scala_library(
   dependencies=[
     ':annotations',
     'src/jvm/fr/cnrs/liris/accio/core/domain',
-    'src/jvm/fr/cnrs/liris/accio/core/application',
+    'src/jvm/fr/cnrs/liris/accio/core/service',
     'src/thrift/fr/cnrs/liris/accio/agent',
 
     'src/jvm/fr/cnrs/liris/common/util',

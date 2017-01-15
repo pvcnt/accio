@@ -45,8 +45,7 @@ struct WorkflowTemplate {
   1: required common.WorkflowId id;
   2: optional string version;
   3: optional string name;
-  4: optional string description;
-  5: optional common.User owner;
-  6: required graph.GraphDef graph;
-  7: required set<operator.ArgDef> params;
+  4: optional common.User owner;
+  5: required graph.GraphDef graph;
+  6: required set<operator.ArgDef> params;
 }

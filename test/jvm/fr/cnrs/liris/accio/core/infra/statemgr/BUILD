@@ -1,7 +1,7 @@
 junit_tests(
   name='statemgr',
   dependencies=[
-    'src/jvm/fr/cnrs/liris/accio/core/application',
+    'src/jvm/fr/cnrs/liris/accio/core/service',
     'test/jvm/fr/cnrs/liris/testing',
     'test/jvm/fr/cnrs/liris/accio/testing',
     '3rdparty/jvm/com/twitter/util:core',

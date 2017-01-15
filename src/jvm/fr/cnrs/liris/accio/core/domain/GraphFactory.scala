@@ -18,7 +18,6 @@
 
 package fr.cnrs.liris.accio.core.domain
 
-import com.google.inject.Inject
 import fr.cnrs.liris.common.util.Seqs
 
 /**
@@ -26,7 +25,7 @@ import fr.cnrs.liris.common.util.Seqs
  *
  * @param opRegistry Operator registry.
  */
-final class GraphFactory @Inject()(opRegistry: OpRegistry) {
+final class GraphFactory(opRegistry: OpRegistry) {
   /**
    * Create a new graph.
    *

@@ -1,0 +1,11 @@
+scala_library(
+  name='handler',
+  dependencies=[
+    'src/jvm/fr/cnrs/liris/accio/core/domain',
+    'src/jvm/fr/cnrs/liris/accio/core/service',
+    'src/thrift/fr/cnrs/liris/accio/core/service',
+    '3rdparty/jvm/com/typesafe/scala-logging',
+    '3rdparty/jvm/com/google/guice',
+  ],
+  sources=globs('*.scala')
+)

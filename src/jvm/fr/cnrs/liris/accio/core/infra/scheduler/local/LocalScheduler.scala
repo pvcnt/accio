@@ -22,9 +22,8 @@ import java.nio.file.Files
 import java.util.UUID
 import java.util.concurrent.{ConcurrentHashMap, Executors}
 
-import com.google.inject.Inject
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.core.application.Scheduler
+import fr.cnrs.liris.accio.core.service.Scheduler
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.common.getter.DownloadClient
 import fr.cnrs.liris.common.util.{FileUtils, HashUtils}
@@ -42,7 +41,7 @@ import scala.collection.mutable
  * @param downloader Download client.
  * @param config     Scheduler configuration.
  */
-class LocalScheduler @Inject()(opRegistry: OpRegistry, downloader: DownloadClient, config: LocalSchedulerConfig)
+class LocalScheduler(opRegistry: OpRegistry, downloader: DownloadClient, config: LocalSchedulerConfig)
   extends Scheduler with StrictLogging {
 
   private[this] val monitors = new ConcurrentHashMap[String, TaskMonitor].asScala
@@ -136,7 +135,7 @@ class LocalScheduler @Inject()(opRegistry: OpRegistry, downloader: DownloadClien
       cmd += "-id"
       cmd += id.value
       cmd += "-tracker_addr"
-      cmd += config.trackerAddr
+      cmd += config.agentAddr
 
       val sandboxDir = getSandboxPath(key)
       Files.createDirectories(sandboxDir)

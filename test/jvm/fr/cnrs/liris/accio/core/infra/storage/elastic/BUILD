@@ -3,7 +3,7 @@ junit_tests(
   dependencies=[
     'src/jvm/fr/cnrs/liris/accio/core/infra/storage/elastic',
     'src/jvm/fr/cnrs/liris/accio/core/infra/jackson',
-    'test/jvm/fr/cnrs/liris/testing',
+    'test/jvm/fr/cnrs/liris/accio/core/infra/storage',
     '3rdparty/jvm/com/sksamuel/elastic4s:testkit',
   ],
   sources=globs('*.scala'),

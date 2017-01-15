@@ -26,15 +26,31 @@ import fr.cnrs.liris.common.util.FileLock
 import org.apache.thrift.protocol.TBinaryProtocol
 
 /**
- * Helper methods for repositories storing their data on the local filesystem.
+ * Helper methods for repositories storing their data on the local filesystem in Scrooge/Thrift binary files.
+ *
+ * It provides a locking feature that will acquire a [[FileLock]] on each file while reading or writing it. It is
+ * an extreme measure, because these locks are exclusive (there is only one person that can read at the same time...),
+ * but effective to prevent concurrency issues.
  *
  * @param locking Whether to lock on I/O operations.
  */
 private[infra] abstract class LocalStorage(locking: Boolean) {
   private[this] val protocolFactory = new TBinaryProtocol.Factory()
 
+  /**
+   * Write a Thrift structure inside a file.
+   *
+   * @param obj Thrift structure to write.
+   * @param file Destination file.
+   */
   protected def write(obj: ThriftStruct, file: File): Unit = write(obj, file.toPath)
 
+  /**
+   * Write a Thrift structure inside a file.
+   *
+   * @param obj Thrift structure to write.
+   * @param file Destination file.
+   */
   protected def write(obj: ThriftStruct, file: Path): Unit = {
     Files.createDirectories(file.getParent)
     val transport = new TArrayByteTransport
@@ -46,8 +62,22 @@ private[infra] abstract class LocalStorage(locking: Boolean) {
     }
   }
 
+  /**
+   * Read a Thrift structure from a file.
+   *
+   * @param file Source file.
+   * @param codec Codec used to read the file.
+   * @tparam T Thrift structure type.
+   */
   protected def read[T <: ThriftStruct : Manifest](file: File, codec: ThriftStructCodec[T]): Option[T] = read(file.toPath, codec)
 
+  /**
+   * Read a Thrift structure from a file.
+   *
+   * @param file Source file.
+   * @param codec Codec used to read the file.
+   * @tparam T Thrift structure type.
+   */
   protected def read[T <: ThriftStruct : Manifest](file: Path, codec: ThriftStructCodec[T]): Option[T] = {
     // We must check is file exists before trying to lock on it, because file lock creates the file if it does not
     // exist yet.

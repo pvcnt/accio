@@ -19,26 +19,81 @@
 package fr.cnrs.liris.accio.core.domain
 
 /**
- * Repository persisting workflows.
+ * Repository persisting workflows. For now, there is intentionally no method to remove a workflow, because it is
+ * not desirable to delete a workflow with runs referencing it.
  */
 trait WorkflowRepository {
+  /**
+   * Search for workflows matching a given query. Runs are returned ordered in inverse chronological order, the most
+   * recent matching workflow being the first result. It will only consider the latest version of each workflow, and
+   * return the latest version of matching workflow in results.
+   *
+   * @param query Query.
+   * @return List of workflow and total number of results.
+   */
   def find(query: WorkflowQuery): WorkflowList
 
+  /**
+   * Save a run. It will either create a new workflow or a new version if there is already one with the same
+   * identifier. Workflows are never replaced.
+   *
+   * @param workflow Workflow to save.
+   */
   def save(workflow: Workflow): Unit
 
+  /**
+   * Retrieve a specific workflow at its latest version, if it exists.
+   *
+   * @param id Workflow identifier.
+   */
   def get(id: WorkflowId): Option[Workflow]
 
+  /**
+   * Retrieve a specific workflow at a specific version, if it exists.
+   *
+   * @param id      Workflow identifier.
+   * @param version Version identifier.
+   */
   def get(id: WorkflowId, version: String): Option[Workflow]
 
-  def exists(id: WorkflowId): Boolean
+  /**
+   * Check whether a specific workflow exists.
+   *
+   * @param id Workflow identifier.
+   * @return True if the workflow exists, false otherwise.
+   */
+  def contains(id: WorkflowId): Boolean
 
-  def exists(id: WorkflowId, version: String): Boolean
+  /**
+   * Check whether a specific workflow exists at a specific version.
+   *
+   * @param id      Workflow identifier.
+   * @param version Version identifier.
+   * @return True if the workflow exists, false otherwise.
+   */
+  def contains(id: WorkflowId, version: String): Boolean
 }
 
+/**
+ * Query to search for workflows. Please note that you have to specify a maximum number of results.
+ *
+ * @param owner  Only include workflows owner by a given user.
+ * @param name   Only include runs whose name matches a given string. Exact interpretation can be implementation-dependant.
+ * @param limit  Maximum number of matching workflows to return. Must be in [1,100].
+ * @param offset Number of matching workflows to skip.
+ */
 case class WorkflowQuery(
   owner: Option[String] = None,
   name: Option[String] = None,
-  limit: Option[Int] = None,
-  offset: Option[Int] = None)
+  limit: Int = 25,
+  offset: Option[Int] = None) {
+  require(limit > 0 && limit <= 100, s"Maximum number of runs must be in [1,100] (got $limit)")
+}
 
+/**
+ * List of workflows and total number of results.
+ *
+ * @param results    List of workflows.
+ * @param totalCount Total number of results.
+ */
 case class WorkflowList(results: Seq[Workflow], totalCount: Int)

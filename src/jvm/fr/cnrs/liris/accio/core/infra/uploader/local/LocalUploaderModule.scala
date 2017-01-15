@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.core.infra.uploader.local
 import java.nio.file.Path
 
 import com.google.inject.Provides
-import fr.cnrs.liris.accio.core.application.{Configurable, Uploader}
+import fr.cnrs.liris.accio.core.service.{Configurable, Uploader}
 import net.codingwell.scalaguice.ScalaModule
 
 /**

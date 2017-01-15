@@ -24,7 +24,7 @@ import com.twitter.finatra.http.Controller
 import com.twitter.finatra.request.{QueryParam, RouteParam}
 import com.twitter.finatra.validation.{Max, Min}
 import fr.cnrs.liris.accio.agent.AgentService
-import fr.cnrs.liris.accio.core.application.handler._
+import fr.cnrs.liris.accio.core.service.handler._
 import fr.cnrs.liris.accio.core.domain._
 
 @Singleton

@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.core.infra.statemgr
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 
-import fr.cnrs.liris.accio.core.application.{Lock, StateManager}
+import fr.cnrs.liris.accio.core.service.{Lock, StateManager}
 import fr.cnrs.liris.accio.testing.Tasks
 import fr.cnrs.liris.testing.UnitSpec
 
@@ -58,8 +58,8 @@ private[statemgr] abstract class StateMgrSpec extends UnitSpec {
 
   it should "create locks" in {
     val stateMgr = createStateMgr
-    val lock1 = stateMgr.createLock("my/lock")
-    val lock2 = stateMgr.createLock("my/lock")
+    val lock1 = stateMgr.lock("my/lock")
+    val lock2 = stateMgr.lock("my/lock")
 
     lock1.lock()
     //lock1.lock() // Current thread can lock, it is reentrant. => Not guaranteed by all implementations.

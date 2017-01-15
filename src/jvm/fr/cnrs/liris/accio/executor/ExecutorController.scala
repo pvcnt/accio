@@ -22,7 +22,7 @@ import com.google.inject.Inject
 import com.twitter.util.{Future, Return, Throw}
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.agent.AgentService
-import fr.cnrs.liris.accio.core.application.handler.StartTaskRequest
+import fr.cnrs.liris.accio.core.service.handler.StartTaskRequest
 import fr.cnrs.liris.accio.core.domain.TaskId
 
 class ExecutorController @Inject()(agentClient: AgentService.FinagledClient, taskExecutor: TaskExecutor) extends LazyLogging {

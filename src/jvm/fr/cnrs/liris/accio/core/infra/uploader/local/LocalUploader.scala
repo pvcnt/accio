@@ -20,14 +20,19 @@ package fr.cnrs.liris.accio.core.infra.uploader.local
 
 import java.nio.file.Path
 
-import fr.cnrs.liris.accio.core.application.Uploader
+import fr.cnrs.liris.accio.core.service.Uploader
 import fr.cnrs.liris.common.util.FileUtils
 
 /**
+ * Uploader copying files locally.
+ *
  * @param rootDir Root directory under which to store files.
  */
 final class LocalUploader(rootDir: Path) extends Uploader {
-  override def upload(src: Path, dst: String): Unit = {
-    FileUtils.recursiveCopy(src, rootDir.resolve(dst))
+  override def upload(src: Path, dst: String): String = {
+    // We copy files to another path. We do *not* want to symlink them, as original files can disapear at any time.
+    val target = rootDir.resolve(dst)
+    FileUtils.recursiveCopy(src, target)
+    target.toAbsolutePath.toString
   }
 }

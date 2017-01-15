@@ -18,7 +18,7 @@
 
 namespace java fr.cnrs.liris.accio.agent
 
-include "fr/cnrs/liris/accio/core/application/agent.thrift"
+include "fr/cnrs/liris/accio/core/service/agent.thrift"
 
 service AgentService {
   agent.GetOperatorResponse getOperator(1: agent.GetOperatorRequest req);

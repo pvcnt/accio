@@ -29,6 +29,7 @@ import com.twitter.finagle.Dtab
 import com.twitter.finatra.http.HttpServer
 import com.twitter.finatra.http.filters.CommonFilters
 import com.twitter.finatra.http.routing.HttpRouter
+import fr.cnrs.liris.accio.core.infra.jackson.AccioFinatraJacksonModule
 import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
@@ -39,9 +40,9 @@ class AccioGateway extends HttpServer {
   private[this] val enableUi = flag("ui", false, "Whether to enable the web-based user interface")
 
   loadLogbackConfig()
-  //readDtab()
+  readDtab()
 
-  override protected def modules = Seq(GatewayModule)
+  override protected def modules = Seq(AccioFinatraJacksonModule, GatewayModule)
 
   override protected def configureHttp(router: HttpRouter): Unit = {
     router

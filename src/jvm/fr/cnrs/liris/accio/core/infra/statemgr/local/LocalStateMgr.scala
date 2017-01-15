@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.core.infra.statemgr.local
 import java.nio.file.{Files, Path}
 
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.core.application.{Lock, StateManager}
+import fr.cnrs.liris.accio.core.service.{Lock, StateManager}
 import fr.cnrs.liris.accio.core.domain.{Task, TaskId}
 import fr.cnrs.liris.accio.core.infra.util.LocalStorage
 import fr.cnrs.liris.common.util.{FileLock, FileUtils}
@@ -34,7 +34,7 @@ import fr.cnrs.liris.common.util.{FileLock, FileUtils}
  */
 final class LocalStateMgr(rootDir: Path) extends LocalStorage(locking = true) with StateManager with StrictLogging {
 
-  override def createLock(key: String): Lock = new LocalLock(key)
+  override def lock(key: String): Lock = new LocalLock(key)
 
   override def tasks: Set[Task] = {
     tasksPath.toFile.listFiles.filter(_.isFile).flatMap(file => get(TaskId(file.getName))).toSet

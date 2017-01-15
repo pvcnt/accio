@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.core.infra.statemgr.local
 import java.nio.file.Path
 
 import com.google.inject.Provides
-import fr.cnrs.liris.accio.core.application.{Configurable, StateManager}
+import fr.cnrs.liris.accio.core.service.{Configurable, StateManager}
 import net.codingwell.scalaguice.ScalaModule
 
 /**

@@ -3,7 +3,7 @@ package fr.cnrs.liris.accio.core.infra.jackson
 /**
  * Unit tests of [[ScroogeStructDeserializer]].
  */
-class ScroogeStructDeserializerSpec extends ScroogeSpec {
+class ScroogeStructDeserializerSpec extends JacksonSpec {
   behavior of "ScroogeStructDeserializer"
 
   it should "deserialize simple struct" in {

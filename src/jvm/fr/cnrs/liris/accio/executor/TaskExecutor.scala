@@ -26,8 +26,8 @@ import com.google.inject.{Inject, Singleton}
 import com.twitter.util.{Await, ExecutorServiceFuturePool, Future}
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.agent.AgentService
-import fr.cnrs.liris.accio.core.application.handler.{CompleteTaskRequest, HeartbeatRequest, StreamLogsRequest}
-import fr.cnrs.liris.accio.core.application.{OpExecutor, OpExecutorOpts}
+import fr.cnrs.liris.accio.core.service.handler.{CompleteTaskRequest, HeartbeatRequest, StreamLogsRequest}
+import fr.cnrs.liris.accio.core.service.{OpExecutor, OpExecutorOpts}
 import fr.cnrs.liris.accio.core.domain._
 
 import scala.collection.mutable

@@ -1,5 +1,5 @@
 # In Sync with Finatra's version.
-VERSION = '2.6.5'
+VERSION = '2.8.4'
 
 jar_library(
   name='core',

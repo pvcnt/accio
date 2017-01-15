@@ -20,41 +20,18 @@ package fr.cnrs.liris.accio.core.infra.jackson
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.Module
-import com.fasterxml.jackson.databind.module.SimpleModule
 import com.twitter.finatra.json.modules.FinatraJacksonModule
-import fr.cnrs.liris.accio.core.domain._
 
+/**
+ * Guice module providing Jackson integration.
+ *
+ * Be careful to distinguish between [[AccioJacksonModule]], which is a Jackson module (providing serializers and
+ * deserializers) and [[AccioFinatraJacksonModule]], which is a Guice module (with additional Finatra integration)
+ * providing bindings to the Jackson object mapper.
+ */
 object AccioFinatraJacksonModule extends FinatraJacksonModule {
+  // We do not want to include None's inside JSON.
   override protected val serializationInclusion = JsonInclude.Include.NON_ABSENT
 
   override protected def additionalJacksonModules: Seq[Module] = Seq(AccioJacksonModule)
-}
-
-private object AccioJacksonModule extends SimpleModule {
-  addDeserializer(classOf[Run], new ScroogeStructDeserializer[Run](Run))
-  addDeserializer(classOf[RunId], new ScroogeStructDeserializer[RunId](RunId))
-  addDeserializer(classOf[RunState], new ScroogeStructDeserializer[RunState](RunState))
-  addDeserializer(classOf[Package], new ScroogeStructDeserializer[Package](Package))
-  addDeserializer(classOf[NodeState], new ScroogeStructDeserializer[NodeState](NodeState))
-  addDeserializer(classOf[Artifact], new ScroogeStructDeserializer[Artifact](Artifact))
-  addDeserializer(classOf[Metric], new ScroogeStructDeserializer[Metric](Metric))
-  addDeserializer(classOf[ErrorData], new ScroogeStructDeserializer[ErrorData](ErrorData))
-  addDeserializer(classOf[Error], new ScroogeStructDeserializer[Error](Error))
-  addDeserializer(classOf[RunLog], new ScroogeStructDeserializer[RunLog](RunLog))
-  addDeserializer(classOf[NodeStatus], new ScroogeEnumDeserializer[NodeStatus](NodeStatus))
-  addDeserializer(classOf[RunStatus], new ScroogeEnumDeserializer[RunStatus](RunStatus))
-
-  addDeserializer(classOf[WorkflowId], new ScroogeStructDeserializer[WorkflowId](WorkflowId))
-  addDeserializer(classOf[Workflow], new ScroogeStructDeserializer[Workflow](Workflow))
-  addDeserializer(classOf[InputDef], new ScroogeUnionDeserializer[InputDef](InputDef))
-  addDeserializer(classOf[Reference], new ScroogeStructDeserializer[Reference](Reference))
-
-  addDeserializer(classOf[Value], new ScroogeStructDeserializer[Value](Value))
-  addDeserializer(classOf[User], new ScroogeStructDeserializer[User](User))
-  addDeserializer(classOf[Value], new ScroogeStructDeserializer[Value](Value))
-  addDeserializer(classOf[DataType], new ScroogeStructDeserializer[DataType](DataType))
-  addDeserializer(classOf[AtomicType], new ScroogeEnumDeserializer[AtomicType](AtomicType))
-
-  addSerializer(new ScroogeStructSerializer)
-  addSerializer(new ScroogeEnumSerializer)
 }

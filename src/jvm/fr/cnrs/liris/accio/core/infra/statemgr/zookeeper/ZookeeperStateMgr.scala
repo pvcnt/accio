@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.core.infra.statemgr.zookeeper
 
 import com.twitter.scrooge.TArrayByteTransport
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.core.application.{Lock, StateManager}
+import fr.cnrs.liris.accio.core.service.{Lock, StateManager}
 import fr.cnrs.liris.accio.core.domain.{Task, TaskId}
 import org.apache.curator.framework.CuratorFramework
 import org.apache.curator.framework.recipes.locks.InterProcessMutex
@@ -40,7 +40,7 @@ final class ZookeeperStateMgr(client: CuratorFramework, rootPath: String)
 
   private[this] val protocolFactory = new TBinaryProtocol.Factory()
 
-  override def createLock(key: String): Lock = new ZookeeperLock(key)
+  override def lock(key: String): Lock = new ZookeeperLock(key)
 
   override def tasks: Set[Task] = {
     client.getChildren.forPath(tasksPath).asScala.toSet.flatMap((nodeName: String) => get(TaskId(nodeName)))

@@ -20,7 +20,6 @@ package fr.cnrs.liris.accio.core.domain
 
 import java.util.UUID
 
-import com.google.inject.Inject
 import fr.cnrs.liris.common.util.Seqs
 
 import scala.util.Random
@@ -28,7 +27,7 @@ import scala.util.Random
 /**
  * Factory for [[Run]].
  */
-final class RunFactory @Inject()(workflowRepository: WorkflowRepository) {
+final class RunFactory(workflowRepository: WorkflowRepository) {
   /**
    * Create one or several runs from a run template.
    *

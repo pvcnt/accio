@@ -25,7 +25,18 @@ import com.twitter.scrooge.ThriftEnum
 
 import scala.reflect._
 
+/**
+ * Jackson deserializer handling Thrift/Scrooge enums. Because enum "codecs" do not have a root type (in fact they do
+ * not inherit anything besides Any), we cannot perform any type check here, apart from the class name. It is up to
+ * the developer to provide a consistent instantiation of this class, including defining the class tag.
+ *
+ * Implementation is quite ugly, but should be stable enough for production use.
+ *
+ * @param codec Enum "codec".
+ * @tparam T Type of enum being deserialized.
+ */
 final class ScroogeEnumDeserializer[T <: ThriftEnum : ClassTag](codec: Any) extends StdDeserializer[T](classTag[T].runtimeClass.asInstanceOf[Class[T]]) {
+  // Yes, this is it. The consistency check...
   require(codec.getClass.getName == _valueClass.getName + "$")
 
   override def deserialize(jp: JsonParser, ctx: DeserializationContext): T = {
@@ -33,7 +44,7 @@ final class ScroogeEnumDeserializer[T <: ThriftEnum : ClassTag](codec: Any) exte
     val method = codec.getClass.getMethod("get", classOf[Int])
     method.invoke(codec, id: java.lang.Integer) match {
       case Some(o: T) => o
-      case None => throw new RuntimeException(s"Unable to parse $id into ${_valueClass.getName}")
+      case None => throw new ThriftProtocolException(s"Unable to parse enum value $id into ${_valueClass.getName}")
     }
   }
 }

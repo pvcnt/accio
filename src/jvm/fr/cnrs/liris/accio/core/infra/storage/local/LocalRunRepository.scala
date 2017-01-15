@@ -20,7 +20,6 @@ package fr.cnrs.liris.accio.core.infra.storage.local
 
 import java.nio.file.{Files, Path}
 
-import com.twitter.finatra.json.FinatraObjectMapper
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.infra.util.LocalStorage
 import fr.cnrs.liris.common.util.FileUtils
@@ -45,14 +44,14 @@ final class LocalRunRepository(rootDir: Path) extends LocalStorage(locking = fal
     query.status.foreach { status => results = results.filter(_.state.status == status) }
 
     // 2. Sort the results in descending chronological order.
-    results = results.sortWith((a, b) => a.createdAt < b.createdAt)
+    results = results.sortWith((a, b) => a.createdAt > b.createdAt)
 
     // 3. Count total number of results (before slicing).
     val totalCount = results.size
 
     // 4. Slice results w.r.t. to specified offset and limit.
     query.offset.foreach { offset => results = results.drop(offset) }
-    query.limit.foreach { limit => results = results.take(limit) }
+    results = results.take(query.limit)
 
     RunList(results, totalCount)
   }
@@ -66,8 +65,7 @@ final class LocalRunRepository(rootDir: Path) extends LocalStorage(locking = fal
     query.since.foreach { since => results = results.filter(_.createdAt > since.inMillis) }
 
     // 2. Sort the results in descending chronological order and slice them.
-    results = results.sortWith((a, b) => a.createdAt < b.createdAt)
-    query.limit.foreach { limit => results = results.take(limit) }
+    results = results.sortWith((a, b) => a.createdAt < b.createdAt).take(query.limit)
 
     results
   }
@@ -87,7 +85,7 @@ final class LocalRunRepository(rootDir: Path) extends LocalStorage(locking = fal
 
   override def get(id: RunId): Option[Run] = read(runPath(id), Run)
 
-  override def exists(id: RunId): Boolean = runPath(id).toFile.exists()
+  override def contains(id: RunId): Boolean = runPath(id).toFile.exists()
 
   override def remove(id: RunId): Unit = {
     FileUtils.safeDelete(runPath(id))
