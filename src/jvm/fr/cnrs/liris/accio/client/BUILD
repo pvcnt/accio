@@ -9,6 +9,7 @@ scala_library(
     'src/jvm/fr/cnrs/liris/common/util',
     'src/jvm/fr/cnrs/liris/common/flags',
     '3rdparty/jvm/com/typesafe/scala-logging',
+    '3rdparty/jvm/com/twitter/finatra:jackson',
     '3rdparty/jvm:scala-guice',
     '3rdparty/jvm:logback',
   ],
@@ -30,7 +31,7 @@ jvm_binary(
     ':client',
   ],
   resources=[
-    'src/resources/fr/cnrs/liris/accio/cli',
+    'src/resources/fr/cnrs/liris/accio/client',
   ],
   main='fr.cnrs.liris.accio.client.AccioClientMain',
   basename='accio',

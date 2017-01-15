@@ -20,12 +20,12 @@ package fr.cnrs.liris.accio.executor
 
 import com.google.inject.Inject
 import com.twitter.util.{Future, Return, Throw}
-import com.typesafe.scalalogging.LazyLogging
+import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.agent.AgentService
-import fr.cnrs.liris.accio.core.service.handler.StartTaskRequest
 import fr.cnrs.liris.accio.core.domain.TaskId
+import fr.cnrs.liris.accio.core.service.handler.StartTaskRequest
 
-class ExecutorController @Inject()(agentClient: AgentService.FinagledClient, taskExecutor: TaskExecutor) extends LazyLogging {
+class ExecutorController @Inject()(agentClient: AgentService.FinagledClient, taskExecutor: TaskExecutor) extends StrictLogging {
   def execute(opts: AccioExecutorFlags): Future[Unit] = {
     agentClient
       .startTask(StartTaskRequest(TaskId(opts.taskId)))
@@ -33,7 +33,9 @@ class ExecutorController @Inject()(agentClient: AgentService.FinagledClient, tas
         case Throw(e) =>
           logger.error("Error while registering executor", e)
           Future.Done
-        case Return(resp) => taskExecutor.submit(TaskId(opts.taskId), resp.runId, resp.nodeName, resp.payload)
+        case Return(resp) =>
+          logger.debug(s"Received task ${opts.taskId}: $resp")
+          taskExecutor.submit(TaskId(opts.taskId), resp.runId, resp.nodeName, resp.payload)
       }
   }
 }

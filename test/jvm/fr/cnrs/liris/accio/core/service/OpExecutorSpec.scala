@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.core.service
 
 import java.nio.file.{Files, Path, Paths}
 
-import com.google.inject.{Guice, TypeLiteral}
+import com.google.inject.{Guice, Injector, TypeLiteral}
 import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.common.util.FileUtils
@@ -43,7 +43,7 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
     tmpDir = Files.createTempDirectory("accio-test-")
     val injector = Guice.createInjector(MyOperatorsModule)
     val opRegistry = injector.getInstance(classOf[RuntimeOpRegistry])
-    val opFactory = injector.getInstance(classOf[OpFactory])
+    val opFactory = new OpFactory(opRegistry, injector)
     executor = new OpExecutor(opRegistry, opFactory, uploader, downloader, tmpDir.resolve("sandbox"), cleanSandbox = true)
   }
 
@@ -66,6 +66,7 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
     res.artifacts should have size 2
     res.exitCode shouldBe 0
     res.error shouldBe None
+    res.cacheKey.isDefined shouldBe true
     res.artifacts should contain(Artifact("str", DataType(AtomicType.String), Values.encodeString("foo+0")))
     res.artifacts should contain(Artifact("b", DataType(AtomicType.Boolean), Values.encodeBoolean(false)))
 
@@ -74,6 +75,7 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
     res.artifacts should have size 2
     res.exitCode shouldBe 0
     res.error shouldBe None
+    res.cacheKey.isDefined shouldBe true
     res.artifacts should contain(Artifact("str", DataType(AtomicType.String), Values.encodeString("bar+3")))
     res.artifacts should contain(Artifact("b", DataType(AtomicType.Boolean), Values.encodeBoolean(true)))
   }
@@ -84,6 +86,7 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
     res.artifacts should have size 1
     res.exitCode shouldBe 0
     res.error shouldBe None
+    res.cacheKey.isDefined shouldBe true
     res.artifacts should contain(Artifact("s", DataType(AtomicType.String), Values.encodeString("foo")))
   }
 
@@ -93,6 +96,7 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
     res.artifacts should have size 0
     res.exitCode shouldBe 0
     res.error shouldBe None
+    res.cacheKey.isDefined shouldBe true
   }
 
   it should "detect a missing input" in {
@@ -128,6 +132,7 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
     res.artifacts should have size 1
     res.exitCode shouldBe 0
     res.error shouldBe None
+    res.cacheKey.isDefined shouldBe true
     res.artifacts should contain(Artifact("lng", DataType(AtomicType.Long), Values.encodeLong(123)))
   }
 
@@ -144,11 +149,12 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
   it should "upload artifacts" in {
     val payload = OpPayload("DatasetProducer", 123, Map.empty)
     val res = executor.execute(payload, OpExecutorOpts(false))
-    uploader.keys should contain(s"${res.cacheKey}/data")
     res.artifacts should have size 1
     res.exitCode shouldBe 0
     res.error shouldBe None
-    res.artifacts should contain(Artifact("data", DataType(AtomicType.Dataset), Values.encodeDataset(Dataset(s"file://mock/${res.cacheKey}/data"))))
+    res.cacheKey.isDefined shouldBe true
+    res.artifacts should contain(Artifact("data", DataType(AtomicType.Dataset), Values.encodeDataset(Dataset(s"file://mock/${res.cacheKey.get}/data"))))
+    uploader.keys should contain(s"${res.cacheKey.get}/data")
   }
 
   it should "download inputs" in {
@@ -158,6 +164,7 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
     res.artifacts should have size 1
     res.exitCode shouldBe 0
     res.error shouldBe None
+    res.cacheKey.isDefined shouldBe true
     res.artifacts should contain(Artifact("ok", DataType(AtomicType.Boolean), Values.encodeBoolean(true)))
   }
 }

@@ -21,9 +21,8 @@ package fr.cnrs.liris.accio.core.infra.scheduler.local
 import java.nio.file.Path
 
 import com.google.inject.Provides
-import fr.cnrs.liris.accio.core.service.{Configurable, Scheduler}
 import fr.cnrs.liris.accio.core.domain.OpRegistry
-import fr.cnrs.liris.common.getter.DownloadClient
+import fr.cnrs.liris.accio.core.service.{Configurable, Downloader, Scheduler}
 import net.codingwell.scalaguice.ScalaModule
 
 /**
@@ -45,7 +44,7 @@ class LocalSchedulerModule extends ScalaModule with Configurable[LocalSchedulerC
   override protected def configure(): Unit = {}
 
   @Provides
-  def providesScheduler(opRegistry: OpRegistry, downloader: DownloadClient): Scheduler = {
+  def providesScheduler(opRegistry: OpRegistry, downloader: Downloader): Scheduler = {
     new LocalScheduler(opRegistry, downloader, config)
   }
 }

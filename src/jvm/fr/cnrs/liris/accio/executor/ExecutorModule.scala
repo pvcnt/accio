@@ -20,27 +20,35 @@ package fr.cnrs.liris.accio.executor
 
 import java.nio.file.Path
 
-import com.google.inject.Provides
+import com.google.inject.{Injector, Provides, TypeLiteral}
 import com.twitter.finagle.Thrift
 import fr.cnrs.liris.accio.agent.AgentService
-import fr.cnrs.liris.accio.core.service.{OpExecutor, Uploader}
-import fr.cnrs.liris.accio.core.domain.{OpFactory, RuntimeOpRegistry}
+import fr.cnrs.liris.accio.core.api.Operator
+import fr.cnrs.liris.accio.core.domain.{OpMetaReader, OpRegistry}
+import fr.cnrs.liris.accio.core.service._
 import fr.cnrs.liris.common.flags.inject.InjectFlag
-import fr.cnrs.liris.common.getter.DownloadClient
-import net.codingwell.scalaguice.ScalaModule
+import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
 
 object ExecutorModule extends ScalaModule {
-  override protected def configure(): Unit = {}
+  override protected def configure(): Unit = {
+    ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Class[_ <: Operator[_, _]]] {})
+    bind[OpMetaReader].to[ReflectOpMetaReader]
+    bind[OpRegistry].to[RuntimeOpRegistry]
+  }
 
   @Provides
-  def providesAgentClient(
-    @InjectFlag("agent_addr") agentAddr: String): AgentService.FinagledClient = {
+  def providesOpFactory(opRegistry: RuntimeOpRegistry, injector: Injector): OpFactory = {
+    new OpFactory(opRegistry, injector: Injector)
+  }
+
+  @Provides
+  def providesAgentClient(@InjectFlag("agent_addr") agentAddr: String): AgentService.FinagledClient = {
     val service = Thrift.newService(agentAddr)
     new AgentService.FinagledClient(service)
   }
 
   @Provides
-  def providesOpExecutor(opRegistry: RuntimeOpRegistry, opFactory: OpFactory, uploader: Uploader, downloader: DownloadClient, @InjectFlag("workdir") workDir: Path): OpExecutor = {
+  def providesOpExecutor(opRegistry: RuntimeOpRegistry, opFactory: OpFactory, uploader: Uploader, downloader: Downloader, @InjectFlag("workdir") workDir: Path): OpExecutor = {
     new OpExecutor(opRegistry, opFactory, uploader, downloader, workDir)
   }
 }

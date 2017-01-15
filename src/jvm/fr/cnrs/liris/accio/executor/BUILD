@@ -5,13 +5,11 @@ scala_library(
     'src/jvm/fr/cnrs/liris/accio/core/service',
     'src/jvm/fr/cnrs/liris/accio/core/infra/downloader',
     'src/jvm/fr/cnrs/liris/accio/core/infra/uploader/local',
-    'src/jvm/fr/cnrs/liris/accio/core/infra/inject',
     'src/thrift/fr/cnrs/liris/accio/core/domain',
     'src/thrift/fr/cnrs/liris/accio/agent',
 
     'src/jvm/fr/cnrs/liris/common/flags',
     'src/jvm/fr/cnrs/liris/common/flags/inject',
-    'src/jvm/fr/cnrs/liris/common/getter',
     'src/jvm/fr/cnrs/liris/privamov/ops',
 
     '3rdparty/jvm/com/typesafe/scala-logging',

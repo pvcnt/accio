@@ -16,24 +16,17 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.client
+package fr.cnrs.liris.accio.core.infra.scheduler
 
-import com.google.inject.{Inject, Injector, ProvisionException}
+import fr.cnrs.liris.accio.core.service.Scheduler
+import fr.cnrs.liris.testing.UnitSpec
 
 /**
- * Factory for [[Command]].
- *
- * @param injector Guice injector.
+ * Common unit tests for all [[Scheduler]] implementations, ensuring they all have consistent behavior.
  */
-final class CmdFactory @Inject()(injector: Injector) {
-  /**
-   * Create a new command.
-   *
-   * @param cmdMeta Command metadata.
-   * @throws ProvisionException If an error happens during operator instantiation.
-   */
-  @throws[ProvisionException]
-  def create(cmdMeta: CmdMeta): Command = {
-    injector.getInstance(cmdMeta.cmdClass)
+private[scheduler] abstract class SchedulerSpec extends UnitSpec {
+  protected def createScheduler: Scheduler
+
+  it should "schedule a task" in {
   }
 }

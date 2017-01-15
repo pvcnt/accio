@@ -18,8 +18,7 @@
 
 package fr.cnrs.liris.accio.client
 
-import com.google.inject.{AbstractModule, Provides, Singleton, TypeLiteral}
-import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
+import com.google.inject.{AbstractModule, TypeLiteral}
 import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
 
 /**

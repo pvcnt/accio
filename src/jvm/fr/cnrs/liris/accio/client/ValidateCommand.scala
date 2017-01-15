@@ -18,32 +18,28 @@
 
 package fr.cnrs.liris.accio.client
 
-import com.google.inject.Inject
 import com.twitter.finatra.json.internal.caseclass.exceptions.CaseClassMappingException
 import com.twitter.finatra.validation.ErrorCode._
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.core.runtime.{IllegalWorkflowException, RunParser, WorkflowFactory, WorkflowParser}
-import fr.cnrs.liris.accio.core.workflow.{RunParser, User}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 
-case class ValidateOptions(
-  @Flag(name = "keep-going", help = "Whether to continue validating other files once an error occurred")
+case class ValidateFlags(
+  @Flag(name = "keep_going", help = "Whether to continue validating other files once an error occurred")
   keepGoing: Boolean = true)
 
 @Cmd(
   name = "validate",
   help = "Validate the syntax of Accio configuration files.",
-  flags = Array(classOf[ValidateOptions]),
+  flags = Array(classOf[ValidateFlags]),
   allowResidue = true)
-class ValidateCommand @Inject()(experimentFactory: ExperimentFactory, experimentParser: RunParser, workflowFactory: WorkflowFactory, workflowParser: WorkflowParser)
-  extends Command with StrictLogging {
+class ValidateCommand extends Command with StrictLogging {
 
   def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     if (flags.residue.isEmpty) {
       out.writeln("<error>Specify one or multiple files to validate as arguments.</error>")
       ExitCode.CommandLineError
     } else {
-      val opts = flags.as[ValidateOptions]
+      val opts = flags.as[ValidateFlags]
       var valid = true
       var i = 0
       while (i < flags.residue.size) {
@@ -72,14 +68,15 @@ class ValidateCommand @Inject()(experimentFactory: ExperimentFactory, experiment
    * @return True if the definition is valid, false otherwise.
    */
   private def validate(uri: String, out: Reporter): Boolean = {
-    if (experimentParser.supports(uri)) {
+    /*if (experimentParser.supports(uri)) {
       validateExperiment(uri, out)
     } else if (workflowParser.supports(uri)) {
       validateWorkflow(uri, out)
     } else {
       out.writeln(s"<error>- Error validating $uri: Neither an experiment or a workflow file.</error>")
       false
-    }
+    }*/
+    true
   }
 
   /**
@@ -91,7 +88,7 @@ class ValidateCommand @Inject()(experimentFactory: ExperimentFactory, experiment
    * @return True if the definition is valid, false otherwise.
    */
   private def validateExperiment(uri: String, out: Reporter) = {
-    try {
+    /*try {
       experimentFactory.create(uri, ExperimentArgs())
       true
     } catch {
@@ -103,7 +100,7 @@ class ValidateCommand @Inject()(experimentFactory: ExperimentFactory, experiment
         out.writeln(s"<error>- Error while validating workflow of experiment $uri</error>")
         out.writeln(s"<error>Try 'accio validate $uri' for more information.</error>")
         false
-    }
+    }*/
   }
 
   /**
@@ -115,7 +112,7 @@ class ValidateCommand @Inject()(experimentFactory: ExperimentFactory, experiment
    * @return True if the definition is valid, false otherwise.
    */
   private def validateWorkflow(uri: String, out: Reporter) = {
-    try {
+    /*try {
       workflowFactory.create(uri, User.Default)
       true
     } catch {
@@ -123,7 +120,7 @@ class ValidateCommand @Inject()(experimentFactory: ExperimentFactory, experiment
         out.writeln(s"<error>- Error validating workflow $uri</error>")
         explainException(e, out, level = 1)
         false
-    }
+    }*/
   }
 
   /**

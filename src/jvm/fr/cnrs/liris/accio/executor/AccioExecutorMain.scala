@@ -24,9 +24,8 @@ import com.google.inject.{Guice, Module}
 import com.twitter.util.Await
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.core.infra.downloader.GetterDownloaderModule
-import fr.cnrs.liris.accio.core.service.Configurator
-import fr.cnrs.liris.accio.core.infra.inject.AccioCoreModule
 import fr.cnrs.liris.accio.core.infra.uploader.local.{LocalUploaderConfig, LocalUploaderModule}
+import fr.cnrs.liris.accio.core.service.Configurator
 import fr.cnrs.liris.common.flags.inject.FlagsModule
 import fr.cnrs.liris.common.flags.{Flag, FlagsParser}
 import fr.cnrs.liris.privamov.ops.OpsModule
@@ -36,7 +35,7 @@ import scala.collection.mutable
 case class AccioExecutorFlags(
   @Flag(name = "id") taskId: String,
   @Flag(name = "agent_addr") agentAddr: String,
-  @Flag(name = "uploader.type") uploaderType: String,
+  @Flag(name = "uploader.type") uploaderType: String = "local",
   @Flag(name = "uploader.local.path") localUploaderPath: Option[Path],
   @Flag(name = "workdir") workDir: Path = Paths.get("."))
 
@@ -48,7 +47,7 @@ class AccioExecutor extends LazyLogging {
     parser.parseAndExitUponError(args)
     val opts = parser.as[AccioExecutorFlags]
 
-    val modules = mutable.ListBuffer[Module](FlagsModule(parser), ExecutorModule, OpsModule, AccioCoreModule, GetterDownloaderModule)
+    val modules = mutable.ListBuffer[Module](FlagsModule(parser), GetterDownloaderModule, OpsModule, ExecutorModule)
     opts.uploaderType match {
       case "local" => modules += new LocalUploaderModule
       case unknown => throw new IllegalArgumentException(s"Unknown uploader type: $unknown")

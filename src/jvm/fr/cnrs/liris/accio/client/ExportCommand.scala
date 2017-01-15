@@ -21,13 +21,10 @@ package fr.cnrs.liris.accio.client
 import java.nio.file.{Path, Paths}
 import java.util.UUID
 
-import com.google.inject.Inject
-import com.twitter.util.Stopwatch
-import fr.cnrs.liris.accio.core.reporting.{AggregatedRuns, ArtifactList, CsvReportCreator, CsvReportOptions}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
-import fr.cnrs.liris.common.util.{FileUtils, HashUtils, StringUtils, TimeUtils}
+import fr.cnrs.liris.common.util.{FileUtils, HashUtils}
 
-case class ExportOptions(
+case class ExportFlags(
   @Flag(name = "workdir", help = "Working directory where to write the export")
   workDir: Option[String],
   @Flag(name = "separator", help = "Separator to use in generated files")
@@ -45,14 +42,14 @@ case class ExportOptions(
 
 @Cmd(
   name = "export",
-  flags = Array(classOf[ExportOptions]),
+  flags = Array(classOf[ExportFlags]),
   help = "Generate text reports from run artifacts.",
   description = "This command is intended to create summarized and readable CSV reports from the output of previous runs.",
   allowResidue = true)
-class ExportCommand @Inject()(repository: ReportRepository) extends Command {
+class ExportCommand extends Command {
 
   override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
-    if (flags.residue.isEmpty) {
+    /*if (flags.residue.isEmpty) {
       out.writeln("<error>Specify one or multiple directories as argument.</error>")
       ExitCode.CommandLineError
     } else {
@@ -69,22 +66,24 @@ class ExportCommand @Inject()(repository: ReportRepository) extends Command {
 
       out.writeln(s"Done in ${TimeUtils.prettyTime(elapsed())}.")
       ExitCode.Success
-    }
+    }*/
+
+    ExitCode.Success
   }
 
-  private def getWorkDir(opts: ExportOptions): Path = opts.workDir match {
+  private def getWorkDir(opts: ExportFlags): Path = opts.workDir match {
     case Some(dir) => FileUtils.expandPath(dir)
     case None =>
       val uid = HashUtils.sha1(UUID.randomUUID().toString).substring(0, 8)
       Paths.get(s"accio-export-$uid")
   }
 
-  private def getArtifacts(residue: Seq[String], opts: ExportOptions): ArtifactList = {
+  /*private def getArtifacts(residue: Seq[String], opts: ExportFlags): ArtifactList = {
     val runs = residue.flatMap { uri =>
       val path = FileUtils.expandPath(uri)
       repository.listRuns(path).flatMap(repository.readRun(path, _))
     }
     val aggRuns = new AggregatedRuns(runs).filter(StringUtils.explode(opts.runs, ","))
     aggRuns.artifacts.filter(StringUtils.explode(opts.artifacts))
-  }
+  }*/
 }

@@ -19,7 +19,7 @@
 package fr.cnrs.liris.accio.client
 
 import com.google.inject.Inject
-import fr.cnrs.liris.accio.core.domain.OpMeta
+import fr.cnrs.liris.accio.core.domain.{OpDef, OpRegistry, Utils}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.reflect.CaseClass
 import fr.cnrs.liris.common.util.StringUtils
@@ -29,7 +29,7 @@ import fr.cnrs.liris.common.util.StringUtils
   help = "Display built-in Accio help.",
   description = "Prints a help page for the given command or topic, or, if nothing is specified, prints the index of available commands.",
   allowResidue = true)
-class HelpCommand @Inject()(commandRegistry: CmdRegistry, opRegistry: OpRegistry) extends Command {
+class HelpCommand @Inject()(cmdRegistry: CmdRegistry, opRegistry: OpRegistry) extends Command {
 
   override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     flags.residue match {
@@ -43,7 +43,7 @@ class HelpCommand @Inject()(commandRegistry: CmdRegistry, opRegistry: OpRegistry
         ExitCode.Success
       case Seq(helpTopic) =>
         // Help topic.
-        commandRegistry.get(helpTopic) match {
+        cmdRegistry.get(helpTopic) match {
           case Some(meta) =>
             // Help topic: display details about a command.
             printCommand(out, meta)
@@ -71,8 +71,8 @@ class HelpCommand @Inject()(commandRegistry: CmdRegistry, opRegistry: OpRegistry
     out.writeln("Usage: accio <command> <options>...")
     out.writeln()
     out.writeln("<info>Available commands:</info>")
-    val maxLength = commandRegistry.commands.filterNot(_.defn.hidden).map(_.defn.name.length).max
-    commandRegistry.commands.toSeq.sortBy(_.defn.name).foreach { command =>
+    val maxLength = cmdRegistry.commands.filterNot(_.defn.hidden).map(_.defn.name.length).max
+    cmdRegistry.commands.toSeq.sortBy(_.defn.name).foreach { command =>
       val padding = " " * (maxLength - command.defn.name.length)
       out.writeln(s"  <comment>${command.defn.name}</comment>$padding ${command.defn.help}")
     }
@@ -116,41 +116,41 @@ class HelpCommand @Inject()(commandRegistry: CmdRegistry, opRegistry: OpRegistry
   }
 
   private def printOpSummary(out: Reporter) = {
-    val maxLength = opRegistry.ops.map(_.defn.name.length).max
-    opRegistry.ops.toSeq.sortBy(_.defn.name).groupBy(_.defn.category).foreach { case (category, ops) =>
+    val maxLength = opRegistry.ops.map(_.name.length).max
+    opRegistry.ops.toSeq.sortBy(_.name).groupBy(_.category).foreach { case (category, ops) =>
       out.writeln(s"<info>Operators in $category category:</info>")
       ops.foreach { op =>
-        val padding = " " * (maxLength - op.defn.name.length)
-        out.writeln(s"  <comment>${op.defn.name}</comment>$padding ${op.defn.help.getOrElse("")}")
+        val padding = " " * (maxLength - op.name.length)
+        out.writeln(s"  <comment>${op.name}</comment>$padding ${op.help.getOrElse("")}")
       }
       out.writeln()
     }
   }
 
-  private def printOp(out: Reporter, meta: OpMeta) = {
-    out.writeln(s"<comment>${meta.defn.name}</comment> (${meta.defn.category})")
+  private def printOp(out: Reporter, opDef: OpDef) = {
+    out.writeln(s"<comment>${opDef.name}</comment> (${opDef.category})")
     out.writeln()
-    meta.defn.deprecation.foreach { deprecation =>
+    opDef.deprecation.foreach { deprecation =>
       out.writeln(s"<error>Deprecated: $deprecation</error>")
       out.writeln()
     }
-    meta.defn.help.foreach { help =>
+    opDef.help.foreach { help =>
       out.writeln(help)
       out.writeln()
     }
-    meta.defn.description.foreach { description =>
+    opDef.description.foreach { description =>
       out.writeln(StringUtils.paragraphFill(description, 80))
       out.writeln()
     }
-    printOpInputs(out, meta)
-    printOpOutputs(out, meta)
+    printOpInputs(out, opDef)
+    printOpOutputs(out, opDef)
   }
 
-  private def printOpInputs(out: Reporter, meta: OpMeta) = {
+  private def printOpInputs(out: Reporter, opDef: OpDef) = {
     out.writeln(s"<info>Available inputs:</info>")
-    meta.defn.inputs.foreach { argDef =>
-      out.write(s"  - ${argDef.name} (${argDef.kind.typeDescription}")
-      if (argDef.defaultValue.isDefined && argDef.defaultValue.get != None) {
+    opDef.inputs.foreach { argDef =>
+      out.write(s"  - ${argDef.name} (${Utils.describe(argDef.kind)}")
+      if (argDef.defaultValue.isDefined) {
         out.write(s"; default: ${argDef.defaultValue.get}")
       }
       if (argDef.isOptional) {
@@ -162,11 +162,11 @@ class HelpCommand @Inject()(commandRegistry: CmdRegistry, opRegistry: OpRegistry
     }
   }
 
-  private def printOpOutputs(out: Reporter, meta: OpMeta) = {
-    if (meta.defn.outputs.nonEmpty) {
+  private def printOpOutputs(out: Reporter, opDef: OpDef) = {
+    if (opDef.outputs.nonEmpty) {
       out.writeln("<info>Available outputs:</info>")
-      meta.defn.outputs.foreach { outputDef =>
-        out.write(s"  - ${outputDef.name} (${outputDef.kind.typeDescription})")
+      opDef.outputs.foreach { outputDef =>
+        out.write(s"  - ${outputDef.name} (${Utils.describe(outputDef.kind)})")
         out.writeln()
         outputDef.help.foreach(help => out.writeln(StringUtils.paragraphFill(help, 80, 4)))
       }

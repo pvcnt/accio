@@ -56,19 +56,18 @@ class CmdDispatcher @Inject()(registry: CmdRegistry, factory: CmdFactory, rcPars
       case Some(m) => m
     }
 
-    val parser = FlagsParser(meta.defn.allowResidue, meta.defn.flags ++ Seq(classOf[AccioOpts]): _*)
+    val parser = FlagsParser(meta.defn.allowResidue, meta.defn.flags ++ Seq(classOf[AccioFlags]): _*)
     parser.parseAndExitUponError(commonArgs)
-    val commonOpts = parser.as[AccioOpts]
+    val commonOpts = parser.as[AccioFlags]
 
     val accioRcArgs = rcParser.parse(commonOpts.accioRcPath, commonOpts.accioRcConfig, cmdName)
     parser.parseAndExitUponError(accioRcArgs, Priority.RcFile)
     parser.parseAndExitUponError(otherArgs)
 
-    // Configure logging level for Accio- and Privamov-related code. Other logging configuration is done in an ordinary
+    // Configure logging level for Accio-related code. Other logging configuration is done in an ordinary
     // logback.xml loaded at the very beginning of the main.
     val logLevel = Level.toLevel(commonOpts.logLevel)
     LoggerFactory.getLogger("fr.cnrs.liris.accio").asInstanceOf[Logger].setLevel(logLevel)
-    LoggerFactory.getLogger("fr.cnrs.liris.privamov").asInstanceOf[Logger].setLevel(logLevel)
     logger.info(s"Set logging level: $logLevel")
 
     try {

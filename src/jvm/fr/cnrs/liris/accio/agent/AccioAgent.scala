@@ -25,7 +25,6 @@ import ch.qos.logback.core.util.StatusPrinter
 import com.google.inject.Module
 import com.twitter.finatra.thrift.ThriftServer
 import com.twitter.finatra.thrift.routing.ThriftRouter
-import fr.cnrs.liris.accio.core.infra.inject.AccioCoreModule
 import fr.cnrs.liris.accio.core.infra.jackson.AccioFinatraJacksonModule
 import fr.cnrs.liris.privamov.ops.OpsModule
 import org.slf4j.LoggerFactory
@@ -35,7 +34,7 @@ object AccioAgentMain extends AccioAgent
 class AccioAgent extends ThriftServer {
   loadLogbackConfig()
 
-  override protected def modules: Seq[Module] = Seq(AccioCoreModule, AccioFinatraJacksonModule, OpsModule, AgentModule)
+  override protected def modules: Seq[Module] = Seq(AccioFinatraJacksonModule, OpsModule, AgentModule)
 
   override protected def configureThrift(router: ThriftRouter): Unit = {
     router.add[AgentController]

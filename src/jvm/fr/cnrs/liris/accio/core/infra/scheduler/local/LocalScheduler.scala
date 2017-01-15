@@ -23,9 +23,8 @@ import java.util.UUID
 import java.util.concurrent.{ConcurrentHashMap, Executors}
 
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.core.service.Scheduler
 import fr.cnrs.liris.accio.core.domain._
-import fr.cnrs.liris.common.getter.DownloadClient
+import fr.cnrs.liris.accio.core.service.{Downloader, Scheduler}
 import fr.cnrs.liris.common.util.{FileUtils, HashUtils}
 
 import scala.collection.JavaConverters._
@@ -38,10 +37,10 @@ import scala.collection.mutable
  * (by definition...) nor resource constraints.
  *
  * @param opRegistry Operator registry.
- * @param downloader Download client.
+ * @param downloader Downloader.
  * @param config     Scheduler configuration.
  */
-class LocalScheduler(opRegistry: OpRegistry, downloader: DownloadClient, config: LocalSchedulerConfig)
+class LocalScheduler(opRegistry: OpRegistry, downloader: Downloader, config: LocalSchedulerConfig)
   extends Scheduler with StrictLogging {
 
   private[this] val monitors = new ConcurrentHashMap[String, TaskMonitor].asScala

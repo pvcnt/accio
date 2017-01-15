@@ -20,16 +20,20 @@ package fr.cnrs.liris.accio.agent
 
 import java.nio.file.{Path, Paths}
 
-import com.google.inject.Module
+import com.google.inject.{Injector, Module, Provides, TypeLiteral}
 import com.twitter.inject.TwitterModule
 import com.twitter.util.Duration
-import fr.cnrs.liris.accio.core.service.Configurator
+import fr.cnrs.liris.accio.core.api.Operator
+import fr.cnrs.liris.accio.core.domain._
+import fr.cnrs.liris.accio.core.infra.downloader.GetterDownloaderModule
 import fr.cnrs.liris.accio.core.infra.scheduler.local.{LocalSchedulerConfig, LocalSchedulerModule}
 import fr.cnrs.liris.accio.core.infra.statemgr.local.{LocalStateMgrConfig, LocalStateMgrModule}
 import fr.cnrs.liris.accio.core.infra.statemgr.zookeeper.{ZookeeperStateMgrConfig, ZookeeperStateMgrModule}
 import fr.cnrs.liris.accio.core.infra.storage.elastic.{ElasticStorageConfig, ElasticStorageModule}
 import fr.cnrs.liris.accio.core.infra.storage.local.{LocalStorageConfig, LocalStorageModule}
 import fr.cnrs.liris.accio.core.infra.uploader.local.{LocalUploaderConfig, LocalUploaderModule}
+import fr.cnrs.liris.accio.core.service._
+import net.codingwell.scalaguice.ScalaMultibinder
 
 import scala.collection.mutable
 
@@ -58,6 +62,7 @@ object AgentModule extends TwitterModule {
 
   protected override def configure(): Unit = {
     val modules = mutable.ListBuffer.empty[Module]
+    modules += GetterDownloaderModule
 
     // Bind correct modules.
     _schedulerType() match {
@@ -91,5 +96,34 @@ object AgentModule extends TwitterModule {
     configurator.initialize(modules: _*)
 
     modules.foreach(install)
+
+    ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Class[_ <: Operator[_, _]]] {})
+    bind[OpMetaReader].to[ReflectOpMetaReader]
+    bind[OpRegistry].to[RuntimeOpRegistry]
+  }
+
+  @Provides
+  def providesOpFactory(opRegistry: RuntimeOpRegistry, injector: Injector): OpFactory = {
+    new OpFactory(opRegistry, injector: Injector)
+  }
+
+  @Provides
+  def providesSchedulerService(scheduler: Scheduler, stateManager: StateManager): SchedulerService = {
+    new SchedulerService(scheduler: Scheduler, stateManager: StateManager)
+  }
+
+  @Provides
+  def providesGraphFactory(opRegistry: OpRegistry): GraphFactory = {
+    new GraphFactory(opRegistry)
+  }
+
+  @Provides
+  def providesWorkflowFactory(graphFactory: GraphFactory, opRegistry: OpRegistry): WorkflowFactory = {
+    new WorkflowFactory(graphFactory, opRegistry)
+  }
+
+  @Provides
+  def providesRunFactory(workflowRepository: WorkflowRepository): RunFactory = {
+    new RunFactory(workflowRepository)
   }
 }

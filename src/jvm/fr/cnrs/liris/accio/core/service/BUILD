@@ -7,6 +7,7 @@ scala_library(
     'src/jvm/fr/cnrs/liris/common/reflect',
     '3rdparty/jvm/org/scalanlp:breeze',
     '3rdparty/jvm/com/typesafe/scala-logging',
+    '3rdparty/jvm/com/google/guice',
   ],
   sources=globs('*.scala')
 )

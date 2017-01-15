@@ -60,7 +60,7 @@ class MissingOpInput(val op: String, val arg: String) extends Exception(s"Missin
  * @param workDir      Working directory where per-operator sandboxes will be created.
  * @param cleanSandbox Whether to clean sandbox immediately after operator completion.
  */
-class OpExecutor(
+final class OpExecutor(
   opRegistry: RuntimeOpRegistry,
   opFactory: OpFactory,
   uploader: Uploader,
@@ -114,7 +114,7 @@ class OpExecutor(
     val profiler = if (opts.useProfiler) new JvmProfiler else NullProfiler
 
     // The actual operator is the only profiled section. The outcome is either an output object or an exception.
-    logger.debug(s"Starting execution of operator ${opDef.name}")
+    logger.debug(s"Starting execution of operator ${opDef.name} (sandbox in ${sandboxDir.toAbsolutePath})")
     val res = profiler.profile {
       try {
         Left(operator.execute(in, ctx))
@@ -136,9 +136,10 @@ class OpExecutor(
       // Sandbox directory can now be deleted. Caveat: If there was a fatal error before, this line will never be
       // reached and it will not be deleted.
       FileUtils.safeDelete(sandboxDir)
+      logger.debug(s"Cleaned operator ${opDef.name} sandbox in ${sandboxDir.toAbsolutePath}")
     }
 
-    OpResult(exitCode, error, artifacts, metrics, cacheKey)
+    OpResult(exitCode, error, artifacts, metrics, Some(cacheKey))
   }
 
   /**

@@ -22,9 +22,7 @@ import java.nio.file.Path
 
 import com.google.inject.Guice
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.core.runtime.FrameworkModule
 import fr.cnrs.liris.common.flags._
-import fr.cnrs.liris.privamov.ops.OpsModule
 
 object AccioClientMain extends AccioClient
 
@@ -33,13 +31,15 @@ object AccioClientMain extends AccioClient
  *
  * @param logLevel Logging level.
  */
-case class AccioOpts(
+case class AccioFlags(
   @Flag(name = "logging", help = "Logging level")
   logLevel: String = "warn",
   @Flag(name = "acciorc", help = "Path to the .acciorc configuration file")
   accioRcPath: Option[Path],
   @Flag(name = "config")
-  accioRcConfig: Option[String])
+  accioRcConfig: Option[String],
+  @Flag(name = "agent_addr", help = "Address to the Accio agent")
+  agentAddr: Option[String])
 
 /**
  * Entry point of the Accio command line application. Very little is done here, it is the job of [[Command]]s
@@ -48,10 +48,10 @@ case class AccioOpts(
 class AccioClient extends StrictLogging {
   def main(args: Array[String]): Unit = {
     // Change the path of logback's configuration file to match Pants resource naming.
-    sys.props("logback.configurationFile") = "fr/cnrs/liris/accio/cli/logback.xml"
+    sys.props("logback.configurationFile") = "fr/cnrs/liris/accio/client/logback.xml"
 
     val reporter = new StreamReporter(Console.out, useColors = true)
-    val injector = Guice.createInjector(FrameworkModule, ClientModule, OpsModule, LocalRuntimeModule)
+    val injector = Guice.createInjector(ClientModule)
     val dispatcher = injector.getInstance(classOf[CmdDispatcher])
     val exitCode = dispatcher.exec(args, reporter)
 

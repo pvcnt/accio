@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.core.infra.statemgr
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 
-import fr.cnrs.liris.accio.core.service.{Lock, StateManager}
+import fr.cnrs.liris.accio.core.service.StateManager
 import fr.cnrs.liris.accio.testing.Tasks
 import fr.cnrs.liris.testing.UnitSpec
 

@@ -16,24 +16,19 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.client
-
-import com.google.inject.{Inject, Injector, ProvisionException}
+package fr.cnrs.liris.accio.core.domain
 
 /**
- * Factory for [[Command]].
- *
- * @param injector Guice injector.
+ * Operator registry embedding static definitions (i.e., known when instantiating the object).
  */
-final class CmdFactory @Inject()(injector: Injector) {
-  /**
-   * Create a new command.
-   *
-   * @param cmdMeta Command metadata.
-   * @throws ProvisionException If an error happens during operator instantiation.
-   */
-  @throws[ProvisionException]
-  def create(cmdMeta: CmdMeta): Command = {
-    injector.getInstance(cmdMeta.cmdClass)
-  }
+class StaticOpRegistry(defns: Set[OpDef]) extends OpRegistry {
+  private[this] val index = defns.map(opDef => opDef.name -> opDef).toMap
+
+  override def ops: Set[OpDef] = index.values.toSet
+
+  override def contains(name: String): Boolean = index.contains(name)
+
+  override def get(name: String): Option[OpDef] = index.get(name)
+
+  override def apply(name: String): OpDef = index(name)
 }
