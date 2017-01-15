@@ -24,7 +24,6 @@ import java.util.UUID
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.api.{OpContext, Operator}
 import fr.cnrs.liris.accio.core.domain._
-import fr.cnrs.liris.common.getter.DownloadClient
 import fr.cnrs.liris.common.util.{FileUtils, HashUtils}
 
 import scala.util.control.NonFatal
@@ -65,7 +64,7 @@ class OpExecutor(
   opRegistry: RuntimeOpRegistry,
   opFactory: OpFactory,
   uploader: Uploader,
-  downloader: DownloadClient,
+  downloader: Downloader,
   workDir: Path,
   cleanSandbox: Boolean = true)
   extends StrictLogging {
@@ -76,11 +75,16 @@ class OpExecutor(
    *
    * @param payload Operator payload.
    * @param opts    Executor options.
-   * @throws MissingOpInput If an input is missing.
+   * @throws UnknownOperatorException If the operator is unknown.
+   * @throws MissingOpInput           If an input is missing.
    * @return Result of the operator execution.
    */
+  @throws[UnknownOperatorException]
   @throws[MissingOpInput]
   def execute(payload: OpPayload, opts: OpExecutorOpts): OpResult = {
+    if (!opRegistry.contains(payload.op)) {
+      throw new UnknownOperatorException(payload.op)
+    }
     val opDef = opRegistry(payload.op)
     val operator = opFactory.create(opDef)
     execute(operator, opDef, payload, opts)

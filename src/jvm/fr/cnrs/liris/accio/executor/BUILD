@@ -3,6 +3,7 @@ scala_library(
   dependencies=[
     'src/jvm/fr/cnrs/liris/accio/core/domain',
     'src/jvm/fr/cnrs/liris/accio/core/service',
+    'src/jvm/fr/cnrs/liris/accio/core/infra/downloader',
     'src/jvm/fr/cnrs/liris/accio/core/infra/uploader/local',
     'src/jvm/fr/cnrs/liris/accio/core/infra/inject',
     'src/thrift/fr/cnrs/liris/accio/core/domain',

@@ -23,6 +23,7 @@ import java.nio.file.{Path, Paths}
 import com.google.inject.{Guice, Module}
 import com.twitter.util.Await
 import com.typesafe.scalalogging.LazyLogging
+import fr.cnrs.liris.accio.core.infra.downloader.GetterDownloaderModule
 import fr.cnrs.liris.accio.core.service.Configurator
 import fr.cnrs.liris.accio.core.infra.inject.AccioCoreModule
 import fr.cnrs.liris.accio.core.infra.uploader.local.{LocalUploaderConfig, LocalUploaderModule}
@@ -47,7 +48,7 @@ class AccioExecutor extends LazyLogging {
     parser.parseAndExitUponError(args)
     val opts = parser.as[AccioExecutorFlags]
 
-    val modules = mutable.ListBuffer[Module](FlagsModule(parser), ExecutorModule, OpsModule, AccioCoreModule)
+    val modules = mutable.ListBuffer[Module](FlagsModule(parser), ExecutorModule, OpsModule, AccioCoreModule, GetterDownloaderModule)
     opts.uploaderType match {
       case "local" => modules += new LocalUploaderModule
       case unknown => throw new IllegalArgumentException(s"Unknown uploader type: $unknown")

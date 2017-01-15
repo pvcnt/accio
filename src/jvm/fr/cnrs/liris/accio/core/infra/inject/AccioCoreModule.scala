@@ -20,9 +20,8 @@ package fr.cnrs.liris.accio.core.infra.inject
 
 import com.google.inject.{Provides, TypeLiteral}
 import fr.cnrs.liris.accio.core.api.Operator
-import fr.cnrs.liris.accio.core.service.{ReflectOpMetaReader, Scheduler, SchedulerService, StateManager}
 import fr.cnrs.liris.accio.core.domain._
-import fr.cnrs.liris.common.getter.GetterModule
+import fr.cnrs.liris.accio.core.service.{ReflectOpMetaReader, Scheduler, SchedulerService, StateManager}
 import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
 
 /**
@@ -30,9 +29,6 @@ import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
  */
 object AccioCoreModule extends ScalaModule {
   override def configure(): Unit = {
-    // Install mandatory modules.
-    install(GetterModule)
-
     // Create a set binder for operators, in case no other module registers operators.
     ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Class[_ <: Operator[_, _]]] {})
 

@@ -21,22 +21,23 @@ package fr.cnrs.liris.accio.core.service
 import java.nio.file.Path
 
 /**
- * Uploaders move files or directories to a remote location.
+ * Downloaders fetch files or directories from remote locations.
  *
- * The counterpart of an uploader is a [[Downloader]]. The two inferfaces are split because executors are usually
+ * The counterpart of a downloader is an [[Uploader]]. The two inferfaces are split because executors are usually
  * tied to a specific uploader, while a downloader may support multiple ways of fetching data, thus guaranteeing
  * compatibility with multiple uploaders.
+ *
+ * Note that we do not expect to support another implementation than the standard one that can be found under the
+ * core/infra/downloader module. However, this interface is useful for better separation of concerns, and facilitates
+ * testing of objects that need a downloader.
  */
-trait Uploader {
+trait Downloader {
   /**
-   * Upload a path to a remote location. Source is guaranteed to exist, it can be either a file or a directory (both
-   * must be supported). The key identifies where the source will be placed on the remote side, which is guaranteed
-   * not to have been used previously with the same uploader. This method returns a URI, that should be designed to
-   * be directly usable with a [[Downloader]].
+   * Retrieve a file or directory from a remote location. Source URI is expected to exist. Destination path is
+   * guaranteed not to exist.
    *
-   * @param src Local source file or directory.
-   * @param key Key identifying data on the remote side.
-   * @return URI allowing to download data.
+   * @param src Source URI.
+   * @param dst Target path.
    */
-  def upload(src: Path, key: String): String
+  def download(src: String, dst: Path): Unit
 }

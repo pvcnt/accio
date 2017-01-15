@@ -18,12 +18,11 @@
 
 package fr.cnrs.liris.accio.core.service
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{Files, Path, Paths}
 
 import com.google.inject.{Guice, TypeLiteral}
 import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.accio.core.domain._
-import fr.cnrs.liris.common.getter.{DownloadClient, GetterModule}
 import fr.cnrs.liris.common.util.FileUtils
 import fr.cnrs.liris.testing.UnitSpec
 import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
@@ -36,15 +35,15 @@ import scala.collection.mutable
  */
 class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfterEach {
   private[this] val uploader = new MockUploader
+  private[this] val downloader = new MockDownloader
   private[this] var tmpDir: Path = null
   private[this] var executor: OpExecutor = null
 
   override protected def beforeAll(): Unit = {
     tmpDir = Files.createTempDirectory("accio-test-")
-    val injector = Guice.createInjector(MyOperatorsModule, GetterModule)
+    val injector = Guice.createInjector(MyOperatorsModule)
     val opRegistry = injector.getInstance(classOf[RuntimeOpRegistry])
     val opFactory = injector.getInstance(classOf[OpFactory])
-    val downloader = injector.getInstance(classOf[DownloadClient])
     executor = new OpExecutor(opRegistry, opFactory, uploader, downloader, tmpDir.resolve("sandbox"), cleanSandbox = true)
   }
 
@@ -56,6 +55,7 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
 
   override protected def beforeEach(): Unit = {
     uploader.clear()
+    downloader.clear()
   }
 
   behavior of "OpExecutor"
@@ -104,6 +104,14 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
     e.arg shouldBe "str"
   }
 
+  it should "detect an unknown operator" in {
+    val payload = OpPayload("Unknown", 123, Map.empty)
+    val e = intercept[UnknownOperatorException] {
+      executor.execute(payload, OpExecutorOpts(false))
+    }
+    e.op shouldBe "Unknown"
+  }
+
   it should "catch exceptions thrown by the operator" in {
     val payload = OpPayload("Exceptional", 123, Map("str" -> Values.encodeString("foo")))
     val res = executor.execute(payload, OpExecutorOpts(false))
@@ -142,6 +150,16 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
     res.error shouldBe None
     res.artifacts should contain(Artifact("data", DataType(AtomicType.Dataset), Values.encodeDataset(Dataset(s"file://mock/${res.cacheKey}/data"))))
   }
+
+  it should "download inputs" in {
+    val payload = OpPayload("DatasetConsumer", 123, Map("data" -> Values.encodeDataset(Dataset(s"file://data"))))
+    downloader.add("file://data")
+    val res = executor.execute(payload, OpExecutorOpts(false))
+    res.artifacts should have size 1
+    res.exitCode shouldBe 0
+    res.error shouldBe None
+    res.artifacts should contain(Artifact("ok", DataType(AtomicType.Boolean), Values.encodeBoolean(true)))
+  }
 }
 
 private object MyOperatorsModule extends ScalaModule {
@@ -155,6 +173,7 @@ private object MyOperatorsModule extends ScalaModule {
     ops.addBinding.toInstance(classOf[NoInputOp])
     ops.addBinding.toInstance(classOf[NoOutputOp])
     ops.addBinding.toInstance(classOf[DatasetProducerOp])
+    ops.addBinding.toInstance(classOf[DatasetConsumerOp])
   }
 }
 
@@ -207,6 +226,18 @@ class DatasetProducerOp extends Operator[Unit, DatasetProducerOut] {
   }
 }
 
+case class DatasetConsumerIn(@Arg data: Dataset)
+
+case class DatasetConsumerOut(@Arg ok: Boolean)
+
+@Op
+class DatasetConsumerOp extends Operator[DatasetConsumerIn, DatasetConsumerOut] {
+  override def execute(in: DatasetConsumerIn, ctx: OpContext): DatasetConsumerOut = {
+    val ok = Paths.get(in.data.uri).toFile.exists
+    DatasetConsumerOut(ok)
+  }
+}
+
 private class MockUploader extends Uploader {
   private[this] val _keys = mutable.Set.empty[String]
 
@@ -216,6 +247,20 @@ private class MockUploader extends Uploader {
   }
 
   def keys: Set[String] = _keys.toSet
+
+  def clear(): Unit = _keys.clear()
+}
+
+private class MockDownloader extends Downloader {
+  private[this] val _keys = mutable.Set.empty[String]
+
+  override def download(src: String, dst: Path): Unit = {
+    if (_keys.contains(src)) {
+      Files.createFile(dst)
+    }
+  }
+
+  def add(key: String): Unit = _keys += key
 
   def clear(): Unit = _keys.clear()
 }
