@@ -124,7 +124,7 @@ struct Run {
 
 struct RunTemplate {
   // Specification of the associated workflow.
-  1: required string pkg;
+  1: required Package pkg;
 
   // Cluster providing resources to execute the run.
   2: required string cluster;

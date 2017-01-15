@@ -23,6 +23,8 @@ import fr.cnrs.liris.accio.core.api.Dataset
 import fr.cnrs.liris.common.geo.{Distance, LatLng, Location}
 import org.joda.time.{Instant, Duration => JodaDuration}
 
+import scala.collection.JavaConverters._
+
 /**
  * Factory and converters for [[Value]].
  */
@@ -35,32 +37,163 @@ object Values {
     override def compare(x: JodaDuration, y: JodaDuration): Int = x.compareTo(y)
   }
 
-  def encode(v: Any, kind: DataType): Value = {
-    kind.base match {
-      case AtomicType.Byte => encodeByte(v.asInstanceOf[java.lang.Number].byteValue)
-      case AtomicType.Integer => encodeInteger(v.asInstanceOf[java.lang.Number].intValue)
-      case AtomicType.Long => encodeLong(v.asInstanceOf[java.lang.Number].longValue)
-      case AtomicType.Double => encodeDouble(v.asInstanceOf[java.lang.Number].doubleValue)
-      case AtomicType.String => encodeString(v.toString)
-      case AtomicType.Boolean => encodeBoolean(v.asInstanceOf[Boolean])
-      case AtomicType.Location => encodeLocation(v.asInstanceOf[Location])
-      case AtomicType.Timestamp => encodeTimestamp(v.asInstanceOf[Instant])
-      case AtomicType.Duration => encodeDuration(v.asInstanceOf[JodaDuration])
-      case AtomicType.Distance => encodeDistance(v.asInstanceOf[Distance])
-      case AtomicType.Dataset => encodeDataset(v.asInstanceOf[Dataset])
-      case AtomicType.Map =>
-        val keys = v.asInstanceOf[Map[Any, Any]].keys.toSeq.map(encode(_, DataType(kind.args.head)))
-        val values = v.asInstanceOf[Map[Any, Any]].values.toSeq.map(encode(_, DataType(kind.args.last)))
-        merge(keys.size, keys ++ values)
-      case AtomicType.List =>
-        val values = v.asInstanceOf[Seq[Any]].map(encode(_, DataType(kind.args.head)))
-        merge(values.size, values)
-      case AtomicType.Set =>
-        val values = v.asInstanceOf[Set[Any]].toSeq.map(encode(_, DataType(kind.args.head)))
-        merge(values.size, values)
-      case AtomicType.EnumUnknownAtomicType(_) => throw new IllegalArgumentException("Unknown type")
-    }
+  /**
+   * Correct a raw value to match a data type.
+   *
+   * Note: This method produce [[Any]] from [[Any]], so in appearance we do nothing. In reality the output
+   * value is of the correct Scala type and can be used later safely.
+   *
+   * @param rawValue Raw value.
+   * @param kind     Data type.
+   * @throws IllegalArgumentException If the raw value is incorrect w.r.t. the data type.
+   * @return Corrected value.
+   */
+  @throws[IllegalArgumentException]
+  def as(rawValue: Any, kind: DataType): Any = kind.base match {
+    case AtomicType.Boolean => asBoolean(rawValue)
+    case AtomicType.Byte => asByte(rawValue)
+    case AtomicType.Integer => asInteger(rawValue)
+    case AtomicType.Long => asLong(rawValue)
+    case AtomicType.Double => asDouble(rawValue)
+    case AtomicType.String => asString(rawValue)
+    case AtomicType.Location => asLocation(rawValue)
+    case AtomicType.Timestamp => asTimestamp(rawValue)
+    case AtomicType.Duration => asDuration(rawValue)
+    case AtomicType.Distance => asDistance(rawValue)
+    case AtomicType.Dataset => asDataset(rawValue)
+    case AtomicType.List => asList(rawValue, kind.args.head)
+    case AtomicType.Set => asSet(rawValue, kind.args.head)
+    case AtomicType.Map => asMap(rawValue, kind.args.head, kind.args.last)
+    case AtomicType.EnumUnknownAtomicType(_) => throw new IllegalArgumentException(s"Unknown type: $kind")
   }
+
+  def asByte(rawValue: Any): Byte = rawValue match {
+    case s: String => parseByte(s)
+    case n: java.lang.Number => n.byteValue
+    case b: Byte => b
+    case _ => throwInvalidTypeException(DataType(AtomicType.Byte), rawValue)
+  }
+
+  def asInteger(rawValue: Any): Int = rawValue match {
+    case s: String => parseInteger(s)
+    case n: java.lang.Number => n.intValue
+    case b: Byte => b
+    case s: Short => s
+    case i: Int => i
+    case _ => throwInvalidTypeException(DataType(AtomicType.Integer), rawValue)
+  }
+
+  def asLong(rawValue: Any): Long = rawValue match {
+    case s: String => parseLong(s)
+    case n: java.lang.Number => n.longValue
+    case b: Byte => b
+    case s: Short => s
+    case i: Int => i
+    case l: Long => l
+    case _ => throwInvalidTypeException(DataType(AtomicType.Long), rawValue)
+  }
+
+  def asDouble(rawValue: Any): Double = rawValue match {
+    case s: String => parseDouble(s)
+    case n: java.lang.Number => n.doubleValue
+    case b: Byte => b
+    case s: Short => s
+    case i: Int => i
+    case l: Long => l
+    case d: Double => d
+    case _ => throwInvalidTypeException(DataType(AtomicType.Double), rawValue)
+  }
+
+  def asBoolean(rawValue: Any): Boolean = rawValue match {
+    case s: String => parseBoolean(s)
+    case b: java.lang.Boolean => b.asInstanceOf[Boolean]
+    case b: Boolean => b
+    case _ => throwInvalidTypeException(DataType(AtomicType.Boolean), rawValue)
+  }
+
+  def asString(rawValue: Any): String = rawValue match {
+    case s: String => s
+    case _ => throwInvalidTypeException(DataType(AtomicType.String), rawValue)
+  }
+
+  def asLocation(rawValue: Any): Location = rawValue match {
+    case s: String => parseLocation(s)
+    case l: Location => l
+    case _ => throwInvalidTypeException(DataType(AtomicType.Location), rawValue)
+  }
+
+  def asTimestamp(rawValue: Any): Instant = rawValue match {
+    case s: String => parseTimestamp(s)
+    case i: Instant => i
+    case n: Number => new Instant(n.longValue)
+    case l: Long => new Instant(l)
+    case _ => throwInvalidTypeException(DataType(AtomicType.Timestamp), rawValue)
+  }
+
+  def asDistance(rawValue: Any): Distance = rawValue match {
+    case s: String => parseDistance(s)
+    case d: Distance => d
+    case _ => throwInvalidTypeException(DataType(AtomicType.Distance), rawValue)
+  }
+
+  def asDuration(rawValue: Any): JodaDuration = rawValue match {
+    case s: String => parseDuration(s)
+    case d: JodaDuration => d
+    case n: Number => new JodaDuration(n.longValue)
+    case l: Long => new JodaDuration(l)
+    case _ => throwInvalidTypeException(DataType(AtomicType.Duration), rawValue)
+  }
+
+  def asDataset(rawValue: Any): Dataset = rawValue match {
+    case s: String => parseDataset(s)
+    case d: Dataset => d
+    case _ => throwInvalidTypeException(DataType(AtomicType.Dataset), rawValue)
+  }
+
+  def asList(rawValue: Any, of: AtomicType): Seq[Any] = rawValue match {
+    case arr: Array[_] => arr.map(as(_, DataType(of))).toSeq
+    case seq: Seq[_] => seq.map(as(_, DataType(of)))
+    case list: java.util.List[_] => list.asScala.map(as(_, DataType(of)))
+    case _ => throwInvalidTypeException(DataType(AtomicType.List, Seq(of)), rawValue)
+  }
+
+  def asSet(rawValue: Any, of: AtomicType): Set[Any] = rawValue match {
+    case arr: Array[_] => arr.map(as(_, DataType(of))).toSet
+    case set: Set[_] => set.map(as(_, DataType(of)))
+    case set: java.util.Set[_] => set.asScala.toSet[Any].map(as(_, DataType(of)))
+    case _ => throwInvalidTypeException(DataType(AtomicType.Set, Seq(of)), rawValue)
+  }
+
+  def asMap(rawValue: Any, ofKeys: AtomicType, ofValues: AtomicType): Map[Any, Any] = rawValue match {
+    case map: Map[_, _] =>
+      map.map { case (k, v) =>
+        as(k, DataType(ofKeys)) -> as(v, DataType(ofValues))
+      }
+    case map: java.util.Map[_, _] =>
+      map.asScala.toMap.map { case (k, v) =>
+        as(k, DataType(ofKeys)) -> as(v, DataType(ofValues))
+      }
+    case _ => throwInvalidTypeException(DataType(AtomicType.Map, Seq(ofKeys, ofValues)), rawValue)
+  }
+
+  def encode(v: Any, kind: DataType): Value =
+    kind.base match {
+      case AtomicType.Byte => encodeByte(asByte(v))
+      case AtomicType.Integer => encodeInteger(asInteger(v))
+      case AtomicType.Long => encodeLong(asLong(v))
+      case AtomicType.Double => encodeDouble(asDouble(v))
+      case AtomicType.Boolean => encodeBoolean(asBoolean(v))
+      case AtomicType.String => encodeString(asString(v))
+      case AtomicType.Location => encodeLocation(asLocation(v))
+      case AtomicType.Timestamp => encodeTimestamp(asTimestamp(v))
+      case AtomicType.Duration => encodeDuration(asDuration(v))
+      case AtomicType.Distance => encodeDistance(asDistance(v))
+      case AtomicType.Dataset => encodeDataset(asDataset(v))
+      case AtomicType.Map => encodeMap(asMap(v, kind.args.head, kind.args.last), kind)
+      case AtomicType.List => encodeList(asList(v, kind.args.head), kind)
+      case AtomicType.Set => encodeSet(asSet(v, kind.args.head), kind)
+      case AtomicType.EnumUnknownAtomicType(_) => throw new IllegalArgumentException(s"Unknown type: $kind")
+    }
 
   def encodeByte(v: Byte): Value = Value(bytes = Seq(v))
 
@@ -87,12 +220,32 @@ object Values {
 
   def encodeDataset(v: Dataset): Value = Value(strings = Seq(v.uri))
 
-  def encodeMap(v: Map[Any, Any], kind: DataType): Value = {
+  def encodeList(v: Seq[_], kind: DataType): Value = {
+    require(kind.base == AtomicType.List, s"${kind.base} is not a List")
+    encodeList(v, kind.args.head)
+  }
+
+  def encodeList(v: Seq[_], of: AtomicType): Value = {
+    val values = v.map(encode(_, DataType(of)))
+    merge(values.size, values)
+  }
+
+  def encodeSet(v: Set[_], kind: DataType): Value = {
+    require(kind.base == AtomicType.Set, s"${kind.base} is not a Set")
+    encodeSet(v, kind.args.head)
+  }
+
+  def encodeSet(v: Set[_], of: AtomicType): Value = {
+    val values = v.toSeq.map(encode(_, DataType(of)))
+    merge(values.size, values)
+  }
+
+  def encodeMap(v: Map[_, _], kind: DataType): Value = {
     require(kind.base == AtomicType.Map, s"${kind.base} is not a Map")
     encodeMap(v, kind.args.head, kind.args.last)
   }
 
-  def encodeMap(v: Map[Any, Any], ofKeys: AtomicType, ofValues: AtomicType): Value = {
+  def encodeMap(v: Map[_, _], ofKeys: AtomicType, ofValues: AtomicType): Value = {
     val keys = v.keys.toSeq.map(encode(_, DataType(ofKeys)))
     val values = v.values.toSeq.map(encode(_, DataType(ofValues)))
     merge(keys.size, keys ++ values)
@@ -100,7 +253,7 @@ object Values {
 
   def toString(value: Value, kind: DataType): String = decode(value, kind).toString
 
-  def decode(value: Value, kind: DataType): Any = {
+  def decode(value: Value, kind: DataType): Any =
     kind.base match {
       case AtomicType.Byte => decodeByte(value)
       case AtomicType.Integer => decodeInteger(value)
@@ -116,9 +269,8 @@ object Values {
       case AtomicType.List => decodeList(value, kind.args.head)
       case AtomicType.Set => decodeSet(value, kind.args.head)
       case AtomicType.Map => decodeMap(value, kind.args.head, kind.args.last)
-      case AtomicType.EnumUnknownAtomicType(_) => throw new IllegalArgumentException("Unknown type")
+      case AtomicType.EnumUnknownAtomicType(_) => throw new IllegalArgumentException(s"Unknown type: $kind")
     }
-  }
 
   def decodeByte(value: Value): Byte = value.bytes.head
 
@@ -291,4 +443,7 @@ object Values {
         strings = slice(i, value.strings))
     }
   }
+
+  private def throwInvalidTypeException(kind: DataType, rawValue: Any) =
+    throw new IllegalArgumentException(s"${rawValue.getClass.getName} is not a $kind")
 }

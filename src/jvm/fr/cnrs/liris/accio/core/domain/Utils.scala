@@ -55,7 +55,12 @@ object Utils {
   private[this] val ListRegex = "^list\\s*\\(\\s*(.+?)\\s*\\)$".r
   private[this] val SetRegex = "^set\\s*\\(\\s*(.+?)\\s*\\)$".r
   private[this] val MapRegex = "^map\\s*\\(\\s*(.+?),\\s*(.+?)\\s*\\)$".r
+  private[this] val UserRegex = "(.+)<(.+)>".r
 
+  /**
+   * Return the default user, inferred from the shell user login. It has no email address. It is of course only
+   * valid in a client context.
+   */
   val DefaultUser = User(sys.props("user.name"))
   val DefaultEnvironment = "devel"
   val DefaultCluster = "default"
@@ -136,7 +141,7 @@ object Utils {
       case base => toString(base)
     }
 
-  private def describe(atomicType: AtomicType): String = toString(atomicType)
+  def describe(atomicType: AtomicType): String = toString(atomicType)
 
   /**
    * Parse a string into a dependency.
@@ -151,6 +156,17 @@ object Utils {
       require(port.nonEmpty, s"Invalid reference, empty port name: $str")
       Reference(node, port)
     case _ => throw new IllegalArgumentException(s"Invalid reference: $str")
+  }
+
+  /**
+   * Parse a string into a user. If it includes an email address, it should have the following
+   * format: `User name <handle@domain.tld>`.
+   *
+   * @param str String to parse
+   */
+  def parseUser(str: String): User = str match {
+    case UserRegex(name, email) => User(name.trim, Some(email.trim))
+    case _ => User(str, None)
   }
 
   def toString(ref: Reference): String = s"${ref.node}/${ref.port}"

@@ -33,42 +33,42 @@ class ApiController @Inject()(client: AgentService.FinagledClient) extends Contr
     response.ok("OK")
   }
 
-  get("/v1/workflow") { httpReq: ListWorkflowsHttpRequest =>
+  get("/api/v1/workflow") { httpReq: ListWorkflowsHttpRequest =>
     val offset = (httpReq.page - 1) * httpReq.perPage
     val req = ListWorkflowsRequest(limit = Some(httpReq.perPage), offset = Some(offset))
     client.listWorkflows(req)
   }
 
-  post("/v1/workflow") { req: Request =>
+  post("/api/v1/workflow") { req: Request =>
     response.badRequest
   }
 
-  get("/v1/workflow/:id") { httpReq: GetWorkflowHttpRequest =>
+  get("/api//v1/workflow/:id") { httpReq: GetWorkflowHttpRequest =>
     val req = GetWorkflowRequest(WorkflowId(httpReq.id), httpReq.version)
     client.getWorkflow(req).map(_.result)
   }
 
-  get("/v1/run") { httpReq: ListRunsHttpRequest =>
+  get("/api/v1/run") { httpReq: ListRunsHttpRequest =>
     val offset = (httpReq.page - 1) * httpReq.perPage
     val req = ListRunsRequest(limit = Some(httpReq.perPage), offset = Some(offset))
     client.listRuns(req)
   }
 
-  post("/v1/run") { req: Request =>
+  post("/api/v1/run") { req: Request =>
     response.badRequest
   }
 
-  get("/v1/run/:id") { httpReq: GetRunHttpRequest =>
+  get("/api/v1/run/:id") { httpReq: GetRunHttpRequest =>
     val req = GetRunRequest(RunId(httpReq.id))
     client.getRun(req).map(_.result)
   }
 
-  delete("/v1/run/:id") { httpReq: DeleteRunHttpRequest =>
+  delete("/api/v1/run/:id") { httpReq: DeleteRunHttpRequest =>
     val req = DeleteRunRequest(RunId(httpReq.id))
     client.deleteRun(req).map(_ => response.ok)
   }
 
-  post("/v1/run/:id/kill") { httpReq: KillRunHttpRequest =>
+  post("/api/v1/run/:id/kill") { httpReq: KillRunHttpRequest =>
     val req = KillRunRequest(RunId(httpReq.id))
     client.killRun(req).map(_ => response.ok)
   }

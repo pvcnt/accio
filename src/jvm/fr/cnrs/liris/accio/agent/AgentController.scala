@@ -22,8 +22,11 @@ import com.google.inject.{Inject, Singleton}
 import com.twitter.finagle.Service
 import com.twitter.finatra.thrift.Controller
 import com.twitter.inject.Injector
+import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.agent.AgentService._
 import fr.cnrs.liris.accio.core.service.handler._
+
+import scala.util.control.NonFatal
 
 @Singleton
 class AgentController @Inject()(injector: Injector) extends Controller with AgentService.BaseServiceIface {
@@ -34,61 +37,69 @@ class AgentController @Inject()(injector: Injector) extends Controller with Agen
 
   override val listOperators: Service[ListOperators.Args, ListOperators.Result] =
     handle(ListOperators) { args: ListOperators.Args =>
-      injector.instance[ListOperatorsHandler].handle(args.req)
+      reportException(injector.instance[ListOperatorsHandler].handle(args.req))
     }
 
   override val pushWorkflow = handle(PushWorkflow) { args: PushWorkflow.Args =>
-    injector.instance[PushWorkflowHandler].handle(args.req)
+    reportException(injector.instance[PushWorkflowHandler].handle(args.req))
   }
 
   override val getWorkflow = handle(GetWorkflow) { args: GetWorkflow.Args =>
-    injector.instance[GetWorkflowHandler].handle(args.req)
+    reportException(injector.instance[GetWorkflowHandler].handle(args.req))
   }
 
   override val listWorkflows = handle(ListWorkflows) { args: ListWorkflows.Args =>
-    injector.instance[ListWorkflowsHandler].handle(args.req)
+    reportException(injector.instance[ListWorkflowsHandler].handle(args.req))
   }
 
   override val createRun = handle(CreateRun) { args: CreateRun.Args =>
-    injector.instance[CreateRunHandler].handle(args.req)
+    reportException(injector.instance[CreateRunHandler].handle(args.req))
   }
 
   override val getRun = handle(GetRun) { args: GetRun.Args =>
-    injector.instance[GetRunHandler].handle(args.req)
+    reportException(injector.instance[GetRunHandler].handle(args.req))
   }
 
   override val listRuns = handle(ListRuns) { args: ListRuns.Args =>
-    injector.instance[ListRunsHandler].handle(args.req)
+    reportException(injector.instance[ListRunsHandler].handle(args.req))
   }
 
   override val deleteRun = handle(DeleteRun) { args: DeleteRun.Args =>
-    injector.instance[DeleteRunHandler].handle(args.req)
+    reportException(injector.instance[DeleteRunHandler].handle(args.req))
   }
 
   override val killRun = handle(KillRun) { args: KillRun.Args =>
-    injector.instance[KillRunHandler].handle(args.req)
+    reportException(injector.instance[KillRunHandler].handle(args.req))
   }
 
   override val heartbeat: Service[Heartbeat.Args, Heartbeat.Result] =
     handle(Heartbeat) { args: Heartbeat.Args =>
-      injector.instance[HeartbeatHandler].handle(args.req)
+      reportException(injector.instance[HeartbeatHandler].handle(args.req))
     }
 
   override val startTask: Service[StartTask.Args, StartTask.Result] = {
     handle(StartTask) { args: StartTask.Args =>
-      injector.instance[StartTaskHandler].handle(args.req)
+      reportException(injector.instance[StartTaskHandler].handle(args.req))
     }
   }
 
   override val streamLogs: Service[StreamLogs.Args, StreamLogs.Result] = {
     handle(StreamLogs) { args: StreamLogs.Args =>
-      injector.instance[StreamLogsHandler].handle(args.req)
+      reportException(injector.instance[StreamLogsHandler].handle(args.req))
     }
   }
 
   override val completeTask: Service[CompleteTask.Args, CompleteTask.Result] = {
     handle(CompleteTask) { args: CompleteTask.Args =>
-      injector.instance[CompleteTaskHandler].handle(args.req)
+      reportException(injector.instance[CompleteTaskHandler].handle(args.req))
     }
+  }
+
+  private def reportException[T](f: => T): T = try {
+    f
+  } catch {
+    case NonFatal(e) =>
+      logger.error("Uncaught exception", e)
+      throw e
   }
 }

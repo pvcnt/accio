@@ -18,91 +18,92 @@
 
 package fr.cnrs.liris.accio.client
 
+import java.nio.file.Paths
+
 import com.google.inject.Inject
-import com.twitter.util.Stopwatch
+import com.twitter.util.{Await, Stopwatch}
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.agent.AgentService
+import fr.cnrs.liris.accio.client.parser._
+import fr.cnrs.liris.accio.core.domain.Utils
+import fr.cnrs.liris.accio.core.service.handler.CreateRunRequest
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
-import fr.cnrs.liris.common.util.TimeUtils
+import fr.cnrs.liris.common.util.{StringUtils, TimeUtils}
+
+import scala.collection.mutable
 
 case class RunFlags(
   @Flag(name = "name", help = "Run name")
   name: Option[String],
+  @Flag(name = "environment", help = "Environment")
+  environment: Option[String],
   @Flag(name = "tags", help = "Space-separated run tags")
   tags: Option[String],
   @Flag(name = "notes", help = "Run notes")
   notes: Option[String],
   @Flag(name = "repeat", help = "Number of times to repeat each run")
   repeat: Option[Int],
+  @Flag(name = "params", help = "Parameters")
+  params: Option[String],
   @Flag(name = "seed", help = "Seed to use for unstable operators")
-  seed: Option[Long],
-  @Flag(name = "params", help = "Run parameters")
-  params: Option[String])
+  seed: Option[Long])
 
 @Cmd(
   name = "run",
   flags = Array(classOf[RunFlags]),
   help = "Execute an Accio workflow.",
   allowResidue = true)
-class RunCommand @Inject()(agentClient: AgentService.FinagledClient)
+class RunCommand @Inject()(agentClient: AgentService.FinagledClient, parser: RunTemplateParser, factory: RunTemplateFactory)
   extends Command with StrictLogging {
+
+  private[this] val ParamRegex = "([^=]+)=(.+)".r
 
   def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     if (flags.residue.size != 1) {
-      out.writeln("<error>You must provide exactly one workflow/run file.</error>")
+      out.writeln("<error>You must provide exactly one run file.</error>")
       ExitCode.CommandLineError
     } else {
       val opts = flags.as[RunFlags]
       val elapsed = Stopwatch.start()
 
-      //val reporter = new ConsoleProgressReporter(out)
-      //flags.residue.foreach(url => make(opts, workDir, url, reporter, out))
+      val partials = mutable.ListBuffer.empty[ClientRunTemplate]
+      val path = Paths.get(flags.residue.head)
+      var pkg: Option[String] = None
+      if (path.toFile.exists) {
+        partials += parser.parse(path)
+      } else {
+        pkg = Some(flags.residue.head)
+      }
+      partials += ClientRunTemplate(
+        pkg,
+        opts.environment,
+        opts.name,
+        opts.notes,
+        StringUtils.explode(opts.tags, ""),
+        opts.seed,
+        parseParams(opts.params),
+        opts.repeat)
+
+      val template = factory.create(partials: _*)
+      println(template)
+
+      val req = CreateRunRequest(template, Utils.DefaultUser)
+      val resp = Await.result(agentClient.createRun(req))
+
+      out.writeln(s"Created ${resp.ids.size} runs: ${resp.ids.map(_.value).mkString(", ")}")
 
       out.writeln(s"Done in ${TimeUtils.prettyTime(elapsed())}.")
       ExitCode.Success
     }
   }
 
-  private def parseParams(params: String): Map[String, String] = {
-    val ParamRegex = "([^=]+)=(.+)".r
-    params.trim.split(" ").map {
-      case ParamRegex(paramName, value) => paramName -> value
-      case str => throw new IllegalArgumentException(s"Invalid param (expected key=value): $str")
-    }.toMap
+  private def parseParams(params: Option[String]): Map[String, Exploration] = {
+    params match {
+      case Some(p) => p.trim.split(" ").map {
+        case ParamRegex(paramName, value) => paramName -> SingletonExploration(value)
+        case str => throw new IllegalArgumentException(s"Invalid param (expected key=value): $str")
+      }.toMap
+      case None => Map.empty
+    }
   }
 }
-
-/*private class ConsoleProgressReporter(out: Reporter, width: Int = 80) extends ProgressReporter {
-  private[this] val progress = new AtomicInteger
-  private[this] var length = 0
-
-  override def onStart(experiment: Experiment): Unit = synchronized {
-    out.writeln(s"Experiment ${experiment.shortId}: <info>${experiment.name}</info>")
-  }
-
-  override def onComplete(experiment: Experiment): Unit = {}
-
-  override def onGraphStart(run: Run): Unit = synchronized {
-    out.writeln(s"  Run ${run.id.shorten}: <info>${run.name}</info>")
-  }
-
-  override def onGraphComplete(run: Run): Unit = synchronized {
-    out.write(s"    ${" " * length}\r")
-    length = 0
-    progress.set(0)
-  }
-
-  override def onNodeStart(run: Run, node: Node): Unit = synchronized {
-    val i = progress.incrementAndGet
-    //val str = s"    ${node.name}: $i/${run.graph.size}"
-    val str = s"    ${node.name}"
-    out.write(str)
-    if (str.length < length) {
-      out.write(" " * (length - str.length))
-    }
-    out.write("\r")
-    length = str.length
-  }
-
-  override def onNodeComplete(run: Run, node: Node): Unit = {}
-}*/

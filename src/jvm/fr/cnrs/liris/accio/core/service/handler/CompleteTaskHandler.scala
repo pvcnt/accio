@@ -20,9 +20,9 @@ package fr.cnrs.liris.accio.core.service.handler
 
 import com.google.inject.Inject
 import com.twitter.util.Future
-import com.typesafe.scalalogging.LazyLogging
-import fr.cnrs.liris.accio.core.service.{SchedulerService, StateManager}
+import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.domain._
+import fr.cnrs.liris.accio.core.service.{SchedulerService, StateManager}
 
 final class CompleteTaskHandler @Inject()(
   runRepository: RunRepository,
@@ -30,15 +30,14 @@ final class CompleteTaskHandler @Inject()(
   stateManager: StateManager,
   scheduler: SchedulerService,
   graphFactory: GraphFactory)
-  extends Handler[CompleteTaskRequest, CompleteTaskResponse] with LazyLogging {
+  extends Handler[CompleteTaskRequest, CompleteTaskResponse] with StrictLogging {
 
   override def handle(req: CompleteTaskRequest): Future[CompleteTaskResponse] = {
     val taskLock = stateManager.lock(s"task/${req.taskId.value}")
     taskLock.lock()
     try {
       stateManager.get(req.taskId) match {
-        case None =>
-          logger.warn(s"Received unknown task ${req.taskId.value}")
+        case None => logger.warn(s"Received unknown task ${req.taskId.value}")
         case Some(task) =>
           stateManager.remove(task.id)
           val runLock = stateManager.lock(s"run/${task.runId.value}")
@@ -47,13 +46,20 @@ final class CompleteTaskHandler @Inject()(
             runRepository.get(task.runId) match {
               case None => logger.warn(s"Received task ${req.taskId.value} associated with unknown run ${task.runId.value}")
               case Some(run) =>
-                updateRun(run, task.nodeName, req.result)
+                val newRun = updateRun(run, task.nodeName, req.result)
                 if (req.result.exitCode == 0) {
                   // Task completed successfully, schedule next nodes.
-                  val graph = getGraph(run)
-                  graph(task.nodeName).successors.foreach { nextNodeName =>
-                    scheduler.submit(run, graph(nextNodeName))
+                  val graph = getGraph(newRun)
+                  val nextNodes = graph(task.nodeName).successors.filter { nextNodeName =>
+                    val nextNode = graph(nextNodeName)
+                    nextNode.predecessors.forall { dep =>
+                      newRun.state.nodes.find(_.nodeName == dep).get.status == NodeStatus.Success
+                    }
                   }
+                  nextNodes.foreach(nextNode => scheduler.submit(newRun, graph(nextNode)))
+                  logger.debug(s"Task ${task.id.value} successful, scheduled ${nextNodes.size} new nodes")
+                } else {
+                  logger.debug(s"Task ${task.id.value} failed, cancelled next nodes")
                 }
             }
           } finally {
@@ -81,7 +87,9 @@ final class CompleteTaskHandler @Inject()(
       var newRunState = run.state.copy(nodes = run.state.nodes - nodeState + newNodeState)
 
       newRunState = updateRunState(newRunState, now)
+      val newRun = run.copy(state = newRunState)
       runRepository.save(run.copy(state = newRunState))
+      newRun
     } else {
       // Task completed with an error.
       val newNodeState = nodeState.copy(completedAt = Some(now), status = NodeStatus.Failed)
@@ -96,7 +104,9 @@ final class CompleteTaskHandler @Inject()(
       }
 
       newRunState = updateRunState(newRunState, now)
-      runRepository.save(run.copy(state = newRunState))
+      val newRun = run.copy(state = newRunState)
+      runRepository.save(newRun)
+      newRun
     }
     //TODO: update parent run if any.
   }

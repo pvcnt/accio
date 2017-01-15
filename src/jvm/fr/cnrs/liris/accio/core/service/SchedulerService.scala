@@ -18,6 +18,7 @@
 
 package fr.cnrs.liris.accio.core.service
 
+import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.domain._
 
 /**
@@ -26,7 +27,7 @@ import fr.cnrs.liris.accio.core.domain._
  * @param scheduler    Scheduler.
  * @param stateManager State manager.
  */
-class SchedulerService(scheduler: Scheduler, stateManager: StateManager) {
+class SchedulerService(scheduler: Scheduler, stateManager: StateManager) extends StrictLogging {
   /**
    * Submit a node to the scheduler.
    *
@@ -38,6 +39,7 @@ class SchedulerService(scheduler: Scheduler, stateManager: StateManager) {
     val payload = createPayload(run, node)
     val task = scheduler.submit(run.id, node.name, payload)
     stateManager.save(task)
+    logger.debug(s"Scheduled task ${task.id.value} (run ${run.id}, node ${node.name}): $payload")
     task
   }
 
@@ -53,7 +55,7 @@ class SchedulerService(scheduler: Scheduler, stateManager: StateManager) {
         case ParamInput(paramName) => run.params(paramName)
         case ReferenceInput(ref) =>
           val maybeArtifact = run.state.nodes.find(_.nodeName == ref.node)
-            .flatMap(node => node.result.get.artifacts.find(_.name == ref.port))
+            .flatMap(node => node.result.flatMap(_.artifacts.find(_.name == ref.port)))
           maybeArtifact match {
             case None =>
               // Should never be there...

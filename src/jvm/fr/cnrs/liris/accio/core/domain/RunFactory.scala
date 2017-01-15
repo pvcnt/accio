@@ -59,6 +59,10 @@ final class RunFactory(workflowRepository: WorkflowRepository) {
       throw new InvalidRunException(s"Non-optional parameters are unspecified: ${missingParams.mkString(", ")}")
     }
 
+    val defaultParams = workflow.params.filterNot(p => template.params.contains(p.name)).map {argDef =>
+      argDef.name -> argDef.defaultValue.get
+    }.toMap
+
     // Check the repeat parameter is correct.
     val repeat = template.repeat.getOrElse(1)
     if (repeat <= 0) {
@@ -73,10 +77,10 @@ final class RunFactory(workflowRepository: WorkflowRepository) {
     val environment = template.environment.getOrElse(Utils.DefaultEnvironment)
     if (expandedParams.size == 1) {
       Seq(createSingle(workflow, template.cluster, owner, environment, template.name, template.notes,
-        template.tags.toSet, template.seed, expandedParams.head, template.clonedFrom))
+        template.tags.toSet, template.seed, defaultParams ++ expandedParams.head, template.clonedFrom))
     } else {
       createSweep(workflow, template.cluster, owner, environment, template.name, template.notes, template.tags.toSet,
-        template.seed, expandedParams, repeat, template.clonedFrom)
+        template.seed, defaultParams, expandedParams, repeat, template.clonedFrom)
     }
   }
 
@@ -135,6 +139,7 @@ final class RunFactory(workflowRepository: WorkflowRepository) {
    * @param notes          Notes describing the purpose of the run.
    * @param tags           Arbitrary tags used when looking for runs.
    * @param seed           Seed used by unstable operators.
+   * @param defaultParams  Default values for workflow parameters.
    * @param expandedParams List of values of workflow parameters.
    * @param repeat         Number of times to repeat each run.
    * @param clonedFrom     Identifier of the run this instance has been cloned from.
@@ -149,6 +154,7 @@ final class RunFactory(workflowRepository: WorkflowRepository) {
     notes: Option[String],
     tags: Set[String],
     seed: Option[Long],
+    defaultParams: Map[String, Value],
     expandedParams: Seq[Map[String, Value]],
     repeat: Int,
     clonedFrom: Option[RunId]): Seq[Run] = {
@@ -172,7 +178,7 @@ final class RunFactory(workflowRepository: WorkflowRepository) {
         owner = owner,
         environment = environment,
         seed = random.nextLong(),
-        params = params,
+        params = defaultParams ++ params,
         parent = Some(parentId),
         createdAt = now,
         state = initialState(workflow.graph))
@@ -213,18 +219,14 @@ final class RunFactory(workflowRepository: WorkflowRepository) {
   }
 
   /**
-   * Return the workflow specified by a package definition.
+   * Return the workflow specified by a package.
    *
-   * @param pkgStr Package definition.
+   * @param pkg Package.
    */
-  private def getWorkflow(pkgStr: String) = {
-    val maybeWorkflow = pkgStr.split(":") match {
-      case Array(id) => workflowRepository.get(WorkflowId(id))
-      case Array(id, version) => workflowRepository.get(WorkflowId(id), version)
-      case _ => throw new InvalidRunException(s"Invalid workflow: $pkgStr")
-    }
+  private def getWorkflow(pkg: Package) = {
+    val maybeWorkflow = workflowRepository.get(pkg.workflowId, pkg.workflowVersion)
     maybeWorkflow match {
-      case None => throw new InvalidRunException(s"Unknown workflow: $pkgStr")
+      case None => throw new InvalidRunException(s"Unknown workflow: $pkg")
       case Some(workflow) => workflow
     }
   }

@@ -19,7 +19,10 @@
 package fr.cnrs.liris.accio.client
 
 import com.google.inject.Inject
-import fr.cnrs.liris.accio.core.domain.{OpDef, OpRegistry, Utils}
+import com.twitter.util.Await
+import fr.cnrs.liris.accio.agent.AgentService
+import fr.cnrs.liris.accio.core.domain.{OpDef, Utils}
+import fr.cnrs.liris.accio.core.service.handler.{GetOperatorRequest, ListOperatorsRequest}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.reflect.CaseClass
 import fr.cnrs.liris.common.util.StringUtils
@@ -29,7 +32,7 @@ import fr.cnrs.liris.common.util.StringUtils
   help = "Display built-in Accio help.",
   description = "Prints a help page for the given command or topic, or, if nothing is specified, prints the index of available commands.",
   allowResidue = true)
-class HelpCommand @Inject()(cmdRegistry: CmdRegistry, opRegistry: OpRegistry) extends Command {
+class HelpCommand @Inject()(cmdRegistry: CmdRegistry, agentClient: AgentService.FinagledClient) extends Command {
 
   override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     flags.residue match {
@@ -49,7 +52,8 @@ class HelpCommand @Inject()(cmdRegistry: CmdRegistry, opRegistry: OpRegistry) ex
             printCommand(out, meta)
             ExitCode.Success
           case None =>
-            opRegistry.get(helpTopic) match {
+            val maybeOp = Await.result(agentClient.getOperator(GetOperatorRequest(helpTopic))).result
+            maybeOp match {
               // Help topic: display details about an operato.
               case Some(meta) =>
                 printOp(out, meta)
@@ -116,8 +120,9 @@ class HelpCommand @Inject()(cmdRegistry: CmdRegistry, opRegistry: OpRegistry) ex
   }
 
   private def printOpSummary(out: Reporter) = {
-    val maxLength = opRegistry.ops.map(_.name.length).max
-    opRegistry.ops.toSeq.sortBy(_.name).groupBy(_.category).foreach { case (category, ops) =>
+    val ops = Await.result(agentClient.listOperators(ListOperatorsRequest())).results
+    val maxLength = ops.map(_.name.length).max
+    ops.sortBy(_.name).groupBy(_.category).foreach { case (category, ops) =>
       out.writeln(s"<info>Operators in $category category:</info>")
       ops.foreach { op =>
         val padding = " " * (maxLength - op.name.length)

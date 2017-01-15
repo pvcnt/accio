@@ -125,20 +125,10 @@ case class Node private[domain](
 /**
  * An input for a port of a node. It specifies where the value for a given port comes from.
  */
-/*@JsonSubTypes(Array(
-  new JsonSubTypes.Type(value = classOf[ValueInput], name = "value"),
-  new JsonSubTypes.Type(value = classOf[ReferenceInput], name = "reference"),
-  new JsonSubTypes.Type(value = classOf[ParamInput], name = "param")))
-@JsonIgnoreProperties(ignoreUnknown = true)*/
 sealed trait Input
 
 /**
  * Input defined by a constant value.
- *
- * Note: default value of [[None]] is required because [[None]] values are serialized in JSON as null, despite
- * the default Jackson inclusion policy (I guess the Any type messes it up). If no default value is set, you will
- * get "field is required" errors every time an optional value is deserialized. This is not ideal, but it is the best
- * workaround I could figure out.
  *
  * @param value Input value.
  */

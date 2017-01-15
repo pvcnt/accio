@@ -97,28 +97,31 @@ final class WorkflowFactory(graphFactory: GraphFactory, opRegistry: OpRegistry) 
       }
     })
 
-    // Then we aggregate these usages into single parameters, and check they are correct.
-    paramUsages.map { case (paramName, usages) =>
+    val undeclaredParams = paramUsages.keySet.diff(params.map(_.name))
+    if (undeclaredParams.nonEmpty) {
+      throw new InvalidWorkflowException(s"Params are used but not declared: ${undeclaredParams.mkString(", ")}")
+    }
+
+    params.map { argDef =>
       // We check param name is valid.
-      if (Utils.ArgRegex.findFirstIn(paramName).isEmpty) {
-        throw new InvalidWorkflowException(s"Invalid param name: $paramName")
+      if (Utils.ArgRegex.findFirstIn(argDef.name).isEmpty) {
+        throw new InvalidWorkflowException(s"Invalid param name: ${argDef.name}")
       }
 
       // We check the parameter is homogeneous, i.e., it is used in ports of the same type.
+      val usages = paramUsages.getOrElse(argDef.name, Set.empty)
       val dataTypes = usages.map(_.argDef).map(_.kind)
       if (dataTypes.size > 1) {
-        throw new InvalidWorkflowException(s"Param $paramName is used in heterogeneous input types: ${dataTypes.mkString(", ")}")
+        throw new InvalidWorkflowException(s"Param ${argDef.name} is used in heterogeneous input types: ${dataTypes.mkString(", ")}")
+      }
+      if (dataTypes.head != argDef.kind) {
+        throw new InvalidWorkflowException(s"Param ${argDef.name} declared as ${argDef.kind} is used as ${dataTypes.head}")
       }
 
       // Parameter is optional only if used only in optional ports or if a default value is available each time.
-      val isOptional = usages.forall(usage => usage.argDef.isOptional || usage.argDef.defaultValue.isDefined)
+      val isOptional = argDef.defaultValue.isDefined || usages.forall(usage => usage.argDef.isOptional || usage.argDef.defaultValue.isDefined)
 
-      params.find(_.name == paramName) match {
-        case Some(argDef) =>
-          // TODO: validate def.
-          argDef
-        case None => ArgDef(paramName, None, dataTypes.head, isOptional)
-      }
-    }.toSet
+      argDef.copy(isOptional = isOptional)
+    }
   }
 }

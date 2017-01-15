@@ -86,7 +86,7 @@ object AgentModule extends TwitterModule {
 
     // Initialize modules with configuration.
     val configurator = Configurator(
-      LocalSchedulerConfig(workDir.resolve("sandbox"), "", _executorUri(), _javaHome.get),
+      LocalSchedulerConfig(workDir.resolve("sandbox"), "127.0.0.1:9999", _executorUri(), _javaHome.get),
       LocalStateMgrConfig(workDir.resolve("state")),
       ZookeeperStateMgrConfig(_zkAddr(), _zkRootPath(), _zkSessionTimeout(), _zkConnTimeout()),
       LocalStorageConfig(workDir.resolve("storage")),

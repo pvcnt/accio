@@ -45,7 +45,7 @@ class LocalScheduler(opRegistry: OpRegistry, downloader: Downloader, config: Loc
 
   private[this] val monitors = new ConcurrentHashMap[String, TaskMonitor].asScala
   private[this] val executorService = Executors.newSingleThreadExecutor
-  private[this] val localExecutorPath = {
+  private[this] lazy val localExecutorPath = {
     val targetPath = config.workDir.resolve("executor.jar")
     logger.info(s"Downloading executor JAR to ${targetPath.toAbsolutePath}")
     downloader.download(config.executorUri, targetPath)
@@ -133,13 +133,13 @@ class LocalScheduler(opRegistry: OpRegistry, downloader: Downloader, config: Loc
       cmd += "fr.cnrs.liris.accio.executor.AccioExecutorMain"
       cmd += "-id"
       cmd += id.value
-      cmd += "-tracker_addr"
+      cmd += "-agent_addr"
       cmd += config.agentAddr
 
       val sandboxDir = getSandboxPath(key)
       Files.createDirectories(sandboxDir)
 
-      val pb = new ProcessBuilder().command(cmd: _*).directory(sandboxDir.toFile)
+      val pb = new ProcessBuilder().command(cmd: _*).directory(sandboxDir.toFile).inheritIO()
       pb.start()
     }
   }

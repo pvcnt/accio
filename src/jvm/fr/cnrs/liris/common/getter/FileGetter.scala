@@ -22,6 +22,8 @@ import java.io.IOException
 import java.net.URI
 import java.nio.file.{Files, Path, Paths}
 
+import fr.cnrs.liris.common.util.FileUtils
+
 /**
  *
  * @param copy Whether to copy of use symlinks.
@@ -33,8 +35,6 @@ class FileGetter(copy: Boolean) extends Getter {
     // The source path must exist and be a directory to be usable.
     if (!srcPath.toFile.exists()) {
       throw new IOException(s"Source does not exist: ${srcPath.toAbsolutePath}")
-    } else if (!srcPath.toFile.isFile) {
-      throw new IOException(s"Source must be a file: ${srcPath.toAbsolutePath}")
     }
 
     // If the destination already exists, it must be a symlink.
@@ -53,7 +53,7 @@ class FileGetter(copy: Boolean) extends Getter {
     if (!copy) {
       Files.createSymbolicLink(dst, srcPath)
     } else {
-      Files.copy(srcPath, dst)
+      FileUtils.recursiveCopy(srcPath, dst)
     }
   }
 

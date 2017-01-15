@@ -24,6 +24,7 @@ import ch.qos.logback.core.joran.spi.JoranException
 import ch.qos.logback.core.util.StatusPrinter
 import com.google.inject.Module
 import com.twitter.finatra.thrift.ThriftServer
+import com.twitter.finatra.thrift.filters._
 import com.twitter.finatra.thrift.routing.ThriftRouter
 import fr.cnrs.liris.accio.core.infra.jackson.AccioFinatraJacksonModule
 import fr.cnrs.liris.privamov.ops.OpsModule
@@ -37,7 +38,13 @@ class AccioAgent extends ThriftServer {
   override protected def modules: Seq[Module] = Seq(AccioFinatraJacksonModule, OpsModule, AgentModule)
 
   override protected def configureThrift(router: ThriftRouter): Unit = {
-    router.add[AgentController]
+    router
+      .filter[LoggingMDCFilter]
+      .filter[TraceIdMDCFilter]
+      .filter[ThriftMDCFilter]
+      .filter[AccessLoggingFilter]
+      .filter[StatsFilter]
+      .add[AgentController]
   }
 
   private def loadLogbackConfig() = {

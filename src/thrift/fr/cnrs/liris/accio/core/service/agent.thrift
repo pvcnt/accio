@@ -46,6 +46,7 @@ struct PushWorkflowRequest {
 }
 
 struct PushWorkflowResponse {
+  1: required workflow.Workflow workflow;
 }
 
 struct GetWorkflowRequest {

@@ -20,6 +20,7 @@ package fr.cnrs.liris.accio.core.service.handler
 
 import com.google.inject.Inject
 import com.twitter.util.Future
+import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.service.SchedulerService
 import fr.cnrs.liris.accio.core.domain._
 
@@ -38,7 +39,7 @@ final class CreateRunHandler @Inject()(
   workflowRepository: WorkflowRepository,
   scheduler: SchedulerService,
   graphFactory: GraphFactory)
-  extends Handler[CreateRunRequest, CreateRunResponse] {
+  extends Handler[CreateRunRequest, CreateRunResponse] with StrictLogging {
 
   @throws[InvalidRunException]
   def handle(req: CreateRunRequest): Future[CreateRunResponse] = {
@@ -53,6 +54,8 @@ final class CreateRunHandler @Inject()(
     runs.filter(_.children.isEmpty).foreach { run =>
       rootNodes.foreach(scheduler.submit(run, _))
     }
+
+    logger.debug(s"Created ${runs.size} runs. Scheduler ${runs.size * rootNodes.size} nodes")
 
     Future(CreateRunResponse(runs.map(_.id)))
   }

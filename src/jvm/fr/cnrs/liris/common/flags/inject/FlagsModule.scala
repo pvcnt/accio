@@ -58,5 +58,8 @@ object FlagsModule {
     classOf[java.lang.Object].getName,
     classOf[java.lang.Comparable[_]].getName,
     classOf[java.lang.CharSequence].getName,
-    classOf[java.io.Serializable].getName)
+    classOf[java.io.Serializable].getName,
+    classOf[scala.Serializable].getName,
+    classOf[scala.Product].getName,
+    classOf[scala.Equals].getName)
 }

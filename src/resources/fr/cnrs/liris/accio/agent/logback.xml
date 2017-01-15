@@ -12,7 +12,7 @@
     </appender>
 
     <!-- Per-package Config -->
-    <logger name="fr.cnrs.liris" level="info"/>
+    <logger name="fr.cnrs.liris" level="debug"/>
     <logger name="com.twitter" level="info"/>
 
     <!-- Root config -->

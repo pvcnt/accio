@@ -136,20 +136,24 @@ final class GraphFactory(opRegistry: OpRegistry) {
     if (unknownInputs.nonEmpty) {
       throw new InvalidGraphException(s"Unknown inputs of ${nodeDef.name}: ${unknownInputs.mkString(", ")}")
     }
-    opDef.inputs.map { argDef =>
+    opDef.inputs.flatMap { argDef =>
       val value = nodeDef.inputs.get(argDef.name) match {
         case None => argDef.defaultValue match {
-          case Some(defaultValue) => ValueInput(defaultValue)
-          case None => throw new InvalidGraphException(s"No value for input ${nodeDef.name}/${argDef.name}")
+          case Some(defaultValue) => Some(ValueInput(defaultValue))
+          case None =>
+            if (!argDef.isOptional) {
+              throw new InvalidGraphException(s"No value for input ${nodeDef.name}/${argDef.name}")
+            }
+            None
         }
         case Some(InputDef.Value(v)) =>
           //TODO: validate type is correct.
-          ValueInput(v)
-        case Some(InputDef.Reference(ref)) => ReferenceInput(ref)
-        case Some(InputDef.Param(name)) => ParamInput(name)
+          Some(ValueInput(v))
+        case Some(InputDef.Reference(ref)) => Some(ReferenceInput(ref))
+        case Some(InputDef.Param(name)) => Some(ParamInput(name))
         case Some(InputDef.UnknownUnionField(_)) => throw new InvalidGraphException(s"Invalid input ${nodeDef.name}/${argDef.name}")
       }
-      argDef.name -> value
+      value.map(v => argDef.name -> v)
     }.toMap
   }
 

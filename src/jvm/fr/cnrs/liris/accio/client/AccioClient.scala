@@ -22,7 +22,9 @@ import java.nio.file.Path
 
 import com.google.inject.Guice
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.common.flags._
+import fr.cnrs.liris.accio.client.parser.ParserFinatraJacksonModule
+import fr.cnrs.liris.common.flags.inject.FlagsModule
+import fr.cnrs.liris.common.flags.{FlagsParser, _}
 
 object AccioClientMain extends AccioClient
 
@@ -39,7 +41,7 @@ case class AccioFlags(
   @Flag(name = "config")
   accioRcConfig: Option[String],
   @Flag(name = "agent_addr", help = "Address to the Accio agent")
-  agentAddr: Option[String])
+  agentAddr: String = "localhost:9999")
 
 /**
  * Entry point of the Accio command line application. Very little is done here, it is the job of [[Command]]s
@@ -50,8 +52,11 @@ class AccioClient extends StrictLogging {
     // Change the path of logback's configuration file to match Pants resource naming.
     sys.props("logback.configurationFile") = "fr/cnrs/liris/accio/client/logback.xml"
 
+    //val parser = FlagsParser[AccioFlags](allowResidue = true)
+    //parser.parse(args)
+
     val reporter = new StreamReporter(Console.out, useColors = true)
-    val injector = Guice.createInjector(ClientModule)
+    val injector = Guice.createInjector(/*FlagsModule(parser), */ClientModule, ParserFinatraJacksonModule)
     val dispatcher = injector.getInstance(classOf[CmdDispatcher])
     val exitCode = dispatcher.exec(args, reporter)
 

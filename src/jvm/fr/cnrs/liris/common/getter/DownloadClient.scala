@@ -50,7 +50,7 @@ class DownloadClient(detectors: Set[Detector], getters: Set[Getter], decompresso
 
   private def detectRaw(requestedUri: DetectedURI) = {
     try {
-      if (requestedUri.rawUri.getScheme.nonEmpty) Some(requestedUri) else None
+      if (requestedUri.rawUri.getScheme != null) Some(requestedUri) else None
     } catch {
       case _: URISyntaxException => None
     }
