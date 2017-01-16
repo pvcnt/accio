@@ -33,7 +33,7 @@ import scala.collection.JavaConverters._
  *
  * @param rootDir Root directory under which to store files.
  */
-final class LocalRunRepository(rootDir: Path) extends LocalStorage(locking = false) with RunRepository {
+final class LocalRunRepository(rootDir: Path) extends LocalStorage with RunRepository {
   override def find(query: RunQuery): RunList = {
     var results = listIds(runsPath).flatMap(id => get(RunId(id)))
 

@@ -35,7 +35,7 @@ import scala.collection.mutable
  *
  * @param rootDir Root directory under which data will be written.
  */
-final class LocalStateMgr(rootDir: Path) extends LocalStorage(locking = true) with StateManager with StrictLogging {
+final class LocalStateMgr(rootDir: Path) extends LocalStorage with StateManager with StrictLogging {
   private[this] val locks = mutable.WeakHashMap.empty[String, LocalLock]
 
   override def lock(key: String): Lock = synchronized {

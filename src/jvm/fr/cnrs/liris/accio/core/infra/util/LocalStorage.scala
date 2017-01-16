@@ -29,11 +29,12 @@ import scala.collection.mutable
 
 /**
  * Helper methods for repositories storing their data on the local filesystem in Scrooge/Thrift binary files. It
- * provides a locking feature based on a [[ReentrantReadWriteLock]].
+ * is thread-safe.
  *
- * @param locking Whether to lock on I/O operations.
+ * It comes with a locking strategy based on [[ReentrantReadWriteLock]]s. To work correctly, it requires that
+ * instances of this class are singletons, in order to use the same locks.
  */
-private[infra] abstract class LocalStorage(locking: Boolean) {
+private[infra] abstract class LocalStorage {
   private[this] val protocolFactory = new TBinaryProtocol.Factory()
   private[this] val locks = mutable.Map.empty[String, ReentrantReadWriteLock]
 
@@ -93,28 +94,25 @@ private[infra] abstract class LocalStorage(locking: Boolean) {
   }
 
   private def withReadLock[U](file: Path)(f: => U): U = {
-    val lock = maybeGetLock(file.toAbsolutePath.toString)
-    lock.foreach(_.readLock.lock())
+    val lock = getLock(file).readLock
+    lock.lock()
     try {
       f
     } finally {
-      lock.foreach(_.readLock.unlock())
+      lock.unlock()
     }
   }
 
   private def withWriteLock[U](file: Path)(f: => U): U = {
-    val lock = maybeGetLock(file.toAbsolutePath.toString)
-    lock.foreach(_.writeLock.lock())
+    val lock = getLock(file).writeLock
+    lock.lock()
     try {
       f
     } finally {
-      lock.foreach(_.writeLock.unlock())
+      lock.unlock()
     }
   }
 
-  private def maybeGetLock(key: String) = {
-    if (locking) synchronized {
-      Some(locks.getOrElseUpdate(key, new ReentrantReadWriteLock))
-    } else None
-  }
+  private def getLock(file: Path): ReentrantReadWriteLock =
+    locks.getOrElseUpdate(file.toAbsolutePath.toString, new ReentrantReadWriteLock)
 }

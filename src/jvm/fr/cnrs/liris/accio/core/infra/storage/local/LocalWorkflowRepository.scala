@@ -32,9 +32,7 @@ import fr.cnrs.liris.common.util.FileUtils
  *
  * @param rootDir Root directory under which to store files.
  */
-final class LocalWorkflowRepository(rootDir: Path)
-  extends LocalStorage(locking = false) with WorkflowRepository with LazyLogging {
-
+final class LocalWorkflowRepository(rootDir: Path) extends LocalStorage with WorkflowRepository with LazyLogging {
   override def find(query: WorkflowQuery): WorkflowList = {
     var results = rootDir.toFile.listFiles.toSeq
       .filter(_.isDirectory)
