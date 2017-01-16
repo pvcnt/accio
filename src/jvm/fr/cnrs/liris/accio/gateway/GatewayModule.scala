@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.gateway
 
-import com.google.inject.Provides
+import com.google.inject.{Provides, Singleton}
 import com.twitter.finagle.Thrift
 import com.twitter.inject.TwitterModule
 import fr.cnrs.liris.accio.agent.AgentService
@@ -26,6 +26,7 @@ import fr.cnrs.liris.accio.agent.AgentService
 object GatewayModule extends TwitterModule {
   private[this] val agentAddr = flag[String]("addr", "Address to contact the Accio agent")
 
+  @Singleton
   @Provides
   def providesClient: AgentService.FinagledClient = {
     val service = Thrift.newService(agentAddr())

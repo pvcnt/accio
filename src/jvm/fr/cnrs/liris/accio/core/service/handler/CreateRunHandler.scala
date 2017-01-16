@@ -55,7 +55,7 @@ final class CreateRunHandler @Inject()(
       rootNodes.foreach(scheduler.submit(run, _))
     }
 
-    logger.debug(s"Created ${runs.size} runs. Scheduler ${runs.size * rootNodes.size} nodes")
+    logger.debug(s"Created ${runs.size} runs, scheduled ${runs.size * rootNodes.size} nodes")
 
     Future(CreateRunResponse(runs.map(_.id)))
   }

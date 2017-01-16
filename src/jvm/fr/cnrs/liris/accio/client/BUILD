@@ -12,7 +12,9 @@ scala_library(
   ],
   excludes = [
     # Conflicts with scalap coming from common/reflect.
-    exclude(org='com.twitter.finatra', name='finatra-scalap-compiler-deps_2.11')
+    exclude(org='com.twitter.finatra', name='finatra-scalap-compiler-deps_2.11'),
+    # Finagle comes with its own Thrift library.
+    exclude(org = 'com.twitter', name = 'libthrift'),
   ],
   sources=globs('*.scala')
 )
@@ -26,5 +28,5 @@ jvm_binary(
     'src/resources/fr/cnrs/liris/accio/client',
   ],
   main='fr.cnrs.liris.accio.client.AccioClientMain',
-  basename='accio',
+  basename='accio-client',
 )

@@ -42,7 +42,8 @@ object FileUtils {
   def safeDelete(file: File): Unit = {
     if (file.exists()) {
       def clean(file: File): Unit = {
-        if (file.isDirectory) {
+        // We do not want to follow symlinks there, otherwise it would delete the content of the target directory!
+        if (file.isDirectory && !Files.isSymbolicLink(file.toPath)) {
           file.listFiles().foreach(clean)
         }
         file.delete()

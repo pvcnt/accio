@@ -26,40 +26,30 @@ import org.apache.curator.framework.CuratorFrameworkFactory
 import org.apache.curator.retry.ExponentialBackoffRetry
 
 /**
- * Zookeeper state manager configuration.
+ * Guice module provisioning a state manager using Zookeeper.
  *
- * @param zkAddr            Address to Zookeeper cluster.
- * @param rootPath          Root path under which to store data.
+ * @param addr              Address to Zookeeper cluster.
+ * @param path              Root path under which to store data.
  * @param sessionTimeout    Session timeout.
  * @param connectionTimeout Connection timeout.
  */
-case class ZookeeperStateMgrConfig(
-  zkAddr: String,
-  rootPath: String = "/accio",
+final class ZookeeperStateMgrModule(
+  addr: String,
+  path: String = "/accio",
   sessionTimeout: Duration = Duration.fromSeconds(60),
   connectionTimeout: Duration = Duration.fromSeconds(15))
-
-/**
- * Guice module provisioning a state manager using Zookeeper.
- */
-final class ZookeeperStateMgrModule extends ScalaModule with Configurable[ZookeeperStateMgrConfig] {
-  override def configClass: Class[ZookeeperStateMgrConfig] = classOf[ZookeeperStateMgrConfig]
-
+  extends ScalaModule {
   override def configure(): Unit = {}
 
   @Singleton
   @Provides
   def providesStateManager(): StateManager = {
     val retryPolicy = new ExponentialBackoffRetry(1000, 3)
-    val client = CuratorFrameworkFactory.newClient(
-      config.zkAddr,
-      config.sessionTimeout.inMillis.toInt,
-      config.connectionTimeout.inMillis.toInt,
-      retryPolicy)
+    val client = CuratorFrameworkFactory.newClient(addr, sessionTimeout.inMillis.toInt, connectionTimeout.inMillis.toInt, retryPolicy)
     client.start()
 
     sys.addShutdownHook(client.close())
 
-    new ZookeeperStateMgr(client, config.rootPath)
+    new ZookeeperStateMgr(client, path)
   }
 }

@@ -2,7 +2,6 @@ scala_library(
   name='elastic',
   dependencies=[
     'src/jvm/fr/cnrs/liris/accio/core/domain',
-    'src/jvm/fr/cnrs/liris/accio/core/service',
     '3rdparty/jvm/com/sksamuel/elastic4s:core',
     '3rdparty/jvm/com/sksamuel/elastic4s:jackson',
     '3rdparty/jvm/com/typesafe/scala-logging',

@@ -9,11 +9,14 @@ scala_library(
     'src/thrift/fr/cnrs/liris/accio/agent',
 
     'src/jvm/fr/cnrs/liris/common/flags',
-    'src/jvm/fr/cnrs/liris/common/flags/inject',
     'src/jvm/fr/cnrs/liris/privamov/ops',
 
     '3rdparty/jvm/com/typesafe/scala-logging',
     '3rdparty/jvm:scala-guice',
+  ],
+  excludes = [
+    # Finagle comes with its own Thrift library.
+    exclude(org = 'com.twitter', name = 'libthrift'),
   ],
   sources=globs('*.scala')
 )

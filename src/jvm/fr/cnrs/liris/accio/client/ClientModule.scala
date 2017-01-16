@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.client
 
-import com.google.inject.{AbstractModule, Provides, TypeLiteral}
+import com.google.inject.{AbstractModule, Provides, Singleton, TypeLiteral}
 import com.twitter.finagle.Thrift
 import fr.cnrs.liris.accio.agent.AgentService
 import fr.cnrs.liris.accio.client.command._
@@ -44,8 +44,10 @@ object ClientModule extends AbstractModule with ScalaModule {
     bind[OpRegistry].to[RemoteOpRegistry]
   }
 
+  @Singleton
   @Provides
-  def providesAgentClient(/*@InjectFlag("agent_addr") agentAddr: String*/): AgentService.FinagledClient = {
+  def providesClient: AgentService.FinagledClient = {
+    //TODO: inject addr.
     val service = Thrift.newService("localhost:9999")
     new AgentService.FinagledClient(service)
   }

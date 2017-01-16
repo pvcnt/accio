@@ -21,26 +21,17 @@ package fr.cnrs.liris.accio.core.infra.uploader.local
 import java.nio.file.Path
 
 import com.google.inject.Provides
-import fr.cnrs.liris.accio.core.service.{Configurable, Uploader}
+import fr.cnrs.liris.accio.core.service.Uploader
 import net.codingwell.scalaguice.ScalaModule
 
 /**
- * Local uploader configuration.
- *
- * @param rootDir Root directory under which to store files.
- */
-case class LocalUploaderConfig(rootDir: Path)
-
-/**
  * Guice module provisioning a local uploader.
+ *
+ * @param path Root directory under which to store files.
  */
-final class LocalUploaderModule extends ScalaModule with Configurable[LocalUploaderConfig] {
-  override def configClass: Class[LocalUploaderConfig] = classOf[LocalUploaderConfig]
-
+final class LocalUploaderModule(path: Path) extends ScalaModule {
   override protected def configure(): Unit = {}
 
   @Provides
-  def providesUploader: Uploader = {
-    new LocalUploader(config.rootDir)
-  }
+  def providesUploader: Uploader = new LocalUploader(path)
 }

@@ -20,39 +20,32 @@ package fr.cnrs.liris.accio.core.infra.scheduler.local
 
 import java.nio.file.Path
 
-import com.google.inject.Provides
+import com.google.inject.{Provides, Singleton}
 import fr.cnrs.liris.accio.core.domain.OpRegistry
-import fr.cnrs.liris.accio.core.service.{Configurable, Downloader, Scheduler}
+import fr.cnrs.liris.accio.core.service.{Downloader, Scheduler}
 import net.codingwell.scalaguice.ScalaModule
 
 /**
- * Local scheduler configuration.
+ * Guice module provisioning a local scheduler.
  *
  * @param workDir      Working directory.
  * @param agentAddr    Agent address.
  * @param executorUri  URI where to fetch the executor.
  * @param javaHome     Java home to be used when running nodes.
- * @param uploaderType Type of uploader to use on the executors.
- * @param uploaderArgs Arguments to parametrize the uploader on the executors.
+ * @param executorArgs Arguments to pass to the executors.
  */
-case class LocalSchedulerConfig(
+class LocalSchedulerModule(
   workDir: Path,
   agentAddr: String,
   executorUri: String,
   javaHome: Option[String],
-  uploaderType: String,
-  uploaderArgs: Map[String, String])
-
-/**
- * Guice module provisioning a local scheduler.
- */
-class LocalSchedulerModule extends ScalaModule with Configurable[LocalSchedulerConfig] {
-  override def configClass: Class[LocalSchedulerConfig] = classOf[LocalSchedulerConfig]
-
+  executorArgs: Seq[String]) extends ScalaModule {
   override protected def configure(): Unit = {}
 
+  @Singleton
   @Provides
   def providesScheduler(opRegistry: OpRegistry, downloader: Downloader): Scheduler = {
-    new LocalScheduler(opRegistry, downloader, config)
+    val allExecutorArgs = Seq("-addr", agentAddr) ++ executorArgs
+    new LocalScheduler(opRegistry, downloader, workDir, executorUri, javaHome, allExecutorArgs)
   }
 }

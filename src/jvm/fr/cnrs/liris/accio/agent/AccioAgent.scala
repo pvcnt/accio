@@ -34,6 +34,7 @@ object AccioAgentMain extends AccioAgent
 
 class AccioAgent extends ThriftServer {
   loadLogbackConfig()
+  //TODO: start thread looking for lost tasks.
 
   override protected def modules: Seq[Module] = Seq(AccioFinatraJacksonModule, OpsModule, AgentModule)
 

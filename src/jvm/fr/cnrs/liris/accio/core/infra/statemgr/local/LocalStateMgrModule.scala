@@ -21,26 +21,17 @@ package fr.cnrs.liris.accio.core.infra.statemgr.local
 import java.nio.file.Path
 
 import com.google.inject.Provides
-import fr.cnrs.liris.accio.core.service.{Configurable, StateManager}
+import fr.cnrs.liris.accio.core.service.StateManager
 import net.codingwell.scalaguice.ScalaModule
 
 /**
- * Local state manager configuration.
- *
- * @param rootDir Root directory under which data will be written.
- */
-case class LocalStateMgrConfig(rootDir: Path)
-
-/**
  * Guice module provisioning a local state manager.
+ *
+ * @param path Root directory under which data will be written.
  */
-final class LocalStateMgrModule extends ScalaModule with Configurable[LocalStateMgrConfig] {
-  override def configClass: Class[LocalStateMgrConfig] = classOf[LocalStateMgrConfig]
-
+final class LocalStateMgrModule(path: Path) extends ScalaModule {
   override def configure(): Unit = {}
 
   @Provides
-  def providesStateManager(): StateManager = {
-    new LocalStateMgr(config.rootDir)
-  }
+  def providesStateManager(): StateManager = new LocalStateMgr(path)
 }

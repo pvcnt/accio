@@ -31,7 +31,7 @@ class StreamLogsHandler @Inject()(runRepository: RunRepository)
     val runIds = req.logs.map(_.runId).toSet
     val unknownRunIds = runIds.filterNot(runRepository.contains)
     unknownRunIds.foreach { runId =>
-      logger.warn(s"Received logs associated with unknown run ${runId.value}")
+      logger.warn(s"Received logs from unknown run ${runId.value}")
     }
     runRepository.save(req.logs.filterNot(log => unknownRunIds.contains(log.runId)))
     Future(StreamLogsResponse())

@@ -59,7 +59,7 @@ class InspectCommand @Inject()(client: AgentService.FinagledClient) extends Comm
     out.writeln(s"<comment>${padTo("Tags", 15)}</comment> ${if (run.tags.nonEmpty) run.tags.mkString(", ") else "<none>"}")
     out.writeln(s"<comment>${padTo("Status", 15)}</comment> ${run.state.status.name}")
     if (!Utils.isCompleted(run.state.status)) {
-      out.writeln(s"<comment>${padTo("Progress", 15)}</comment> ${(run.state.progress * 100).round}")
+      out.writeln(s"<comment>${padTo("Progress", 15)}</comment> ${(run.state.progress * 100).round} %")
     }
     run.state.startedAt.foreach { startedAt =>
       out.writeln(s"<comment>${padTo("Started", 15)}</comment> ${prettyTime.format(new Date(startedAt))}")
@@ -68,16 +68,9 @@ class InspectCommand @Inject()(client: AgentService.FinagledClient) extends Comm
       out.writeln(s"<comment>${padTo("Completed", 15)}</comment> ${prettyTime.format(new Date(completedAt))}")
     }
     out.writeln()
-    out.writeln(s"<comment>${padTo("Node name", 25)}  ${padTo("Status", 9)}  Result</comment>")
+    out.writeln(s"<comment>${padTo("Node name", 30)}  Status</comment>")
     run.state.nodes.foreach { node =>
-      val result = node.result.map { result =>
-        if (result.exitCode != 0) {
-          s"Exited with ${result.exitCode}${result.error.map(err => ". " + err.root.classifier + ": " + err.root.message).getOrElse("")}"
-        } else {
-          s"Artifacts: ${result.artifacts.map(_.name).mkString(",")}"
-        }
-      }.getOrElse("<none>")
-      out.writeln(s"${padTo(node.nodeName, 25)}  ${padTo(node.status.name, 9)}  $result")
+      out.writeln(s"${padTo(node.nodeName, 30)}  ${node.status.name}")
     }
   }
 
@@ -93,6 +86,14 @@ class InspectCommand @Inject()(client: AgentService.FinagledClient) extends Comm
     }
 
     node.result.foreach { result =>
+      out.writeln(s"<comment>${padTo("Exit code", 15)}</comment> ${result.exitCode}")
+      result.error.foreach { error =>
+        out.writeln()
+        out.writeln(s"<error>${padTo("Error class", 15)}</comment> ${error.root.classifier}")
+        out.writeln(s"<error>${padTo("Error message", 15)}</comment> ${error.root.message}")
+        out.writeln(s"<error>${padTo("Error stack", 15)}</comment> ${error.root.stacktrace.headOption.getOrElse("") + error.root.stacktrace.tail.map(s => " " * 16 + s)}")
+      }
+
       out.writeln()
       out.writeln(s"<comment>${padTo("Artifact name", 25)}  Value</comment>")
       result.artifacts.foreach { artifact =>

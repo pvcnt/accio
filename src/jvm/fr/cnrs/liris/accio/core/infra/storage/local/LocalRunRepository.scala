@@ -18,11 +18,13 @@
 
 package fr.cnrs.liris.accio.core.infra.storage.local
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{Files, Path, StandardOpenOption}
 
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.infra.util.LocalStorage
 import fr.cnrs.liris.common.util.FileUtils
+
+import scala.collection.JavaConverters._
 
 /**
  * A run repository storing runs locally inside binary files. Intended for testing or use in single-node development
@@ -57,17 +59,19 @@ final class LocalRunRepository(rootDir: Path) extends LocalStorage(locking = fal
   }
 
   override def find(query: LogsQuery): Seq[RunLog] = {
-    //TODO
-    var results = Seq.empty[RunLog]
-
-    // 1. Filter results by specified criteria.
-    query.classifier.foreach { classifier => results = results.filter(_.classifier == classifier) }
-    query.since.foreach { since => results = results.filter(_.createdAt > since.inMillis) }
-
-    // 2. Sort the results in descending chronological order and slice them.
-    results = results.sortWith((a, b) => a.createdAt < b.createdAt).take(query.limit)
-
-    results
+    val files = query.classifier match {
+      case Some(classifier) => Seq(logsPath(query.runId, query.nodeName, classifier).toFile)
+      case None => logsPath(query.runId, query.nodeName).toFile.listFiles.toSeq.filter(_.getName.endsWith(".txt"))
+    }
+    files.flatMap { file =>
+      val classifier = file.getName.stripSuffix(".txt")
+      val lines = Files.readAllLines(file.toPath).asScala
+      lines.flatMap { line =>
+        val pos = line.indexOf(" ")
+        val log = RunLog(query.runId, query.nodeName, line.take(pos).toLong, classifier, line.drop(pos + 1))
+        if (query.since.isEmpty || log.createdAt > query.since.get.inMillis) Some(log) else None
+      }
+    }.sortWith((a, b) => a.createdAt < b.createdAt).take(query.limit)
   }
 
   override def save(run: Run): Unit = {
@@ -76,9 +80,14 @@ final class LocalRunRepository(rootDir: Path) extends LocalStorage(locking = fal
 
   override def save(logs: Seq[RunLog]): Unit = {
     logs.groupBy(_.runId).foreach { case (runId, logs) =>
-      logs.groupBy(_.classifier).foreach { case (classifier, logs) =>
-        val content = logs.map(log => s"${log.createdAt} ${log.message.replace("\n", "\\\\n")}").mkString("\n")
-        Files.write(getSubdir(logsPath, runId.value.toString).resolve(s"$classifier.txt"), content.getBytes)
+      logs.groupBy(_.nodeName).foreach { case (nodeName, logs) =>
+        logs.groupBy(_.classifier).foreach { case (classifier, logs) =>
+          val path = logsPath(runId, nodeName, classifier)
+          Files.createDirectories(path.getParent)
+          val content = logs.map(log => s"${log.createdAt} ${log.message.replace("\n", "\\\\n")}").mkString("\n")
+          //TODO: lock file? Or not ?
+          Files.write(path, content.getBytes, StandardOpenOption.CREATE, StandardOpenOption.APPEND)
+        }
       }
     }
   }
@@ -96,6 +105,10 @@ final class LocalRunRepository(rootDir: Path) extends LocalStorage(locking = fal
   private def logsPath = rootDir.resolve("logs")
 
   private def runPath(id: RunId) = getSubdir(runsPath, id.value).resolve(s"${id.value}.json")
+
+  private def logsPath(id: RunId, nodeName: String): Path = getSubdir(logsPath, id.value.toString).resolve(nodeName)
+
+  private def logsPath(id: RunId, nodeName: String, classifier: String): Path = logsPath(id, nodeName).resolve(s"$classifier.txt")
 
   private def getSubdir(dir: Path, id: String) = {
     // We create two levels of subdirectories based on run identifier to avoid putting to many files in a single

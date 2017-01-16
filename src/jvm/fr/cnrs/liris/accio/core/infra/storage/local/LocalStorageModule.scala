@@ -21,32 +21,20 @@ package fr.cnrs.liris.accio.core.infra.storage.local
 import java.nio.file.Path
 
 import com.google.inject.{AbstractModule, Provides}
-import fr.cnrs.liris.accio.core.service.Configurable
 import fr.cnrs.liris.accio.core.domain.{RunRepository, WorkflowRepository}
 import net.codingwell.scalaguice.ScalaModule
 
 /**
- * Local storage configuration.
- *
- * @param rootDir Root directory under which to store files.
- */
-case class LocalStorageConfig(rootDir: Path)
-
-/**
  * Guice module provisioning repositories with local storage.
+ *
+ * @param path Root directory under which to store files.
  */
-final class LocalStorageModule extends AbstractModule with ScalaModule with Configurable[LocalStorageConfig] {
-  override def configClass: Class[LocalStorageConfig] = classOf[LocalStorageConfig]
-
+final class LocalStorageModule(path: Path) extends AbstractModule with ScalaModule {
   override def configure(): Unit = {}
 
   @Provides
-  def providesRunRepository: RunRepository = {
-    new LocalRunRepository(config.rootDir.resolve("runs"))
-  }
+  def providesRunRepository: RunRepository = new LocalRunRepository(path.resolve("runs"))
 
   @Provides
-  def providesWorkflowRepository: WorkflowRepository = {
-    new LocalWorkflowRepository(config.rootDir.resolve("workflows"))
-  }
+  def providesWorkflowRepository: WorkflowRepository = new LocalWorkflowRepository(path.resolve("workflows"))
 }

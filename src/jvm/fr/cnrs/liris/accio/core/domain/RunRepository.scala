@@ -87,7 +87,7 @@ trait RunRepository {
  * @param owner    Only include runs initiated by a given user.
  * @param name     Only include runs whose name matches a given string. Exact interpretation can be implementation-dependant.
  * @param status   Only include runs whose status belong to those specified.
- * @param limit    Maximum number of matching runs to return. Must be in [1,100].
+ * @param limit    Maximum number of matching runs to return. Must be in [1,200].
  * @param offset   Number of matching runs to skip.
  */
 case class RunQuery(
@@ -95,9 +95,9 @@ case class RunQuery(
   owner: Option[String] = None,
   name: Option[String] = None,
   status: Set[RunStatus] = Set.empty,
-  limit: Int = 25,
+  limit: Int = 50,
   offset: Option[Int] = None) {
-  require(limit > 0 && limit <= 100, s"Maximum number of runs must be in [1,100] (got $limit)")
+  require(limit > 0 && limit <= 200, s"Maximum number of runs must be in [1,200] (got $limit)")
 }
 
 /**

@@ -31,9 +31,15 @@ import fr.cnrs.liris.common.util.FileUtils
 final class LocalUploader(rootDir: Path) extends Uploader {
   override def upload(src: Path, dst: String): String = {
     // We copy files to target path. We do *not* want to symlink them, as original files can disappear at any time.
+    println(s"--- uploading from ${src.toAbsolutePath}")
+    println(s"--- uploading: ${src.toFile.list.mkString(", ")}")
     val target = rootDir.resolve(dst)
     Files.createDirectories(target.getParent)
     FileUtils.recursiveCopy(src, target)
+
+    println(s"--- uploaded to ${target.toAbsolutePath}")
+    println(s"--- uploaded: ${target.toFile.list.mkString(", ")}")
+
     target.toAbsolutePath.toString
   }
 }

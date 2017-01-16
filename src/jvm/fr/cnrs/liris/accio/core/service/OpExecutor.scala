@@ -136,7 +136,8 @@ final class OpExecutor(
     if (cleanSandbox) {
       // Sandbox directory can now be deleted. Caveat: If there was a fatal error before, this line will never be
       // reached and it will not be deleted.
-      FileUtils.safeDelete(sandboxDir)
+      FileUtils.    'src/thrift/fr/cnrs/liris/accio/core/domain',
+safeDelete(sandboxDir)
       logger.debug(s"${opts.logsPrefix}Cleaned sandbox")
     }
 

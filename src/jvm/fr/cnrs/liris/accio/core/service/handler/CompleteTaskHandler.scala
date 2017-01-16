@@ -57,9 +57,12 @@ final class CompleteTaskHandler @Inject()(
                     }
                   }
                   nextNodes.foreach(nextNode => scheduler.submit(newRun, graph(nextNode)))
-                  logger.debug(s"Task ${task.id.value} successful, scheduled ${nextNodes.size} new nodes")
+                  logger.debug(s"[T${task.id.value}] Task successful, scheduled ${nextNodes.size} new nodes")
                 } else {
-                  logger.debug(s"Task ${task.id.value} failed, cancelled next nodes")
+                  logger.debug(s"[T${task.id.value}] Task failed, cancelled next nodes")
+                }
+                if (Utils.isCompleted(newRun.state.status)) {
+                  logger.debug(s"[T${task.id.value}] Run ${run.id.value} completed")
                 }
             }
           } finally {

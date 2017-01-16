@@ -9,8 +9,11 @@ scala_library(
     '3rdparty/jvm:logback',
   ],
   excludes = [
+    # Multiple logging frameworks.
     exclude(org = 'org.slf4j', name = 'slf4j-log4j12'),
     exclude(org = 'org.slf4j', name = 'slf4j-jdk14'),
+    # Finagle comes with its own Thrift library.
+    exclude(org = 'com.twitter', name = 'libthrift'),
   ],
   resources = [
     'src/resources/fr/cnrs/liris/accio/agent',

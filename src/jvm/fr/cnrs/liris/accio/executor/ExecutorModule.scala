@@ -18,18 +18,17 @@
 
 package fr.cnrs.liris.accio.executor
 
-import java.nio.file.Path
+import java.nio.file.Paths
 
-import com.google.inject.{Injector, Provides, TypeLiteral}
+import com.google.inject.{Injector, Provides, Singleton, TypeLiteral}
 import com.twitter.finagle.Thrift
 import fr.cnrs.liris.accio.agent.AgentService
 import fr.cnrs.liris.accio.core.api.Operator
 import fr.cnrs.liris.accio.core.domain.{OpMetaReader, OpRegistry}
 import fr.cnrs.liris.accio.core.service._
-import fr.cnrs.liris.common.flags.inject.InjectFlag
 import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
 
-object ExecutorModule extends ScalaModule {
+class ExecutorModule(addr: String) extends ScalaModule {
   override protected def configure(): Unit = {
     ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Class[_ <: Operator[_, _]]] {})
     bind[OpMetaReader].to[ReflectOpMetaReader]
@@ -41,14 +40,17 @@ object ExecutorModule extends ScalaModule {
     new OpFactory(opRegistry, injector: Injector)
   }
 
+  @Singleton
   @Provides
-  def providesAgentClient(@InjectFlag("addr") agentAddr: String): AgentService.FinagledClient = {
-    val service = Thrift.newService(agentAddr)
+  def providesClient: AgentService.FinagledClient = {
+    val service = Thrift.newService(addr)
     new AgentService.FinagledClient(service)
   }
 
   @Provides
-  def providesOpExecutor(opRegistry: RuntimeOpRegistry, opFactory: OpFactory, uploader: Uploader, downloader: Downloader, @InjectFlag("workdir") workDir: Path): OpExecutor = {
-    new OpExecutor(opRegistry, opFactory, uploader, downloader, workDir)
+  def providesOpExecutor(opRegistry: RuntimeOpRegistry, opFactory: OpFactory, uploader: Uploader, downloader: Downloader): OpExecutor = {
+    // Because the executor is designed to run inside a sandbox, we simply use current directory as temporary path
+    // for the operator executor.
+    new OpExecutor(opRegistry, opFactory, uploader, downloader, Paths.get("."))
   }
 }

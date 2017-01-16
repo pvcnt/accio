@@ -36,7 +36,7 @@ class FileUtilsSpec extends UnitSpec {
   }
 
   it should "delete a file" in {
-    val file  = Files.createTempFile("FileUtilsSpec-", ".txt")
+    val file = Files.createTempFile("FileUtilsSpec-", ".txt")
     file.toFile.deleteOnExit()
     file.toFile.exists() shouldBe true
 
@@ -67,5 +67,43 @@ class FileUtilsSpec extends UnitSpec {
     FileUtils.expand("./foo/bar") shouldBe sys.props("user.dir") + "/foo/bar"
     FileUtils.expand(".foo/bar") shouldBe ".foo/bar"
     FileUtils.expand("abc/./foo/bar") shouldBe "abc/./foo/bar"
+  }
+
+  "FileUtils::recursiveCopy" should "copy files" in {
+    val srcFile = Files.createTempFile("FileUtilsSpec-", ".txt")
+    Files.write(srcFile, "foobar".getBytes)
+    val dstFile = Files.createTempDirectory("FileUtilsSpec-").resolve("file.txt")
+    FileUtils.recursiveCopy(srcFile, dstFile)
+
+    dstFile.toFile.exists shouldBe true
+    dstFile.toFile.isFile shouldBe true
+    new String(Files.readAllBytes(dstFile)) shouldBe "foobar"
+
+    // Cleanup.
+    FileUtils.safeDelete(srcFile)
+    FileUtils.safeDelete(dstFile.getParent)
+  }
+
+  it should "copy directories" in {
+    val srcDir = Files.createTempDirectory("FileUtilsSpec-")
+    Files.createDirectory(srcDir.resolve("foo"))
+    Files.createDirectory(srcDir.resolve("bar"))
+    Files.write(srcDir.resolve("foobar.txt"), "foobar".getBytes)
+    Files.write(srcDir.resolve("foo/foo.txt"), "foo/foo".getBytes)
+    Files.write(srcDir.resolve("foo/bar.txt"), "foo/bar".getBytes)
+    Files.write(srcDir.resolve("bar/foo.txt"), "bar/foo".getBytes)
+    Files.write(srcDir.resolve("bar/bar.txt"), "bar/bar".getBytes)
+    val dstDir = Files.createTempDirectory("FileUtilsSpec-").resolve("dir")
+    FileUtils.recursiveCopy(srcDir, dstDir)
+
+    new String(Files.readAllBytes(dstDir.resolve("foobar.txt"))) shouldBe "foobar"
+    new String(Files.readAllBytes(dstDir.resolve("foo/foo.txt"))) shouldBe "foo/foo"
+    new String(Files.readAllBytes(dstDir.resolve("foo/bar.txt"))) shouldBe "foo/bar"
+    new String(Files.readAllBytes(dstDir.resolve("bar/foo.txt"))) shouldBe "bar/foo"
+    new String(Files.readAllBytes(dstDir.resolve("bar/bar.txt"))) shouldBe "bar/bar"
+
+    // Cleanup.
+    FileUtils.safeDelete(srcDir)
+    FileUtils.safeDelete(dstDir.getParent)
   }
 }

@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.core.infra.scheduler.local
 
-import java.nio.file.Files
+import java.nio.file.{Files, Path}
 import java.util.UUID
 import java.util.concurrent.{ConcurrentHashMap, Executors}
 
@@ -36,19 +36,28 @@ import scala.collection.mutable
  * Intended for testing or use in single-node development clusters, as it does not support cluster-mode
  * (by definition...) nor resource constraints.
  *
- * @param opRegistry Operator registry.
- * @param downloader Downloader.
- * @param config     Scheduler configuration.
+ * @param opRegistry   Operator registry.
+ * @param downloader   Downloader.
+ * @param workDir      Working directory where sandboxes will be stored.
+ * @param executorUri  URI where to fetch the executor.
+ * @param javaHome     Java home to be used when running nodes.
+ * @param executorArgs Arguments to pass to the executors.
  */
-class LocalScheduler(opRegistry: OpRegistry, downloader: Downloader, config: LocalSchedulerConfig)
+class LocalScheduler(
+  opRegistry: OpRegistry,
+  downloader: Downloader,
+  workDir: Path,
+  executorUri: String,
+  javaHome: Option[String],
+  executorArgs: Seq[String])
   extends Scheduler with StrictLogging {
 
   private[this] val monitors = new ConcurrentHashMap[String, TaskMonitor].asScala
-  private[this] val executorService = Executors.newSingleThreadExecutor
+  private[this] val executorService = Executors.newCachedThreadPool
   private[this] lazy val localExecutorPath = {
-    val targetPath = config.workDir.resolve("executor.jar")
+    val targetPath = workDir.resolve("executor.jar")
     logger.info(s"Downloading executor JAR to ${targetPath.toAbsolutePath}")
-    downloader.download(config.executorUri, targetPath)
+    downloader.download(executorUri, targetPath)
     targetPath
   }
 
@@ -79,28 +88,28 @@ class LocalScheduler(opRegistry: OpRegistry, downloader: Downloader, config: Loc
     executorService.shutdownNow()
   }
 
-  private def getSandboxPath(key: String) = config.workDir.resolve(key)
+  private def getSandboxPath(key: String) = workDir.resolve(key)
 
-  private class TaskMonitor(id: TaskId, key: String, payload: OpPayload) extends Runnable with StrictLogging {
+  private class TaskMonitor(taskId: TaskId, key: String, payload: OpPayload) extends Runnable with StrictLogging {
     private[this] var killed = false
     private[this] var process: Option[Process] = None
 
     override def run(): Unit = {
       val maybeProcess = synchronized {
-        process = if (killed) None else Some(startProcess(id, key, payload))
+        process = if (killed) None else Some(startProcess(taskId, key, payload))
         process
       }
       maybeProcess match {
         case None =>
-          logger.info(s"Skipped task ${id.value} (killed)")
+          logger.info(s"[T${taskId.value}] Skipped task (killed)")
           cleanup()
         case Some(p) =>
-          logger.info(s"Started task ${id.value}")
+          logger.info(s"[T${taskId.value}] Started task")
           try {
             p.waitFor()
-            logger.info(s"Completed task ${id.value}")
+            logger.info(s"[T${taskId.value}] Completed task")
           } catch {
-            case e: InterruptedException => logger.warn(s"Interrupted while waiting for task ${id.value}", e)
+            case e: InterruptedException => logger.warn(s"[T${taskId.value}] Interrupted while waiting", e)
           } finally {
             cleanup()
           }
@@ -112,7 +121,7 @@ class LocalScheduler(opRegistry: OpRegistry, downloader: Downloader, config: Loc
         killed = true
         process.foreach(_.destroyForcibly())
         process = None
-        logger.info(s"Killed task ${id.value}")
+        logger.info(s"[T${taskId.value}] Killed task")
       }
     }
 
@@ -121,8 +130,8 @@ class LocalScheduler(opRegistry: OpRegistry, downloader: Downloader, config: Loc
       FileUtils.safeDelete(getSandboxPath(key))
     }
 
-    private def startProcess(id: TaskId, key: String, payload: OpPayload): Process = {
-      val javaBinary = config.javaHome.orElse(sys.env.get("JAVA_HOME")).map(home => s"$home/bin/java").getOrElse("/usr/bin/java")
+    private def startProcess(taskId: TaskId, key: String, payload: OpPayload): Process = {
+      val javaBinary = javaHome.orElse(sys.env.get("JAVA_HOME")).map(home => s"$home/bin/java").getOrElse("/usr/bin/java")
       val resource = opRegistry(payload.op).resource
 
       val cmd = mutable.ListBuffer.empty[String]
@@ -131,13 +140,11 @@ class LocalScheduler(opRegistry: OpRegistry, downloader: Downloader, config: Loc
       cmd += localExecutorPath.toString
       cmd += s"-Xmx${resource.ramMb}M"
       cmd += "fr.cnrs.liris.accio.executor.AccioExecutorMain"
-      cmd += "-id"
-      cmd += id.value
-      cmd += "-addr"
-      cmd += config.agentAddr
-      cmd += "-uploader.type"
-      cmd += config.uploaderType
-      cmd ++= config.uploaderArgs.flatMap { case (k, v) => Seq(s"uploader.${config.uploaderType}.$k", v) }
+      cmd += "-task_id"
+      cmd += taskId.value
+      cmd ++= executorArgs
+
+      logger.debug(s"[T${taskId.value}] Built command-line: ${cmd.mkString(" ")}")
 
       val sandboxDir = getSandboxPath(key)
       Files.createDirectories(sandboxDir)

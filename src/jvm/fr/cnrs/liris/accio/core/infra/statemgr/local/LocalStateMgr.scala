@@ -33,7 +33,6 @@ import fr.cnrs.liris.common.util.{FileLock, FileUtils}
  * @param rootDir Root directory under which data will be written.
  */
 final class LocalStateMgr(rootDir: Path) extends LocalStorage(locking = true) with StateManager with StrictLogging {
-
   override def lock(key: String): Lock = new LocalLock(key)
 
   override def tasks: Set[Task] = {

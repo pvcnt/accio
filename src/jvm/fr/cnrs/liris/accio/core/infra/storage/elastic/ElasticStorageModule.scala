@@ -22,7 +22,6 @@ import com.google.inject.Provides
 import com.sksamuel.elastic4s.{ElasticClient, ElasticsearchClientUri}
 import com.twitter.finatra.json.FinatraObjectMapper
 import com.twitter.util.{Duration => TwitterDuration}
-import fr.cnrs.liris.accio.core.service.Configurable
 import fr.cnrs.liris.accio.core.domain.{RunRepository, WorkflowRepository}
 import net.codingwell.scalaguice.ScalaModule
 import org.elasticsearch.common.settings.Settings
@@ -30,40 +29,33 @@ import org.elasticsearch.common.settings.Settings
 import scala.concurrent.duration.{Duration => ScalaDuration}
 
 /**
- * Local storage configuration.
+ * Guice module provisioning repositories with storage inside an Elasticsearch cluster.
  *
- * @param clusterAddr  Address(es) to Elasticsearch cluster members ("hostname:port[,hostname:port...]").
- * @param sniff        Whether to "sniff" Elasticsearch cluster members.
+ * @param addr         Address(es) to Elasticsearch cluster members ("hostname:port[,hostname:port...]").
  * @param prefix       Prefix of indices managed by Accio.
  * @param queryTimeout Timeout of queries sent to Elasticsearch.
  */
-case class ElasticStorageConfig(
-  clusterAddr: String,
-  sniff: Boolean = true,
-  prefix: String = "accio__",
+final class ElasticStorageModule(
+  addr: String,
+  prefix: String = "accio_",
   queryTimeout: TwitterDuration = TwitterDuration.fromSeconds(20))
-
-/**
- * Guice module provisioning repositories with storage inside an Elasticsearch cluster.
- */
-final class ElasticStorageModule extends ScalaModule with Configurable[ElasticStorageConfig] {
-  override def configClass: Class[ElasticStorageConfig] = classOf[ElasticStorageConfig]
+  extends ScalaModule {
 
   override def configure(): Unit = {}
 
   @Provides
   def providesRunRepository(mapper: FinatraObjectMapper): RunRepository = {
-    new ElasticRunRepository(mapper, client, config.prefix, ScalaDuration.fromNanos(config.queryTimeout.inNanoseconds))
+    new ElasticRunRepository(mapper, client, prefix, ScalaDuration.fromNanos(queryTimeout.inNanoseconds))
   }
 
   @Provides
   def providesWorkflowRepository(mapper: FinatraObjectMapper): WorkflowRepository = {
-    new ElasticWorkflowRepository(mapper, client, config.prefix, ScalaDuration.fromNanos(config.queryTimeout.inNanoseconds))
+    new ElasticWorkflowRepository(mapper, client, prefix, ScalaDuration.fromNanos(queryTimeout.inNanoseconds))
   }
 
   private lazy val client = {
-    val settings = Settings.builder().put("client.transport.sniff", config.sniff).build()
-    val uri = ElasticsearchClientUri(s"elasticsearch://${config.clusterAddr}")
+    val settings = Settings.builder().put("client.transport.sniff", true).build()
+    val uri = ElasticsearchClientUri(s"elasticsearch://$addr")
     val client = ElasticClient.transport(settings, uri)
 
     sys.addShutdownHook(client.close())

@@ -60,13 +60,13 @@ class TaskExecutor @Inject()(opExecutor: OpExecutor, client: AgentService.Finagl
   }
 
   private def start(taskId: TaskId, runId: RunId, nodeName: String, payload: OpPayload): Future[Unit] = {
-    System.setOut(new PrintStream(stdoutBytes))
-    System.setErr(new PrintStream(stderrBytes))
+    //System.setOut(new PrintStream(stdoutBytes))
+    //System.setErr(new PrintStream(stderrBytes))
     threads ++= Set(new HeartbeatThread(taskId), new StreamLogsThread(taskId, runId, nodeName))
     threads.foreach(_.start())
     logger.debug(s"[T${taskId.value}] Started execution")
     pool {
-      val opts = OpExecutorOpts(useProfiler = true, logsPrefix = s"[T${taskId.value}]")
+      val opts = OpExecutorOpts(useProfiler = true, logsPrefix = s"[T${taskId.value}] ")
       opExecutor.execute(payload, opts)
     }.transform {
       case Throw(e) =>
