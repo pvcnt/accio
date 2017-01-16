@@ -82,14 +82,11 @@ struct Run {
   // Specification of the associated workflow.
   2: required Package pkg;
 
-  // Cluster providing resources.
-  3: required string cluster;
-
-  // Environment.
-  4: required string environment;
-
   // User initiating the run.
-  5: required common.User owner;
+  3: required common.User owner;
+
+  // Time at which this run has been created.
+  4: required common.Timestamp created_at;
 
   // Human-readable name.
   6: optional string name;
@@ -115,47 +112,38 @@ struct Run {
   // Identifier of the run this instance has been cloned from.
   13: optional common.RunId cloned_from;
 
-  // Time at which this run has been created.
-  14: required common.Timestamp created_at;
-
   // Execution state.
-  15: required RunState state;
+  14: required RunState state;
 }
 
-struct RunTemplate {
+struct RunDef {
   // Specification of the associated workflow.
   1: required Package pkg;
 
-  // Cluster providing resources to execute the run.
-  2: required string cluster;
-
-  // Environment inside which the run is executed.
-  3: optional string environment;
-
   // User initiating the run.
-  5: optional common.User owner;
+  2: optional common.User owner;
 
   // Human-readable name.
-  6: optional string name;
+  3: optional string name;
 
   // Notes describing the purpose of the run.
-  7: optional string notes;
+  4: optional string notes;
 
   // Arbitrary tags used when looking for runs.
-  8: required set<string> tags;
+  5: required set<string> tags;
 
   // Seed used by unstable operators.
-  9: optional i64 seed;
+  6: optional i64 seed;
 
   // Values of workflow parameters. There can possibly be many values for a single parameter, which will cause a
   // parameter sweep to be executed.
-  11: required map<string, list<common.Value>> params;
+  7: required map<string, list<common.Value>> params;
 
   // Number of times to repeat each run.
-  12: optional i32 repeat;
+  8: optional i32 repeat;
 
   // Identifier of the run this instance has been cloned from.
-  13: optional common.RunId cloned_from;
+  9: optional common.RunId cloned_from;
 }
 
 struct RunLog {

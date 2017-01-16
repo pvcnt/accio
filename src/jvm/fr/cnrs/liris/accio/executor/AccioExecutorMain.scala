@@ -23,6 +23,7 @@ import java.nio.file.{Path, Paths}
 import com.google.inject.{Guice, Module}
 import com.twitter.util.Await
 import com.typesafe.scalalogging.LazyLogging
+import fr.cnrs.liris.accio.core.domain.TaskId
 import fr.cnrs.liris.accio.core.infra.downloader.GetterDownloaderModule
 import fr.cnrs.liris.accio.core.infra.uploader.local.{LocalUploaderConfig, LocalUploaderModule}
 import fr.cnrs.liris.accio.core.service.Configurator
@@ -34,9 +35,9 @@ import scala.collection.mutable
 
 case class AccioExecutorFlags(
   @Flag(name = "id") taskId: String,
-  @Flag(name = "agent_addr") agentAddr: String,
+  @Flag(name = "addr") agentAddr: String,
   @Flag(name = "uploader.type") uploaderType: String = "local",
-  @Flag(name = "uploader.local.path") localUploaderPath: Option[Path],
+  @Flag(name = "uploader.local.path") localUploaderPath: Path,
   @Flag(name = "workdir") workDir: Path = Paths.get("."))
 
 object AccioExecutorMain extends AccioExecutor
@@ -54,11 +55,11 @@ class AccioExecutor extends LazyLogging {
     }
 
     val configurator = Configurator(
-      LocalUploaderConfig(opts.localUploaderPath.getOrElse(opts.workDir.resolve("uploads"))))
+      LocalUploaderConfig(opts.localUploaderPath))
     configurator.initialize(modules: _*)
     val injector = Guice.createInjector(modules: _*)
 
-    val controller = injector.getInstance(classOf[ExecutorController])
-    Await.ready(controller.execute(opts))
+    val executor = injector.getInstance(classOf[TaskExecutor])
+    Await.ready(executor.execute(TaskId(opts.taskId)))
   }
 }

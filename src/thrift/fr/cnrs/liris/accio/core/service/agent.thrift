@@ -41,7 +41,7 @@ struct ListOperatorsResponse {
 }
 
 struct PushWorkflowRequest {
-  1: required workflow.WorkflowTemplate template;
+  1: required workflow.WorkflowDef defn;
   2: required common.User user;
 }
 
@@ -71,7 +71,7 @@ struct ListWorkflowsResponse {
 }
 
 struct CreateRunRequest {
-  1: required run.RunTemplate template;
+  1: required run.RunDef defn;
   2: required common.User user;
 }
 
@@ -90,13 +90,11 @@ struct GetRunResponse {
 struct ListRunsRequest {
   1: optional string owner;
   2: optional string name;
-  3: optional string cluster;
-  4: optional string environment;
-  5: optional run.RunStatus status;
+  3: optional common.WorkflowId workflow_id;
+  5: optional set<run.RunStatus> status;
   6: optional set<string> tags;
   7: optional common.RunId parent;
   8: optional common.RunId cloned_from;
-  9: optional common.WorkflowId workflow_id;
   10: optional i32 limit;
   11: optional i32 offset;
 }

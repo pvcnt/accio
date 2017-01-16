@@ -22,9 +22,9 @@ import java.nio.file.Path
 
 import com.google.inject.Guice
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.client.parser.ParserFinatraJacksonModule
-import fr.cnrs.liris.common.flags.inject.FlagsModule
-import fr.cnrs.liris.common.flags.{FlagsParser, _}
+import fr.cnrs.liris.accio.client.service.ParserFinatraJacksonModule
+import fr.cnrs.liris.accio.core.infra.cli.{CmdDispatcher, StreamReporter}
+import fr.cnrs.liris.common.flags._
 
 object AccioClientMain extends AccioClient
 
@@ -36,15 +36,15 @@ object AccioClientMain extends AccioClient
 case class AccioFlags(
   @Flag(name = "logging", help = "Logging level")
   logLevel: String = "warn",
-  @Flag(name = "acciorc", help = "Path to the .acciorc configuration file")
+  @Flag(name = "color", help = "Enable or disabled colored output")
+  color: Boolean = false,
+  @Flag(name = "rc", help = "Path to the .acciorc configuration file")
   accioRcPath: Option[Path],
   @Flag(name = "config")
-  accioRcConfig: Option[String],
-  @Flag(name = "agent_addr", help = "Address to the Accio agent")
-  agentAddr: String = "localhost:9999")
+  accioRcConfig: Option[String])
 
 /**
- * Entry point of the Accio command line application. Very little is done here, it is the job of [[Command]]s
+ * Entry point of the Accio command line application. Very little is done here, it is the job of [[fr.cnrs.liris.accio.core.infra.cli.Command]]s
  * to actually handle the payload.
  */
 class AccioClient extends StrictLogging {
@@ -55,10 +55,9 @@ class AccioClient extends StrictLogging {
     //val parser = FlagsParser[AccioFlags](allowResidue = true)
     //parser.parse(args)
 
-    val reporter = new StreamReporter(Console.out, useColors = true)
     val injector = Guice.createInjector(/*FlagsModule(parser), */ClientModule, ParserFinatraJacksonModule)
     val dispatcher = injector.getInstance(classOf[CmdDispatcher])
-    val exitCode = dispatcher.exec(args, reporter)
+    val exitCode = dispatcher.exec(args)
 
     logger.info(s"Terminating Accio client: ${exitCode.name}")
     sys.exit(exitCode.code)

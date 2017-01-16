@@ -48,20 +48,15 @@ final class ElasticRunRepository(
 
   override def find(query: RunQuery): RunList = {
     var q = boolQuery()
-    query.cluster.foreach { cluster =>
-      q = q.must(termQuery("cluster", cluster))
-    }
-    query.environment.foreach { environment =>
-      q = q.must(termQuery("environment", environment))
-    }
     query.owner.foreach { owner =>
-      q = q.filter(termQuery("owner.name", owner))
+      q = q.must(termQuery("owner.name", owner))
     }
-    query.status.foreach { status =>
-      q = q.filter(termQuery("state.status", status.value))
+    if (query.status.nonEmpty) {
+      val qs = query.status.map(v => termQuery("state.status", v))
+      q = q.should(qs)
     }
     query.workflow.foreach { workflowId =>
-      q = q.filter(termQuery("pkg.workflow_id.value", workflowId.value))
+      q = q.must(termQuery("pkg.workflow_id.value", workflowId.value))
     }
     query.name.foreach { name =>
       q = q.must(matchQuery("name", name))

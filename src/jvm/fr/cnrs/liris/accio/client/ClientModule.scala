@@ -21,8 +21,10 @@ package fr.cnrs.liris.accio.client
 import com.google.inject.{AbstractModule, Provides, TypeLiteral}
 import com.twitter.finagle.Thrift
 import fr.cnrs.liris.accio.agent.AgentService
-import fr.cnrs.liris.accio.core.domain.{OpRegistry, StaticOpRegistry}
-import fr.cnrs.liris.common.flags.inject.InjectFlag
+import fr.cnrs.liris.accio.client.command._
+import fr.cnrs.liris.accio.client.service.RemoteOpRegistry
+import fr.cnrs.liris.accio.core.domain.OpRegistry
+import fr.cnrs.liris.accio.core.infra.cli.Command
 import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
 
 /**
@@ -36,8 +38,10 @@ object ClientModule extends AbstractModule with ScalaModule {
     commands.addBinding.toInstance(classOf[RunCommand])
     commands.addBinding.toInstance(classOf[ValidateCommand])
     commands.addBinding.toInstance(classOf[PushCommand])
+    commands.addBinding.toInstance(classOf[PsCommand])
+    commands.addBinding.toInstance(classOf[InspectCommand])
 
-    bind[OpRegistry].toInstance(new StaticOpRegistry(Set.empty))
+    bind[OpRegistry].to[RemoteOpRegistry]
   }
 
   @Provides

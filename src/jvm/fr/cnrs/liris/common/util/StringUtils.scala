@@ -30,6 +30,8 @@ object StringUtils {
   val DoubleQuoteEscaper: Escaper = new CharEscaperBuilder().addEscape('"', "\\\"").toEscaper
   val SingleQuoteEscaper: Escaper = new CharEscaperBuilder().addEscape('\\', "\\\\").toEscaper
 
+  def padTo(str: String, n: Int) = str.padTo(n, " ").take(n).mkString
+
   /**
    * Paragraph-fill the specified input text, indenting lines to 'indent' and
    * wrapping lines at 'width'.  Returns the formatted result.

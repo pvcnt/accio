@@ -26,21 +26,21 @@ import fr.cnrs.liris.accio.core.domain._
 private[accio] object Operators {
   val FirstSimple: OpDef = createOpDef(
     "FirstSimple",
-    Seq(ArgDef("foo", None, DataType(AtomicType.Integer), false)),
-    Seq(ArgDef("data", None, DataType(AtomicType.Dataset), false)))
+    Seq(ArgDef("foo", DataType(AtomicType.Integer))),
+    Seq(ArgDef("data", DataType(AtomicType.Dataset))))
   val SecondSimple: OpDef = createOpDef(
     "SecondSimple",
     Seq(
-      ArgDef("dbl", None, DataType(AtomicType.Double), false),
-      ArgDef("str", None, DataType(AtomicType.String), false, Some(Value(strings = Seq("something")))),
-      ArgDef("data", None, DataType(AtomicType.Dataset), false, None)),
-    Seq(ArgDef("data", None, DataType(AtomicType.Dataset), false)))
+      ArgDef("dbl", DataType(AtomicType.Double)),
+      ArgDef("str", DataType(AtomicType.String), defaultValue = Some(Value(strings = Seq("something")))),
+      ArgDef("data", DataType(AtomicType.Dataset))),
+    Seq(ArgDef("data", DataType(AtomicType.Dataset))))
   val ThirdSimple: OpDef = createOpDef(
     "ThirdSimple",
     Seq(
-      ArgDef("data1", None, DataType(AtomicType.Dataset), false, None),
-      ArgDef("data2", None, DataType(AtomicType.Dataset), false, None)),
-    Seq(ArgDef("data", None, DataType(AtomicType.Dataset), false)))
+      ArgDef("data1", DataType(AtomicType.Dataset)),
+      ArgDef("data2", DataType(AtomicType.Dataset))),
+    Seq(ArgDef("data", DataType(AtomicType.Dataset))))
 
   val ops: Set[OpDef] = Set(FirstSimple, SecondSimple, ThirdSimple)
 

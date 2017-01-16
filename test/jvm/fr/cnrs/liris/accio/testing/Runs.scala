@@ -28,8 +28,6 @@ object Runs {
   val Foobar = Run(
     id = RunId("foobar"),
     pkg = Package(WorkflowId("my_workflow"), "v1"),
-    cluster = "local",
-    environment = "devel",
     owner = User("me"),
     name = Some("foo bar workflow"),
     notes = Some("awesome workflow!"),
@@ -42,8 +40,6 @@ object Runs {
   val Foo = Run(
     id = RunId("foo"),
     pkg = Package(WorkflowId("my_workflow"), "v1"),
-    cluster = "local",
-    environment = "devel",
     owner = User("me"),
     name = Some("foo bar workflow"),
     tags = Set("foo"),

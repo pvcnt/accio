@@ -25,9 +25,9 @@ import fr.cnrs.liris.accio.core.domain._
 class PushWorkflowHandler @Inject()(workflowFactory: WorkflowFactory, workflowRepository: WorkflowRepository)
   extends Handler[PushWorkflowRequest, PushWorkflowResponse] {
 
-  @throws[InvalidWorkflowException]
+  @throws[InvalidWorkflowDefException]
   override def handle(req: PushWorkflowRequest): Future[PushWorkflowResponse] = {
-    val workflow = workflowFactory.create(req.template, req.user)
+    val workflow = workflowFactory.create(req.defn, req.user)
     workflowRepository.save(workflow)
     println(workflow)
     Future(PushWorkflowResponse(workflow))

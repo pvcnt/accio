@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.core.domain
 
 import java.util.UUID
 
-import fr.cnrs.liris.common.util.Seqs
+import fr.cnrs.liris.common.util.{HashUtils, Seqs}
 
 import scala.util.Random
 
@@ -29,7 +29,7 @@ import scala.util.Random
  */
 final class RunFactory(workflowRepository: WorkflowRepository) {
   /**
-   * Create one or several runs from a run template.
+   * Create one or several runs from a run definition.
    *
    * Run templates can trigger a parameter sweep if one the following conditions is met:
    * (1) `repeat` field is set to a value greater than 1 OR
@@ -37,72 +37,67 @@ final class RunFactory(workflowRepository: WorkflowRepository) {
    * When a parameter sweep is launched, several runs will be returned, the first one being the parent run, which will
    * not be actually executed, and the other the children, which will be executed in parallel.
    *
-   * @param template Run template.
-   * @param user     User creating the runs.
-   * @throws InvalidRunException
+   * @param defn Run definition.
+   * @param user User creating the runs.
+   * @throws InvalidRunDefException
    * @return List of runs.
    */
-  @throws[InvalidRunException]
-  def create(template: RunTemplate, user: User): Seq[Run] = {
+  @throws[InvalidRunDefException]
+  def create(defn: RunDef, user: User): Seq[Run] = {
     // Extract the workflow.
-    val workflow = getWorkflow(template.pkg)
+    val workflow = getWorkflow(defn.pkg)
 
     // Check that workflow parameters referenced actually exist.
-    val unknownParams = template.params.keySet.diff(workflow.params.map(_.name))
+    val unknownParams = defn.params.keySet.diff(workflow.params.map(_.name))
     if (unknownParams.nonEmpty) {
-      throw new InvalidRunException(s"Unknown parameters: ${unknownParams.mkString(", ")}")
+      throw new InvalidRunDefException(s"Unknown parameters: ${unknownParams.mkString(", ")}")
     }
 
     // Check that all non-optional workflow parameters are defined.
-    val missingParams = workflow.params.filterNot(_.isOptional).map(_.name).diff(template.params.keySet)
+    val missingParams = workflow.params.filterNot(_.isOptional).map(_.name).diff(defn.params.keySet)
     if (missingParams.nonEmpty) {
-      throw new InvalidRunException(s"Non-optional parameters are unspecified: ${missingParams.mkString(", ")}")
+      throw new InvalidRunDefException(s"Non-optional parameters are unspecified: ${missingParams.mkString(", ")}")
     }
 
-    val defaultParams = workflow.params.filterNot(p => template.params.contains(p.name)).map {argDef =>
+    val defaultParams = workflow.params.filterNot(p => defn.params.contains(p.name)).map { argDef =>
       argDef.name -> argDef.defaultValue.get
     }.toMap
 
     // Check the repeat parameter is correct.
-    val repeat = template.repeat.getOrElse(1)
+    val repeat = defn.repeat.getOrElse(1)
     if (repeat <= 0) {
-      throw new InvalidRunException(s"Number of repetitions must be >= 1, got: $repeat")
+      throw new InvalidRunDefException(s"Number of repetitions must be >= 1, got: $repeat")
     }
 
     // Expand parameters w.r.t. to parameter sweep and repeat.
-    val expandedParams = expandForSweep(template.params.toMap).flatMap(expandForRepeat(repeat, _))
+    val expandedParams = expandForSweep(defn.params.toMap).flatMap(expandForRepeat(repeat, _))
 
     // Create all runs.
-    val owner = template.owner.getOrElse(user)
-    val environment = template.environment.getOrElse(Utils.DefaultEnvironment)
+    val owner = defn.owner.getOrElse(user)
     if (expandedParams.size == 1) {
-      Seq(createSingle(workflow, template.cluster, owner, environment, template.name, template.notes,
-        template.tags.toSet, template.seed, defaultParams ++ expandedParams.head, template.clonedFrom))
+      Seq(createSingle(workflow, owner, defn.name, defn.notes,
+        defn.tags.toSet, defn.seed, defaultParams ++ expandedParams.head, defn.clonedFrom))
     } else {
-      createSweep(workflow, template.cluster, owner, environment, template.name, template.notes, template.tags.toSet,
-        template.seed, defaultParams, expandedParams, repeat, template.clonedFrom)
+      createSweep(workflow, owner, defn.name, defn.notes, defn.tags.toSet,
+        defn.seed, defaultParams, expandedParams, repeat, defn.clonedFrom)
     }
   }
 
   /**
    * Create a single run (neither a parent or a child). It can however be a cloned run.
    *
-   * @param workflow    Workflow that will be executed.
-   * @param cluster     Cluster providing resources to execute the run.
-   * @param owner       User initiating the run.
-   * @param environment Environment inside which the run is executed.
-   * @param name        Human-readable name.
-   * @param notes       Notes describing the purpose of the run.
-   * @param tags        Arbitrary tags used when looking for runs.
-   * @param seed        Seed used by unstable operators.
-   * @param params      Values of workflow parameters.
-   * @param clonedFrom  Identifier of the run this instance has been cloned from.
+   * @param workflow   Workflow that will be executed.
+   * @param owner      User initiating the run.
+   * @param name       Human-readable name.
+   * @param notes      Notes describing the purpose of the run.
+   * @param tags       Arbitrary tags used when looking for runs.
+   * @param seed       Seed used by unstable operators.
+   * @param params     Values of workflow parameters.
+   * @param clonedFrom Identifier of the run this instance has been cloned from.
    */
   private def createSingle(
     workflow: Workflow,
-    cluster: String,
     owner: User,
-    environment: String,
     name: Option[String] = None,
     notes: Option[String] = None,
     tags: Set[String] = Set.empty,
@@ -113,9 +108,7 @@ final class RunFactory(workflowRepository: WorkflowRepository) {
     Run(
       id = randomId,
       pkg = Package(workflow.id, workflow.version),
-      cluster = cluster,
       owner = owner,
-      environment = environment,
       name = name,
       notes = notes,
       tags = tags,
@@ -132,9 +125,7 @@ final class RunFactory(workflowRepository: WorkflowRepository) {
    * Create several runs representing a parameter sweep.
    *
    * @param workflow       Workflow that will be executed.
-   * @param cluster        Cluster providing resources to execute the run.
    * @param owner          User initiating the run.
-   * @param environment    Environment inside which the run is executed.
    * @param name           Human-readable name.
    * @param notes          Notes describing the purpose of the run.
    * @param tags           Arbitrary tags used when looking for runs.
@@ -147,9 +138,7 @@ final class RunFactory(workflowRepository: WorkflowRepository) {
    */
   private def createSweep(
     workflow: Workflow,
-    cluster: String,
     owner: User,
-    environment: String,
     name: Option[String],
     notes: Option[String],
     tags: Set[String],
@@ -174,9 +163,7 @@ final class RunFactory(workflowRepository: WorkflowRepository) {
       Run(
         id = randomId,
         pkg = pkg,
-        cluster = cluster,
         owner = owner,
-        environment = environment,
         seed = random.nextLong(),
         params = defaultParams ++ params,
         parent = Some(parentId),
@@ -186,9 +173,7 @@ final class RunFactory(workflowRepository: WorkflowRepository) {
     val parent = Run(
       id = parentId,
       pkg = pkg,
-      cluster = cluster,
       owner = owner,
-      environment = environment,
       name = name,
       notes = notes,
       tags = tags,
@@ -226,7 +211,7 @@ final class RunFactory(workflowRepository: WorkflowRepository) {
   private def getWorkflow(pkg: Package) = {
     val maybeWorkflow = workflowRepository.get(pkg.workflowId, pkg.workflowVersion)
     maybeWorkflow match {
-      case None => throw new InvalidRunException(s"Unknown workflow: $pkg")
+      case None => throw new InvalidRunDefException(s"Unknown workflow: $pkg")
       case Some(workflow) => workflow
     }
   }

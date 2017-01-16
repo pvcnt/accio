@@ -42,7 +42,7 @@ object ExecutorModule extends ScalaModule {
   }
 
   @Provides
-  def providesAgentClient(@InjectFlag("agent_addr") agentAddr: String): AgentService.FinagledClient = {
+  def providesAgentClient(@InjectFlag("addr") agentAddr: String): AgentService.FinagledClient = {
     val service = Thrift.newService(agentAddr)
     new AgentService.FinagledClient(service)
   }

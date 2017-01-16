@@ -22,31 +22,12 @@ package fr.cnrs.liris.accio.core.domain
  * Registry providing definitions of all operators known to Accio.
  */
 trait OpRegistry {
-  /**
-   * Return all operator definitions.
-   */
   def ops: Set[OpDef]
 
-  /**
-   * Check whether the registry contains an operator with given name.
-   *
-   * @param name Operator name.
-   */
   def contains(name: String): Boolean
 
-  /**
-   * Return the definition of a given operator, if it exists.
-   *
-   * @param name Operator name.
-   */
   def get(name: String): Option[OpDef]
 
-  /**
-   * Return the definition of a given operator.
-   *
-   * @param name Operator name.
-   * @throws NoSuchElementException If there is no operator with the given name.
-   */
   @throws[NoSuchElementException]
   def apply(name: String): OpDef
 }

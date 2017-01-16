@@ -13,7 +13,7 @@
 
     <!-- Per-package Config -->
     <logger name="fr.cnrs.liris" level="info"/>
-    <logger name="com.twitter" level="info"/>
+    <logger name="com.twitter" level="warn"/>
 
     <!-- Root config -->
     <root level="warn">

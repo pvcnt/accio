@@ -261,8 +261,8 @@ object Values {
       case AtomicType.Double => decodeDouble(value)
       case AtomicType.String => decodeString(value)
       case AtomicType.Boolean => decodeBoolean(value)
-      case AtomicType.Location => LatLng.degrees(value.doubles.head, value.doubles.last)
-      case AtomicType.Timestamp => new Instant(value.longs.head)
+      case AtomicType.Location => decodeLocation(value)
+      case AtomicType.Timestamp => decodeTimestamp(value)
       case AtomicType.Duration => decodeDuration(value)
       case AtomicType.Distance => decodeDistance(value)
       case AtomicType.Dataset => decodeDataset(value)
@@ -283,6 +283,10 @@ object Values {
   def decodeBoolean(value: Value): Boolean = value.booleans.head
 
   def decodeString(value: Value): String = value.strings.head
+
+  def decodeLocation(value: Value): LatLng = LatLng.degrees(value.doubles.head, value.doubles.last)
+
+  def decodeTimestamp(value: Value): Instant = new Instant(value.longs.head)
 
   def decodeDataset(value: Value): Dataset = Dataset(value.strings.head)
 

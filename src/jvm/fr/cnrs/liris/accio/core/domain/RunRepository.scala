@@ -83,22 +83,18 @@ trait RunRepository {
 /**
  * Query to search for runs. Please note that you have to specify a maximum number of results.
  *
- * @param workflow    Only include runs being instances of a given workflow.
- * @param cluster     Only include runs executed on a given cluster.
- * @param owner       Only include runs initiated by a given user.
- * @param environment Only include runs executed inside a given environment.
- * @param name        Only include runs whose name matches a given string. Exact interpretation can be implementation-dependant.
- * @param status      Only include runs with a given status.
- * @param limit       Maximum number of matching runs to return. Must be in [1,100].
- * @param offset      Number of matching runs to skip.
+ * @param workflow Only include runs being instances of a given workflow.
+ * @param owner    Only include runs initiated by a given user.
+ * @param name     Only include runs whose name matches a given string. Exact interpretation can be implementation-dependant.
+ * @param status   Only include runs whose status belong to those specified.
+ * @param limit    Maximum number of matching runs to return. Must be in [1,100].
+ * @param offset   Number of matching runs to skip.
  */
 case class RunQuery(
   workflow: Option[WorkflowId] = None,
-  cluster: Option[String] = None,
   owner: Option[String] = None,
-  environment: Option[String] = None,
   name: Option[String] = None,
-  status: Option[RunStatus] = None,
+  status: Set[RunStatus] = Set.empty,
   limit: Int = 25,
   offset: Option[Int] = None) {
   require(limit > 0 && limit <= 100, s"Maximum number of runs must be in [1,100] (got $limit)")

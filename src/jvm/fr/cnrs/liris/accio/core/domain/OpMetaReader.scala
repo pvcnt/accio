@@ -33,11 +33,11 @@ case class OpMeta(defn: OpDef, opClass: Class[_ <: Operator[_, _]], inClass: Opt
 /**
  * Exception thrown when the definition of an operator is invalid.
  *
- * @param clazz Operator class.
- * @param cause Root exception.
+ * @param clazz   Operator class.
+ * @param message Error message.
  */
-class IllegalOpException(clazz: Class[_ <: Operator[_, _]], cause: Throwable)
-  extends Exception(s"Illegal definition of operator ${clazz.getName}: ${cause.getMessage}", cause)
+class InvalidOpException(val clazz: Class[_ <: Operator[_, _]], message: String, cause: Throwable = null)
+  extends Exception(s"Illegal definition of operator ${clazz.getName}: $message", cause)
 
 /**
  * A metadata reader extracts metadata about operators.
@@ -48,8 +48,8 @@ trait OpMetaReader {
    *
    * @param clazz Operator class.
    * @return Operator metadata.
-   * @throws IllegalOpException If the operator definition is invalid.
+   * @throws InvalidOpException If the operator definition is invalid.
    */
-  @throws[IllegalOpException]
+  @throws[InvalidOpException]
   def read[T <: Operator[_, _]](clazz: Class[T]): OpMeta
 }

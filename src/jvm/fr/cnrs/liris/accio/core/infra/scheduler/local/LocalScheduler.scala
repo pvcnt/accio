@@ -133,8 +133,11 @@ class LocalScheduler(opRegistry: OpRegistry, downloader: Downloader, config: Loc
       cmd += "fr.cnrs.liris.accio.executor.AccioExecutorMain"
       cmd += "-id"
       cmd += id.value
-      cmd += "-agent_addr"
+      cmd += "-addr"
       cmd += config.agentAddr
+      cmd += "-uploader.type"
+      cmd += config.uploaderType
+      cmd ++= config.uploaderArgs.flatMap { case (k, v) => Seq(s"uploader.${config.uploaderType}.$k", v) }
 
       val sandboxDir = getSandboxPath(key)
       Files.createDirectories(sandboxDir)

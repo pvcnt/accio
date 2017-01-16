@@ -62,8 +62,6 @@ object Utils {
    * valid in a client context.
    */
   val DefaultUser = User(sys.props("user.name"))
-  val DefaultEnvironment = "devel"
-  val DefaultCluster = "default"
 
   /**
    * Generate a human-readable label for a list of parameters.
@@ -170,6 +168,8 @@ object Utils {
   }
 
   def toString(ref: Reference): String = s"${ref.node}/${ref.port}"
+
+  def toString(user: User): String = s"${user.name}${user.email.map(email => s" <$email>").getOrElse("")}"
 
   def isCompleted(status: NodeStatus): Boolean = status match {
     case NodeStatus.Success => true

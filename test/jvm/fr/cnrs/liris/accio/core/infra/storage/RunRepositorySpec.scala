@@ -61,39 +61,29 @@ private[storage] abstract class RunRepositorySpec extends UnitSpec {
     val runs = Seq(
       Runs.Foobar,
       Runs.Foobar.copy(id = Runs.randomId, createdAt = System.currentTimeMillis() + 10),
-      Runs.Foobar.copy(id = Runs.randomId, createdAt = System.currentTimeMillis() + 20, cluster = "other"),
-      Runs.Foobar.copy(id = Runs.randomId, createdAt = System.currentTimeMillis() + 30, environment = "production"),
       Runs.Foobar.copy(id = Runs.randomId, createdAt = System.currentTimeMillis() + 40, owner = User("him")),
       Runs.Foobar.copy(id = Runs.randomId, createdAt = System.currentTimeMillis() + 50, pkg = Package(WorkflowId("other_workflow"), "v1")))
     runs.foreach(repo.save)
     refreshBeforeSearch()
 
-    var res = repo.find(RunQuery(cluster = Some("local")))
-    res.totalCount shouldBe 5
-    res.results should contain theSameElementsInOrderAs Seq(runs(5), runs(4), runs(3), runs(1), runs(0))
+    var res = repo.find(RunQuery(owner = Some("me")))
+    res.totalCount shouldBe 3
+    res.results should contain theSameElementsInOrderAs Seq(runs(3), runs(1), runs(0))
 
-    res = repo.find(RunQuery(cluster = Some("local"), limit = 3))
-    res.totalCount shouldBe 5
-    res.results should contain theSameElementsInOrderAs Seq(runs(5), runs(4), runs(3))
+    res = repo.find(RunQuery(owner = Some("me"), limit = 2))
+    res.totalCount shouldBe 3
+    res.results should contain theSameElementsInOrderAs Seq(runs(3), runs(1))
 
-    res = repo.find(RunQuery(cluster = Some("local"), limit = 3, offset = Some(3)))
-    res.totalCount shouldBe 5
-    res.results should contain theSameElementsInOrderAs Seq(runs(1), runs(0))
-
-    res = repo.find(RunQuery(cluster = Some("other")))
-    res.totalCount shouldBe 1
-    res.results should contain theSameElementsInOrderAs Seq(runs(2))
-
-    res = repo.find(RunQuery(environment = Some("production")))
-    res.totalCount shouldBe 1
-    res.results should contain theSameElementsInOrderAs Seq(runs(3))
+    res = repo.find(RunQuery(owner = Some("me"), limit = 2, offset = Some(2)))
+    res.totalCount shouldBe 3
+    res.results should contain theSameElementsInOrderAs Seq(runs(0))
 
     res = repo.find(RunQuery(owner = Some("him")))
     res.totalCount shouldBe 1
-    res.results should contain theSameElementsInOrderAs Seq(runs(4))
+    res.results should contain theSameElementsInOrderAs Seq(runs(2))
 
     res = repo.find(RunQuery(workflow = Some(WorkflowId("other_workflow"))))
     res.totalCount shouldBe 1
-    res.results should contain theSameElementsInOrderAs Seq(runs(5))
+    res.results should contain theSameElementsInOrderAs Seq(runs(3))
   }
 }

@@ -19,12 +19,11 @@
 package fr.cnrs.liris.accio.core.service
 
 import java.io.IOException
-import java.util.NoSuchElementException
 
 import com.twitter.util.StorageUnit
+import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.core.api._
-import fr.cnrs.liris.accio.core.domain.{IllegalOpException, OpMeta, OpMetaReader, Values}
-import fr.cnrs.liris.accio.core.domain._
+import fr.cnrs.liris.accio.core.domain.{InvalidOpException, OpMeta, OpMetaReader, Values, _}
 import fr.cnrs.liris.common.reflect.{CaseClass, PlainClass, ScalaType}
 import fr.cnrs.liris.common.util.ResourceFileLoader
 import fr.cnrs.liris.common.util.StringUtils.maybe
@@ -32,7 +31,7 @@ import fr.cnrs.liris.common.util.StringUtils.maybe
 /**
  * Read operator metadata from information gathered by Scala reflection and annotations.
  */
-class ReflectOpMetaReader extends OpMetaReader {
+class ReflectOpMetaReader extends OpMetaReader with LazyLogging {
   def read[T <: Operator[_, _]](clazz: Class[T]): OpMeta =
     try {
       val opRefl = PlainClass(clazz)
@@ -42,34 +41,38 @@ class ReflectOpMetaReader extends OpMetaReader {
           val inRefl = getInRefl(opRefl)
           val outRefl = getOutRefl(opRefl)
           val name = if (op.name.nonEmpty) op.name else clazz.getSimpleName.stripSuffix("Op")
+          if (Utils.OpRegex.findFirstIn(name).isEmpty) {
+            throw new InvalidOpException(clazz, s"Illegal operator name: $name")
+          }
           val resource = Resource(op.cpu, parseStorageUnit(op.memory()).inMegabytes, parseStorageUnit(op.disk()).inMegabytes)
           val defn = OpDef(
             name = name,
             inputs = inRefl.map(getInputs).getOrElse(Seq.empty),
             outputs = outRefl.map(getOutputs).getOrElse(Seq.empty),
             help = maybe(op.help),
-            description = maybe(op.description).map(loadDescription(_, clazz)),
+            description = maybe(op.description).flatMap(loadDescription(_, clazz)),
             category = op.category,
             deprecation = maybe(op.deprecation),
             resource = resource)
           OpMeta(defn, clazz, inRefl.map(_.runtimeClass), outRefl.map(_.runtimeClass))
       }
     } catch {
-      case e: NoSuchElementException => throw new IllegalOpException(clazz, e)
-      case e: IllegalArgumentException => throw new IllegalOpException(clazz, e)
+      case e: IllegalArgumentException =>
+        throw new InvalidOpException(clazz, e.getMessage.stripPrefix("requirement failed: "))
     }
 
   private def loadDescription(description: String, clazz: Class[_]) = {
     if (description.startsWith("resource:")) {
       val resourceName = description.substring("resource:".length)
       try {
-        ResourceFileLoader.loadResource(clazz, resourceName)
+        Some(ResourceFileLoader.loadResource(clazz, resourceName))
       } catch {
         case e: IOException =>
-          throw new IllegalStateException(s"Failed to load help resource '$resourceName': ${e.getMessage}", e)
+          logger.warn(s"Failed to load help resource '$resourceName': ${e.getMessage}", e)
+          None
       }
     } else {
-      description
+      Some(description)
     }
   }
 
@@ -114,9 +117,8 @@ class ReflectOpMetaReader extends OpMetaReader {
         ArgDef(
           name = field.name,
           help = maybe(out.help),
-          kind = getDataType(field.scalaType),
-          isOptional = false)
-      }
+          kind = getDataType(field.scalaType))
+      }.toSeq
     }
   }
 

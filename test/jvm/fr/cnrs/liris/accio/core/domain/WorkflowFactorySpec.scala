@@ -25,59 +25,103 @@ import fr.cnrs.liris.testing.UnitSpec
  * Unit tests for [[WorkflowFactory]].
  */
 class WorkflowFactorySpec extends UnitSpec {
-  private val workflows = Map(
-    "workflow1" -> WorkflowTemplate(
-      id = WorkflowId("my_workflow"),
-      graph = GraphDef(Set(
-        NodeDef(
-          op = "FirstSimple",
-          name = "FirstSimple",
-          inputs = Map("foo" -> InputDef.Value(Values.encodeInteger(42)))),
-        NodeDef(
-          op = "SecondSimple",
-          name = "SecondSimple",
-          inputs = Map(
-            "dbl" -> InputDef.Value(Values.encodeDouble(3.14)),
-            "data" -> InputDef.Reference(Reference("FirstSimple", "data")))))),
-      name = Some("my workflow"),
-      owner = Some(User("him"))),
+  private val workflow1 = WorkflowDef(
+    id = WorkflowId("my_workflow"),
+    graph = GraphDef(Set(
+      NodeDef(
+        op = "FirstSimple",
+        name = "FirstSimple",
+        inputs = Map("foo" -> InputDef.Value(Values.encodeInteger(42)))),
+      NodeDef(
+        op = "SecondSimple",
+        name = "SecondSimple",
+        inputs = Map(
+          "dbl" -> InputDef.Value(Values.encodeDouble(3.14)),
+          "data" -> InputDef.Reference(Reference("FirstSimple", "data")))))),
+    name = Some("my workflow"),
+    owner = Some(User("him")))
 
-    "workflow2" -> WorkflowTemplate(
-      id = WorkflowId("workflow2"),
-      graph = GraphDef(Set(
-        NodeDef(
-          op = "FirstSimple",
-          name = "FirstSimple",
-          inputs = Map("foo" -> InputDef.Param("foo"))),
-        NodeDef(
-          op = "SecondSimple",
-          name = "SecondSimple",
-          inputs = Map(
-            "dbl" -> InputDef.Param("bar"),
-            "data" -> InputDef.Reference(Reference("FirstSimple", "data"))))))),
+  private val workflow2 = WorkflowDef(
+    id = WorkflowId("workflow2"),
+    params = Set(
+      ArgDef("foo", DataType(AtomicType.Integer)),
+      ArgDef("bar", DataType(AtomicType.Double))
+    ),
+    graph = GraphDef(Set(
+      NodeDef(
+        op = "FirstSimple",
+        name = "FirstSimple",
+        inputs = Map("foo" -> InputDef.Param("foo"))),
+      NodeDef(
+        op = "SecondSimple",
+        name = "SecondSimple",
+        inputs = Map(
+          "dbl" -> InputDef.Param("bar"),
+          "data" -> InputDef.Reference(Reference("FirstSimple", "data")))))))
 
-    "invalid_param_workflow" -> WorkflowTemplate(
-      id = WorkflowId("invalid_param_workflow"),
-      graph = GraphDef(Set(
-        NodeDef(
-          op = "FirstSimple",
-          name = "FirstSimple",
-          inputs = Map("foo" -> InputDef.Param("foo/foo")))))),
+  private val workflow3 = WorkflowDef(
+    id = WorkflowId("workflow3"),
+    params = Set(
+      ArgDef("foo", DataType(AtomicType.Integer), defaultValue = Some(Values.encodeInteger(42))),
+      ArgDef("bar", DataType(AtomicType.Double)),
+      ArgDef("string", DataType(AtomicType.String))
+    ),
+    graph = GraphDef(Set(
+      NodeDef(
+        op = "FirstSimple",
+        name = "FirstSimple",
+        inputs = Map("foo" -> InputDef.Param("foo"))),
+      NodeDef(
+        op = "SecondSimple",
+        name = "SecondSimple",
+        inputs = Map(
+          "dbl" -> InputDef.Param("bar"),
+          "str" -> InputDef.Param("string"),
+          "data" -> InputDef.Reference(Reference("FirstSimple", "data")))))))
 
-    "heterogeneous_workflow" -> WorkflowTemplate(
-      id = WorkflowId("heterogeneous_workflow"),
-      graph = GraphDef(Set(
-        NodeDef(
-          op = "FirstSimple",
-          name = "FirstSimple",
-          inputs = Map("foo" -> InputDef.Param("foo"))),
-        NodeDef(
-          op = "SecondSimple",
-          name = "SecondSimple",
-          inputs = Map(
-            "dbl" -> InputDef.Param("foo"),
-            "data" -> InputDef.Reference(Reference("FirstSimple", "data")))))))
-  )
+  private val invalidParamNameWorkflow = WorkflowDef(
+    id = WorkflowId("invalid_workflow"),
+    params = Set(
+      ArgDef("foo/foo", DataType(AtomicType.Integer))
+    ),
+    graph = GraphDef(Set(
+      NodeDef(
+        op = "FirstSimple",
+        name = "FirstSimple",
+        inputs = Map("foo" -> InputDef.Param("foo/foo"))))))
+
+  private val invalidParamTypeWorkflow = WorkflowDef(
+    id = WorkflowId("invalid_workflow"),
+    params = Set(ArgDef("foo", DataType(AtomicType.String))),
+    graph = GraphDef(Set(
+      NodeDef(
+        op = "FirstSimple",
+        name = "FirstSimple",
+        inputs = Map("foo" -> InputDef.Param("foo"))))))
+
+  private val undeclaredParamWorkflow = WorkflowDef(
+    id = WorkflowId("invalid_workflow"),
+    graph = GraphDef(Set(
+      NodeDef(
+        op = "FirstSimple",
+        name = "FirstSimple",
+        inputs = Map("foo" -> InputDef.Param("foo"))))))
+
+  private val heterogeneousWorkflow = WorkflowDef(
+    id = WorkflowId("invalid_workflow"),
+    params = Set(ArgDef("foo", DataType(AtomicType.Integer))),
+    graph = GraphDef(Set(
+      NodeDef(
+        op = "FirstSimple",
+        name = "FirstSimple",
+        inputs = Map("foo" -> InputDef.Param("foo"))),
+      NodeDef(
+        op = "SecondSimple",
+        name = "SecondSimple",
+        inputs = Map(
+          "dbl" -> InputDef.Param("foo"),
+          "data" -> InputDef.Reference(Reference("FirstSimple", "data")))))))
+
   private val workflowFactory = {
     val opRegistry = new StaticOpRegistry(Operators.ops)
     val graphFactory = new GraphFactory(opRegistry)
@@ -87,37 +131,59 @@ class WorkflowFactorySpec extends UnitSpec {
   behavior of "WorkflowFactory"
 
   it should "create a workflow" in {
-    val workflow = workflowFactory.create(workflows("workflow1"), User("me"))
+    val workflow = workflowFactory.create(workflow1, User("me"))
     workflow.id shouldBe WorkflowId("my_workflow")
     workflow.name shouldBe Some("my workflow")
     workflow.owner shouldBe User("him")
-    workflow.graph shouldBe workflows("workflow1").graph
+    workflow.graph shouldBe workflow1.graph
     workflow.params should have size 0
   }
 
   it should "populate default owner" in {
-    val workflow = workflowFactory.create(workflows("workflow2"), User("me"))
+    val workflow = workflowFactory.create(workflow2, User("me"))
     workflow.owner shouldBe User("me")
   }
 
-  it should "collect implicit parameters" in {
-    val workflow = workflowFactory.create(workflows("workflow2"), User("me"))
+  it should "create a workflow with params" in {
+    val workflow = workflowFactory.create(workflow2, User("me"))
     workflow.params should contain theSameElementsAs Set(
-      ArgDef("foo", None, DataType(AtomicType.Integer), isOptional = false),
-      ArgDef("bar", None, DataType(AtomicType.Double), isOptional = false))
+      ArgDef("foo", DataType(AtomicType.Integer)),
+      ArgDef("bar", DataType(AtomicType.Double)))
   }
 
-  it should "detect heterogeneous data types" in {
-    val expected = intercept[InvalidWorkflowException] {
-      workflowFactory.create(workflows("heterogeneous_workflow"), User("me"))
+  it should "create a workflow with optional params" in {
+    val workflow = workflowFactory.create(workflow3, User("me"))
+    workflow.params should contain theSameElementsAs Set(
+      ArgDef("foo", DataType(AtomicType.Integer), isOptional = true, defaultValue = Some(Values.encodeInteger(42))),
+      ArgDef("bar", DataType(AtomicType.Double)),
+      ArgDef("string", DataType(AtomicType.String), isOptional = true))
+  }
+
+  it should "detect param heterogeneous data types" in {
+    val expected = intercept[InvalidWorkflowDefException] {
+      workflowFactory.create(heterogeneousWorkflow, User("me"))
     }
-    expected.getMessage should startWith("Param foo is used in heterogeneous input types:")
+    expected.getMessage shouldBe "Param foo is used with heterogeneous types: double, integer"
+  }
+
+  it should "detect invalid param type" in {
+    val expected = intercept[InvalidWorkflowDefException] {
+      workflowFactory.create(invalidParamTypeWorkflow, User("me"))
+    }
+    expected.getMessage should startWith("Param foo declared as string is used as integer")
   }
 
   it should "detect invalid param name" in {
-    val expected = intercept[InvalidWorkflowException] {
-      workflowFactory.create(workflows("invalid_param_workflow"), User("me"))
+    val expected = intercept[InvalidWorkflowDefException] {
+      workflowFactory.create(invalidParamNameWorkflow, User("me"))
     }
-    expected.getMessage should startWith("Invalid param name: foo/foo")
+    expected.getMessage should startWith("Illegal param name: foo/foo")
+  }
+
+  it should "detect undeclared param" in {
+    val expected = intercept[InvalidWorkflowDefException] {
+      workflowFactory.create(undeclaredParamWorkflow, User("me"))
+    }
+    expected.getMessage shouldBe "Some params are used but not declared: foo"
   }
 }

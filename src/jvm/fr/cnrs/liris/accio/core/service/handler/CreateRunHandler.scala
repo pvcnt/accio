@@ -41,10 +41,10 @@ final class CreateRunHandler @Inject()(
   graphFactory: GraphFactory)
   extends Handler[CreateRunRequest, CreateRunResponse] with StrictLogging {
 
-  @throws[InvalidRunException]
+  @throws[InvalidRunDefException]
   def handle(req: CreateRunRequest): Future[CreateRunResponse] = {
     // Create and save runs into the repository.
-    val runs = runFactory.create(req.template, req.user)
+    val runs = runFactory.create(req.defn, req.user)
     runs.foreach(runRepository.save)
 
     // Schedule root nodes, for all runs. Take care not to schedule the parent run (if any).

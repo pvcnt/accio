@@ -23,6 +23,14 @@ import java.util.Objects
 import fr.cnrs.liris.common.util.{HashUtils, Seqs}
 
 /**
+ * Exception thrown if a workflow definition is invalid.
+ *
+ * @param message Message explaining the error.
+ * @param cause   Cause exception.
+ */
+class InvalidWorkflowDefException(message: String, cause: Throwable = null) extends RuntimeException(message, cause)
+
+/**
  * Factory for [[Workflow]].
  *
  * @param graphFactory Graph factory.
@@ -30,38 +38,38 @@ import fr.cnrs.liris.common.util.{HashUtils, Seqs}
  */
 final class WorkflowFactory(graphFactory: GraphFactory, opRegistry: OpRegistry) {
   /**
-   * Create a workflow from a workflow template.
+   * Create a workflow from a workflow definition.
    *
-   * @param template Workflow template.
-   * @param user     User creating the workflow.
-   * @throws InvalidWorkflowException
+   * @param defn Workflow definition.
+   * @param user User creating the workflow.
+   * @throws InvalidWorkflowDefException If the workflow definition is invalid.
    */
-  @throws[InvalidWorkflowException]
-  def create(template: WorkflowTemplate, user: User): Workflow = {
-    val graph = getGraph(template)
-    val params = getParams(graph, template.params.toSet)
-    val owner = template.owner.getOrElse(user)
-    val version = template.version.getOrElse(defaultVersion(template.id, template.name, owner, template.graph, params))
+  @throws[InvalidWorkflowDefException]
+  def create(defn: WorkflowDef, user: User): Workflow = {
+    val graph = getGraph(defn)
+    val params = getParams(graph, defn.params.toSet)
+    val owner = defn.owner.getOrElse(user)
+    val version = defn.version.getOrElse(defaultVersion(defn.id, defn.name, owner, defn.graph, params))
     Workflow(
-      id = template.id,
+      id = defn.id,
       version = version,
       createdAt = System.currentTimeMillis(),
-      name = template.name,
+      name = defn.name,
       owner = owner,
-      graph = template.graph,
+      graph = defn.graph,
       params = params)
   }
 
   /**
    * Create (and validate) the graph associated with the workflow.
    *
-   * @param template Workflow template.
+   * @param defn Workflow definition.
    */
-  private def getGraph(template: WorkflowTemplate) = {
+  private def getGraph(defn: WorkflowDef) = {
     try {
-      graphFactory.create(template.graph)
+      graphFactory.create(defn.graph)
     } catch {
-      case e: InvalidGraphException => throw new InvalidWorkflowException(e.getMessage, e.getCause)
+      case e: InvalidGraphException => throw new InvalidWorkflowDefException(e.getMessage, e.getCause)
     }
   }
 
@@ -97,28 +105,34 @@ final class WorkflowFactory(graphFactory: GraphFactory, opRegistry: OpRegistry) 
       }
     })
 
+    // Check for undeclared params usage.
     val undeclaredParams = paramUsages.keySet.diff(params.map(_.name))
     if (undeclaredParams.nonEmpty) {
-      throw new InvalidWorkflowException(s"Params are used but not declared: ${undeclaredParams.mkString(", ")}")
+      throw new InvalidWorkflowDefException(s"Some params are used but not declared: ${undeclaredParams.toSeq.sorted.mkString(", ")}")
     }
 
     params.map { argDef =>
-      // We check param name is valid.
+      // Check the parameter name is valid.
       if (Utils.ArgRegex.findFirstIn(argDef.name).isEmpty) {
-        throw new InvalidWorkflowException(s"Invalid param name: ${argDef.name}")
+        throw new InvalidWorkflowDefException(s"Illegal param name: ${argDef.name}")
       }
 
-      // We check the parameter is homogeneous, i.e., it is used in ports of the same type.
+      // Check the parameter is homogeneous, i.e., it is used in ports of the same type, and consistent with the type
+      // of those ports.
       val usages = paramUsages.getOrElse(argDef.name, Set.empty)
       val dataTypes = usages.map(_.argDef).map(_.kind)
       if (dataTypes.size > 1) {
-        throw new InvalidWorkflowException(s"Param ${argDef.name} is used in heterogeneous input types: ${dataTypes.mkString(", ")}")
+        throw new InvalidWorkflowDefException(s"Param ${argDef.name} is used with heterogeneous types: " +
+          dataTypes.map(Utils.toString).toSeq.sorted.mkString(", "))
       }
       if (dataTypes.head != argDef.kind) {
-        throw new InvalidWorkflowException(s"Param ${argDef.name} declared as ${argDef.kind} is used as ${dataTypes.head}")
+        throw new InvalidWorkflowDefException(s"Param ${argDef.name} declared as ${Utils.toString(argDef.kind)} is " +
+          s"used as ${Utils.toString(dataTypes.head)}")
       }
 
-      // Parameter is optional only if used only in optional ports or if a default value is available each time.
+      // Parameter is optional if either:
+      // (1) a default value is defined, or
+      // (2) it is used only in optional ports or if a default value is available each time.
       val isOptional = argDef.defaultValue.isDefined || usages.forall(usage => usage.argDef.isOptional || usage.argDef.defaultValue.isDefined)
 
       argDef.copy(isOptional = isOptional)

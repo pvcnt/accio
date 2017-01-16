@@ -1,7 +1,7 @@
 junit_tests(
   name='storage',
   dependencies=[
-    'src/jvm/fr/cnrs/liris/accio/core/service',
+    'src/jvm/fr/cnrs/liris/accio/core/domain',
     'test/jvm/fr/cnrs/liris/accio/testing',
     'test/jvm/fr/cnrs/liris/testing',
   ],

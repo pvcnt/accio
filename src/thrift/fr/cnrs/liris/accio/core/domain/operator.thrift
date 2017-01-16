@@ -41,14 +41,14 @@ struct ArgDef {
   // Input name. Should be unique among all inputs of a given operator.
   1: required string name;
 
-  // One-line help text.
-  2: optional string help;
-
   // Data type.
-  3: required common.DataType kind;
+  2: required common.DataType kind;
+
+  // One-line help text.
+  3: optional string help;
 
   // Whether this parameter is optional and does not have to be specified. It should be false for output ports.
-  4: required bool is_optional;
+  4: required bool is_optional = false;
 
   // Default value taken by this input if none is specified. It should be empty for output ports.
   5: optional common.Value default_value;

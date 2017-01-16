@@ -28,12 +28,20 @@ import net.codingwell.scalaguice.ScalaModule
 /**
  * Local scheduler configuration.
  *
- * @param workDir     Working directory.
- * @param agentAddr   Agent address.
- * @param executorUri URI where to fetch the executor.
- * @param javaHome    Java home to be used when running nodes.
+ * @param workDir      Working directory.
+ * @param agentAddr    Agent address.
+ * @param executorUri  URI where to fetch the executor.
+ * @param javaHome     Java home to be used when running nodes.
+ * @param uploaderType Type of uploader to use on the executors.
+ * @param uploaderArgs Arguments to parametrize the uploader on the executors.
  */
-case class LocalSchedulerConfig(workDir: Path, agentAddr: String, executorUri: String, javaHome: Option[String])
+case class LocalSchedulerConfig(
+  workDir: Path,
+  agentAddr: String,
+  executorUri: String,
+  javaHome: Option[String],
+  uploaderType: String,
+  uploaderArgs: Map[String, String])
 
 /**
  * Guice module provisioning a local scheduler.

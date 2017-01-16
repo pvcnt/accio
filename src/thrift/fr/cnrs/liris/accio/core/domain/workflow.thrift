@@ -41,7 +41,7 @@ struct Workflow {
   7: required set<operator.ArgDef> params;
 }
 
-struct WorkflowTemplate {
+struct WorkflowDef {
   1: required common.WorkflowId id;
   2: optional string version;
   3: optional string name;

@@ -32,10 +32,8 @@ class ListRunsHandler @Inject()(repository: RunRepository) extends Handler[ListR
     val query = RunQuery(
       name = req.name,
       owner = req.owner,
-      cluster = req.cluster,
-      environment = req.environment,
       workflow = req.workflowId,
-      status = req.status,
+      status = req.status.toSet.flatten,
       limit = req.limit.getOrElse(25),
       offset = req.offset)
     val res = repository.find(query)

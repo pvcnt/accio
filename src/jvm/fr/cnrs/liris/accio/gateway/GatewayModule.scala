@@ -24,7 +24,7 @@ import com.twitter.inject.TwitterModule
 import fr.cnrs.liris.accio.agent.AgentService
 
 object GatewayModule extends TwitterModule {
-  private[this] val agentAddr = flag[String]("agent_addr", "Address to contact the Accio agent")
+  private[this] val agentAddr = flag[String]("addr", "Address to contact the Accio agent")
 
   @Provides
   def providesClient: AgentService.FinagledClient = {

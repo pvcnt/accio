@@ -160,14 +160,14 @@ class ReflectOperatorMetaReaderSpec extends UnitSpec {
   }
 
   it should "detect missing @Op annotation" in {
-    val expected = intercept[IllegalOpException] {
+    val expected = intercept[InvalidOpException] {
       reader.read(classOf[NonAnnotatedOp])
     }
     expected.getMessage should endWith(": Operator must be annotated with @Op")
   }
 
   it should "detect missing @Arg annotation" in {
-    val expected = intercept[IllegalOpException] {
+    val expected = intercept[InvalidOpException] {
       reader.read(classOf[NonAnnotatedInOp])
     }
     expected.getMessage should endWith(": Input s must be annotated with @Arg")
@@ -178,14 +178,14 @@ class ReflectOperatorMetaReaderSpec extends UnitSpec {
   }
 
   it should "detect unsupported data type" in {
-    val expected = intercept[IllegalOpException] {
+    val expected = intercept[InvalidOpException] {
       reader.read(classOf[InvalidParamOp])
     }
     expected.getMessage shouldBe "Illegal definition of operator fr.cnrs.liris.accio.core.service.InvalidParamOp: Unsupported data type: scala.collection.Iterator"
   }
 
   it should "detect optional fields to have a default value" in {
-    val expected = intercept[IllegalOpException] {
+    val expected = intercept[InvalidOpException] {
       reader.read(classOf[OptionalWithDefaultValueOp])
     }
     expected.getMessage should endWith(": Input i cannot be optional with a default value")

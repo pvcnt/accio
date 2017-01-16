@@ -85,13 +85,14 @@ object AgentModule extends TwitterModule {
     }
 
     // Initialize modules with configuration.
+    val localUploaderConfig = LocalUploaderConfig(workDir.resolve("uploads"))
     val configurator = Configurator(
-      LocalSchedulerConfig(workDir.resolve("sandbox"), "127.0.0.1:9999", _executorUri(), _javaHome.get),
+      LocalSchedulerConfig(workDir.resolve("sandbox"), "127.0.0.1:9999", _executorUri(), _javaHome.get, _uploaderType(), Map("path" -> localUploaderConfig.rootDir.toString)),
       LocalStateMgrConfig(workDir.resolve("state")),
       ZookeeperStateMgrConfig(_zkAddr(), _zkRootPath(), _zkSessionTimeout(), _zkConnTimeout()),
       LocalStorageConfig(workDir.resolve("storage")),
       ElasticStorageConfig(_esAddr(), _esSniff(), _esPrefix(), _esQueryTimeout()),
-      LocalUploaderConfig(workDir.resolve("uploads"))
+      localUploaderConfig
     )
     configurator.initialize(modules: _*)
 
