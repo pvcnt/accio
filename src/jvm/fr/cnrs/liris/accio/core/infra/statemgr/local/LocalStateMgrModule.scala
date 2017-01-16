@@ -20,18 +20,21 @@ package fr.cnrs.liris.accio.core.infra.statemgr.local
 
 import java.nio.file.Path
 
-import com.google.inject.Provides
+import com.google.inject.{Provides, Singleton}
 import fr.cnrs.liris.accio.core.service.StateManager
 import net.codingwell.scalaguice.ScalaModule
 
 /**
  * Guice module provisioning a local state manager.
  *
+ * Note: State manager should be a singleton, otherwise the locking mechanism won't work.
+ *
  * @param path Root directory under which data will be written.
  */
 final class LocalStateMgrModule(path: Path) extends ScalaModule {
   override def configure(): Unit = {}
 
+  @Singleton
   @Provides
   def providesStateManager(): StateManager = new LocalStateMgr(path)
 }

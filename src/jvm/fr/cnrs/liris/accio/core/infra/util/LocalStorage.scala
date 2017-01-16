@@ -20,27 +20,27 @@ package fr.cnrs.liris.accio.core.infra.util
 
 import java.io.File
 import java.nio.file.{Files, Path}
+import java.util.concurrent.locks.ReentrantReadWriteLock
 
 import com.twitter.scrooge.{TArrayByteTransport, ThriftStruct, ThriftStructCodec}
-import fr.cnrs.liris.common.util.FileLock
 import org.apache.thrift.protocol.TBinaryProtocol
 
+import scala.collection.mutable
+
 /**
- * Helper methods for repositories storing their data on the local filesystem in Scrooge/Thrift binary files.
- *
- * It provides a locking feature that will acquire a [[FileLock]] on each file while reading or writing it. It is
- * an extreme measure, because these locks are exclusive (there is only one person that can read at the same time...),
- * but effective to prevent concurrency issues.
+ * Helper methods for repositories storing their data on the local filesystem in Scrooge/Thrift binary files. It
+ * provides a locking feature based on a [[ReentrantReadWriteLock]].
  *
  * @param locking Whether to lock on I/O operations.
  */
 private[infra] abstract class LocalStorage(locking: Boolean) {
   private[this] val protocolFactory = new TBinaryProtocol.Factory()
+  private[this] val locks = mutable.Map.empty[String, ReentrantReadWriteLock]
 
   /**
    * Write a Thrift structure inside a file.
    *
-   * @param obj Thrift structure to write.
+   * @param obj  Thrift structure to write.
    * @param file Destination file.
    */
   protected def write(obj: ThriftStruct, file: File): Unit = write(obj, file.toPath)
@@ -48,7 +48,7 @@ private[infra] abstract class LocalStorage(locking: Boolean) {
   /**
    * Write a Thrift structure inside a file.
    *
-   * @param obj Thrift structure to write.
+   * @param obj  Thrift structure to write.
    * @param file Destination file.
    */
   protected def write(obj: ThriftStruct, file: Path): Unit = {
@@ -57,7 +57,7 @@ private[infra] abstract class LocalStorage(locking: Boolean) {
     val protocol = protocolFactory.getProtocol(transport)
     obj.write(protocol)
     val bytes = transport.toByteArray
-    withLock(file) {
+    withWriteLock(file) {
       Files.write(file, bytes)
     }
   }
@@ -65,7 +65,7 @@ private[infra] abstract class LocalStorage(locking: Boolean) {
   /**
    * Read a Thrift structure from a file.
    *
-   * @param file Source file.
+   * @param file  Source file.
    * @param codec Codec used to read the file.
    * @tparam T Thrift structure type.
    */
@@ -74,7 +74,7 @@ private[infra] abstract class LocalStorage(locking: Boolean) {
   /**
    * Read a Thrift structure from a file.
    *
-   * @param file Source file.
+   * @param file  Source file.
    * @param codec Codec used to read the file.
    * @tparam T Thrift structure type.
    */
@@ -82,7 +82,7 @@ private[infra] abstract class LocalStorage(locking: Boolean) {
     // We must check is file exists before trying to lock on it, because file lock creates the file if it does not
     // exist yet.
     if (file.toFile.exists) {
-      val bytes = withLock(file) {
+      val bytes = withReadLock(file) {
         Files.readAllBytes(file)
       }
       val protocol = protocolFactory.getProtocol(TArrayByteTransport(bytes))
@@ -92,13 +92,29 @@ private[infra] abstract class LocalStorage(locking: Boolean) {
     }
   }
 
-  private def withLock[U](file: Path)(f: => U): U = {
-    val lock = if (locking) Some(new FileLock(file.toFile)) else None
-    lock.foreach(_.lock())
+  private def withReadLock[U](file: Path)(f: => U): U = {
+    val lock = maybeGetLock(file.toAbsolutePath.toString)
+    lock.foreach(_.readLock.lock())
     try {
       f
     } finally {
-      lock.foreach(_.destroy())
+      lock.foreach(_.readLock.unlock())
     }
+  }
+
+  private def withWriteLock[U](file: Path)(f: => U): U = {
+    val lock = maybeGetLock(file.toAbsolutePath.toString)
+    lock.foreach(_.writeLock.lock())
+    try {
+      f
+    } finally {
+      lock.foreach(_.writeLock.unlock())
+    }
+  }
+
+  private def maybeGetLock(key: String) = {
+    if (locking) synchronized {
+      Some(locks.getOrElseUpdate(key, new ReentrantReadWriteLock))
+    } else None
   }
 }

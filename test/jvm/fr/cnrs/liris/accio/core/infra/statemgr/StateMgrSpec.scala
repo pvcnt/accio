@@ -58,18 +58,31 @@ private[statemgr] abstract class StateMgrSpec extends UnitSpec {
 
   it should "create locks" in {
     val stateMgr = createStateMgr
+    val lock = stateMgr.lock("my/lock")
+
+    lock.lock()
+    lock.unlock()
+
+    doAsync(lock.lock()) shouldBe true // Other thread can lock now.
+  }
+
+  it should "prevent another thread to lock" in {
+    val stateMgr = createStateMgr
     val lock1 = stateMgr.lock("my/lock")
     val lock2 = stateMgr.lock("my/lock")
 
     lock1.lock()
-    //lock1.lock() // Current thread can lock, it is reentrant. => Not guaranteed by all implementations.
     doAsync(lock2.lock()) shouldBe false // Other thread cannot lock.
-    lock1.unlock()
+  }
+
+  it should "create re-entrant locks" in {
+    val stateMgr = createStateMgr
+    val lock = stateMgr.lock("my/lock")
 
     doAsync {
-      lock2.lock()
-      lock2.unlock()
-    } shouldBe true // Other thread can lock and unlock now.
+      lock.lock()
+      lock.lock() // Current thread can lock, it is reentrant.
+    } shouldBe true
   }
 
   private def doAsync(f: => Unit) = {
@@ -81,9 +94,10 @@ private[statemgr] abstract class StateMgrSpec extends UnitSpec {
         locked.set(true)
       }
     }
-    pool.submit(task)
+    val future = pool.submit(task)
 
     Thread.sleep(2 * 1000)
+    future.cancel(true)
     pool.shutdownNow()
 
     locked.get

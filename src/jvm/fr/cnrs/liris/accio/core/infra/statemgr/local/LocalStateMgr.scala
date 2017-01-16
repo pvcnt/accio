@@ -18,13 +18,16 @@
 
 package fr.cnrs.liris.accio.core.infra.statemgr.local
 
-import java.nio.file.{Files, Path}
+import java.nio.file.Path
+import java.util.concurrent.locks.ReentrantLock
 
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.core.service.{Lock, StateManager}
 import fr.cnrs.liris.accio.core.domain.{Task, TaskId}
 import fr.cnrs.liris.accio.core.infra.util.LocalStorage
-import fr.cnrs.liris.common.util.{FileLock, FileUtils}
+import fr.cnrs.liris.accio.core.service.{Lock, StateManager}
+import fr.cnrs.liris.common.util.FileUtils
+
+import scala.collection.mutable
 
 /**
  * State manager storing data on the local filesystem. Intended for testing or use in single-node development
@@ -33,7 +36,11 @@ import fr.cnrs.liris.common.util.{FileLock, FileUtils}
  * @param rootDir Root directory under which data will be written.
  */
 final class LocalStateMgr(rootDir: Path) extends LocalStorage(locking = true) with StateManager with StrictLogging {
-  override def lock(key: String): Lock = new LocalLock(key)
+  private[this] val locks = mutable.WeakHashMap.empty[String, LocalLock]
+
+  override def lock(key: String): Lock = synchronized {
+    locks.getOrElseUpdate(key, new LocalLock(key))
+  }
 
   override def tasks: Set[Task] = {
     tasksPath.toFile.listFiles.filter(_.isFile).flatMap(file => get(TaskId(file.getName))).toSet
@@ -51,8 +58,6 @@ final class LocalStateMgr(rootDir: Path) extends LocalStorage(locking = true) wi
 
   override def get(id: TaskId): Option[Task] = read(taskPath(id), Task)
 
-  private def locksPath = rootDir.resolve("logs")
-
   private def tasksPath = rootDir.resolve("tasks")
 
   private def taskPath(id: TaskId) = tasksPath.resolve(id.value)
@@ -63,19 +68,16 @@ final class LocalStateMgr(rootDir: Path) extends LocalStorage(locking = true) wi
    * @param key Lock key.
    */
   private class LocalLock(key: String) extends Lock {
-    private[this] val fileLock = {
-      val path = locksPath.resolve(key)
-      Files.createDirectories(path.getParent)
-      new FileLock(path.toFile)
-    }
+    private[this] val javaLock = new ReentrantLock
 
     override def lock(): Unit = {
       logger.debug(s"Acquiring lock on $key")
-      fileLock.lock()
+      javaLock.lock()
+      logger.debug(s"Acquired lock on $key")
     }
 
     override def unlock(): Unit = {
-      fileLock.unlock()
+      javaLock.unlock()
       logger.debug(s"Released lock on $key")
     }
   }

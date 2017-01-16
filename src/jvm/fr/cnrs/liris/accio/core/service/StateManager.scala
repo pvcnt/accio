@@ -46,9 +46,7 @@ trait StateManager {
 }
 
 /**
- * Lock trait, provided by [[StateManager]]s. They may or may not be re-entrant, depending on implementations!
- *
- * @todo Precise how locks should behave (reentrant or not) and enforce it.
+ * Lock trait, provided by [[StateManager]]s. They are re-entrant, and implementations should stick to this.
  */
 trait Lock {
   /**
