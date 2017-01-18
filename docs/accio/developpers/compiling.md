@@ -1,6 +1,7 @@
 ---
 layout: accio
 nav: accio
+section: developpers
 title: Compiling Accio
 ---
 
@@ -9,9 +10,6 @@ This page describes how to successfully get started to develop Accio.
 
 Accio can be built either entirely or component by component.
 It is also possible to [run the test suit](testing.html).
-
-* TOC
-{:toc}
 
 ## Requirements
 
@@ -23,7 +21,7 @@ The following dependencies must be met in order to compile Accio:
   * [Node 3.9.5](https://nodejs.org/en/) is required if you want to develop Accio's web interface.
   * [Git](https://git-scm.com/) is needed to keep Accio's source code up-to-date.
   * Internet access is required to download dependencies both for Pants and Accio.
-  
+
 Alternatively, if you have [Vagrant](https://www.vagrantup.com) and [VirtualBox](https://www.virtualbox.org) installed on your machine, you can launch a fully configured development environment via `vagrant up`.
 The source code will be located under the `/vagrant` folder, with tools to compile and launch it already installed.
 

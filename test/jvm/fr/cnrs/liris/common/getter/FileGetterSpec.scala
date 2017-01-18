@@ -1,6 +1,6 @@
 /*
  * Accio is a program whose purpose is to study location privacy.
- * Copyright (C) 2016 Vincent Primault <vincent.primault@liris.cnrs.fr>
+ * Copyright (C) 2016-2017 Vincent Primault <vincent.primault@liris.cnrs.fr>
  *
  * Accio is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -84,22 +84,6 @@ class FileGetterSpec extends UnitSpec {
       FileUtils.safeDelete(srcFile)
       FileUtils.safeDelete(dstFile.getParent)
       FileUtils.safeDelete(tmpFile)
-    }
-  }
-
-  it should "reject a source directory" in {
-    val getter = new FileGetter(copy = true)
-    val srcDir = Files.createTempDirectory("getter-test-")
-    val dstFile = Files.createTempDirectory("getter-test-").resolve("foo.txt")
-
-    try {
-      val e = intercept[IOException] {
-        getter.get(srcDir.toUri, dstFile)
-      }
-      e.getMessage should startWith("Source must be a file: ")
-    } finally {
-      FileUtils.safeDelete(srcDir)
-      FileUtils.safeDelete(dstFile.getParent)
     }
   }
 

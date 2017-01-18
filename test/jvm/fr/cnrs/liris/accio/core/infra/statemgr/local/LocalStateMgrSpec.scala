@@ -1,6 +1,6 @@
 /*
  * Accio is a program whose purpose is to study location privacy.
- * Copyright (C) 2016 Vincent Primault <vincent.primault@liris.cnrs.fr>
+ * Copyright (C) 2016-2017 Vincent Primault <vincent.primault@liris.cnrs.fr>
  *
  * Accio is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,27 +18,13 @@
 
 package fr.cnrs.liris.accio.core.infra.statemgr.local
 
-import java.nio.file.{Files, Path}
-
 import fr.cnrs.liris.accio.core.infra.statemgr.StateMgrSpec
-import fr.cnrs.liris.common.util.FileUtils
-import org.scalatest.BeforeAndAfterEach
+import fr.cnrs.liris.testing.WithTmpDirectory
 
 /**
  * Unit tests of [[LocalStateMgr]].
  */
-class LocalStateMgrSpec extends StateMgrSpec with BeforeAndAfterEach {
-  private[this] var tmpDir: Path = null
-
-  override protected def beforeEach(): Unit = {
-    tmpDir = Files.createTempDirectory("accio-test-")
-  }
-
-  override protected def afterEach(): Unit = {
-    FileUtils.safeDelete(tmpDir)
-    tmpDir = null
-  }
-
+class LocalStateMgrSpec extends StateMgrSpec with WithTmpDirectory {
   protected def createStateMgr = new LocalStateMgr(tmpDir)
 
   behavior of "LocalStateMgr"

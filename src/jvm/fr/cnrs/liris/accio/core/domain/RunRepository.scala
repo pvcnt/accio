@@ -1,6 +1,6 @@
 /*
  * Accio is a program whose purpose is to study location privacy.
- * Copyright (C) 2016 Vincent Primault <vincent.primault@liris.cnrs.fr>
+ * Copyright (C) 2016-2017 Vincent Primault <vincent.primault@liris.cnrs.fr>
  *
  * Accio is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,10 @@ import com.twitter.util.Time
 
 /**
  * Repository persisting runtime data collected as runs are executed.
+ *
+ * Repositories are *not* required to be thread-safe. Mutating methods might need to be wrapped inside transactions
+ * on the application-level. However, repositories should still take care not to leave data in a corrupted state,
+ * which can be hard to recover from.
  */
 trait RunRepository {
   /**

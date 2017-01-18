@@ -1,6 +1,6 @@
 /*
  * Accio is a program whose purpose is to study location privacy.
- * Copyright (C) 2016 Vincent Primault <vincent.primault@liris.cnrs.fr>
+ * Copyright (C) 2016-2017 Vincent Primault <vincent.primault@liris.cnrs.fr>
  *
  * Accio is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,41 +18,20 @@
 
 package fr.cnrs.liris.accio.executor
 
-import java.nio.file.Path
-
-import com.google.inject.{Guice, Module}
+import com.twitter.inject.app.App
 import com.twitter.util.Await
-import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.core.domain.TaskId
-import fr.cnrs.liris.accio.core.infra.downloader.GetterDownloaderModule
-import fr.cnrs.liris.accio.core.infra.uploader.local.LocalUploaderModule
-import fr.cnrs.liris.common.flags.{Flag, FlagsParser}
 import fr.cnrs.liris.privamov.ops.OpsModule
-
-import scala.collection.mutable
-
-case class AccioExecutorFlags(
-  @Flag(name = "task_id") taskId: String,
-  @Flag(name = "addr") addr: String,
-  @Flag(name = "uploader.type") uploaderType: String,
-  @Flag(name = "uploader.local.path") localUploaderPath: Path)
 
 object AccioExecutorMain extends AccioExecutor
 
-class AccioExecutor extends LazyLogging {
-  def main(args: Array[String]): Unit = {
-    val parser = FlagsParser[AccioExecutorFlags]
-    parser.parseAndExitUponError(args)
-    val opts = parser.as[AccioExecutorFlags]
+class AccioExecutor extends App {
+  private[this] val taskIdFlag = flag[String]("task_id", "Identifier of the task to execute")
 
-    val modules = mutable.ListBuffer[Module](GetterDownloaderModule, OpsModule, new ExecutorModule(opts.addr))
-    opts.uploaderType match {
-      case "local" => modules += new LocalUploaderModule(opts.localUploaderPath)
-      case unknown => throw new IllegalArgumentException(s"Unknown uploader type: $unknown")
-    }
-    val injector = Guice.createInjector(modules: _*)
+  override protected def modules = Seq(ExecutorModule, OpsModule)
 
-    val executor = injector.getInstance(classOf[TaskExecutor])
-    Await.ready(executor.execute(TaskId(opts.taskId)))
+  override protected def run(): Unit = {
+    val executor = injector.instance[TaskExecutor]
+    Await.ready(executor.execute(TaskId(taskIdFlag())))
   }
 }

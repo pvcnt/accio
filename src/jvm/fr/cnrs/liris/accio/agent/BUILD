@@ -2,7 +2,6 @@ scala_library(
   name='agent',
   dependencies=[
     'src/jvm/fr/cnrs/liris/accio/core/service/handler',
-    'src/jvm/fr/cnrs/liris/accio/core/infra/jackson',
     'src/jvm/fr/cnrs/liris/accio/core/infra/downloader',
     'src/jvm/fr/cnrs/liris/accio/core/infra/scheduler/local',
     'src/jvm/fr/cnrs/liris/accio/core/infra/uploader/local',

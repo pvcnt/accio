@@ -1,6 +1,6 @@
 /*
  * Accio is a program whose purpose is to study location privacy.
- * Copyright (C) 2016 Vincent Primault <vincent.primault@liris.cnrs.fr>
+ * Copyright (C) 2016-2017 Vincent Primault <vincent.primault@liris.cnrs.fr>
  *
  * Accio is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@ import fr.cnrs.liris.accio.core.service.{Downloader, Scheduler}
 import net.codingwell.scalaguice.ScalaModule
 
 /**
- * Guice module provisioning a local scheduler.
+ * Local scheduler configuration.
  *
  * @param workDir      Working directory.
  * @param agentAddr    Agent address.
@@ -34,18 +34,25 @@ import net.codingwell.scalaguice.ScalaModule
  * @param javaHome     Java home to be used when running nodes.
  * @param executorArgs Arguments to pass to the executors.
  */
-class LocalSchedulerModule(
+case class LocalSchedulerConfig(
   workDir: Path,
   agentAddr: String,
   executorUri: String,
   javaHome: Option[String],
-  executorArgs: Seq[String]) extends ScalaModule {
+  executorArgs: Seq[String])
+
+/**
+ * Guice module provisioning a local scheduler.
+ *
+ * @param config Configuration.
+ */
+class LocalSchedulerModule(config: LocalSchedulerConfig) extends ScalaModule {
   override protected def configure(): Unit = {}
 
   @Singleton
   @Provides
   def providesScheduler(opRegistry: OpRegistry, downloader: Downloader): Scheduler = {
-    val allExecutorArgs = Seq("-addr", agentAddr) ++ executorArgs
-    new LocalScheduler(opRegistry, downloader, workDir, executorUri, javaHome, allExecutorArgs)
+    val executorArgs = Seq("-addr", config.agentAddr) ++ config.executorArgs
+    new LocalScheduler(opRegistry, downloader, config.workDir, config.executorUri, config.javaHome, executorArgs)
   }
 }

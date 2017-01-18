@@ -1,6 +1,6 @@
 /*
  * Accio is a program whose purpose is to study location privacy.
- * Copyright (C) 2016 Vincent Primault <vincent.primault@liris.cnrs.fr>
+ * Copyright (C) 2016-2017 Vincent Primault <vincent.primault@liris.cnrs.fr>
  *
  * Accio is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,10 @@ package fr.cnrs.liris.accio.core.domain
 /**
  * Repository persisting workflows. For now, there is intentionally no method to remove a workflow, because it is
  * not desirable to delete a workflow with runs referencing it.
+ *
+ * Repositories are *not* required to be thread-safe. Mutating methods might need to be wrapped inside transactions
+ * on the application-level. However, repositories should still take care not to leave data in a corrupted state,
+ * which can be hard to recover from.
  */
 trait WorkflowRepository {
   /**

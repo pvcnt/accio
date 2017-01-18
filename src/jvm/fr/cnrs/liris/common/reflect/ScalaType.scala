@@ -1,6 +1,6 @@
 // Copied from Twitter's Finatra.
 /*
- * Copyright (C) 2016 Twitter
+ * Copyright (C) 2016-2017 Twitter
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements.  See the
  * NOTICE file distributed with this work for additional information regarding copyright ownership.  The ASF

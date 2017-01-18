@@ -33,8 +33,7 @@ trait WithSparkleEnv extends FlatSpec with SparkleOpSpec with BeforeAndAfter {
     val workDir = Files.createTempDirectory("accio-test-")
     workDir.toFile.deleteOnExit()
     // This seed make random operators tests to pass for now.
-    // Node name is not needed in the tests.
-    new OpContext(Some(-7590331047132310476L), workDir, "FooNode")
+    new OpContext(Some(-7590331047132310476L), workDir)
   }
 
   before {

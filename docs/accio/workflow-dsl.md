@@ -6,9 +6,6 @@ title: Workflow definition
 
 This section covers how to easily define workflows as JSON documents.
 
-* TOC
-{:toc}
-
 ## JSON schema
 
 A workflow is a JSON object formed of the following fields.
@@ -21,7 +18,7 @@ A workflow is a JSON object formed of the following fields.
 | graph | object[]; required | Nodes composing the workflow graph. The order in which nodes are defined does not matter. |
 | graph[*].op | string; required | Operator name. |
 | graph[*].name | string; optional | Node name. By default it will be the operator's name. |
-| graph[*].inputs | object; optional | Mapping between input names and their values. All parameters without a default value should be specified. | 
+| graph[*].inputs | object; optional | Mapping between input names and their values. All parameters without a default value should be specified. |
 {: class="table table-striped"}
 
 Here is an example of a simple workflow's definition:
@@ -80,11 +77,11 @@ Nodes are specified under the `graph` key in no particular order.
 A node is a particular instantiation of an operator (i.e., with well-defined inputs).
 By default, a node is named after its operator name, but this name can be overriden with the `name` key.
 An operator can be instantiated more than once, in which case you have to give a name to subsequent operators (there cannot be two nodes with the same name).
-All nodes have to form a directed acyclic graph (DAG), which will be enforced at runtime when running a workflow. 
+All nodes have to form a directed acyclic graph (DAG), which will be enforced at runtime when running a workflow.
 
 ## Specifying inputs
 
-An input can be either specified as a constant value, as a reference to the output of another node or as a reference to a parameter. 
+An input can be either specified as a constant value, as a reference to the output of another node or as a reference to a parameter.
 
 ### Constant value
 
@@ -140,7 +137,7 @@ It may be needed sometimes to use the explicit form to disambiguate, especially 
 
 Inputs can be filled by the output of another node, in which case there will be a dependency between the two nodes.
 You may reference another node by providing a JSON object with a `reference` key and the full name of the output as a value.
- 
+
 ```json
 {
   "op": "GeoIndistinguishability",

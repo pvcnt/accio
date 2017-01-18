@@ -1,5 +1,5 @@
 # Accio is a program whose purpose is to study location privacy.
-# Copyright (C) 2016 Vincent Primault <vincent.primault@liris.cnrs.fr>
+# Copyright (C) 2016-2017 Vincent Primault <vincent.primault@liris.cnrs.fr>
 #
 # Accio is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
 # avoid dependency hell. Known dependencies that must stay in sync:
 #   - com/twitter/finagle
 #   - com/twitter/util
+#   - com/twitter/inject
 #   - com/fasterxml/jackson
 VERSION = '2.7.0'
 

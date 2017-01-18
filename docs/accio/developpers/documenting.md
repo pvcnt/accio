@@ -1,6 +1,7 @@
 ---
 layout: accio
 nav: accio
+section: developpers
 title: Documenting operators
 ---
 
@@ -30,7 +31,7 @@ The following arguments, all optional, can be used for documentation purposes.
   By default, all operators fall into the "misc" category.
   * `deprecation` is used to indicate that an operator is deprecated.
   If you fill this argument, a warning will appear in documentation and when the operator is used, with the deprecation message.
-  
+
 
 ### Annotating ports
 

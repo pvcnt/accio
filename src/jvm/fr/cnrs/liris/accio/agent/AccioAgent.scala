@@ -1,6 +1,6 @@
 /*
  * Accio is a program whose purpose is to study location privacy.
- * Copyright (C) 2016 Vincent Primault <vincent.primault@liris.cnrs.fr>
+ * Copyright (C) 2016-2017 Vincent Primault <vincent.primault@liris.cnrs.fr>
  *
  * Accio is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,6 @@ import com.google.inject.Module
 import com.twitter.finatra.thrift.ThriftServer
 import com.twitter.finatra.thrift.filters._
 import com.twitter.finatra.thrift.routing.ThriftRouter
-import fr.cnrs.liris.accio.core.infra.jackson.AccioFinatraJacksonModule
 import fr.cnrs.liris.privamov.ops.OpsModule
 import org.slf4j.LoggerFactory
 
@@ -36,7 +35,7 @@ class AccioAgent extends ThriftServer {
   loadLogbackConfig()
   //TODO: start thread looking for lost tasks.
 
-  override protected def modules: Seq[Module] = Seq(AccioFinatraJacksonModule, OpsModule, AgentModule)
+  override protected def modules: Seq[Module] = Seq(AgentModule, OpsModule)
 
   override protected def configureThrift(router: ThriftRouter): Unit = {
     router

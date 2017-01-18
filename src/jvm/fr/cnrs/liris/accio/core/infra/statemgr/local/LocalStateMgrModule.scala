@@ -1,6 +1,6 @@
 /*
  * Accio is a program whose purpose is to study location privacy.
- * Copyright (C) 2016 Vincent Primault <vincent.primault@liris.cnrs.fr>
+ * Copyright (C) 2016-2017 Vincent Primault <vincent.primault@liris.cnrs.fr>
  *
  * Accio is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,16 +25,23 @@ import fr.cnrs.liris.accio.core.service.StateManager
 import net.codingwell.scalaguice.ScalaModule
 
 /**
- * Guice module provisioning a local state manager.
+ * Local state manager configuration.
  *
  * Note: State manager should be a singleton, otherwise the locking mechanism won't work.
  *
  * @param path Root directory under which data will be written.
  */
-final class LocalStateMgrModule(path: Path) extends ScalaModule {
+case class LocalStateMgrConfig(path: Path)
+
+/**
+ * Guice module provisioning a local state manager.
+ *
+ * @param config Configuration.
+ */
+final class LocalStateMgrModule(config: LocalStateMgrConfig) extends ScalaModule {
   override def configure(): Unit = {}
 
   @Singleton
   @Provides
-  def providesStateManager(): StateManager = new LocalStateMgr(path)
+  def providesStateManager(): StateManager = new LocalStateMgr(config.path)
 }

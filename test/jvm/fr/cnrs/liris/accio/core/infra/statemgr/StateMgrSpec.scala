@@ -1,6 +1,6 @@
 /*
  * Accio is a program whose purpose is to study location privacy.
- * Copyright (C) 2016 Vincent Primault <vincent.primault@liris.cnrs.fr>
+ * Copyright (C) 2016-2017 Vincent Primault <vincent.primault@liris.cnrs.fr>
  *
  * Accio is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,39 +21,58 @@ package fr.cnrs.liris.accio.core.infra.statemgr
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 
+import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.service.StateManager
-import fr.cnrs.liris.accio.testing.Tasks
 import fr.cnrs.liris.testing.UnitSpec
 
 /**
  * Common unit tests for all [[StateManager]] implementations, ensuring they all have consistent behavior.
  */
 private[statemgr] abstract class StateMgrSpec extends UnitSpec {
+  private[this] val ScheduledTask = Task(
+    id = TaskId("id2"),
+    runId = RunId("foobar"),
+    nodeName = "foonode",
+    payload = OpPayload("fooop", 1234, Map.empty),
+    key = "fookey",
+    scheduler = "dummy",
+    createdAt = System.currentTimeMillis(),
+    state = TaskState(TaskStatus.Scheduled))
+  private[this] val RunningTask = Task(
+    id = TaskId("id1"),
+    runId = RunId("foobar"),
+    nodeName = "foonode",
+    payload = OpPayload("fooop", 1234, Map.empty),
+    key = "fookey",
+    scheduler = "dummy",
+    createdAt = System.currentTimeMillis(),
+    state = TaskState(TaskStatus.Running))
+
   protected def createStateMgr: StateManager
 
   it should "save and retrieve a task" in {
     val stateMgr = createStateMgr
-    stateMgr.get(Tasks.RunningTask.id) shouldBe None
-    stateMgr.save(Tasks.RunningTask)
-    stateMgr.get(Tasks.RunningTask.id) shouldBe Some(Tasks.RunningTask)
+    stateMgr.get(RunningTask.id) shouldBe None
+    stateMgr.save(RunningTask)
+    stateMgr.get(RunningTask.id) shouldBe Some(RunningTask)
 
-    val newTask = Tasks.RunningTask.copy(nodeName = "barnode")
+    val newTask = RunningTask.copy(nodeName = "barnode")
     stateMgr.save(newTask)
-    stateMgr.get(Tasks.RunningTask.id) shouldBe Some(newTask)
+    stateMgr.get(RunningTask.id) shouldBe Some(newTask)
   }
 
   it should "list all tasks" in {
     val stateMgr = createStateMgr
-    stateMgr.save(Tasks.ScheduledTask)
-    stateMgr.save(Tasks.RunningTask)
-    stateMgr.tasks shouldBe Set(Tasks.ScheduledTask, Tasks.RunningTask)
+    stateMgr.save(ScheduledTask)
+    stateMgr.save(RunningTask)
+    stateMgr.tasks should contain theSameElementsAs Set(ScheduledTask, RunningTask)
   }
 
   it should "delete a task" in {
     val stateMgr = createStateMgr
-    stateMgr.save(Tasks.RunningTask)
-    stateMgr.remove(Tasks.RunningTask.id)
-    stateMgr.get(Tasks.RunningTask.id) shouldBe None
+    stateMgr.save(RunningTask)
+    stateMgr.remove(RunningTask.id)
+    stateMgr.get(RunningTask.id) shouldBe None
   }
 
   it should "create locks" in {

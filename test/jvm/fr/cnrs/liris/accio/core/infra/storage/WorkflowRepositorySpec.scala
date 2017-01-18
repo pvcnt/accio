@@ -1,6 +1,6 @@
 /*
  * Accio is a program whose purpose is to study location privacy.
- * Copyright (C) 2016 Vincent Primault <vincent.primault@liris.cnrs.fr>
+ * Copyright (C) 2016-2017 Vincent Primault <vincent.primault@liris.cnrs.fr>
  *
  * Accio is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,45 +18,81 @@
 
 package fr.cnrs.liris.accio.core.infra.storage
 
-import fr.cnrs.liris.accio.core.domain.{WorkflowId, _}
-import fr.cnrs.liris.accio.testing.Workflows
+import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.testing.UnitSpec
 
 /**
  * Common unit tests for all [[WorkflowRepository]] implementations, ensuring they all have consistent behavior.
  */
 private[storage] abstract class WorkflowRepositorySpec extends UnitSpec {
+  private[this] val workflow1 = Workflow(
+    id = WorkflowId("workflow1"),
+    version = "v1",
+    owner = User("me"),
+    isActive = true,
+    createdAt = System.currentTimeMillis(),
+    graph = GraphDef(Set(
+      NodeDef(
+        op = "FirstSimple",
+        name = "FirstSimple",
+        inputs = Map("foo" -> InputDef.Value(Values.encodeInteger(42)))),
+      NodeDef(
+        op = "SecondSimple",
+        name = "SecondSimple",
+        inputs = Map(
+          "dbl" -> InputDef.Value(Values.encodeDouble(3.14)),
+          "data" -> InputDef.Reference(Reference("FirstSimple", "data")))))),
+    name = Some("my workflow"))
+
+  private[this] val workflow2 = Workflow(
+    id = WorkflowId("workflow2"),
+    version = "v1",
+    owner = User("me"),
+    isActive = true,
+    createdAt = System.currentTimeMillis() + 10,
+    graph = GraphDef(Set(
+      NodeDef(
+        op = "FirstSimple",
+        name = "FirstSimple",
+        inputs = Map("foo" -> InputDef.Param("foo"))),
+      NodeDef(
+        op = "SecondSimple",
+        name = "SecondSimple",
+        inputs = Map(
+          "dbl" -> InputDef.Param("bar"),
+          "data" -> InputDef.Reference(Reference("FirstSimple", "data")))))))
+
   protected def createRepository: WorkflowRepository
 
   protected def refreshBeforeSearch(): Unit = {}
 
   it should "save and retrieve workflows" in {
     val repo = createRepository
-    repo.contains(Workflows.workflow1.id) shouldBe false
-    repo.get(Workflows.workflow1.id) shouldBe None
-    repo.contains(Workflows.workflow2.id) shouldBe false
-    repo.get(Workflows.workflow2.id) shouldBe None
+    repo.contains(workflow1.id) shouldBe false
+    repo.get(workflow1.id) shouldBe None
+    repo.contains(workflow2.id) shouldBe false
+    repo.get(workflow2.id) shouldBe None
 
-    repo.save(Workflows.workflow1)
+    repo.save(workflow1)
     refreshBeforeSearch()
-    repo.contains(Workflows.workflow1.id) shouldBe true
-    repo.get(Workflows.workflow1.id) shouldBe Some(Workflows.workflow1)
+    repo.contains(workflow1.id) shouldBe true
+    repo.get(workflow1.id) shouldBe Some(workflow1)
 
-    repo.save(Workflows.workflow2)
+    repo.save(workflow2)
     refreshBeforeSearch()
-    repo.contains(Workflows.workflow2.id) shouldBe true
-    repo.get(Workflows.workflow2.id) shouldBe Some(Workflows.workflow2)
+    repo.contains(workflow2.id) shouldBe true
+    repo.get(workflow2.id) shouldBe Some(workflow2)
   }
 
   it should "search for workflows" in {
     val repo = createRepository
     val workflows = Seq(
-      Workflows.workflow1,
-      Workflows.workflow1.copy(version = "v2"),
-      Workflows.workflow2,
-      Workflows.workflow2.copy(version = "v2"),
-      Workflows.workflow1.copy(id = WorkflowId("other_workflow"), createdAt = System.currentTimeMillis() + 20),
-      Workflows.workflow1.copy(id = WorkflowId("another_workflow"), createdAt = System.currentTimeMillis() + 30, owner = User("him")))
+      workflow1,
+      workflow1.copy(version = "v2"),
+      workflow2,
+      workflow2.copy(version = "v2"),
+      workflow1.copy(id = WorkflowId("other_workflow"), createdAt = System.currentTimeMillis() + 20),
+      workflow1.copy(id = WorkflowId("another_workflow"), createdAt = System.currentTimeMillis() + 30, owner = User("him")))
     workflows.foreach(repo.save)
     refreshBeforeSearch()
 
@@ -76,32 +112,32 @@ private[storage] abstract class WorkflowRepositorySpec extends UnitSpec {
   it should "check whether a workflow exists at a specific version" in {
     val repo = createRepository
     val workflows = Seq(
-      Workflows.workflow1,
-      Workflows.workflow1.copy(version = "v2"),
-      Workflows.workflow2)
+      workflow1,
+      workflow1.copy(version = "v2"),
+      workflow2)
     workflows.foreach(repo.save)
     refreshBeforeSearch()
 
-    repo.contains(Workflows.workflow1.id, "v1") shouldBe true
-    repo.contains(Workflows.workflow1.id, "v2") shouldBe true
-    repo.contains(Workflows.workflow1.id, "v3") shouldBe false
-    repo.contains(Workflows.workflow2.id, "v1") shouldBe true
-    repo.contains(Workflows.workflow2.id, "v2") shouldBe false
+    repo.contains(workflow1.id, "v1") shouldBe true
+    repo.contains(workflow1.id, "v2") shouldBe true
+    repo.contains(workflow1.id, "v3") shouldBe false
+    repo.contains(workflow2.id, "v1") shouldBe true
+    repo.contains(workflow2.id, "v2") shouldBe false
   }
 
   it should "retrieve a workflow at a specific version" in {
     val repo = createRepository
     val workflows = Seq(
-      Workflows.workflow1,
-      Workflows.workflow1.copy(version = "v2"),
-      Workflows.workflow2)
+      workflow1,
+      workflow1.copy(version = "v2"),
+      workflow2)
     workflows.foreach(repo.save)
     refreshBeforeSearch()
 
-    repo.get(Workflows.workflow1.id, "v1") shouldBe Some(workflows(0))
-    repo.get(Workflows.workflow1.id, "v2") shouldBe Some(workflows(1))
-    repo.get(Workflows.workflow1.id, "v3") shouldBe None
-    repo.get(Workflows.workflow2.id, "v1") shouldBe Some(workflows(2))
-    repo.get(Workflows.workflow2.id, "v2") shouldBe None
+    repo.get(workflow1.id, "v1") shouldBe Some(workflows(0).copy(isActive = false))
+    repo.get(workflow1.id, "v2") shouldBe Some(workflows(1))
+    repo.get(workflow1.id, "v3") shouldBe None
+    repo.get(workflow2.id, "v1") shouldBe Some(workflows(2))
+    repo.get(workflow2.id, "v2") shouldBe None
   }
 }

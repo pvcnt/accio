@@ -1,6 +1,7 @@
 ---
 layout: accio
 nav: accio
+section: users
 title: Running experiments
 ---
 

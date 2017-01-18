@@ -1,6 +1,6 @@
 /*
  * Accio is a program whose purpose is to study location privacy.
- * Copyright (C) 2016 Vincent Primault <vincent.primault@liris.cnrs.fr>
+ * Copyright (C) 2016-2017 Vincent Primault <vincent.primault@liris.cnrs.fr>
  *
  * Accio is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,6 +53,7 @@ final class WorkflowFactory(graphFactory: GraphFactory, opRegistry: OpRegistry) 
     Workflow(
       id = defn.id,
       version = version,
+      isActive = true,
       createdAt = System.currentTimeMillis(),
       name = defn.name,
       owner = owner,

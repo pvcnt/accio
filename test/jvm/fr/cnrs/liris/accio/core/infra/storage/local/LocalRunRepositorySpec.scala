@@ -1,6 +1,6 @@
 /*
  * Accio is a program whose purpose is to study location privacy.
- * Copyright (C) 2016 Vincent Primault <vincent.primault@liris.cnrs.fr>
+ * Copyright (C) 2016-2017 Vincent Primault <vincent.primault@liris.cnrs.fr>
  *
  * Accio is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,28 +18,14 @@
 
 package fr.cnrs.liris.accio.core.infra.storage.local
 
-import java.nio.file.{Files, Path}
-
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.infra.storage.RunRepositorySpec
-import fr.cnrs.liris.common.util.FileUtils
-import org.scalatest.BeforeAndAfterEach
+import fr.cnrs.liris.testing.WithTmpDirectory
 
 /**
  * Unit tests of [[LocalRunRepository]].
  */
-class LocalRunRepositorySpec extends RunRepositorySpec with BeforeAndAfterEach {
-  private[this] var tmpDir: Path = null
-
-  override protected def beforeEach(): Unit = {
-    tmpDir = Files.createTempDirectory("accio-test-")
-  }
-
-  override protected def afterEach(): Unit = {
-    FileUtils.safeDelete(tmpDir)
-    tmpDir = null
-  }
-
+class LocalRunRepositorySpec extends RunRepositorySpec with WithTmpDirectory {
   override protected def createRepository: RunRepository = new LocalRunRepository(tmpDir)
 
   behavior of "LocalRunRepository"

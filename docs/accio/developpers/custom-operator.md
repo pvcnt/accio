@@ -1,6 +1,7 @@
 ---
 layout: accio
 nav: accio
+section: developpers
 title: Implementing a custom operator
 ---
 
@@ -165,7 +166,7 @@ class MultiplyOp extends Operator[MultiplyIn, MultiplyOut] {
     } else 0d
     MultiplyOut(in.a * in.b + plus)
   }
-  
+
   override def isUnstable(in: MultiplyIn): Boolean = in.add  
 }
 

@@ -3,24 +3,21 @@ body {
 }
 
 .page-title {
-  font-size: 34px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #EEE;
-  margin-bottom: 20px;
+/*  font-size: 34px;*/
+  margin-bottom: 30px;
 }
 
 h2 {
-  font-size: 26px !important;
+  font-size: 28px !important;
+  margin-top: 35px !important;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #EEE;
 }
 
 h3 {
-  font-size: 20px !important;
+  margin-top: 25px !important;
+  font-size: 24px !important;
   font-style: italic;
-}
-
-h4 {
-  font-size: 18px !important;
-
 }
 
 .section-title {
@@ -47,4 +44,43 @@ footer {
 
 .sidebar .nav>li>a {
   padding: 3px 15px;
+}
+
+#content {
+  margin-top: 15px;
+}
+
+/* Sidebar with links */
+
+.docs-sidebar {
+  padding-right: 15px;
+}
+
+.docs-sidebar hr {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.docs-menu {
+  list-style-type: none;
+  padding-left: 15px;
+}
+
+.docs-menu a {
+  display: block;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  font-size: 0.9em;
+  color: #767676;
+}
+
+.docs-menu li.active > a {
+  color: #18bc9c;
+}
+
+.docs-menu ul { /* Sub-menu */
+  list-style-type: none;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  padding-left: 20px;
 }

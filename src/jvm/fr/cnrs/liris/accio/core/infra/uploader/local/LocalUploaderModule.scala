@@ -1,6 +1,6 @@
 /*
  * Accio is a program whose purpose is to study location privacy.
- * Copyright (C) 2016 Vincent Primault <vincent.primault@liris.cnrs.fr>
+ * Copyright (C) 2016-2017 Vincent Primault <vincent.primault@liris.cnrs.fr>
  *
  * Accio is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,20 +18,27 @@
 
 package fr.cnrs.liris.accio.core.infra.uploader.local
 
-import java.nio.file.Path
+import java.nio.file.{Path, Paths}
 
 import com.google.inject.Provides
 import fr.cnrs.liris.accio.core.service.Uploader
 import net.codingwell.scalaguice.ScalaModule
 
 /**
- * Guice module provisioning a local uploader.
+ * Local uploader configuration.
  *
  * @param path Root directory under which to store files.
  */
-final class LocalUploaderModule(path: Path) extends ScalaModule {
+case class LocalUploaderConfig(path: Path)
+
+/**
+ * Guice module provisioning a local uploader.
+ *
+ * @param config Configuration
+ */
+final class LocalUploaderModule(config: LocalUploaderConfig) extends ScalaModule {
   override protected def configure(): Unit = {}
 
   @Provides
-  def providesUploader: Uploader = new LocalUploader(path)
+  def providesUploader: Uploader = new LocalUploader(config.path)
 }

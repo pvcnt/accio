@@ -1,6 +1,6 @@
 /*
  * Accio is a program whose purpose is to study location privacy.
- * Copyright (C) 2016 Vincent Primault <vincent.primault@liris.cnrs.fr>
+ * Copyright (C) 2016-2017 Vincent Primault <vincent.primault@liris.cnrs.fr>
  *
  * Accio is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -150,6 +150,14 @@ class LocalScheduler(
       Files.createDirectories(sandboxDir)
 
       val pb = new ProcessBuilder().command(cmd: _*).directory(sandboxDir.toFile).inheritIO()
+
+      // Pass as environment variables resource constraints, in case it can help operators to better use them.
+      // As an example, SparkleEnv uses the "CPU" variable to known how many cores it can use.
+      val env = pb.environment()
+      env.put("CPU", resource.cpu.toString)
+      env.put("RAM", resource.ramMb.toString)
+      env.put("DISK", resource.diskMb.toString)
+
       pb.start()
     }
   }

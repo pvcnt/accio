@@ -1,6 +1,6 @@
 /*
  * Accio is a program whose purpose is to study location privacy.
- * Copyright (C) 2016 Vincent Primault <vincent.primault@liris.cnrs.fr>
+ * Copyright (C) 2016-2017 Vincent Primault <vincent.primault@liris.cnrs.fr>
  *
  * Accio is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -81,7 +81,7 @@ object OpsModule extends ScalaModule {
   @Provides
   @Singleton
   def providesSparkleEnv: SparkleEnv = {
-    //TODO: make this adapt to number of cores specified by the operator.
-    new SparkleEnv(math.max(1, sys.runtime.availableProcessors() - 1))
+    val cores = sys.env.get("CPU").map(_.toDouble.round.toInt).getOrElse(sys.runtime.availableProcessors)
+    new SparkleEnv(math.max(1, cores))
   }
 }

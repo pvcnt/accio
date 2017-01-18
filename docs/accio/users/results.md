@@ -1,6 +1,7 @@
 ---
 layout: accio
 nav: accio
+section: users
 title: Analysing results
 ---
 
@@ -73,7 +74,7 @@ Be careful, no escaping will be done on values.
 `-artifacts="PoisRetrieval/recall,PoisRetrieval/precision"`
 
 Specifies a comma-separated list of artifacts to take into account in the export.
-You can also use the special `NUMERIC` artifact, which will trigger the inclusion of all artifact whose [type is numeric](model.html). 
+You can also use the special `NUMERIC` artifact, which will trigger the inclusion of all artifact whose [type is numeric](model.html).
 By default, only numeric artifacts are included.
 
 `-runs="a12df453,830fh53d"`

@@ -1,6 +1,6 @@
 /*
  * Accio is a program whose purpose is to study location privacy.
- * Copyright (C) 2016 Vincent Primault <vincent.primault@liris.cnrs.fr>
+ * Copyright (C) 2016-2017 Vincent Primault <vincent.primault@liris.cnrs.fr>
  *
  * Accio is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,16 +19,20 @@
 package fr.cnrs.liris.accio.core.infra.storage.elastic
 
 import com.sksamuel.elastic4s.ElasticDsl.{search, _}
+import com.sksamuel.elastic4s.analyzers.KeywordAnalyzer
+import com.sksamuel.elastic4s.mappings.MappingDefinition
+import com.sksamuel.elastic4s.script.ScriptDefinition
 import com.sksamuel.elastic4s.{ElasticClient, ElasticDsl}
 import com.twitter.finatra.json.FinatraObjectMapper
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.domain._
+import org.elasticsearch.action.support.WriteRequest.RefreshPolicy
 import org.elasticsearch.index.IndexNotFoundException
 import org.elasticsearch.search.sort.SortOrder
 
-import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, Future}
 import scala.util.control.NonFatal
 
 /**
@@ -46,8 +50,10 @@ class ElasticWorkflowRepository(
   queryTimeout: Duration)
   extends WorkflowRepository with StrictLogging {
 
+  initializeWorkflowsIndex()
+
   override def find(query: WorkflowQuery): WorkflowList = {
-    var q = boolQuery()
+    var q = boolQuery().filter(termQuery("is_active", 1))
     query.owner.foreach { owner =>
       q = q.filter(termQuery("owner.name", owner))
     }
@@ -76,7 +82,35 @@ class ElasticWorkflowRepository(
   override def save(workflow: Workflow): Unit = {
     val json = mapper.writeValueAsString(workflow)
     val f = client.execute {
-      indexInto(workflowsIndex / workflowsType).id(internalId(workflow.id, workflow.version)).source(json)
+      // We insert the new version.
+      indexInto(workflowsIndex / workflowsType)
+        .id(internalId(workflow.id, workflow.version))
+        .source(json)
+        .refresh(RefreshPolicy.WAIT_UNTIL)
+    }.flatMap { _ =>
+      if (workflow.isActive) {
+        // We update the previous version to mark it as inactive. In a normal use case, the workflow to save is
+        // supposed to be active, but we never know...
+        val q = boolQuery()
+          .filter(termQuery("id.value", workflow.id.value))
+          .filter(termQuery("is_active", 1))
+          .filter(not(termQuery("version", workflow.version)))
+        client.execute {
+          updateIn(workflowsIndex)
+            .query(q)
+            .script(ScriptDefinition("ctx._source.is_active = 0;", Some("painless")))
+            .refresh(true)
+        }
+      } else {
+        Future.successful(true)
+      }
+    }.flatMap { _ =>
+      // We need to refresh the indices because of a lot of edge cases that can happen if not. We could ultimately
+      // end up with two active versions of a workflow, which is not exactly good and would mess up things when
+      // looking for workflows.
+      // It is not ideal, but I expect this not to be too grave, as workflows are not expected to be updated several
+      // times per second.
+      client.execute(refreshIndex(workflowsIndex))
     }
     f.onSuccess {
       case _ => logger.debug(s"Saved workflow ${workflow.id.value}:${workflow.version}")
@@ -88,8 +122,11 @@ class ElasticWorkflowRepository(
   }
 
   override def get(id: WorkflowId): Option[Workflow] = {
+    val q = boolQuery()
+      .filter(termQuery("id.value", id.value))
+      .filter(termQuery("is_active", 1))
     val f = client.execute {
-      search(workflowsIndex / workflowsType).query(termQuery("id.value", id.value)).limit(1)
+      search(workflowsIndex / workflowsType).query(q).limit(1)
     }.map { resp =>
       if (resp.totalHits > 0) {
         Some(mapper.parse[Workflow](resp.hits.head.sourceAsString))
@@ -112,7 +149,6 @@ class ElasticWorkflowRepository(
       if (resp.isSourceEmpty) {
         None
       } else {
-        println(resp.sourceAsString)
         Some(mapper.parse[Workflow](resp.sourceAsString))
       }
     }.recover {
@@ -154,4 +190,22 @@ class ElasticWorkflowRepository(
   private def workflowsIndex = s"${prefix}runs"
 
   private def workflowsType = s"default"
+
+  private def initializeWorkflowsIndex() = {
+    val f = client.execute(indexExists(workflowsIndex)).flatMap { resp =>
+      if (!resp.isExists) {
+        // Some fields must absolutely be indexed with the keyword analyzer, which performs no tokenization at all,
+        // otherwise they won't be searchable by their exact value (which can be annoying, e.g., for ids).
+        val fields = Seq(
+          objectField("id").as(textField("value").analyzer(KeywordAnalyzer)),
+          textField("version").analyzer(KeywordAnalyzer))
+        logger.info(s"Creating $workflowsIndex/$workflowsType index")
+        client.execute(createIndex(workflowsIndex).mappings(new MappingDefinition(workflowsType) as (fields: _*)))
+      } else {
+        Future.successful(true)
+      }
+    }
+    f.onFailure { case NonFatal(e) => logger.error("Failed to initialize logs index", e) }
+    Await.ready(f, queryTimeout)
+  }
 }

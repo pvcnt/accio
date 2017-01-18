@@ -1,12 +1,13 @@
 ---
 layout: accio
 nav: accio
+section: admins
 title: Installing Accio
 ---
 
 The most straightforward way to install Accio is to fetch a binary release.
 Because Accio is developed in Java, those releases should be compatible with all platforms Java is available on, although Windows support has not been tested.
- 
+
 If you wish to develop Accio, or just live on the edge and use the latest available source code, you can also [compile Accio from source](contribute/compiling.html).
 
 * TOC
@@ -60,4 +61,3 @@ When running experiments, you may need to tune JVM memory options, like increasi
 ```bash
 $ java -Xmx8G -jar accio.jar <command> <options>...
 ```
-

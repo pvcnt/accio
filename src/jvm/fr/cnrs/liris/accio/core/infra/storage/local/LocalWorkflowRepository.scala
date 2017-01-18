@@ -1,6 +1,6 @@
 /*
  * Accio is a program whose purpose is to study location privacy.
- * Copyright (C) 2016 Vincent Primault <vincent.primault@liris.cnrs.fr>
+ * Copyright (C) 2016-2017 Vincent Primault <vincent.primault@liris.cnrs.fr>
  *
  * Accio is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -68,9 +68,7 @@ final class LocalWorkflowRepository(rootDir: Path) extends LocalStorage with Wor
 
   override def get(id: WorkflowId): Option[Workflow] = read(latestPath(id), Workflow)
 
-  override def get(id: WorkflowId, version: String): Option[Workflow] = {
-    read(workflowPath(id, version).toFile, Workflow)
-  }
+  override def get(id: WorkflowId, version: String): Option[Workflow] = read(id, version)
 
   override def contains(id: WorkflowId): Boolean = latestPath(id).toFile.exists
 
@@ -83,4 +81,15 @@ final class LocalWorkflowRepository(rootDir: Path) extends LocalStorage with Wor
   private def workflowPath(id: WorkflowId, version: String): Path = workflowPath(id).resolve(s"v$version.json")
 
   private def latestPath(id: WorkflowId): Path = workflowPath(id).resolve(s"latest.json")
+
+  private def read(id: WorkflowId, version: String): Option[Workflow] = {
+    read(workflowPath(id, version), Workflow).map { workflow =>
+      val latestVersion = Files.readSymbolicLink(latestPath(id)).getFileName.toString.drop(1).stripSuffix(".json")
+      if (latestVersion != version) {
+        workflow.copy(isActive = false)
+      } else {
+        workflow
+      }
+    }
+  }
 }

@@ -1,7 +1,5 @@
 ---
 layout: accio
 nav: accio
-title: Architecture
+title: HTTP REST API
 ---
-
-Lorem ipsum.

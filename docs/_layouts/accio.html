@@ -3,65 +3,143 @@ layout: default
 ---
 
 <div class="row">
-  <div class="col-md-3 sidebar">
-    <h4>Accio Basics</h4>
-    <ul class="nav nav-pills nav-stacked">
-      <li><a href="{{ "/accio/basics/overview.html" | prepend: site.baseurl }}">
-        Overview
-        </a></li>
-      <li><a href="{{ "/accio/basics/installing.html" | prepend: site.baseurl }}">
-        Installing
-        </a></li>
-      <li><a href="{{ "/accio/basics/concepts.html" | prepend: site.baseurl }}">
+  <div class="col-md-3 docs-sidebar">
+    <ul class="docs-menu">
+      <li><a href="{{ "/accio/index.html" | prepend: site.baseurl }}">
+        Introduction
+      </a></li>
+      <li><a href="{{ "/accio/concepts.html" | prepend: site.baseurl }}">
         Concepts
       </a></li>
-      <li><a href="#">
+      <li><a href="{{ "/accio/architecture.html" | prepend: site.baseurl }}">
         Architecture
       </a></li>
+      <li><a href="{{ "/accio/getting-started.html" | prepend: site.baseurl }}">
+        Getting started
+      </a></li>
     </ul>
 
-    <h4>Using Accio</h4>
-    <ul class="nav nav-pills nav-stacked">
-      <li><a href="{{ "/accio/usage/running.html" | prepend: site.baseurl }}">
-        Running experiments
-      </a></li>
-      <li><a href="{{ "/accio/usage/workflows.html" | prepend: site.baseurl }}">
+    <hr />
+    <ul class="docs-menu">
+      <li><a href="{{ "/accio/workflow-dsl.html" | prepend: site.baseurl }}">
         Workflow definition
       </a></li>
-      <li><a href="{{ "/accio/usage/experiments.html" | prepend: site.baseurl }}">
-        Experiment definition
+      <li><a href="{{ "/accio/run-dsl.html" | prepend: site.baseurl }}">
+        Run definition
       </a></li>
-      <li><a href="{{ "/accio/usage/model.html" | prepend: site.baseurl }}">
-        Accio data model
+      <li{% if page.section == 'users' %} class="active"{% endif %}>
+        <a href="{{ "/accio/users/index.html" | prepend: site.baseurl }}">
+          Launching experiments
+        </a>
+        {% if page.section == 'users' %}
+        <ul>
+          <li><a href="{{ "/accio/users/authoring.html" | prepend: site.baseurl }}">
+            Authoring experiment
+          </a></li>
+          <li><a href="{{ "/accio/users/inspecting.html" | prepend: site.baseurl }}">
+            Inspecting state
+          </a></li>
+          <li><a href="{{ "/accio/users/results.html" | prepend: site.baseurl }}">
+            Analysing results
+          </a></li>
+          <li><a href="{{ "/accio/users/debugging.html" | prepend: site.baseurl }}">
+            Debugging failures
+          </a></li>
+        </ul>
+        {% endif %}
+      </li>
+      <li{% if page.section == 'client' %} class="active"{% endif %}>
+        <a href="{{ "/accio/client/index.html" | prepend: site.baseurl }}">
+          Client (CLI)
+        </a>
+        {% if page.section == 'client' %}
+        <ul>
+          <li><a href="{{ "/accio/client/acciorc.html" | prepend: site.baseurl }}">
+            .acciorc configuration
+          </a></li>
+          <li><a href="{{ "/accio/client/run-command.html" | prepend: site.baseurl }}">
+            Command: run
+          </a></li>
+          <li><a href="{{ "/accio/client/push-command.html" | prepend: site.baseurl }}">
+            Command: push
+          </a></li>
+        </ul>
+        {% endif %}
+      </li>
+      <li><a href="{{ "/accio/web-ui.html" | prepend: site.baseurl }}">
+        Web UI
       </a></li>
-      <li><a href="{{ "/accio/usage/analysing.html" | prepend: site.baseurl }}">
-        Analysing results
-      </a></li>
-      <li><a href="{{ "/accio/usage/cli.html" | prepend: site.baseurl }}">
-        Accio CLI
-      </a></li>
-      <li><a href="#">
-        Accio Web UI
+      <li><a href="{{ "/accio/rest-api.html" | prepend: site.baseurl }}">
+        REST API
       </a></li>
     </ul>
 
-    <h4>Developing Accio</h4>
-    <ul class="nav nav-pills nav-stacked">
-      <li><a href="{{ "/accio/contribute/compiling.html" | prepend: site.baseurl }}">
-        Compiling
+    <hr />
+    <ul class="docs-menu">
+      <li><a href="{{ "/accio/schedulers.html" | prepend: site.baseurl }}">
+        Schedulers
       </a></li>
-      <li><a href="{{ "/accio/contribute/testing.html" | prepend: site.baseurl }}">
-        Running tests
+      <li><a href="{{ "/accio/storage.html" | prepend: site.baseurl }}">
+        Storage
       </a></li>
-      <li><a href="{{ "/accio/contribute/codebase.html" | prepend: site.baseurl }}">
-        Code organization
+      <li><a href="{{ "/accio/state-managers.html" | prepend: site.baseurl }}">
+        State managers
       </a></li>
-      <li><a href="{{ "/accio/contribute/operator.html" | prepend: site.baseurl }}">
-        Custom operator
+      <li><a href="{{ "/accio/uploaders.html" | prepend: site.baseurl }}">
+        Uploaders
       </a></li>
-      <li><a href="{{ "/accio/contribute/documenting.html" | prepend: site.baseurl }}">
-        Documenting operators
-        </a></li>
+    </ul>
+
+    <hr/>
+    <ul class="docs-menu">
+      <li{% if page.section == 'admins' %} class="active"{% endif %}>
+        <a href="{{ "/accio/admins/index.html" | prepend: site.baseurl }}">
+          Administrating a cluster
+        </a>
+        {% if page.section == 'admins' %}
+        <ul>
+          <li><a href="{{ "/accio/admins/install.html" | prepend: site.baseurl }}">
+            Installation
+          </a></li>
+          <li><a href="{{ "/accio/admins/agent.html" | prepend: site.baseurl }}">
+            Running the agent
+          </a></li>
+          <li><a href="{{ "/accio/admins/gateway.html" | prepend: site.baseurl }}">
+            Running the gateway
+          </a></li>
+          <li><a href="{{ "/accio/admins/monitoring.html" | prepend: site.baseurl }}">
+            Monitoring
+          </a></li>
+        </ul>
+        {% endif %}
+      </li>
+      <li{% if page.section == 'developpers' %} class="active"{% endif %}>
+        <a href="{{ "/accio/developpers/index.html" | prepend: site.baseurl }}">
+          Developping Accio
+        </a>
+        {% if page.section == 'developpers' %}
+        <ul>
+          <li><a href="{{ "/accio/developpers/compiling.html" | prepend: site.baseurl }}">
+            Compiling code
+          </a></li>
+          <li><a href="{{ "/accio/developpers/testing.html" | prepend: site.baseurl }}">
+            Running tests
+          </a></li>
+          <li><a href="{{ "/accio/developpers/codebase.html" | prepend: site.baseurl }}">
+            Code organization
+          </a></li>
+          <li><a href="{{ "/accio/developpers/custom-operator.html" | prepend: site.baseurl }}">
+            Custom operator
+          </a></li>
+          <li><a href="{{ "/accio/developpers/documenting.html" | prepend: site.baseurl }}">
+            Documenting operators
+          </a></li>
+          <li><a href="{{ "/accio/developpers/simulator.html" | prepend: site.baseurl }}">
+            Simulator mode
+          </a></li>
+        </ul>
+        {% endif %}
+      </li>
     </ul>
   </div>
 

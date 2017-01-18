@@ -1,6 +1,6 @@
 /*
  * Accio is a program whose purpose is to study location privacy.
- * Copyright (C) 2016 Vincent Primault <vincent.primault@liris.cnrs.fr>
+ * Copyright (C) 2016-2017 Vincent Primault <vincent.primault@liris.cnrs.fr>
  *
  * Accio is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,15 +30,31 @@ include "fr/cnrs/liris/accio/core/domain/operator.thrift"
  * do not have to be incrementing integers, which allows to use things such as sha1.
  */
 struct Workflow {
+  // Workflow unique identifier. It is referenced by users creating runs, so it can be a little descriptive and not
+  // totally random.
   1: required common.WorkflowId id;
+
+  // Version identifier, unique among all version of a particular workflow. Besires this, there is no constraint on
+  // it, it is just a plain string.
   2: required string version;
+
+  // Whether this object represents the active (i.e., latest) version of the workflow.
+  3: required bool is_active;
+
   // Time at which this version of the workflow was created.
-  3: required common.Timestamp created_at;
-  4: optional string name;
-  5: required common.User owner;
-  6: required graph.GraphDef graph;
+  4: required common.Timestamp created_at;
+
+  // Human-readable name.
+  5: optional string name;
+
+  // User owning this workflow (usually the one who created it).
+  6: required common.User owner;
+
+  // Graph definition.
+  7: required graph.GraphDef graph;
+
   // Workflow parameters.
-  7: required set<operator.ArgDef> params;
+  8: required set<operator.ArgDef> params;
 }
 
 struct WorkflowDef {

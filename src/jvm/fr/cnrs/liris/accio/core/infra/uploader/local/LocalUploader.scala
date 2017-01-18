@@ -1,6 +1,6 @@
 /*
  * Accio is a program whose purpose is to study location privacy.
- * Copyright (C) 2016 Vincent Primault <vincent.primault@liris.cnrs.fr>
+ * Copyright (C) 2016-2017 Vincent Primault <vincent.primault@liris.cnrs.fr>
  *
  * Accio is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,15 +31,9 @@ import fr.cnrs.liris.common.util.FileUtils
 final class LocalUploader(rootDir: Path) extends Uploader {
   override def upload(src: Path, dst: String): String = {
     // We copy files to target path. We do *not* want to symlink them, as original files can disappear at any time.
-    println(s"--- uploading from ${src.toAbsolutePath}")
-    println(s"--- uploading: ${src.toFile.list.mkString(", ")}")
     val target = rootDir.resolve(dst)
     Files.createDirectories(target.getParent)
     FileUtils.recursiveCopy(src, target)
-
-    println(s"--- uploaded to ${target.toAbsolutePath}")
-    println(s"--- uploaded: ${target.toFile.list.mkString(", ")}")
-
     target.toAbsolutePath.toString
   }
 }

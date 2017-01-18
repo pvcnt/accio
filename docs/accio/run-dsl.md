@@ -1,13 +1,10 @@
 ---
 layout: accio
 nav: accio
-title: Experiment definition
+title: Run definition
 ---
 
-This section covers how to easily define experiments as JSON documents.
-
-* TOC
-{:toc}
+This section covers how to easily define runs as JSON documents.
 
 ## JSON schema
 
@@ -46,11 +43,6 @@ Here is an example of a simple experiment definition.
 }
 ```
 
-## Specifying a workflow
-
-The workflow to be executed is specified under the `workflow` key.
-It is a path to a [workflow definition file](workflows.html), which can be either a relative (starting with `./`), home relative (starting with `~`) or absolute (starting with `/`) path.
-
 ## Specifying parameters
 
 When defining an experiment, you can specify values for parameters.
@@ -59,7 +51,7 @@ You can either specify a single value or multiple values for any parameter, trig
 Accio currently supports several ways to specify parameters, described in the next sections.
 
 ### Single value
- 
+
 To define a parameter with a single value, you can use a JSON object whose only key is `value`, mapped to the new value for the parameter.
 The value should be specified using the same format as for [workflow input values](workflows.html#input-values).
 For example:
@@ -88,7 +80,7 @@ The following code is equivalent to the previous one:
 It may be needed sometimes to use the explicit form to disambiguate, especially if your input is a map.
 
 ### List of values
- 
+
 To define a parameter with a list of values, you can use a JSON object whose only key is `values`, mapped to a JSON array with all values taken by the parameter.
 The order of values has no importance.
 Values should be specified using the same format as for [workflow input values](workflows.html#input-values).
@@ -105,9 +97,9 @@ For example:
 ```
 
 ### Range of values
- 
+
 To define a parameter with a range of values, you can a JSON object with keys `from`, `to` and `step`, mapped respectively to the first value (inclusive) taken by the parameter, the last value (inclusive) taken by the parameter and the increment between two consecutive values.
-The first value (under the `from` key) must be lower than the last value (under the `to` key). 
+The first value (under the `from` key) must be lower than the last value (under the `to` key).
 Values should be specified using the same format as for [workflow input values](workflows.html#input-values).
 For example:
 

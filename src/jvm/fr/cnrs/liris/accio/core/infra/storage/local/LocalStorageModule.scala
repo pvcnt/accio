@@ -1,6 +1,6 @@
 /*
  * Accio is a program whose purpose is to study location privacy.
- * Copyright (C) 2016 Vincent Primault <vincent.primault@liris.cnrs.fr>
+ * Copyright (C) 2016-2017 Vincent Primault <vincent.primault@liris.cnrs.fr>
  *
  * Accio is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,20 +25,27 @@ import fr.cnrs.liris.accio.core.domain.{RunRepository, WorkflowRepository}
 import net.codingwell.scalaguice.ScalaModule
 
 /**
- * Guice module provisioning repositories with local storage.
+ * Local storage configuration.
  *
  * Note: Repositories should be singletons, otherwise the locking mechanism won't work.
  *
  * @param path Root directory under which to store files.
  */
-final class LocalStorageModule(path: Path) extends AbstractModule with ScalaModule {
+case class LocalStorageConfig(path: Path)
+
+/**
+ * Guice module provisioning repositories with local storage.
+ *
+ * @param config Configuration.
+ */
+final class LocalStorageModule(config: LocalStorageConfig) extends AbstractModule with ScalaModule {
   override def configure(): Unit = {}
 
   @Singleton
   @Provides
-  def providesRunRepository: RunRepository = new LocalRunRepository(path.resolve("runs"))
+  def providesRunRepository: RunRepository = new LocalRunRepository(config.path.resolve("runs"))
 
   @Singleton
   @Provides
-  def providesWorkflowRepository: WorkflowRepository = new LocalWorkflowRepository(path.resolve("workflows"))
+  def providesWorkflowRepository: WorkflowRepository = new LocalWorkflowRepository(config.path.resolve("workflows"))
 }

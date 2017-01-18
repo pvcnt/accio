@@ -1,6 +1,6 @@
 /*
  * Accio is a program whose purpose is to study location privacy.
- * Copyright (C) 2016 Vincent Primault <vincent.primault@liris.cnrs.fr>
+ * Copyright (C) 2016-2017 Vincent Primault <vincent.primault@liris.cnrs.fr>
  *
  * Accio is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,8 +60,8 @@ class TaskExecutor @Inject()(opExecutor: OpExecutor, client: AgentService.Finagl
   }
 
   private def start(taskId: TaskId, runId: RunId, nodeName: String, payload: OpPayload): Future[Unit] = {
-    //System.setOut(new PrintStream(stdoutBytes))
-    //System.setErr(new PrintStream(stderrBytes))
+    System.setOut(new PrintStream(stdoutBytes))
+    System.setErr(new PrintStream(stderrBytes))
     threads ++= Set(new HeartbeatThread(taskId), new StreamLogsThread(taskId, runId, nodeName))
     threads.foreach(_.start())
     logger.debug(s"[T${taskId.value}] Started execution")

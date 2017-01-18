@@ -1,6 +1,6 @@
 /*
  * Accio is a program whose purpose is to study location privacy.
- * Copyright (C) 2016 Vincent Primault <vincent.primault@liris.cnrs.fr>
+ * Copyright (C) 2016-2017 Vincent Primault <vincent.primault@liris.cnrs.fr>
  *
  * Accio is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -134,6 +134,7 @@ class WorkflowFactorySpec extends UnitSpec {
     val workflow = workflowFactory.create(workflow1, User("me"))
     workflow.id shouldBe WorkflowId("my_workflow")
     workflow.name shouldBe Some("my workflow")
+    workflow.isActive shouldBe true
     workflow.owner shouldBe User("him")
     workflow.graph shouldBe workflow1.graph
     workflow.params should have size 0

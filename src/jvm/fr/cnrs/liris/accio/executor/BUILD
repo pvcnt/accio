@@ -7,11 +7,10 @@ scala_library(
     'src/jvm/fr/cnrs/liris/accio/core/infra/uploader/local',
     'src/thrift/fr/cnrs/liris/accio/core/domain',
     'src/thrift/fr/cnrs/liris/accio/agent',
-
-    'src/jvm/fr/cnrs/liris/common/flags',
     'src/jvm/fr/cnrs/liris/privamov/ops',
 
     '3rdparty/jvm/com/typesafe/scala-logging',
+    '3rdparty/jvm/com/twitter/inject:app',
     '3rdparty/jvm:scala-guice',
   ],
   excludes = [

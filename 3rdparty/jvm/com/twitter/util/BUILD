@@ -1,7 +1,22 @@
+# Accio is a program whose purpose is to study location privacy.
+# Copyright (C) 2016-2017 Vincent Primault <vincent.primault@liris.cnrs.fr>
+#
+# Accio is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Accio is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Accio.  If not, see <http://www.gnu.org/licenses/>.
+
 # In Sync with Finatra's version.
 VERSION='6.40.0'
 
+jar_library(name='app', jars=[scala_jar('com.twitter', 'util-app', VERSION)])
 jar_library(name='core', jars=[scala_jar('com.twitter', 'util-core', VERSION)])
 jar_library(name='eval', jars=[scala_jar('com.twitter', 'util-eval', VERSION)])
-jar_library(name='reflect', jars=[scala_jar('com.twitter', 'util-reflect', VERSION)])
-jar_library(name='collection', jars=[scala_jar('com.twitter', 'util-collection', VERSION)])

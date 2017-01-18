@@ -1,6 +1,6 @@
 /*
  * Accio is a program whose purpose is to study location privacy.
- * Copyright (C) 2016 Vincent Primault <vincent.primault@liris.cnrs.fr>
+ * Copyright (C) 2016-2017 Vincent Primault <vincent.primault@liris.cnrs.fr>
  *
  * Accio is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,36 +20,42 @@ package fr.cnrs.liris.accio.core.infra.statemgr.zookeeper
 
 import com.google.inject.{Provides, Singleton}
 import com.twitter.util.Duration
-import fr.cnrs.liris.accio.core.service.{Configurable, StateManager}
+import fr.cnrs.liris.accio.core.service.StateManager
 import net.codingwell.scalaguice.ScalaModule
 import org.apache.curator.framework.CuratorFrameworkFactory
 import org.apache.curator.retry.ExponentialBackoffRetry
 
 /**
- * Guice module provisioning a state manager using Zookeeper.
+ * Zookeeper state manager configuration.
  *
  * @param addr              Address to Zookeeper cluster.
  * @param path              Root path under which to store data.
  * @param sessionTimeout    Session timeout.
  * @param connectionTimeout Connection timeout.
  */
-final class ZookeeperStateMgrModule(
+case class ZookeeperStateMgrConfig(
   addr: String,
   path: String = "/accio",
   sessionTimeout: Duration = Duration.fromSeconds(60),
   connectionTimeout: Duration = Duration.fromSeconds(15))
-  extends ScalaModule {
+
+/**
+ * Guice module provisioning a state manager using Zookeeper.
+ *
+ * @param config Configuration.
+ */
+final class ZookeeperStateMgrModule(config: ZookeeperStateMgrConfig) extends ScalaModule {
   override def configure(): Unit = {}
 
   @Singleton
   @Provides
   def providesStateManager(): StateManager = {
     val retryPolicy = new ExponentialBackoffRetry(1000, 3)
-    val client = CuratorFrameworkFactory.newClient(addr, sessionTimeout.inMillis.toInt, connectionTimeout.inMillis.toInt, retryPolicy)
+    val client = CuratorFrameworkFactory.newClient(config.addr, config.sessionTimeout.inMillis.toInt, config.connectionTimeout.inMillis.toInt, retryPolicy)
     client.start()
 
     sys.addShutdownHook(client.close())
 
-    new ZookeeperStateMgr(client, path)
+    new ZookeeperStateMgr(client, config.path)
   }
 }

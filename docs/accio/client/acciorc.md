@@ -1,17 +1,9 @@
 ---
 layout: accio
 nav: accio
-title: Command line reference
+section: client
+title: .acciorc configuration file
 ---
-
-The principal interface of Accio is a command line interface.
-It can be used to [run experiments](running.html) and [analyze their results](analysing.html).
-We present here some additional features of this application.
-
-* TOC
-{:toc}
-
-## `.acciorc`, the Accio configuration file
 
 Accio accepts many options.
 While some of them are frequently varying (e.g., the name of an experiment), some others are less susceptible to vary (e.g., your user name).
@@ -36,12 +28,3 @@ The goal of this is to package command line options that work together.
 For example, a `run:twice -runs=2` line in a configuration file combined with an `accio run -config=twice /path/to/workflow.json` Accio invocation in running twice any workflow.
 
 The `-acciorc` and `-config` options must appear *before* the command name (e.g., `run`).
-
-## Built-in documentation
-
-Accio comes with built-in documentation.
-
-  * `accio help` enumerates all available commands and their options.
-  * `accio help <command>` provides detailed information about a given command.
-  * `accio help list-ops` enumerates all available operators, their inputs and outputs.
-  * `accio help <operator>` provides detailed information about a given operator.
