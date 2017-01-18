@@ -48,7 +48,7 @@ final class LocalStateMgr(rootDir: Path) extends LocalStorage with StateManager 
 
   override def save(task: Task): Unit = {
     write(task, taskPath(task.id))
-    logger.debug(s"Saved task $task")
+    logger.debug(s"Saved task ${task.id.value}")
   }
 
   override def remove(id: TaskId): Unit = {

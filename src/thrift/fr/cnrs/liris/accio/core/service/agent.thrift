@@ -149,3 +149,11 @@ struct CompleteTaskRequest {
 
 struct CompleteTaskResponse {
 }
+
+exception UnknownTaskException{
+  1: required common.TaskId id;
+}
+
+exception UnknownRunException{
+  1: required common.RunId id;
+}

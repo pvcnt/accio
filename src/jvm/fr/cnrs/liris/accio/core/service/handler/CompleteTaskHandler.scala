@@ -37,7 +37,7 @@ final class CompleteTaskHandler @Inject()(
     taskLock.lock()
     try {
       stateManager.get(req.taskId) match {
-        case None => logger.warn(s"Received unknown task ${req.taskId.value}")
+        case None => throw new UnknownTaskException(req.taskId)
         case Some(task) =>
           stateManager.remove(task.id)
           val runLock = stateManager.lock(s"run/${task.runId.value}")
@@ -59,12 +59,13 @@ final class CompleteTaskHandler @Inject()(
                   nextNodes.foreach { nextNode =>
                     val nodeState = newRun.state.nodes.find(_.nodeName == nextNode).get
                     val newNodeState = nodeState.copy(status = NodeStatus.Scheduled)
-                    newRun = newRun.copy(state = newRun.state.copy(nodes = run.state.nodes - nodeState + newNodeState))
+                    newRun = newRun.copy(state = newRun.state.copy(nodes = newRun.state.nodes - nodeState + newNodeState))
                   }
                   runRepository.save(newRun)
                   nextNodes.foreach(nextNode => scheduler.submit(newRun, graph(nextNode)))
                   logger.debug(s"[T${task.id.value}] Task successful, scheduled ${nextNodes.size} nodes: ${nextNodes.mkString(", ")}")
                 } else {
+                  println("--- saved " + newRun)
                   runRepository.save(newRun)
                   logger.debug(s"[T${task.id.value}] Task failed, cancelled next nodes")
                 }
@@ -94,14 +95,12 @@ final class CompleteTaskHandler @Inject()(
     if (result.exitCode == 0) {
       // Task completed successfully.
       val newNodeState = nodeState.copy(completedAt = Some(now), result = Some(result), status = NodeStatus.Success)
-      var newRunState = run.state.copy(nodes = run.state.nodes - nodeState + newNodeState)
-
-      newRunState = updateRunState(newRunState, now)
-      run.copy(state = newRunState)
+      val newRunState = run.state.copy(nodes = run.state.nodes - nodeState + newNodeState)
+      run.copy(state = updateRunState(newRunState, now))
     } else {
       // Task completed with an error.
       val newNodeState = nodeState.copy(completedAt = Some(now), status = NodeStatus.Failed)
-      var newRunState = run.state.copy(nodes = run.state.nodes - nodeState + newNodeState)
+      val newRunState = run.state.copy(nodes = run.state.nodes - nodeState + newNodeState)
 
       // Mark dependent tasks as cancelled.
       val graph = getGraph(run)
@@ -111,8 +110,7 @@ final class CompleteTaskHandler @Inject()(
         run.state.copy(nodes = run.state.nodes - nodeState + newNodeState)
       }
 
-      newRunState = updateRunState(newRunState, now)
-      run.copy(state = newRunState)
+      run.copy(state = updateRunState(newRunState, now))
     }
     //TODO: update parent run if any.
   }

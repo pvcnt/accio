@@ -43,9 +43,9 @@ service AgentService {
 
   agent.HeartbeatResponse heartbeat(1: agent.HeartbeatRequest req);
 
-  agent.StartTaskResponse startTask(1: agent.StartTaskRequest req);
+  agent.StartTaskResponse startTask(1: agent.StartTaskRequest req) throws (1: agent.UnknownTaskException unknown);
 
   agent.StreamLogsResponse streamLogs(1: agent.StreamLogsRequest req);
 
-  agent.CompleteTaskResponse completeTask(1: agent.CompleteTaskRequest req);
+  agent.CompleteTaskResponse completeTask(1: agent.CompleteTaskRequest req) throws (1: agent.UnknownTaskException unknownTask, 2: agent.UnknownRunException unknownRun);
 }

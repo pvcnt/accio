@@ -25,12 +25,20 @@ import fr.cnrs.liris.privamov.ops.OpsModule
 
 object AccioExecutorMain extends AccioExecutor
 
+/**
+ * Accio executor canonical implementation.
+ */
 class AccioExecutor extends App {
+  override protected def failfastOnFlagsNotParsed = true
+
   override protected def modules = Seq(ExecutorModule, OpsModule)
 
   override protected def run(): Unit = {
     require(args.length == 1, "You must provide a single task identifier as argument")
     val executor = injector.instance[TaskExecutor]
+    onExit {
+      executor.close()
+    }
     Await.ready(executor.execute(TaskId(args.head)))
   }
 }

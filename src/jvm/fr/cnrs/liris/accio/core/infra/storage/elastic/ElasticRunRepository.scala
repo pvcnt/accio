@@ -180,7 +180,7 @@ final class ElasticRunRepository(
       delete(id.value).from(runsIndex / runsType)
     }.flatMap { _ =>
       client.execute {
-        deleteIn(logsIndex).by(termQuery("run_id.value", id.value))
+        deleteIn(logsIndex).by(termQuery("id.value", id.value))
       }
     }
     f.onSuccess {

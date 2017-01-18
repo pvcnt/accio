@@ -20,6 +20,7 @@ package fr.cnrs.liris.accio.core.infra.storage.local
 
 import java.nio.file.{Files, Path, StandardOpenOption}
 
+import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.infra.util.LocalStorage
 import fr.cnrs.liris.common.util.FileUtils
@@ -33,7 +34,7 @@ import scala.collection.JavaConverters._
  *
  * @param rootDir Root directory under which to store files.
  */
-final class LocalRunRepository(rootDir: Path) extends LocalStorage with RunRepository {
+final class LocalRunRepository(rootDir: Path) extends LocalStorage with RunRepository with StrictLogging {
   override def find(query: RunQuery): RunList = {
     var results = listIds(runsPath).flatMap(id => get(RunId(id)))
 
@@ -76,6 +77,7 @@ final class LocalRunRepository(rootDir: Path) extends LocalStorage with RunRepos
 
   override def save(run: Run): Unit = {
     write(run, runPath(run.id))
+    logger.debug(s"Saved run ${run.id.value}")
   }
 
   override def save(logs: Seq[RunLog]): Unit = {
@@ -90,6 +92,7 @@ final class LocalRunRepository(rootDir: Path) extends LocalStorage with RunRepos
         }
       }
     }
+    logger.debug(s"Saved ${logs.size} logs")
   }
 
   override def get(id: RunId): Option[Run] = read(runPath(id), Run)
@@ -98,6 +101,8 @@ final class LocalRunRepository(rootDir: Path) extends LocalStorage with RunRepos
 
   override def remove(id: RunId): Unit = {
     FileUtils.safeDelete(runPath(id))
+    FileUtils.safeDelete(logsPath(id))
+    logger.debug(s"Removed run ${id.value}")
   }
 
   private def runsPath = rootDir.resolve("runs")
@@ -106,7 +111,9 @@ final class LocalRunRepository(rootDir: Path) extends LocalStorage with RunRepos
 
   private def runPath(id: RunId) = getSubdir(runsPath, id.value).resolve(s"${id.value}.json")
 
-  private def logsPath(id: RunId, nodeName: String): Path = getSubdir(logsPath, id.value.toString).resolve(nodeName)
+  private def logsPath(id: RunId): Path = getSubdir(logsPath, id.value.toString)
+
+  private def logsPath(id: RunId, nodeName: String): Path = logsPath(id).resolve(nodeName)
 
   private def logsPath(id: RunId, nodeName: String, classifier: String): Path = logsPath(id, nodeName).resolve(s"$classifier.txt")
 

@@ -23,7 +23,7 @@ import java.util.{Date, Locale}
 import com.google.inject.Inject
 import com.twitter.util.{Await, Return, Throw}
 import fr.cnrs.liris.accio.agent.AgentService
-import fr.cnrs.liris.accio.core.domain.RunStatus
+import fr.cnrs.liris.accio.core.domain.{JsonSerializer, RunStatus}
 import fr.cnrs.liris.accio.core.infra.cli.{Cmd, Command, ExitCode, Reporter}
 import fr.cnrs.liris.accio.core.service.handler.ListRunsRequest
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
@@ -35,6 +35,8 @@ import scala.collection.mutable
 case class PsFlags(
   @Flag(name = "q")
   quiet: Boolean = false,
+  @Flag(name = "json", help = "Whether to output JSON")
+  json: Boolean = false,
   @Flag(name = "active")
   active: Boolean = true,
   @Flag(name = "completed", expansion = Array("success", "failed"))
@@ -86,12 +88,21 @@ class PsCommand @Inject()(client: AgentService.FinagledClient) extends Command {
     Await.result(f) match {
       case Return(resp) =>
         if (opts.quiet) {
-          resp.results.map(_.id.value).foreach(out.writeln)
+          if (opts.json) {
+            out.writeln("[" + resp.results.map(_.id.value).mkString(",") + "]")
+          } else {
+            resp.results.map(_.id.value).foreach(out.writeln)
+          }
         } else {
-          val prettyTime = new PrettyTime().setLocale(Locale.ENGLISH)
-          out.writeln(s"${padTo("Run id", 36 )}  ${padTo("Workflow id", 15)}  ${padTo("Created", 15)}  ${padTo("Run name", 15)}  ${padTo("Status", 9)}  Nodes")
-          resp.results.foreach { run =>
-            out.writeln(s"${run.id.value}  ${padTo(run.pkg.workflowId.value, 15)}  ${padTo(prettyTime.format(new Date(run.createdAt)), 15)}  ${padTo(run.name.getOrElse("<no name>"), 15)}  ${padTo(run.state.status.name, 9)}  ${run.state.nodes.size}")
+          if (opts.json) {
+            val serializer = new JsonSerializer
+            out.writeln("[" + resp.results.map(serializer.serialize).mkString(",") + "]")
+          } else {
+            val prettyTime = new PrettyTime().setLocale(Locale.ENGLISH)
+            out.writeln(s"${padTo("Run id", 36 )}  ${padTo("Workflow id", 15)}  ${padTo("Created", 15)}  ${padTo("Run name", 15)}  ${padTo("Status", 9)}  Nodes")
+            resp.results.foreach { run =>
+              out.writeln(s"${run.id.value}  ${padTo(run.pkg.workflowId.value, 15)}  ${padTo(prettyTime.format(new Date(run.createdAt)), 15)}  ${padTo(run.name.getOrElse("<no name>"), 15)}  ${padTo(run.state.status.name, 9)}  ${run.state.nodes.size}")
+            }
           }
         }
         ExitCode.Success

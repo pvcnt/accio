@@ -22,41 +22,64 @@ import java.io.{ByteArrayOutputStream, PrintStream}
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 
-import com.google.inject.{Inject, Singleton}
+import com.google.inject.Inject
 import com.twitter.util._
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.agent.AgentService
 import fr.cnrs.liris.accio.core.domain._
-import fr.cnrs.liris.accio.core.service.handler.{CompleteTaskRequest, HeartbeatRequest, StartTaskRequest, StreamLogsRequest}
+import fr.cnrs.liris.accio.core.service.handler._
 import fr.cnrs.liris.accio.core.service.{OpExecutor, OpExecutorOpts}
 
 import scala.collection.mutable
 
 /**
- * Execute tasks.
+ * Execute tasks. It handles the whole lifecycle of a task:
+ *   - getting payload from the agent;
+ *   - executing the operator;
+ *   - reporting completed task to the agent;
+ *   - sending heartbeat to the agent;
+ *   - streaming logs to the agent.
  *
- * @param opExecutor
- * @param client
+ * Although nothing enforces it, it is designed for a single execution of a task.
+ *
+ * @param opExecutor Operator executor.
+ * @param client     Client to the agent.
  */
-@Singleton
-class TaskExecutor @Inject()(opExecutor: OpExecutor, client: AgentService.FinagledClient)
-  extends StrictLogging {
-
+class TaskExecutor @Inject()(opExecutor: OpExecutor, client: AgentService.FinagledClient) extends StrictLogging {
   private[this] val pool = new ExecutorServiceFuturePool(Executors.newSingleThreadExecutor)
   private[this] val stdoutBytes = new ByteArrayOutputStream
   private[this] val stderrBytes = new ByteArrayOutputStream
   private[this] val stopped = new AtomicBoolean(false)
   private[this] val threads = mutable.Set.empty[Thread]
 
+  /**
+   * Execute a task.
+   *
+   * @param taskId Task identifier.
+   * @return A future that will be completed once the task is executed.
+   */
   def execute(taskId: TaskId): Future[Unit] = {
     client.startTask(StartTaskRequest(taskId)).transform {
+      case Throw(UnknownTaskException(_)) =>
+        logger.error(s"[T${taskId.value}] Unknown task")
+        Future.Done
+      case Throw(UnknownRunException(_)) =>
+        logger.error(s"[T${taskId.value}] Unknown run")
+        Future.Done
       case Throw(e) =>
-        logger.error("Error while registering executor", e)
+        logger.error("[T${taskId.value}] Error while registering executor", e)
         Future.Done
       case Return(resp) =>
         logger.debug(s"[T${taskId.value}] Received payload")
         start(taskId, resp.runId, resp.nodeName, resp.payload)
     }
+  }
+
+  /**
+   * Close the task executor.
+   */
+  def close(): Unit = {
+    pool.executor.shutdownNow()
   }
 
   private def start(taskId: TaskId, runId: RunId, nodeName: String, payload: OpPayload): Future[Unit] = {
@@ -68,13 +91,16 @@ class TaskExecutor @Inject()(opExecutor: OpExecutor, client: AgentService.Finagl
     pool {
       val opts = OpExecutorOpts(useProfiler = true, logsPrefix = s"[T${taskId.value}] ")
       opExecutor.execute(payload, opts)
-    }.transform {
-      case Throw(e) =>
+    }.handle {
+      case e: Throwable =>
         logger.error(s"[T${taskId.value}] Operator raised an unexpected error", e)
-        Future(OpResult(-999, Some(ErrorFactory.create(e))))
-      case Return(result) =>
-        client.completeTask(CompleteTaskRequest(taskId, result))
-          .onFailure(e => logger.error(s"[T${taskId.value}] Error while marking task as completed", e))
+        OpResult(-999, Some(ErrorFactory.create(e)))
+    }.flatMap { result =>
+      client.completeTask(CompleteTaskRequest(taskId, result))
+        .onFailure {
+          case UnknownTaskException(_) => // Ignore.
+          case e: Throwable => logger.error(s"[T${taskId.value}] Error while marking task as completed", e)
+        }
     }.respond { _ =>
       stopped.set(true)
       threads.foreach(_.interrupt())

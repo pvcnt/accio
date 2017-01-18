@@ -22,7 +22,7 @@ import com.google.inject.{Inject, Singleton}
 import com.twitter.finagle.Service
 import com.twitter.finatra.thrift.Controller
 import com.twitter.inject.Injector
-import com.typesafe.scalalogging.StrictLogging
+import com.twitter.scrooge.ThriftException
 import fr.cnrs.liris.accio.agent.AgentService._
 import fr.cnrs.liris.accio.core.service.handler._
 
@@ -98,6 +98,7 @@ class AgentController @Inject()(injector: Injector) extends Controller with Agen
   private def reportException[T](f: => T): T = try {
     f
   } catch {
+    case e: ThriftException => throw e // Rethrow an exception handled by Thrift.
     case NonFatal(e) =>
       logger.error("Uncaught exception", e)
       throw e

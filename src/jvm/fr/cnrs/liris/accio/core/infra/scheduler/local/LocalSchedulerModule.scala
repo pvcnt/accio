@@ -51,7 +51,7 @@ class LocalSchedulerModule(config: LocalSchedulerConfig) extends ScalaModule {
 
   @Singleton
   @Provides
-  def providesScheduler(opRegistry: OpRegistry, downloader: Downloader): Scheduler = {
+  def providesLocalScheduler(opRegistry: OpRegistry, downloader: Downloader): Scheduler = {
     val executorArgs = Seq("-addr", config.agentAddr) ++ config.executorArgs
     new LocalScheduler(opRegistry, downloader, config.workDir, config.executorUri, config.javaHome, executorArgs)
   }

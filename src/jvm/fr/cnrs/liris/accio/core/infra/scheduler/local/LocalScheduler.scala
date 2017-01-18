@@ -22,6 +22,7 @@ import java.nio.file.{Files, Path}
 import java.util.UUID
 import java.util.concurrent.{ConcurrentHashMap, Executors}
 
+import com.twitter.util.ExecutorServiceFuturePool
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.service.{Downloader, Scheduler}
@@ -53,9 +54,12 @@ class LocalScheduler(
   extends Scheduler with StrictLogging {
 
   private[this] val monitors = new ConcurrentHashMap[String, TaskMonitor].asScala
-  private[this] val executorService = Executors.newWorkStealingPool
+  private[this] val pool = new ExecutorServiceFuturePool(Executors.newWorkStealingPool)
   private[this] lazy val localExecutorPath = {
     val targetPath = workDir.resolve("executor.jar")
+    if (targetPath.toFile.exists()) {
+      targetPath.toFile.delete()
+    }
     logger.info(s"Downloading executor JAR to ${targetPath.toAbsolutePath}")
     downloader.download(executorUri, targetPath)
     targetPath
@@ -66,7 +70,10 @@ class LocalScheduler(
     val key = HashUtils.sha1(id.value)
     val monitor = new TaskMonitor(id, key, payload)
     monitors(key) = monitor
-    executorService.submit(monitor)
+    val f = pool(monitor.run())
+    f.onSuccess(_ => logger.debug(s"[T${id.value}] Monitoring thread completed"))
+    f.onFailure(e => logger.error(s"[T${id.value}] Error in monitoring thread", e))
+    logger.debug(s"[T${id.value}] Submitted task")
     Task(
       id = id,
       runId = runId,
@@ -85,7 +92,11 @@ class LocalScheduler(
   override def stop(): Unit = {
     monitors.values.foreach(_.kill())
     monitors.clear()
-    executorService.shutdownNow()
+  }
+
+  override def finalize(): Unit = {
+    super.finalize()
+    stop()
   }
 
   private def getSandboxPath(key: String) = workDir.resolve(key)
@@ -101,13 +112,13 @@ class LocalScheduler(
       }
       maybeProcess match {
         case None =>
-          logger.info(s"[T${taskId.value}] Skipped task (killed)")
+          logger.debug(s"[T${taskId.value}] Skipped task (killed)")
           cleanup()
         case Some(p) =>
-          logger.info(s"[T${taskId.value}] Started task")
+          logger.debug(s"[T${taskId.value}] Waiting for process completion")
           try {
             p.waitFor()
-            logger.info(s"[T${taskId.value}] Completed task")
+            logger.debug(s"[T${taskId.value}] Process completed")
           } catch {
             case e: InterruptedException => logger.warn(s"[T${taskId.value}] Interrupted while waiting", e)
           } finally {
@@ -121,7 +132,7 @@ class LocalScheduler(
         killed = true
         process.foreach(_.destroyForcibly())
         process = None
-        logger.info(s"[T${taskId.value}] Killed task")
+        logger.debug(s"[T${taskId.value}] Killed task")
       }
     }
 

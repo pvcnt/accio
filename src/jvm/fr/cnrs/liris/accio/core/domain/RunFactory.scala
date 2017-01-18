@@ -189,7 +189,7 @@ final class RunFactory(workflowRepository: WorkflowRepository) {
   /**
    * Return a random and unique run identifier.
    */
-  private def randomId = RunId(UUID.randomUUID().toString)
+  private def randomId = RunId(UUID.randomUUID().toString.replace("-", ""))
 
   /**
    * Return initial run state.

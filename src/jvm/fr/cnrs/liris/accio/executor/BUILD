@@ -11,7 +11,6 @@ scala_library(
 
     '3rdparty/jvm/com/typesafe/scala-logging',
     '3rdparty/jvm/com/twitter/inject:app',
-    '3rdparty/jvm:scala-guice',
   ],
   excludes = [
     # Finagle comes with its own Thrift library.

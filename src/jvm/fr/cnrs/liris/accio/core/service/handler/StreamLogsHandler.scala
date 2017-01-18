@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.core.service.handler
 import com.google.inject.Inject
 import com.twitter.util.Future
 import com.typesafe.scalalogging.LazyLogging
-import fr.cnrs.liris.accio.core.domain.{RunRepository, UnknownTaskException}
+import fr.cnrs.liris.accio.core.domain.RunRepository
 
 class StreamLogsHandler @Inject()(runRepository: RunRepository)
   extends Handler[StreamLogsRequest, StreamLogsResponse] with LazyLogging {
@@ -31,6 +31,7 @@ class StreamLogsHandler @Inject()(runRepository: RunRepository)
     val runIds = req.logs.map(_.runId).toSet
     val unknownRunIds = runIds.filterNot(runRepository.contains)
     unknownRunIds.foreach { runId =>
+      // We do not throw an exception because it can be a "normal" situation (if the thread sending logs is stopping).
       logger.warn(s"Received logs from unknown run ${runId.value}")
     }
     runRepository.save(req.logs.filterNot(log => unknownRunIds.contains(log.runId)))

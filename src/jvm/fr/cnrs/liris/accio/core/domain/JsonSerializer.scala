@@ -18,4 +18,14 @@
 
 package fr.cnrs.liris.accio.core.domain
 
-class UnknownTaskException(val taskId: TaskId) extends RuntimeException(s"Unknown task: $taskId")
+import com.twitter.scrooge.{TArrayByteTransport, ThriftStruct}
+import org.apache.thrift.protocol.TSimpleJSONProtocol
+
+class JsonSerializer {
+  def serialize(struct: ThriftStruct): Array[Byte] = {
+    val transport = new TArrayByteTransport
+    val protocol = new TSimpleJSONProtocol.Factory().getProtocol(transport)
+    struct.write(protocol)
+    transport.toByteArray
+  }
+}

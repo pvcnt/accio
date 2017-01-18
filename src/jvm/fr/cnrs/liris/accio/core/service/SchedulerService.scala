@@ -39,8 +39,7 @@ class SchedulerService(scheduler: Scheduler, stateManager: StateManager) extends
     val payload = createPayload(run, node)
     val task = scheduler.submit(run.id, node.name, payload)
     stateManager.save(task)
-    logger.debug(s"[T${task.id.value}] Scheduled task. Run: ${run.id}, node: ${node.name}, op: ${payload.op}, " +
-      s"inputs: ${payload.inputs.map { case (k, v) => s"$k=$v" }.mkString(" ")})")
+    logger.debug(s"[T${task.id.value}] Scheduled task. Run: ${run.id.value}, node: ${node.name}, op: ${payload.op}")
     task
   }
 
