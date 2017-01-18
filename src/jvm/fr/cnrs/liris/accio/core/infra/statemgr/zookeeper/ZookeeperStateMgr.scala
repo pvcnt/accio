@@ -18,6 +18,8 @@
 
 package fr.cnrs.liris.accio.core.infra.statemgr.zookeeper
 
+import java.util.concurrent.TimeUnit
+
 import com.twitter.scrooge.TArrayByteTransport
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.service.{Lock, StateManager}
@@ -88,6 +90,14 @@ final class ZookeeperStateMgr(client: CuratorFramework, rootPath: String)
     override def lock(): Unit = {
       logger.debug(s"Acquiring lock on $key")
       zkLock.acquire()
+    }
+
+    override def tryLock(): Boolean = {
+      val res = zkLock.acquire(10, TimeUnit.MILLISECONDS)
+      if (res) {
+        logger.debug(s"Acquired lock on $key")
+      }
+      res
     }
 
     override def unlock(): Unit = {

@@ -55,6 +55,13 @@ trait Lock {
   def lock(): Unit
 
   /**
+   * Try to acquire this lock. This is a non-blocking operation.
+   *
+   * @return True if the lock was acquired, false otherwise.
+   */
+  def tryLock(): Boolean
+
+  /**
    * Release this lock.
    */
   def unlock(): Unit

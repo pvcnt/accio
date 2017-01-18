@@ -76,6 +76,14 @@ final class LocalStateMgr(rootDir: Path) extends LocalStorage with StateManager 
       logger.debug(s"Acquired lock on $key")
     }
 
+    override def tryLock(): Boolean = {
+      val res = javaLock.tryLock()
+      if (res) {
+        logger.debug(s"Acquired lock on $key")
+      }
+      res
+    }
+
     override def unlock(): Unit = {
       javaLock.unlock()
       logger.debug(s"Released lock on $key")

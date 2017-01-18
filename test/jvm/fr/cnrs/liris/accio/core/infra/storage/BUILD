@@ -1,5 +1,6 @@
 junit_tests(
   name='storage',
+  concurrency='SERIAL',
   dependencies=[
     'src/jvm/fr/cnrs/liris/accio/core/domain',
     'test/jvm/fr/cnrs/liris/testing',
