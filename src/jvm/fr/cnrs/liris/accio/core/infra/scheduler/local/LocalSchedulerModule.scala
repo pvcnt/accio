@@ -53,6 +53,8 @@ class LocalSchedulerModule(config: LocalSchedulerConfig) extends ScalaModule {
   @Provides
   def providesLocalScheduler(opRegistry: OpRegistry, downloader: Downloader): Scheduler = {
     val executorArgs = Seq("-addr", config.agentAddr) ++ config.executorArgs
-    new LocalScheduler(opRegistry, downloader, config.workDir, config.executorUri, config.javaHome, executorArgs)
+    val scheduler = new LocalScheduler(opRegistry, downloader, config.workDir, config.executorUri, config.javaHome, executorArgs)
+    sys.addShutdownHook(scheduler.stop())
+    scheduler
   }
 }

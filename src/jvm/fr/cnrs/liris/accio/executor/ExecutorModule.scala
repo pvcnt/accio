@@ -22,7 +22,7 @@ import java.nio.file.Paths
 
 import com.google.inject._
 import com.twitter.finagle.Thrift
-import com.twitter.inject.TwitterModule
+import com.twitter.inject.{Injector, TwitterModule}
 import fr.cnrs.liris.accio.agent.AgentService
 import fr.cnrs.liris.accio.core.api.Operator
 import fr.cnrs.liris.accio.core.domain.{OpMetaReader, OpRegistry}
@@ -58,8 +58,8 @@ object ExecutorModule extends TwitterModule {
   }
 
   @Provides
-  def providesOpFactory(opRegistry: RuntimeOpRegistry, injector: Injector): OpFactory = {
-    new OpFactory(opRegistry, injector: Injector)
+  def providesOpFactory(opRegistry: RuntimeOpRegistry, injector: com.google.inject.Injector): OpFactory = {
+    new OpFactory(opRegistry, injector)
   }
 
   @Singleton
@@ -74,5 +74,9 @@ object ExecutorModule extends TwitterModule {
     // Because the executor is designed to run inside a sandbox, we simply use current directory as temporary path
     // for the operator executor.
     new OpExecutor(opRegistry, opFactory, uploader, downloader, Paths.get("."))
+  }
+
+  override def singletonShutdown(injector: Injector): Unit = {
+    injector.instance[AgentService.FinagledClient].service.close()
   }
 }

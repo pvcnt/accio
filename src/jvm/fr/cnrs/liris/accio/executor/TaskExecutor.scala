@@ -23,6 +23,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 
 import com.google.inject.Inject
+import com.twitter.concurrent.NamedPoolThreadFactory
 import com.twitter.util._
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.agent.AgentService
@@ -46,11 +47,11 @@ import scala.collection.mutable
  * @param client     Client to the agent.
  */
 class TaskExecutor @Inject()(opExecutor: OpExecutor, client: AgentService.FinagledClient) extends StrictLogging {
-  private[this] val pool = new ExecutorServiceFuturePool(Executors.newSingleThreadExecutor)
+  private[this] val pool = new ExecutorServiceFuturePool(Executors.newSingleThreadExecutor(new NamedPoolThreadFactory("executor-")))
+  private[this] val threads = mutable.Set.empty[Thread]
+  private[this] val stopped = new AtomicBoolean(false)
   private[this] val stdoutBytes = new ByteArrayOutputStream
   private[this] val stderrBytes = new ByteArrayOutputStream
-  private[this] val stopped = new AtomicBoolean(false)
-  private[this] val threads = mutable.Set.empty[Thread]
 
   /**
    * Execute a task.
@@ -69,9 +70,7 @@ class TaskExecutor @Inject()(opExecutor: OpExecutor, client: AgentService.Finagl
       case Throw(e) =>
         logger.error("[T${taskId.value}] Error while registering executor", e)
         Future.Done
-      case Return(resp) =>
-        logger.debug(s"[T${taskId.value}] Received payload")
-        start(taskId, resp.runId, resp.nodeName, resp.payload)
+      case Return(resp) => start(taskId, resp.runId, resp.nodeName, resp.payload)
     }
   }
 
@@ -79,17 +78,20 @@ class TaskExecutor @Inject()(opExecutor: OpExecutor, client: AgentService.Finagl
    * Close the task executor.
    */
   def close(): Unit = {
+    stopped.set(true)
     pool.executor.shutdownNow()
+    threads.foreach(_.interrupt())
   }
 
   private def start(taskId: TaskId, runId: RunId, nodeName: String, payload: OpPayload): Future[Unit] = {
+    // Swap output streams.
     System.setOut(new PrintStream(stdoutBytes))
     System.setErr(new PrintStream(stderrBytes))
+
     threads ++= Set(new HeartbeatThread(taskId), new StreamLogsThread(taskId, runId, nodeName))
     threads.foreach(_.start())
-    logger.debug(s"[T${taskId.value}] Started execution")
     pool {
-      val opts = OpExecutorOpts(useProfiler = true, logsPrefix = s"[T${taskId.value}] ")
+      val opts = OpExecutorOpts(useProfiler = true)
       opExecutor.execute(payload, opts)
     }.handle {
       case e: Throwable =>
@@ -101,14 +103,10 @@ class TaskExecutor @Inject()(opExecutor: OpExecutor, client: AgentService.Finagl
           case UnknownTaskException(_) => // Ignore.
           case e: Throwable => logger.error(s"[T${taskId.value}] Error while marking task as completed", e)
         }
-    }.respond { _ =>
-      stopped.set(true)
-      threads.foreach(_.interrupt())
-      logger.debug(s"[T${taskId.value}] Completed execution")
     }.unit
   }
 
-  private class StreamLogsThread(taskId: TaskId, runId: RunId, nodeName: String) extends Thread {
+  private class StreamLogsThread(taskId: TaskId, runId: RunId, nodeName: String) extends Thread("executor-logs") {
     override def run(): Unit = {
       logger.debug(s"[T${taskId.value}] Logs thread started")
       trySleep(Duration.fromSeconds(2))
@@ -140,7 +138,7 @@ class TaskExecutor @Inject()(opExecutor: OpExecutor, client: AgentService.Finagl
     }
   }
 
-  private class HeartbeatThread(taskId: TaskId) extends Thread {
+  private class HeartbeatThread(taskId: TaskId) extends Thread("executor-heartbeat") {
     override def run(): Unit = {
       logger.debug(s"[T${taskId.value}] Heartbeat thread started")
       trySleep(Duration.fromSeconds(5))

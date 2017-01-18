@@ -32,9 +32,8 @@ import scala.util.control.NonFatal
  * Operator execution options.
  *
  * @param useProfiler Whether to profile code execution.
- * @param logsPrefix  Prefix added to everything logged via slf4j.
  */
-case class OpExecutorOpts(useProfiler: Boolean, logsPrefix: String = "")
+case class OpExecutorOpts(useProfiler: Boolean)
 
 /**
  * Exception sent if an input is missing.
@@ -107,7 +106,7 @@ final class OpExecutor(
     Files.createDirectories(sandboxDir.resolve("outputs"))
     Files.createDirectories(sandboxDir.resolve("inputs"))
 
-    val inputs = downloadInputs(opDef, sandboxDir, payload.inputs.toMap, opts.logsPrefix)
+    val inputs = downloadInputs(opDef, sandboxDir, payload.inputs.toMap)
     val in = createInput(opDef, inputs).asInstanceOf[In]
 
     val maybeSeed = if (operator.isUnstable(in)) Some(payload.seed) else None
@@ -115,7 +114,7 @@ final class OpExecutor(
     val profiler = if (opts.useProfiler) new JvmProfiler else NullProfiler
 
     // The actual operator is the only profiled section. The outcome is either an output object or an exception.
-    logger.debug(s"${opts.logsPrefix}Starting operator ${opDef.name} (sandbox in ${sandboxDir.toAbsolutePath})")
+    logger.debug(s"Starting operator ${opDef.name} (sandbox in ${sandboxDir.toAbsolutePath})")
     val res = profiler.profile {
       try {
         Left(operator.execute(in, ctx))
@@ -123,11 +122,11 @@ final class OpExecutor(
         case NonFatal(e) => Right(ErrorFactory.create(e))
       }
     }
-    logger.debug(s"${opts.logsPrefix}Completed operator")
+    logger.debug(s"Completed operator")
 
     // We convert the outcome into an exit code, artifacts, metrics and possibly and error.
     val (artifacts, error) = res match {
-      case Left(out) => (uploadArtifacts(extractArtifacts(opDef, out), cacheKey, opts.logsPrefix), None)
+      case Left(out) => (uploadArtifacts(extractArtifacts(opDef, out), cacheKey), None)
       case Right(ex) => (Set.empty[Artifact], Some(ex))
     }
     val metrics = profiler.metrics
@@ -137,7 +136,7 @@ final class OpExecutor(
       // Sandbox directory can now be deleted. Caveat: If there was a fatal error before, this line will never be
       // reached and it will not be deleted.
       FileUtils.safeDelete(sandboxDir)
-      logger.debug(s"${opts.logsPrefix}Cleaned sandbox")
+      logger.debug(s"Cleaned sandbox")
     }
 
     OpResult(exitCode, error, artifacts, metrics, Some(cacheKey))
@@ -202,17 +201,16 @@ final class OpExecutor(
    * @param opDef      Operator definition.
    * @param sandboxDir Sandbox directory.
    * @param inputs     Operator inputs.
-   * @param logsPrefix Prefix added to everything logged via slf4j.
    * @return Rewritten list of inputs, taking into account artifacts final local destination.
    */
-  private def downloadInputs(opDef: OpDef, sandboxDir: Path, inputs: Map[String, Value], logsPrefix: String): Map[String, Value] = {
+  private def downloadInputs(opDef: OpDef, sandboxDir: Path, inputs: Map[String, Value]): Map[String, Value] = {
     inputs.map { case (name, value) =>
       val inputDef = opDef.inputs.find(_.name == name).get
       val newValue = inputDef.kind.base match {
         case AtomicType.Dataset =>
           val dataset = Values.decodeDataset(value)
           val dst = sandboxDir.resolve("inputs").resolve(name)
-          logger.debug(s"${logsPrefix}Downloading inputs/$name...")
+          logger.debug(s"Downloading inputs/$name...")
           downloader.download(dataset.uri, dst)
           Values.encodeDataset(dataset.copy(uri = dst.toAbsolutePath.toString))
         case _ => value
@@ -226,15 +224,14 @@ final class OpExecutor(
    *
    * @param artifacts  Artifacts produced by the operator.
    * @param cacheKey   Cache key under which to upload artifacts.
-   * @param logsPrefix Prefix added to everything logged via slf4j.
    * @return Rewritten list of artifacts, taking into account artifacts' final remote destination.
    */
-  private def uploadArtifacts(artifacts: Set[Artifact], cacheKey: String, logsPrefix: String): Set[Artifact] = {
+  private def uploadArtifacts(artifacts: Set[Artifact], cacheKey: String): Set[Artifact] = {
     artifacts.map { artifact =>
       artifact.kind.base match {
         case AtomicType.Dataset =>
           val dataset = Values.decodeDataset(artifact.value)
-          logger.debug(s"${logsPrefix}Uploading outputs/${artifact.name} under $cacheKey...")
+          logger.debug(s"Uploading outputs/${artifact.name} under $cacheKey...")
           val newUri = uploader.upload(Paths.get(dataset.uri), s"$cacheKey/${artifact.name}")
           artifact.copy(value = Values.encodeDataset(dataset.copy(uri = newUri)))
         case _ => artifact

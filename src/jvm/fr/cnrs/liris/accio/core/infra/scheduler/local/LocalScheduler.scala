@@ -54,7 +54,7 @@ class LocalScheduler(
   extends Scheduler with StrictLogging {
 
   private[this] val monitors = new ConcurrentHashMap[String, TaskMonitor].asScala
-  private[this] val pool = new ExecutorServiceFuturePool(Executors.newWorkStealingPool)
+  private[this] val pool = new ExecutorServiceFuturePool(Executors.newFixedThreadPool(sys.runtime.availableProcessors))
   private[this] lazy val localExecutorPath = {
     val targetPath = workDir.resolve("executor.jar")
     if (targetPath.toFile.exists()) {
@@ -70,10 +70,9 @@ class LocalScheduler(
     val key = HashUtils.sha1(id.value)
     val monitor = new TaskMonitor(id, key, payload)
     monitors(key) = monitor
-    val f = pool(monitor.run())
-    f.onSuccess(_ => logger.debug(s"[T${id.value}] Monitoring thread completed"))
-    f.onFailure(e => logger.error(s"[T${id.value}] Error in monitoring thread", e))
-    logger.debug(s"[T${id.value}] Submitted task")
+    pool(monitor.run())
+      .onSuccess(_ => logger.debug(s"[T${id.value}] Monitoring thread completed"))
+      .onFailure(e => logger.error(s"[T${id.value}] Error in monitoring thread", e))
     Task(
       id = id,
       runId = runId,
@@ -118,7 +117,6 @@ class LocalScheduler(
           logger.debug(s"[T${taskId.value}] Waiting for process completion")
           try {
             p.waitFor()
-            logger.debug(s"[T${taskId.value}] Process completed")
           } catch {
             case e: InterruptedException => logger.warn(s"[T${taskId.value}] Interrupted while waiting", e)
           } finally {
@@ -159,7 +157,10 @@ class LocalScheduler(
       val sandboxDir = getSandboxPath(key)
       Files.createDirectories(sandboxDir)
 
-      val pb = new ProcessBuilder().command(cmd: _*).directory(sandboxDir.toFile).inheritIO()
+      val pb = new ProcessBuilder()
+        .command(cmd: _*)
+        .directory(sandboxDir.toFile)
+        .inheritIO()
 
       // Pass as environment variables resource constraints, in case it can help operators to better use them.
       // As an example, SparkleEnv uses the "CPU" variable to known how many cores it can use.

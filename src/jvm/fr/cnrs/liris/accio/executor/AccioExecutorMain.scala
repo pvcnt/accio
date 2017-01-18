@@ -23,7 +23,16 @@ import com.twitter.util.Await
 import fr.cnrs.liris.accio.core.domain.TaskId
 import fr.cnrs.liris.privamov.ops.OpsModule
 
-object AccioExecutorMain extends AccioExecutor
+object AccioExecutorMain {
+  def main(args: Array[String]): Unit = {
+    new AccioExecutor().main(args)
+    // Long story short: After leaving the executor there are still some alive threads, apparently related to Finagle.
+    // Without this line, the executor process never terminates. It is far from ideal, but after spending one day
+    // debugging this issue it was the best I could figure out. My only finding was that it did not happen with very
+    // short-lived operators (e.g., EventSource), but why?
+    sys.exit(0)
+  }
+}
 
 /**
  * Accio executor canonical implementation.

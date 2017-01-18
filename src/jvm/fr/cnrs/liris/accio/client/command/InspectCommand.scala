@@ -68,7 +68,8 @@ class InspectCommand @Inject()(client: AgentService.FinagledClient) extends Comm
                 }
               } else {
                 if (opts.json) {
-                  out.writeln(new String(new JsonSerializer().serialize(run)))
+                  val runWithoutResults = run.copy(state = run.state.copy(nodes = run.state.nodes.map(_.copy(result = None))))
+                  out.writeln(new String(new JsonSerializer().serialize(runWithoutResults)))
                 } else {
                   printRun(run, out)
                 }
