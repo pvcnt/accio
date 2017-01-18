@@ -19,7 +19,7 @@ Options of this command allow to supplement or override any field of the run def
 Once a workflow has been successfully launched, this command prints the identifier of the runs that have been created.
 The progress of the execution can then be tracked with the `accio status` command and the run identifiers that have been provided.
 
-## General options
+## Options
 * `-name=<string>`: Run name. Overrides the value defined in the run file, if any.
 * `-tags=<string>[,...]`: Run tags (comma-separated). Overrides the value defined in the run file, if any.
 * `-notes=<string>`: Run notes. Overrides the value defined in the run file, if specified.
