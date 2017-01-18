@@ -3,148 +3,163 @@ layout: default
 ---
 
 <div class="row">
-  <div class="col-md-3 docs-sidebar">
-    <ul class="docs-menu">
-      <li><a href="{{ "/accio/index.html" | prepend: site.baseurl }}">
-        Introduction
-      </a></li>
-      <li><a href="{{ "/accio/concepts.html" | prepend: site.baseurl }}">
-        Concepts
-      </a></li>
-      <li><a href="{{ "/accio/architecture.html" | prepend: site.baseurl }}">
-        Architecture
-      </a></li>
-      <li><a href="{{ "/accio/getting-started.html" | prepend: site.baseurl }}">
-        Getting started
-      </a></li>
-    </ul>
-
-    <hr />
-    <ul class="docs-menu">
-      <li><a href="{{ "/accio/workflow-dsl.html" | prepend: site.baseurl }}">
-        Workflow definition
-      </a></li>
-      <li><a href="{{ "/accio/run-dsl.html" | prepend: site.baseurl }}">
-        Run definition
-      </a></li>
-      <li{% if page.section == 'users' %} class="active"{% endif %}>
-        <a href="{{ "/accio/users/index.html" | prepend: site.baseurl }}">
-          Launching experiments
-        </a>
-        {% if page.section == 'users' %}
-        <ul>
-          <li><a href="{{ "/accio/users/authoring.html" | prepend: site.baseurl }}">
-            Authoring experiment
-          </a></li>
-          <li><a href="{{ "/accio/users/inspecting.html" | prepend: site.baseurl }}">
-            Inspecting state
-          </a></li>
-          <li><a href="{{ "/accio/users/results.html" | prepend: site.baseurl }}">
-            Analysing results
-          </a></li>
-          <li><a href="{{ "/accio/users/debugging.html" | prepend: site.baseurl }}">
-            Debugging failures
-          </a></li>
+    <div class="col-md-3 docs-sidebar">
+        <ul class="docs-menu">
+            <li><a href="{{ "/docs/index.html" | prepend: site.baseurl }}">
+                Introduction
+            </a></li>
+            <li><a href="{{ "/docs/concepts.html" | prepend: site.baseurl }}">
+                Concepts
+            </a></li>
+            <li><a href="{{ "/docs/architecture.html" | prepend: site.baseurl }}">
+                Architecture
+            </a></li>
+            <li><a href="{{ "/docs/getting-started.html" | prepend: site.baseurl }}">
+                Getting started
+            </a></li>
         </ul>
-        {% endif %}
-      </li>
-      <li{% if page.section == 'client' %} class="active"{% endif %}>
-        <a href="{{ "/accio/client/index.html" | prepend: site.baseurl }}">
-          Client (CLI)
-        </a>
-        {% if page.section == 'client' %}
-        <ul>
-          <li><a href="{{ "/accio/client/acciorc.html" | prepend: site.baseurl }}">
-            .acciorc configuration
-          </a></li>
-          <li><a href="{{ "/accio/client/run-command.html" | prepend: site.baseurl }}">
-            Command: run
-          </a></li>
-          <li><a href="{{ "/accio/client/push-command.html" | prepend: site.baseurl }}">
-            Command: push
-          </a></li>
-        </ul>
-        {% endif %}
-      </li>
-      <li><a href="{{ "/accio/web-ui.html" | prepend: site.baseurl }}">
-        Web UI
-      </a></li>
-      <li><a href="{{ "/accio/rest-api.html" | prepend: site.baseurl }}">
-        REST API
-      </a></li>
-    </ul>
 
-    <hr />
-    <ul class="docs-menu">
-      <li><a href="{{ "/accio/schedulers.html" | prepend: site.baseurl }}">
-        Schedulers
-      </a></li>
-      <li><a href="{{ "/accio/storage.html" | prepend: site.baseurl }}">
-        Storage
-      </a></li>
-      <li><a href="{{ "/accio/state-managers.html" | prepend: site.baseurl }}">
-        State managers
-      </a></li>
-      <li><a href="{{ "/accio/uploaders.html" | prepend: site.baseurl }}">
-        Uploaders
-      </a></li>
-    </ul>
-
-    <hr/>
-    <ul class="docs-menu">
-      <li{% if page.section == 'admins' %} class="active"{% endif %}>
-        <a href="{{ "/accio/admins/index.html" | prepend: site.baseurl }}">
-          Administrating a cluster
-        </a>
-        {% if page.section == 'admins' %}
-        <ul>
-          <li><a href="{{ "/accio/admins/install.html" | prepend: site.baseurl }}">
-            Installation
-          </a></li>
-          <li><a href="{{ "/accio/admins/agent.html" | prepend: site.baseurl }}">
-            Running the agent
-          </a></li>
-          <li><a href="{{ "/accio/admins/gateway.html" | prepend: site.baseurl }}">
-            Running the gateway
-          </a></li>
-          <li><a href="{{ "/accio/admins/monitoring.html" | prepend: site.baseurl }}">
-            Monitoring
-          </a></li>
+        <hr />
+        <ul class="docs-menu">
+            <li><a href="{{ "/docs/workflow-dsl.html" | prepend: site.baseurl }}">
+                Workflow definition
+            </a></li>
+            <li><a href="{{ "/docs/run-dsl.html" | prepend: site.baseurl }}">
+                Run definition
+            </a></li>
+            <li{% if page.section == 'users' %} class="active"{% endif %}>
+                <a href="{{ "/docs/users/index.html" | prepend: site.baseurl }}">
+                    Launching experiments
+                </a>
+                {% if page.section == 'users' %}
+                <ul>
+                    <li><a href="{{ "/docs/users/authoring.html" | prepend: site.baseurl }}">
+                        Authoring experiment
+                    </a></li>
+                    <li><a href="{{ "/docs/users/inspecting.html" | prepend: site.baseurl }}">
+                        Inspecting state
+                    </a></li>
+                    <li><a href="{{ "/docs/users/results.html" | prepend: site.baseurl }}">
+                        Analysing results
+                    </a></li>
+                    <li><a href="{{ "/docs/users/debugging.html" | prepend: site.baseurl }}">
+                        Debugging failures
+                    </a></li>
+                </ul>
+                {% endif %}
+            </li>
+            <li{% if page.section == 'client' %} class="active"{% endif %}>
+                <a href="{{ "/docs/client/index.html" | prepend: site.baseurl }}">
+                    Client (CLI)
+                </a>
+                {% if page.section == 'client' %}
+                <ul>
+                    <li><a href="{{ "/docs/client/docsrc.html" | prepend: site.baseurl }}">
+                        .acciorc configuration
+                    </a></li>
+                    <li><a href="{{ "/docs/client/run-command.html" | prepend: site.baseurl }}">
+                        Command: run
+                    </a></li>
+                    <li><a href="{{ "/docs/client/push-command.html" | prepend: site.baseurl }}">
+                        Command: push
+                    </a></li>
+                </ul>
+                {% endif %}
+            </li>
+            <li><a href="{{ "/docs/web-ui.html" | prepend: site.baseurl }}">
+                Web UI
+            </a></li>
+            <li><a href="{{ "/docs/rest-api.html" | prepend: site.baseurl }}">
+                REST API
+            </a></li>
         </ul>
-        {% endif %}
-      </li>
-      <li{% if page.section == 'developpers' %} class="active"{% endif %}>
-        <a href="{{ "/accio/developpers/index.html" | prepend: site.baseurl }}">
-          Developping Accio
-        </a>
-        {% if page.section == 'developpers' %}
-        <ul>
-          <li><a href="{{ "/accio/developpers/compiling.html" | prepend: site.baseurl }}">
-            Compiling code
-          </a></li>
-          <li><a href="{{ "/accio/developpers/testing.html" | prepend: site.baseurl }}">
-            Running tests
-          </a></li>
-          <li><a href="{{ "/accio/developpers/codebase.html" | prepend: site.baseurl }}">
-            Code organization
-          </a></li>
-          <li><a href="{{ "/accio/developpers/custom-operator.html" | prepend: site.baseurl }}">
-            Custom operator
-          </a></li>
-          <li><a href="{{ "/accio/developpers/documenting.html" | prepend: site.baseurl }}">
-            Documenting operators
-          </a></li>
-          <li><a href="{{ "/accio/developpers/simulator.html" | prepend: site.baseurl }}">
-            Simulator mode
-          </a></li>
-        </ul>
-        {% endif %}
-      </li>
-    </ul>
-  </div>
 
-  <div class="col-md-9">
-    <h1 class="page-title">{{ page.title }}</h1>
-    {{ content }}
-  </div>
+        <hr />
+        <ul class="docs-menu">
+            <li><a href="{{ "/docs/location-privacy.html" | prepend: site.baseurl }}">
+                Location privacy
+            </a></li>
+            <li><a href="{{ "/docs/data-model.html" | prepend: site.baseurl }}">
+                Data model
+            </a></li>
+            <li><a href="{{ "/docs/operators-library.html" | prepend: site.baseurl }}">
+                Operators library
+            </a></li>
+            <li><a href="{{ "/docs/extending.html" | prepend: site.baseurl }}">
+                Extending Accio
+            </a></li>
+        </ul>
+
+        <hr/>
+        <ul class="docs-menu">
+            <li{% if page.section == 'admins' %} class="active"{% endif %}>
+                <a href="{{ "/docs/admins/index.html" | prepend: site.baseurl }}">
+                    Administrating a cluster
+                </a>
+                {% if page.section == 'admins' %}
+                <ul>
+                    <li><a href="{{ "/docs/admins/install.html" | prepend: site.baseurl }}">
+                        Installation
+                    </a></li>
+                    <li><a href="{{ "/docs/admins/agent.html" | prepend: site.baseurl }}">
+                        Running the agent
+                    </a></li>
+                    <li><a href="{{ "/docs/admins/gateway.html" | prepend: site.baseurl }}">
+                        Running the gateway
+                    </a></li>
+                    <li><a href="{{ "/docs/admins/schedulers.html" | prepend: site.baseurl }}">
+                        Schedulers
+                        </a></li>
+                    <li><a href="{{ "/docs/admins/storage.html" | prepend: site.baseurl }}">
+                        Storage
+                        </a></li>
+                    <li><a href="{{ "/docs/admins/state-managers.html" | prepend: site.baseurl }}">
+                        State managers
+                        </a></li>
+                    <li><a href="{{ "/docs/admins/uploaders.html" | prepend: site.baseurl }}">
+                        Uploaders
+                        </a></li>
+                    <li><a href="{{ "/docs/admins/telemetry.html" | prepend: site.baseurl }}">
+                        Telemetry
+                    </a></li>
+                </ul>
+                {% endif %}
+            </li>
+            <li{% if page.section == 'developpers' %} class="active"{% endif %}>
+                <a href="{{ "/docs/developpers/index.html" | prepend: site.baseurl }}">
+                    Developping Accio
+                </a>
+                {% if page.section == 'developpers' %}
+                <ul>
+                    <li><a href="{{ "/docs/developpers/compiling.html" | prepend: site.baseurl }}">
+                        Compiling code
+                    </a></li>
+                    <li><a href="{{ "/docs/developpers/testing.html" | prepend: site.baseurl }}">
+                        Running tests
+                    </a></li>
+                    <li><a href="{{ "/docs/developpers/codebase.html" | prepend: site.baseurl }}">
+                        Code organization
+                    </a></li>
+                    <li><a href="{{ "/docs/developpers/custom-operator.html" | prepend: site.baseurl }}">
+                        Custom operator
+                    </a></li>
+                    <li><a href="{{ "/docs/developpers/documenting.html" | prepend: site.baseurl }}">
+                        Documenting operators
+                    </a></li>
+                    <li><a href="{{ "/docs/developpers/sparkle.html" | prepend: site.baseurl }}">
+                        Sparkle
+                    </a></li>
+                    <li><a href="{{ "/docs/developpers/simulator.html" | prepend: site.baseurl }}">
+                        Simulator mode
+                    </a></li>
+                </ul>
+                {% endif %}
+            </li>
+        </ul>
+    </div>
+
+    <div class="col-md-9">
+        <h1 class="page-title">{{ page.title }}</h1>
+        {{ content }}
+    </div>
 </div>
