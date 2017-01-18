@@ -1,5 +1,5 @@
 ---
-layout: accio
+layout: docs
 nav: docs
 title: Location privacy data model
 ---

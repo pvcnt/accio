@@ -143,7 +143,7 @@ class LocalScheduler(
       cmd ++= executorArgs
       cmd += taskId.value
 
-      logger.debug(s"[T${taskId.value}] Built command-line: ${cmd.mkString(" ")}")
+      logger.debug(s"[T${taskId.value}] Command-line: ${cmd.mkString(" ")}")
 
       val sandboxDir = getSandboxPath(key)
       Files.createDirectories(sandboxDir)

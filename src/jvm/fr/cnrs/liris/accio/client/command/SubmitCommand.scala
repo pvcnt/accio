@@ -29,7 +29,7 @@ import fr.cnrs.liris.accio.core.service.handler.CreateRunRequest
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.util.{StringUtils, TimeUtils}
 
-case class RunFlags(
+case class SubmitFlags(
   @Flag(name = "name", help = "Run name")
   name: Option[String],
   @Flag(name = "tags", help = "Space-separated run tags")
@@ -46,11 +46,11 @@ case class RunFlags(
   quiet: Boolean = false)
 
 @Cmd(
-  name = "run",
-  flags = Array(classOf[RunFlags]),
+  name = "submit",
+  flags = Array(classOf[SubmitFlags]),
   help = "Launch an Accio workflow.",
   allowResidue = true)
-class RunCommand @Inject()(agentClient: AgentService.FinagledClient, factory: RunDefFactory)
+class SubmitCommand @Inject()(agentClient: AgentService.FinagledClient, factory: RunDefFactory)
   extends Command with StrictLogging {
 
   def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
@@ -58,7 +58,7 @@ class RunCommand @Inject()(agentClient: AgentService.FinagledClient, factory: Ru
       out.writeln("<error>You must provide exactly one run file or package specification.</error>")
       ExitCode.CommandLineError
     } else {
-      val opts = flags.as[RunFlags]
+      val opts = flags.as[SubmitFlags]
       val elapsed = Stopwatch.start()
 
       val params = try {

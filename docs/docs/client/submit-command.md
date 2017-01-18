@@ -1,15 +1,15 @@
 ---
-layout: accio
+layout: docs
 nav: docs
 section: client
-title: "Command: run"
+title: "Command: submit"
 ---
 
-The `run` command is used to launch a workflow on an Accio cluster.
+The `submit` command is used to launch a workflow on an Accio cluster.
 
 ## Usage
 ```
-accio run [options] <run file>|<package spec>
+accio submit [options] <run file>|<package spec>
 ```
 
 This command requires a single argument, which is either the local path to a file containing a valid run definition, or the specification of a package. A package is specified under the form `<workflow id>[:<workflow version>]`. If the version is not specified, the workflow will be launched at its latest version.
@@ -20,7 +20,6 @@ Once a workflow has been successfully launched, this command prints the identifi
 The progress of the execution can then be tracked with the `accio status` command and the run identifiers that have been provided.
 
 ## General options
-* `-addr=<string>`: The address of the Accio cluster. It can be any name following [Finagle's naming syntax](https://twitter.github.io/finagle/guide/Names.html). Overrides the ACCIO_ADDR environment variable. Defaults to *127.0.0.1:9999*.
 * `-name=<string>`: Run name. Overrides the value defined in the run file, if any.
 * `-tags=<string>[,...]`: Run tags (comma-separated). Overrides the value defined in the run file, if any.
 * `-notes=<string>`: Run notes. Overrides the value defined in the run file, if specified.

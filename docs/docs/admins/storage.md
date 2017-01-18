@@ -1,5 +1,5 @@
 ---
-layout: accio
+layout: docs
 nav: docs
 section: admins
 title: Storage

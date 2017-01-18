@@ -1,5 +1,5 @@
 ---
-layout: accio
+layout: docs
 nav: docs
 section: client
 title: .acciorc configuration file
