@@ -26,12 +26,11 @@ import fr.cnrs.liris.privamov.ops.OpsModule
 object AccioExecutorMain extends AccioExecutor
 
 class AccioExecutor extends App {
-  private[this] val taskIdFlag = flag[String]("task_id", "Identifier of the task to execute")
-
   override protected def modules = Seq(ExecutorModule, OpsModule)
 
   override protected def run(): Unit = {
+    require(args.length == 1, "You must provide a single task identifier as argument")
     val executor = injector.instance[TaskExecutor]
-    Await.ready(executor.execute(TaskId(taskIdFlag())))
+    Await.ready(executor.execute(TaskId(args.head)))
   }
 }

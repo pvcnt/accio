@@ -89,13 +89,13 @@ class InspectCommand @Inject()(client: AgentService.FinagledClient) extends Comm
       out.writeln(s"<comment>${padTo("Exit code", 15)}</comment> ${result.exitCode}")
       result.error.foreach { error =>
         out.writeln()
-        out.writeln(s"<error>${padTo("Error class", 15)}</comment> ${error.root.classifier}")
-        out.writeln(s"<error>${padTo("Error message", 15)}</comment> ${error.root.message}")
-        out.writeln(s"<error>${padTo("Error stack", 15)}</comment> ${error.root.stacktrace.headOption.getOrElse("") + error.root.stacktrace.tail.map(s => " " * 16 + s)}")
+        out.writeln(s"<error>${padTo("Error class", 15)}</error> ${error.root.classifier}")
+        out.writeln(s"<error>${padTo("Error message", 15)}</error> ${error.root.message}")
+        out.writeln(s"<error>${padTo("Error stack", 15)}</error> ${error.root.stacktrace.headOption.getOrElse("") + error.root.stacktrace.tail.map(s => " " * 16 + s)}")
       }
 
       out.writeln()
-      out.writeln(s"<comment>${padTo("Artifact name", 25)}  Value</comment>")
+      out.writeln(s"<comment>${padTo("Artifact name", 25)}  Value preview</comment>")
       result.artifacts.foreach { artifact =>
         out.writeln(s"${padTo(artifact.name, 25)}  ${Values.toString(artifact.value, artifact.kind)}</comment>")
       }

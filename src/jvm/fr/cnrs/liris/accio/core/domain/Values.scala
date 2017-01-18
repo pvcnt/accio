@@ -29,6 +29,8 @@ import scala.collection.JavaConverters._
  * Factory and converters for [[Value]].
  */
 object Values {
+  private[this] val AbbreviateThreshold = 9
+
   val instantOrdering = new Ordering[Instant] {
     override def compare(x: Instant, y: Instant): Int = x.compareTo(y)
   }
@@ -251,7 +253,35 @@ object Values {
     merge(keys.size, keys ++ values)
   }
 
-  def toString(value: Value, kind: DataType): String = decode(value, kind).toString
+  def toString(value: Value, kind: DataType, abbreviate: Boolean = true): String =
+    kind.base match {
+      case AtomicType.List => toString(decodeList(value, kind.args.head), abbreviate)
+      case AtomicType.Set => toString(decodeSet(value, kind.args.head).toSeq, abbreviate)
+      case AtomicType.Map =>
+        val seq = decodeMap(value, kind.args.head, kind.args.last).toSeq
+          .map {
+            case (k, v) => s"${toString(k)}=${toString(v)}"
+            case s => s // For the last <xx more>
+          }
+        toString(seq, abbreviate)
+      case _ => toString(decode(value, kind))
+    }
+
+  private def toString(seq: Seq[_], abbreviate: Boolean): String = {
+    val abbreviated = if (seq.size > AbbreviateThreshold) {
+      seq.take(AbbreviateThreshold - 1) ++ Seq(s"<${seq.size - AbbreviateThreshold + 1} more>")
+    } else seq
+    abbreviated.map(toString).mkString(", ")
+  }
+
+  private def toString(obj: Any): String =
+    obj match {
+      case d: Double => roundAt4(d).toString
+      case d: Distance => Distance.meters(roundAt4(d.meters)).toString
+      case _ => obj.toString
+    }
+
+  private def roundAt4(d: Double) = (d * 10000).round / 10000
 
   def decode(value: Value, kind: DataType): Any =
     kind.base match {
@@ -301,8 +331,8 @@ object Values {
 
   def decodeMap(value: Value, ofKeys: AtomicType, ofValues: AtomicType): Map[Any, Any] = {
     val keysValues = split(value.copy(size = 2))
-    val keys = split(keysValues.head.copy(size = value.size)).map(decode(_, DataType(ofKeys)))
-    val values = split(keysValues.last.copy(size = value.size)).map(decode(_, DataType(ofValues)))
+    val keys = split(keysValues.head.copy(size = value.size / 2)).map(decode(_, DataType(ofKeys)))
+    val values = split(keysValues.last.copy(size = value.size / 2)).map(decode(_, DataType(ofValues)))
     Map(keys.zip(values): _*)
   }
 

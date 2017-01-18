@@ -47,8 +47,9 @@ class SparkleEnv(level: Int) extends StrictLogging {
    * @param data List of keys and items.
    * @tparam T Elements' type.
    */
-  def parallelize[T: ClassTag](data: (String, Iterable[T])*): DataFrame[T] =
-  new ParallelCollectionDataFrame(ListMap(data.map { case (key, value) => key -> value.toSeq }: _*), this)
+  def parallelize[T: ClassTag](data: (String, Iterable[T])*): DataFrame[T] = {
+    new ParallelCollectionDataFrame(ListMap(data.map { case (key, value) => key -> value.toSeq }: _*), this)
+  }
 
   /**
    * Create a new dataframe from an in-memory collection.
@@ -57,8 +58,9 @@ class SparkleEnv(level: Int) extends StrictLogging {
    * @param indexer Indexing function, extracting the key from an item.
    * @tparam T Elements' type.
    */
-  def parallelize[T: ClassTag](values: T*)(indexer: T => String): DataFrame[T] =
-  new ParallelCollectionDataFrame(values.groupBy(indexer), this)
+  def parallelize[T: ClassTag](values: T*)(indexer: T => String): DataFrame[T] = {
+    new ParallelCollectionDataFrame(values.groupBy(indexer), this)
+  }
 
   /**
    * Create a new dataframe from a data source.

@@ -81,7 +81,7 @@ object OpsModule extends ScalaModule {
   @Provides
   @Singleton
   def providesSparkleEnv: SparkleEnv = {
-    val cores = sys.env.get("CPU").map(_.toDouble.round.toInt).getOrElse(sys.runtime.availableProcessors)
+    val cores = sys.env.get("ACCIO_CPU").map(_.toDouble.round.toInt).getOrElse(sys.runtime.availableProcessors)
     new SparkleEnv(math.max(1, cores))
   }
 }

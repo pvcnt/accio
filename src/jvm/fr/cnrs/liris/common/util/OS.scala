@@ -23,8 +23,9 @@ package fr.cnrs.liris.common.util
  *
  * @param canonicalName Normalized canonical name.
  * @param detectionName Name used to detect this OS from system properties.
+ * @param isUnix        Whether this OS is Unix based.
  */
-case class OS(canonicalName: String, detectionName: String) {
+case class OS(canonicalName: String, detectionName: String, isUnix: Boolean) {
   override def toString: String = canonicalName
 }
 
@@ -32,11 +33,11 @@ case class OS(canonicalName: String, detectionName: String) {
  * Factory for [[OS]].
  */
 object OS {
-  val Darwin = OS("osx", "Mac OS X")
-  val FreeBsd = OS("freebsd", "FreeBSD")
-  val Linux = OS("linux", "Linux")
-  val Windows = OS("windows", "Windows")
-  val Unknown = OS("unknown", "")
+  val Darwin = OS("osx", "Mac OS X", isUnix = true)
+  val FreeBsd = OS("freebsd", "FreeBSD", isUnix = true)
+  val Linux = OS("linux", "Linux", isUnix = true)
+  val Windows = OS("windows", "Windows", isUnix = false)
+  val Unknown = OS("unknown", "", isUnix = false)
 
   /**
    * Return the version of the current operating system.

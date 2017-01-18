@@ -53,7 +53,7 @@ class LocalScheduler(
   extends Scheduler with StrictLogging {
 
   private[this] val monitors = new ConcurrentHashMap[String, TaskMonitor].asScala
-  private[this] val executorService = Executors.newCachedThreadPool
+  private[this] val executorService = Executors.newWorkStealingPool
   private[this] lazy val localExecutorPath = {
     val targetPath = workDir.resolve("executor.jar")
     logger.info(s"Downloading executor JAR to ${targetPath.toAbsolutePath}")
@@ -140,9 +140,8 @@ class LocalScheduler(
       cmd += localExecutorPath.toString
       cmd += s"-Xmx${resource.ramMb}M"
       cmd += "fr.cnrs.liris.accio.executor.AccioExecutorMain"
-      cmd += "-task_id"
-      cmd += taskId.value
       cmd ++= executorArgs
+      cmd += taskId.value
 
       logger.debug(s"[T${taskId.value}] Built command-line: ${cmd.mkString(" ")}")
 
@@ -154,9 +153,9 @@ class LocalScheduler(
       // Pass as environment variables resource constraints, in case it can help operators to better use them.
       // As an example, SparkleEnv uses the "CPU" variable to known how many cores it can use.
       val env = pb.environment()
-      env.put("CPU", resource.cpu.toString)
-      env.put("RAM", resource.ramMb.toString)
-      env.put("DISK", resource.diskMb.toString)
+      env.put("ACCIO_CPU", resource.cpu.toString)
+      env.put("ACCIO_RAM", resource.ramMb.toString)
+      env.put("ACCIO_DISK", resource.diskMb.toString)
 
       pb.start()
     }
