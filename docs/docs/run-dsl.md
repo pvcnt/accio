@@ -1,24 +1,32 @@
 ---
 layout: docs
 nav: docs
-title: Run definition
+title: Run definition DSL
 ---
 
-This section covers how to easily define runs as JSON documents.
+Runs are specified via a JSON DSL.
+An interesting thing to note is that Accio comes with a built-in format to create parameter sweep.
+What we call a run definition will actually generate one to several runs.
+This way, you can very easily create an experiment that will launch thousands of runs, each one being a different combination of parameters of the same workflow.
+All runs created this way will be *child runs*, and grouped together under a *parent run*.
+
+Note that although workflows have to specified with their [appropriate DSL](workflow-dsl.html), runs can be created via the client without creating a run file.
+However, this is considered as a good practice to store run definitions inside files, this gives better reproducibility if you want later to re-run the same experiment, and allows to version them (e.g., inside a Git repository.)
+
+* TOC
+{:toc}
 
 ## JSON schema
-
-An experiment is a JSON object formed of the following fields.
+A run file should contain a single JSON object formed of the following fields.
 
 | Name | Type | Description |
 |:-----|:-----|:------------|
-| workflow | string; required | Workflow to execute. |
+| workflow | string; required | Specification of the workflow to execute. |
 | name | string; optional | A human-readable name. |
-| notes | string; optional | Some free text notes. |
-| tags | string[]; optional | Some tags, used when searching for experiments. |
-| owner | string; optional | Person owning the experiment. It can include an email address between chevrons. |
+| notes | string; optional | Notes describing the purpose of this experiment. |
+| tags | string[]; optional | Some tags, used when searching for runs. |
+| seed | long; optional | Seed to be used for deterministic reproduction. If not specified, a random one will be generated. |
 | repeat | integer; optional; default: 1 | Number of times to repeat each run. |
-| seed | long; optional | Initial seed to be used for deterministic reproduction of results. |
 | params | object; optional | Mapping between parameter names and their values. |
 {: class="table table-striped"}
 
@@ -26,8 +34,8 @@ Here is an example of a simple experiment definition.
 
 ```json
 {
-  "workflow": "./my-awesome-workflow.json",
-  "runs": 3,
+  "workflow": "my_awesome_workflow",
+  "repeat": 3,
   "name": "My brand new experiment",
   "tags": ["brand", "new"],
   "params": {
@@ -44,14 +52,12 @@ Here is an example of a simple experiment definition.
 ```
 
 ## Specifying parameters
-
 When defining an experiment, you can specify values for parameters.
 You must specify a value for all parameters, except if they are only used by optional inputs.
 You can either specify a single value or multiple values for any parameter, triggering the execution of multiple versions of the same original workflow.
 Accio currently supports several ways to specify parameters, described in the next sections.
 
 ### Single value
-
 To define a parameter with a single value, you can use a JSON object whose only key is `value`, mapped to the new value for the parameter.
 The value should be specified using the same format as for [workflow input values](workflows.html#input-values).
 For example:
@@ -80,7 +86,6 @@ The following code is equivalent to the previous one:
 It may be needed sometimes to use the explicit form to disambiguate, especially if your input is a map.
 
 ### List of values
-
 To define a parameter with a list of values, you can use a JSON object whose only key is `values`, mapped to a JSON array with all values taken by the parameter.
 The order of values has no importance.
 Values should be specified using the same format as for [workflow input values](workflows.html#input-values).
@@ -97,7 +102,6 @@ For example:
 ```
 
 ### Range of values
-
 To define a parameter with a range of values, you can a JSON object with keys `from`, `to` and `step`, mapped respectively to the first value (inclusive) taken by the parameter, the last value (inclusive) taken by the parameter and the increment between two consecutive values.
 The first value (under the `from` key) must be lower than the last value (under the `to` key).
 Values should be specified using the same format as for [workflow input values](workflows.html#input-values).
@@ -143,36 +147,9 @@ For example:
 
 will produce values 10, 100, 1000 and 10000.
 
-### Glob
-
-To define a parameter with a list of paths, you can use a JSON object whose only key is `glob`, mapped to a string written using the [glob syntax](https://en.wikipedia.org/wiki/Glob_(programming)#Syntax).
-This exploration will generate one value per path matching your glob string.
-Moreover, the glob string is subject to expansion for the `~` and `./` characters.
-
-For example:
-
-```json
-{
-  "params": {
-    "files": {
-      "glob": "/home/me/my_dataset/*.csv"
-    }
-  }
-}
-```
-
-will produce a value per CSV file in the `/home/me/my_dataset` directory.
-
-## Controlling randomness through a seed
-
+## Controlling randomness with a seed
 Some workflows may include operators marked as *unstable*, which means they need some source of randomness when being executed.
 This randomness is provided through a seed.
-By default, a random seed is generated for each experiment, but you may fix it through the `seed` key.
-If the workflow is not repeated, the same seed will be used for each run.
-If the workflow is repeated, the seed will be used to deterministically produce a different seed for each run with the same combination of parameters.
-
-## Validating experiments
-
-Experiment files can be validated thanks to the `accio validate` command, which takes one or several files as arguments.
-This command will not execute files, but only check there are correct and could be executed without any problem.
-In case of an error, it will do its best to provide meaningful information to help you fix errors.
+By default, a random seed is generated for each run, but you may fix it through the `seed` key.
+If a run definition gives birth to several runs, the seed specified in the definition will be used to deterministically generate a seed for each child run.
+If a run definition corresponds to a single run, the specified seed will be used directly.

@@ -66,7 +66,7 @@ class RunDefFactory @Inject()(parser: JsonRunDefParser, client: AgentService.Fin
 
   private def parseWorkflow(path: Path) = {
     val json = parser.parse(path)
-    val workflow = findWorkflow(json.pkg)
+    val workflow = findWorkflow(json.workflow)
     val params = json.params.map { case (paramName, explo) =>
       workflow.params.find(_.name == paramName) match {
         case None => throw new InvalidRunDefException(s"Unknown param: $paramName")

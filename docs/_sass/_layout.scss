@@ -2,11 +2,6 @@ body {
   padding-top: 75px;
 }
 
-.page-title {
-/*  font-size: 34px;*/
-  margin-bottom: 30px;
-}
-
 h2 {
   font-size: 28px !important;
   margin-top: 35px !important;
@@ -38,20 +33,34 @@ footer {
   text-align: center;
 }
 
-.jumbotron {
-  text-align: center;
-}
-
-.sidebar .nav>li>a {
-  padding: 3px 15px;
-}
-
 #content {
   margin-top: 15px;
 }
 
-/* Sidebar with links */
+/**
+ * Home page.
+ */
+.jumbotron {
+  text-align: center;
+}
 
+.page-title {
+  margin-bottom: 30px;
+}
+
+/**
+ * Docs section.
+ */
+/* Space between list items for better readability... */
+#page li {
+  margin-top: 10px;
+}
+/* ... but not for the table of contents */
+#page #markdown-toc li {
+  margin-top: 0;
+}
+
+/* Sidebar with smaller grey links */
 .docs-sidebar {
   padding-right: 15px;
 }
@@ -78,7 +87,7 @@ footer {
   color: #18bc9c;
 }
 
-.docs-menu ul { /* Sub-menu */
+.docs-menu ul { /* Sub-menu, with additional indentation */
   list-style-type: none;
   margin-top: 5px;
   margin-bottom: 5px;

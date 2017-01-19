@@ -25,27 +25,6 @@ It can also be a special key:
 Notably happens if specified help topic does not exist.
 
 ## Examples
-Display help summary:
-
-```bash
-$ accio help
-Usage: accio <command> <options>...
-
-Available commands:
-  export   Generate text reports from run artifacts and metrics.
-  help     Display built-in Accio help.
-  inspect  Display status of a run.
-  ps       List runs.
-  push     Push a workflow.
-  submit   Launch an Accio workflow.
-  validate Validate the syntax of Accio configuration files.
-
-  def printArtifact(no)Getting more help:
-  accio help <command> Print help and options for <command>.
-  accio help <operator> Print help and arguments for <operator>.
-  accio help list-ops Print the list of registered operators.
-```
-
 Display help about a particular command:
 
 ```bash

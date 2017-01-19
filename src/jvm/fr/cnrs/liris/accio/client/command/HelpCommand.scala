@@ -78,7 +78,7 @@ class HelpCommand @Inject()(cmdRegistry: CmdRegistry, opRegistry: OpRegistry) ex
       out.writeln(s"  <comment>${command.defn.name}</comment>$padding ${command.defn.help}")
     }
     out.writeln()
-    out.writeln("  def printArtifact(no)Getting more help:")
+    out.writeln("Getting more help:")
     out.writeln("  <comment>accio help <command></comment> Print help and options for <command>.")
     out.writeln("  <comment>accio help <operator></comment> Print help and arguments for <operator>.")
     out.writeln("  <comment>accio help list-ops</comment> Print the list of registered operators.")

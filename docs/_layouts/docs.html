@@ -2,32 +2,46 @@
 layout: default
 ---
 
+{% assign url = page.url | split: "/" %}
+
 <div class="row">
     <div class="col-md-3 docs-sidebar">
         <ul class="docs-menu">
-            <li><a href="{{ "/docs/index.html" | prepend: site.baseurl }}">
-                Introduction
-            </a></li>
-            <li><a href="{{ "/docs/concepts.html" | prepend: site.baseurl }}">
-                Concepts
-            </a></li>
-            <li><a href="{{ "/docs/architecture.html" | prepend: site.baseurl }}">
-                Architecture
-            </a></li>
-            <li><a href="{{ "/docs/getting-started.html" | prepend: site.baseurl }}">
-                Getting started
-            </a></li>
+            <li{% unless url[2] %} class="active"{% endunless %}>
+                <a href="{{ "/docs/index.html" | prepend: site.baseurl }}">
+                    Introduction
+                </a>
+            </li>
+            <li{% if url[2] == 'concepts.html' %} class="active"{% endif %}>
+                <a href="{{ "/docs/concepts.html" | prepend: site.baseurl }}">
+                    Concepts
+                </a>
+            </li>
+            <li{% if url[2] == 'architecture.html' %} class="active"{% endif %}>
+                <a href="{{ "/docs/architecture.html" | prepend: site.baseurl }}">
+                    Architecture
+                </a>
+            </li>
+            <li{% if url[2] == 'getting-started.html' %} class="active"{% endif %}>
+                <a href="{{ "/docs/getting-started.html" | prepend: site.baseurl }}">
+                    Getting started
+                </a>
+            </li>
         </ul>
 
         <hr />
         <ul class="docs-menu">
-            <li><a href="{{ "/docs/workflow-dsl.html" | prepend: site.baseurl }}">
-                Workflow definition
-            </a></li>
-            <li><a href="{{ "/docs/run-dsl.html" | prepend: site.baseurl }}">
-                Run definition
-            </a></li>
-            <li{% if page.section == 'users' %} class="active"{% endif %}>
+            <li{% if url[2] == 'workflow-dsl.html' %} class="active"{% endif %}>
+                <a href="{{ "/docs/workflow-dsl.html" | prepend: site.baseurl }}">
+                    Workflow definition
+                </a>
+            </li>
+            <li{% if url[2] == 'run-dsl.html' %} class="active"{% endif %}>
+                <a href="{{ "/docs/run-dsl.html" | prepend: site.baseurl }}">
+                    Run definition
+                </a>
+            </li>
+            <li{% if url[2] == 'users' %} class="active"{% endif %}>
                 <a href="{{ "/docs/users/index.html" | prepend: site.baseurl }}">
                     Launching experiments
                 </a>
@@ -48,13 +62,13 @@ layout: default
                 </ul>
                 {% endif %}
             </li>
-            <li{% if page.section == 'client' %} class="active"{% endif %}>
+            <li{% if url[2] == 'client' %} class="active"{% endif %}>
                 <a href="{{ "/docs/client/index.html" | prepend: site.baseurl }}">
                     Client (CLI)
                 </a>
                 {% if page.section == 'client' %}
                 <ul>
-                    <li><a href="{{ "/docs/client/docsrc.html" | prepend: site.baseurl }}">
+                    <li><a href="{{ "/docs/client/acciorc.html" | prepend: site.baseurl }}">
                         .acciorc configuration
                     </a></li>
                     <li><a href="{{ "/docs/client/inspect-command.html" | prepend: site.baseurl }}">
@@ -91,9 +105,11 @@ layout: default
 
         <hr />
         <ul class="docs-menu">
-            <li><a href="{{ "/docs/location-privacy.html" | prepend: site.baseurl }}">
-                Location privacy
-            </a></li>
+            <li>
+                <a href="{{ "/docs/location-privacy.html" | prepend: site.baseurl }}">
+                    Location privacy
+                </a>
+            </li>
             <li><a href="{{ "/docs/data-model.html" | prepend: site.baseurl }}">
                 Data model
             </a></li>
@@ -173,7 +189,7 @@ layout: default
         </ul>
     </div>
 
-    <div class="col-md-9">
+    <div class="col-md-9" id="page">
         <h1 class="page-title">{{ page.title }}</h1>
         {{ content }}
     </div>

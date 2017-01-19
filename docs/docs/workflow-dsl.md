@@ -1,24 +1,31 @@
 ---
 layout: docs
 nav: docs
-title: Workflow definition
+title: Workflow definition DSL
 ---
 
-This section covers how to easily define workflows as JSON documents.
+Workflows are specified via a JSON DSL.
+
+* TOC
+{:toc}
 
 ## JSON schema
 
-A workflow is a JSON object formed of the following fields.
+A workflow file should contain a single JSON object formed of the following fields.
 
 | Name | Type | Description |
 |:-----|:-----|:------------|
-| id | string; optional | A machine unique identifier. |
-| name | string; optional | A human-readable name. |
+| id | string; optional | Unique identifier. If not specified, it will be set to the filename (without its extension). |
+| name | string; optional | Human-readable name. |
 | owner | string; optional | Person owning the workflow. It can include an email address between chevrons. |
-| graph | object[]; required | Nodes composing the workflow graph. The order in which nodes are defined does not matter. |
-| graph[*].op | string; required | Operator name. |
-| graph[*].name | string; optional | Node name. By default it will be the operator's name. |
-| graph[*].inputs | object; optional | Mapping between input names and their values. All parameters without a default value should be specified. |
+| params | object[]; optional | Workflow parameters. The order in which they are defined does not matter. |
+| params[].name | string; required | Parameter name. Must match `[a-z][a-zA-Z0-9_]+`. |
+| params[].kind | string; required | Parameter data type (see below). |
+| params[].default_value | any; optional | Default value. |
+| graph | object[]; required | Nodes composing the workflow graph. The order in which they are defined does not matter. |
+| graph[].op | string; required | Operator name. |
+| graph[].name | string; optional | Node name. By default it will be the operator's name. |
+| graph[].inputs | object; optional | Mapping between input names and their values. All parameters without a default value should be specified. |
 {: class="table table-striped"}
 
 Here is an example of a simple workflow's definition:
@@ -28,6 +35,12 @@ Here is an example of a simple workflow's definition:
   "id": "geoind_workflow",
   "name": "Geo-indistinguishability workflow",
   "owner": "John Doe <john.doe@gmail.com>",
+  "params": [
+    {
+      "name": "epsilon",
+      "kind": "double"
+    }
+  ],
   "graph": [
     {
       "op": "EventSource",
@@ -80,34 +93,11 @@ An operator can be instantiated more than once, in which case you have to give a
 All nodes have to form a directed acyclic graph (DAG), which will be enforced at runtime when running a workflow.
 
 ## Specifying inputs
-
 An input can be either specified as a constant value, as a reference to the output of another node or as a reference to a parameter.
 
 ### Constant value
-
 You may directly specify the value of an input as a constant by providing a JSON object with a `value` key and the constant as a value.
-Values are specified differently depending on their type, following the specification in the next table.
-
-| Data type | JSON format |
-|:----------|:------------|
-| byte | JSON number. |
-| short | JSON number. |
-| integer | JSON number. |
-| long | JSON number. |
-| double | JSON number. |
-| boolean | JSON boolean. |
-| string | JSON string. |
-| distance | JSON string, formatted as `<quantity>.<unit>`, where `<quantity>` is a number and `<unit>` one of "meters", "kilometers" or "miles", either singular or plural. |
-| duration | JSON string, formatted as `<quantity>.<unit>`, where `<quantity>` is a number and `<unit>` one of "millis", "seconds", "minutes", "hours" or "days", either singular or plural. |
-| timestamp | JSON string, formatted with respect to [ISO 8601](https://www.w3.org/TR/NOTE-datetime), e.g., "2016-06-22T11:28:32Z". |
-| location | JSON string, formatted as `<latitude>,<longitude>` where `<latitude>` and `<longitude>` are numbers and expressed in degrees. |
-| list | JSON array of any other allowed type. |
-| set | JSON array of any other allowed type. |
-| map | JSON object of any other allowed type. |
-| dataset | Cannot be specified as JSON. |
-| image | Cannot be specified as JSON. |
-{: class="table table-striped"}
-
+Values are specified differently depending on their type, following the specification in [this table](#data-types).
 For example:
 
 ```json
@@ -134,7 +124,6 @@ The following code is equivalent to the previous one:
 It may be needed sometimes to use the explicit form to disambiguate, especially if your input is a map.
 
 ### Reference
-
 Inputs can be filled by the output of another node, in which case there will be a dependency between the two nodes.
 You may reference another node by providing a JSON object with a `reference` key and the full name of the output as a value.
 
@@ -151,13 +140,10 @@ References are formed of a node name and an output port name, separated by a sla
 Please be careful to specify the node name and not the operator name when the two are different.
 
 ### Parameter
-
 Inputs can be filled by the value of a workflow parameter.
 Parameters are useful to let the user vary some parameters are runtime, possibly affecting multiple ports at once.
 You may reference a parameter by providing a JSON object with a `param` key and the name of the parameter as a value.
-You do not need to explicitly create parameters before using them.
-However, you must ensure that a given parameter is used only on ports of the same data type (e.g., you cannot use a parameter on an integer port and then on a distance port).
-Parameter names are global to a workflow and therefore not namespaced.
+Parameters must be explicitly declared under the workflow `params` field, and their data type must be consistent with those of the ports they are used in.
 
 ```json
 {
@@ -169,19 +155,53 @@ Parameter names are global to a workflow and therefore not namespaced.
 }
 ```
 
-You may also define a default value for the input port, under the `default_value` key.
-This way, if the parameter is not filled when launching the workflow, this default value will be used.
-It means when using a parameter, you have three possible sources for the actual port value, in order of precedence:
+### Unspecified
+Under some conditions, you can leave an input unspecified:
+
+  * if the operator defines a default value for this port; or
+  * if the operator defines this port as optional, which means it can still be executed if no value at all is specified.
+
+If one of those conditions is satisfied, you do not have to specify a value for this input.
+Otherwise, you should fill it.
+
+## Specifying workflow parameters
+Workflow parameters allow to define parametric workflows, that can be customized at runtime.
+Parameters must be explicitly declared under the workflow `params` field, they have a name, a data type and possibly a default value.
+They can only be used in ports of the same data type (e.g., you cannot use a parameter on an integer port and then on a distance port).
+Parameter names are global to a workflow and therefore not namespaced.
+
+Normally, all parameters should be specified when launching a workflow.
+However, under some conditions, they can be left unspecified:
+
+  * if a default value is specified in the workflow definition; or
+  * if all ports using this parameter [could be left unspecified](#unspecified). 
+
+Once a value for a parameter is specified, it will override any default value, whether it comes from the parameter or the input port.
+It means that when using parameters, there are three possible sources for the actual port value, in order of precedence:
 
   * the parameter value, specified when launching the workflow;
   * the parameter default value, specified when creating the workflow;
-  * the port default value, specified when creating the operator.
+  * the input port default value, specified when creating the operator. 
 
-Please note that despite the fact parameters are global, the parameter default value is specified on a per-port basis.
-It means that until the parameter value is explicitly specified when launching the workflow, ports depending on the same parameter may have different values (depending on the parameter or operator default values).
+## Data types
+Accio comes with types that are strongly enforced.
+Here is a list of supported types, with their names (as they should be specified in any field requiring a data type) and the way to format their values in JSON.
 
-## Validating workflows
+| Name | Value JSON format |
+|:----------|:------------|
+| byte | JSON number. |
+| integer | JSON number. |
+| long | JSON number. |
+| double | JSON number. |
+| boolean | JSON boolean. |
+| string | JSON string. |
+| distance | JSON string, formatted as `<quantity>.<unit>`, where `<quantity>` is a number and `<unit>` one of "meters", "kilometers" or "miles", either singular or plural. |
+| duration | JSON string, formatted as `<quantity>.<unit>`, where `<quantity>` is a number and `<unit>` one of "millis", "seconds", "minutes", "hours" or "days", either singular or plural. |
+| timestamp | JSON string, formatted with respect to [ISO 8601](https://www.w3.org/TR/NOTE-datetime), e.g., "2016-06-22T11:28:32Z". |
+| location | JSON string, formatted as `<latitude>,<longitude>` where `<latitude>` and `<longitude>` are numbers and expressed in degrees. |
+| list | JSON array of any other allowed type. |
+| set | JSON array of any other allowed type. |
+| map | JSON object of any other allowed type. |
+| dataset | JSON string, specifying the dataset URI. |
+{: class="table table-striped"}
 
-Workflows files can be validated thanks to the `accio validate` command, which takes one or several files as arguments.
-This command will not execute files, but only check there are correct and could be executed without any problem.
-In case of an error, it will do its best to provide meaningful information to help you fix errors.

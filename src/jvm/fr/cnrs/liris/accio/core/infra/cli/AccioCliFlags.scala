@@ -29,5 +29,5 @@ case class AccioCliFlags(
   color: Boolean = true,
   @Flag(name = "rc", help = "Path to the .acciorc configuration file")
   accioRcPath: Option[Path],
-  @Flag(name = "config")
+  @Flag(name = "config", help = "Name of the configuration to use, conjointly with the .acciorc configuration file")
   accioRcConfig: Option[String])
