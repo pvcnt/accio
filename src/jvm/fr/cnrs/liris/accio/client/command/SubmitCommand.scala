@@ -55,7 +55,7 @@ class SubmitCommand @Inject()(agentClient: AgentService.FinagledClient, factory:
 
   def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     if (flags.residue.size != 1) {
-      out.writeln("<error>You must provide exactly one run file or package specification.</error>")
+      out.writeln("<error>[ERROR]</error> You must provide exactly one run file or package specification.")
       ExitCode.CommandLineError
     } else {
       val opts = flags.as[SubmitFlags]

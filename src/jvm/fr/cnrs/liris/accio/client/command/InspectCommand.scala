@@ -42,7 +42,7 @@ case class InspectFlags(
 class InspectCommand @Inject()(client: AgentService.FinagledClient) extends Command {
   override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     if (flags.residue.isEmpty || flags.residue.size > 2) {
-      out.writeln("<error>You must provide exactly one run identifier.</error>")
+      out.writeln("<error>[ERROR]</error> You must provide a single run identifier.")
       ExitCode.CommandLineError
     } else {
       val opts = flags.as[InspectFlags]

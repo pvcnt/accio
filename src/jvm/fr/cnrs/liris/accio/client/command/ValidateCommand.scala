@@ -37,7 +37,7 @@ class ValidateCommand extends Command with StrictLogging {
 
   def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     if (flags.residue.isEmpty) {
-      out.writeln("<error>Specify one or multiple files to validate as arguments.</error>")
+      out.writeln("<error>[ERROR]</error> You must specify some files to validate as argument.")
       ExitCode.CommandLineError
     } else {
       val opts = flags.as[ValidateFlags]

@@ -18,15 +18,34 @@
 
 package fr.cnrs.liris.accio.client.command
 
+import com.google.inject.Inject
+import fr.cnrs.liris.accio.agent.AgentService
 import fr.cnrs.liris.accio.core.infra.cli.{Cmd, Command, ExitCode, Reporter}
 import fr.cnrs.liris.common.flags.FlagsProvider
 
+case class LogsFlags()
+
 @Cmd(
-  name = "version",
-  help = "Display build information.")
-class VersionCommand extends Command {
+  name = "inspect",
+  flags = Array(classOf[LogsFlags]),
+  help = "Display logs.",
+  allowResidue = true)
+class LogsCommand @Inject()(client: AgentService.FinagledClient) extends Command {
   override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
-    out.writeln("Accio development version")
-    ExitCode.Success
+    if (flags.residue.size != 2) {
+      out.writeln("<error>[ERROR]</error> You must provide exactly a run identifier and a node name.")
+      ExitCode.CommandLineError
+    } else {
+      val opts = flags.as[LogsFlags]
+      /*val f = client.getRun(GetLogsRequest(RunId(flags.residue.head))).liftToTry
+      Await.result(f) match {
+        case Return(resp) =>
+
+        case Throw(e) =>
+          out.writeln(s"<error>[ERROR]</error> Server error: ${e.getMessage}")
+          ExitCode.InternalError
+      }*/
+      ExitCode.Success
+    }
   }
 }

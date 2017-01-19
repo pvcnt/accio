@@ -43,7 +43,7 @@ class PushCommand @Inject()(client: AgentService.FinagledClient, factory: Workfl
 
   def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     if (flags.residue.isEmpty) {
-      out.writeln("<error>You must provide exactly at least one workflow definition file.</error>")
+      out.writeln("<error>[ERROR]</error> You must provide exactly at least one workflow definition file.")
       ExitCode.CommandLineError
     } else {
       val opts = flags.as[PushFlags]

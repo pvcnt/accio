@@ -23,7 +23,7 @@ import java.nio.file.Path
 import com.google.inject.Guice
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.client.service.ParserFinatraJacksonModule
-import fr.cnrs.liris.accio.core.infra.cli.{CmdDispatcher, StreamReporter}
+import fr.cnrs.liris.accio.core.infra.cli.CmdDispatcher
 import fr.cnrs.liris.common.flags._
 
 object AccioClientMain extends AccioClient
@@ -34,6 +34,8 @@ object AccioClientMain extends AccioClient
  * @param logLevel Logging level.
  */
 case class AccioFlags(
+  @Flag(name = "addr", help = "Address of the Accio agent")
+  addr: String = "127.0.0.1:9999",
   @Flag(name = "logging", help = "Logging level")
   logLevel: String = "warn",
   @Flag(name = "color", help = "Enable or disabled colored output")
@@ -52,10 +54,7 @@ class AccioClient extends StrictLogging {
     // Change the path of logback's configuration file to match Pants resource naming.
     sys.props("logback.configurationFile") = "fr/cnrs/liris/accio/client/logback.xml"
 
-    //val parser = FlagsParser[AccioFlags](allowResidue = true)
-    //parser.parse(args)
-
-    val injector = Guice.createInjector(/*FlagsModule(parser), */ClientModule, ParserFinatraJacksonModule)
+    val injector = Guice.createInjector(ClientModule, ParserFinatraJacksonModule)
     val dispatcher = injector.getInstance(classOf[CmdDispatcher])
     val exitCode = dispatcher.exec(args)
 

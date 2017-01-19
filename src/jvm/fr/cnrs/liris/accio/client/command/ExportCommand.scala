@@ -57,7 +57,7 @@ class ExportCommand @Inject()(client: AgentService.FinagledClient) extends Comma
 
   override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     if (flags.residue.isEmpty) {
-      out.writeln("<error>Specify one or multiple directories as argument.</error>")
+      out.writeln("<error>[ERROR]</error> Specify one or multiple directories as argument.")
       ExitCode.CommandLineError
     } else {
       val opts = flags.as[ExportFlags]
