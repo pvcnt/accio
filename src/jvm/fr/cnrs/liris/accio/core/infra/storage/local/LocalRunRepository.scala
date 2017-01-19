@@ -111,7 +111,7 @@ final class LocalRunRepository(rootDir: Path) extends LocalStorage with RunRepos
 
   private def runPath(id: RunId) = getSubdir(runsPath, id.value).resolve(s"${id.value}.json")
 
-  private def logsPath(id: RunId): Path = getSubdir(logsPath, id.value.toString)
+  private def logsPath(id: RunId): Path = getSubdir(logsPath, id.value.toString).resolve(id.value.toString)
 
   private def logsPath(id: RunId, nodeName: String): Path = logsPath(id).resolve(nodeName)
 
@@ -123,7 +123,6 @@ final class LocalRunRepository(rootDir: Path) extends LocalStorage with RunRepos
     dir
       .resolve(id.substring(0, 1))
       .resolve(id.substring(1, 2))
-      .resolve(id)
   }
 
   private def listIds(dir: Path) = {
