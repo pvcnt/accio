@@ -20,13 +20,13 @@ package fr.cnrs.liris.accio.agent
 
 import java.nio.file.{Path, Paths}
 
-import com.google.inject.{Injector, Module, Provides, TypeLiteral}
-import com.twitter.inject.TwitterModule
+import com.google.inject.{Module, Provides, TypeLiteral}
+import com.twitter.inject.{Injector, TwitterModule}
 import com.twitter.util.Duration
 import fr.cnrs.liris.accio.core.api.Operator
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.infra.downloader.GetterDownloaderModule
-import fr.cnrs.liris.accio.core.infra.scheduler.local.{LocalSchedulerConfig, LocalSchedulerModule}
+import fr.cnrs.liris.accio.core.infra.scheduler.local.{LocalScheduler, LocalSchedulerConfig, LocalSchedulerModule}
 import fr.cnrs.liris.accio.core.infra.statemgr.local.{LocalStateMgrConfig, LocalStateMgrModule}
 import fr.cnrs.liris.accio.core.infra.statemgr.zookeeper.{ZookeeperStateMgrConfig, ZookeeperStateMgrModule}
 import fr.cnrs.liris.accio.core.infra.storage.elastic.{ElasticStorageConfig, ElasticStorageModule}
@@ -106,8 +106,8 @@ object AgentModule extends TwitterModule {
   }
 
   @Provides
-  def providesOpFactory(opRegistry: RuntimeOpRegistry, injector: Injector): OpFactory = {
-    new OpFactory(opRegistry, injector: Injector)
+  def providesOpFactory(opRegistry: RuntimeOpRegistry, injector: com.google.inject.Injector): OpFactory = {
+    new OpFactory(opRegistry, injector)
   }
 
   @Provides
@@ -128,5 +128,11 @@ object AgentModule extends TwitterModule {
   @Provides
   def providesRunFactory(workflowRepository: WorkflowRepository): RunFactory = {
     new RunFactory(workflowRepository)
+  }
+
+  override def singletonShutdown(injector: Injector): Unit = {
+    schedulerFlag() match {
+      case "local" => injector.instance[LocalScheduler].stop()
+    }
   }
 }

@@ -26,10 +26,12 @@ import fr.cnrs.liris.privamov.ops.OpsModule
 object AccioExecutorMain {
   def main(args: Array[String]): Unit = {
     new AccioExecutor().main(args)
-    // Long story short: After leaving the executor there are still some alive threads, apparently related to Finagle.
-    // Without this line, the executor process never terminates. It is far from ideal, but after spending one day
-    // debugging this issue it was the best I could figure out. My only finding was that it did not happen with very
-    // short-lived operators (e.g., EventSource), but why?
+    // Long story short: Yes, we need this.
+    //
+    // After leaving the executor there are still some alive threads, apparently related to Finagle, which causes,
+    // the executor process to never terminate. It is far from ideal, but after spending one day debugging this issue
+    // it was the best I could figure out. My only finding was that it did not happen with very short-lived operators
+    // (e.g., EventSource), but why?
     sys.exit(0)
   }
 }

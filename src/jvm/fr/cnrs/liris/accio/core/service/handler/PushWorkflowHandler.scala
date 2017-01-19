@@ -29,7 +29,6 @@ class PushWorkflowHandler @Inject()(workflowFactory: WorkflowFactory, workflowRe
   override def handle(req: PushWorkflowRequest): Future[PushWorkflowResponse] = {
     val workflow = workflowFactory.create(req.defn, req.user)
     workflowRepository.save(workflow)
-    println(workflow)
     Future(PushWorkflowResponse(workflow))
   }
 }

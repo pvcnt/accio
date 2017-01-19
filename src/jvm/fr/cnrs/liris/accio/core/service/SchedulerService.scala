@@ -43,6 +43,10 @@ class SchedulerService(scheduler: Scheduler, stateManager: StateManager) extends
     task
   }
 
+  def kill(run: Run): Unit = {
+
+  }
+
   /**
    * Create the payload for a given node, by resolving the inputs.
    *

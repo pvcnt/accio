@@ -120,6 +120,9 @@ final class OpExecutor(
         Left(operator.execute(in, ctx))
       } catch {
         case NonFatal(e) => Right(ErrorFactory.create(e))
+        case e: OutOfMemoryError =>
+          System.gc()
+          Right(ErrorFactory.create(e))
       }
     }
     logger.debug(s"Completed operator")

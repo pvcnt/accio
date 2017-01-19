@@ -20,16 +20,19 @@ package fr.cnrs.liris.accio.core.infra.scheduler.local
 
 import java.nio.file.{Files, Path}
 import java.util.UUID
-import java.util.concurrent.{ConcurrentHashMap, Executors}
+import java.util.concurrent.{ConcurrentHashMap, ConcurrentLinkedQueue, Executors}
 
-import com.twitter.util.ExecutorServiceFuturePool
+import com.twitter.concurrent.NamedPoolThreadFactory
+import com.twitter.util.{ExecutorServiceFuturePool, Return, Throw}
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.service.{Downloader, Scheduler}
-import fr.cnrs.liris.common.util.{FileUtils, HashUtils}
+import fr.cnrs.liris.common.util.{FileUtils, HashUtils, Platform}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
+
+private case class Job(taskId: TaskId, runId: RunId, nodeName: String, key: String, payload: OpPayload, resource: Resource)
 
 /**
  * Scheduler executing tasks locally, in the same machine. Each task is started inside a new Java process.
@@ -54,7 +57,11 @@ class LocalScheduler(
   extends Scheduler with StrictLogging {
 
   private[this] val monitors = new ConcurrentHashMap[String, TaskMonitor].asScala
-  private[this] val pool = new ExecutorServiceFuturePool(Executors.newFixedThreadPool(sys.runtime.availableProcessors))
+  private[this] val queue = new ConcurrentLinkedQueue[Job]
+  private[this] val totalCpu = sys.runtime.availableProcessors
+  private[this] val totalRam = Platform.totalMemory
+  private[this] val totalDisk = Platform.totalDiskSpace
+  private[this] val pool = new ExecutorServiceFuturePool(Executors.newCachedThreadPool(new NamedPoolThreadFactory("scheduler")))
   private[this] lazy val localExecutorPath = {
     val targetPath = workDir.resolve("executor.jar")
     if (targetPath.toFile.exists()) {
@@ -65,14 +72,22 @@ class LocalScheduler(
     targetPath
   }
 
-  override def submit(runId: RunId, nodeName: String, payload: OpPayload): Task = {
+  logger.info(s"Available CPU: $totalCpu, RAM: ${totalRam.map(_.toHuman).getOrElse("<unknown>")}, disk: ${totalDisk.map(_.toHuman).getOrElse("<unknown>")}")
+
+  override def submit(runId: RunId, nodeName: String, payload: OpPayload): Task = synchronized {
     val id = TaskId(UUID.randomUUID().toString)
     val key = HashUtils.sha1(id.value)
-    val monitor = new TaskMonitor(id, key, payload)
+    val monitor = new TaskMonitor(id, key, payload, opRegistry(payload.op).resource)
     monitors(key) = monitor
-    pool(monitor.run())
-      .onSuccess(_ => logger.debug(s"[T${id.value}] Monitoring thread completed"))
-      .onFailure(e => logger.error(s"[T${id.value}] Error in monitoring thread", e))
+
+    val job = Job(id, runId, nodeName, key, payload, opRegistry(payload.op).resource)
+    synchronized {
+      if (isSatisfied(job)) {
+        start(job)
+      } else {
+        queue.add(job)
+      }
+    }
     Task(
       id = id,
       runId = runId,
@@ -93,14 +108,42 @@ class LocalScheduler(
     monitors.clear()
   }
 
-  override def finalize(): Unit = {
-    super.finalize()
-    stop()
+  private def start(job: Job): Unit = {
+    logger.debug(s"[T${job.taskId.value}] Starting task")
+    pool(monitors(job.key).run())
+      .respond {
+        case Throw(e) =>
+          logger.error(s"[T${job.taskId.value}] Error in monitoring thread", e)
+          scheduleNext()
+        case Return(_) =>
+          logger.debug(s"[T${job.taskId.value}] Monitoring thread completed")
+          scheduleNext()
+      }
+  }
+
+  private def scheduleNext(): Unit = synchronized {
+    val it = queue.iterator
+    while (it.hasNext) {
+      val job = it.next()
+      if (isSatisfied(job)) {
+        start(job)
+        it.remove()
+      }
+    }
+  }
+
+  private def isSatisfied(job: Job): Boolean = {
+    val usedCpu = monitors.values.map(_.resource.cpu).sum
+    val usedRamMb = monitors.values.map(_.resource.ramMb).sum
+    val usedDiskMb = monitors.values.map(_.resource.diskMb).sum
+    job.resource.cpu <= (totalCpu - usedCpu) &&
+      totalRam.forall(ram => job.resource.ramMb <= (ram.inMegabytes - usedRamMb)) &&
+      totalDisk.forall(disk => job.resource.diskMb <= (disk.inMegabytes - usedDiskMb))
   }
 
   private def getSandboxPath(key: String) = workDir.resolve(key)
 
-  private class TaskMonitor(taskId: TaskId, key: String, payload: OpPayload) extends Runnable with StrictLogging {
+  private class TaskMonitor(taskId: TaskId, key: String, payload: OpPayload, val resource: Resource) extends Runnable with StrictLogging {
     private[this] var killed = false
     private[this] var process: Option[Process] = None
 
@@ -129,19 +172,19 @@ class LocalScheduler(
       if (!killed) {
         killed = true
         process.foreach(_.destroyForcibly())
-        process = None
+        cleanup()
         logger.debug(s"[T${taskId.value}] Killed task")
       }
     }
 
     private def cleanup() = {
+      process = None
       monitors.remove(key)
       FileUtils.safeDelete(getSandboxPath(key))
     }
 
     private def startProcess(taskId: TaskId, key: String, payload: OpPayload): Process = {
       val javaBinary = javaHome.orElse(sys.env.get("JAVA_HOME")).map(home => s"$home/bin/java").getOrElse("/usr/bin/java")
-      val resource = opRegistry(payload.op).resource
 
       val cmd = mutable.ListBuffer.empty[String]
       cmd += javaBinary

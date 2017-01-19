@@ -47,7 +47,7 @@ import scala.collection.mutable
  * @param client     Client to the agent.
  */
 class TaskExecutor @Inject()(opExecutor: OpExecutor, client: AgentService.FinagledClient) extends StrictLogging {
-  private[this] val pool = new ExecutorServiceFuturePool(Executors.newSingleThreadExecutor(new NamedPoolThreadFactory("executor-")))
+  private[this] val pool = new ExecutorServiceFuturePool(Executors.newSingleThreadExecutor(new NamedPoolThreadFactory("executor/main")))
   private[this] val threads = mutable.Set.empty[Thread]
   private[this] val stopped = new AtomicBoolean(false)
   private[this] val stdoutBytes = new ByteArrayOutputStream
@@ -106,17 +106,16 @@ class TaskExecutor @Inject()(opExecutor: OpExecutor, client: AgentService.Finagl
     }.unit
   }
 
-  private class StreamLogsThread(taskId: TaskId, runId: RunId, nodeName: String) extends Thread("executor-logs") {
+  private class StreamLogsThread(taskId: TaskId, runId: RunId, nodeName: String) extends Thread("executor/logs") {
     override def run(): Unit = {
       logger.debug(s"[T${taskId.value}] Logs thread started")
       trySleep(Duration.fromSeconds(2))
       while (!stopped.get()) {
+        // Do not log anything here, otherwise it will create a logging loop, even if nothing else is printed.
+        // We want to send only meaningful logs.
         val logs = extractLogs(stdoutBytes, "stdout") ++ extractLogs(stderrBytes, "stderr")
         if (logs.nonEmpty) {
-          val future = client.streamLogs(StreamLogsRequest(logs))
-            .onFailure(e => logger.error(s"[T${taskId.value}] Error while sending logs", e))
-            .onSuccess(_ => logger.debug(s"[T${taskId.value}] Sent ${logs.size} logs"))
-          Await.ready(future)
+          Await.ready(client.streamLogs(StreamLogsRequest(logs)))
           trySleep(Duration.fromSeconds(5))
         } else {
           trySleep(Duration.fromSeconds(2))
@@ -138,15 +137,14 @@ class TaskExecutor @Inject()(opExecutor: OpExecutor, client: AgentService.Finagl
     }
   }
 
-  private class HeartbeatThread(taskId: TaskId) extends Thread("executor-heartbeat") {
+  private class HeartbeatThread(taskId: TaskId) extends Thread("executor/heartbeat") {
     override def run(): Unit = {
       logger.debug(s"[T${taskId.value}] Heartbeat thread started")
       trySleep(Duration.fromSeconds(5))
       while (!stopped.get()) {
-        val future = client.heartbeat(HeartbeatRequest(taskId))
-          .onFailure(e => logger.error(s"[T${taskId.value}] Error while sending heartbeat", e))
-          .onSuccess(_ => logger.debug(s"[T${taskId.value}] Sent heartbeat"))
-        Await.ready(future)
+        // Do not log anything here, if communication with agent is broken it will be eventually detected on the
+        // agent side. We want to send only meaningful logs.
+        Await.ready(client.heartbeat(HeartbeatRequest(taskId)))
         trySleep(Duration.fromSeconds(30))
       }
       logger.debug(s"[T${taskId.value}] Heartbeat thread stopped")

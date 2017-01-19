@@ -86,7 +86,7 @@ final class LocalRunRepository(rootDir: Path) extends LocalStorage with RunRepos
         logs.groupBy(_.classifier).foreach { case (classifier, logs) =>
           val path = logsPath(runId, nodeName, classifier)
           Files.createDirectories(path.getParent)
-          val content = logs.map(log => s"${log.createdAt} ${log.message.replace("\n", "\\\\n")}").mkString("\n")
+          val content = logs.map(log => s"${log.createdAt} ${log.message.replace("\n", "\\\\n")}\n").mkString
           //TODO: lock file? Or not ?
           Files.write(path, content.getBytes, StandardOpenOption.CREATE, StandardOpenOption.APPEND)
         }
@@ -123,6 +123,7 @@ final class LocalRunRepository(rootDir: Path) extends LocalStorage with RunRepos
     dir
       .resolve(id.substring(0, 1))
       .resolve(id.substring(1, 2))
+      .resolve(id)
   }
 
   private def listIds(dir: Path) = {

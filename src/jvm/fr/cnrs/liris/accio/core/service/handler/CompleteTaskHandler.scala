@@ -65,7 +65,6 @@ final class CompleteTaskHandler @Inject()(
                   nextNodes.foreach(nextNode => scheduler.submit(newRun, graph(nextNode)))
                   logger.debug(s"[T${task.id.value}] Task successful, scheduled ${nextNodes.size} nodes: ${nextNodes.mkString(", ")}")
                 } else {
-                  println("--- saved " + newRun)
                   runRepository.save(newRun)
                   logger.debug(s"[T${task.id.value}] Task failed, cancelled next nodes")
                 }

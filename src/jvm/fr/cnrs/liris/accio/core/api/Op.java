@@ -58,7 +58,7 @@ public @interface Op {
 
     float cpu() default 1;
 
-    String memory() default "256M";
+    String memory() default "512M";
 
-    String disk() default "2G";
+    String disk() default "1G";
 }

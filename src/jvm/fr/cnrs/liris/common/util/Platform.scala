@@ -23,6 +23,7 @@ import java.io.File
 import com.twitter.util.StorageUnit
 
 import scala.sys.process.Process
+import scala.util.control.NonFatal
 
 /**
  * Provide some system level information.
@@ -31,17 +32,37 @@ object Platform {
   /**
    * Return total RAM memory mounted on the machine, if possible to obtain. Works only on Unix platforms.
    */
-  lazy val totalMemory: Option[StorageUnit] = readMeminfo("MemTotal")
+  lazy val totalMemory: Option[StorageUnit] = {
+    if (OS.Current == OS.Linux || OS.Current == OS.FreeBsd) {
+      readMeminfo("MemTotal")
+    } else if (OS.Current == OS.Darwin) {
+      readSysctl("hw.memsize")
+    } else {
+      None
+    }
+  }
 
   /**
    * Return free RAM memory on the machine, if possible to obtain. Works only on Unix platforms.
    */
-  def freeMemory: Option[StorageUnit] = readMeminfo("MemFree")
+  def freeMemory: Option[StorageUnit] = {
+    if (OS.Current == OS.Linux || OS.Current == OS.FreeBsd) {
+      readMeminfo("MemFree")
+    } else {
+      None
+    }
+  }
 
   /**
    * Return available RAM memory on the machine, if possible to obtain. Works only on Unix platforms.
    */
-  def availableMemory: Option[StorageUnit] = readMeminfo("MemAvailable")
+  def availableMemory: Option[StorageUnit] = {
+    if (OS.Current == OS.Linux || OS.Current == OS.FreeBsd) {
+      readMeminfo("MemAvailable")
+    } else {
+      None
+    }
+  }
 
   /**
    * Return total disk space of the root partition.
@@ -60,18 +81,41 @@ object Platform {
   }
 
   /**
-   * Read a key from the meminfo util, if available. Works only on Unix platforms.
+   * Read a key from the meminfo util, if available. Works only on Linux and FreeBSD platforms.
    *
    * @param key Key to read.
    */
   private def readMeminfo(key: String): Option[StorageUnit] = {
-    if (OS.Current.isUnix) {
-      Process("cat /proc/meminfo").lineStream
-        .find(_.startsWith(s"$key:"))
-        .map { line =>
-          val kiloBytes = line.stripPrefix(s"$key:").stripSuffix(" kB").trim.toLong
-          StorageUnit.fromKilobytes(kiloBytes)
-        }
+    if (OS.Current == OS.Linux || OS.Current == OS.FreeBsd) {
+      try {
+        Process("cat /proc/meminfo").lineStream
+          .find(_.startsWith(s"$key:"))
+          .map { line =>
+            val kiloBytes = line.stripPrefix(s"$key:").trim.stripSuffix(" kB").toLong
+            StorageUnit.fromKilobytes(kiloBytes)
+          }
+      } catch {
+        case NonFatal(_) => None
+      }
+    } else {
+      None
+    }
+  }
+
+  /**
+   * Read a key from the sysctl util, if available. Works only on Darwin platforms.
+   *
+   * @param key Key to read.
+   */
+  private def readSysctl(key: String): Option[StorageUnit] = {
+    if (OS.Current == OS.Darwin) {
+      try {
+        val line = Process(s"sysctl $key").lineStream.head
+        val bytes = line.stripPrefix(s"$key:").trim.toLong
+        Some(StorageUnit.fromBytes(bytes))
+      } catch {
+        case NonFatal(_) => None
+      }
     } else {
       None
     }
