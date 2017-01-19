@@ -28,7 +28,9 @@ import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 @Op(
   category = "prepare",
   help = "Enforce a given duration on each trace.",
-  description = "Longer traces will be truncated, shorter traces will be discarded.")
+  description = "Longer traces will be truncated, shorter traces will be discarded.",
+  cpu = 4,
+  ram = "2G")
 class EnforceDurationOp @Inject()(
   override protected val env: SparkleEnv,
   override protected val decoders: Set[Decoder[_]],

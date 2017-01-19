@@ -29,7 +29,9 @@ import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
   category = "prepare",
   help = "Enforce a minimum distance between two consecutive events in traces.",
   description = "If the distance is less than a given threshold, records will be discarded until the next point " +
-    "that fulfills the minimum distance requirement.")
+    "that fulfills the minimum distance requirement.",
+  cpu = 4,
+  ram = "2G")
 class SpatialSamplingOp @Inject()(
   override protected val env: SparkleEnv,
   override protected val decoders: Set[Decoder[_]],

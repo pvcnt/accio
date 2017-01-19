@@ -30,7 +30,9 @@ import org.joda.time.Instant
 
 @Op(
   category = "metric",
-  help = "Compute temporal distortion difference between two datasets of traces")
+  help = "Compute temporal distortion difference between two datasets of traces",
+  cpu = 3,
+  ram = "6G")
 class SpatioTemporalDistortionOp @Inject()(
   override protected val env: SparkleEnv,
   override protected val decoders: Set[Decoder[_]])

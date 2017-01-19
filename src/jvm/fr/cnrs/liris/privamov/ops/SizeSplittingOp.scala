@@ -26,7 +26,9 @@ import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 
 @Op(
   category = "prepare",
-  help = "Split traces, ensuring a maximum size for each one.")
+  help = "Split traces, ensuring a maximum size for each one.",
+  cpu = 4,
+  ram = "2G")
 class SizeSplittingOp @Inject()(
   override protected val env: SparkleEnv,
   override protected val decoders: Set[Decoder[_]],

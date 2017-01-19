@@ -29,7 +29,9 @@ import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 @Op(
   category = "prepare",
   help = "Apply gaussian kernel smoothing on traces.",
-  description = "Apply gaussian kernel smoothing on a trace, attenuating the impact of noisy observations.")
+  description = "Apply gaussian kernel smoothing on a trace, attenuating the impact of noisy observations.",
+  cpu = 4,
+  ram = "2G")
 class GaussianKernelSmoothingOp @Inject()(
   override protected val env: SparkleEnv,
   override protected val decoders: Set[Decoder[_]],

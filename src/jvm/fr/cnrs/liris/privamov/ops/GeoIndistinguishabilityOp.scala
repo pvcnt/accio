@@ -31,7 +31,9 @@ import scala.util.Random
   category = "lppm",
   help = "Enforce geo-indistinguishability guarantees on traces.",
   description = "Generate locations satisfying geo-indistinguishability properties. The method used here is the one " +
-    "presented by the authors of the paper and consists in adding noise following a double-exponential distribution.")
+    "presented by the authors of the paper and consists in adding noise following a double-exponential distribution.",
+  cpu = 4,
+  ram = "2G")
 class GeoIndistinguishabilityOp @Inject()(
   override protected val env: SparkleEnv,
   override protected val decoders: Set[Decoder[_]],

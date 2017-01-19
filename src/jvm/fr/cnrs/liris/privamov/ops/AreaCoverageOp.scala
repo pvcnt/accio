@@ -28,7 +28,9 @@ import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 
 @Op(
   category = "metric",
-  help = "Compute area coverage difference between two datasets of traces")
+  help = "Compute area coverage difference between two datasets of traces",
+  cpu = 4,
+  ram = "2G")
 class AreaCoverageOp @Inject()(
   override protected val env: SparkleEnv,
   override protected val decoders: Set[Decoder[_]])

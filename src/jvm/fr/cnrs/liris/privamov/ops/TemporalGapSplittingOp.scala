@@ -27,7 +27,9 @@ import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 
 @Op(
   category = "prepare",
-  help = "Split traces, when there is a too long duration between consecutive events.")
+  help = "Split traces, when there is a too long duration between consecutive events.",
+  cpu = 4,
+  ram = "2G")
 class TemporalGapSplittingOp @Inject()(
   override protected val env: SparkleEnv,
   override protected val decoders: Set[Decoder[_]],

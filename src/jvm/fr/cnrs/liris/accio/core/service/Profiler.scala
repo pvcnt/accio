@@ -124,12 +124,12 @@ class JvmProfiler extends Profiler {
   def systemTime: Duration = Duration.fromNanoseconds(_systemTime.get)
 
   /**
-   * Return total heap memory used (computed for the whole JVM process).
+   * Return total heap ram used (computed for the whole JVM process).
    */
   def memoryUsed: StorageUnit = StorageUnit.fromBytes(_memoryUsed.get)
 
   /**
-   * Return total heap memory reserved (computed for the whole JVM process).
+   * Return total heap ram reserved (computed for the whole JVM process).
    */
   def memoryReserved: StorageUnit = StorageUnit.fromBytes(_memoryReserved.get)
 }

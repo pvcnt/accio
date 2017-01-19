@@ -36,7 +36,9 @@ import fr.cnrs.liris.privamov.core.sparkle.{DataFrame, SparkleEnv}
  */
 @Op(
   category = "metric",
-  help = "Re-identification attack using POIs a the discriminating information.")
+  help = "Re-identification attack using POIs a the discriminating information.",
+  cpu = 6,
+  ram = "3G")
 class PoisReidentOp @Inject()(
   override protected val env: SparkleEnv,
   override protected val decoders: Set[Decoder[_]]

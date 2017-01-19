@@ -34,7 +34,7 @@ trait Operator[In, Out] {
    *
    * Implementations can use a seed if they need to use some randomness. Outside of this, the execution should be
    * perfectly deterministic. A working directory is provided for operators who need to write results somewhere.
-   * This is generally a good idea for large that would not fit comfortably in the JVM memory or inside the JSON
+   * This is generally a good idea for large that would not fit comfortably in the JVM ram or inside the JSON
    * file report.
    *
    * @param in  Inputs.

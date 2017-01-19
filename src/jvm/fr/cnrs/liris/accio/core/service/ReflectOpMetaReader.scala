@@ -44,7 +44,7 @@ class ReflectOpMetaReader extends OpMetaReader with LazyLogging {
           if (Utils.OpRegex.findFirstIn(name).isEmpty) {
             throw new InvalidOpException(clazz, s"Illegal operator name: $name")
           }
-          val resource = Resource(op.cpu, parseStorageUnit(op.memory()).inMegabytes, parseStorageUnit(op.disk()).inMegabytes)
+          val resource = Resource(op.cpu, parseStorageUnit(op.ram()).inMegabytes, parseStorageUnit(op.disk()).inMegabytes)
           val defn = OpDef(
             name = name,
             inputs = inRefl.map(getInputs).getOrElse(Seq.empty),

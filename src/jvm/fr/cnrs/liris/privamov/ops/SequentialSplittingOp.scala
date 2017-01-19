@@ -26,7 +26,9 @@ import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 
 @Op(
   category = "prepare",
-  help = "Split traces sequentially, according to chronological order.")
+  help = "Split traces sequentially, according to chronological order.",
+  cpu = 4,
+  ram = "2G")
 class SequentialSplittingOp @Inject()(
   override protected val env: SparkleEnv,
   override protected val decoders: Set[Decoder[_]],

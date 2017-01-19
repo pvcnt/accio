@@ -30,7 +30,9 @@ import scala.util.Random
 @Op(
   category = "prepare",
   help = "Uniformly sample events inside traces.",
-  description = "Perform a uniform sampling on traces, keeping each event with a given probability.")
+  description = "Perform a uniform sampling on traces, keeping each event with a given probability.",
+  cpu = 4,
+  ram = "2G")
 class UniformSamplingOp @Inject()(
   override protected val env: SparkleEnv,
   override protected val decoders: Set[Decoder[_]],

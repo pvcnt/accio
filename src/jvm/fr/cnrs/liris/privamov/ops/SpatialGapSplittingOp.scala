@@ -27,7 +27,9 @@ import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 
 @Op(
   category = "prepare",
-  help = "Split traces, when there is a too huge distance between consecutive events.")
+  help = "Split traces, when there is a too huge distance between consecutive events.",
+  cpu = 4,
+  ram = "2G")
 class SpatialGapSplittingOp @Inject()(
   override protected val env: SparkleEnv,
   override protected val decoders: Set[Decoder[_]],

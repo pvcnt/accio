@@ -28,7 +28,9 @@ import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 
 @Op(
   category = "lppm",
-  help = "Enforce speed smoothing guarantees on traces.")
+  help = "Enforce speed smoothing guarantees on traces.",
+  cpu = 4,
+  ram = "2G")
 class PromesseOp @Inject()(
   override protected val env: SparkleEnv,
   override protected val decoders: Set[Decoder[_]],

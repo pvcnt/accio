@@ -29,7 +29,9 @@ import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
   category = "prepare",
   help = "Enforce a minimum duration between two consecutive events in traces.",
   description = "If the duration is less than a given threshold, events will be discarded until the next point " +
-    "that fulfills the minimum duration requirement.")
+    "that fulfills the minimum duration requirement.",
+  cpu = 4,
+  ram = "2G")
 class TemporalSamplingOp @Inject()(
   override protected val env: SparkleEnv,
   override protected val decoders: Set[Decoder[_]],

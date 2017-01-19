@@ -27,7 +27,9 @@ import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 @Op(
   category = "prepare",
   help = "Enforce a given size on each trace.",
-  description = "Larger traces will be truncated, smaller traces will be discarded.")
+  description = "Larger traces will be truncated, smaller traces will be discarded.",
+  cpu = 4,
+  ram = "2G")
 class EnforceSizeOp @Inject()(
   override protected val env: SparkleEnv,
   override protected val decoders: Set[Decoder[_]],

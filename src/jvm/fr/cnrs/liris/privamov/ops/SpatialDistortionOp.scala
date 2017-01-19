@@ -29,7 +29,9 @@ import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 
 @Op(
   category = "metric",
-  help = "Compute spatial distortion between two datasets of traces")
+  help = "Compute spatial distortion between two datasets of traces",
+  cpu = 3,
+  ram = "6G")
 class SpatialDistortionOp @Inject()(
   override protected val env: SparkleEnv,
   override protected val decoders: Set[Decoder[_]]

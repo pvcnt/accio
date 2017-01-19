@@ -31,7 +31,9 @@ import scala.collection.mutable
 
 @Op(
   help = "Compute statistics about points of interest",
-  category = "metric")
+  category = "metric",
+  cpu = 4,
+  ram = "2G")
 class PoisAnalyzerOp @Inject()(
   override protected val env: SparkleEnv,
   override protected val decoders: Set[Decoder[_]],

@@ -28,7 +28,9 @@ import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 
 @Op(
   category = "transform",
-  help = "Compute POIs retrieval difference between two datasets of traces")
+  help = "Compute POIs retrieval difference between two datasets of traces",
+  cpu = 6,
+  ram = "3G")
 class PoisExtractionOp @Inject()(
   override protected val env: SparkleEnv,
   override protected val decoders: Set[Decoder[_]],

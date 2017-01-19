@@ -36,10 +36,7 @@ import scala.concurrent.duration.{Duration => ScalaDuration}
  * @param prefix       Prefix of indices managed by Accio.
  * @param queryTimeout Timeout of queries sent to Elasticsearch.
  */
-case class ElasticStorageConfig(
-  addr: String,
-  prefix: String = "accio_",
-  queryTimeout: TwitterDuration = TwitterDuration.fromSeconds(20))
+case class ElasticStorageConfig(addr: String, prefix: String, queryTimeout: TwitterDuration)
 
 /**
  * Guice module provisioning repositories with storage inside an Elasticsearch cluster.
