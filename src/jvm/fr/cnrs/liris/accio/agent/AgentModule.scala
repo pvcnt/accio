@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.agent
 
-import java.nio.file.{Path, Paths}
+import java.nio.file.Paths
 
 import com.google.inject.{Module, Provides, TypeLiteral}
 import com.twitter.inject.{Injector, TwitterModule}
@@ -39,29 +39,30 @@ import scala.collection.mutable
 
 object AgentModule extends TwitterModule {
   private[this] val advertiseFlag = flag("advertise", "127.0.0.1:9999", "Address to advertise to executors")
-  private[this] val workDirFlag = flag("workdir", "/var/lib/accio-agent", "Working directory")
+  private[this] val clusterFlag = flag("cluster", "default", "Cluster name")
 
   private[this] val schedulerFlag = flag("scheduler.type", "local", "Scheduler type")
   private[this] val executorUriFlag = flag[String]("scheduler.executor_uri", "URI to the executor JAR")
-  private[this] val javaHomeFlag = flag[String]("scheduler.local.java_home", "Path to JRE when launching the executor")
+  private[this] val localSchedulerPathFlag = flag[String]("scheduler.local.path", "Path where to store sandboxes")
+  private[this] val localSchedulerJavaHomeFlag = flag[String]("scheduler.local.java_home", "Path to JRE when launching the executor")
 
   private[this] val stateMgrFlag = flag("statemgr.type", "local", "State manager type")
+  private[this] val localStateMgrPathFlag = flag[String]("statemgr.local.path", "Path where to store state")
   private[this] val zkStateMgrAddrFlag = flag("statemgr.zk.addr", "127.0.0.1:2181", "Address to Zookeeper cluster")
   private[this] val zkStateMgrPathFlag = flag("statemgr.zk.path", "/accio", "Root path in Zookeeper")
   private[this] val zkStateMgrSessionTimeoutFlag = flag("statemgr.zk.session_timeout", Duration.fromSeconds(60), "Zookeeper session timeout")
   private[this] val zkStateMgrConnTimeoutFlag = flag("statemgr.zk.conn_timeout", Duration.fromSeconds(15), "Zookeeper connection timeout")
 
   private[this] val uploaderFlag = flag("uploader.type", "local", "Uploader type")
-  private[this] val localUploaderPathFlag = flag[String]("uploader.local.path", "Local uploader path")
+  private[this] val localUploaderPathFlag = flag[String]("uploader.local.path", "Path where to store files")
 
   private[this] val storageFlag = flag("storage.type", "local", "Storage type")
+  private[this] val localStoragePathFlag = flag[String]("storage.local.path", "Path where to store data")
   private[this] val esStorageAddrFlag = flag("storage.es.addr", "127.0.0.1:9300", "Address to Elasticsearch cluster")
-  private[this] val esStoragePrefixFlag = flag("storage.es.prefix", "accio__", "Prefix of Elasticsearch indices")
+  private[this] val esStoragePrefixFlag = flag("storage.es.prefix", "accio_", "Prefix of Elasticsearch indices")
   private[this] val esStorageQueryTimeoutFlag = flag("storage.es.query_timeout", Duration.fromSeconds(15), "Elasticsearch query timeout")
 
   private[this] val executorPassthroughFlags = Seq(uploaderFlag, localUploaderPathFlag)
-
-  private def workDir: Path = Paths.get(workDirFlag())
 
   protected override def configure(): Unit = {
     val modules = mutable.ListBuffer.empty[Module]
@@ -69,7 +70,7 @@ object AgentModule extends TwitterModule {
 
     // Install appropriate modules.
     stateMgrFlag() match {
-      case "local" => modules += new LocalStateMgrModule(LocalStateMgrConfig(workDir.resolve("state")))
+      case "local" => modules += new LocalStateMgrModule(LocalStateMgrConfig(Paths.get(localStateMgrPathFlag())))
       case "zk" =>
         val config = ZookeeperStateMgrConfig(zkStateMgrAddrFlag(), zkStateMgrPathFlag(), zkStateMgrSessionTimeoutFlag(), zkStateMgrConnTimeoutFlag())
         modules += new ZookeeperStateMgrModule(config)
@@ -80,7 +81,7 @@ object AgentModule extends TwitterModule {
       case unknown => throw new IllegalArgumentException(s"Unknown uploader type: $unknown")
     }
     storageFlag() match {
-      case "local" => modules += new LocalStorageModule(LocalStorageConfig(workDir.resolve("storage")))
+      case "local" => modules += new LocalStorageModule(LocalStorageConfig(Paths.get(localStoragePathFlag())))
       case "es" =>
         val config = ElasticStorageConfig(esStorageAddrFlag(), esStoragePrefixFlag(), esStorageQueryTimeoutFlag())
         modules += new ElasticStorageModule(config)
@@ -91,7 +92,7 @@ object AgentModule extends TwitterModule {
         val executorArgs = executorPassthroughFlags.flatMap { flag =>
           flag.getWithDefault.map(v => Seq(s"-${flag.name}", v)).getOrElse(Seq.empty[String])
         }
-        val config = LocalSchedulerConfig(workDir.resolve("sandbox"), advertiseFlag(), executorUriFlag(), javaHomeFlag.get, executorArgs)
+        val config = LocalSchedulerConfig(Paths.get(localSchedulerPathFlag()), advertiseFlag(), executorUriFlag(), localSchedulerJavaHomeFlag.get, executorArgs)
         modules += new LocalSchedulerModule(config)
       case unknown => throw new IllegalArgumentException(s"Unknown scheduler type: $unknown")
     }

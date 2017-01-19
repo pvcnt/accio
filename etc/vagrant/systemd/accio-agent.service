@@ -1,0 +1,34 @@
+# Accio is a program whose purpose is to study location privacy.
+# Copyright (C) 2016-2017 Vincent Primault <vincent.primault@liris.cnrs.fr>
+#
+# Accio is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Accio is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Accio.  If not, see <http://www.gnu.org/licenses/>.
+
+[Unit]
+Description=Accio agent
+
+[Service]
+ExecStartPre=/bin/mkdir -p /var/lib/accio-agent
+ExecStart=/usr/bin/java \
+  -Xmx1G -agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=n \
+  -jar /home/ubuntu/accio/dist/accio-agent.jar \
+    -cluster=devcluster \
+    -scheduler.type=local \
+    -scheduler.executor_uri=/home/ubuntu/accio/dist/accio-executor.sh \
+    -scheduler.local.path=/var/lib/accio-agent/scheduler \
+    -storage.type=local \
+    -storage.local.path=/var/lib/accio-agent/storage \
+    -statemgr.type=local \
+    -statemgr.local.path=/var/lib/accio-agent/state \
+    -uploader.type=local \
+    -uploader.local.path=/var/lib/accio-agent/uploads
