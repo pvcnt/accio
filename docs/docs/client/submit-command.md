@@ -26,8 +26,6 @@ The progress of the execution can then be tracked with the `accio status` comman
 * `-repeat=<integer>`: Number of times to repeat each run. Overrides the value defined in the run file, if any.
 * `-seed=<long>`: Run seed. Overrides the value defined in the run file, if any.
 * `-params=<key>=<value>[,...]`: Run parameters (comma-separated). Overrides the values defined in the run file, if any.
-
-## Run options
 * `-q`: Prints only run identifiers (one per line), if the command was successful. Otherwise, you can still use the exit code to determine the outcome of the command.
 * `-json`: Prints pretty human-readable (but still machine-parsable) JSON.
 
