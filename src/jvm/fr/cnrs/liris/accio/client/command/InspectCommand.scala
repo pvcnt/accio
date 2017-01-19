@@ -31,7 +31,7 @@ import fr.cnrs.liris.common.util.StringUtils.padTo
 import org.ocpsoft.prettytime.PrettyTime
 
 case class InspectFlags(
-  @Flag(name = "json", help = "Whether to output JSON")
+  @Flag(name = "json", help = "Print machine-readable JSON")
   json: Boolean = false)
 
 @Cmd(

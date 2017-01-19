@@ -30,7 +30,7 @@ import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.util.TimeUtils
 
 case class PushFlags(
-  @Flag(name = "q")
+  @Flag(name = "q", help = "Print only identifiers")
   quiet: Boolean = false)
 
 @Cmd(

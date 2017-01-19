@@ -91,7 +91,7 @@ case class WorkflowQuery(
   name: Option[String] = None,
   limit: Int = 25,
   offset: Option[Int] = None) {
-  require(limit > 0 && limit <= 100, s"Maximum number of runs must be in [1,100] (got $limit)")
+  require(limit > 0 && limit <= 100, s"Maximum number of workflow must be in [1,100] (got $limit)")
 }
 
 /**

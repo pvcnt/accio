@@ -40,6 +40,7 @@ object ClientModule extends AbstractModule with ScalaModule {
     commands.addBinding.toInstance(classOf[PushCommand])
     commands.addBinding.toInstance(classOf[PsCommand])
     commands.addBinding.toInstance(classOf[InspectCommand])
+    commands.addBinding.toInstance(classOf[ListCommand])
 
     bind[OpRegistry].to[RemoteOpRegistry]
   }
@@ -49,6 +50,7 @@ object ClientModule extends AbstractModule with ScalaModule {
   def providesClient: AgentService.FinagledClient = {
     //TODO: inject addr.
     val service = Thrift.newService("localhost:9999")
+    sys.addShutdownHook(service.close())
     new AgentService.FinagledClient(service)
   }
 }

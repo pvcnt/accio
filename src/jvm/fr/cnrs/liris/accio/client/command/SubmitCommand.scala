@@ -32,17 +32,17 @@ import fr.cnrs.liris.common.util.{StringUtils, TimeUtils}
 case class SubmitFlags(
   @Flag(name = "name", help = "Run name")
   name: Option[String],
-  @Flag(name = "tags", help = "Space-separated run tags")
+  @Flag(name = "tags", help = "Run tags (comma-separated)")
   tags: Option[String],
   @Flag(name = "notes", help = "Run notes")
   notes: Option[String],
   @Flag(name = "repeat", help = "Number of times to repeat each run")
   repeat: Option[Int],
-  @Flag(name = "params", help = "Parameters")
+  @Flag(name = "params", help = "Workflow parameters")
   params: Option[String],
   @Flag(name = "seed", help = "Seed to use for unstable operators")
   seed: Option[Long],
-  @Flag(name = "q")
+  @Flag(name = "q", help = "Print only identifiers")
   quiet: Boolean = false)
 
 @Cmd(
@@ -76,7 +76,7 @@ class SubmitCommand @Inject()(agentClient: AgentService.FinagledClient, factory:
           flags.residue.head,
           name = opts.name,
           notes = opts.notes,
-          tags = StringUtils.explode(opts.tags, ""),
+          tags = StringUtils.explode(opts.tags, ","),
           seed = opts.seed,
           params = params,
           repeat = opts.repeat)
