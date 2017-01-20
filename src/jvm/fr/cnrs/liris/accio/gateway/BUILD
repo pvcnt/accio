@@ -10,10 +10,12 @@ scala_library(
   ],
   excludes = [
     # Multiple logging frameworks.
-    exclude(org = 'org.slf4j', name = 'slf4j-log4j12'),
-    exclude(org = 'org.slf4j', name = 'slf4j-jdk14'),
-    # Finagle comes with its own Thrift library.
-    exclude(org = 'com.twitter', name = 'libthrift'),
+    exclude('org.slf4j', 'slf4j-log4j12'),
+    exclude('org.slf4j', 'slf4j-jdk14'),
+    exclude('log4j', 'log4j'),
+    exclude('commons-logging', 'commons-logging'),
+    # We already include canonical Thrift library, we do not need the one provided by Finagle.
+    exclude('com.twitter', 'libthrift'),
   ],
   resources = [
     'src/resources/fr/cnrs/liris/accio/agent',

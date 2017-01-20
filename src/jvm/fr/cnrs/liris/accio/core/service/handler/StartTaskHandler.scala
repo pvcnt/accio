@@ -20,8 +20,8 @@ package fr.cnrs.liris.accio.core.service.handler
 
 import com.google.inject.Inject
 import com.twitter.util.Future
-import fr.cnrs.liris.accio.core.service.StateManager
 import fr.cnrs.liris.accio.core.domain._
+import fr.cnrs.liris.accio.core.service.StateManager
 
 class StartTaskHandler @Inject()(runRepository: RunRepository, stateManager: StateManager)
   extends Handler[StartTaskRequest, StartTaskResponse] {
@@ -62,13 +62,13 @@ class StartTaskHandler @Inject()(runRepository: RunRepository, stateManager: Sta
       val newNodeState = nodeState.copy(startedAt = Some(now), status = NodeStatus.Running)
       var newRunState = run.state.copy(nodes = run.state.nodes - nodeState + newNodeState)
       if (run.state.startedAt.isEmpty) {
-        newRunState = newRunState.copy(startedAt = Some(now))
+        newRunState = newRunState.copy(startedAt = Some(now), status = RunStatus.Running)
       }
       runRepository.save(run.copy(state = newRunState))
     }
   }
 
-  private def updateTask(task:Task, now: Long) = {
+  private def updateTask(task: Task, now: Long) = {
     // Mark task as started.
     val newTask = task.copy(state = task.state.copy(startedAt = Some(now), status = TaskStatus.Running))
     stateManager.save(newTask)

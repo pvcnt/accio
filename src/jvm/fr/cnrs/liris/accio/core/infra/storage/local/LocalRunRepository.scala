@@ -64,7 +64,7 @@ final class LocalRunRepository(rootDir: Path) extends LocalStorage with RunRepos
       case Some(classifier) => Seq(logsPath(query.runId, query.nodeName, classifier).toFile)
       case None => logsPath(query.runId, query.nodeName).toFile.listFiles.toSeq.filter(_.getName.endsWith(".txt"))
     }
-    files.flatMap { file =>
+    var results = files.flatMap { file =>
       val classifier = file.getName.stripSuffix(".txt")
       val lines = Files.readAllLines(file.toPath).asScala
       lines.flatMap { line =>
@@ -72,7 +72,11 @@ final class LocalRunRepository(rootDir: Path) extends LocalStorage with RunRepos
         val log = RunLog(query.runId, query.nodeName, line.take(pos).toLong, classifier, line.drop(pos + 1))
         if (query.since.isEmpty || log.createdAt > query.since.get.inMillis) Some(log) else None
       }
-    }.sortWith((a, b) => a.createdAt < b.createdAt).take(query.limit)
+    }.sortWith((a, b) => a.createdAt < b.createdAt)
+    query.limit.foreach { limit =>
+      results = results.take(limit)
+    }
+    results
   }
 
   override def save(run: Run): Unit = {

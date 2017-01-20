@@ -19,14 +19,23 @@
 package fr.cnrs.liris.accio.client.command
 
 import com.google.inject.Inject
+import com.twitter.util.{Await, Return, Throw}
 import fr.cnrs.liris.accio.agent.AgentService
+import fr.cnrs.liris.accio.core.domain.RunId
 import fr.cnrs.liris.accio.core.infra.cli.{Cmd, Command, ExitCode, Reporter}
-import fr.cnrs.liris.common.flags.FlagsProvider
+import fr.cnrs.liris.accio.core.service.handler.ListLogsRequest
+import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 
-case class LogsFlags()
+case class LogsFlags(
+  @Flag(name = "stdout", help = "Include stdout logs")
+  stdout: Boolean = true,
+  @Flag(name = "stderr", help = "Include stderr logs")
+  stderr: Boolean = true,
+  @Flag(name = "n", help = "Maximum number of results")
+  n: Option[Int])
 
 @Cmd(
-  name = "inspect",
+  name = "logs",
   flags = Array(classOf[LogsFlags]),
   help = "Display logs.",
   allowResidue = true)
@@ -37,14 +46,17 @@ class LogsCommand @Inject()(client: AgentService.FinagledClient) extends Command
       ExitCode.CommandLineError
     } else {
       val opts = flags.as[LogsFlags]
-      /*val f = client.getRun(GetLogsRequest(RunId(flags.residue.head))).liftToTry
+      val classifier = if (opts.stderr && opts.stdout) None else if (opts.stderr) Some("stderr") else Some("stdout")
+      val f = client.listLogs(ListLogsRequest(RunId(flags.residue.head), flags.residue.last, classifier, opts.n)).liftToTry
       Await.result(f) match {
         case Return(resp) =>
-
+          resp.results.foreach { log =>
+            out.writeln(s"<comment>${log.classifier}:</comment> ${log.message}")
+          }
         case Throw(e) =>
           out.writeln(s"<error>[ERROR]</error> Server error: ${e.getMessage}")
           ExitCode.InternalError
-      }*/
+      }
       ExitCode.Success
     }
   }

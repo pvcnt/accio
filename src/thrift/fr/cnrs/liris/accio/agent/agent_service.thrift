@@ -41,6 +41,8 @@ service AgentService {
 
   agent.KillRunResponse killRun(1: agent.KillRunRequest req);
 
+  agent.ListLogsResponse listLogs(1: agent.ListLogsRequest req);
+
   agent.HeartbeatResponse heartbeat(1: agent.HeartbeatRequest req);
 
   agent.StartTaskResponse startTask(1: agent.StartTaskRequest req) throws (1: agent.UnknownTaskException unknown);

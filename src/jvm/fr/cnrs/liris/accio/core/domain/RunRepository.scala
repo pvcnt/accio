@@ -119,14 +119,12 @@ case class RunList(results: Seq[Run], totalCount: Int)
  * @param runId      Run for which to retrieve the logs.
  * @param nodeName   Node for which to retrieve the logs.
  * @param classifier Only include logs with this classifier.
- * @param limit      Maximum number of matching logs to return. Must be in [1,1000]
+ * @param limit      Maximum number of matching logs to return.
  * @param since      Only include logs older than a given instant.
  */
 case class LogsQuery(
   runId: RunId,
   nodeName: String,
   classifier: Option[String] = None,
-  limit: Int = 100,
-  since: Option[Time] = None) {
-  require(limit > 0 && limit <= 1000, s"Maximum number of logs must be in [1,1000] (got $limit)")
-}
+  limit: Option[Int] = None,
+  since: Option[Time] = None)

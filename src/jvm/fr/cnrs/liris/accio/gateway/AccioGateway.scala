@@ -42,7 +42,9 @@ class AccioGateway extends HttpServer {
   loadLogbackConfig()
   readDtab()
 
-  override protected def modules = Seq(AccioFinatraJacksonModule, GatewayModule)
+  override protected def modules = Seq(GatewayModule)
+
+  override protected def jacksonModule = AccioFinatraJacksonModule
 
   override protected def configureHttp(router: HttpRouter): Unit = {
     router

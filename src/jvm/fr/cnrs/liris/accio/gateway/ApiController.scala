@@ -24,8 +24,9 @@ import com.twitter.finatra.http.Controller
 import com.twitter.finatra.request.{QueryParam, RouteParam}
 import com.twitter.finatra.validation.{Max, Min}
 import fr.cnrs.liris.accio.agent.AgentService
-import fr.cnrs.liris.accio.core.service.handler._
 import fr.cnrs.liris.accio.core.domain._
+import fr.cnrs.liris.accio.core.service.handler._
+import org.joda.time.DateTime
 
 @Singleton
 class ApiController @Inject()(client: AgentService.FinagledClient) extends Controller {
@@ -68,6 +69,11 @@ class ApiController @Inject()(client: AgentService.FinagledClient) extends Contr
     client.deleteRun(req).map(_ => response.ok)
   }
 
+  delete("/api/v1/run/:id/logs/:node") { httpReq: ListLogsHttpRequest =>
+    val req = ListLogsRequest(RunId(httpReq.id), httpReq.node, httpReq.classifier, httpReq.limit, httpReq.since.map(_.getMillis))
+    client.listLogs(req).map(_.results)
+  }
+
   post("/api/v1/run/:id/kill") { httpReq: KillRunHttpRequest =>
     val req = KillRunRequest(RunId(httpReq.id))
     client.killRun(req).map(_ => response.ok)
@@ -91,3 +97,10 @@ case class ListWorkflowsHttpRequest(
 case class GetWorkflowHttpRequest(@RouteParam id: String, @RouteParam version: Option[String])
 
 case class DeleteWorkflowHttpRequest(@RouteParam id: String)
+
+case class ListLogsHttpRequest(
+  @RouteParam id: String,
+  @RouteParam node: String,
+  @QueryParam classifier: Option[String],
+  @QueryParam @Min(1) limit: Option[Int],
+  @QueryParam @Min(0) since: Option[DateTime])

@@ -35,6 +35,7 @@ object ClientModule extends AbstractModule with ScalaModule {
     val commands = ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Class[_ <: Command]] {})
     commands.addBinding.toInstance(classOf[ExportCommand])
     commands.addBinding.toInstance(classOf[HelpCommand])
+    commands.addBinding.toInstance(classOf[InspectCommand])
     commands.addBinding.toInstance(classOf[ListCommand])
     commands.addBinding.toInstance(classOf[LogsCommand])
     commands.addBinding.toInstance(classOf[PsCommand])

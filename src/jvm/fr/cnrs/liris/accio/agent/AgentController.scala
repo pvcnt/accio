@@ -72,6 +72,10 @@ class AgentController @Inject()(injector: Injector) extends Controller with Agen
     reportException(injector.instance[KillRunHandler].handle(args.req))
   }
 
+  override val listLogs = handle(ListLogs) { args: ListLogs.Args =>
+    reportException(injector.instance[ListLogsHandler].handle(args.req))
+  }
+
   override val heartbeat: Service[Heartbeat.Args, Heartbeat.Result] =
     handle(Heartbeat) { args: Heartbeat.Args =>
       reportException(injector.instance[HeartbeatHandler].handle(args.req))

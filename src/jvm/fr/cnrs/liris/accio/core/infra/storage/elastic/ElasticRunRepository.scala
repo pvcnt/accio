@@ -98,10 +98,12 @@ final class ElasticRunRepository(
       q = q.filter(rangeQuery("created_at").from(since.inMillis).includeLower(false))
     }
 
-    val s = search(logsIndex / logsType)
+    var s = search(logsIndex / logsType)
       .query(q)
       .sortBy(fieldSort("created_at"))
-      .limit(query.limit)
+    query.limit.foreach { limit =>
+      s = s.limit(limit)
+    }
 
     val f = client.execute(s).map { resp =>
       resp.hits.toSeq.map(hit => mapper.parse[RunLog](hit.sourceAsBytes))

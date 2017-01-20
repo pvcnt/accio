@@ -24,6 +24,9 @@ include "fr/cnrs/liris/accio/core/domain/workflow.thrift"
 include "fr/cnrs/liris/accio/core/domain/run.thrift"
 include "fr/cnrs/liris/accio/core/domain/operator.thrift"
 
+/**
+ * Communication protocol with clients.
+ */
 struct GetOperatorRequest {
   1: required string name;
 }
@@ -118,6 +121,21 @@ struct KillRunRequest {
 struct KillRunResponse {
 }
 
+struct ListLogsRequest {
+  1: required common.RunId run_id;
+  2: required string node_name;
+  3: optional string classifier;
+  4: optional i32 limit;
+  5: optional common.Timestamp since;
+}
+
+struct ListLogsResponse {
+  1: required list<run.RunLog> results;
+}
+
+/**
+ * Communication protocol with executors.
+ */
 struct StartTaskRequest {
   1: required common.TaskId task_id;
 }

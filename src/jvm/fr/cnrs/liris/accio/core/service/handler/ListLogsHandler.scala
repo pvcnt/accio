@@ -16,20 +16,25 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.gateway
+package fr.cnrs.liris.accio.core.service.handler
 
-import com.google.inject.{Provides, Singleton}
-import com.twitter.finagle.Thrift
-import com.twitter.inject.TwitterModule
-import fr.cnrs.liris.accio.agent.AgentService
+import com.google.inject.Inject
+import com.twitter.util.{Future, Time}
+import fr.cnrs.liris.accio.core.domain.{LogsQuery, RunRepository}
 
-object GatewayModule extends TwitterModule {
-  private[this] val addrFlag = flag[String]("addr", "Address to contact the Accio agent")
-
-  @Singleton
-  @Provides
-  def providesClient: AgentService.FinagledClient = {
-    val service = Thrift.newService(addrFlag())
-    new AgentService.FinagledClient(service)
+/**
+ * Handler retrieving logs matching some search criteria.
+ *
+ * @param repository Run repository.
+ */
+class ListLogsHandler @Inject()(repository: RunRepository) extends Handler[ListLogsRequest, ListLogsResponse] {
+  override def handle(req: ListLogsRequest): Future[ListLogsResponse] = {
+    val query = LogsQuery(
+      runId = req.runId,
+      nodeName = req.nodeName,
+      limit = req.limit,
+      since = req.since.map(Time.fromMilliseconds))
+    val results = repository.find(query)
+    Future(ListLogsResponse(results))
   }
 }
