@@ -33,7 +33,7 @@ function prepare_extras() {
   chown ubuntu: /usr/local/bin/acciobuild && chmod +x /usr/local/bin/acciobuild
 
   # Install Pants bash completion. It will trigger Pants initialization (including download).
-  ./pants bash-completion > /etc/bash_completion.d/pants-completion.bash
+  su ubuntu -c "./pants bash-completion" > /etc/bash_completion.d/pants-completion.bash
 }
 
 function prepare_sources {
