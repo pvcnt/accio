@@ -95,17 +95,21 @@ layout: default
                 </ul>
                 {% endif %}
             </li>
-            <li><a href="{{ "/docs/web-ui.html" | prepend: site.baseurl }}">
-                Web UI
-            </a></li>
-            <li><a href="{{ "/docs/rest-api.html" | prepend: site.baseurl }}">
-                REST API
-            </a></li>
+            <li{% if url[2] == 'web-ui.html' %} class="active"{% endif %}>
+                <a href="{{ "/docs/web-ui.html" | prepend: site.baseurl }}">
+                    Web UI
+                </a>
+            </li>
+            <li{% if url[2] == 'rest-api.html' %} class="active"{% endif %}>
+                <a href="{{ "/docs/rest-api.html" | prepend: site.baseurl }}">
+                    REST API
+                </a>
+            </li>
         </ul>
 
         <hr />
         <ul class="docs-menu">
-            <li>
+            <li{% if url[2] == 'location-privacy.html' %} class="active"{% endif %}>
                 <a href="{{ "/docs/location-privacy.html" | prepend: site.baseurl }}">
                     Location privacy
                 </a>

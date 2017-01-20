@@ -8,16 +8,64 @@ layout: default
       <img src="{{ "/images/wand.svg" | prepend: site.baseurl }}" width="100"/>
     </div>
     <div class="col-sm-10">
-      <h1>Accio</h1>
-      <p>A framework designed to provide a better understanding of location privacy.</p>
+      <h1>Accio is a scientific workflow management tool, with a strong emphasis on location privacy.</h1>
       <p>
         <a class="btn btn-primary" href="{{ "/docs/index.html" | prepend: site.baseurl }}">
-          Learn more »
+          <i class="fa fa-book"></i> Learn more »
         </a>
         <a class="btn btn-primary" href="{{ "/docs/getting-started.html" | prepend: site.baseurl }}">
-          Get started »
+          <i class="fa fa-check" aria-hidden="true"></i> Get started »
         </a>
       </p>
     </div>
   </div>
+</div>
+
+<hr />
+
+<div class="row features-summary">
+    <div class="col-md-offset-1 col-md-1">
+        <img src="{{ "/images/home-file.png" | prepend: site.baseurl }}" />
+    </div>
+    <div class="col-md-4">
+        <h3>Simple yet powerful DSL</h3>
+        <p>
+            Experiments are defined with a user-friendly JSON syntax, still
+            supporting more complex use cases such as parameter sweeps.
+        </p>
+    </div>
+    <div class="col-md-1">
+        <img src="{{ "/images/home-library.png" | prepend: site.baseurl }}" />
+    </div>
+    <div class="col-md-4">
+        <h3>Batteries included for location privacy research</h3>
+        <p>
+            Accio is bundled with many pre-defined operators, allowing any
+            privacy researcher to quickly begin experimenting with state-of-the-art
+            algorithms.
+        </p>
+    </div>
+</div>
+
+<div class="row features-summary">
+    <div class="col-md-offset-1 col-md-1">
+        <img src="{{ "/images/home-user.png" | prepend: site.baseurl }}" />
+    </div>
+    <div class="col-md-4">
+        <h3>Multi-tenant and collaborative</h3>
+        <p>
+            Many users can use the same Accio cluster. Experiments are easily
+            accessible, allowing users to monitor progress and collaborate on results.
+        </p>
+    </div>
+    <div class="col-md-1">
+        <img src="{{ "/images/home-colorwheel.png" | prepend: site.baseurl }}" />
+    </div>
+    <div class="col-md-4">
+        <h3>Extensible</h3>
+        <p>
+            Accio is built around a plugin system, making it to adapt to your
+            very own architecture and requirements.
+        </p>
+    </div>
 </div>

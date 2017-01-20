@@ -1,28 +1,17 @@
+html {
+  height: 100%;
+}
+
 body {
   padding-top: 75px;
-}
-
-h2 {
-  font-size: 28px !important;
-  margin-top: 35px !important;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #EEE;
-}
-
-h3 {
-  margin-top: 25px !important;
-  font-size: 24px !important;
-  font-style: italic;
-}
-
-.section-title {
-  margin-top: 0;
-  background-color: #f7f7f7;
-  padding: 15px;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .page-title {
   margin-top: 0;
+  margin-bottom: 30px;
 }
 
 footer {
@@ -33,8 +22,14 @@ footer {
   text-align: center;
 }
 
+footer .license {
+  font-size: 0.8em;
+  color: #ADADAD;
+}
+
 #content {
   margin-top: 15px;
+  flex: 1;
 }
 
 /**
@@ -44,13 +39,48 @@ footer {
   text-align: center;
 }
 
-.page-title {
-  margin-bottom: 30px;
+.jumbotron p {
+  margin-top: 40px;
+}
+
+.jumbotron h1 {
+  font-size: 40px !important;
+}
+
+.jumbotron .btn {
+   font-size: 16px;
+}
+
+.features-summary {
+    margin-top: 15px;
+}
+
+.features-summary p {
+  padding-right: 15px;
+  text-align: justify;
+}
+
+.features-summary h3 {
+    border: 0;
+    font-size: 24px;
 }
 
 /**
  * Docs section.
  */
+#page h2 {
+  font-size: 28px;
+  margin-top: 35px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #EEE;
+}
+
+#page h3 {
+  margin-top: 25px !important;
+  font-size: 24px !important;
+  font-style: italic;
+}
+
 /* Space between list items for better readability... */
 #page li {
   margin-top: 10px;
