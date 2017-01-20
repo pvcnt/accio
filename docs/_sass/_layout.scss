@@ -66,30 +66,33 @@ footer .license {
 }
 
 /**
+ * Page content.
+ */
+ #page h2 {
+   font-size: 28px;
+   margin-top: 35px;
+   padding-bottom: 10px;
+   border-bottom: 1px solid #EEE;
+ }
+
+ #page h3 {
+   margin-top: 25px !important;
+   font-size: 24px !important;
+   font-style: italic;
+ }
+
+ /* Space between list items for better readability... */
+ #page li {
+   margin-top: 10px;
+ }
+ /* ... but not for the table of contents */
+ #page #markdown-toc li {
+   margin-top: 0;
+ }
+
+/**
  * Docs section.
  */
-#page h2 {
-  font-size: 28px;
-  margin-top: 35px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #EEE;
-}
-
-#page h3 {
-  margin-top: 25px !important;
-  font-size: 24px !important;
-  font-style: italic;
-}
-
-/* Space between list items for better readability... */
-#page li {
-  margin-top: 10px;
-}
-/* ... but not for the table of contents */
-#page #markdown-toc li {
-  margin-top: 0;
-}
-
 /* Sidebar with smaller grey links */
 .docs-sidebar {
   padding-right: 15px;

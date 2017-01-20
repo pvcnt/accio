@@ -4,8 +4,6 @@ nav: research
 layout: default
 ---
 
-<h1 class="page-title">{{ page.title }}</h1>
-
 Accio is a research project developed at the [LIRIS laboratory](https://liris.cnrs.fr) (Lyon, France).
 It originated from the [Priva'Mov project](https://privamov.liris.cnrs.fr), whose purpose was to collect mobility data in order to study location privacy.
 Accio is currently being used by the [DRIM team](https://liris.cnrs.fr/drim/) at the LIRIS and by the [SYSCO team](http://www.gipsa-lab.grenoble-inp.fr/sysco/accueil-sysco.php) at the [GIPSA laboratory](http://www.gipsa-lab.fr/) (Grenoble, France).
@@ -27,4 +25,4 @@ In *Proceedings of the 35h Symposium on Reliable Distributed Systems (SRDS)*, Se
 
 ## Acknowledgements
 
-This work was supported by the LABEX IMU (ANR-10-LABX-0088) of Université de Lyon, within the program "Investissements d'Avenir" (ANR-11-IDEX-0007) operated by the French National Research Agency (ANR).
+This work was supported by the [LABEX IMU](http://imu.universite-lyon.fr) (ANR-10-LABX-0088) of Université de Lyon, within the program "Investissements d'Avenir" (ANR-11-IDEX-0007) operated by the French National Research Agency (ANR).
