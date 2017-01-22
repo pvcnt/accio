@@ -137,7 +137,7 @@ private[storage] abstract class RunRepositorySpec extends UnitSpec {
     res = repo.find(LogsQuery(runIds.head, "Node2", classifier = Some("stdout")))
     res should contain theSameElementsAs logs(runIds.head)("Node2").take(10)
 
-    res = repo.find(LogsQuery(runIds.head, "Node2", limit = 10))
+    res = repo.find(LogsQuery(runIds.head, "Node2", limit = Some(10)))
     res should have size 10
 
     res = repo.find(LogsQuery(runIds.last, "Node0", since = Some(Time.fromMilliseconds(now + 15))))
