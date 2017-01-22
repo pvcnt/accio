@@ -18,12 +18,28 @@
 
 package fr.cnrs.liris.accio.core.service
 
-import fr.cnrs.liris.accio.core.domain.{OpPayload, RunId, Task}
+import fr.cnrs.liris.accio.core.domain._
+
+import scala.collection.mutable
+
+case class Job(taskId: TaskId, runId: RunId, nodeName: String, payload: OpPayload, resource: Resource)
 
 trait Scheduler {
-  def submit(runId: RunId, nodeName: String, payload: OpPayload): Task
+  def submit(job: Job): String
 
   def kill(key: String): Unit
 
   def stop(): Unit
+
+  protected def createCommandLine(job: Job, executorPath: String, args: Seq[String], javaHome: Option[String] = None): Seq[String] = {
+    val javaBinary = javaHome.map(home => s"$home/bin/java").getOrElse("/usr/bin/java")
+    val cmd = mutable.ListBuffer.empty[String]
+    cmd += javaBinary
+    cmd += "-cp"
+    cmd += executorPath
+    cmd += s"-Xmx${job.resource.ramMb}M"
+    cmd += "fr.cnrs.liris.accio.executor.AccioExecutorMain"
+    cmd ++= args
+    cmd += job.taskId.value
+  }
 }

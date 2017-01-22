@@ -21,7 +21,6 @@ package fr.cnrs.liris.accio.core.infra.scheduler.local
 import java.nio.file.Path
 
 import com.google.inject.{Provides, Singleton}
-import fr.cnrs.liris.accio.core.domain.OpRegistry
 import fr.cnrs.liris.accio.core.service.{Downloader, Scheduler}
 import net.codingwell.scalaguice.ScalaModule
 
@@ -51,10 +50,8 @@ class LocalSchedulerModule(config: LocalSchedulerConfig) extends ScalaModule {
 
   @Singleton
   @Provides
-  def providesLocalScheduler(opRegistry: OpRegistry, downloader: Downloader): Scheduler = {
+  def providesScheduler(downloader: Downloader): Scheduler = {
     val executorArgs = Seq("-addr", config.agentAddr) ++ config.executorArgs
-    val scheduler = new LocalScheduler(opRegistry, downloader, config.workDir, config.executorUri, config.javaHome, executorArgs)
-    sys.addShutdownHook(scheduler.stop())
-    scheduler
+    new LocalScheduler(downloader, config.workDir, config.executorUri, config.javaHome, executorArgs)
   }
 }

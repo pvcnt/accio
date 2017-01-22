@@ -33,11 +33,7 @@ import org.apache.curator.retry.ExponentialBackoffRetry
  * @param sessionTimeout    Session timeout.
  * @param connectionTimeout Connection timeout.
  */
-case class ZookeeperStateMgrConfig(
-  addr: String,
-  path: String = "/accio",
-  sessionTimeout: Duration = Duration.fromSeconds(60),
-  connectionTimeout: Duration = Duration.fromSeconds(15))
+case class ZookeeperStateMgrConfig(addr: String, path: String, sessionTimeout: Duration, connectionTimeout: Duration)
 
 /**
  * Guice module provisioning a state manager using Zookeeper.
@@ -53,9 +49,7 @@ final class ZookeeperStateMgrModule(config: ZookeeperStateMgrConfig) extends Sca
     val retryPolicy = new ExponentialBackoffRetry(1000, 3)
     val client = CuratorFrameworkFactory.newClient(config.addr, config.sessionTimeout.inMillis.toInt, config.connectionTimeout.inMillis.toInt, retryPolicy)
     client.start()
-
     sys.addShutdownHook(client.close())
-
     new ZookeeperStateMgr(client, config.path)
   }
 }

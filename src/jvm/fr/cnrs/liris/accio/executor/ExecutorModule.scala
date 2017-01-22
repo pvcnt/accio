@@ -73,7 +73,9 @@ object ExecutorModule extends TwitterModule {
   def providesOpExecutor(opRegistry: RuntimeOpRegistry, opFactory: OpFactory, uploader: Uploader, downloader: Downloader): OpExecutor = {
     // Because the executor is designed to run inside a sandbox, we simply use current directory as temporary path
     // for the operator executor.
-    new OpExecutor(opRegistry, opFactory, uploader, downloader, Paths.get("."))
+    //TODO: fixme, make this more configurable. TMPDIR is used by gridengine.
+    val workDir = Paths.get(sys.env.get("TMPDIR").getOrElse("."))
+    new OpExecutor(opRegistry, opFactory, uploader, downloader, workDir)
   }
 
   override def singletonShutdown(injector: Injector): Unit = {

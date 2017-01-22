@@ -26,7 +26,7 @@ import com.twitter.util.Duration
 import fr.cnrs.liris.accio.core.api.Operator
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.infra.downloader.GetterDownloaderModule
-import fr.cnrs.liris.accio.core.infra.scheduler.local.{LocalScheduler, LocalSchedulerConfig, LocalSchedulerModule}
+import fr.cnrs.liris.accio.core.infra.scheduler.local.{LocalSchedulerConfig, LocalSchedulerModule}
 import fr.cnrs.liris.accio.core.infra.statemgr.local.{LocalStateMgrConfig, LocalStateMgrModule}
 import fr.cnrs.liris.accio.core.infra.statemgr.zookeeper.{ZookeeperStateMgrConfig, ZookeeperStateMgrModule}
 import fr.cnrs.liris.accio.core.infra.storage.elastic.{ElasticStorageConfig, ElasticStorageModule}
@@ -37,15 +37,21 @@ import net.codingwell.scalaguice.ScalaMultibinder
 
 import scala.collection.mutable
 
+/**
+ * Guice module provisioning services for the Accio agent.
+ */
 object AgentModule extends TwitterModule {
+  // General.
   private[this] val advertiseFlag = flag("advertise", "127.0.0.1:9999", "Address to advertise to executors")
-  private[this] val clusterFlag = flag("cluster", "default", "Cluster name")
+  private[this] val clusterFlag = flag("cluster", "default", "Cluster name") // Not used yet.
 
+  // Scheduler configuration.
   private[this] val schedulerFlag = flag("scheduler.type", "local", "Scheduler type")
   private[this] val executorUriFlag = flag[String]("scheduler.executor_uri", "URI to the executor JAR")
   private[this] val localSchedulerPathFlag = flag[String]("scheduler.local.path", "Path where to store sandboxes")
   private[this] val localSchedulerJavaHomeFlag = flag[String]("scheduler.local.java_home", "Path to JRE when launching the executor")
 
+  // State manager configuration.
   private[this] val stateMgrFlag = flag("statemgr.type", "local", "State manager type")
   private[this] val localStateMgrPathFlag = flag[String]("statemgr.local.path", "Path where to store state")
   private[this] val zkStateMgrAddrFlag = flag("statemgr.zk.addr", "127.0.0.1:2181", "Address to Zookeeper cluster")
@@ -53,15 +59,18 @@ object AgentModule extends TwitterModule {
   private[this] val zkStateMgrSessionTimeoutFlag = flag("statemgr.zk.session_timeout", Duration.fromSeconds(60), "Zookeeper session timeout")
   private[this] val zkStateMgrConnTimeoutFlag = flag("statemgr.zk.conn_timeout", Duration.fromSeconds(15), "Zookeeper connection timeout")
 
+  // Uploader configuration.
   private[this] val uploaderFlag = flag("uploader.type", "local", "Uploader type")
   private[this] val localUploaderPathFlag = flag[String]("uploader.local.path", "Path where to store files")
 
+  // Storage configuration.
   private[this] val storageFlag = flag("storage.type", "local", "Storage type")
   private[this] val localStoragePathFlag = flag[String]("storage.local.path", "Path where to store data")
   private[this] val esStorageAddrFlag = flag("storage.es.addr", "127.0.0.1:9300", "Address to Elasticsearch cluster")
   private[this] val esStoragePrefixFlag = flag("storage.es.prefix", "accio_", "Prefix of Elasticsearch indices")
   private[this] val esStorageQueryTimeoutFlag = flag("storage.es.query_timeout", Duration.fromSeconds(15), "Elasticsearch query timeout")
 
+  // Flags that will be forwarded "as-is" when invoking the executor.
   private[this] val executorPassthroughFlags = Seq(uploaderFlag, localUploaderPathFlag)
 
   protected override def configure(): Unit = {
@@ -112,11 +121,6 @@ object AgentModule extends TwitterModule {
   }
 
   @Provides
-  def providesSchedulerService(scheduler: Scheduler, stateManager: StateManager): SchedulerService = {
-    new SchedulerService(scheduler: Scheduler, stateManager: StateManager)
-  }
-
-  @Provides
   def providesGraphFactory(opRegistry: OpRegistry): GraphFactory = {
     new GraphFactory(opRegistry)
   }
@@ -132,8 +136,6 @@ object AgentModule extends TwitterModule {
   }
 
   override def singletonShutdown(injector: Injector): Unit = {
-    schedulerFlag() match {
-      case "local" => injector.instance[LocalScheduler].stop()
-    }
+    injector.instance[Scheduler].stop()
   }
 }

@@ -19,20 +19,15 @@
 package fr.cnrs.liris.accio.core.infra.scheduler.local
 
 import java.nio.file.{Files, Path}
-import java.util.UUID
 import java.util.concurrent.{ConcurrentHashMap, ConcurrentLinkedQueue, Executors}
 
 import com.twitter.concurrent.NamedPoolThreadFactory
 import com.twitter.util.{ExecutorServiceFuturePool, Return, Throw}
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.core.domain._
-import fr.cnrs.liris.accio.core.service.{Downloader, Scheduler}
-import fr.cnrs.liris.common.util.{FileUtils, HashUtils, Platform}
+import fr.cnrs.liris.accio.core.service.{Downloader, Job, Scheduler}
+import fr.cnrs.liris.common.util.{FileUtils, Platform}
 
 import scala.collection.JavaConverters._
-import scala.collection.mutable
-
-private case class Job(taskId: TaskId, runId: RunId, nodeName: String, key: String, payload: OpPayload, resource: Resource)
 
 /**
  * Scheduler executing tasks locally, in the same machine. Each task is started inside a new Java process.
@@ -40,7 +35,6 @@ private case class Job(taskId: TaskId, runId: RunId, nodeName: String, key: Stri
  * Intended for testing or use in single-node development clusters, as it does not support cluster-mode
  * (by definition...) nor resource constraints.
  *
- * @param opRegistry   Operator registry.
  * @param downloader   Downloader.
  * @param workDir      Working directory where sandboxes will be stored.
  * @param executorUri  URI where to fetch the executor.
@@ -48,7 +42,6 @@ private case class Job(taskId: TaskId, runId: RunId, nodeName: String, key: Stri
  * @param executorArgs Arguments to pass to the executors.
  */
 class LocalScheduler(
-  opRegistry: OpRegistry,
   downloader: Downloader,
   workDir: Path,
   executorUri: String,
@@ -69,18 +62,14 @@ class LocalScheduler(
     }
     logger.info(s"Downloading executor JAR to ${targetPath.toAbsolutePath}")
     downloader.download(executorUri, targetPath)
-    targetPath
+    targetPath.toAbsolutePath
   }
 
   logger.info(s"Available CPU: $totalCpu, RAM: ${totalRam.map(_.toHuman).getOrElse("<unknown>")}, disk: ${totalDisk.map(_.toHuman).getOrElse("<unknown>")}")
 
-  override def submit(runId: RunId, nodeName: String, payload: OpPayload): Task = synchronized {
-    val id = TaskId(UUID.randomUUID().toString)
-    val key = HashUtils.sha1(id.value)
-    val monitor = new TaskMonitor(id, key, payload, opRegistry(payload.op).resource)
-    monitors(key) = monitor
-
-    val job = Job(id, runId, nodeName, key, payload, opRegistry(payload.op).resource)
+  override def submit(job: Job): String = {
+    val monitor = new TaskMonitor(job)
+    monitors(job.taskId.value) = monitor
     synchronized {
       if (isSatisfied(job)) {
         start(job)
@@ -88,15 +77,7 @@ class LocalScheduler(
         queue.add(job)
       }
     }
-    Task(
-      id = id,
-      runId = runId,
-      key = key,
-      payload = payload,
-      nodeName = nodeName,
-      createdAt = System.currentTimeMillis(),
-      scheduler = "local",
-      state = TaskState(TaskStatus.Scheduled))
+    job.taskId.value
   }
 
   override def kill(key: String): Unit = {
@@ -110,7 +91,7 @@ class LocalScheduler(
 
   private def start(job: Job): Unit = {
     logger.debug(s"[T${job.taskId.value}] Starting task")
-    pool(monitors(job.key).run())
+    pool(monitors(job.taskId.value).run())
       .respond {
         case Throw(e) =>
           logger.error(s"[T${job.taskId.value}] Error in monitoring thread", e)
@@ -133,9 +114,9 @@ class LocalScheduler(
   }
 
   private def isSatisfied(job: Job): Boolean = {
-    val usedCpu = monitors.values.map(_.resource.cpu).sum
-    val usedRamMb = monitors.values.map(_.resource.ramMb).sum
-    val usedDiskMb = monitors.values.map(_.resource.diskMb).sum
+    val usedCpu = monitors.values.map(_.job.resource.cpu).sum
+    val usedRamMb = monitors.values.map(_.job.resource.ramMb).sum
+    val usedDiskMb = monitors.values.map(_.job.resource.diskMb).sum
     job.resource.cpu <= (totalCpu - usedCpu) &&
       totalRam.forall(ram => job.resource.ramMb <= (ram.inMegabytes - usedRamMb)) &&
       totalDisk.forall(disk => job.resource.diskMb <= (disk.inMegabytes - usedDiskMb))
@@ -143,25 +124,25 @@ class LocalScheduler(
 
   private def getSandboxPath(key: String) = workDir.resolve(key)
 
-  private class TaskMonitor(taskId: TaskId, key: String, payload: OpPayload, val resource: Resource) extends Runnable with StrictLogging {
+  private class TaskMonitor(val job: Job) extends Runnable with StrictLogging {
     private[this] var killed = false
     private[this] var process: Option[Process] = None
 
     override def run(): Unit = {
       val maybeProcess = synchronized {
-        process = if (killed) None else Some(startProcess(taskId, key, payload))
+        process = if (killed) None else Some(startProcess(job))
         process
       }
       maybeProcess match {
         case None =>
-          logger.debug(s"[T${taskId.value}] Skipped task (killed)")
+          logger.debug(s"[T${job.taskId.value}] Skipped task (killed)")
           cleanup()
         case Some(p) =>
-          logger.debug(s"[T${taskId.value}] Waiting for process completion")
+          logger.debug(s"[T${job.taskId.value}] Waiting for process completion")
           try {
             p.waitFor()
           } catch {
-            case e: InterruptedException => logger.warn(s"[T${taskId.value}] Interrupted while waiting", e)
+            case e: InterruptedException => logger.warn(s"[T${job.taskId.value}] Interrupted while waiting", e)
           } finally {
             cleanup()
           }
@@ -173,31 +154,21 @@ class LocalScheduler(
         killed = true
         process.foreach(_.destroyForcibly())
         cleanup()
-        logger.debug(s"[T${taskId.value}] Killed task")
+        logger.debug(s"[T${job.taskId.value}] Killed task")
       }
     }
 
     private def cleanup() = {
       process = None
-      monitors.remove(key)
-      FileUtils.safeDelete(getSandboxPath(key))
+      monitors.remove(job.taskId.value)
+      FileUtils.safeDelete(getSandboxPath(job.taskId.value))
     }
 
-    private def startProcess(taskId: TaskId, key: String, payload: OpPayload): Process = {
-      val javaBinary = javaHome.orElse(sys.env.get("JAVA_HOME")).map(home => s"$home/bin/java").getOrElse("/usr/bin/java")
+    private def startProcess(job: Job): Process = {
+      val cmd = createCommandLine(job, localExecutorPath.toString, executorArgs, javaHome.orElse(sys.env.get("JAVA_HOME")))
+      logger.debug(s"[T${job.taskId.value}] Command-line: ${cmd.mkString(" ")}")
 
-      val cmd = mutable.ListBuffer.empty[String]
-      cmd += javaBinary
-      cmd += "-cp"
-      cmd += localExecutorPath.toString
-      cmd += s"-Xmx${resource.ramMb}M"
-      cmd += "fr.cnrs.liris.accio.executor.AccioExecutorMain"
-      cmd ++= executorArgs
-      cmd += taskId.value
-
-      logger.debug(s"[T${taskId.value}] Command-line: ${cmd.mkString(" ")}")
-
-      val sandboxDir = getSandboxPath(key)
+      val sandboxDir = getSandboxPath(job.taskId.value)
       Files.createDirectories(sandboxDir)
 
       val pb = new ProcessBuilder()
@@ -208,9 +179,9 @@ class LocalScheduler(
       // Pass as environment variables resource constraints, in case it can help operators to better use them.
       // As an example, SparkleEnv uses the "CPU" variable to known how many cores it can use.
       val env = pb.environment()
-      env.put("ACCIO_CPU", resource.cpu.toString)
-      env.put("ACCIO_RAM", resource.ramMb.toString)
-      env.put("ACCIO_DISK", resource.diskMb.toString)
+      env.put("ACCIO_CPU", job.resource.cpu.toString)
+      env.put("ACCIO_RAM", job.resource.ramMb.toString)
+      env.put("ACCIO_DISK", job.resource.diskMb.toString)
 
       pb.start()
     }

@@ -18,6 +18,9 @@
 
 package fr.cnrs.liris.accio.core.service
 
+import java.util.UUID
+
+import com.google.inject.Inject
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.domain._
 
@@ -26,8 +29,9 @@ import fr.cnrs.liris.accio.core.domain._
  *
  * @param scheduler    Scheduler.
  * @param stateManager State manager.
+ * @param opRegistry   Operator registry.
  */
-class SchedulerService(scheduler: Scheduler, stateManager: StateManager) extends StrictLogging {
+class SchedulerService @Inject()(scheduler: Scheduler, stateManager: StateManager, opRegistry: OpRegistry) extends StrictLogging {
   /**
    * Submit a node to the scheduler.
    *
@@ -37,7 +41,18 @@ class SchedulerService(scheduler: Scheduler, stateManager: StateManager) extends
    */
   def submit(run: Run, node: Node): Task = {
     val payload = createPayload(run, node)
-    val task = scheduler.submit(run.id, node.name, payload)
+    val taskId = TaskId(UUID.randomUUID().toString)
+    val job = Job(taskId, run.id, node.name, payload, opRegistry(payload.op).resource)
+    val key = scheduler.submit(job)
+    val task = Task(
+      id = taskId,
+      runId = run.id,
+      key = key,
+      payload = payload,
+      nodeName = node.name,
+      createdAt = System.currentTimeMillis(),
+      scheduler = scheduler.getClass.getName,
+      state = TaskState(TaskStatus.Scheduled))
     stateManager.save(task)
     logger.debug(s"[T${task.id.value}] Scheduled task. Run: ${run.id.value}, node: ${node.name}, op: ${payload.op}")
     task
