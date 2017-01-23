@@ -21,11 +21,14 @@ package fr.cnrs.liris.accio.executor
 import com.twitter.inject.app.App
 import com.twitter.util.Await
 import fr.cnrs.liris.accio.core.domain.TaskId
+import fr.cnrs.liris.accio.core.infra.downloader.DownloaderModule
+import fr.cnrs.liris.accio.core.infra.inject.UploaderModule
 import fr.cnrs.liris.privamov.ops.OpsModule
 
 object AccioExecutorMain {
   def main(args: Array[String]): Unit = {
     new AccioExecutor().main(args)
+
     // Long story short: Yes, we need this.
     //
     // After leaving the executor there are still some alive threads, apparently related to Finagle, which causes,
@@ -42,7 +45,7 @@ object AccioExecutorMain {
 class AccioExecutor extends App {
   override protected def failfastOnFlagsNotParsed = true
 
-  override protected def modules = Seq(ExecutorModule, OpsModule)
+  override protected def modules = Seq(ExecutorModule, DownloaderModule, UploaderModule, OpsModule)
 
   override protected def run(): Unit = {
     require(args.length == 1, "You must provide a single task identifier as argument")

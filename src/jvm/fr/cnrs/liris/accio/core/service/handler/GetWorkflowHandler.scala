@@ -20,14 +20,14 @@ package fr.cnrs.liris.accio.core.service.handler
 
 import com.google.inject.Inject
 import com.twitter.util.Future
-import fr.cnrs.liris.accio.core.domain.WorkflowRepository
+import fr.cnrs.liris.accio.core.domain.ReadOnlyWorkflowRepository
 
 /**
  * Handler retrieving a single workflow, if it exists.
  *
- * @param repository Workflow repository
+ * @param repository Workflow repository (read-only).
  */
-final class GetWorkflowHandler @Inject()(repository: WorkflowRepository)
+final class GetWorkflowHandler @Inject()(repository: ReadOnlyWorkflowRepository)
   extends Handler[GetWorkflowRequest, GetWorkflowResponse] {
 
   override def handle(req: GetWorkflowRequest): Future[GetWorkflowResponse] = {

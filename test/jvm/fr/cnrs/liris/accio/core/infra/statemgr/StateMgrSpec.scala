@@ -35,18 +35,16 @@ private[statemgr] abstract class StateMgrSpec extends UnitSpec {
     id = TaskId("id2"),
     runId = RunId("foobar"),
     nodeName = "foonode",
-    payload = OpPayload("fooop", 1234, Map.empty, "MyCacheKey"),
+    payload = OpPayload("fooop", 1234, Map.empty, CacheKey("MyCacheKey")),
     key = "fookey",
-    scheduler = "dummy",
     createdAt = System.currentTimeMillis(),
     state = TaskState(TaskStatus.Scheduled))
   private[this] val RunningTask = Task(
     id = TaskId("id1"),
     runId = RunId("foobar"),
     nodeName = "foonode",
-    payload = OpPayload("fooop", 1234, Map.empty, "MyCacheKey"),
+    payload = OpPayload("fooop", 1234, Map.empty, CacheKey("MyCacheKey")),
     key = "fookey",
-    scheduler = "dummy",
     createdAt = System.currentTimeMillis(),
     state = TaskState(TaskStatus.Running))
 

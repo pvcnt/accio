@@ -19,13 +19,14 @@
 package fr.cnrs.liris.accio.core.infra.storage.elastic
 
 import com.google.inject.Singleton
-import com.sksamuel.elastic4s.ElasticDsl._
+import com.sksamuel.elastic4s.ElasticDsl.{search, _}
 import com.sksamuel.elastic4s.analyzers.KeywordAnalyzer
 import com.sksamuel.elastic4s.mappings.MappingDefinition
 import com.sksamuel.elastic4s.{ElasticClient, ElasticDsl}
 import com.twitter.finatra.json.FinatraObjectMapper
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.domain._
+import org.apache.lucene.search.join.ScoreMode
 import org.elasticsearch.index.IndexNotFoundException
 import org.elasticsearch.search.sort.SortOrder
 
@@ -190,6 +191,42 @@ final class ElasticRunRepository(
     Await.ready(f, queryTimeout)
   }
 
+  override def get(cacheKey: CacheKey): Option[OpResult] = {
+    val f = client.execute(searchCachedResult(cacheKey)).map { resp =>
+      if (resp.totalHits > 0) {
+        val run = mapper.parse[Run](resp.hits.head.sourceAsString)
+        run.state.nodes.find(_.cacheKey.contains(cacheKey)).get.result
+      } else {
+        None
+      }
+    }.recover {
+      case _: IndexNotFoundException => None
+      case e: Throwable =>
+        logger.error(s"Error while retrieving cached result ${cacheKey.hash}", e)
+        None
+    }
+    Await.result(f, queryTimeout)
+  }
+
+  override def contains(cacheKey: CacheKey): Boolean = {
+    val f = client.execute(searchCachedResult(cacheKey)).map { resp =>
+      resp.totalHits > 0
+    }.recover {
+      case _: IndexNotFoundException => false
+      case e: Throwable =>
+        logger.error(s"Error while retrieving cached result ${cacheKey.hash}", e)
+        false
+    }
+    Await.result(f, queryTimeout)
+  }
+
+  private def searchCachedResult(cacheKey: CacheKey) = {
+    val q = nestedQuery("state.nodes")
+      .query(termQuery("nodes.cache_key.hash", cacheKey.hash))
+      .scoreMode(ScoreMode.None)
+    search(runsIndex / runsType).query(q).size(1)
+  }
+
   private def runsIndex = s"${prefix}runs"
 
   private def logsIndex = s"${prefix}logs"
@@ -212,6 +249,7 @@ final class ElasticRunRepository(
           objectField("parent").as(textField("value").analyzer(KeywordAnalyzer)),
           objectField("cloned_from").as(textField("value").analyzer(KeywordAnalyzer)),
           nestedField("children").as(textField("value").analyzer(KeywordAnalyzer)))
+        //TODO: do not index state.nodes.artifacts and state.nodes.metrics.
         logger.info(s"Creating $runsIndex/$runsType index")
         client.execute(createIndex(runsIndex).mappings(new MappingDefinition(runsType) as (fields: _*)))
       } else {

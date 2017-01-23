@@ -33,7 +33,7 @@ import fr.cnrs.liris.accio.core.domain.OpDef
  * @param opRegistry Runtime operator registry.
  * @param injector   Guice injector.
  */
-final class OpFactory @Inject() (opRegistry: RuntimeOpRegistry, injector: Injector) extends LazyLogging {
+final class OpFactory @Inject()(opRegistry: RuntimeOpRegistry, injector: Injector) extends LazyLogging {
   /**
    * Create a new operator.
    *

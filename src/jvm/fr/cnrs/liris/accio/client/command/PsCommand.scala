@@ -100,7 +100,7 @@ class PsCommand @Inject()(client: AgentService.FinagledClient) extends Command {
             out.writeln("[" + resp.results.map(serializer.serialize).mkString(",") + "]")
           } else {
             val prettyTime = new PrettyTime().setLocale(Locale.ENGLISH)
-            out.writeln(s"${padTo("Run id", 36 )}  ${padTo("Workflow id", 15)}  ${padTo("Created", 15)}  ${padTo("Run name", 15)}  ${padTo("Status", 9)}  Nodes")
+            out.writeln(s"<comment>${padTo("Run id", 32)}  ${padTo("Workflow id", 15)}  ${padTo("Created", 15)}  ${padTo("Run name", 15)}  ${padTo("Status", 9)}  Nodes</comment>")
             resp.results.foreach { run =>
               out.writeln(s"${run.id.value}  ${padTo(run.pkg.workflowId.value, 15)}  ${padTo(prettyTime.format(new Date(run.createdAt)), 15)}  ${padTo(run.name.getOrElse("<no name>"), 15)}  ${padTo(run.state.status.name, 9)}  ${run.state.nodes.size}")
             }

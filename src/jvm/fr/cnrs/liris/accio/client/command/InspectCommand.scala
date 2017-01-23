@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.client.command
 import java.util.{Date, Locale}
 
 import com.google.inject.Inject
-import com.twitter.util.{Await, Return, Throw}
+import com.twitter.util.{Await, Duration, Return, Throw}
 import fr.cnrs.liris.accio.agent.AgentService
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.infra.cli.{Cmd, Command, ExitCode, Reporter}
@@ -29,8 +29,6 @@ import fr.cnrs.liris.accio.core.service.handler.GetRunRequest
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.util.StringUtils.padTo
 import org.ocpsoft.prettytime.PrettyTime
-import org.ocpsoft.prettytime.impl.DurationImpl
-import org.ocpsoft.prettytime.units.Millisecond
 
 case class InspectFlags(
   @Flag(name = "json", help = "Print machine-readable JSON")
@@ -87,13 +85,6 @@ class InspectCommand @Inject()(client: AgentService.FinagledClient) extends Comm
     }
   }
 
-  private def createDuration(millis: Long) = {
-    val duration = new DurationImpl
-    duration.setQuantity(millis)
-    duration.setUnit(new Millisecond)
-    duration
-  }
-
   private def printRun(run: Run, out: Reporter) = {
     val prettyTime = new PrettyTime().setLocale(Locale.ENGLISH)
     out.writeln(s"<comment>${padTo("Id", colWidth)}</comment> ${run.id.value}")
@@ -102,6 +93,7 @@ class InspectCommand @Inject()(client: AgentService.FinagledClient) extends Comm
     out.writeln(s"<comment>${padTo("Owner", colWidth)}</comment> ${Utils.toString(run.owner)}")
     out.writeln(s"<comment>${padTo("Name", colWidth)}</comment> ${run.name.getOrElse("<no name>")}")
     out.writeln(s"<comment>${padTo("Tags", colWidth)}</comment> ${if (run.tags.nonEmpty) run.tags.mkString(", ") else "<none>"}")
+    out.writeln(s"<comment>${padTo("Seed", colWidth)}</comment> ${run.seed}")
     out.writeln(s"<comment>${padTo("Status", colWidth)}</comment> ${run.state.status.name}")
     if (!Utils.isCompleted(run.state.status)) {
       out.writeln(s"<comment>${padTo("Progress", colWidth)}</comment> ${(run.state.progress * 100).round} %")
@@ -111,17 +103,20 @@ class InspectCommand @Inject()(client: AgentService.FinagledClient) extends Comm
     }
     run.state.completedAt.foreach { completedAt =>
       out.writeln(s"<comment>${padTo("Completed", colWidth)}</comment> ${prettyTime.format(new Date(completedAt))}")
-      out.writeln(s"<comment>${padTo("Duration", colWidth)}</comment> ${prettyTime.format(createDuration(completedAt - run.state.startedAt.get))}")
+      if (run.state.startedAt.isDefined) {
+        out.writeln(s"<comment>${padTo("Duration", colWidth)}</comment> " +
+          formatDuration(Duration.fromMilliseconds(completedAt - run.state.startedAt.get)))
+      }
     }
     out.writeln()
     out.writeln(s"<comment>${padTo("Node name", 30)}  ${padTo("Status", 9)}  Duration</comment>")
     run.state.nodes.foreach { node =>
-      val duration = if (node.completedAt.isDefined) {
-        Some(createDuration(node.completedAt.get - node.startedAt.get))
+      val duration = if (node.startedAt.isDefined && node.completedAt.isDefined) {
+        Some(Duration.fromMilliseconds(node.completedAt.get - node.startedAt.get))
       } else {
         None
       }
-      out.writeln(s"${padTo(node.nodeName, 30)}  ${padTo(node.status.name, 15)}  ${duration.map(prettyTime.format(_)).getOrElse("-")}")
+      out.writeln(s"${padTo(node.nodeName, 30)}  ${padTo(node.status.name, 9)}  ${duration.map(formatDuration).getOrElse("-")}")
     }
   }
 
@@ -134,7 +129,10 @@ class InspectCommand @Inject()(client: AgentService.FinagledClient) extends Comm
     }
     node.completedAt.foreach { completedAt =>
       out.writeln(s"<comment>${padTo("Completed", colWidth)}</comment> ${prettyTime.format(new Date(completedAt))}")
-      out.writeln(s"<comment>${padTo("Duration", colWidth)}</comment> ${prettyTime.format(createDuration(completedAt - node.startedAt.get))}")
+      if (node.startedAt.isDefined) {
+        out.writeln(s"<comment>${padTo("Duration", colWidth)}</comment> " +
+          formatDuration(Duration.fromMilliseconds(completedAt - node.startedAt.get)))
+      }
     }
 
     node.result.foreach { result =>
@@ -143,20 +141,36 @@ class InspectCommand @Inject()(client: AgentService.FinagledClient) extends Comm
         out.writeln()
         out.writeln(s"<error>${padTo("Error class", colWidth)}</error> ${error.root.classifier}")
         out.writeln(s"<error>${padTo("Error message", colWidth)}</error> ${error.root.message}")
-        out.writeln(s"<error>${padTo("Error stack", colWidth)}</error> ${error.root.stacktrace.headOption.getOrElse("") + error.root.stacktrace.tail.map(s => " " * 16 + s)}")
+        out.writeln(s"<error>${padTo("Error stack", colWidth)}</error> " +
+          error.root.stacktrace.headOption.getOrElse("") + "\n" +
+          error.root.stacktrace.tail.map(s => (" " * (colWidth + 1)) + s).mkString("\n"))
       }
+      if (result.artifacts.nonEmpty) {
+        out.writeln()
+        out.writeln(s"<comment>${padTo("Artifact name", 25)}  Value preview</comment>")
+        result.artifacts.foreach { artifact =>
+          out.writeln(s"${padTo(artifact.name, 25)}  ${Values.toString(artifact.value, artifact.kind)}</comment>")
+        }
+      }
+      if (result.metrics.nonEmpty) {
+        out.writeln()
+        out.writeln(s"<comment>${padTo("Metric name", 25)}  Value</comment>")
+        result.metrics.foreach { metric =>
+          out.writeln(s"${padTo(metric.name, 25)}  ${metric.value}")
+        }
+      }
+    }
+  }
 
-      out.writeln()
-      out.writeln(s"<comment>${padTo("Artifact name", 25)}  Value preview</comment>")
-      result.artifacts.foreach { artifact =>
-        out.writeln(s"${padTo(artifact.name, 25)}  ${Values.toString(artifact.value, artifact.kind)}</comment>")
-      }
-
-      out.writeln()
-      out.writeln(s"<comment>${padTo("Metric name", 25)}  Value</comment>")
-      result.metrics.foreach { metric =>
-        out.writeln(s"${padTo(metric.name, 25)}  ${metric.value}")
-      }
+  private def formatDuration(duration: Duration) = {
+    if (duration.inHours > 5) {
+      s"${duration.inHours} hours"
+    } else if (duration.inMinutes > 30) {
+      s"${duration.inMinutes} minutes"
+    } else if (duration.inSeconds > 10) {
+      s"${duration.inSeconds} seconds"
+    } else {
+      s"${duration.inMillis} milliseconds"
     }
   }
 }

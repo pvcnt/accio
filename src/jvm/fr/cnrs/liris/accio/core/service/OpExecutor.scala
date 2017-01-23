@@ -120,7 +120,7 @@ final class OpExecutor(
 
     // We convert the outcome into an exit code, artifacts, metrics and possibly and error.
     val (artifacts, error) = res match {
-      case Left(out) => (uploadArtifacts(extractArtifacts(opDef, out), payload.cacheKey), None)
+      case Left(out) => (uploadArtifacts(extractArtifacts(opDef, out)), None)
       case Right(ex) => (Set.empty[Artifact], Some(ex))
     }
     val metrics = profiler.metrics
@@ -217,16 +217,16 @@ final class OpExecutor(
    * Upload artifacts that need to be uploaded, i.e., those that hold a reference to local storage.
    *
    * @param artifacts Artifacts produced by the operator.
-   * @param cacheKey  Cache key under which to upload artifacts.
    * @return Rewritten list of artifacts, taking into account artifacts' final remote destination.
    */
-  private def uploadArtifacts(artifacts: Set[Artifact], cacheKey: String): Set[Artifact] = {
+  private def uploadArtifacts(artifacts: Set[Artifact]): Set[Artifact] = {
     artifacts.map { artifact =>
       artifact.kind.base match {
         case AtomicType.Dataset =>
+          val key = UUID.randomUUID().toString
           val dataset = Values.decodeDataset(artifact.value)
-          logger.debug(s"Uploading outputs/${artifact.name} under $cacheKey...")
-          val newUri = uploader.upload(Paths.get(dataset.uri), s"$cacheKey/${artifact.name}")
+          logger.debug(s"Uploading outputs/${artifact.name} under $key...")
+          val newUri = uploader.upload(Paths.get(dataset.uri), key)
           artifact.copy(value = Values.encodeDataset(dataset.copy(uri = newUri)))
         case _ => artifact
       }

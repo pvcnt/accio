@@ -16,28 +16,32 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace java fr.cnrs.liris.accio.core.domain
+package fr.cnrs.liris.accio.core.domain
 
-include "fr/cnrs/liris/accio/core/domain/common.thrift"
-include "fr/cnrs/liris/accio/core/domain/operator.thrift"
+/**
+ * A run repository doing nothing.
+ */
+class NullRunRepository extends RunRepository {
+  override def save(run: Run): Unit = {}
 
-enum TaskStatus {
-  SCHEDULED,
-  RUNNING,
+  override def save(logs: Seq[RunLog]): Unit = {}
+
+  override def remove(id: RunId): Unit = {}
+
+  override def find(query: RunQuery): RunList = RunList(Seq.empty, 0)
+
+  override def find(query: LogsQuery): Seq[RunLog] = Seq.empty
+
+  override def get(id: RunId): Option[Run] = None
+
+  override def get(cacheKey: CacheKey): Option[OpResult] = None
+
+  override def contains(id: RunId): Boolean = false
+
+  override def contains(cacheKey: CacheKey): Boolean = false
 }
 
-struct TaskState {
-  1: required TaskStatus status;
-  2: optional common.Timestamp started_at;
-  3: optional common.Timestamp heartbeat_at;
-}
-
-struct Task {
-  1: required common.TaskId id;
-  2: required common.RunId run_id;
-  3: required string node_name;
-  4: required operator.OpPayload payload;
-  5: required string key;
-  6: required common.Timestamp created_at;
-  7: required TaskState state;
-}
+/**
+ * Singleton of [[NullRunRepository]].
+ */
+object NullRunRepository extends NullRunRepository

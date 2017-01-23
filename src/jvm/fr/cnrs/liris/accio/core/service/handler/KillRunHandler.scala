@@ -18,12 +18,9 @@
 
 package fr.cnrs.liris.accio.core.service.handler
 
-import com.google.inject.Inject
 import com.twitter.util.Future
-import fr.cnrs.liris.accio.core.domain.RunRepository
-import fr.cnrs.liris.accio.core.service.SchedulerService
 
-class KillRunHandler @Inject()(runRepository: RunRepository, scheduler: SchedulerService) extends Handler[KillRunRequest, KillRunResponse] {
+class KillRunHandler extends Handler[KillRunRequest, KillRunResponse] {
   override def handle(req: KillRunRequest): Future[KillRunResponse] = {
     //TODO.
     Future(KillRunResponse())

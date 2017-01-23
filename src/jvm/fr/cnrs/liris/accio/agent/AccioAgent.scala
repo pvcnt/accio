@@ -26,6 +26,8 @@ import com.google.inject.Module
 import com.twitter.finatra.thrift.ThriftServer
 import com.twitter.finatra.thrift.filters._
 import com.twitter.finatra.thrift.routing.ThriftRouter
+import fr.cnrs.liris.accio.core.infra.downloader.DownloaderModule
+import fr.cnrs.liris.accio.core.infra.inject.{SchedulerModule, StateManagerModule, StorageModule, UploaderModule}
 import fr.cnrs.liris.privamov.ops.OpsModule
 import org.slf4j.LoggerFactory
 
@@ -33,9 +35,16 @@ object AccioAgentMain extends AccioAgent
 
 class AccioAgent extends ThriftServer {
   loadLogbackConfig()
-  //TODO: start thread looking for lost tasks.
+  //TODO: start a thread looking for lost tasks.
 
-  override protected def modules: Seq[Module] = Seq(AgentModule, OpsModule)
+  override protected def modules: Seq[Module] = Seq(
+    DownloaderModule,
+    StateManagerModule,
+    SchedulerModule,
+    StorageModule,
+    UploaderModule,
+    AgentModule,
+    OpsModule)
 
   override protected def configureThrift(router: ThriftRouter): Unit = {
     router

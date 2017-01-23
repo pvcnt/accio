@@ -20,14 +20,17 @@ package fr.cnrs.liris.accio.core.domain
 
 import java.util.UUID
 
-import fr.cnrs.liris.common.util.{HashUtils, Seqs}
+import com.google.inject.Inject
+import fr.cnrs.liris.common.util.Seqs
 
 import scala.util.Random
 
 /**
  * Factory for [[Run]].
+ *
+ * @param workflowRepository Workflow repository (read-only).
  */
-final class RunFactory(workflowRepository: WorkflowRepository) {
+final class RunFactory @Inject()(workflowRepository: ReadOnlyWorkflowRepository) {
   /**
    * Create one or several runs from a run definition.
    *

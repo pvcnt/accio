@@ -100,6 +100,7 @@ class JvmProfiler extends Profiler {
       Metric("memory_reserved_bytes", memoryReserved.inBytes),
       Metric("cpu_time_nanos", cpuTime.inNanoseconds),
       Metric("user_time_nanos", userTime.inNanoseconds),
+      Metric("wall_time_nanos", wallTime.inNanoseconds),
       Metric("system_time_nanos", systemTime.inNanoseconds))
   }
 

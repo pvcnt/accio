@@ -16,18 +16,26 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.infra.downloader
-
-import fr.cnrs.liris.accio.core.service.Downloader
-import fr.cnrs.liris.common.getter.GetterModule
-import net.codingwell.scalaguice.ScalaModule
+package fr.cnrs.liris.accio.core.domain
 
 /**
- * Guice module provisioning a downloader using the common/getter module.
+ * A workflow repository doing nothing.
  */
-object GetterDownloaderModule extends ScalaModule {
-  override def configure(): Unit = {
-    install(GetterModule)
-    bind[Downloader].to[GetterDownloader]
-  }
+class NullWorkflowRepository extends WorkflowRepository {
+  override def save(workflow: Workflow): Unit = {}
+
+  override def find(query: WorkflowQuery): WorkflowList = WorkflowList(Seq.empty, 0)
+
+  override def get(id: WorkflowId): Option[Workflow] = None
+
+  override def get(id: WorkflowId, version: String): Option[Workflow] = None
+
+  override def contains(id: WorkflowId): Boolean = false
+
+  override def contains(id: WorkflowId, version: String): Boolean = false
 }
+
+/**
+ * Singleton of [[NullWorkflowRepository]].
+ */
+object NullWorkflowRepository extends NullWorkflowRepository

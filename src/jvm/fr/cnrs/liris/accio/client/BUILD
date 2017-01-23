@@ -11,7 +11,7 @@ scala_library(
     '3rdparty/jvm:logback',
   ],
   excludes = [
-    # Conflicts with scalap coming from common/reflect.
+    # common/reflect comes with its own Scala compiler library, we do not need the one provided by Finatra.
     exclude(org='com.twitter.finatra', name='finatra-scalap-compiler-deps_2.11'),
     # Finagle comes with its own Thrift library.
     exclude(org = 'com.twitter', name = 'libthrift'),

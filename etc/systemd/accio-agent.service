@@ -27,7 +27,7 @@ ExecStart=/usr/bin/java \
   -jar /home/ubuntu/accio/dist/accio-agent.jar \
     -cluster=devcluster \
     -scheduler.type=local \
-    -scheduler.executor_uri=/home/ubuntu/accio/dist/accio-executor.sh \
+    -scheduler.executor_uri=/home/ubuntu/accio/dist/accio-executor.jar \
     -scheduler.local.path=/var/lib/accio-agent/scheduler \
     -storage.type=local \
     -storage.local.path=/var/lib/accio-agent/storage \

@@ -61,7 +61,7 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
   behavior of "OpExecutor"
 
   it should "execute operators and return artifacts" in {
-    var payload = OpPayload("Simple", 123, Map("str" -> Values.encodeString("foo")), "MyCacheKey")
+    var payload = OpPayload("Simple", 123, Map("str" -> Values.encodeString("foo")), CacheKey("MyCacheKey"))
     var res = executor.execute(payload, OpExecutorOpts(false))
     res.artifacts should have size 2
     res.exitCode shouldBe 0
@@ -69,7 +69,7 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
     res.artifacts should contain(Artifact("str", DataType(AtomicType.String), Values.encodeString("foo+0")))
     res.artifacts should contain(Artifact("b", DataType(AtomicType.Boolean), Values.encodeBoolean(false)))
 
-    payload = OpPayload("Simple", 123, Map("str" -> Values.encodeString("bar"), "i" -> Values.encodeInteger(3)), "MyCacheKey")
+    payload = OpPayload("Simple", 123, Map("str" -> Values.encodeString("bar"), "i" -> Values.encodeInteger(3)), CacheKey("MyCacheKey"))
     res = executor.execute(payload, OpExecutorOpts(false))
     res.artifacts should have size 2
     res.exitCode shouldBe 0
@@ -79,7 +79,7 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
   }
 
   it should "execute operators with no input" in {
-    val payload = OpPayload("NoInput", 123, Map.empty, "MyCacheKey")
+    val payload = OpPayload("NoInput", 123, Map.empty, CacheKey("MyCacheKey"))
     val res = executor.execute(payload, OpExecutorOpts(false))
     res.artifacts should have size 1
     res.exitCode shouldBe 0
@@ -88,7 +88,7 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
   }
 
   it should "execute operators with no output" in {
-    val payload = OpPayload("NoOutput", 123, Map("s" -> Values.encodeString("foo")), "MyCacheKey")
+    val payload = OpPayload("NoOutput", 123, Map("s" -> Values.encodeString("foo")), CacheKey("MyCacheKey"))
     val res = executor.execute(payload, OpExecutorOpts(false))
     res.artifacts should have size 0
     res.exitCode shouldBe 0
@@ -96,7 +96,7 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
   }
 
   it should "detect a missing input" in {
-    val payload = OpPayload("Simple", 123, Map.empty, "MyCacheKey")
+    val payload = OpPayload("Simple", 123, Map.empty, CacheKey("MyCacheKey"))
     val e = intercept[MissingOpInput] {
       executor.execute(payload, OpExecutorOpts(false))
     }
@@ -105,7 +105,7 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
   }
 
   it should "detect an unknown operator" in {
-    val payload = OpPayload("Unknown", 123, Map.empty, "MyCacheKey")
+    val payload = OpPayload("Unknown", 123, Map.empty, CacheKey("MyCacheKey"))
     val e = intercept[UnknownOperatorException] {
       executor.execute(payload, OpExecutorOpts(false))
     }
@@ -113,7 +113,7 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
   }
 
   it should "catch exceptions thrown by the operator" in {
-    val payload = OpPayload("Exceptional", 123, Map("str" -> Values.encodeString("foo")), "MyCacheKey")
+    val payload = OpPayload("Exceptional", 123, Map("str" -> Values.encodeString("foo")), CacheKey("MyCacheKey"))
     val res = executor.execute(payload, OpExecutorOpts(false))
     res.artifacts should have size 0
     res.exitCode shouldNot be(0)
@@ -123,7 +123,7 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
   }
 
   it should "give a seed to unstable operators" in {
-    val payload = OpPayload("Unstable", 123, Map.empty, "MyCacheKey")
+    val payload = OpPayload("Unstable", 123, Map.empty, CacheKey("MyCacheKey"))
     val res = executor.execute(payload, OpExecutorOpts(false))
     res.artifacts should have size 1
     res.exitCode shouldBe 0
@@ -132,7 +132,7 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
   }
 
   it should "not give a seed to non-unstable operators" in {
-    val payload = OpPayload("InvalidUnstable", 123, Map.empty, "MyCacheKey")
+    val payload = OpPayload("InvalidUnstable", 123, Map.empty, CacheKey("MyCacheKey"))
     val res = executor.execute(payload, OpExecutorOpts(false))
     res.artifacts should have size 0
     res.exitCode shouldNot be(0)
@@ -142,7 +142,7 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
   }
 
   it should "upload artifacts" in {
-    val payload = OpPayload("DatasetProducer", 123, Map.empty, "MyCacheKey")
+    val payload = OpPayload("DatasetProducer", 123, Map.empty, CacheKey("MyCacheKey"))
     val res = executor.execute(payload, OpExecutorOpts(false))
     res.artifacts should have size 1
     res.exitCode shouldBe 0
@@ -152,7 +152,7 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
   }
 
   it should "download inputs" in {
-    val payload = OpPayload("DatasetConsumer", 123, Map("data" -> Values.encodeDataset(Dataset(s"file://data"))), "MyCacheKey")
+    val payload = OpPayload("DatasetConsumer", 123, Map("data" -> Values.encodeDataset(Dataset(s"file://data"))), CacheKey("MyCacheKey"))
     downloader.add("file://data")
     val res = executor.execute(payload, OpExecutorOpts(false))
     res.artifacts should have size 1

@@ -32,6 +32,10 @@ struct TaskId {
   1: string value;
 }
 
+struct CacheKey {
+  1: string hash;
+}
+
 enum AtomicType {
   BYTE,
   INTEGER,

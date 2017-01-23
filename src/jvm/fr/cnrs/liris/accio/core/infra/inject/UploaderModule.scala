@@ -16,27 +16,26 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.agent
+package fr.cnrs.liris.accio.core.infra.inject
 
-import com.google.inject.TypeLiteral
+import java.nio.file.Paths
+
 import com.twitter.inject.TwitterModule
-import fr.cnrs.liris.accio.core.api.Operator
-import fr.cnrs.liris.accio.core.domain._
+import fr.cnrs.liris.accio.core.infra.uploader.local.{LocalUploaderConfig, LocalUploaderModule}
 import fr.cnrs.liris.accio.core.service._
-import net.codingwell.scalaguice.ScalaMultibinder
 
 /**
- * Guice module provisioning services for the Accio agent.
+ * Guice module provisioning the [[Uploader]] service.
  */
-object AgentModule extends TwitterModule {
-  private[this] val clusterFlag = flag("cluster", "default", "Cluster name") // Not used yet.
+object UploaderModule extends TwitterModule {
+  private[inject] val uploaderFlag = flag("uploader.type", "local", "Uploader type")
+  private[inject] val localUploaderPathFlag = flag[String]("uploader.local.path", "Path where to store files")
 
   protected override def configure(): Unit = {
-    // Create an empty set of operators, in case nothing else is bound.
-    ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Class[_ <: Operator[_, _]]] {})
-
-    // Bind remaining implementations.
-    bind[OpMetaReader].to[ReflectOpMetaReader]
-    bind[OpRegistry].to[RuntimeOpRegistry]
+    val module = uploaderFlag() match {
+      case "local" => new LocalUploaderModule(LocalUploaderConfig(Paths.get(localUploaderPathFlag())))
+      case unknown => throw new IllegalArgumentException(s"Unknown uploader type: $unknown")
+    }
+    install(module)
   }
 }

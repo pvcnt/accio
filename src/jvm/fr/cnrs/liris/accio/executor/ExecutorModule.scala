@@ -26,40 +26,19 @@ import com.twitter.inject.{Injector, TwitterModule}
 import fr.cnrs.liris.accio.agent.AgentService
 import fr.cnrs.liris.accio.core.api.Operator
 import fr.cnrs.liris.accio.core.domain.{OpMetaReader, OpRegistry}
-import fr.cnrs.liris.accio.core.infra.downloader.GetterDownloaderModule
-import fr.cnrs.liris.accio.core.infra.uploader.local.{LocalUploaderConfig, LocalUploaderModule}
 import fr.cnrs.liris.accio.core.service._
 import net.codingwell.scalaguice.ScalaMultibinder
 
-import scala.collection.mutable
-
 object ExecutorModule extends TwitterModule {
   private[this] val addrFlag = flag[String]("addr", "Address of the Accio agent")
-  private[this] val uploaderFlag = flag[String]("uploader.type", "Uploader type")
-  private[this] val localUploaderPathFlag = flag[String]("uploader.local.path", "Local uploader path")
 
   override protected def configure(): Unit = {
-    val modules = mutable.ListBuffer.empty[Module]
-    modules += GetterDownloaderModule
-
-    // Install appropriate modules.
-    uploaderFlag() match {
-      case "local" => modules += new LocalUploaderModule(LocalUploaderConfig(Paths.get(localUploaderPathFlag())))
-      case unknown => throw new IllegalArgumentException(s"Unknown uploader type: $unknown")
-    }
-    modules.foreach(install)
-
     // Create an empty set of operators, in case nothing else is bound.
     ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Class[_ <: Operator[_, _]]] {})
 
     // Bind remaining implementations.
     bind[OpMetaReader].to[ReflectOpMetaReader]
     bind[OpRegistry].to[RuntimeOpRegistry]
-  }
-
-  @Provides
-  def providesOpFactory(opRegistry: RuntimeOpRegistry, injector: com.google.inject.Injector): OpFactory = {
-    new OpFactory(opRegistry, injector)
   }
 
   @Singleton

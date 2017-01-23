@@ -22,7 +22,7 @@ import com.google.inject.Provides
 import com.sksamuel.elastic4s.{ElasticClient, ElasticsearchClientUri}
 import com.twitter.finatra.json.FinatraObjectMapper
 import com.twitter.util.{Duration => TwitterDuration}
-import fr.cnrs.liris.accio.core.domain.{RunRepository, WorkflowRepository}
+import fr.cnrs.liris.accio.core.domain.{ReadOnlyRunRepository, RunRepository, WorkflowRepository}
 import fr.cnrs.liris.accio.core.infra.jackson.AccioFinatraJacksonModule
 import net.codingwell.scalaguice.ScalaModule
 import org.elasticsearch.common.settings.Settings

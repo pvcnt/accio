@@ -195,10 +195,12 @@ class ElasticWorkflowRepository(
     val f = client.execute(indexExists(workflowsIndex)).flatMap { resp =>
       if (!resp.isExists) {
         // Some fields must absolutely be indexed with the keyword analyzer, which performs no tokenization at all,
-        // otherwise they won't be searchable by their exact value (which can be annoying, e.g., for ids).
+        // otherwise they won't be searchable by their exact value (which can be annoying, e.g., for ids). Graph is
+        // not indexed.
         val fields = Seq(
           objectField("id").as(textField("value").analyzer(KeywordAnalyzer)),
-          textField("version").analyzer(KeywordAnalyzer))
+          textField("version").analyzer(KeywordAnalyzer),
+          objectField("graph").enabled(false))
         logger.info(s"Creating $workflowsIndex/$workflowsType index")
         client.execute(createIndex(workflowsIndex).mappings(new MappingDefinition(workflowsType) as (fields: _*)))
       } else {

@@ -20,15 +20,15 @@ package fr.cnrs.liris.accio.core.service.handler
 
 import com.google.inject.Inject
 import com.twitter.util.Future
-import fr.cnrs.liris.accio.core.domain.{WorkflowQuery, WorkflowRepository}
+import fr.cnrs.liris.accio.core.domain.{WorkflowQuery, ReadOnlyWorkflowRepository}
 
 /**
  * Handler retrieving workflows matching some search criteria. It does not return underlying graph for each workflow,
  * only workflow metadata.
  *
- * @param repository Workflow repository.
+ * @param repository Workflow repository (read-only).
  */
-class ListWorkflowsHandler @Inject()(repository: WorkflowRepository)
+class ListWorkflowsHandler @Inject()(repository: ReadOnlyWorkflowRepository)
   extends Handler[ListWorkflowsRequest, ListWorkflowsResponse] {
 
   override def handle(req: ListWorkflowsRequest): Future[ListWorkflowsResponse] = {
@@ -38,6 +38,7 @@ class ListWorkflowsHandler @Inject()(repository: WorkflowRepository)
       limit = req.limit.getOrElse(25),
       offset = req.offset)
     val res = repository.find(query)
-    Future(ListWorkflowsResponse(res.results.map(_.unsetGraph), res.totalCount))
+    val workflows = res.results.map(workflow => workflow.copy(graph = workflow.graph.unsetNodes))
+    Future(ListWorkflowsResponse(workflows, res.totalCount))
   }
 }

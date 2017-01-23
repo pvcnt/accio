@@ -33,11 +33,24 @@ enum NodeStatus {
 }
 
 struct NodeState {
+  // Name of the node this state is about.
   1: required string node_name;
+
+  // Node execution status.
   2: required NodeStatus status;
+
+  // Time at which the execution of the node started.
   3: optional common.Timestamp started_at;
+
+  // Time at which the execution of the node completed.
   4: optional common.Timestamp completed_at;
+
+  // Result of the node execution, either success or failed. Should be filled when the node is completed.
   5: optional operator.OpResult result;
+
+  // Cache key used for result memoization. If filled, the `result` field has to be filled too. Filling this indicates
+  // the associated result can be used as a cached value.
+  6: optional common.CacheKey cache_key;
 }
 
 enum RunStatus {

@@ -22,14 +22,12 @@ import com.google.inject.Inject
 import com.twitter.util.Future
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.domain._
-import fr.cnrs.liris.accio.core.service.{SchedulerService, StateManager}
+import fr.cnrs.liris.accio.core.service.{RunLifecycleManager, StateManager}
 
 final class CompleteTaskHandler @Inject()(
   runRepository: RunRepository,
-  workflowRepository: WorkflowRepository,
   stateManager: StateManager,
-  scheduler: SchedulerService,
-  graphFactory: GraphFactory)
+  runManager: RunLifecycleManager)
   extends Handler[CompleteTaskRequest, CompleteTaskResponse] with StrictLogging {
 
   override def handle(req: CompleteTaskRequest): Future[CompleteTaskResponse] = {
@@ -46,22 +44,14 @@ final class CompleteTaskHandler @Inject()(
             runRepository.get(task.runId) match {
               case None => logger.warn(s"Received task ${req.taskId.value} for unknown run ${task.runId.value}")
               case Some(run) =>
-                var newRun = updateRun(run, task.nodeName, req.result)
-                if (req.result.exitCode == 0) {
-                  // Task completed successfully, schedule next nodes.
-                  val nextNodes = getReadyNodes(run, task.nodeName)
-                  nextNodes.foreach { nextNode =>
-                    newRun = scheduler.submit(run, nextNode)
-                  }
-                  logger.debug(s"[T${task.id.value}] Task successful, scheduled ${nextNodes.size} nodes: ${nextNodes.mkString(", ")}")
+                var newRun = if (req.result.exitCode == 0) {
+                  runManager.onSuccess(run, task.nodeName, req.result, Some(task.payload.cacheKey))
                 } else {
-                  // Task failed, next nodes are cancelled.
-                  logger.debug(s"[T${task.id.value}] Task failed, cancelled next nodes")
+                  runManager.onFailed(run, task.nodeName, req.result)
                 }
+                newRun = newRun.copy(state = updateRunState(newRun.state))
+                //TODO: update parent run if any.
                 runRepository.save(newRun)
-                if (Utils.isCompleted(newRun.state.status)) {
-                  logger.debug(s"[T${task.id.value}] Run ${run.id.value} completed")
-                }
             }
           } finally {
             runLock.unlock()
@@ -73,50 +63,7 @@ final class CompleteTaskHandler @Inject()(
     }
   }
 
-  private def getGraph(run: Run): Graph = {
-    // Workflow does exist, because it has been validate when creating the runs.
-    val workflow = workflowRepository.get(run.pkg.workflowId, run.pkg.workflowVersion).get
-    graphFactory.create(workflow.graph)
-  }
-
-  private def getReadyNodes(run: Run, nodeName: String): Set[Node] = {
-    val graph = getGraph(run)
-    graph(nodeName).successors
-      .map(graph.apply)
-      .filter { nextNode =>
-        nextNode.predecessors.forall { dep =>
-          run.state.nodes.find(_.nodeName == dep).get.status == NodeStatus.Success
-        }
-      }
-  }
-
-  private def updateRun(run: Run, nodeName: String, result: OpResult) = {
-    val now = System.currentTimeMillis()
-    val nodeState = run.state.nodes.find(_.nodeName == nodeName).get
-    if (result.exitCode == 0) {
-      // Task completed successfully.
-      val newNodeState = nodeState.copy(completedAt = Some(now), result = Some(result), status = NodeStatus.Success)
-      val newRunState = run.state.copy(nodes = run.state.nodes - nodeState + newNodeState)
-      run.copy(state = updateRunState(newRunState, now))
-    } else {
-      // Task completed with an error.
-      val newNodeState = nodeState.copy(completedAt = Some(now), status = NodeStatus.Failed)
-      val newRunState = run.state.copy(nodes = run.state.nodes - nodeState + newNodeState)
-
-      // Mark dependent tasks as cancelled.
-      val graph = getGraph(run)
-      graph(nodeName).successors.foreach { nextNodeName =>
-        val nodeState = run.state.nodes.find(_.nodeName == nextNodeName).get
-        val newNodeState = nodeState.copy(completedAt = Some(now), status = NodeStatus.Cancelled)
-        run.state.copy(nodes = run.state.nodes - nodeState + newNodeState)
-      }
-
-      run.copy(state = updateRunState(newRunState, now))
-    }
-    //TODO: update parent run if any.
-  }
-
-  private def updateRunState(runState: RunState, now: Long) = {
+  private def updateRunState(runState: RunState) = {
     // Run could already be marked as completed if it was killed. In this case we do not want to update its state.
     // Otherwise, we check if this node was the last one to complete the run.
     if (runState.completedAt.isEmpty) {
@@ -128,7 +75,7 @@ final class CompleteTaskHandler @Inject()(
         } else {
           RunStatus.Failed
         }
-        runState.copy(progress = 1, status = newRunStatus, completedAt = Some(now))
+        runState.copy(progress = 1, status = newRunStatus, completedAt = Some(System.currentTimeMillis()))
       } else {
         // Run is not yet completed, only, update progress.
         val progress = runState.nodes.count(s => Utils.isCompleted(s.status)).toDouble / runState.nodes.size

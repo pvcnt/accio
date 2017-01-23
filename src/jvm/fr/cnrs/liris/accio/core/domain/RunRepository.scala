@@ -27,61 +27,29 @@ import com.twitter.util.Time
  * on the application-level. However, repositories should still take care not to leave data in a corrupted state,
  * which can be hard to recover from.
  */
-trait RunRepository {
-  /**
-   * Search for runs matching a given query. Runs are returned ordered in inverse chronological order, the most
-   * recent matching run being the first result.
-   *
-   * @param query Query.
-   * @return List of runs and total number of results.
-   */
-  def find(query: RunQuery): RunList
-
-  /**
-   * Search for logs matching a given query. Logs are returned ordered in chronological order, the oldest matching
-   * log being the first result (yes, this in *not* the same order than previous method).
-   *
-   * @param query Query.
-   * @return List of logs.
-   */
-  def find(query: LogsQuery): Seq[RunLog]
-
-  /**
-   * Save a run. It will either create a new run or replace an existing one with the same identifier.
-   *
-   * @param run Run to save.
-   */
+trait RunRepository extends ReadOnlyRunRepository {
   def save(run: Run): Unit
 
-  /**
-   * Save some logs. Since they are small objects, they can be saved in a batch (details are implementation-dependant).
-   * Logs are append-only.
-   *
-   * @param logs Logs to save.
-   */
   def save(logs: Seq[RunLog]): Unit
 
-  /**
-   * Retrieve a specific run, if it exists.
-   *
-   * @param id Run identifier.
-   */
+  def remove(id: RunId): Unit
+}
+
+/**
+ * Read-only run repository.
+ */
+trait ReadOnlyRunRepository {
+  def find(query: RunQuery): RunList
+
+  def find(query: LogsQuery): Seq[RunLog]
+
   def get(id: RunId): Option[Run]
 
-  /**
-   * Check whether a specific run exists.
-   *
-   * @param id Run identifier.
-   * @return True if the run exists, false otherwise.
-   */
+  def get(cacheKey: CacheKey): Option[OpResult]
+
   def contains(id: RunId): Boolean
 
-  /**
-   * Delete a run, if it exists. It will also delete all associated log lines.
-   *
-   * @param id Run identifier.
-   */
-  def remove(id: RunId): Unit
+  def contains(cacheKey: CacheKey): Boolean
 }
 
 /**

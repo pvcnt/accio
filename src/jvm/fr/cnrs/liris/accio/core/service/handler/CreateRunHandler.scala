@@ -22,45 +22,26 @@ import com.google.inject.Inject
 import com.twitter.util.Future
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.domain._
-import fr.cnrs.liris.accio.core.service.SchedulerService
+import fr.cnrs.liris.accio.core.service.RunLifecycleManager
 
 /**
  * Handler for launching a workflow. It create one or several runs, save them and schedule them.
  *
- * @param runFactory         Run factory.
- * @param runRepository      Run repository.
- * @param workflowRepository Workflow repository.
- * @param scheduler          Scheduler service.
- * @param graphFactory       Graph factory.
+ * @param runFactory    Run factory.
+ * @param runRepository Run repository.
+ * @param runManager    Run lifecycle manager.
  */
 final class CreateRunHandler @Inject()(
   runFactory: RunFactory,
   runRepository: RunRepository,
-  workflowRepository: WorkflowRepository,
-  scheduler: SchedulerService,
-  graphFactory: GraphFactory)
+  runManager: RunLifecycleManager)
   extends Handler[CreateRunRequest, CreateRunResponse] with StrictLogging {
 
   @throws[InvalidRunDefException]
   def handle(req: CreateRunRequest): Future[CreateRunResponse] = {
-    // Create runs.
     val runs = runFactory.create(req.defn, req.user)
-
-    // Save only parent run.
-    runs.filter(_.children.nonEmpty).foreach(runRepository.save)
-
-    // Workflow does exist, because it has been validated when creating the runs.
-    val workflow = workflowRepository.get(runs.head.pkg.workflowId, runs.head.pkg.workflowVersion).get
-    val rootNodes = graphFactory.create(workflow.graph).roots
-
-    // Schedule root nodes, for all child runs.
-    runs.filter(_.children.isEmpty).foreach { run =>
-      rootNodes.foreach { node =>
-        runRepository.save(scheduler.submit(run, node))
-      }
-    }
-
-    logger.debug(s"Created ${runs.size} runs, scheduled ${runs.size * rootNodes.size} nodes")
+    val scheduledRuns = runManager.launch(runs)
+    scheduledRuns.foreach(runRepository.save)
     Future(CreateRunResponse(runs.map(_.id)))
   }
 }

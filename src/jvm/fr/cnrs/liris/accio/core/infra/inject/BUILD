@@ -1,0 +1,13 @@
+scala_library(
+  dependencies=[
+    'src/jvm/fr/cnrs/liris/accio/core/service',
+    'src/jvm/fr/cnrs/liris/accio/core/infra/scheduler/local',
+    'src/jvm/fr/cnrs/liris/accio/core/infra/uploader/local',
+    'src/jvm/fr/cnrs/liris/accio/core/infra/statemgr/zookeeper',
+    'src/jvm/fr/cnrs/liris/accio/core/infra/statemgr/local',
+    'src/jvm/fr/cnrs/liris/accio/core/infra/storage/elastic',
+    'src/jvm/fr/cnrs/liris/accio/core/infra/storage/local',
+    '3rdparty/jvm/com/twitter/inject:app',
+  ],
+  sources=globs('*.scala')
+)

@@ -20,6 +20,7 @@ package fr.cnrs.liris.accio.core.domain
 
 import java.util.Objects
 
+import com.google.inject.Inject
 import fr.cnrs.liris.common.util.{HashUtils, Seqs}
 
 /**
@@ -36,7 +37,7 @@ class InvalidWorkflowDefException(message: String, cause: Throwable = null) exte
  * @param graphFactory Graph factory.
  * @param opRegistry   Operator registry.
  */
-final class WorkflowFactory(graphFactory: GraphFactory, opRegistry: OpRegistry) {
+final class WorkflowFactory @Inject()(graphFactory: GraphFactory, opRegistry: OpRegistry) {
   /**
    * Create a workflow from a workflow definition.
    *

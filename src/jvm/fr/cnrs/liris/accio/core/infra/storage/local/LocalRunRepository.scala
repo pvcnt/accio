@@ -30,7 +30,7 @@ import scala.collection.JavaConverters._
 /**
  * A run repository storing runs locally inside binary files. Intended for testing or use in single-node development
  * clusters. It might have very poor performance because data is not indexed, which results in a sequential scan at
- * each query.
+ * each query. Moreover, this implementation does no result memoization.
  *
  * @param rootDir Root directory under which to store files.
  */
@@ -137,4 +137,8 @@ final class LocalRunRepository(rootDir: Path) extends LocalStorage with RunRepos
       .filter(_.endsWith(".json"))
       .map(_.stripSuffix(".json"))
   }
+
+  override def get(cacheKey: CacheKey): Option[OpResult] = None
+
+  override def contains(cacheKey: CacheKey): Boolean = false
 }

@@ -16,28 +16,18 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace java fr.cnrs.liris.accio.core.domain
+package fr.cnrs.liris.accio.core.infra.downloader
 
-include "fr/cnrs/liris/accio/core/domain/common.thrift"
-include "fr/cnrs/liris/accio/core/domain/operator.thrift"
+import fr.cnrs.liris.accio.core.service.Downloader
+import fr.cnrs.liris.common.getter.GetterModule
+import net.codingwell.scalaguice.ScalaModule
 
-enum TaskStatus {
-  SCHEDULED,
-  RUNNING,
-}
-
-struct TaskState {
-  1: required TaskStatus status;
-  2: optional common.Timestamp started_at;
-  3: optional common.Timestamp heartbeat_at;
-}
-
-struct Task {
-  1: required common.TaskId id;
-  2: required common.RunId run_id;
-  3: required string node_name;
-  4: required operator.OpPayload payload;
-  5: required string key;
-  6: required common.Timestamp created_at;
-  7: required TaskState state;
+/**
+ * Guice module provisioning a downloader using the common/getter module.
+ */
+object DownloaderModule extends ScalaModule {
+  override def configure(): Unit = {
+    install(GetterModule)
+    bind[Downloader].to[GetterDownloader]
+  }
 }

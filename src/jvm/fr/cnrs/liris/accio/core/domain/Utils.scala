@@ -51,12 +51,6 @@ object Utils {
    */
   val ArgRegex: Regex = ("^" + ArgPattern + "$").r
 
-  // In the three following regex, +? is a so-called reluctant quantifier (i.e., not greedy).
-  private[this] val ListRegex = "^list\\s*\\(\\s*(.+?)\\s*\\)$".r
-  private[this] val SetRegex = "^set\\s*\\(\\s*(.+?)\\s*\\)$".r
-  private[this] val MapRegex = "^map\\s*\\(\\s*(.+?),\\s*(.+?)\\s*\\)$".r
-  private[this] val UserRegex = "(.+)<(.+)>".r
-
   /**
    * Return the default user, inferred from the environment of the shell user login. It is of course only
    * valid in a client context.
@@ -85,6 +79,11 @@ object Utils {
    * @param params Map of parameters.
    */
   def label(params: Map[String, Value]): String = label(params.toSeq)
+
+  // In the following regex, +? is a so-called reluctant quantifier (i.e., not greedy).
+  private[this] val ListRegex = "^list\\s*\\(\\s*(.+?)\\s*\\)$".r
+  private[this] val SetRegex = "^set\\s*\\(\\s*(.+?)\\s*\\)$".r
+  private[this] val MapRegex = "^map\\s*\\(\\s*(.+?),\\s*(.+?)\\s*\\)$".r
 
   def parseDataType(str: String): DataType =
     str.toLowerCase.trim match {
@@ -155,6 +154,8 @@ object Utils {
       Reference(node, port)
     case _ => throw new IllegalArgumentException(s"Invalid reference: $str")
   }
+
+  private[this] val UserRegex = "(.+)<(.+)>".r
 
   /**
    * Parse a string into a user. If it includes an email address, it should have the following

@@ -69,7 +69,7 @@ class ListCommand @Inject()(client: AgentService.FinagledClient) extends Command
             out.writeln("[" + resp.results.map(serializer.serialize).mkString(",") + "]")
           } else {
             val prettyTime = new PrettyTime().setLocale(Locale.ENGLISH)
-            out.writeln(s"${padTo("Id", 30)}  ${padTo("Owner", 15)}  ${padTo("Created", 15)}  Name")
+            out.writeln(s"<comment>${padTo("Id", 30)}  ${padTo("Owner", 15)}  ${padTo("Created", 15)}  Name</comment>")
             resp.results.foreach { workflow =>
               out.writeln(s"${padTo(workflow.id.value, 30)}  ${padTo(workflow.owner.name, 15)}  ${padTo(prettyTime.format(new Date(workflow.createdAt)), 15)}  ${workflow.name.getOrElse("<no name>")}")
             }

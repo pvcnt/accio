@@ -103,8 +103,8 @@ struct OpPayload {
   // Mapping between a port name and its value. It should contain at least required inputs.
   3: required map<string, common.Value> inputs;
 
-  // Cache key under which to upload files, if any.
-  4: required string cache_key;
+  // Cache key associated with this payload, used for further memoization.
+  4: required common.CacheKey cache_key;
 }
 
 /**
@@ -130,4 +130,7 @@ struct OpResult {
   // There is no definition of metrics produced by an operator, so any relevant metrics can be included here and will
   // be exposed thereafter.
   4: required set<common.Metric> metrics;
+
+  // Whether it corresponds to a cache hit, i.e., the value has not been explicitly computed.
+  5: required bool cache_hit = false;
 }
