@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.core.service
 
-import com.google.inject.{Injector, ProvisionException}
+import com.google.inject.{Inject, Injector, ProvisionException}
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.core.api.Operator
 import fr.cnrs.liris.accio.core.domain.OpDef
@@ -33,7 +33,7 @@ import fr.cnrs.liris.accio.core.domain.OpDef
  * @param opRegistry Runtime operator registry.
  * @param injector   Guice injector.
  */
-final class OpFactory(opRegistry: RuntimeOpRegistry, injector: Injector) extends LazyLogging {
+final class OpFactory @Inject() (opRegistry: RuntimeOpRegistry, injector: Injector) extends LazyLogging {
   /**
    * Create a new operator.
    *

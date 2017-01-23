@@ -116,11 +116,6 @@ object AgentModule extends TwitterModule {
   }
 
   @Provides
-  def providesOpFactory(opRegistry: RuntimeOpRegistry, injector: com.google.inject.Injector): OpFactory = {
-    new OpFactory(opRegistry, injector)
-  }
-
-  @Provides
   def providesGraphFactory(opRegistry: OpRegistry): GraphFactory = {
     new GraphFactory(opRegistry)
   }
