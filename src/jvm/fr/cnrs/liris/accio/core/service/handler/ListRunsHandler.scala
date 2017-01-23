@@ -23,8 +23,8 @@ import com.twitter.util.Future
 import fr.cnrs.liris.accio.core.domain.{RunQuery, RunRepository}
 
 /**
- * Handler retrieving runs matching some search criteria. It does *not* return the state of each node, only
- * run-level state.
+ * Handler retrieving runs matching some search criteria. It does *not* return the result of each node, only
+ * its state.
  *
  * @param repository Run repository.
  */
@@ -38,7 +38,7 @@ class ListRunsHandler @Inject()(repository: RunRepository) extends Handler[ListR
       limit = req.limit.getOrElse(25),
       offset = req.offset)
     val res = repository.find(query)
-    val results = res.results.map(run => run.copy(state = run.state.unsetNodes))
+    val results = res.results.map(run => run.copy(state = run.state.copy(nodes = run.state.nodes.map(_.unsetResult))))
     Future(ListRunsResponse(results, res.totalCount))
   }
 }
