@@ -23,7 +23,8 @@ import com.twitter.util.Future
 import fr.cnrs.liris.accio.core.domain.{WorkflowQuery, WorkflowRepository}
 
 /**
- * Handler retrieving workflows matching some search criteria.
+ * Handler retrieving workflows matching some search criteria. It does not return underlying graph for each workflow,
+ * only workflow metadata.
  *
  * @param repository Workflow repository.
  */
@@ -37,6 +38,6 @@ class ListWorkflowsHandler @Inject()(repository: WorkflowRepository)
       limit = req.limit.getOrElse(25),
       offset = req.offset)
     val res = repository.find(query)
-    Future(ListWorkflowsResponse(res.results, res.totalCount))
+    Future(ListWorkflowsResponse(res.results.map(_.unsetGraph), res.totalCount))
   }
 }
