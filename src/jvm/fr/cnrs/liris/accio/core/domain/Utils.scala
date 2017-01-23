@@ -58,10 +58,10 @@ object Utils {
   private[this] val UserRegex = "(.+)<(.+)>".r
 
   /**
-   * Return the default user, inferred from the shell user login. It has no email address. It is of course only
+   * Return the default user, inferred from the environment of the shell user login. It is of course only
    * valid in a client context.
    */
-  val DefaultUser = User(sys.props("user.name"))
+  val DefaultUser: User = sys.env.get("ACCIO_USER").map(parseUser).getOrElse(User(sys.props("user.name")))
 
   /**
    * Generate a human-readable label for a list of parameters.
