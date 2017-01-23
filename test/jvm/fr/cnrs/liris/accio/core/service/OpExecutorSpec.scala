@@ -147,8 +147,12 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
     res.artifacts should have size 1
     res.exitCode shouldBe 0
     res.error shouldBe None
-    res.artifacts should contain(Artifact("data", DataType(AtomicType.Dataset), Values.encodeDataset(Dataset(s"file://mock/MyCacheKey/data"))))
-    uploader.keys should contain(s"MyCacheKey/data")
+    res.artifacts should have size 1
+    res.artifacts.head.name shouldBe "data"
+    res.artifacts.head.kind shouldBe DataType(AtomicType.Dataset)
+    val dataset = Values.decodeDataset(res.artifacts.head.value)
+    dataset.uri should startWith("file:///mock")
+    uploader.keys should contain(dataset.uri)
   }
 
   it should "download inputs" in {
@@ -240,8 +244,9 @@ private class MockUploader extends Uploader {
   private[this] val _keys = mutable.Set.empty[String]
 
   override def upload(src: Path, key: String): String = {
-    _keys += key
-    s"file://mock/$key"
+    val uri = s"file:///mock/$key"
+    _keys += uri
+    uri
   }
 
   def keys: Set[String] = _keys.toSet
