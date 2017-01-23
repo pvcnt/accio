@@ -29,6 +29,8 @@ import fr.cnrs.liris.accio.core.service.handler.GetRunRequest
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.util.StringUtils.padTo
 import org.ocpsoft.prettytime.PrettyTime
+import org.ocpsoft.prettytime.impl.DurationImpl
+import org.ocpsoft.prettytime.units.Millisecond
 
 case class InspectFlags(
   @Flag(name = "json", help = "Print machine-readable JSON")
@@ -40,6 +42,8 @@ case class InspectFlags(
   help = "Display status of a run.",
   allowResidue = true)
 class InspectCommand @Inject()(client: AgentService.FinagledClient) extends Command {
+  private[this] val colWidth = 15
+
   override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     if (flags.residue.isEmpty || flags.residue.size > 2) {
       out.writeln("<error>[ERROR]</error> You must provide a single run identifier.")
@@ -83,49 +87,63 @@ class InspectCommand @Inject()(client: AgentService.FinagledClient) extends Comm
     }
   }
 
+  private def createDuration(millis: Long) = {
+    val duration = new DurationImpl
+    duration.setQuantity(millis)
+    duration.setUnit(new Millisecond)
+    duration
+  }
+
   private def printRun(run: Run, out: Reporter) = {
     val prettyTime = new PrettyTime().setLocale(Locale.ENGLISH)
-    out.writeln(s"<comment>${padTo("Id", 15)}</comment> ${run.id.value}")
-    out.writeln(s"<comment>${padTo("Workflow", 15)}</comment> ${run.pkg.workflowId.value}:${run.pkg.workflowVersion}")
-    out.writeln(s"<comment>${padTo("Created", 15)}</comment> ${prettyTime.format(new Date(run.createdAt))}")
-    out.writeln(s"<comment>${padTo("Owner", 15)}</comment> ${Utils.toString(run.owner)}")
-    out.writeln(s"<comment>${padTo("Name", 15)}</comment> ${run.name.getOrElse("<no name>")}")
-    out.writeln(s"<comment>${padTo("Tags", 15)}</comment> ${if (run.tags.nonEmpty) run.tags.mkString(", ") else "<none>"}")
-    out.writeln(s"<comment>${padTo("Status", 15)}</comment> ${run.state.status.name}")
+    out.writeln(s"<comment>${padTo("Id", colWidth)}</comment> ${run.id.value}")
+    out.writeln(s"<comment>${padTo("Workflow", colWidth)}</comment> ${run.pkg.workflowId.value}:${run.pkg.workflowVersion}")
+    out.writeln(s"<comment>${padTo("Created", colWidth)}</comment> ${prettyTime.format(new Date(run.createdAt))}")
+    out.writeln(s"<comment>${padTo("Owner", colWidth)}</comment> ${Utils.toString(run.owner)}")
+    out.writeln(s"<comment>${padTo("Name", colWidth)}</comment> ${run.name.getOrElse("<no name>")}")
+    out.writeln(s"<comment>${padTo("Tags", colWidth)}</comment> ${if (run.tags.nonEmpty) run.tags.mkString(", ") else "<none>"}")
+    out.writeln(s"<comment>${padTo("Status", colWidth)}</comment> ${run.state.status.name}")
     if (!Utils.isCompleted(run.state.status)) {
-      out.writeln(s"<comment>${padTo("Progress", 15)}</comment> ${(run.state.progress * 100).round} %")
+      out.writeln(s"<comment>${padTo("Progress", colWidth)}</comment> ${(run.state.progress * 100).round} %")
     }
     run.state.startedAt.foreach { startedAt =>
-      out.writeln(s"<comment>${padTo("Started", 15)}</comment> ${prettyTime.format(new Date(startedAt))}")
+      out.writeln(s"<comment>${padTo("Started", colWidth)}</comment> ${prettyTime.format(new Date(startedAt))}")
     }
     run.state.completedAt.foreach { completedAt =>
-      out.writeln(s"<comment>${padTo("Completed", 15)}</comment> ${prettyTime.format(new Date(completedAt))}")
+      out.writeln(s"<comment>${padTo("Completed", colWidth)}</comment> ${prettyTime.format(new Date(completedAt))}")
+      out.writeln(s"<comment>${padTo("Duration", colWidth)}</comment> ${prettyTime.format(createDuration(completedAt - run.state.startedAt.get))}")
     }
     out.writeln()
-    out.writeln(s"<comment>${padTo("Node name", 30)}  Status</comment>")
+    out.writeln(s"<comment>${padTo("Node name", 30)}  ${padTo("Status", 9)}  Duration</comment>")
     run.state.nodes.foreach { node =>
-      out.writeln(s"${padTo(node.nodeName, 30)}  ${node.status.name}")
+      val duration = if (node.completedAt.isDefined) {
+        Some(createDuration(node.completedAt.get - node.startedAt.get))
+      } else {
+        None
+      }
+      out.writeln(s"${padTo(node.nodeName, 30)}  ${padTo(node.status.name, 15)}  ${duration.map(prettyTime.format(_)).getOrElse("-")}")
     }
   }
 
   private def printNode(node: NodeState, out: Reporter) = {
     val prettyTime = new PrettyTime().setLocale(Locale.ENGLISH)
-    out.writeln(s"<comment>${padTo("Node name", 15)}</comment> ${node.nodeName}")
-    out.writeln(s"<comment>${padTo("Status", 15)}</comment> ${node.status.name}")
+    out.writeln(s"<comment>${padTo("Node name", colWidth)}</comment> ${node.nodeName}")
+    out.writeln(s"<comment>${padTo("Status", colWidth)}</comment> ${node.status.name}")
     node.startedAt.foreach { startedAt =>
-      out.writeln(s"<comment>${padTo("Started", 15)}</comment> ${prettyTime.format(new Date(startedAt))}")
+      out.writeln(s"<comment>${padTo("Started", colWidth)}</comment> ${prettyTime.format(new Date(startedAt))}")
     }
     node.completedAt.foreach { completedAt =>
-      out.writeln(s"<comment>${padTo("Completed", 15)}</comment> ${prettyTime.format(new Date(completedAt))}")
+      out.writeln(s"<comment>${padTo("Completed", colWidth)}</comment> ${prettyTime.format(new Date(completedAt))}")
+      out.writeln(s"<comment>${padTo("Duration", colWidth)}</comment> ${prettyTime.format(createDuration(completedAt - node.startedAt.get))}")
     }
 
     node.result.foreach { result =>
-      out.writeln(s"<comment>${padTo("Exit code", 15)}</comment> ${result.exitCode}")
+      out.writeln(s"<comment>${padTo("Exit code", colWidth)}</comment> ${result.exitCode}")
       result.error.foreach { error =>
         out.writeln()
-        out.writeln(s"<error>${padTo("Error class", 15)}</error> ${error.root.classifier}")
-        out.writeln(s"<error>${padTo("Error message", 15)}</error> ${error.root.message}")
-        out.writeln(s"<error>${padTo("Error stack", 15)}</error> ${error.root.stacktrace.headOption.getOrElse("") + error.root.stacktrace.tail.map(s => " " * 16 + s)}")
+        out.writeln(s"<error>${padTo("Error class", colWidth)}</error> ${error.root.classifier}")
+        out.writeln(s"<error>${padTo("Error message", colWidth)}</error> ${error.root.message}")
+        out.writeln(s"<error>${padTo("Error stack", colWidth)}</error> ${error.root.stacktrace.headOption.getOrElse("") + error.root.stacktrace.tail.map(s => " " * 16 + s)}")
       }
 
       out.writeln()
