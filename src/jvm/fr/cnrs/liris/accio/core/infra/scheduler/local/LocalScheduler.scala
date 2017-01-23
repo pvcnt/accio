@@ -21,9 +21,11 @@ package fr.cnrs.liris.accio.core.infra.scheduler.local
 import java.nio.file.{Files, Path}
 import java.util.concurrent.{ConcurrentHashMap, ConcurrentLinkedQueue, Executors}
 
+import com.google.common.io.ByteStreams
 import com.twitter.concurrent.NamedPoolThreadFactory
 import com.twitter.util.{ExecutorServiceFuturePool, Return, Throw}
 import com.typesafe.scalalogging.StrictLogging
+import fr.cnrs.liris.accio.core.domain.{RunLog, RunRepository}
 import fr.cnrs.liris.accio.core.service.{Downloader, Job, Scheduler}
 import fr.cnrs.liris.common.util.{FileUtils, Platform}
 
@@ -35,18 +37,20 @@ import scala.collection.JavaConverters._
  * Intended for testing or use in single-node development clusters, as it does not support cluster-mode
  * (by definition...) nor resource constraints.
  *
- * @param downloader   Downloader.
- * @param workDir      Working directory where sandboxes will be stored.
- * @param executorUri  URI where to fetch the executor.
- * @param javaHome     Java home to be used when running nodes.
- * @param executorArgs Arguments to pass to the executors.
+ * @param downloader    Downloader.
+ * @param workDir       Working directory where sandboxes will be stored.
+ * @param executorUri   URI where to fetch the executor.
+ * @param javaHome      Java home to be used when running nodes.
+ * @param executorArgs  Arguments to pass to the executors.
+ * @param runRepository Run repository.
  */
 class LocalScheduler(
   downloader: Downloader,
   workDir: Path,
   executorUri: String,
   javaHome: Option[String],
-  executorArgs: Seq[String])
+  executorArgs: Seq[String],
+  runRepository: RunRepository)
   extends Scheduler with StrictLogging {
 
   private[this] val monitors = new ConcurrentHashMap[String, TaskMonitor].asScala
@@ -68,20 +72,29 @@ class LocalScheduler(
   logger.info(s"Available CPU: $totalCpu, RAM: ${totalRam.map(_.toHuman).getOrElse("<unknown>")}, disk: ${totalDisk.map(_.toHuman).getOrElse("<unknown>")}")
 
   override def submit(job: Job): String = {
-    val monitor = new TaskMonitor(job)
-    monitors(job.taskId.value) = monitor
     synchronized {
       if (isSatisfied(job)) {
         start(job)
       } else {
         queue.add(job)
+        if (monitors.isEmpty) {
+          logger.warn(s"Unable to schedule job: $job, CPU: $totalCpu, RAM: ${totalRam.map(_.toHuman).getOrElse("-")}, disk: ${totalDisk.map(_.toHuman).getOrElse("-")}")
+        } else {
+          logger.debug(s"Running jobs: ${monitors.size}, waiting jobs: ${queue.size}")
+        }
       }
     }
     job.taskId.value
   }
 
-  override def kill(key: String): Unit = {
+  override def kill(key: String): Unit = synchronized {
     monitors.get(key).foreach(_.kill())
+    val it = queue.iterator
+    while (it.hasNext) {
+      if (it.next.taskId.value == key) {
+        it.remove()
+      }
+    }
   }
 
   override def stop(): Unit = {
@@ -90,8 +103,11 @@ class LocalScheduler(
   }
 
   private def start(job: Job): Unit = {
+    // We do not synchronized here, are it is already called from synchronized sections.
+    val monitor = new TaskMonitor(job)
     logger.debug(s"[T${job.taskId.value}] Starting task")
-    pool(monitors(job.taskId.value).run())
+    monitors(job.taskId.value) = monitor
+    pool(monitor.run())
       .respond {
         case Throw(e) =>
           logger.error(s"[T${job.taskId.value}] Error in monitoring thread", e)
@@ -110,6 +126,11 @@ class LocalScheduler(
         start(job)
         it.remove()
       }
+    }
+    if (monitors.isEmpty && !queue.isEmpty) {
+      logger.warn(s"Unable to schedule jobs. First job: ${queue.peek}, CPU: $totalCpu, RAM: ${totalRam.map(_.toHuman).getOrElse("-")}, disk: ${totalDisk.map(_.toHuman).getOrElse("-")}")
+    } else {
+      logger.debug(s"Running jobs: ${monitors.size}, waiting jobs: ${queue.size}")
     }
   }
 
@@ -140,7 +161,15 @@ class LocalScheduler(
         case Some(p) =>
           logger.debug(s"[T${job.taskId.value}] Waiting for process completion")
           try {
+            val out = new String(ByteStreams.toByteArray(p.getInputStream))
             p.waitFor()
+            val logs = out.trim.split("\n").map { line =>
+              RunLog(job.runId, job.nodeName, System.currentTimeMillis(), "stdout", line.trim)
+            }
+            if (logs.nonEmpty) {
+              logger.debug(s"[T${job.taskId.value}] Saved ${logs.length} additional logs")
+              runRepository.save(logs)
+            }
           } catch {
             case e: InterruptedException => logger.warn(s"[T${job.taskId.value}] Interrupted while waiting", e)
           } finally {
@@ -174,7 +203,7 @@ class LocalScheduler(
       val pb = new ProcessBuilder()
         .command(cmd: _*)
         .directory(sandboxDir.toFile)
-        .inheritIO()
+        .redirectErrorStream(true)
 
       // Pass as environment variables resource constraints, in case it can help operators to better use them.
       // As an example, SparkleEnv uses the "CPU" variable to known how many cores it can use.

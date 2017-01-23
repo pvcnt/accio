@@ -30,15 +30,10 @@ class HeartbeatHandler @Inject()(stateManager: StateManager)
     val taskLock = stateManager.lock(s"task/${req.taskId.value}")
     taskLock.lock()
     try {
-      stateManager.get(req.taskId) match {
-        case None =>
-          // If the task has already been removed, we do not want to recreate a new one. We do not throw an
-          // exception because it can be a "normal" situation (if the thread sending heartbeat is stopping).
-          logger.warn(s"Received heartbeat from unknown task: ${req.taskId.value}")
-        case Some(task) =>
-          val newTask = task.copy(state = task.state.copy(heartbeatAt = Some(System.currentTimeMillis())))
-          stateManager.save(newTask)
-          logger.debug(s"[T${req.taskId.value}] Received heartbeat")
+      stateManager.get(req.taskId).foreach { task =>
+        val newTask = task.copy(state = task.state.copy(heartbeatAt = Some(System.currentTimeMillis())))
+        stateManager.save(newTask)
+        logger.debug(s"[T${req.taskId.value}] Received heartbeat")
       }
     } finally {
       taskLock.unlock()

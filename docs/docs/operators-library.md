@@ -1,6 +1,6 @@
 ---
-layout: privacy
-nav: privacy
+nav: docs
+layout: docs
 title: Operators library
 ---
 

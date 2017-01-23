@@ -100,7 +100,6 @@ class TaskExecutor @Inject()(opExecutor: OpExecutor, client: AgentService.Finagl
     }.flatMap { result =>
       client.completeTask(CompleteTaskRequest(taskId, result))
         .onFailure {
-          case UnknownTaskException(_) => // Ignore.
           case e: Throwable => logger.error(s"[T${taskId.value}] Error while marking task as completed", e)
         }
     }.unit
@@ -145,7 +144,7 @@ class TaskExecutor @Inject()(opExecutor: OpExecutor, client: AgentService.Finagl
         // Do not log anything here, if communication with agent is broken it will be eventually detected on the
         // agent side. We want to send only meaningful logs.
         Await.ready(client.heartbeat(HeartbeatRequest(taskId)))
-        trySleep(Duration.fromSeconds(30))
+        trySleep(Duration.fromSeconds(15))
       }
       logger.debug(s"[T${taskId.value}] Heartbeat thread stopped")
     }

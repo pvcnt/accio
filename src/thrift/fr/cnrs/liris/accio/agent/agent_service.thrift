@@ -49,5 +49,5 @@ service AgentService {
 
   agent.StreamLogsResponse streamLogs(1: agent.StreamLogsRequest req);
 
-  agent.CompleteTaskResponse completeTask(1: agent.CompleteTaskRequest req) throws (1: agent.UnknownTaskException unknownTask, 2: agent.UnknownRunException unknownRun);
+  agent.CompleteTaskResponse completeTask(1: agent.CompleteTaskRequest req) throws (1: agent.UnknownRunException unknownRun);
 }

@@ -33,9 +33,9 @@ case class AccioDocgenFlags(
   @Flag(name = "toc", help = "Whether to include a table of contents")
   toc: Boolean = true,
   @Flag(name = "layout")
-  layout: String = "privacy",
+  layout: String = "docs",
   @Flag(name = "nav")
-  nav: String = "privacy",
+  nav: String = "docs",
   @Flag(name = "title")
   title: String = "Operators library")
 

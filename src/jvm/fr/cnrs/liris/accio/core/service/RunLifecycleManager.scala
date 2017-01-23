@@ -46,6 +46,13 @@ class RunLifecycleManager @Inject()(
   runRepository: ReadOnlyRunRepository)
   extends StrictLogging {
 
+  /**
+   * Launch a list of runs. Ready nodes of those runs will be submitted to the scheduler, and state of all runs
+   * will updated to reflect this.
+   *
+   * @param runs Runs to launch.
+   * @return Runs with updated state.
+   */
   def launch(runs: Seq[Run]): Seq[Run] = {
     if (runs.isEmpty) {
       runs
@@ -69,41 +76,76 @@ class RunLifecycleManager @Inject()(
     }
   }
 
+  /**
+   * Mark a node inside a run as failed. It will recursively cancel all successors of this node. Execution of other
+   * branches of the graph will however continue.
+   *
+   * @param run      Run.
+   * @param nodeName Node that has failed, as part of the run.
+   * @param result   Node result.
+   * @return Run with updated state.
+   */
   def onFailed(run: Run, nodeName: String, result: OpResult): Run = {
-    // First update node state.
-    val now = System.currentTimeMillis()
     val nodeState = run.state.nodes.find(_.nodeName == nodeName).get
-    val newNodeState = nodeState.copy(
-      completedAt = Some(now),
-      status = NodeStatus.Failed,
-      result = Some(result))
-    var newRun = replace(run, nodeState, newNodeState)
-
-    // Cancel next nodes.
-    getNextNodes(run, nodeName).foreach { nextNode =>
-      val nodeState = newRun.state.nodes.find(_.nodeName == nextNode.name).get
-      val newNodeState = nodeState.copy(completedAt = Some(now), status = NodeStatus.Cancelled)
-      newRun = replace(newRun, nodeState, newNodeState)
-      //TODO: recurse.
+    if (nodeState.completedAt.isDefined) {
+      // On race requests, node state could be already marked as completed.
+      run
+    } else {
+      val newNodeState = nodeState.copy(
+        completedAt = Some(System.currentTimeMillis()),
+        status = NodeStatus.Failed,
+        result = Some(result))
+      var newRun = replace(run, nodeState, newNodeState)
+      newRun = cancelNextNodes(run, nodeName)
+      updateProgress(newRun)
     }
-    newRun
   }
 
-  def onSuccess(run: Run, nodeName: String, result: OpResult, cacheKey: Option[CacheKey]): Run = {
-    // First update node state.
+  /**
+   * Mark a node inside a run as lost. It will recursively cancel all successors of this node. Execution of other
+   * branches of the graph will however continue.
+   *
+   * @param run      Run.
+   * @param nodeName Node that has failed, as part of the run.
+   * @return Run with updated state.
+   */
+  def onLost(run: Run, nodeName: String): Run = {
     val nodeState = run.state.nodes.find(_.nodeName == nodeName).get
-    val newNodeState = nodeState.copy(
-      completedAt = Some(System.currentTimeMillis()),
-      status = NodeStatus.Success,
-      result = Some(result),
-      cacheKey = cacheKey)
-    var newRun = replace(run, nodeState, newNodeState)
-
-    // Schedule next nodes.
-    getNextReadyNodes(newRun, nodeName).foreach { nextNode =>
-      newRun = schedule(newRun, nextNode)
+    if (nodeState.completedAt.isDefined) {
+      // On race requests, node state could be already marked as completed.
+      run
+    } else {
+      val newNodeState = nodeState.copy(completedAt = Some(System.currentTimeMillis()), status = NodeStatus.Lost)
+      var newRun = replace(run, nodeState, newNodeState)
+      newRun = cancelNextNodes(run, nodeName)
+      updateProgress(newRun)
     }
-    newRun
+  }
+
+  /**
+   * Mark a node inside a run as successful. It will schedule direct successors that are ready to be executed (i.e.,
+   * whose all dependent nodes have been successfully completed).
+   *
+   * @param run      Run.
+   * @param nodeName Node that completed, as part of the run.
+   * @param result   Node result.
+   * @return Run with updated state.
+   */
+  def onSuccess(run: Run, nodeName: String, result: OpResult, cacheKey: Option[CacheKey]): Run = {
+    val nodeState = run.state.nodes.find(_.nodeName == nodeName).get
+    if (nodeState.completedAt.isDefined) {
+      // On race requests, node state could be already marked as completed.
+      run
+    } else {
+      val newNodeState = nodeState.copy(
+        completedAt = Some(System.currentTimeMillis()),
+        status = NodeStatus.Success,
+        result = Some(result),
+        cacheKey = cacheKey)
+      var newRun = replace(run, nodeState, newNodeState)
+      newRun = scheduleNextNodes(newRun, nodeName)
+      updateProgress(newRun)
+    }
   }
 
   private def replace(run: Run, nodeState: NodeState, newNodeState: NodeState) = {
@@ -123,15 +165,19 @@ class RunLifecycleManager @Inject()(
 
     val now = System.currentTimeMillis()
     val nodeState = run.state.nodes.find(_.nodeName == node.name).get
-    val newNodeState = runRepository.get(payload.cacheKey) match {
+    runRepository.get(payload.cacheKey) match {
       case Some(result) =>
-        logger.debug(s"Cache hit. Run: ${run.id.value}, node: ${node.name}.")
-        //TODO: recurse.
-        nodeState.copy(
+        var newRun = replace(run, nodeState, nodeState.copy(
           startedAt = Some(now),
           completedAt = Some(now),
           status = NodeStatus.Success,
-          result = Some(result.copy(cacheHit = true)))
+          cacheKey = Some(payload.cacheKey),
+          result = Some(result.copy(cacheHit = true))))
+        logger.debug(s"Cache hit. Run: ${run.id.value}, node: ${node.name}.")
+
+        // Schedule next nodes.
+        newRun = scheduleNextNodes(newRun, node.name)
+        newRun
       case None =>
         val taskId = TaskId(UUID.randomUUID().toString)
         val job = Job(taskId, run.id, node.name, payload, opDef.resource)
@@ -145,10 +191,9 @@ class RunLifecycleManager @Inject()(
           createdAt = now,
           state = TaskState(TaskStatus.Scheduled))
         stateManager.save(task)
-        logger.debug(s"[T${task.id.value}] Scheduled task. Run: ${run.id.value}, node: ${node.name}, op: ${payload.op}")
-        nodeState.copy(status = NodeStatus.Scheduled)
+        logger.debug(s"Scheduled task ${task.id.value}. Run: ${run.id.value}, node: ${node.name}, op: ${payload.op}")
+        replace(run, nodeState, nodeState.copy(status = NodeStatus.Scheduled))
     }
-    replace(run, nodeState, newNodeState)
   }
 
   /**
@@ -179,6 +224,30 @@ class RunLifecycleManager @Inject()(
     OpPayload(node.op, run.seed, inputs, cacheKey)
   }
 
+  private def updateProgress(run: Run): Run = {
+    // Run could already be marked as completed if it was killed. In this case we do not want to update its state.
+    // Otherwise, we check if this node was the last one to complete the run.
+    if (run.state.completedAt.isEmpty) {
+      // If all nodes are completed (not necessarily successfully), mark the run as completed. It is successfully
+      // completed if all nodes completed successfully.
+      if (run.state.nodes.forall(s => Utils.isCompleted(s.status))) {
+        val newRunStatus = if (run.state.nodes.forall(_.status == NodeStatus.Success)) {
+          RunStatus.Success
+        } else {
+          RunStatus.Failed
+        }
+        run.copy(state = run.state.copy(progress = 1, status = newRunStatus, completedAt = Some(System.currentTimeMillis())))
+      } else {
+        // Run is not yet completed, only, update progress.
+        val progress = run.state.nodes.count(s => Utils.isCompleted(s.status)).toDouble / run.state.nodes.size
+        run.copy(state = run.state.copy(progress = progress))
+      }
+    } else {
+      run
+    }
+    //TODO: update parent run if any.
+  }
+
   /**
    * Generate a unique cache key for the outputs of a node. It is based on operator definition, inputs and seed.
    *
@@ -198,16 +267,33 @@ class RunLifecycleManager @Inject()(
     CacheKey(hasher.hash().toString)
   }
 
-  private def getNextReadyNodes(run: Run, nodeName: String): Set[Node] = {
-    getNextNodes(run, nodeName).filter { nextNode =>
+  private def scheduleNextNodes(run: Run, nodeName: String): Run = {
+    val graph = getGraph(run)
+    val nextNodes = getNextNodes(run, graph, nodeName).filter { nextNode =>
       nextNode.predecessors.forall { dep =>
         run.state.nodes.find(_.nodeName == dep).get.status == NodeStatus.Success
       }
     }
+    var newRun = run
+    nextNodes.foreach { nextNode =>
+      newRun = schedule(newRun, nextNode)
+    }
+    newRun
   }
 
-  private def getNextNodes(run: Run, nodeName: String): Set[Node] = {
+  private def cancelNextNodes(run: Run, nodeName: String): Run = {
     val graph = getGraph(run)
+    val nextNodes = getNextNodes(run, graph, nodeName).flatMap(node => Seq(node) ++ getNextNodes(run, graph, node.name))
+    var newRun = run
+    nextNodes.foreach { nextNode =>
+      val nodeState = newRun.state.nodes.find(_.nodeName == nextNode.name).get
+      val newNodeState = nodeState.copy(completedAt = Some(System.currentTimeMillis()), status = NodeStatus.Cancelled)
+      newRun = replace(newRun, nodeState, newNodeState)
+    }
+    newRun
+  }
+
+  private def getNextNodes(run: Run, graph: Graph, nodeName: String): Set[Node] = {
     graph(nodeName).successors
       .map(graph.apply)
       .filter { nextNode =>

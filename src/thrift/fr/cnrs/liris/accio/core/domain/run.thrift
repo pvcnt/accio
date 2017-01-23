@@ -30,6 +30,7 @@ enum NodeStatus {
   FAILED,
   KILLED,
   CANCELLED,
+  LOST
 }
 
 struct NodeState {

@@ -66,7 +66,6 @@ class JvmProfiler extends Profiler {
   private[this] val _wallTime = new AtomicLong(0)
   private[this] val _cpuTime = new AtomicLong(0)
   private[this] val _userTime = new AtomicLong(0)
-  private[this] val _systemTime = new AtomicLong(0)
   private[this] val _memoryUsed = new AtomicLong(0)
   private[this] val _memoryReserved = new AtomicLong(0)
 
@@ -75,7 +74,6 @@ class JvmProfiler extends Profiler {
     val startWallTime = System.nanoTime
     val startCpuTime = if (bean.isCurrentThreadCpuTimeSupported) Some(bean.getCurrentThreadCpuTime) else None
     val startUserTime = if (bean.isCurrentThreadCpuTimeSupported) Some(bean.getCurrentThreadUserTime) else None
-    val startSystemTime = if (bean.isCurrentThreadCpuTimeSupported) Some(startCpuTime.get - startUserTime.get) else None
 
     try {
       f
@@ -85,8 +83,6 @@ class JvmProfiler extends Profiler {
       cpuTime.foreach(time => this._cpuTime.addAndGet(math.max(0, time)))
       val userTime = startUserTime.map(start => bean.getCurrentThreadUserTime - start)
       userTime.foreach(time => this._userTime.addAndGet(math.max(0, time)))
-      val systemTime = startSystemTime.map(start => cpuTime.get - userTime.get - start)
-      systemTime.foreach(time => this._systemTime.addAndGet(math.max(0, time)))
 
       val peaks = ManagementFactory.getMemoryPoolMXBeans.asScala.map(_.getPeakUsage)
       _memoryUsed.addAndGet(peaks.map(_.getUsed).sum)
@@ -98,10 +94,9 @@ class JvmProfiler extends Profiler {
     Set(
       Metric("memory_used_bytes", memoryUsed.inBytes),
       Metric("memory_reserved_bytes", memoryReserved.inBytes),
-      Metric("cpu_time_nanos", cpuTime.inNanoseconds),
-      Metric("user_time_nanos", userTime.inNanoseconds),
-      Metric("wall_time_nanos", wallTime.inNanoseconds),
-      Metric("system_time_nanos", systemTime.inNanoseconds))
+      Metric("cpu_time_millis", cpuTime.inMillis),
+      Metric("user_time_millis", userTime.inMillis),
+      Metric("wall_time_millis", wallTime.inMillis),
   }
 
   /**
@@ -118,11 +113,6 @@ class JvmProfiler extends Profiler {
    * Return total user time.
    */
   def userTime: Duration = Duration.fromNanoseconds(_userTime.get)
-
-  /**
-   * Return total system time.
-   */
-  def systemTime: Duration = Duration.fromNanoseconds(_systemTime.get)
 
   /**
    * Return total heap ram used (computed for the whole JVM process).

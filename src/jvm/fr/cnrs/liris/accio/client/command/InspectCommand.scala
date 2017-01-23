@@ -130,8 +130,12 @@ class InspectCommand @Inject()(client: AgentService.FinagledClient) extends Comm
     node.completedAt.foreach { completedAt =>
       out.writeln(s"<comment>${padTo("Completed", colWidth)}</comment> ${prettyTime.format(new Date(completedAt))}")
       if (node.startedAt.isDefined) {
-        out.writeln(s"<comment>${padTo("Duration", colWidth)}</comment> " +
-          formatDuration(Duration.fromMilliseconds(completedAt - node.startedAt.get)))
+        out.write(s"<comment>${padTo("Duration", colWidth)}</comment> ")
+        if (node.result.exists(_.cacheHit)) {
+          out.writeln("<cache hit>")
+        } else {
+          out.writeln(formatDuration(Duration.fromMilliseconds(completedAt - node.startedAt.get)))
+        }
       }
     }
 

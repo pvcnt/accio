@@ -34,55 +34,26 @@ final class CompleteTaskHandler @Inject()(
     val taskLock = stateManager.lock(s"task/${req.taskId.value}")
     taskLock.lock()
     try {
-      stateManager.get(req.taskId) match {
-        case None => throw new UnknownTaskException(req.taskId)
-        case Some(task) =>
-          stateManager.remove(task.id)
-          val runLock = stateManager.lock(s"run/${task.runId.value}")
-          runLock.lock()
-          try {
-            runRepository.get(task.runId) match {
-              case None => logger.warn(s"Received task ${req.taskId.value} for unknown run ${task.runId.value}")
-              case Some(run) =>
-                var newRun = if (req.result.exitCode == 0) {
-                  runManager.onSuccess(run, task.nodeName, req.result, Some(task.payload.cacheKey))
-                } else {
-                  runManager.onFailed(run, task.nodeName, req.result)
-                }
-                newRun = newRun.copy(state = updateRunState(newRun.state))
-                //TODO: update parent run if any.
-                runRepository.save(newRun)
+      stateManager.get(req.taskId).foreach { task =>
+        stateManager.remove(task.id)
+        val runLock = stateManager.lock(s"run/${task.runId.value}")
+        runLock.lock()
+        try {
+          runRepository.get(task.runId).foreach { run =>
+            val newRun = if (req.result.exitCode == 0) {
+              runManager.onSuccess(run, task.nodeName, req.result, Some(task.payload.cacheKey))
+            } else {
+              runManager.onFailed(run, task.nodeName, req.result)
             }
-          } finally {
-            runLock.unlock()
+            runRepository.save(newRun)
           }
+        } finally {
+          runLock.unlock()
+        }
       }
       Future(CompleteTaskResponse())
     } finally {
       taskLock.unlock()
-    }
-  }
-
-  private def updateRunState(runState: RunState) = {
-    // Run could already be marked as completed if it was killed. In this case we do not want to update its state.
-    // Otherwise, we check if this node was the last one to complete the run.
-    if (runState.completedAt.isEmpty) {
-      // If all nodes are completed (not necessarily successfully), mark the run as completed. It is successfully
-      // completed if all nodes completed successfully.
-      if (runState.nodes.forall(s => Utils.isCompleted(s.status))) {
-        val newRunStatus = if (runState.nodes.forall(_.status == NodeStatus.Success)) {
-          RunStatus.Success
-        } else {
-          RunStatus.Failed
-        }
-        runState.copy(progress = 1, status = newRunStatus, completedAt = Some(System.currentTimeMillis()))
-      } else {
-        // Run is not yet completed, only, update progress.
-        val progress = runState.nodes.count(s => Utils.isCompleted(s.status)).toDouble / runState.nodes.size
-        runState.copy(progress = progress)
-      }
-    } else {
-      runState
     }
   }
 }

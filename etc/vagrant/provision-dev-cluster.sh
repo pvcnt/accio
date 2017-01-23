@@ -24,7 +24,8 @@ function install_packages() {
         nodejs \
         npm \
         autoconf \
-        automake
+        automake \
+        htop
 }
 
 function prepare_extras() {

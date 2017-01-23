@@ -18,8 +18,9 @@
 
 package fr.cnrs.liris.accio.agent
 
-import com.google.inject.TypeLiteral
+import com.google.inject.{Provides, Singleton, TypeLiteral}
 import com.twitter.inject.TwitterModule
+import com.twitter.util.Duration
 import fr.cnrs.liris.accio.core.api.Operator
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.service._
@@ -30,6 +31,7 @@ import net.codingwell.scalaguice.ScalaMultibinder
  */
 object AgentModule extends TwitterModule {
   private[this] val clusterFlag = flag("cluster", "default", "Cluster name") // Not used yet.
+  private[this] val taskTimeout = flag("task_timeout", Duration.fromSeconds(30), "Time after which a task is considered lost")
 
   protected override def configure(): Unit = {
     // Create an empty set of operators, in case nothing else is bound.
@@ -38,5 +40,11 @@ object AgentModule extends TwitterModule {
     // Bind remaining implementations.
     bind[OpMetaReader].to[ReflectOpMetaReader]
     bind[OpRegistry].to[RuntimeOpRegistry]
+  }
+
+  @Singleton
+  @Provides
+  def providesLostTaskObserver(stateManager: StateManager, runRepository: RunRepository, runManager: RunLifecycleManager): LostTaskObserver = {
+    new LostTaskObserver(taskTimeout(), stateManager, runRepository, runManager)
   }
 }
