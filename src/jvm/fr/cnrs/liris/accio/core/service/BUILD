@@ -8,6 +8,7 @@ scala_library(
     '3rdparty/jvm/org/scalanlp:breeze',
     '3rdparty/jvm/com/typesafe/scala-logging',
     '3rdparty/jvm/com/google/guice',
+    '3rdparty/jvm/com/google/guava',
   ],
   sources=globs('*.scala')
 )

@@ -33,11 +33,12 @@ import fr.cnrs.liris.accio.core.domain._
  */
 class SchedulerService @Inject()(scheduler: Scheduler, stateManager: StateManager, opRegistry: OpRegistry) extends StrictLogging {
   /**
-   * Submit a node to the scheduler.
+   * Submit a node to the scheduler. It submits a job to the scheduler, creates a task from it and saves this task in
+   * the state manager.
    *
    * @param run  Run. Must contain the latest execution state, to allow the node to fetch its dependencies.
    * @param node Node to execute, as part of the run.
-   * @return Task submitted to the scheduler.
+   * @return Task that has been created.
    */
   def submit(run: Run, node: Node): Task = {
     val payload = createPayload(run, node)

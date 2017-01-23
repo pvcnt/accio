@@ -21,10 +21,12 @@ package fr.cnrs.liris.accio.core.service
 import java.nio.file.{Files, Path, Paths}
 import java.util.UUID
 
+import com.google.common.base.Charsets
+import com.google.common.hash.Hashing
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.api.{OpContext, Operator}
 import fr.cnrs.liris.accio.core.domain._
-import fr.cnrs.liris.common.util.{FileUtils, HashUtils}
+import fr.cnrs.liris.common.util.FileUtils
 
 import scala.util.control.NonFatal
 
@@ -101,8 +103,7 @@ final class OpExecutor(
    * @return Result of the operator execution.
    */
   private def execute[In](operator: Operator[In, _], opDef: OpDef, payload: OpPayload, opts: OpExecutorOpts) = {
-    val cacheKey = HashUtils.sha1(UUID.randomUUID().toString)
-    val sandboxDir = workDir.resolve(cacheKey)
+    val sandboxDir = workDir.resolve(UUID.randomUUID().toString)
     Files.createDirectories(sandboxDir.resolve("outputs"))
     Files.createDirectories(sandboxDir.resolve("inputs"))
 
@@ -112,6 +113,8 @@ final class OpExecutor(
     val maybeSeed = if (operator.isUnstable(in)) Some(payload.seed) else None
     val ctx = new OpContext(maybeSeed, sandboxDir.resolve("outputs"))
     val profiler = if (opts.useProfiler) new JvmProfiler else NullProfiler
+
+    val cacheKey = generateCacheKey(opDef, inputs, maybeSeed)
 
     // The actual operator is the only profiled section. The outcome is either an output object or an exception.
     logger.debug(s"Starting operator ${opDef.name} (sandbox in ${sandboxDir.toAbsolutePath})")
@@ -225,8 +228,8 @@ final class OpExecutor(
   /**
    * Upload artifacts that need to be uploaded, i.e., those that hold a reference to local storage.
    *
-   * @param artifacts  Artifacts produced by the operator.
-   * @param cacheKey   Cache key under which to upload artifacts.
+   * @param artifacts Artifacts produced by the operator.
+   * @param cacheKey  Cache key under which to upload artifacts.
    * @return Rewritten list of artifacts, taking into account artifacts' final remote destination.
    */
   private def uploadArtifacts(artifacts: Set[Artifact], cacheKey: String): Set[Artifact] = {
@@ -240,5 +243,23 @@ final class OpExecutor(
         case _ => artifact
       }
     }
+  }
+
+  /**
+   * Generate a unique cache key for the outputs of a node. It is based on operator definition, inputs and seed.
+   *
+   * @param opDef  Operator definition.
+   * @param inputs Node inputs.
+   * @param seed   Seed, only for an unstable node.
+   */
+  private def generateCacheKey(opDef: OpDef, inputs: Map[String, Value], seed: Option[Long]): String = {
+    val hasher = Hashing.sha1().newHasher()
+    hasher.putString(opDef.name, Charsets.UTF_8)
+    hasher.putLong(seed.getOrElse(0L))
+    opDef.inputs.map { argDef =>
+      hasher.putString(argDef.name, Charsets.UTF_8)
+      hasher.putInt(inputs.get(argDef.name).orElse(argDef.defaultValue).hashCode)
+    }
+    hasher.hash().toString
   }
 }
