@@ -98,12 +98,11 @@ final class ElasticRunRepository(
       q = q.filter(rangeQuery("created_at").from(since.inMillis).includeLower(false))
     }
 
-    var s = search(logsIndex / logsType)
+    val s = search(logsIndex / logsType)
       .query(q)
       .sortBy(fieldSort("created_at"))
-    query.limit.foreach { limit =>
-      s = s.limit(limit)
-    }
+      // https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-from-size.html
+      .limit(query.limit.getOrElse(10000))
 
     val f = client.execute(s).map { resp =>
       resp.hits.toSeq.map(hit => mapper.parse[RunLog](hit.sourceAsBytes))
