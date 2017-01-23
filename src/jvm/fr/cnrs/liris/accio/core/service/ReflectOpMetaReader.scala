@@ -53,6 +53,7 @@ class ReflectOpMetaReader extends OpMetaReader with LazyLogging {
             description = maybe(op.description).flatMap(loadDescription(_, clazz)),
             category = op.category,
             deprecation = maybe(op.deprecation),
+            unstable = op.unstable,
             resource = resource)
           OpMeta(defn, clazz, inRefl.map(_.runtimeClass), outRefl.map(_.runtimeClass))
       }

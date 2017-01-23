@@ -31,6 +31,7 @@ import scala.util.Random
   category = "prepare",
   help = "Uniformly sample events inside traces.",
   description = "Perform a uniform sampling on traces, keeping each event with a given probability.",
+  unstable = true,
   cpu = 4,
   ram = "2G")
 class UniformSamplingOp @Inject()(
@@ -46,8 +47,6 @@ class UniformSamplingOp @Inject()(
     val output = input.map(trace => transform(trace, in.probability, seeds(trace.id)))
     UniformSamplingOut(write(output, ctx.workDir))
   }
-
-  override def isUnstable(in: UniformSamplingIn): Boolean = true
 
   private def transform(trace: Trace, probability: Double, seed: Long): Trace = {
     trace.replace(RandomUtils.sampleUniform(trace.events, probability, seed))

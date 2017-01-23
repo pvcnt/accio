@@ -21,8 +21,8 @@ package fr.cnrs.liris.accio.core.service.handler
 import com.google.inject.Inject
 import com.twitter.util.Future
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.core.service.SchedulerService
 import fr.cnrs.liris.accio.core.domain._
+import fr.cnrs.liris.accio.core.service.SchedulerService
 
 /**
  * Handler for launching a workflow. It create one or several runs, save them and schedule them.
@@ -43,20 +43,24 @@ final class CreateRunHandler @Inject()(
 
   @throws[InvalidRunDefException]
   def handle(req: CreateRunRequest): Future[CreateRunResponse] = {
-    // Create and save runs into the repository.
+    // Create runs.
     val runs = runFactory.create(req.defn, req.user)
-    runs.foreach(runRepository.save)
 
-    // Schedule root nodes, for all runs. Take care not to schedule the parent run (if any).
-    // Workflow does exist, because it has been validate when creating the runs.
+    // Save only parent run.
+    runs.filter(_.children.nonEmpty).foreach(runRepository.save)
+
+    // Workflow does exist, because it has been validated when creating the runs.
     val workflow = workflowRepository.get(runs.head.pkg.workflowId, runs.head.pkg.workflowVersion).get
     val rootNodes = graphFactory.create(workflow.graph).roots
+
+    // Schedule root nodes, for all child runs.
     runs.filter(_.children.isEmpty).foreach { run =>
-      rootNodes.foreach(scheduler.submit(run, _))
+      rootNodes.foreach { node =>
+        runRepository.save(scheduler.submit(run, node))
+      }
     }
 
     logger.debug(s"Created ${runs.size} runs, scheduled ${runs.size * rootNodes.size} nodes")
-
     Future(CreateRunResponse(runs.map(_.id)))
   }
 }

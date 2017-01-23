@@ -46,23 +46,17 @@ class EventSourceOp @Inject()(
       if (in.users.nonEmpty) {
         data = data.restrict(in.users.toSet)
       }
-      in.sample.foreach { sample =>
-        data = data.sample(withReplacement = false, fraction = sample, seed = ctx.seed)
-      }
       write(data, ctx.workDir)
     } else Dataset(in.url)
     EventSourceOut(output)
   }
 
-  override def isUnstable(in: EventSourceIn): Boolean = in.sample.isDefined
-
-  private def willWrite(in: EventSourceIn) = in.kind != "csv" || in.sample.nonEmpty || in.users.nonEmpty
+  private def willWrite(in: EventSourceIn) = in.kind != "csv" || in.users.nonEmpty
 }
 
 case class EventSourceIn(
   @Arg(help = "Dataset URL") url: String,
   @Arg(help = "Kind of dataset") kind: String = "csv",
-  @Arg(help = "Sampling ratio") sample: Option[Double],
   @Arg(help = "Users to include") users: Seq[String] = Seq.empty)
 
 case class EventSourceOut(@Arg(help = "Source dataset") data: Dataset)

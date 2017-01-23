@@ -44,30 +44,21 @@ final class CompleteTaskHandler @Inject()(
           runLock.lock()
           try {
             runRepository.get(task.runId) match {
-              case None => logger.warn(s"Received task ${req.taskId.value} associated with unknown run ${task.runId.value}")
+              case None => logger.warn(s"Received task ${req.taskId.value} for unknown run ${task.runId.value}")
               case Some(run) =>
                 var newRun = updateRun(run, task.nodeName, req.result)
                 if (req.result.exitCode == 0) {
                   // Task completed successfully, schedule next nodes.
-                  val graph = getGraph(newRun)
-                  val nextNodes = graph(task.nodeName).successors.filter { nextNodeName =>
-                    val nextNode = graph(nextNodeName)
-                    nextNode.predecessors.forall { dep =>
-                      newRun.state.nodes.find(_.nodeName == dep).get.status == NodeStatus.Success
-                    }
-                  }
+                  val nextNodes = getReadyNodes(run, task.nodeName)
                   nextNodes.foreach { nextNode =>
-                    val nodeState = newRun.state.nodes.find(_.nodeName == nextNode).get
-                    val newNodeState = nodeState.copy(status = NodeStatus.Scheduled)
-                    newRun = newRun.copy(state = newRun.state.copy(nodes = newRun.state.nodes - nodeState + newNodeState))
+                    newRun = scheduler.submit(run, nextNode)
                   }
-                  runRepository.save(newRun)
-                  nextNodes.foreach(nextNode => scheduler.submit(newRun, graph(nextNode)))
                   logger.debug(s"[T${task.id.value}] Task successful, scheduled ${nextNodes.size} nodes: ${nextNodes.mkString(", ")}")
                 } else {
-                  runRepository.save(newRun)
+                  // Task failed, next nodes are cancelled.
                   logger.debug(s"[T${task.id.value}] Task failed, cancelled next nodes")
                 }
+                runRepository.save(newRun)
                 if (Utils.isCompleted(newRun.state.status)) {
                   logger.debug(s"[T${task.id.value}] Run ${run.id.value} completed")
                 }
@@ -82,10 +73,21 @@ final class CompleteTaskHandler @Inject()(
     }
   }
 
-  private def getGraph(run: Run) = {
+  private def getGraph(run: Run): Graph = {
     // Workflow does exist, because it has been validate when creating the runs.
     val workflow = workflowRepository.get(run.pkg.workflowId, run.pkg.workflowVersion).get
     graphFactory.create(workflow.graph)
+  }
+
+  private def getReadyNodes(run: Run, nodeName: String): Set[Node] = {
+    val graph = getGraph(run)
+    graph(nodeName).successors
+      .map(graph.apply)
+      .filter { nextNode =>
+        nextNode.predecessors.forall { dep =>
+          run.state.nodes.find(_.nodeName == dep).get.status == NodeStatus.Success
+        }
+      }
   }
 
   private def updateRun(run: Run, nodeName: String, result: OpResult) = {

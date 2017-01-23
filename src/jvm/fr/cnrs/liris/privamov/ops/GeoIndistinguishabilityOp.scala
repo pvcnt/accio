@@ -32,6 +32,7 @@ import scala.util.Random
   help = "Enforce geo-indistinguishability guarantees on traces.",
   description = "Generate locations satisfying geo-indistinguishability properties. The method used here is the one " +
     "presented by the authors of the paper and consists in adding noise following a double-exponential distribution.",
+  unstable = true,
   cpu = 4,
   ram = "2G")
 class GeoIndistinguishabilityOp @Inject()(
@@ -47,8 +48,6 @@ class GeoIndistinguishabilityOp @Inject()(
     val output = input.map(trace => new Laplace(in.epsilon, seeds(trace.id)).transform(trace))
     GeoIndistinguishabilityOut(write(output, ctx.workDir))
   }
-
-  override def isUnstable(in: GeoIndistinguishabilityIn): Boolean = true
 }
 
 case class GeoIndistinguishabilityIn(

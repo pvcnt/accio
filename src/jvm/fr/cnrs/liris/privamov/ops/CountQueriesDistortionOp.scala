@@ -32,7 +32,8 @@ import org.joda.time.{Duration, Interval}
 
 @Op(
   category = "metric",
-  help = "Evaluate count query distortion between to datasets.")
+  help = "Evaluate count query distortion between to datasets.",
+  unstable = true)
 class CountQueriesDistortionOp @Inject()(
   override protected val env: SparkleEnv,
   override protected val decoders: Set[Decoder[_]]
@@ -48,8 +49,6 @@ class CountQueriesDistortionOp @Inject()(
     val values = refCounts.indices.map(i => compute(refCounts(i), resCounts(i)))
     CountQueriesDistortionOut(values)
   }
-
-  override def isUnstable(in: CountQueriesDistortionIn): Boolean = true
 
   private def compute(refCount: Long, resCount: Long): Double = {
     if (0 == refCount) resCount

@@ -21,8 +21,6 @@ package fr.cnrs.liris.accio.core.service
 import java.nio.file.{Files, Path, Paths}
 import java.util.UUID
 
-import com.google.common.base.Charsets
-import com.google.common.hash.Hashing
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.api.{OpContext, Operator}
 import fr.cnrs.liris.accio.core.domain._
@@ -36,14 +34,6 @@ import scala.util.control.NonFatal
  * @param useProfiler Whether to profile code execution.
  */
 case class OpExecutorOpts(useProfiler: Boolean)
-
-/**
- * Exception sent if an input is missing.
- *
- * @param op  Operator name.
- * @param arg Input port name;
- */
-class MissingOpInput(val op: String, val arg: String) extends Exception(s"Missing required input of $op operator: $arg")
 
 /**
  * Entry point for executing an operator from a payload. It manages the whole lifecycle of instantiating an operator,
@@ -110,11 +100,9 @@ final class OpExecutor(
     val inputs = downloadInputs(opDef, sandboxDir, payload.inputs.toMap)
     val in = createInput(opDef, inputs).asInstanceOf[In]
 
-    val maybeSeed = if (operator.isUnstable(in)) Some(payload.seed) else None
+    val maybeSeed = if (opDef.unstable) Some(payload.seed) else None
     val ctx = new OpContext(maybeSeed, sandboxDir.resolve("outputs"))
     val profiler = if (opts.useProfiler) new JvmProfiler else NullProfiler
-
-    val cacheKey = generateCacheKey(opDef, inputs, maybeSeed)
 
     // The actual operator is the only profiled section. The outcome is either an output object or an exception.
     logger.debug(s"Starting operator ${opDef.name} (sandbox in ${sandboxDir.toAbsolutePath})")
@@ -132,7 +120,7 @@ final class OpExecutor(
 
     // We convert the outcome into an exit code, artifacts, metrics and possibly and error.
     val (artifacts, error) = res match {
-      case Left(out) => (uploadArtifacts(extractArtifacts(opDef, out), cacheKey), None)
+      case Left(out) => (uploadArtifacts(extractArtifacts(opDef, out), payload.cacheKey), None)
       case Right(ex) => (Set.empty[Artifact], Some(ex))
     }
     val metrics = profiler.metrics
@@ -145,7 +133,7 @@ final class OpExecutor(
       logger.debug(s"Cleaned sandbox")
     }
 
-    OpResult(exitCode, error, artifacts, metrics, Some(cacheKey))
+    OpResult(exitCode, error, artifacts, metrics)
   }
 
   /**
@@ -243,23 +231,5 @@ final class OpExecutor(
         case _ => artifact
       }
     }
-  }
-
-  /**
-   * Generate a unique cache key for the outputs of a node. It is based on operator definition, inputs and seed.
-   *
-   * @param opDef  Operator definition.
-   * @param inputs Node inputs.
-   * @param seed   Seed, only for an unstable node.
-   */
-  private def generateCacheKey(opDef: OpDef, inputs: Map[String, Value], seed: Option[Long]): String = {
-    val hasher = Hashing.sha1().newHasher()
-    hasher.putString(opDef.name, Charsets.UTF_8)
-    hasher.putLong(seed.getOrElse(0L))
-    opDef.inputs.map { argDef =>
-      hasher.putString(argDef.name, Charsets.UTF_8)
-      hasher.putInt(inputs.get(argDef.name).orElse(argDef.defaultValue).hashCode)
-    }
-    hasher.hash().toString
   }
 }

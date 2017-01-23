@@ -42,15 +42,6 @@ trait Operator[In, Out] {
    * @return Outputs.
    */
   def execute(in: In, ctx: OpContext): Out
-
-  /**
-   * Specifies whether the outputs of this operator will be unstable under some inputs. Unstable operators need to
-   * use a random seed specified in the context to produce deterministic outputs.
-   *
-   * @param in Inputs.
-   * @return True if this execution is unstable, false otherwise.
-   */
-  def isUnstable(in: In): Boolean = false
 }
 
 /**

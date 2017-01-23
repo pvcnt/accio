@@ -29,13 +29,13 @@ import fr.cnrs.liris.testing.UnitSpec
  * Common unit tests for all [[StateManager]] implementations, ensuring they all have consistent behavior.
  */
 private[statemgr] abstract class StateMgrSpec extends UnitSpec {
-  val pool = Executors.newCachedThreadPool
+  private[this] val pool = Executors.newCachedThreadPool
 
   private[this] val ScheduledTask = Task(
     id = TaskId("id2"),
     runId = RunId("foobar"),
     nodeName = "foonode",
-    payload = OpPayload("fooop", 1234, Map.empty),
+    payload = OpPayload("fooop", 1234, Map.empty, "MyCacheKey"),
     key = "fookey",
     scheduler = "dummy",
     createdAt = System.currentTimeMillis(),
@@ -44,7 +44,7 @@ private[statemgr] abstract class StateMgrSpec extends UnitSpec {
     id = TaskId("id1"),
     runId = RunId("foobar"),
     nodeName = "foonode",
-    payload = OpPayload("fooop", 1234, Map.empty),
+    payload = OpPayload("fooop", 1234, Map.empty, "MyCacheKey"),
     key = "fookey",
     scheduler = "dummy",
     createdAt = System.currentTimeMillis(),

@@ -51,6 +51,8 @@ public @interface Op {
      */
     String category() default "misc";
 
+    boolean unstable() default false;
+
     /**
      * A deprecation message that will be used each time this operator is used in a workflow.
      */

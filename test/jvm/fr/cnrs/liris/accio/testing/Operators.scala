@@ -53,6 +53,7 @@ private[accio] object Operators {
       inputs = inputs,
       outputs = outputs,
       deprecation = None,
+      unstable = false,
       resource = Resource(1, 128, 1000))
   }
 }
