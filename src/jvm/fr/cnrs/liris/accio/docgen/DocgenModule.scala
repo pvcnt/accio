@@ -20,16 +20,17 @@ package fr.cnrs.liris.accio.docgen
 
 import com.google.inject.{AbstractModule, TypeLiteral}
 import fr.cnrs.liris.accio.core.api.Operator
-import fr.cnrs.liris.accio.core.service.ReflectOpMetaReader
-import fr.cnrs.liris.accio.core.domain.OpMetaReader
+import fr.cnrs.liris.accio.core.service.{ReflectOpMetaReader, RuntimeOpRegistry}
+import fr.cnrs.liris.accio.core.domain.{OpMetaReader, OpRegistry}
 import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
 
 /**
  * Guice module providing bindings for Accio Docgen application.
  */
-object AccioModule extends AbstractModule with ScalaModule {
+object DocgenModule extends AbstractModule with ScalaModule {
   override def configure(): Unit = {
     ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Class[_ <: Operator[_, _]]] {})
     bind[OpMetaReader].to[ReflectOpMetaReader]
+    bind[OpRegistry].to[RuntimeOpRegistry]
   }
 }

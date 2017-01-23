@@ -45,7 +45,7 @@ case class AccioDocgenFlags(
 class AccioDocgen {
   def main(args: Array[String]): Unit = {
     val elapsed = Stopwatch.start()
-    val injector = Guice.createInjector(AccioModule, OpsModule)
+    val injector = Guice.createInjector(DocgenModule, OpsModule)
     val parser = FlagsParser[AccioDocgenFlags](allowResidue = false)
     parser.parseAndExitUponError(args)
 

@@ -1,6 +1,6 @@
 ---
-layout: docs
-nav: docs
+layout: privacy
+nav: privacy
 title: Operators library
 ---
 
@@ -11,8 +11,6 @@ title: Operators library
 
 ### EventSource
 
-:hammer: Implemented in `fr.cnrs.liris.privamov.ops.EventSourceOp`
-
 Read a dataset of traces.
 
 This operator can manipulate the source dataset, essentially to reduce its size, through some basic preprocessing.
@@ -21,8 +19,7 @@ This operator can manipulate the source dataset, essentially to reduce its size,
 |:-----------|:-----|:------------|
 | `url` | string; required | Dataset URL |
 | `kind` | string; optional; default: csv | Kind of dataset |
-| `sample` | float; optional | Sampling ratio |
-| `users` | list of strings; optional; default: List() | Users to include |
+| `users` | list of string; optional; default:  | Users to include |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
@@ -33,8 +30,6 @@ This operator can manipulate the source dataset, essentially to reduce its size,
 ## Prepare operators
 
 ### CollapseTemporalGaps
-
-:hammer: Implemented in `fr.cnrs.liris.privamov.ops.CollapseTemporalGapsOp`
 
 Collapse temporal gaps between days.
 
@@ -53,8 +48,6 @@ Removes empty days by shifting data to fill those empty days.
 
 ### DurationSplitting
 
-:hammer: Implemented in `fr.cnrs.liris.privamov.ops.DurationSplittingOp`
-
 Split traces, ensuring a maximum duration for each one.
 
 | Input name | Type | Description |
@@ -69,8 +62,6 @@ Split traces, ensuring a maximum duration for each one.
 {: class="table table-striped"}
 
 ### EnforceDuration
-
-:hammer: Implemented in `fr.cnrs.liris.privamov.ops.EnforceDurationOp`
 
 Enforce a given duration on each trace.
 
@@ -90,8 +81,6 @@ Longer traces will be truncated, shorter traces will be discarded.
 
 ### EnforceSize
 
-:hammer: Implemented in `fr.cnrs.liris.privamov.ops.EnforceSizeOp`
-
 Enforce a given size on each trace.
 
 Larger traces will be truncated, smaller traces will be discarded.
@@ -110,8 +99,6 @@ Larger traces will be truncated, smaller traces will be discarded.
 
 ### GaussianKernelSmoothing
 
-:hammer: Implemented in `fr.cnrs.liris.privamov.ops.GaussianKernelSmoothingOp`
-
 Apply gaussian kernel smoothing on traces.
 
 Apply gaussian kernel smoothing on a trace, attenuating the impact of noisy observations.
@@ -128,8 +115,6 @@ Apply gaussian kernel smoothing on a trace, attenuating the impact of noisy obse
 {: class="table table-striped"}
 
 ### ModuloSampling
-
-:hammer: Implemented in `fr.cnrs.liris.privamov.ops.ModuloSamplingOp`
 
 Regularly sample events inside traces using the modulo operator.
 
@@ -148,14 +133,12 @@ It will ensure that the final number of events is exactly (+/- 1) the one requir
 
 ### SequentialSplitting
 
-:hammer: Implemented in `fr.cnrs.liris.privamov.ops.SequentialSplittingOp`
-
 Split traces sequentially, according to chronological order.
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `percentBegin` | float; required | Percentage of events at which a trace begins |
-| `percentEnd` | float; required | Percentage of events at which a trace ends |
+| `percentBegin` | double; required | Percentage of events at which a trace begins |
+| `percentEnd` | double; required | Percentage of events at which a trace ends |
 | `complement` | boolean; optional; default: false | Whether to take the complement trace |
 | `data` | dataset; required | Input dataset |
 {: class="table table-striped"}
@@ -166,8 +149,6 @@ Split traces sequentially, according to chronological order.
 {: class="table table-striped"}
 
 ### SizeSplitting
-
-:hammer: Implemented in `fr.cnrs.liris.privamov.ops.SizeSplittingOp`
 
 Split traces, ensuring a maximum size for each one.
 
@@ -184,8 +165,6 @@ Split traces, ensuring a maximum size for each one.
 
 ### SpatialGapSplitting
 
-:hammer: Implemented in `fr.cnrs.liris.privamov.ops.SpatialGapSplittingOp`
-
 Split traces, when there is a too huge distance between consecutive events.
 
 | Input name | Type | Description |
@@ -200,8 +179,6 @@ Split traces, when there is a too huge distance between consecutive events.
 {: class="table table-striped"}
 
 ### SpatialSampling
-
-:hammer: Implemented in `fr.cnrs.liris.privamov.ops.SpatialSamplingOp`
 
 Enforce a minimum distance between two consecutive events in traces.
 
@@ -220,8 +197,6 @@ If the distance is less than a given threshold, records will be discarded until 
 
 ### TemporalGapSplitting
 
-:hammer: Implemented in `fr.cnrs.liris.privamov.ops.TemporalGapSplittingOp`
-
 Split traces, when there is a too long duration between consecutive events.
 
 | Input name | Type | Description |
@@ -236,8 +211,6 @@ Split traces, when there is a too long duration between consecutive events.
 {: class="table table-striped"}
 
 ### TemporalSampling
-
-:hammer: Implemented in `fr.cnrs.liris.privamov.ops.TemporalSamplingOp`
 
 Enforce a minimum duration between two consecutive events in traces.
 
@@ -256,15 +229,13 @@ If the duration is less than a given threshold, events will be discarded until t
 
 ### UniformSampling
 
-:hammer: Implemented in `fr.cnrs.liris.privamov.ops.UniformSamplingOp`
-
 Uniformly sample events inside traces.
 
 Perform a uniform sampling on traces, keeping each event with a given probability.
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `probability` | float; required | Probability to keep each event |
+| `probability` | double; required | Probability to keep each event |
 | `data` | dataset; required | Input dataset |
 {: class="table table-striped"}
 
@@ -277,15 +248,13 @@ Perform a uniform sampling on traces, keeping each event with a given probabilit
 
 ### GeoIndistinguishability
 
-:hammer: Implemented in `fr.cnrs.liris.privamov.ops.GeoIndistinguishabilityOp`
-
 Enforce geo-indistinguishability guarantees on traces.
 
 Generate locations satisfying geo-indistinguishability properties. The method used here is the one presented by the authors of the paper and consists in adding noise following a double-exponential distribution.
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `epsilon` | float; optional; default: 0.001 | Privacy budget |
+| `epsilon` | double; optional; default: 0 | Privacy budget |
 | `data` | dataset; required | Input dataset |
 {: class="table table-striped"}
 
@@ -295,8 +264,6 @@ Generate locations satisfying geo-indistinguishability properties. The method us
 {: class="table table-striped"}
 
 ### Promesse
-
-:hammer: Implemented in `fr.cnrs.liris.privamov.ops.PromesseOp`
 
 Enforce speed smoothing guarantees on traces.
 
@@ -313,8 +280,6 @@ Enforce speed smoothing guarantees on traces.
 
 ### Wait4Me
 
-:hammer: Implemented in `fr.cnrs.liris.privamov.ops.Wait4MeOp`
-
 Time-tolerant k-anonymization
 
 Wrapper around the implementation of the Wait4Me algorithm provided by their authors.
@@ -325,7 +290,7 @@ Wrapper around the implementation of the Wait4Me algorithm provided by their aut
 | `k` | integer; required | Anonymity level |
 | `delta` | distance; required | Uncertainty |
 | `radiusMax` | distance; optional | Initial maximum radius used in clustering |
-| `trashMax` | float; optional; default: 0.1 | Global maximum trash size, in percentage of the dataset size |
+| `trashMax` | double; optional; default: 0 | Global maximum trash size, in percentage of the dataset size |
 | `chunk` | boolean; optional; default: false | Whether to chunk the input dataset |
 {: class="table table-striped"}
 
@@ -351,8 +316,6 @@ Wrapper around the implementation of the Wait4Me algorithm provided by their aut
 
 ### AreaCoverage
 
-:hammer: Implemented in `fr.cnrs.liris.privamov.ops.AreaCoverageOp`
-
 Compute area coverage difference between two datasets of traces
 
 | Input name | Type | Description |
@@ -364,14 +327,12 @@ Compute area coverage difference between two datasets of traces
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `precision` | map of strings => floats | Area coverage precision |
-| `recall` | map of strings => floats | Area coverage recall |
-| `fscore` | map of strings => floats | Area coverage F-score |
+| `precision` | map of string => double | Area coverage precision |
+| `recall` | map of string => double | Area coverage recall |
+| `fscore` | map of string => double | Area coverage F-score |
 {: class="table table-striped"}
 
 ### BasicAnalyzer
-
-:hammer: Implemented in `fr.cnrs.liris.privamov.ops.BasicAnalyzerOp`
 
 Compute basic statistics about traces.
 
@@ -382,14 +343,12 @@ Compute basic statistics about traces.
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `size` | map of strings => longs | Trace size |
-| `length` | map of strings => floats | Trace length |
-| `duration` | map of strings => longs | Trace duration |
+| `size` | map of string => long | Trace size |
+| `length` | map of string => double | Trace length |
+| `duration` | map of string => long | Trace duration |
 {: class="table table-striped"}
 
 ### CountQueriesDistortion
-
-:hammer: Implemented in `fr.cnrs.liris.privamov.ops.CountQueriesDistortionOp`
 
 Evaluate count query distortion between to datasets.
 
@@ -406,12 +365,10 @@ Evaluate count query distortion between to datasets.
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `value` | list of floats | Count query distortion |
+| `value` | list of double | Count query distortion |
 {: class="table table-striped"}
 
 ### DataCompleteness
-
-:hammer: Implemented in `fr.cnrs.liris.privamov.ops.DataCompletenessOp`
 
 Compute data completeness difference between two datasets of traces.
 
@@ -423,12 +380,10 @@ Compute data completeness difference between two datasets of traces.
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `value` | map of strings => floats | Data completeness |
+| `value` | map of string => double | Data completeness |
 {: class="table table-striped"}
 
 ### PoisAnalyzer
-
-:hammer: Implemented in `fr.cnrs.liris.privamov.ops.PoisAnalyzerOp`
 
 Compute statistics about points of interest
 
@@ -446,8 +401,6 @@ Compute statistics about points of interest
 
 ### PoisReident
 
-:hammer: Implemented in `fr.cnrs.liris.privamov.ops.PoisReidentOp`
-
 Re-identification attack using POIs a the discriminating information.
 
 | Input name | Type | Description |
@@ -462,14 +415,12 @@ Re-identification attack using POIs a the discriminating information.
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `distances` | map of strings => map of strings => floatss | Distances between users from test and train datasets |
-| `matches` | map of strings => strings | Matches between users from test and train datasets |
-| `rate` | float | Correct re-identifications rate |
+| `distances` | map of string => map | Distances between users from test and train datasets |
+| `matches` | map of string => string | Matches between users from test and train datasets |
+| `rate` | double | Correct re-identifications rate |
 {: class="table table-striped"}
 
 ### PoisRetrieval
-
-:hammer: Implemented in `fr.cnrs.liris.privamov.ops.PoisRetrievalOp`
 
 Compute POIs retrieval difference between two datasets of traces
 
@@ -484,14 +435,12 @@ Compute POIs retrieval difference between two datasets of traces
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `precision` | map of strings => floats | POIs retrieval precision |
-| `recall` | map of strings => floats | POIs retrieval recall |
-| `fscore` | map of strings => floats | POIs retrieval F-Score |
+| `precision` | map of string => double | POIs retrieval precision |
+| `recall` | map of string => double | POIs retrieval recall |
+| `fscore` | map of string => double | POIs retrieval F-Score |
 {: class="table table-striped"}
 
 ### PoisRetrieval2
-
-:hammer: Implemented in `fr.cnrs.liris.privamov.ops.PoisRetrieval2Op`
 
 Compute POIs retrieval difference between two POIs datasets
 
@@ -504,14 +453,12 @@ Compute POIs retrieval difference between two POIs datasets
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `precision` | map of strings => floats | POIs retrieval precision |
-| `recall` | map of strings => floats | POIs retrieval recall |
-| `fscore` | map of strings => floats | POIs retrieval F-Score |
+| `precision` | map of string => double | POIs retrieval precision |
+| `recall` | map of string => double | POIs retrieval recall |
+| `fscore` | map of string => double | POIs retrieval F-Score |
 {: class="table table-striped"}
 
 ### SpatialDistortion
-
-:hammer: Implemented in `fr.cnrs.liris.privamov.ops.SpatialDistortionOp`
 
 Compute spatial distortion between two datasets of traces
 
@@ -524,16 +471,14 @@ Compute spatial distortion between two datasets of traces
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `min` | map of strings => floats | Spatial distortion min |
-| `max` | map of strings => floats | Spatial distortion max |
-| `stddev` | map of strings => floats | Spatial distortion stddev |
-| `avg` | map of strings => floats | Spatial distortion avg |
-| `median` | map of strings => floats | Spatial distortion median |
+| `min` | map of string => double | Spatial distortion min |
+| `max` | map of string => double | Spatial distortion max |
+| `stddev` | map of string => double | Spatial distortion stddev |
+| `avg` | map of string => double | Spatial distortion avg |
+| `median` | map of string => double | Spatial distortion median |
 {: class="table table-striped"}
 
 ### SpatioTemporalDistortion
-
-:hammer: Implemented in `fr.cnrs.liris.privamov.ops.SpatioTemporalDistortionOp`
 
 Compute temporal distortion difference between two datasets of traces
 
@@ -545,16 +490,14 @@ Compute temporal distortion difference between two datasets of traces
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `min` | map of strings => floats | Temporal distortion min |
-| `max` | map of strings => floats | Temporal distortion max |
-| `stddev` | map of strings => floats | Temporal distortion stddev |
-| `avg` | map of strings => floats | Temporal distortion avg |
-| `median` | map of strings => floats | Temporal distortion median |
+| `min` | map of string => double | Temporal distortion min |
+| `max` | map of string => double | Temporal distortion max |
+| `stddev` | map of string => double | Temporal distortion stddev |
+| `avg` | map of string => double | Temporal distortion avg |
+| `median` | map of string => double | Temporal distortion median |
 {: class="table table-striped"}
 
 ### TransmissionDelay
-
-:hammer: Implemented in `fr.cnrs.liris.privamov.ops.TransmissionDelayOp`
 
 Compute transmission delay between two datasets of traces
 
@@ -566,14 +509,12 @@ Compute transmission delay between two datasets of traces
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `value` | map of strings => longs | Transmission delay |
+| `value` | map of string => long | Transmission delay |
 {: class="table table-striped"}
 
 ## Transform operators
 
 ### PoisExtraction
-
-:hammer: Implemented in `fr.cnrs.liris.privamov.ops.PoisExtractionOp`
 
 Compute POIs retrieval difference between two datasets of traces
 
