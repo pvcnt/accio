@@ -1,4 +1,4 @@
-import React from "React";
+import React from "react";
 import {filter, find, isEmpty} from "lodash";
 import {LinkContainer} from "react-router-bootstrap";
 import CopyToClipboard from "react-copy-to-clipboard";
@@ -6,22 +6,11 @@ import {Grid, Button, Glyphicon} from "react-bootstrap";
 import RunStatusPanel from "./RunStatusPanel";
 import RunDetailsPanel from "./RunDetailsPanel";
 import SummaryPanelContainer from "./SummaryPanelContainer";
-import GraphView from "../GraphView";
 import LazyPanel from "../LazyPanel";
 
 let RunView = React.createClass({
   getInitialState: function () {
-    return {
-      graphHeight: 500,
-    };
-  },
-
-  _handleLargerGraphClick: function () {
-    this.setState({graphHeight: this.state.graphHeight + 50});
-  },
-
-  _handleSmallerGraphClick: function () {
-    this.setState({graphHeight: this.state.graphHeight - 50});
+    return {};
   },
 
   render: function () {
@@ -47,35 +36,22 @@ let RunView = React.createClass({
     return (
       <Grid>
         <h2 className="accio-title">
-          <img src="images/bars-32px.png"/> {run.name}
+          <img src="images/bars-32px.png"/> {run.name ? run.name : 'Untitled run #' + run.id.value}
         </h2>
 
         <div className="accio-actions">
-          <LinkContainer to={{path: '/runs/create', query: {copy: run.id}}}>
-            <Button><Glyphicon glyph="duplicate"/> Clone run</Button>
-          </LinkContainer>
-
-          <Button href={'/api/run/' + run.id + '?download=true'}>
-            <Glyphicon glyph="save"/> Download run as JSON
+          <Button href={'/api/v1/run/' + run.id.value + '?download=true'}>
+            <Glyphicon glyph="save"/> Download as JSON
           </Button>
 
-          <CopyToClipboard text={run.id}>
+          <CopyToClipboard text={run.id.value}>
             <Button><Glyphicon glyph="copy"/> Copy ID to clipboard</Button>
           </CopyToClipboard>
         </div>
 
         <RunStatusPanel run={run}/>
 
-        <RunDetailsPanel run={run} experiment={this.props.experiment}/>
-
-        <LazyPanel header={<h3>Run graph</h3>}
-                   className="accio-view-panel accio-view-panel-graph"
-                   collapsible={true}
-                   defaultExpanded={false}>
-          <GraphView graph={run.graph} run={run} height={this.state.graphHeight}/>
-        </LazyPanel>
-
-        {summaryPanels}
+        <RunDetailsPanel run={run}/>
       </Grid>
     );
   }
@@ -83,7 +59,6 @@ let RunView = React.createClass({
 
 RunView.propTypes = {
   run: React.PropTypes.object.isRequired,
-  experiment: React.PropTypes.object.isRequired
 };
 
 export default RunView;

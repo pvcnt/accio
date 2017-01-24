@@ -1,4 +1,4 @@
-import React from "React";
+import React from "react";
 import {Label} from "react-bootstrap";
 
 let TagList = React.createClass({

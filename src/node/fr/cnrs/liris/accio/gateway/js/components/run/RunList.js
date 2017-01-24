@@ -1,4 +1,22 @@
-import React from "React";
+/*
+ * Accio is a program whose purpose is to study location privacy.
+ * Copyright (C) 2016-2017 Vincent Primault <vincent.primault@liris.cnrs.fr>
+ *
+ * Accio is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Accio is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+import React from "react";
 import {noop} from "lodash";
 import {LinkContainer} from "react-router-bootstrap";
 import RunTable from "./RunTable";
@@ -42,12 +60,6 @@ let RunList = React.createClass({
     }
   },
 
-  _handleSectionChange: function(eventKey) {
-    this.setState({section: eventKey});
-    const query = ('mine' === eventKey) ? 'owner:vincent' : ('custom' === eventKey) ? this.props.query : '';
-    this.props.onChange({query: query, page: this.props.page});
-  },
-
   render: function () {
     return (
       <Grid className="accio-list">
@@ -65,23 +77,12 @@ let RunList = React.createClass({
 
         <div className="accio-actions">
           <Button><Glyphicon glyph="th" /> Compare</Button>
-          <LinkContainer to="/runs/create">
-            <Button><Glyphicon glyph="plus" /> Launch new run</Button>
-          </LinkContainer>
         </div>
 
         <p>
           Runs are instantiations of workflows, for some parameters.
-          They produce summaries and various statistics, that can be viewed and compared here.
+          They produce artifacts and various metrics, that can be viewed and compared here.
         </p>
-
-        <div className="accio-list-nav">
-          <Nav bsStyle="pills" activeKey={this.state.section} onSelect={this._handleSectionChange}>
-            <NavItem eventKey="mine">My runs</NavItem>
-            <NavItem eventKey="all">All runs</NavItem>
-            <NavItem eventKey="custom" disabled={!this.state.query}>Custom</NavItem>
-          </Nav>
-        </div>
 
         {(null !== this.props.runs) ? <RunTable runs={this.props.runs}/> : <Spinner spinnerName="three-bounce"/>}
 
@@ -101,7 +102,7 @@ let RunList = React.createClass({
 RunList.propTypes = {
   onChange: React.PropTypes.func.isRequired,
   page: React.PropTypes.number.isRequired,
-  query: React.PropTypes.string.isRequired,
+  query: React.PropTypes.object.isRequired,
   runs: React.PropTypes.array,
   totalCount: React.PropTypes.number.isRequired
 };

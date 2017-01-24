@@ -1,4 +1,4 @@
-import React from "React";
+import React from "react";
 import moment from "moment";
 import {Row, Col, Badge, Glyphicon, Label, Modal, Panel} from "react-bootstrap";
 
@@ -18,16 +18,16 @@ let RunStatusPanel = React.createClass({
     this.setState({error: {data: data, node: node}});
   },
 
-  _getState: function (status) {
-    if (status.completed_at) {
-      const millis = status.completed_at - status.started_at;
+  _getState: function (state) {
+    if (state.completed_at) {
+      const millis = state.completed_at - state.started_at;
       return {
         duration: moment.duration(millis).humanize(),
-        text: (status.successful) ? 'successful' : 'errored',
-        glyph: (status.successful) ? 'ok' : 'remove',
+        text: (state.status == 3) ? 'successful' : 'errored',
+        glyph: (state.status == 3) ? 'ok' : 'remove',
       };
-    } else if (status.started_at) {
-      const millis = moment().valueOf() - status.started_at;
+    } else if (state.started_at) {
+      const millis = moment().valueOf() - state.started_at;
       return {
         duration: moment.duration(millis).humanize(),
         text: 'running',
@@ -44,24 +44,24 @@ let RunStatusPanel = React.createClass({
 
   render: function () {
     const run = this.props.run;
-    const runState = this._getState(run.report);
+    const runState = this._getState(run.state);
 
-    const nodeTreeRows = run.report.node_stats.map((node, idx) => {
+    const nodeTreeRows = run.state.nodes.map((node, idx) => {
       const nodeState = this._getState(node);
-      const label = (node.completed)
-        ? <Label bsStyle={(node.successful) ? 'success' : 'danger'}>Ran for {nodeState.duration}</Label>
+      const label = (node.completed_at)
+        ? <Label bsStyle={(node.status == 3) ? 'success' : 'danger'}>Ran for {nodeState.duration}</Label>
         : <Label bsStyle="info">Running for {nodeState.duration}</Label>;
-      const showError = (node.completed && !node.successful)
+      const showError = (node.result && node.result.error)
         ? (
         <span>
         <Glyphicon glyph="warning-sign"/>
-        <a href="#" onClick={e => this._handleErrorModalShow(e, node.name, node.error)}>Show exception details</a>
+        <a href="#" onClick={e => this._handleErrorModalShow(e, node.node_name, node.error)}>Show exception details</a>
       </span>
       ) : null;
 
       return (
         <Row key={idx}>
-          <Col sm={3}><Glyphicon glyph={nodeState.glyph}/> {node.name}</Col>
+          <Col sm={3}><Glyphicon glyph={nodeState.glyph}/> {node.node_name}</Col>
           <Col sm={9}>{label} {showError}</Col>
         </Row>
       );
@@ -89,11 +89,11 @@ let RunStatusPanel = React.createClass({
              defaultExpanded={true}>
         <Row>
           <Col sm={2} className="accio-view-label">Started</Col>
-          <Col sm={10}>{moment(run.started).format('MMM Do YYYY, hh:mma')}</Col>
+          <Col sm={10}>{moment(run.started_at).format('MMM Do YYYY, hh:mma')}</Col>
         </Row>
         {run.completed ? <Row>
           <Col sm={2} className="accio-view-label">Completed</Col>
-          <Col sm={10}>{moment(run.completed).format('MMM Do YYYY, hh:mma')}</Col>
+          <Col sm={10}>{moment(run.completed_at).format('MMM Do YYYY, hh:mma')}</Col>
         </Row> : null}
         <Row>
           <Col sm={2} className="accio-view-label">Duration</Col>

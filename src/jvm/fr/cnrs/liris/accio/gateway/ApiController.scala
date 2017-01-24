@@ -36,7 +36,11 @@ class ApiController @Inject()(client: AgentService.FinagledClient) extends Contr
 
   get("/api/v1/workflow") { httpReq: ListWorkflowsHttpRequest =>
     val offset = (httpReq.page - 1) * httpReq.perPage
-    val req = ListWorkflowsRequest(limit = Some(httpReq.perPage), offset = Some(offset))
+    val req = ListWorkflowsRequest(
+      name = httpReq.name,
+      owner = httpReq.owner,
+      limit = Some(httpReq.perPage),
+      offset = Some(offset))
     client.listWorkflows(req)
   }
 
@@ -44,7 +48,7 @@ class ApiController @Inject()(client: AgentService.FinagledClient) extends Contr
     response.badRequest
   }
 
-  get("/api//v1/workflow/:id") { httpReq: GetWorkflowHttpRequest =>
+  get("/api/v1/workflow/:id") { httpReq: GetWorkflowHttpRequest =>
     val req = GetWorkflowRequest(WorkflowId(httpReq.id), httpReq.version)
     client.getWorkflow(req).map(_.result)
   }
@@ -91,6 +95,8 @@ case class DeleteRunHttpRequest(@RouteParam id: String)
 case class KillRunHttpRequest(@RouteParam id: String)
 
 case class ListWorkflowsHttpRequest(
+  @QueryParam owner: Option[String],
+  @QueryParam name: Option[String],
   @QueryParam @Min(1) page: Int = 1,
   @QueryParam @Min(0) @Max(50) perPage: Int = 15)
 

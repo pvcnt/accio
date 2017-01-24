@@ -1,11 +1,11 @@
-import React from "React";
+import React from "react";
 import {Link} from "react-router";
 import {Row, Col, Panel} from "react-bootstrap";
 import TagList from "../TagList";
 
 let RunDetailsPanel = React.createClass({
   render: function () {
-    const workflowLink = 'workflows/view/' + this.props.experiment.workflow.name;
+    const workflowLink = 'workflows/view/' + this.props.run.pkg.workflow_id.value + '/' + this.props.run.pkg.workflow_id.workflow_version;
     return (
       <Panel header="Run details"
              className="accio-view-panel"
@@ -14,16 +14,16 @@ let RunDetailsPanel = React.createClass({
         <Row>
           <Col sm={2} className="accio-view-label">Workflow</Col>
           <Col sm={10}>
-            <Link to={workflowLink}>{this.props.experiment.workflow.name}</Link>
+            <Link to={workflowLink}>{this.props.run.pkg.workflow_id.value}:{this.props.run.pkg.workflow_version}</Link>
           </Col>
         </Row>
         <Row>
           <Col sm={2} className="accio-view-label">Owner</Col>
-          <Col sm={10}>{this.props.experiment.owner}</Col>
+          <Col sm={10}>{this.props.run.owner.name}</Col>
         </Row>
         <Row>
           <Col sm={2} className="accio-view-label">Tags</Col>
-          <Col sm={10}><TagList tags={this.props.experiment.tags}/></Col>
+          <Col sm={10}><TagList tags={this.props.run.tags}/></Col>
         </Row>
       </Panel>
     );
@@ -32,7 +32,6 @@ let RunDetailsPanel = React.createClass({
 
 RunDetailsPanel.propTypes = {
   run: React.PropTypes.object.isRequired,
-  experiment: React.PropTypes.object.isRequired
 };
 
 export default RunDetailsPanel;

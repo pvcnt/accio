@@ -1,4 +1,4 @@
-import React from "React";
+import React from "react";
 import {Panel} from "react-bootstrap";
 
 let LazyPanel = React.createClass({

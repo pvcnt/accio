@@ -1,4 +1,4 @@
-import React from "React";
+import React from "react";
 import {noop} from "lodash";
 import {Row, Col, Button, FormControl, InputGroup, Glyphicon} from "react-bootstrap";
 

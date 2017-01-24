@@ -5,13 +5,13 @@ import Home from "./components/home/Home";
 import RunSection from "./components/run/RunSection";
 import RunListContainer from "./components/run/RunListContainer";
 import RunViewContainer from "./components/run/RunViewContainer";
-import CreateRunContainer from "./components/run/CreateRunContainer";
 import WorkflowSection from "./components/workflow/WorkflowSection";
 import WorkflowListContainer from "./components/workflow/WorkflowListContainer";
 import WorkflowViewContainer from "./components/workflow/WorkflowViewContainer";
 
 const App = React.createClass({
   render: function () {
+    //            <Route path="create/:workflow" component={CreateRunContainer}/>
     return (
       <Router history={hashHistory}>
         <Route path="/" component={AppController}>
@@ -19,7 +19,6 @@ const App = React.createClass({
           <Route path="runs" component={RunSection}>
             <IndexRoute component={RunListContainer}/>
             <Route path="view/:id" component={RunViewContainer}/>
-            <Route path="create/:workflow" component={CreateRunContainer}/>
           </Route>
           <Route path="workflows" component={WorkflowSection}>
             <IndexRoute component={WorkflowListContainer}/>

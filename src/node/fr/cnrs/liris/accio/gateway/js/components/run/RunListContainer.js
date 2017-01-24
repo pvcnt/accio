@@ -1,19 +1,21 @@
 import React from "react";
 import xhr from "../../utils/xhr";
 import RunList from "./RunList";
+import {toPairs} from "lodash";
 
 let RunListContainer = React.createClass({
   getInitialState: function () {
     return {
       data: {results: null, total_count: 0},
-      query: '',
+      query: {},
       page: 1,
     };
   },
 
   _loadData: function (state) {
-    xhr('/api/run?q=' + encodeURIComponent(state.query) + '&page=' + state.page)
-      .then(data => this.setState(Object.assign({}, state, {data: data})));
+    const qs = toPairs(state.query).map(pair => pair[0] + '=' + encodeURIComponent(pair[1])).join('&')
+    xhr('/api/v1/run?per_page=25&page=' + state.page + '&' + qs)
+      .then(data => this.setState({data: data}));
   },
 
   _handleChange: function (state) {

@@ -1,4 +1,4 @@
-import React from "React";
+import React from "react";
 import {noop} from "lodash";
 import moment from "moment";
 import {Link} from "react-router";
@@ -75,7 +75,7 @@ let WorkflowList = React.createClass({
 WorkflowList.propTypes = {
   onChange: React.PropTypes.func.isRequired,
   page: React.PropTypes.number.isRequired,
-  query: React.PropTypes.string.isRequired,
+  query: React.PropTypes.object.isRequired,
   workflows: React.PropTypes.array,
   totalCount: React.PropTypes.number.isRequired
 };

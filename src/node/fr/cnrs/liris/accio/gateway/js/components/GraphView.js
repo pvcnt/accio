@@ -1,7 +1,24 @@
-import React from "React";
+/*
+ * Accio is a program whose purpose is to study location privacy.
+ * Copyright (C) 2016-2017 Vincent Primault <vincent.primault@liris.cnrs.fr>
+ *
+ * Accio is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Accio is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+import React from "react";
 import d3plus from "d3plus";
-import {uniqueId} from "lodash";
-import {map, flatMap, fromPairs, toPairs, keys, identity, filter, head, uniqid} from "lodash";
+import {map, flatMap, fromPairs, toPairs, keys, identity, filter, head, uniqueId, uniq} from "lodash";
 
 let GraphView = React.createClass({
   getDefaultProps: function () {
@@ -12,9 +29,15 @@ let GraphView = React.createClass({
 
   _updateGraph: function () {
     const nodes = this.props.graph.map(node => {
-      const params = fromPairs(filter(toPairs(node.inputs, (kv) => kv[1].value)).map(kv => ['in:' + kv[0], kv[1].value]));
+      const params = fromPairs(filter(toPairs(node.inputs), (kv) => !kv[1].reference).map(kv => {
+        if (kv[1].value) {
+          return ['in:' + kv[0], '' + kv[1].value];
+        } else if (kv[1].param) {
+          return ['in:' + kv[0], '$' + kv[1].param];
+        }
+      }));
       let color = '#5bc0de'; // Bootstrap's "info" style
-      if (this.props.report) {
+      /*if (this.props.report) {
         const stats = head(filter(this.props.report.node_stats, (node) => node.name === node.name));
         if (stats.completed_at) {
           color = (stats.successful)
@@ -23,17 +46,15 @@ let GraphView = React.createClass({
         } else {
           color = '#f0ad4e'; // Bootstrap's "warning" style
         }
-      }
+      }*/
       return Object.assign({name: node.name, op: node.op, color: color}, params);
     });
     const links = flatMap(this.props.graph, node => {
-      return map(filter(node.inputs, (input) => input.reference), (input, key) => {
-        const source = input.reference.substring(0, input.reference.indexOf("/"));
-        const port = input.reference.substring(input.reference.indexOf("/") + 1);
-        return {source, target: node.name, port};
+      return map(filter(node.inputs, (input) => input.reference), input => {
+        return {source: input.reference.node, target: node.name, port: input.reference.port};
       });
     });
-    let allParams = flatMap(this.props.graph, node => filter(toPairs(node.inputs, (kv) => kv[1].value)).map(kv => 'in:' + kv[0]));
+    let allParams = uniq(flatMap(this.props.graph, node => toPairs(node.inputs).map(kv => 'in:' + kv[0])));
     allParams.unshift('op');
 
     const domNode = document.getElementById(this.props.id);

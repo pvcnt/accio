@@ -1,4 +1,4 @@
-import React from "React";
+import React from "react";
 import {noop} from "lodash";
 import {Row, Col, Button, FormControl, InputGroup, Glyphicon} from "react-bootstrap";
 
@@ -32,7 +32,7 @@ let WorkflowFilter = React.createClass({
           <FormControl type="text"
                       value={this.state.value}
                       onChange={this._handleChange}
-                      placeholder="Search by name, owner or tags..."/>
+                      placeholder="Search by name or owner..."/>
           <InputGroup.Button>
             <Button type="submit"><Glyphicon glyph="search" /></Button>
           </InputGroup.Button>
