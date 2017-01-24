@@ -23,8 +23,7 @@ import com.twitter.util.Future
 import fr.cnrs.liris.accio.core.domain.{ReadOnlyRunRepository, RunQuery}
 
 /**
- * Handler retrieving runs matching some search criteria. It does *not* return the result of each node, only
- * its state.
+ * Handler retrieving runs matching some search criteria.
  *
  * @param repository Run repository (read-only).
  */
@@ -38,7 +37,6 @@ class ListRunsHandler @Inject()(repository: ReadOnlyRunRepository) extends Handl
       limit = req.limit.getOrElse(25),
       offset = req.offset)
     val res = repository.find(query)
-    val runs = res.results.map(run => run.copy(state = run.state.copy(nodes = run.state.nodes.map(_.unsetResult))))
-    Future(ListRunsResponse(runs, res.totalCount))
+    Future(ListRunsResponse(res.results, res.totalCount))
   }
 }

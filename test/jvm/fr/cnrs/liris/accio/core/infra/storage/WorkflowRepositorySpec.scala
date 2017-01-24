@@ -99,15 +99,15 @@ private[storage] abstract class WorkflowRepositorySpec extends UnitSpec {
 
     var res = repo.find(WorkflowQuery(owner = Some("me")))
     res.totalCount shouldBe 3
-    res.results should contain theSameElementsInOrderAs Seq(workflows(4), workflows(3), workflows(1))
+    res.results should contain theSameElementsInOrderAs Seq(workflows(4), workflows(3), workflows(1)).map(unsetNodes)
 
     res = repo.find(WorkflowQuery(owner = Some("me"), limit = 2))
     res.totalCount shouldBe 3
-    res.results should contain theSameElementsInOrderAs Seq(workflows(4), workflows(3))
+    res.results should contain theSameElementsInOrderAs Seq(workflows(4), workflows(3)).map(unsetNodes)
 
     res = repo.find(WorkflowQuery(owner = Some("me"), limit = 2, offset = Some(2)))
     res.totalCount shouldBe 3
-    res.results should contain theSameElementsInOrderAs Seq(workflows(1))
+    res.results should contain theSameElementsInOrderAs Seq(workflows(1)).map(unsetNodes)
   }
 
   it should "check whether a workflow exists at a specific version" in {
@@ -141,4 +141,6 @@ private[storage] abstract class WorkflowRepositorySpec extends UnitSpec {
     repo.get(workflow2.id, "v1") shouldBe Some(workflows(2))
     repo.get(workflow2.id, "v2") shouldBe None
   }
+
+  private def unsetNodes(workflow: Workflow) = workflow.copy(graph = workflow.graph.unsetNodes)
 }

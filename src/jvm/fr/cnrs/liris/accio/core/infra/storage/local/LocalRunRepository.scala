@@ -38,7 +38,7 @@ final class LocalRunRepository(rootDir: Path) extends LocalStorage with RunRepos
   override def find(query: RunQuery): RunList = {
     var results = listIds(runsPath).flatMap(id => get(RunId(id)))
 
-    // 1. Filter results by specified criteria.
+    // Filter results by specified criteria.
     query.workflow.foreach { workflow => results = results.filter(_.pkg.workflowId == workflow) }
     query.name.foreach { name => results = results.filter(_.name.contains(name)) }
     query.owner.foreach { owner => results = results.filter(_.owner.name == owner) }
@@ -46,15 +46,14 @@ final class LocalRunRepository(rootDir: Path) extends LocalStorage with RunRepos
       results = results.filter(run => query.status.contains(run.state.status))
     }
 
-    // 2. Sort the results in descending chronological order.
+    // Sort results in descending chronological order, count and slice.
     results = results.sortWith((a, b) => a.createdAt > b.createdAt)
-
-    // 3. Count total number of results (before slicing).
     val totalCount = results.size
-
-    // 4. Slice results w.r.t. to specified offset and limit.
     query.offset.foreach { offset => results = results.drop(offset) }
     results = results.take(query.limit)
+
+    // Remove the result of each node, that we do not want to return.
+    results = results.map(run => run.copy(state = run.state.copy(nodes = run.state.nodes.map(_.unsetResult))))
 
     RunList(results, totalCount)
   }
@@ -109,6 +108,8 @@ final class LocalRunRepository(rootDir: Path) extends LocalStorage with RunRepos
     logger.debug(s"Removed run ${id.value}")
   }
 
+  override def get(cacheKey: CacheKey): Option[OpResult] = None
+
   private def runsPath = rootDir.resolve("runs")
 
   private def logsPath = rootDir.resolve("logs")
@@ -137,8 +138,4 @@ final class LocalRunRepository(rootDir: Path) extends LocalStorage with RunRepos
       .filter(_.endsWith(".json"))
       .map(_.stripSuffix(".json"))
   }
-
-  override def get(cacheKey: CacheKey): Option[OpResult] = None
-
-  override def contains(cacheKey: CacheKey): Boolean = false
 }

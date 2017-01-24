@@ -58,7 +58,7 @@ class PushCommand @Inject()(clientFactory: AgentClientFactory, factory: Workflow
 
   private def tryPush(uri: String, opts: PushCommandFlags, addr: String, out: Reporter): Boolean = {
     val defn = try {
-      factory.create(uri)
+      factory.create(uri, addr)
     } catch {
       case e: ParsingException =>
         if (!opts.quiet) {

@@ -28,10 +28,26 @@ import com.twitter.util.Time
  * which can be hard to recover from.
  */
 trait RunRepository extends ReadOnlyRunRepository {
+  /**
+   * Save a run. It will either create a new run or replace an existing one with the same identifier.
+   *
+   * @param run Run to save.
+   */
   def save(run: Run): Unit
 
+  /**
+   * Save some logs. Since they are small objects, they can be saved in a batch (details are implementation-dependant).
+   * Logs are append-only.
+   *
+   * @param logs Logs to save.
+   */
   def save(logs: Seq[RunLog]): Unit
 
+  /**
+   * Delete a run, if it exists. It will also delete all associated logs.
+   *
+   * @param id Run identifier.
+   */
   def remove(id: RunId): Unit
 }
 
@@ -39,17 +55,46 @@ trait RunRepository extends ReadOnlyRunRepository {
  * Read-only run repository.
  */
 trait ReadOnlyRunRepository {
+  /**
+   * Search for runs matching a given query. Runs are returned ordered in inverse chronological order, the most
+   * recent matching run being the first result. It does *not* include the result of each node.
+   *
+   * @param query Query.
+   * @return List of runs and total number of results.
+   */
   def find(query: RunQuery): RunList
 
+  /**
+   * Search for logs matching a given query. Logs are returned ordered in chronological order, the oldest matching
+   * log being the first result (yes, this in *not* the same order than previous method).
+   *
+   * @param query Query.
+   * @return List of logs.
+   */
   def find(query: LogsQuery): Seq[RunLog]
 
+  /**
+   * Retrieve a specific run, if it exists.
+   *
+   * @param id Run identifier.
+   */
   def get(id: RunId): Option[Run]
 
+  /**
+   * Retrieve the cached result of an operator, if it exists. It is not mandatory for implementations to handle this,
+   * they can simply return [[None]] if they have not easy way to manage this.
+   *
+   * @param cacheKey Cache key.
+   */
   def get(cacheKey: CacheKey): Option[OpResult]
 
+  /**
+   * Check whether a specific run exists.
+   *
+   * @param id Run identifier.
+   * @return True if the run exists, false otherwise.
+   */
   def contains(id: RunId): Boolean
-
-  def contains(cacheKey: CacheKey): Boolean
 }
 
 /**

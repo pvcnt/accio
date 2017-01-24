@@ -37,8 +37,6 @@ class NullRunRepository extends RunRepository {
   override def get(cacheKey: CacheKey): Option[OpResult] = None
 
   override def contains(id: RunId): Boolean = false
-
-  override def contains(cacheKey: CacheKey): Boolean = false
 }
 
 /**

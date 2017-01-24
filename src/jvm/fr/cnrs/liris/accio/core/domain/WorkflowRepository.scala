@@ -27,6 +27,12 @@ package fr.cnrs.liris.accio.core.domain
  * which can be hard to recover from.
  */
 trait WorkflowRepository extends ReadOnlyWorkflowRepository {
+  /**
+   * Save a run. It will either create a new workflow or a new version if there is already one with the same
+   * identifier. Workflows are never replaced.
+   *
+   * @param workflow Workflow to save.
+   */
   def save(workflow: Workflow): Unit
 }
 
@@ -34,14 +40,47 @@ trait WorkflowRepository extends ReadOnlyWorkflowRepository {
  * Read-only workflow repository.
  */
 trait ReadOnlyWorkflowRepository {
+  /**
+   * Search for workflows matching a given query. Runs are returned ordered in inverse chronological order, the most
+   * recent matching workflow being the first result. It will only consider the latest version of each workflow, and
+   * return the latest version of matching workflow in results. It does *not* include graph nodes of each workflow,
+   * always an empty graph.
+   *
+   * @param query Query.
+   * @return List of workflow and total number of results.
+   */
   def find(query: WorkflowQuery): WorkflowList
 
+  /**
+   * Retrieve a specific workflow at its latest version, if it exists.
+   *
+   * @param id Workflow identifier.
+   */
   def get(id: WorkflowId): Option[Workflow]
 
+  /**
+   * Retrieve a specific workflow at a specific version, if it exists.
+   *
+   * @param id      Workflow identifier.
+   * @param version Version identifier.
+   */
   def get(id: WorkflowId, version: String): Option[Workflow]
 
+  /**
+   * Check whether a specific workflow exists.
+   *
+   * @param id Workflow identifier.
+   * @return True if the workflow exists, false otherwise.
+   */
   def contains(id: WorkflowId): Boolean
 
+  /**
+   * Check whether a specific workflow exists at a specific version.
+   *
+   * @param id      Workflow identifier.
+   * @param version Version identifier.
+   * @return True if the workflow exists, false otherwise.
+   */
   def contains(id: WorkflowId, version: String): Boolean
 }
 

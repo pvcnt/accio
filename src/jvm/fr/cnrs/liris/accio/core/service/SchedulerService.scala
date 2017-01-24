@@ -80,25 +80,6 @@ final class SchedulerService @Inject()(
   }
 
   /**
-   * Generate a unique cache key for the outputs of a node. It is based on operator definition, inputs and seed.
-   *
-   * @param opDef  Operator definition.
-   * @param inputs Node inputs.
-   * @param seed   Seed for unstable operators.
-   */
-  def generateCacheKey(opDef: OpDef, inputs: Map[String, Value], seed: Long): CacheKey = {
-    val hasher = Hashing.sha1().newHasher()
-    hasher.putString(opDef.name, Charsets.UTF_8)
-    hasher.putLong(if (opDef.unstable) seed else 0L)
-    opDef.inputs.map { argDef =>
-      hasher.putString(argDef.name, Charsets.UTF_8)
-      val value = inputs.get(argDef.name).orElse(argDef.defaultValue)
-      hasher.putInt(value.hashCode)
-    }
-    CacheKey(hasher.hash().toString)
-  }
-
-  /**
    * Create the payload for a given node, by resolving the inputs.
    *
    * @param run   Run.
@@ -124,5 +105,24 @@ final class SchedulerService @Inject()(
     }
     val cacheKey = generateCacheKey(opDef, inputs, run.seed)
     OpPayload(node.op, run.seed, inputs, cacheKey)
+  }
+
+  /**
+   * Generate a unique cache key for the outputs of a node. It is based on operator definition, inputs and seed.
+   *
+   * @param opDef  Operator definition.
+   * @param inputs Node inputs.
+   * @param seed   Seed for unstable operators.
+   */
+  def generateCacheKey(opDef: OpDef, inputs: Map[String, Value], seed: Long): CacheKey = {
+    val hasher = Hashing.sha1().newHasher()
+    hasher.putString(opDef.name, Charsets.UTF_8)
+    hasher.putLong(if (opDef.unstable) seed else 0L)
+    opDef.inputs.map { argDef =>
+      hasher.putString(argDef.name, Charsets.UTF_8)
+      val value = inputs.get(argDef.name).orElse(argDef.defaultValue)
+      hasher.putInt(value.hashCode)
+    }
+    CacheKey(hasher.hash().toString)
   }
 }

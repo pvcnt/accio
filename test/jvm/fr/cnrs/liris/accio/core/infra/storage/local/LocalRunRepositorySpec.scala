@@ -19,13 +19,13 @@
 package fr.cnrs.liris.accio.core.infra.storage.local
 
 import fr.cnrs.liris.accio.core.domain._
-import fr.cnrs.liris.accio.core.infra.storage.RunRepositorySpec
+import fr.cnrs.liris.accio.core.infra.storage.RunRepositorySpecWithoutMemoization
 import fr.cnrs.liris.testing.WithTmpDirectory
 
 /**
  * Unit tests of [[LocalRunRepository]].
  */
-class LocalRunRepositorySpec extends RunRepositorySpec with WithTmpDirectory {
+class LocalRunRepositorySpec extends RunRepositorySpecWithoutMemoization with WithTmpDirectory {
   override protected def createRepository: RunRepository = new LocalRunRepository(tmpDir)
 
   behavior of "LocalRunRepository"

@@ -24,15 +24,16 @@ import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.core.domain._
 
-class WorkflowDefFactory @Inject()(parser: JsonWorkflowDefParser, opRegistry: OpRegistry) extends LazyLogging {
+class WorkflowDefFactory @Inject()(parser: JsonWorkflowDefParser, clientFactory: AgentClientFactory) extends LazyLogging {
   @throws[ParsingException]
   @throws[InvalidWorkflowDefException]
-  def create(uri: String): WorkflowDef = {
+  def create(uri: String, addr: String): WorkflowDef = {
     val path = Paths.get(uri)
     val json = parser.parse(path)
+    val opRegistry = new RemoteOpRegistry(clientFactory.create(addr))
     val id = WorkflowId(json.id.getOrElse(defaultId(path)))
     val owner = json.owner.map(Utils.parseUser)
-    val nodes = json.graph.map(getNode).toSet
+    val nodes = json.graph.map(getNode(_, opRegistry)).toSet
 
     val params = json.params.map { paramDef =>
       val kind = Utils.parseDataType(paramDef.kind)
@@ -53,7 +54,7 @@ class WorkflowDefFactory @Inject()(parser: JsonWorkflowDefParser, opRegistry: Op
     filename.substring(0, filename.indexOf("."))
   }
 
-  private def getNode(node: JsonNodeDef) = {
+  private def getNode(node: JsonNodeDef, opRegistry: OpRegistry) = {
     val inputs = node.inputs.map {
       case (argName, JsonValueInputDef(rawValue)) =>
         opRegistry.get(node.op) match {

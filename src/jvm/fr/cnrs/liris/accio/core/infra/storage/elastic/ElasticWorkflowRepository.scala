@@ -63,6 +63,7 @@ class ElasticWorkflowRepository(
 
     val s = search(workflowsIndex / workflowsType)
       .query(q)
+      .sourceExclude("graph.nodes")
       .sortBy(fieldSort("created_at").order(SortOrder.DESC))
       .limit(query.limit)
       .from(query.offset.getOrElse(0))

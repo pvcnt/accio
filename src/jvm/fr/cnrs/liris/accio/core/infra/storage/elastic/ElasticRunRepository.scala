@@ -33,8 +33,8 @@ import org.elasticsearch.search.sort.SortOrder
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
-import scala.util.control.NonFatal
 import scala.language.reflectiveCalls
+import scala.util.control.NonFatal
 
 /**
  * Run repository persisting data into an Elasticsearch cluster.
@@ -73,6 +73,7 @@ final class ElasticRunRepository(
 
     val s = search(runsIndex / runsType)
       .query(q)
+      .sourceExclude("state.nodes.result")
       .sortBy(fieldSort("created_at").order(SortOrder.DESC))
       .limit(query.limit)
       .from(query.offset.getOrElse(0))
@@ -193,7 +194,11 @@ final class ElasticRunRepository(
   }
 
   override def get(cacheKey: CacheKey): Option[OpResult] = {
-    val f = client.execute(searchCachedResult(cacheKey)).map { resp =>
+    val q = nestedQuery("state.nodes")
+      .query(termQuery("state.nodes.cache_key.hash", cacheKey.hash))
+      .scoreMode(ScoreMode.None)
+    val s = search(runsIndex / runsType).query(q).size(1)
+    val f = client.execute(s).map { resp =>
       if (resp.totalHits > 0) {
         val run = mapper.parse[Run](resp.hits.head.sourceAsString)
         run.state.nodes.find(_.cacheKey.contains(cacheKey)).get.result
@@ -207,25 +212,6 @@ final class ElasticRunRepository(
         None
     }
     Await.result(f, queryTimeout)
-  }
-
-  override def contains(cacheKey: CacheKey): Boolean = {
-    val f = client.execute(searchCachedResult(cacheKey)).map { resp =>
-      resp.totalHits > 0
-    }.recover {
-      case _: IndexNotFoundException => false
-      case e: Throwable =>
-        logger.error(s"Error while retrieving cached result ${cacheKey.hash}", e)
-        false
-    }
-    Await.result(f, queryTimeout)
-  }
-
-  private def searchCachedResult(cacheKey: CacheKey) = {
-    val q = nestedQuery("state.nodes")
-      .query(termQuery("nodes.cache_key.hash", cacheKey.hash))
-      .scoreMode(ScoreMode.None)
-    search(runsIndex / runsType).query(q).size(1)
   }
 
   private def runsIndex = s"${prefix}runs"

@@ -30,7 +30,7 @@ import scala.collection.Map
  * Common unit tests for all [[RunRepository]] implementations, ensuring they all have consistent behavior.
  */
 private[storage] abstract class RunRepositorySpec extends UnitSpec {
-  private[this] val foobarRun = Run(
+  protected val foobarRun = Run(
     id = RunId("foobar"),
     pkg = Package(WorkflowId("my_workflow"), "v1"),
     owner = User("me"),
@@ -42,7 +42,7 @@ private[storage] abstract class RunRepositorySpec extends UnitSpec {
     createdAt = System.currentTimeMillis(),
     state = RunState(status = RunStatus.Scheduled, progress = 0))
 
-  private[this] val fooRun = Run(
+  protected val fooRun = Run(
     id = RunId("foo"),
     pkg = Package(WorkflowId("my_workflow"), "v1"),
     owner = User("me"),
@@ -53,6 +53,28 @@ private[storage] abstract class RunRepositorySpec extends UnitSpec {
     createdAt = System.currentTimeMillis() - 1000,
     state = RunState(status = RunStatus.Running, progress = .5))
 
+  protected val foobarResults = Map(
+    "FooNode" -> OpResult(
+      0,
+      None,
+      Set(Artifact("myint", DataType(AtomicType.Integer), Values.encodeInteger(42)), Artifact("mystr", DataType(AtomicType.String), Values.encodeString("foo str"))),
+      Set(Metric("a", 1), Metric("b", 2))),
+    "BarNode" -> OpResult(
+      0,
+      None,
+      Set(Artifact("dbl", DataType(AtomicType.Double), Values.encodeDouble(3.14))),
+      Set(Metric("a", 12))))
+  protected val foobarRunWithNodes = foobarRun.copy(state = foobarRun.state.copy(nodes = Set(
+    NodeState(nodeName = "FooNode", status = NodeStatus.Success, cacheKey = Some(CacheKey("MyFooCacheKey")), result = Some(foobarResults("FooNode"))),
+    NodeState(nodeName = "BarNode", status = NodeStatus.Success, cacheKey = Some(CacheKey("MyBarCacheKey")), result = Some(foobarResults("BarNode")))
+  )))
+  protected val fooResults = Map("FooNode" -> OpResult(
+    0,
+    None,
+    Set(Artifact("myint", DataType(AtomicType.Integer), Values.encodeInteger(44)), Artifact("mystr", DataType(AtomicType.String), Values.encodeString("str"))),
+    Set(Metric("a", 3), Metric("b", 4))))
+  protected val fooRunWithNodes = fooRun.copy(state = fooRun.state.copy(nodes = Set(
+    NodeState(nodeName = "FooNode", status = NodeStatus.Success, cacheKey = Some(CacheKey("YourFooCacheKey")), result = Some(fooResults("FooNode"))))))
 
   protected def createRepository: RunRepository
 
@@ -96,27 +118,27 @@ private[storage] abstract class RunRepositorySpec extends UnitSpec {
 
     var res = repo.find(RunQuery(owner = Some("me")))
     res.totalCount shouldBe 3
-    res.results should contain theSameElementsInOrderAs Seq(runs(3), runs(1), runs(0))
+    res.results should contain theSameElementsInOrderAs Seq(runs(3), runs(1), runs(0)).map(unsetResult)
 
     res = repo.find(RunQuery(owner = Some("me"), limit = 2))
     res.totalCount shouldBe 3
-    res.results should contain theSameElementsInOrderAs Seq(runs(3), runs(1))
+    res.results should contain theSameElementsInOrderAs Seq(runs(3), runs(1)).map(unsetResult)
 
     res = repo.find(RunQuery(owner = Some("me"), limit = 2, offset = Some(2)))
     res.totalCount shouldBe 3
-    res.results should contain theSameElementsInOrderAs Seq(runs(0))
+    res.results should contain theSameElementsInOrderAs Seq(runs(0)).map(unsetResult)
 
     res = repo.find(RunQuery(owner = Some("him")))
     res.totalCount shouldBe 1
-    res.results should contain theSameElementsInOrderAs Seq(runs(2))
+    res.results should contain theSameElementsInOrderAs Seq(runs(2)).map(unsetResult)
 
     res = repo.find(RunQuery(workflow = Some(WorkflowId("other_workflow"))))
     res.totalCount shouldBe 1
-    res.results should contain theSameElementsInOrderAs Seq(runs(3))
+    res.results should contain theSameElementsInOrderAs Seq(runs(3)).map(unsetResult)
 
     res = repo.find(RunQuery(status = Set(RunStatus.Running)))
     res.totalCount shouldBe 2
-    res.results should contain theSameElementsInOrderAs Seq(runs(2), runs(1))
+    res.results should contain theSameElementsInOrderAs Seq(runs(2), runs(1)).map(unsetResult)
   }
 
   it should "save logs" in {
@@ -148,5 +170,35 @@ private[storage] abstract class RunRepositorySpec extends UnitSpec {
     res should contain theSameElementsAs logs(runIds.last)("Node0").drop(16)
   }
 
+  private def unsetResult(run: Run) = run.copy(state = run.state.copy(nodes = run.state.nodes.map(_.unsetResult)))
+
   private[this] def randomId: RunId = RunId(UUID.randomUUID().toString)
+}
+
+private[storage] trait RunRepositorySpecWithMemoization extends RunRepositorySpec {
+  it should "memoize artifacts" in {
+    val repo = createRepository
+    repo.save(foobarRunWithNodes)
+    repo.save(fooRunWithNodes)
+    refreshBeforeSearch()
+
+    repo.get(CacheKey("MyFooCacheKey")) shouldBe Some(foobarResults("FooNode"))
+    repo.get(CacheKey("MyBarCacheKey")) shouldBe Some(foobarResults("BarNode"))
+    repo.get(CacheKey("YourFooCacheKey")) shouldBe Some(fooResults("FooNode"))
+    repo.get(CacheKey("UnknownKey")) shouldBe None
+  }
+}
+
+private[storage] trait RunRepositorySpecWithoutMemoization extends RunRepositorySpec {
+  it should "not memoize artifacts" in {
+    val repo = createRepository
+    repo.save(foobarRunWithNodes)
+    repo.save(fooRunWithNodes)
+    refreshBeforeSearch()
+
+    repo.get(CacheKey("MyFooCacheKey")) shouldBe None
+    repo.get(CacheKey("MyBarCacheKey")) shouldBe None
+    repo.get(CacheKey("YourFooCacheKey")) shouldBe None
+    repo.get(CacheKey("UnknownKey")) shouldBe None
+  }
 }

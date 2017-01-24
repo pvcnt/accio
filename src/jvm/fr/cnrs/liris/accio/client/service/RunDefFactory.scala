@@ -28,18 +28,18 @@ import fr.cnrs.liris.accio.core.service.handler.GetWorkflowRequest
 
 import scala.util.control.NonFatal
 
-class RunDefFactory @Inject()(parser: JsonRunDefParser, client: AgentService.FinagledClient) {
+class RunDefFactory @Inject()(parser: JsonRunDefParser, clientFactory: AgentClientFactory) {
   @throws[ParsingException]
   @throws[InvalidRunDefException]
   @throws[AccioServerException]
-  def create(uri: String, name: Option[String] = None, notes: Option[String] = None, tags: Set[String] = Set.empty,
+  def create(uri: String, addr: String, name: Option[String] = None, notes: Option[String] = None, tags: Set[String] = Set.empty,
     repeat: Option[Int] = None, seed: Option[Long] = None, params: Map[String, String] = Map.empty): RunDef = {
 
     val path = Paths.get(uri)
     var (workflow, defn) = if (path.toFile.exists) {
-      parseWorkflow(path)
+      parseWorkflow(path, addr)
     } else {
-      val workflow = findWorkflow(uri)
+      val workflow = findWorkflow(uri, addr)
       (workflow, RunDef(Package(workflow.id, workflow.version)))
     }
     name.foreach { name =>
@@ -64,9 +64,9 @@ class RunDefFactory @Inject()(parser: JsonRunDefParser, client: AgentService.Fin
     defn
   }
 
-  private def parseWorkflow(path: Path) = {
+  private def parseWorkflow(path: Path, addr: String) = {
     val json = parser.parse(path)
-    val workflow = findWorkflow(json.workflow)
+    val workflow = findWorkflow(json.workflow, addr)
     val params = json.params.map { case (paramName, explo) =>
       workflow.params.find(_.name == paramName) match {
         case None => throw new InvalidRunDefException(s"Unknown param: $paramName")
@@ -106,7 +106,8 @@ class RunDefFactory @Inject()(parser: JsonRunDefParser, client: AgentService.Fin
       }
     }
 
-  private def findWorkflow(str: String): Workflow = {
+  private def findWorkflow(str: String, addr: String): Workflow = {
+    val client = clientFactory.create(addr)
     val f = str.split(":") match {
       case Array(id) => client.getWorkflow(GetWorkflowRequest(WorkflowId(id)))
       case Array(id, version) => client.getWorkflow(GetWorkflowRequest(WorkflowId(id), Some(version)))

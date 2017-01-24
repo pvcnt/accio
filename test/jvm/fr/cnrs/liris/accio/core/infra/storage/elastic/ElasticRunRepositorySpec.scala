@@ -24,14 +24,14 @@ import com.google.inject.Guice
 import com.twitter.finatra.json.FinatraObjectMapper
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.infra.jackson.AccioFinatraJacksonModule
-import fr.cnrs.liris.accio.core.infra.storage.RunRepositorySpec
+import fr.cnrs.liris.accio.core.infra.storage.RunRepositorySpecWithMemoization
 
 import scala.concurrent.duration.Duration
 
 /**
  * Unit tests of [[ElasticRunRepository]].
  */
-class ElasticRunRepositorySpec extends RunRepositorySpec with ElasticStorageSpec {
+class ElasticRunRepositorySpec extends RunRepositorySpecWithMemoization with ElasticStorageSpec {
   private[this] var i = 0
   private[this] val injector = Guice.createInjector(AccioFinatraJacksonModule)
 

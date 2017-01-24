@@ -68,9 +68,11 @@ class SubmitCommand @Inject()(clientFactory: AgentClientFactory, factory: RunDef
           return ExitCode.CommandLineError
       }
 
+      val addr = flags.as[AccioAgentFlags].addr
       val defn = try {
         factory.create(
           flags.residue.head,
+          addr,
           name = opts.name,
           notes = opts.notes,
           tags = StringUtils.explode(opts.tags, ","),
@@ -96,7 +98,7 @@ class SubmitCommand @Inject()(clientFactory: AgentClientFactory, factory: RunDef
       }
 
       val req = CreateRunRequest(defn, Utils.DefaultUser)
-      val client = clientFactory.create(flags.as[AccioAgentFlags].addr)
+      val client = clientFactory.create(addr)
       Await.result(client.createRun(req).liftToTry) match {
         case Return(resp) =>
           if (opts.quiet) {

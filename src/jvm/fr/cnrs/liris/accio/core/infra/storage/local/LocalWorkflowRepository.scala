@@ -39,19 +39,18 @@ final class LocalWorkflowRepository(rootDir: Path) extends LocalStorage with Wor
       .map(_.getName)
       .flatMap(dirname => get(WorkflowId(dirname)))
 
-    // 1. Filter results by specified criteria.
+    // Filter results by specified criteria.
     query.owner.foreach { owner => results = results.filter(_.owner.name == owner) }
     query.name.foreach { name => results = results.filter(_.name.contains(name)) }
 
-    // 2. Sort the results in descending chronological order (after filtering and before slicing).
+    // Sort the results in descending chronological order (after filtering and before slicing), count and slice.
     results = results.sortWith((a, b) => a.createdAt > b.createdAt)
-
-    // 3. Count total number of results (before slicing).
     val totalCount = results.size
-
-    // 4. Slice results w.r.t. to specified offset and limit.
     query.offset.foreach { offset => results = results.drop(offset) }
     results = results.take(query.limit)
+
+    // Remove the graph of each workflow, that we do not want to return.
+    results = results.map(workflow => workflow.copy(graph = workflow.graph.unsetNodes))
 
     WorkflowList(results, totalCount)
   }
