@@ -96,7 +96,7 @@ class JvmProfiler extends Profiler {
       Metric("memory_reserved_bytes", memoryReserved.inBytes),
       Metric("cpu_time_millis", cpuTime.inMillis),
       Metric("user_time_millis", userTime.inMillis),
-      Metric("wall_time_millis", wallTime.inMillis),
+      Metric("wall_time_millis", wallTime.inMillis))
   }
 
   /**
