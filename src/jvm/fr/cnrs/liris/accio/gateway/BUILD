@@ -1,7 +1,7 @@
 scala_library(
   name='gateway',
   dependencies=[
-    'src/jvm/fr/cnrs/liris/accio/core/infra/jackson',
+    'src/jvm/fr/cnrs/liris/accio/core/domain',
     'src/thrift/fr/cnrs/liris/accio/agent',
     '3rdparty/jvm/com/twitter/finatra:http',
     '3rdparty/jvm/com/twitter/finatra:httpclient',

@@ -24,16 +24,16 @@ import {ProgressBar, Table, Label} from "react-bootstrap";
 let RunTable = React.createClass({
   render: function () {
     const rows = this.props.runs.map((run, idx) => {
-      const style = (run.state.completed_at) ? (run.state.status == 2) ? 'success' : 'danger' : 'warning';
+      const style = (run.state.completed_at) ? (run.state.status == 'success') ? 'success' : 'danger' : 'warning';
       const tags = (run.tags.length > 0) ? run.tags.map((tag, idx) => <Label key={idx}>tag</Label>) : '–';
-      const progress = Math.round(run.state.progress * 100)
+      const progress = Math.round(run.state.progress * 100);
       return (
         <tr key={idx}>
           <td><input type="checkbox" /></td>
           <td>
-            <Link to={'/runs/view/' + run.id.value}>{run.name ? run.name : 'Untitled run #' + run.id.value}</Link>
+            <Link to={'/runs/view/' + run.id}>{run.name ? run.name : 'Untitled run #' + run.id}</Link>
           </td>
-          <td>{run.pkg.workflow_id.value}</td>
+          <td>{run.pkg.workflow_id}</td>
           <td>{run.owner.name}</td>
           <td><ProgressBar now={progress} label={progress + '%'} bsStyle={style}/></td>
           <td>{(run.state.started_at) ? moment(run.state.started_at).fromNow() : '–'}</td>

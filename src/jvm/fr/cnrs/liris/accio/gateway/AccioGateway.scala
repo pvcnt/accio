@@ -29,7 +29,6 @@ import com.twitter.finagle.Dtab
 import com.twitter.finatra.http.HttpServer
 import com.twitter.finatra.http.filters.CommonFilters
 import com.twitter.finatra.http.routing.HttpRouter
-import fr.cnrs.liris.accio.core.infra.jackson.AccioFinatraJacksonModule
 import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
@@ -37,7 +36,7 @@ import scala.collection.JavaConverters._
 object AccioGatewayMain extends AccioGateway
 
 class AccioGateway extends HttpServer {
-  private[this] val enableUi = flag("ui", false, "Whether to enable the web-based user interface")
+  private[this] val uiFlag = flag("ui", false, "Whether to enable the web-based user interface")
 
   loadLogbackConfig()
   readDtab()
@@ -51,7 +50,7 @@ class AccioGateway extends HttpServer {
       .filter[CorsFilter](beforeRouting = true)
       .filter[CommonFilters]
       .add[ApiController]
-    if (enableUi()) {
+    if (uiFlag()) {
       router.add[UiController]
     }
   }

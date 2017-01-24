@@ -18,21 +18,20 @@
 
 package fr.cnrs.liris.accio.gateway
 
-import com.google.inject.Singleton
-import com.twitter.finagle.http.Request
-import com.twitter.finatra.http.Controller
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.databind.Module
+import com.twitter.finatra.json.modules.FinatraJacksonModule
 
-@Singleton
-class UiController extends Controller {
-  get("/") { request: Request =>
-    response.movedPermanently.header("Location", "/ui")
-  }
+/**
+ * Guice module providing Jackson integration.
+ *
+ * Be careful to distinguish between [[AccioJacksonModule]], which is a Jackson module (providing serializers and
+ * deserializers) and [[AccioFinatraJacksonModule]], which is a Guice module (with additional Finatra integration)
+ * providing bindings to the Jackson object mapper.
+ */
+object AccioFinatraJacksonModule extends FinatraJacksonModule {
+  // We do not want to include None's inside JSON.
+  override protected val serializationInclusion = JsonInclude.Include.NON_ABSENT
 
-  get("/ui") { request : Request =>
-    response.ok.file("index.html")
-  }
-
-  get("/ui/:*") { request: Request =>
-    response.ok.fileOrIndex(request.params("*"), "index.html")
-  }
+  override protected def additionalJacksonModules: Seq[Module] = Seq(AccioJacksonModule)
 }

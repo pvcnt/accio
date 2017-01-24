@@ -29,11 +29,11 @@ let WorkflowView = React.createClass({
     return (
       <Grid>
         <h2 className="accio-title">
-          <img src="images/stack-32px.png"/> {this.props.workflow.id.value}
+          <img src="images/stack-32px.png"/> {this.props.workflow.id}:{this.props.workflow.version}
         </h2>
 
         <div className="accio-actions">
-          <Button href={'/api/v1/workflow/' + this.props.workflow.id.value + '?download=true'}>
+          <Button href={'/api/v1/workflow/' + this.props.workflow.id + '?download=true'}>
             <Glyphicon glyph="save"/> Download as JSON
           </Button>
         </div>

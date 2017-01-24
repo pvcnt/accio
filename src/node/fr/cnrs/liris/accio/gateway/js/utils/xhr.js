@@ -39,7 +39,7 @@ const xhr = (url, params = {}) => {
     method: 'GET',
   }, params);
 
-  return fetch('http://liris501-r049.insa-lyon.fr:8888' + url, params)
+  return fetch(url, params)
     .then(status)
     .then(json);
 };

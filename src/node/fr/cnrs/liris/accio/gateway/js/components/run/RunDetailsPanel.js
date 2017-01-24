@@ -5,7 +5,7 @@ import TagList from "../TagList";
 
 let RunDetailsPanel = React.createClass({
   render: function () {
-    const workflowLink = 'workflows/view/' + this.props.run.pkg.workflow_id.value + '/' + this.props.run.pkg.workflow_id.workflow_version;
+    const workflowLink = 'workflows/view/' + this.props.run.pkg.workflow_id + '/' + this.props.run.pkg.workflow_id.workflow_version;
     return (
       <Panel header="Run details"
              className="accio-view-panel"
@@ -14,7 +14,7 @@ let RunDetailsPanel = React.createClass({
         <Row>
           <Col sm={2} className="accio-view-label">Workflow</Col>
           <Col sm={10}>
-            <Link to={workflowLink}>{this.props.run.pkg.workflow_id.value}:{this.props.run.pkg.workflow_version}</Link>
+            <Link to={workflowLink}>{this.props.run.pkg.workflow_id}:{this.props.run.pkg.workflow_version}</Link>
           </Col>
         </Row>
         <Row>

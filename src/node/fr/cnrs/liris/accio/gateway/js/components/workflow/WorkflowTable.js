@@ -27,8 +27,8 @@ let WorkflowTable = React.createClass({
       return (
         <tr key={idx}>
           <td>
-            <Link to={'/workflows/view/' + workflow.id.value}>
-              {workflow.id.value}
+            <Link to={'/workflows/view/' + workflow.id}>
+              {workflow.id}
             </Link>
           </td>
           <td>{workflow.owner.name}</td>

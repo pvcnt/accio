@@ -21,10 +21,12 @@ let RunStatusPanel = React.createClass({
   _getState: function (state) {
     if (state.completed_at) {
       const millis = state.completed_at - state.started_at;
+      const successful = (state.status == 'success');
       return {
         duration: moment.duration(millis).humanize(),
-        text: (state.status == 3) ? 'successful' : 'errored',
-        glyph: (state.status == 3) ? 'ok' : 'remove',
+        text: (successful) ? 'successful' : 'errored',
+        glyph: (successful) ? 'ok' : 'remove',
+        successful: successful,
       };
     } else if (state.started_at) {
       const millis = moment().valueOf() - state.started_at;
@@ -49,7 +51,7 @@ let RunStatusPanel = React.createClass({
     const nodeTreeRows = run.state.nodes.map((node, idx) => {
       const nodeState = this._getState(node);
       const label = (node.completed_at)
-        ? <Label bsStyle={(node.status == 3) ? 'success' : 'danger'}>Ran for {nodeState.duration}</Label>
+        ? <Label bsStyle={(nodeState.successful) ? 'success' : 'danger'}>Ran for {nodeState.duration}</Label>
         : <Label bsStyle="info">Running for {nodeState.duration}</Label>;
       const showError = (node.result && node.result.error)
         ? (

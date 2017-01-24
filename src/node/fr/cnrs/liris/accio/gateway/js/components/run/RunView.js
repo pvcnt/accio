@@ -36,15 +36,15 @@ let RunView = React.createClass({
     return (
       <Grid>
         <h2 className="accio-title">
-          <img src="images/bars-32px.png"/> {run.name ? run.name : 'Untitled run #' + run.id.value}
+          <img src="images/bars-32px.png"/> {run.name ? run.name : 'Untitled run #' + run.id}
         </h2>
 
         <div className="accio-actions">
-          <Button href={'/api/v1/run/' + run.id.value + '?download=true'}>
+          <Button href={'/api/v1/run/' + run.id + '?download=true'}>
             <Glyphicon glyph="save"/> Download as JSON
           </Button>
 
-          <CopyToClipboard text={run.id.value}>
+          <CopyToClipboard text={run.id}>
             <Button><Glyphicon glyph="copy"/> Copy ID to clipboard</Button>
           </CopyToClipboard>
         </div>

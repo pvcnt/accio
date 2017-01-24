@@ -20,22 +20,22 @@ package fr.cnrs.liris.accio.gateway
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-case class Error private(@JsonProperty("type") kind: String, message: Option[String])
+case class HttpError private(@JsonProperty("type") kind: String, message: Option[String])
 
-object Error {
-  def invalidRequest(message: String): Error = Error("invalid_request", Some(message))
+object HttpError {
+  def invalidRequest(message: String): HttpError = HttpError("invalid_request", Some(message))
 
-  def invalidRequest: Error = Error("invalid_request", None)
+  def invalidRequest: HttpError = HttpError("invalid_request", None)
 
-  def api(message: String): Error = Error("api_error", Some(message))
+  def api(message: String): HttpError = HttpError("api_error", Some(message))
 
-  def api: Error = Error("api_error", None)
+  def api: HttpError = HttpError("api_error", None)
 
-  def authentication(message: String): Error = Error("authentication_error", Some(message))
+  def authentication(message: String): HttpError = HttpError("authentication_error", Some(message))
 
-  def authentication: Error = Error("authentication_error", None)
+  def authentication: HttpError = HttpError("authentication_error", None)
 
-  def rateLimit(message: String): Error = Error("rate_limit_error", Some(message))
+  def rateLimit(message: String): HttpError = HttpError("rate_limit_error", Some(message))
 
-  def rateLimit: Error = Error("rate_limit_error", None)
+  def rateLimit: HttpError = HttpError("rate_limit_error", None)
 }
