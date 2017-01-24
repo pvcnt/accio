@@ -88,8 +88,8 @@ private[storage] abstract class RunRepositorySpec extends UnitSpec {
     val repo = createRepository
     val runs = Seq(
       foobarRun,
-      foobarRun.copy(id = randomId, createdAt = System.currentTimeMillis() + 10),
-      foobarRun.copy(id = randomId, createdAt = System.currentTimeMillis() + 40, owner = User("him")),
+      foobarRun.copy(id = randomId, createdAt = System.currentTimeMillis() + 10, state = foobarRun.state.copy(status = RunStatus.Running)),
+      foobarRun.copy(id = randomId, createdAt = System.currentTimeMillis() + 40, state = foobarRun.state.copy(status = RunStatus.Running), owner = User("him")),
       foobarRun.copy(id = randomId, createdAt = System.currentTimeMillis() + 50, pkg = Package(WorkflowId("other_workflow"), "v1")))
     runs.foreach(repo.save)
     refreshBeforeSearch()
@@ -113,6 +113,10 @@ private[storage] abstract class RunRepositorySpec extends UnitSpec {
     res = repo.find(RunQuery(workflow = Some(WorkflowId("other_workflow"))))
     res.totalCount shouldBe 1
     res.results should contain theSameElementsInOrderAs Seq(runs(3))
+
+    res = repo.find(RunQuery(status = Set(RunStatus.Running)))
+    res.totalCount shouldBe 2
+    res.results should contain theSameElementsInOrderAs Seq(runs(2), runs(1))
   }
 
   it should "save logs" in {

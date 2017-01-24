@@ -36,6 +36,8 @@ object AccioJacksonModule extends SimpleModule {
   addDeserializer(classOf[ErrorData], new ScroogeStructDeserializer[ErrorData](ErrorData))
   addDeserializer(classOf[Error], new ScroogeStructDeserializer[Error](Error))
   addDeserializer(classOf[RunLog], new ScroogeStructDeserializer[RunLog](RunLog))
+  addDeserializer(classOf[OpResult], new ScroogeStructDeserializer[OpResult](OpResult))
+  addDeserializer(classOf[CacheKey], new ScroogeStructDeserializer[CacheKey](CacheKey))
   addDeserializer(classOf[NodeStatus], new ScroogeEnumDeserializer[NodeStatus](NodeStatus))
   addDeserializer(classOf[RunStatus], new ScroogeEnumDeserializer[RunStatus](RunStatus))
 
@@ -44,6 +46,7 @@ object AccioJacksonModule extends SimpleModule {
   addDeserializer(classOf[Workflow], new ScroogeStructDeserializer[Workflow](Workflow))
   addDeserializer(classOf[GraphDef], new ScroogeStructDeserializer[GraphDef](GraphDef))
   addDeserializer(classOf[NodeDef], new ScroogeStructDeserializer[NodeDef](NodeDef))
+  addDeserializer(classOf[ArgDef], new ScroogeStructDeserializer[ArgDef](ArgDef))
   addDeserializer(classOf[InputDef], new ScroogeUnionDeserializer[InputDef](InputDef))
   addDeserializer(classOf[Reference], new ScroogeStructDeserializer[Reference](Reference))
 

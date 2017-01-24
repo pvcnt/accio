@@ -18,11 +18,11 @@
 
 package fr.cnrs.liris.accio.core.infra.storage.elastic
 
-import com.google.inject.Provides
+import com.google.inject.{Provides, Singleton}
 import com.sksamuel.elastic4s.{ElasticClient, ElasticsearchClientUri}
 import com.twitter.finatra.json.FinatraObjectMapper
 import com.twitter.util.{Duration => TwitterDuration}
-import fr.cnrs.liris.accio.core.domain.{ReadOnlyRunRepository, RunRepository, WorkflowRepository}
+import fr.cnrs.liris.accio.core.domain.{RunRepository, WorkflowRepository}
 import fr.cnrs.liris.accio.core.infra.jackson.AccioFinatraJacksonModule
 import net.codingwell.scalaguice.ScalaModule
 import org.elasticsearch.common.settings.Settings
@@ -48,18 +48,23 @@ final class ElasticStorageModule(config: ElasticStorageConfig) extends ScalaModu
     install(AccioFinatraJacksonModule)
   }
 
+  @Singleton
   @Provides
   def providesRunRepository(mapper: FinatraObjectMapper): RunRepository = {
     new ElasticRunRepository(mapper, client, config.prefix, ScalaDuration.fromNanos(config.queryTimeout.inNanoseconds))
   }
 
+  @Singleton
   @Provides
   def providesWorkflowRepository(mapper: FinatraObjectMapper): WorkflowRepository = {
     new ElasticWorkflowRepository(mapper, client, config.prefix, ScalaDuration.fromNanos(config.queryTimeout.inNanoseconds))
   }
 
   private lazy val client = {
-    val settings = Settings.builder().put("client.transport.sniff", true).build()
+    val settings = Settings.builder()
+      //.put("client.transport.sniff", true)
+        .put("cluster.name", "elasticsearch")
+      .build()
     val uri = ElasticsearchClientUri(s"elasticsearch://${config.addr}")
     val client = ElasticClient.transport(settings, uri)
 

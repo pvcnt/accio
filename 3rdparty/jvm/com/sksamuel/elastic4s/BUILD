@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION = '5.1.5'
+VERSION = '5.1.2'
 
 jar_library(name='core', jars=[scala_jar('com.sksamuel.elastic4s', 'elastic4s-core', VERSION)])
 jar_library(name='jackson', jars=[scala_jar('com.sksamuel.elastic4s', 'elastic4s-jackson', VERSION)])
@@ -24,6 +24,6 @@ jar_library(
     scala_jar('com.sksamuel.elastic4s', 'elastic4s-testkit', VERSION),
     # Painless plugin is not included by default, and not available in official org.elasticsearch Maven repository
     # (why??), as of 01/17/2017.
-    jar('org.codelibs.elasticsearch.module', 'lang-painless', '5.1.2'),
+    jar('org.codelibs.elasticsearch.module', 'lang-painless', VERSION),
   ]
 )

@@ -20,9 +20,9 @@ package fr.cnrs.liris.accio.agent
 
 import java.util.concurrent.atomic.AtomicBoolean
 
-import com.twitter.util.Duration
+import com.twitter.util.{Duration, Time}
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.core.domain.RunRepository
+import fr.cnrs.liris.accio.core.domain.{RunRepository, Task}
 import fr.cnrs.liris.accio.core.service.{RunLifecycleManager, StateManager}
 
 /**
@@ -39,22 +39,7 @@ class LostTaskObserver(taskTimeout: Duration, stateManager: StateManager, runRep
       val lock = stateManager.lock("lost-tasks")
       if (lock.tryLock()) {
         try {
-          stateManager.tasks.filterNot { task =>
-            task.state.heartbeatAt.forall(_ >= System.currentTimeMillis() - taskTimeout.inMillis)
-          }.foreach { task =>
-            val runLock = stateManager.lock(s"run/${task.runId.value}")
-            runLock.lock()
-            try {
-              runRepository.get(task.runId).foreach { run =>
-                val newRun = runManager.onLost(run, task.nodeName)
-                runRepository.save(newRun)
-              }
-            } finally {
-              runLock.unlock()
-            }
-            stateManager.remove(task.id)
-            logger.debug(s"[T${task.id.value}] Lost task")
-          }
+          lostTasks.foreach(handleLostTask)
         } finally {
           lock.unlock()
         }
@@ -70,5 +55,25 @@ class LostTaskObserver(taskTimeout: Duration, stateManager: StateManager, runRep
 
   def kill(): Unit = {
     killed.set(true)
+  }
+
+  private def lostTasks = {
+    val deadline = Time.now - taskTimeout
+    stateManager.tasks.filter(_.state.heartbeatAt.forall(_ < deadline.inMillis))
+  }
+
+  private def handleLostTask(task: Task) = {
+    val runLock = stateManager.lock(s"run/${task.runId.value}")
+    runLock.lock()
+    try {
+      runRepository.get(task.runId).foreach { run =>
+        val newRun = runManager.onLost(run, task.nodeName)
+        runRepository.save(newRun)
+      }
+    } finally {
+      runLock.unlock()
+    }
+    stateManager.remove(task.id)
+    logger.debug(s"[T${task.id.value}] Lost task")
   }
 }

@@ -14,16 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
-# This is an example for a production deployment.
 
-[program:accio-gateway]
-command=/usr/bin/java
-  -Xmx1G
-  -server
-  -jar /opt/accio-gateway.jar
-  -addr="127.0.0.1:9999"
-  -admin.port=":8880"
-  -http.port=":8888"
-stderr_logfile=/var/log/accio/gateway/stderr.txt
-stdout_logfile=/var/log/accio/gateway/stdout.txt
-autorestart=true
+jar_library(
+  name='log4j-over-slf4j',
+  jars=[jar('org.slf4j', 'log4j-over-slf4j', '1.7.22')]
+)

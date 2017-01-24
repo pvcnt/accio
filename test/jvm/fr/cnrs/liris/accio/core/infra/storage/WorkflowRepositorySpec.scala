@@ -49,6 +49,7 @@ private[storage] abstract class WorkflowRepositorySpec extends UnitSpec {
     version = "v1",
     owner = User("me"),
     isActive = true,
+    params = Set(ArgDef("foo", DataType(AtomicType.Integer))),
     createdAt = System.currentTimeMillis() + 10,
     graph = GraphDef(Set(
       NodeDef(

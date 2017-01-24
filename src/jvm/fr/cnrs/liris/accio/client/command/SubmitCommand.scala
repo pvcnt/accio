@@ -38,8 +38,6 @@ case class SubmitFlags(
   notes: Option[String],
   @Flag(name = "repeat", help = "Number of times to repeat each run")
   repeat: Option[Int],
-  @Flag(name = "params", help = "Workflow parameters")
-  params: Option[String],
   @Flag(name = "seed", help = "Seed to use for unstable operators")
   seed: Option[Long],
   @Flag(name = "q", help = "Print only identifiers")
@@ -54,15 +52,15 @@ class SubmitCommand @Inject()(agentClient: AgentService.FinagledClient, factory:
   extends Command with StrictLogging {
 
   def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
-    if (flags.residue.size != 1) {
-      out.writeln("<error>[ERROR]</error> You must provide exactly one run file or package specification.")
+    if (flags.residue.isEmpty) {
+      out.writeln("<error>[ERROR]</error> You must provide a run file or package specification.")
       ExitCode.CommandLineError
     } else {
       val opts = flags.as[SubmitFlags]
       val elapsed = Stopwatch.start()
 
       val params = try {
-        parseParams(opts.params)
+        parseParams(flags.residue.tail)
       } catch {
         case e: IllegalArgumentException =>
           if (!opts.quiet) {
@@ -125,13 +123,10 @@ class SubmitCommand @Inject()(agentClient: AgentService.FinagledClient, factory:
 
   private[this] val ParamRegex = "([^=]+)=(.+)".r
 
-  private def parseParams(params: Option[String]): Map[String, String] = {
-    params match {
-      case Some(p) => p.trim.split(",").map {
-        case ParamRegex(paramName, value) => paramName -> value
-        case str => throw new IllegalArgumentException(s"Invalid param (expected key=value): $str")
-      }.toMap
-      case None => Map.empty
-    }
+  private def parseParams(params: Seq[String]): Map[String, String] = {
+    params.map {
+      case ParamRegex(paramName, value) => paramName -> value
+      case str => throw new IllegalArgumentException(s"Invalid param (expected key=value): $str")
+    }.toMap
   }
 }

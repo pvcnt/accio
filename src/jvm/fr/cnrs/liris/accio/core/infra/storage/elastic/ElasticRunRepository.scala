@@ -34,6 +34,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 import scala.util.control.NonFatal
+import scala.language.reflectiveCalls
 
 /**
  * Run repository persisting data into an Elasticsearch cluster.
@@ -60,7 +61,7 @@ final class ElasticRunRepository(
       q = q.filter(termQuery("owner.name", owner))
     }
     if (query.status.nonEmpty) {
-      val qs = query.status.map(v => termQuery("state.status", v))
+      val qs = query.status.map(v => termQuery("state.status", v.value))
       q = q.should(qs)
     }
     query.workflow.foreach { workflowId =>
@@ -248,8 +249,16 @@ final class ElasticRunRepository(
           ),
           objectField("parent").as(textField("value").analyzer(KeywordAnalyzer)),
           objectField("cloned_from").as(textField("value").analyzer(KeywordAnalyzer)),
-          nestedField("children").as(textField("value").analyzer(KeywordAnalyzer)))
-        //TODO: do not index state.nodes.artifacts and state.nodes.metrics.
+          nestedField("children").as(textField("value").analyzer(KeywordAnalyzer)),
+          longField("created_at"),
+          objectField("params").enabled(false),
+          objectField("state").as(
+            nestedField("nodes").as(
+              textField("name").analyzer(KeywordAnalyzer),
+              objectField("cache_key").as(textField("hash").analyzer(KeywordAnalyzer)),
+              objectField("result").enabled(false)
+            )
+          ))
         logger.info(s"Creating $runsIndex/$runsType index")
         client.execute(createIndex(runsIndex).mappings(new MappingDefinition(runsType) as (fields: _*)))
       } else {
@@ -268,6 +277,7 @@ final class ElasticRunRepository(
         val fields = Seq(
           objectField("run_id").as(textField("value").analyzer(KeywordAnalyzer)),
           textField("node_name").analyzer(KeywordAnalyzer),
+          longField("created_at"),
           textField("classifier").analyzer(KeywordAnalyzer))
         logger.info(s"Creating $logsIndex/$logsType index")
         client.execute(createIndex(logsIndex).mappings(new MappingDefinition(logsType) as (fields: _*)))

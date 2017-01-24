@@ -33,7 +33,7 @@ Vagrant.configure(2) do |config|
 
   config.vm.provider "virtualbox" do |vb|
       vb.name = "accio.local"
-      vb.memory = "3072"
+      vb.memory = "4096"
       vb.cpus = 4
     end
 

@@ -15,3 +15,5 @@ Overrides the ACCIO_ADDR environment variable. Defaults to *127.0.0.1:9999*.
 * `-rc=<string>`: Path to the .acciorc configuration file.
 * `-config=<string>`: Name of the configuration to use, conjointly with the .acciorc configuration file.
 * `-no_color`: Disable colored output.
+
+The `ACCIO_USER` environment variable can be used to specify the actual user's name.

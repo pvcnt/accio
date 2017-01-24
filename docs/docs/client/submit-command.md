@@ -9,12 +9,16 @@ The `submit` command is used to launch a workflow on an Accio cluster.
 
 ## Usage
 ```
-accio submit [options] <run file>|<package spec>
+accio submit [options] <run file>|<package spec> [param=value [...]]
 ```
 
-This command requires a single argument, which is either the local path to a file containing a valid run definition, or the specification of a package. A package is specified under the form `<workflow id>[:<workflow version>]`. If the version is not specified, the workflow will be launched at its latest version.
+This command requires a single argument, which is either the local path to a file containing a valid run definition, or the specification of a package.
+A package is specified under the form `<workflow id>[:<workflow version>]`.
+If the version is not specified, the workflow will be launched at its latest version.
 
-Options of this command allow to supplement or override any field of the run definition. Options have precedence over what is defined by the file or the package specified as argument.
+Options of this command allow to supplement or override any field of the run definition.
+Additional arguments are used to specify workflow parameters, under the form `key=value`.
+Options and parameter passed as arguments have precedence over what is defined by the run file or package specification.
 
 Once a workflow has been successfully launched, this command prints the identifier of the runs that have been created.
 The progress of the execution can then be tracked with the `accio status` command and the run identifiers that have been provided.
@@ -25,7 +29,6 @@ The progress of the execution can then be tracked with the `accio status` comman
 * `-notes=<string>`: Run notes. Overrides the value defined in the run file, if specified.
 * `-repeat=<integer>`: Number of times to repeat each run. Overrides the value defined in the run file, if any.
 * `-seed=<long>`: Run seed. Overrides the value defined in the run file, if any.
-* `-params=<key>=<value>[,...]`: Run parameters (comma-separated). Overrides the values defined in the run file, if any.
 * `-q`: Prints only run identifiers (one per line), if the command was successful. Otherwise, you can still use the exit code to determine the outcome of the command.
 * `-json`: Prints pretty human-readable (but still machine-parsable) JSON.
 

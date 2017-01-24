@@ -187,7 +187,7 @@ class ElasticWorkflowRepository(
 
   private def internalId(id: WorkflowId, version: String) = s"${id.value}:$version"
 
-  private def workflowsIndex = s"${prefix}runs"
+  private def workflowsIndex = s"${prefix}workflows"
 
   private def workflowsType = s"default"
 
@@ -200,7 +200,13 @@ class ElasticWorkflowRepository(
         val fields = Seq(
           objectField("id").as(textField("value").analyzer(KeywordAnalyzer)),
           textField("version").analyzer(KeywordAnalyzer),
-          objectField("graph").enabled(false))
+          longField("created_at"),
+          booleanField("is_active"),
+          objectField("graph").enabled(false),
+          nestedField("params").as(
+            textField("name").analyzer(KeywordAnalyzer),
+            objectField("value").enabled(false)
+          ))
         logger.info(s"Creating $workflowsIndex/$workflowsType index")
         client.execute(createIndex(workflowsIndex).mappings(new MappingDefinition(workflowsType) as (fields: _*)))
       } else {
