@@ -32,14 +32,12 @@ import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.util.{FileUtils, HashUtils, StringUtils, TimeUtils}
 
 case class ExportFlags(
-  @Flag(name = "workdir", help = "Working directory where to write the export")
-  workDir: Option[String],
+  @Flag(name = "out", help = "Directory where to write the export")
+  out: Option[String],
   @Flag(name = "separator", help = "Separator to use in generated files")
   separator: String = " ",
   @Flag(name = "artifacts", help = "Comma-separated list of artifacts to take into account, or NUMERIC for only those of a numeric type")
   artifacts: String = "NUMERIC",
-  @Flag(name = "runs", help = "Comma-separated list of runs to take into account")
-  runs: Option[String],
   @Flag(name = "split", help = "Whether to split the export by workflow parameters")
   split: Boolean = false,
   @Flag(name = "aggregate", help = "Whether to aggregate artifact values across multiple runs into a single value")
@@ -57,26 +55,26 @@ class ExportCommand @Inject()(client: AgentService.FinagledClient) extends Comma
 
   override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     if (flags.residue.isEmpty) {
-      out.writeln("<error>[ERROR]</error> Specify one or multiple directories as argument.")
+      out.writeln("<error>[ERROR]</error> You must specify at least one run as argument.")
       ExitCode.CommandLineError
     } else {
       val opts = flags.as[ExportFlags]
       val elapsed = Stopwatch.start()
 
       val workDir = getWorkDir(opts)
-      out.writeln(s"Writing export to <comment>${workDir.toAbsolutePath}</comment>")
+      out.writeln(s"<info>[OK]</info> Writing export to <comment>${workDir.toAbsolutePath}</comment>")
 
       val artifacts = getArtifacts(flags.residue, opts)
       val reportCreator = new CsvReportCreator
       val reportCreatorOpts = CsvReportOpts(separator = opts.separator, split = opts.split, aggregate = opts.aggregate, append = opts.append)
       reportCreator.write(artifacts, workDir, reportCreatorOpts)
 
-      out.writeln(s"Done in ${TimeUtils.prettyTime(elapsed())}.")
+      out.writeln(s"<info>[OK]</info> Done in ${TimeUtils.prettyTime(elapsed())}.")
       ExitCode.Success
     }
   }
 
-  private def getWorkDir(opts: ExportFlags): Path = opts.workDir match {
+  private def getWorkDir(opts: ExportFlags): Path = opts.out match {
     case Some(dir) => FileUtils.expandPath(dir)
     case None =>
       val uid = HashUtils.sha1(UUID.randomUUID().toString).substring(0, 8)
@@ -87,7 +85,7 @@ class ExportCommand @Inject()(client: AgentService.FinagledClient) extends Comma
     val runs = residue.flatMap { id =>
       Await.result(client.getRun(GetRunRequest(RunId(id)))).result
     }
-    val aggRuns = new AggregatedRuns(runs).filter(StringUtils.explode(opts.runs, ","))
+    val aggRuns = new AggregatedRuns(runs)
     aggRuns.artifacts.filter(StringUtils.explode(opts.artifacts))
   }
 }

@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 import com.twitter.util.{Duration, Time}
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.core.domain.{RunRepository, Task}
+import fr.cnrs.liris.accio.core.domain.{RunRepository, Task, TaskStatus}
 import fr.cnrs.liris.accio.core.service.{RunLifecycleManager, StateManager}
 
 /**
@@ -45,7 +45,7 @@ class LostTaskObserver(taskTimeout: Duration, stateManager: StateManager, runRep
         }
       }
       try {
-        Thread.sleep(10 * 1000)
+        Thread.sleep(20 * 1000)
       } catch {
         case _: InterruptedException => // Do nothing.
       }
@@ -59,7 +59,11 @@ class LostTaskObserver(taskTimeout: Duration, stateManager: StateManager, runRep
 
   private def lostTasks = {
     val deadline = Time.now - taskTimeout
-    stateManager.tasks.filter(_.state.heartbeatAt.forall(_ < deadline.inMillis))
+    stateManager.tasks.filterNot(isActive(_, deadline))
+  }
+
+  private def isActive(task: Task, deadline: Time) = {
+    task.state.status == TaskStatus.Scheduled || task.state.heartbeatAt.exists(_ >= deadline.inMillis)
   }
 
   private def handleLostTask(task: Task) = {

@@ -49,14 +49,19 @@ function build_executor {
   ./pants binary src/jvm/fr/cnrs/liris/accio/executor:bin
 }
 
+function build_gateway {
+  ./pants binary src/jvm/fr/cnrs/liris/accio/gateway:bin
+}
+
 function build_all {
   build_client
   build_agent
   build_executor
+  build_gateway
 }
 
 function print_components {
-  echo 'Please select from: client, executor, agent or all.'
+  echo 'Please select from: client, executor, agent, gateway or all.'
 }
 
 if [ "$#" -eq 0 ]; then
@@ -73,7 +78,7 @@ for component in "$@"; do
   exit 1
 done
 
-cd $REPO_DIR
+cd ${REPO_DIR}
 update-sources
 for component in "$@"; do
   build_$component

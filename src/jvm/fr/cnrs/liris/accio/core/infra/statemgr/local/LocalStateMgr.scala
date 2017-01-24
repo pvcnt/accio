@@ -71,22 +71,22 @@ final class LocalStateMgr(rootDir: Path) extends LocalStorage with StateManager 
     private[this] val javaLock = new ReentrantLock
 
     override def lock(): Unit = {
-      logger.debug(s"Acquiring lock on $key")
+      logger.trace(s"Acquiring lock on $key")
       javaLock.lock()
-      logger.debug(s"Acquired lock on $key")
+      logger.trace(s"Acquired lock on $key")
     }
 
     override def tryLock(): Boolean = {
       val res = javaLock.tryLock()
       if (res) {
-        logger.debug(s"Acquired lock on $key")
+        logger.trace(s"Acquired lock on $key")
       }
       res
     }
 
     override def unlock(): Unit = {
       javaLock.unlock()
-      logger.debug(s"Released lock on $key")
+      logger.trace(s"Released lock on $key")
     }
   }
 

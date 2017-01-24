@@ -12,7 +12,7 @@ The `inspect` command is used to query the status of a specific run.
 accio inspect [options] <run id> [<node name>]
 ```
 
-This command requires as argument the identifier or a run.
+This command requires as argument the identifier of a run.
 You can also specify as a second argument a node name that is part of the run.
 
 When used to inspect a run, this command returns metadata about the run (e.g., name, creation time) and status of the nodes.

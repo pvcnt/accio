@@ -21,9 +21,9 @@ package fr.cnrs.liris.accio.core.service.handler
 import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.core.domain._
-import fr.cnrs.liris.accio.core.service.StateManager
+import fr.cnrs.liris.accio.core.service.{RunLifecycleManager, StateManager}
 
-class StartTaskHandler @Inject()(runRepository: RunRepository, stateManager: StateManager)
+class StartTaskHandler @Inject()(runRepository: RunRepository, stateManager: StateManager, runManager: RunLifecycleManager)
   extends Handler[StartTaskRequest, StartTaskResponse] {
 
   @throws[UnknownTaskException]
@@ -43,34 +43,21 @@ class StartTaskHandler @Inject()(runRepository: RunRepository, stateManager: Sta
               stateManager.remove(req.taskId)
               throw new UnknownRunException(task.runId)
             case Some(run) =>
+              // Update task.
               val now = System.currentTimeMillis()
-              updateRun(run, task.nodeName, now)
-              updateTask(task, now)
+              val newTask = task.copy(state = task.state.copy(startedAt = Some(now), heartbeatAt = Some(now), status = TaskStatus.Running))
+              stateManager.save(newTask)
+
+              // Update run.
+              val newRun = runManager.onStart(run, task.nodeName)
+              runRepository.save(newRun)
+
+              // Transmit payload to the executor.
               Future(StartTaskResponse(task.runId, task.nodeName, task.payload))
           }
         } finally {
           runLock.unlock()
         }
     }
-  }
-
-  private def updateRun(run: Run, nodeName: String, now: Long) = {
-    val nodeState = run.state.nodes.find(_.nodeName == nodeName).get
-    // Node state could be already marked as started if another task was already spawned for this node.
-    if (nodeState.startedAt.isEmpty) {
-      // Mark node as started, and run as started if not already.
-      val newNodeState = nodeState.copy(startedAt = Some(now), status = NodeStatus.Running)
-      var newRunState = run.state.copy(nodes = run.state.nodes - nodeState + newNodeState)
-      if (run.state.startedAt.isEmpty) {
-        newRunState = newRunState.copy(startedAt = Some(now), status = RunStatus.Running)
-      }
-      runRepository.save(run.copy(state = newRunState))
-    }
-  }
-
-  private def updateTask(task: Task, now: Long) = {
-    // Mark task as started.
-    val newTask = task.copy(state = task.state.copy(startedAt = Some(now), status = TaskStatus.Running))
-    stateManager.save(newTask)
   }
 }

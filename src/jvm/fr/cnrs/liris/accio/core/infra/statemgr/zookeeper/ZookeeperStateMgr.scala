@@ -88,21 +88,21 @@ final class ZookeeperStateMgr(client: CuratorFramework, rootPath: String)
     private[this] val zkLock = new InterProcessMutex(client, s"$locksPath/$key")
 
     override def lock(): Unit = {
-      logger.debug(s"Acquiring lock on $key")
+      logger.trace(s"Acquiring lock on $key")
       zkLock.acquire()
     }
 
     override def tryLock(): Boolean = {
       val res = zkLock.acquire(10, TimeUnit.MILLISECONDS)
       if (res) {
-        logger.debug(s"Acquired lock on $key")
+        logger.trace(s"Acquired lock on $key")
       }
       res
     }
 
     override def unlock(): Unit = {
       zkLock.release()
-      logger.debug(s"Released lock on $key")
+      logger.trace(s"Released lock on $key")
     }
   }
 

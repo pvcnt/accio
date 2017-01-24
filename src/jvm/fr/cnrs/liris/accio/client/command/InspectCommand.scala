@@ -110,7 +110,7 @@ class InspectCommand @Inject()(client: AgentService.FinagledClient) extends Comm
     }
     out.writeln()
     out.writeln(s"<comment>${padTo("Node name", 30)}  ${padTo("Status", 9)}  Duration</comment>")
-    run.state.nodes.foreach { node =>
+    run.state.nodes.toSeq.sortBy(_.startedAt.getOrElse(Long.MaxValue)).foreach { node =>
       val duration = if (node.startedAt.isDefined && node.completedAt.isDefined) {
         Some(Duration.fromMilliseconds(node.completedAt.get - node.startedAt.get))
       } else {

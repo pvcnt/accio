@@ -111,6 +111,14 @@ object Utils {
 
   def isNumeric(dataType: DataType): Boolean =
     dataType.base match {
+      case AtomicType.List => isNumeric(dataType.args.head)
+      case AtomicType.Set => isNumeric(dataType.args.head)
+      case AtomicType.Map => isNumeric(dataType.args.last)
+      case _ => isNumeric(dataType.base)
+    }
+
+  private def isNumeric(dataType: AtomicType): Boolean =
+    dataType match {
       case AtomicType.Byte => true
       case AtomicType.Integer => true
       case AtomicType.Long => true
@@ -177,6 +185,7 @@ object Utils {
     case NodeStatus.Failed => true
     case NodeStatus.Killed => true
     case NodeStatus.Cancelled => true
+    case NodeStatus.Lost => true
     case _ => false
   }
 

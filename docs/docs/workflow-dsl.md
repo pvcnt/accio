@@ -187,21 +187,21 @@ It means that when using parameters, there are three possible sources for the ac
 Accio comes with types that are strongly enforced.
 Here is a list of supported types, with their names (as they should be specified in any field requiring a data type) and the way to format their values in JSON.
 
-| Name | Value JSON format |
-|:----------|:------------|
-| byte | JSON number. |
-| integer | JSON number. |
-| long | JSON number. |
-| double | JSON number. |
-| boolean | JSON boolean. |
-| string | JSON string. |
-| distance | JSON string, formatted as `<quantity>.<unit>`, where `<quantity>` is a number and `<unit>` one of "meters", "kilometers" or "miles", either singular or plural. |
-| duration | JSON string, formatted as `<quantity>.<unit>`, where `<quantity>` is a number and `<unit>` one of "millis", "seconds", "minutes", "hours" or "days", either singular or plural. |
-| timestamp | JSON string, formatted with respect to [ISO 8601](https://www.w3.org/TR/NOTE-datetime), e.g., "2016-06-22T11:28:32Z". |
-| location | JSON string, formatted as `<latitude>,<longitude>` where `<latitude>` and `<longitude>` are numbers and expressed in degrees. |
-| list | JSON array of any other allowed type. |
-| set | JSON array of any other allowed type. |
-| map | JSON object of any other allowed type. |
-| dataset | JSON string, specifying the dataset URI. |
+| Name | Collection | JSON format of value |
+|:-----|:-----------|:---------------------|
+| byte | | JSON number. |
+| integer | | JSON number. |
+| long | | JSON number. |
+| double | | JSON number. |
+| boolean | | JSON boolean. |
+| string | | JSON string. |
+| distance | | JSON string, formatted as `<quantity>.<unit>`, where `<quantity>` is a number and `<unit>` one of "meters", "kilometers" or "miles", either singular or plural. |
+| duration | | JSON string, formatted as `<quantity>.<unit>`, where `<quantity>` is a number and `<unit>` one of "millis", "seconds", "minutes", "hours" or "days", either singular or plural. |
+| timestamp | | JSON string, formatted with respect to [ISO 8601](https://www.w3.org/TR/NOTE-datetime), e.g., "2016-06-22T11:28:32Z". |
+| location | | JSON string, formatted as `<latitude>,<longitude>` where `<latitude>` and `<longitude>` are numbers and expressed in degrees. |
+| dataset | | JSON string, specifying the dataset URI. |
+| list | :heavy_check_mark: | JSON array of any other allowed type. |
+| set | :heavy_check_mark: | JSON array of any other allowed type. |
+| map | :heavy_check_mark: | JSON object of any other allowed type. |
 {: class="table table-striped"}
 

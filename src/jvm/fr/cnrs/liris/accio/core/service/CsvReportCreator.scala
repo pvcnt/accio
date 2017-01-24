@@ -88,7 +88,7 @@ class CsvReportCreator {
   private def asHeader(kind: DataType): Seq[String] = kind.base match {
     case AtomicType.List => asHeader(DataType(kind.args.head))
     case AtomicType.Set => asHeader(DataType(kind.args.head))
-    case AtomicType.Map => Seq("key_index", "key") ++ asHeader(DataType(kind.args.last))
+    case AtomicType.Map => Seq("key", "key_index") ++ asHeader(DataType(kind.args.last))
     case AtomicType.Distance => Seq("value_in_meters")
     case AtomicType.Duration => Seq("value_in_millis")
     case _ => Seq("value")

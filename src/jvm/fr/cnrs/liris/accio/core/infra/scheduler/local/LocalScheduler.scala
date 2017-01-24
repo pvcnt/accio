@@ -58,7 +58,7 @@ class LocalScheduler(
   private[this] val totalCpu = sys.runtime.availableProcessors
   private[this] val totalRam = Platform.totalMemory
   private[this] val totalDisk = Platform.totalDiskSpace
-  private[this] val pool = new ExecutorServiceFuturePool(Executors.newCachedThreadPool(new NamedPoolThreadFactory("scheduler")))
+  private[this] val pool = new ExecutorServiceFuturePool(Executors.newCachedThreadPool(new NamedPoolThreadFactory("accio/scheduler")))
   private[this] lazy val localExecutorPath = {
     val targetPath = workDir.resolve("executor.jar")
     if (targetPath.toFile.exists()) {

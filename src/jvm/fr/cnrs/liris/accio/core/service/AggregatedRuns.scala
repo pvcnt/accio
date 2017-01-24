@@ -33,39 +33,25 @@ class AggregatedRuns(val runs: Seq[Run]) {
   require(runs.nonEmpty, "You must provide some runs to aggregate")
 
   /**
-   * Filter the runs being aggregated to only include those specified. The list of identifiers specified to filter
-   * can include both run or experiment identifiers. If the list is empty, no filtering will actually be applied.
-   *
-   * @param ids List of experiment or run identifiers.
-   * @return A copy including only specified runs.
-   */
-  def filter(ids: Set[String]): AggregatedRuns = {
-    if (ids.isEmpty) {
-      this
-    } else {
-      val newRuns = runs.filter(run => ids.exists(run.id.value.startsWith) || run.parent.exists(parentId => ids.exists(parentId .value.startsWith)))
-      new AggregatedRuns(newRuns)
-    }
-  }
-
-  /**
    * Return an aggregated description of the artifacts contained inside those runs.
    */
   def artifacts: ArtifactList = {
     // Group all artifacts by run id.
     val artifactsByRun = runs.flatMap { run =>
-      run.state.nodes.flatMap(_.result.toSeq.flatMap(_.artifacts.map(art => run.id -> art)))
+      run.state.nodes.flatMap { node =>
+        node.result.toSeq.flatMap(_.artifacts.map(art => run.id -> art.copy(name = s"${node.nodeName}/${art.name}")))
+      }
     }
 
     // Group artifacts by their name, and then by run id..
     val groups = artifactsByRun
       .groupBy(_._2.name)
-      .map { case (name, list) =>
+      .map { case (artifactName, list) =>
         val values = list.map { case (runId, art) => runId -> art.value }
-        ArtifactGroup(name, list.head._2.kind, values.toMap)
+        ArtifactGroup(artifactName, list.head._2.kind, values.toMap)
       }.toSeq
 
-    // Only keep runs that matter.
+    // Only keep runs for which we have at least one artifact.
     val runIds = artifactsByRun.map(_._1).toSet
     val effectiveRuns = runs.filter(run => runIds.contains(run.id))
 
@@ -143,8 +129,10 @@ case class ArtifactGroup(name: String, kind: DataType, values: Map[RunId, Value]
     case AtomicType.Integer => Values.encodeDouble(mean(values.map(Values.decodeInteger(_).toDouble)))
     case AtomicType.Double => Values.encodeDouble(mean(values.map(Values.decodeDouble)))
     case AtomicType.Long => Values.encodeDouble(mean(values.map(Values.decodeLong(_).toDouble)))
-    case AtomicType.Distance => Values.encodeDistance(Distance.meters(mean(values.map(Values.decodeDistance(_).meters))))
-    case AtomicType.Duration => Values.encodeDuration(Duration.millis(mean(values.map(Values.decodeDuration(_).getMillis.toDouble)).round))
+    case AtomicType.Distance =>
+      Values.encodeDistance(Distance.meters(mean(values.map(Values.decodeDistance(_).meters))))
+    case AtomicType.Duration =>
+      Values.encodeDuration(Duration.millis(mean(values.map(Values.decodeDuration(_).getMillis.toDouble)).round))
     case AtomicType.List =>
       val of = DataType(kind.args.head)
       aggregate(of, values.flatMap(Values.decodeList(_, kind.args.head)).map(Values.encode(_, of)))
