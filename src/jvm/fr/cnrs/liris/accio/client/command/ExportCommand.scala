@@ -23,7 +23,7 @@ import java.util.UUID
 
 import com.google.inject.Inject
 import com.twitter.util.{Await, Stopwatch}
-import fr.cnrs.liris.accio.agent.AgentService
+import fr.cnrs.liris.accio.client.service.AgentClientFactory
 import fr.cnrs.liris.accio.core.domain.RunId
 import fr.cnrs.liris.accio.core.infra.cli.{Cmd, Command, ExitCode, Reporter}
 import fr.cnrs.liris.accio.core.service.handler.GetRunRequest
@@ -31,7 +31,7 @@ import fr.cnrs.liris.accio.core.service.{AggregatedRuns, ArtifactList, CsvReport
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.util.{FileUtils, HashUtils, StringUtils, TimeUtils}
 
-case class ExportFlags(
+case class ExportCommandFlags(
   @Flag(name = "out", help = "Directory where to write the export")
   out: Option[String],
   @Flag(name = "separator", help = "Separator to use in generated files")
@@ -47,24 +47,24 @@ case class ExportFlags(
 
 @Cmd(
   name = "export",
-  flags = Array(classOf[ExportFlags]),
-  help = "Generate text reports from run artifacts and metrics.",
+  flags = Array(classOf[ExportCommandFlags], classOf[AccioAgentFlags]),
+  help = "Generate text reports from run results.",
   description = "This command is intended to create summarized and readable CSV reports from run results.",
   allowResidue = true)
-class ExportCommand @Inject()(client: AgentService.FinagledClient) extends Command {
+class ExportCommand @Inject()(clientFactory: AgentClientFactory) extends Command {
 
   override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     if (flags.residue.isEmpty) {
       out.writeln("<error>[ERROR]</error> You must specify at least one run as argument.")
       ExitCode.CommandLineError
     } else {
-      val opts = flags.as[ExportFlags]
+      val opts = flags.as[ExportCommandFlags]
       val elapsed = Stopwatch.start()
 
       val workDir = getWorkDir(opts)
       out.writeln(s"<info>[OK]</info> Writing export to <comment>${workDir.toAbsolutePath}</comment>")
 
-      val artifacts = getArtifacts(flags.residue, opts)
+      val artifacts = getArtifacts(flags.residue, opts, flags.as[AccioAgentFlags].addr)
       val reportCreator = new CsvReportCreator
       val reportCreatorOpts = CsvReportOpts(separator = opts.separator, split = opts.split, aggregate = opts.aggregate, append = opts.append)
       reportCreator.write(artifacts, workDir, reportCreatorOpts)
@@ -74,14 +74,15 @@ class ExportCommand @Inject()(client: AgentService.FinagledClient) extends Comma
     }
   }
 
-  private def getWorkDir(opts: ExportFlags): Path = opts.out match {
+  private def getWorkDir(opts: ExportCommandFlags): Path = opts.out match {
     case Some(dir) => FileUtils.expandPath(dir)
     case None =>
       val uid = HashUtils.sha1(UUID.randomUUID().toString).substring(0, 8)
       Paths.get(s"accio-export-$uid")
   }
 
-  private def getArtifacts(residue: Seq[String], opts: ExportFlags): ArtifactList = {
+  private def getArtifacts(residue: Seq[String], opts: ExportCommandFlags, addr: String): ArtifactList = {
+    val client = clientFactory.create(addr)
     val runs = residue.flatMap { id =>
       Await.result(client.getRun(GetRunRequest(RunId(id)))).result
     }

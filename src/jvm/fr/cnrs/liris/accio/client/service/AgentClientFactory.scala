@@ -18,8 +18,13 @@
 
 package fr.cnrs.liris.accio.client.service
 
-class AccioServerException(message: String, cause: Throwable = null) extends Exception(message, cause)
+import com.twitter.finagle.Thrift
+import fr.cnrs.liris.accio.agent.AgentService
 
-object AccioServerException {
-  def apply(e: Throwable): AccioServerException = new AccioServerException(e.getMessage, e.getCause)
+class AgentClientFactory {
+  def create(addr: String): AgentService.FinagledClient = {
+    val service = Thrift.newService(addr)
+    sys.addShutdownHook(service.close())
+    new AgentService.FinagledClient(service)
+  }
 }

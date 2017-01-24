@@ -113,7 +113,7 @@ class RunDefFactory @Inject()(parser: JsonRunDefParser, client: AgentService.Fin
       case _ => throw new InvalidRunDefException(s"Invalid workflow specification: $str")
     }
     Await.result(f.map(_.result).liftToTry) match {
-      case Throw(e) => throw new AccioServerException("Communication error", e)
+      case Throw(e) => throw AccioServerException(e)
       case Return(None) => throw new InvalidRunDefException(s"Unknown workflow: $str")
       case Return(Some(workflow)) => workflow
     }

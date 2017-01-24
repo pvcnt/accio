@@ -22,7 +22,7 @@ import java.util.{Date, Locale}
 
 import com.google.inject.Inject
 import com.twitter.util.{Await, Duration, Return, Throw}
-import fr.cnrs.liris.accio.agent.AgentService
+import fr.cnrs.liris.accio.client.service.AgentClientFactory
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.infra.cli.{Cmd, Command, ExitCode, Reporter}
 import fr.cnrs.liris.accio.core.service.handler.GetRunRequest
@@ -30,16 +30,16 @@ import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.util.StringUtils.padTo
 import org.ocpsoft.prettytime.PrettyTime
 
-case class InspectFlags(
+case class InspectCommandFlags(
   @Flag(name = "json", help = "Print machine-readable JSON")
   json: Boolean = false)
 
 @Cmd(
   name = "inspect",
-  flags = Array(classOf[InspectFlags]),
-  help = "Display status of a run.",
+  flags = Array(classOf[InspectCommandFlags], classOf[AccioAgentFlags]),
+  help = "Retrieve execution status of a run.",
   allowResidue = true)
-class InspectCommand @Inject()(client: AgentService.FinagledClient) extends Command {
+class InspectCommand @Inject()(clientFactory: AgentClientFactory) extends Command {
   private[this] val colWidth = 15
 
   override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
@@ -47,9 +47,10 @@ class InspectCommand @Inject()(client: AgentService.FinagledClient) extends Comm
       out.writeln("<error>[ERROR]</error> You must provide a single run identifier.")
       ExitCode.CommandLineError
     } else {
-      val opts = flags.as[InspectFlags]
-      val f = client.getRun(GetRunRequest(RunId(flags.residue.head))).liftToTry
-      Await.result(f) match {
+      val opts = flags.as[InspectCommandFlags]
+      val req = GetRunRequest(RunId(flags.residue.head))
+      val client = clientFactory.create(flags.as[AccioAgentFlags].addr)
+      Await.result(client.getRun(req).liftToTry) match {
         case Return(resp) =>
           resp.result match {
             case None =>

@@ -1,14 +1,29 @@
+# Accio is a program whose purpose is to study location privacy.
+# Copyright (C) 2016-2017 Vincent Primault <vincent.primault@liris.cnrs.fr>
+#
+# Accio is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Accio is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Accio.  If not, see <http://www.gnu.org/licenses/>.
+
 scala_library(
   dependencies=[
-    'src/jvm/fr/cnrs/liris/accio/core/domain',
     'src/jvm/fr/cnrs/liris/accio/core/infra/cli',
     'src/jvm/fr/cnrs/liris/accio/client/command',
     'src/jvm/fr/cnrs/liris/accio/client/service',
-    'src/thrift/fr/cnrs/liris/accio/agent',
 
     '3rdparty/jvm/com/typesafe/scala-logging',
     '3rdparty/jvm:scala-guice',
     '3rdparty/jvm:logback',
+    '3rdparty/jvm/org/slf4j:jul-to-slf4j',
   ],
   excludes = [
     # common/reflect comes with its own Scala compiler library, we do not need the one provided by Finatra.

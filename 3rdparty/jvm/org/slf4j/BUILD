@@ -14,8 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
+VERSION='1.7.22'
 
-jar_library(
-  name='log4j-over-slf4j',
-  jars=[jar('org.slf4j', 'log4j-over-slf4j', '1.7.22')]
-)
+jar_library(name='log4j-over-slf4j', jars=[jar('org.slf4j', 'log4j-over-slf4j', VERSION)])
+jar_library(name='jul-to-slf4j', jars=[jar('org.slf4j', 'jul-to-slf4j', VERSION)])

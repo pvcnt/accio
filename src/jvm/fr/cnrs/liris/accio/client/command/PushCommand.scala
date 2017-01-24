@@ -21,24 +21,23 @@ package fr.cnrs.liris.accio.client.command
 import com.google.inject.Inject
 import com.twitter.util.{Await, Return, Stopwatch, Throw}
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.agent.AgentService
-import fr.cnrs.liris.accio.client.service.{ParsingException, WorkflowDefFactory}
+import fr.cnrs.liris.accio.client.service.{AgentClientFactory, ParsingException, WorkflowDefFactory}
 import fr.cnrs.liris.accio.core.domain.{InvalidWorkflowDefException, Utils}
 import fr.cnrs.liris.accio.core.infra.cli.{Cmd, Command, ExitCode, Reporter}
 import fr.cnrs.liris.accio.core.service.handler.PushWorkflowRequest
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.util.TimeUtils
 
-case class PushFlags(
+case class PushCommandFlags(
   @Flag(name = "q", help = "Print only identifiers")
   quiet: Boolean = false)
 
 @Cmd(
   name = "push",
-  flags = Array(classOf[PushFlags]),
+  flags = Array(classOf[PushCommandFlags], classOf[AccioAgentFlags]),
   help = "Push a workflow.",
   allowResidue = true)
-class PushCommand @Inject()(client: AgentService.FinagledClient, factory: WorkflowDefFactory)
+class PushCommand @Inject()(clientFactory: AgentClientFactory, factory: WorkflowDefFactory)
   extends Command with StrictLogging {
 
   def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
@@ -46,12 +45,10 @@ class PushCommand @Inject()(client: AgentService.FinagledClient, factory: Workfl
       out.writeln("<error>[ERROR]</error> You must provide exactly at least one workflow definition file.")
       ExitCode.CommandLineError
     } else {
-      val opts = flags.as[PushFlags]
+      val opts = flags.as[PushCommandFlags]
+      val addr = flags.as[AccioAgentFlags].addr
       val elapsed = Stopwatch.start()
-
-      val outcomes = flags.residue.map { uri =>
-        tryPush(uri, opts, out)
-      }
+      val outcomes = flags.residue.map(uri => tryPush(uri, opts, addr, out))
       if (!opts.quiet) {
         out.writeln(s"<info>[OK]</info> Done in ${TimeUtils.prettyTime(elapsed())}.")
       }
@@ -59,7 +56,7 @@ class PushCommand @Inject()(client: AgentService.FinagledClient, factory: Workfl
     }
   }
 
-  private def tryPush(uri: String, opts: PushFlags, out: Reporter): Boolean = {
+  private def tryPush(uri: String, opts: PushCommandFlags, addr: String, out: Reporter): Boolean = {
     val defn = try {
       factory.create(uri)
     } catch {
@@ -75,8 +72,8 @@ class PushCommand @Inject()(client: AgentService.FinagledClient, factory: Workfl
         return false
     }
     val req = PushWorkflowRequest(defn, Utils.DefaultUser)
-    val resp = Await.result(client.pushWorkflow(req).liftToTry)
-    resp match {
+    val client = clientFactory.create(addr)
+    Await.result(client.pushWorkflow(req).liftToTry) match {
       case Return(_) =>
         if (!opts.quiet) {
           out.writeln(s"<info>[OK]</info> Pushed workflow: ${defn.id.value}")

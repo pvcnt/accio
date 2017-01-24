@@ -18,13 +18,9 @@
 
 package fr.cnrs.liris.accio.client
 
-import com.google.inject.{AbstractModule, Provides, Singleton, TypeLiteral}
-import com.twitter.finagle.Thrift
-import fr.cnrs.liris.accio.agent.AgentService
+import com.google.inject.{AbstractModule, TypeLiteral}
 import fr.cnrs.liris.accio.client.command._
-import fr.cnrs.liris.accio.client.service.RemoteOpRegistry
-import fr.cnrs.liris.accio.core.domain.OpRegistry
-import fr.cnrs.liris.accio.core.infra.cli.Command
+import fr.cnrs.liris.accio.core.infra.cli.{Command, HelpCommand}
 import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
 
 /**
@@ -36,23 +32,13 @@ object ClientModule extends AbstractModule with ScalaModule {
     commands.addBinding.toInstance(classOf[ExportCommand])
     commands.addBinding.toInstance(classOf[HelpCommand])
     commands.addBinding.toInstance(classOf[InspectCommand])
-    commands.addBinding.toInstance(classOf[ListCommand])
+    commands.addBinding.toInstance(classOf[WorkflowsCommand])
     commands.addBinding.toInstance(classOf[LogsCommand])
+    commands.addBinding.toInstance(classOf[OpsCommand])
     commands.addBinding.toInstance(classOf[PsCommand])
     commands.addBinding.toInstance(classOf[PushCommand])
     commands.addBinding.toInstance(classOf[SubmitCommand])
-    commands.addBinding.toInstance(classOf[ValidateCommand])
+    //commands.addBinding.toInstance(classOf[ValidateCommand])
     commands.addBinding.toInstance(classOf[VersionCommand])
-
-    bind[OpRegistry].to[RemoteOpRegistry]
-  }
-
-  @Singleton
-  @Provides
-  def providesClient: AgentService.FinagledClient = {
-    //TODO: inject addr.
-    val service = Thrift.newService("localhost:9999")
-    sys.addShutdownHook(service.close())
-    new AgentService.FinagledClient(service)
   }
 }

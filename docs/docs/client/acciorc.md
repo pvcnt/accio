@@ -25,4 +25,4 @@ Moreover, options specified through the command line always take precedence over
 In configuration files, commands names may suffixed by `:config`, `config` being a tag for a particular configuration.
 These options are ignored by default, but can be included with the `-config` option.
 The goal of this is to package command line options that work together.
-For example, a `run:twice -runs=2` line in a configuration file combined with an `accio run -config=twice /path/to/workflow.json` Accio invocation in running twice any workflow.
+For example, a `run:twice -repeat=2` line in a configuration file combined with an `accio run -config=twice /path/to/workflow.json` Accio invocation in running twice any workflow.

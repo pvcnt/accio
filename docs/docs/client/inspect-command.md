@@ -22,6 +22,8 @@ Please note that when `-json` is not enabled, only a preview of the artifacts is
 If you want the full results, please enable the `-json` option, or use the [`export` command](export-command.md).
 
 ## Options
+* `-addr=<string>`: Address of the Accio cluster. It can be any name following [Finagle's naming syntax](https://twitter.github.io/finagle/guide/Names.html).
+Overrides the ACCIO_ADDR environment variable. Defaults to *127.0.0.1:9999*.
 * `-json`: Print JSON output. If an entire run is being inspected, resulting JSON does *not* include the result of nodes.
 
 ## Exit codes

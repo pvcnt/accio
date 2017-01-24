@@ -21,7 +21,6 @@ package fr.cnrs.liris.accio.client.command
 import com.google.inject.Inject
 import com.twitter.util.{Await, Return, Stopwatch, Throw}
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.agent.AgentService
 import fr.cnrs.liris.accio.client.service._
 import fr.cnrs.liris.accio.core.domain.{InvalidRunDefException, Utils}
 import fr.cnrs.liris.accio.core.infra.cli.{Cmd, Command, ExitCode, Reporter}
@@ -29,7 +28,7 @@ import fr.cnrs.liris.accio.core.service.handler.CreateRunRequest
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.util.{StringUtils, TimeUtils}
 
-case class SubmitFlags(
+case class SubmitCommandFlags(
   @Flag(name = "name", help = "Run name")
   name: Option[String],
   @Flag(name = "tags", help = "Run tags (comma-separated)")
@@ -45,10 +44,10 @@ case class SubmitFlags(
 
 @Cmd(
   name = "submit",
-  flags = Array(classOf[SubmitFlags]),
+  flags = Array(classOf[SubmitCommandFlags], classOf[AccioAgentFlags]),
   help = "Launch an Accio workflow.",
   allowResidue = true)
-class SubmitCommand @Inject()(agentClient: AgentService.FinagledClient, factory: RunDefFactory)
+class SubmitCommand @Inject()(clientFactory: AgentClientFactory, factory: RunDefFactory)
   extends Command with StrictLogging {
 
   def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
@@ -56,7 +55,7 @@ class SubmitCommand @Inject()(agentClient: AgentService.FinagledClient, factory:
       out.writeln("<error>[ERROR]</error> You must provide a run file or package specification.")
       ExitCode.CommandLineError
     } else {
-      val opts = flags.as[SubmitFlags]
+      val opts = flags.as[SubmitCommandFlags]
       val elapsed = Stopwatch.start()
 
       val params = try {
@@ -97,8 +96,8 @@ class SubmitCommand @Inject()(agentClient: AgentService.FinagledClient, factory:
       }
 
       val req = CreateRunRequest(defn, Utils.DefaultUser)
-      val f = agentClient.createRun(req).liftToTry
-      Await.result(f) match {
+      val client = clientFactory.create(flags.as[AccioAgentFlags].addr)
+      Await.result(client.createRun(req).liftToTry) match {
         case Return(resp) =>
           if (opts.quiet) {
             resp.ids.map(_.value).foreach(out.writeln)

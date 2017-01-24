@@ -22,12 +22,12 @@ import java.nio.file.Path
 
 import fr.cnrs.liris.common.flags.Flag
 
-case class AccioCliFlags(
+case class CliFlags(
   @Flag(name = "logging", help = "Logging level")
   logLevel: String = "warn",
   @Flag(name = "color", help = "Enable or disable colored output")
   color: Boolean = true,
   @Flag(name = "rc", help = "Path to the .acciorc configuration file")
-  accioRcPath: Option[Path],
+  rcPath: Option[Path],
   @Flag(name = "config", help = "Name of the configuration to use, conjointly with the .acciorc configuration file")
-  accioRcConfig: Option[String])
+  rcConfig: Option[String])

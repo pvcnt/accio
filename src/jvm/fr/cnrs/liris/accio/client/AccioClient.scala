@@ -18,47 +18,72 @@
 
 package fr.cnrs.liris.accio.client
 
-import java.nio.file.Path
-
+import ch.qos.logback.classic.LoggerContext
+import ch.qos.logback.classic.joran.JoranConfigurator
+import ch.qos.logback.core.joran.spi.JoranException
+import ch.qos.logback.core.util.StatusPrinter
 import com.google.inject.Guice
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.client.service.ParserFinatraJacksonModule
 import fr.cnrs.liris.accio.core.infra.cli.CmdDispatcher
-import fr.cnrs.liris.common.flags._
+import org.slf4j.LoggerFactory
+import org.slf4j.bridge.SLF4JBridgeHandler
 
 object AccioClientMain extends AccioClient
 
 /**
- * Core flags used at the Accio-level. Commands may define additional flags.
- *
- * @param logLevel Logging level.
- */
-case class AccioFlags(
-  @Flag(name = "addr", help = "Address of the Accio agent")
-  addr: String = "127.0.0.1:9999",
-  @Flag(name = "logging", help = "Logging level")
-  logLevel: String = "warn",
-  @Flag(name = "color", help = "Enable or disabled colored output")
-  color: Boolean = false,
-  @Flag(name = "rc", help = "Path to the .acciorc configuration file")
-  accioRcPath: Option[Path],
-  @Flag(name = "config")
-  accioRcConfig: Option[String])
-
-/**
- * Entry point of the Accio command line application. Very little is done here, it is the job of [[fr.cnrs.liris.accio.core.infra.cli.Command]]s
- * to actually handle the payload.
+ * Entry point of the Accio command line application. Very little is done here, it is the job of
+ * [[fr.cnrs.liris.accio.core.infra.cli.Command]]s to actually handle the payload.
  */
 class AccioClient extends StrictLogging {
   def main(args: Array[String]): Unit = {
-    // Change the path of logback's configuration file to match Pants resource naming.
-    sys.props("logback.configurationFile") = "fr/cnrs/liris/accio/client/logback.xml"
+    loadLogbackConfig()
+    attemptSlf4jBridgeHandlerInstallation()
 
     val injector = Guice.createInjector(ClientModule, ParserFinatraJacksonModule)
     val dispatcher = injector.getInstance(classOf[CmdDispatcher])
     val exitCode = dispatcher.exec(args)
 
-    logger.info(s"Terminating Accio client: ${exitCode.name}")
+    logger.debug(s"Terminating Accio client: ${exitCode.name}")
     sys.exit(exitCode.code)
+  }
+
+  private def loadLogbackConfig() = {
+    val is = getClass.getClassLoader.getResourceAsStream(s"fr/cnrs/liris/accio/client/logback.xml")
+    if (null != is) {
+      // We assume SLF4J is bound to logback in the current environment.
+      val ctx = LoggerFactory.getILoggerFactory.asInstanceOf[LoggerContext]
+      try {
+        val configurator = new JoranConfigurator
+        configurator.setContext(ctx)
+        // Call context.reset() to clear any previous configuration, e.g. default
+        // configuration. For multi-step configuration, omit calling context.reset().
+        ctx.reset()
+        configurator.doConfigure(is)
+      } catch {
+        case _: JoranException => // StatusPrinter will handle this.
+      }
+      StatusPrinter.printInCaseOfErrorsOrWarnings(ctx)
+    }
+  }
+
+  private def attemptSlf4jBridgeHandlerInstallation(): Unit = {
+    if (!SLF4JBridgeHandler.isInstalled && canInstallBridgeHandler) {
+      SLF4JBridgeHandler.removeHandlersForRootLogger()
+      SLF4JBridgeHandler.install()
+      logger.info("org.slf4j.bridge.SLF4JBridgeHandler installed.")
+    }
+  }
+
+  private def canInstallBridgeHandler: Boolean = {
+    // We do not want to attempt to install the bridge handler if the JDK14LoggerFactory
+    // exists on the classpath. See: http://www.slf4j.org/legacy.html#jul-to-slf4j
+    try {
+      Class.forName("org.slf4j.impl.JDK14LoggerFactory", false, this.getClass.getClassLoader)
+      logger.warn("Detected [org.slf4j.impl.JDK14LoggerFactory] on classpath. SLF4JBridgeHandler cannot be installed, see: http://www.slf4j.org/legacy.html#jul-to-slf4j")
+      false
+    } catch {
+      case _: ClassNotFoundException => true
+    }
   }
 }

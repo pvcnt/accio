@@ -1,5 +1,5 @@
 <configuration>
-    <!-- JUL/JDK14 to Logback bridge -->
+    <!-- Required for performance -->
     <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
         <resetJUL>true</resetJUL>
     </contextListener>
@@ -10,10 +10,6 @@
             <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
-
-    <!-- Per-package Config -->
-    <logger name="fr.cnrs.liris" level="info"/>
-    <logger name="com.twitter" level="warn"/>
 
     <!-- Root config -->
     <root level="warn">

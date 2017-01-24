@@ -2,14 +2,14 @@
 layout: docs
 nav: docs
 section: client
-title: "Command: list"
+title: "Command: workflows"
 ---
 
-The `list` command is used to search for workflows.
+The `workflows` command is used to search for workflows.
 
 ## Usage
 ```
-accio list [options]
+accio workflows [options]
 ```
 
 This command accepts no argument.
@@ -17,6 +17,8 @@ By default it returns all workflows (up to 100), but options can be specified to
 Workflows are returned in reverse chronological order, the most recently created one being the first result.
 
 ## Options
+* `-addr=<string>`: Address of the Accio cluster. It can be any name following [Finagle's naming syntax](https://twitter.github.io/finagle/guide/Names.html).
+Overrides the ACCIO_ADDR environment variable. Defaults to *127.0.0.1:9999*.
 * `-owner=<string>`: Include only workflows belonging to a given owner.
 * `-name=<string>`: Include only workflows whose name matches a given string.
 * `-n=<integer>`: Limit the number of results.
@@ -32,7 +34,7 @@ Otherwise, you can still use the exit code to determine the outcome of the comma
 List all workflows:
 
 ```bash
-$ accio list
+$ accio workflows
 Id                              Owner            Created          Name
 workflow_Cab_Geo-I              Awesome person   1 hour ago       Geo-I Cab nominal workflow
 workflow_Cab_W4M                Awesome person   1 hour ago       W4M Cab nominal workflow

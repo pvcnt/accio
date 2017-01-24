@@ -16,10 +16,10 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.client.service
+package fr.cnrs.liris.accio.client.command
 
-class AccioServerException(message: String, cause: Throwable = null) extends Exception(message, cause)
+import fr.cnrs.liris.common.flags.Flag
 
-object AccioServerException {
-  def apply(e: Throwable): AccioServerException = new AccioServerException(e.getMessage, e.getCause)
-}
+case class AccioAgentFlags(
+  @Flag(name = "addr", help = "Address of the Accio agent")
+  addr: String = "127.0.0.1:9999")

@@ -20,13 +20,13 @@ package fr.cnrs.liris.accio.client.command
 
 import com.google.inject.Inject
 import com.twitter.util.{Await, Return, Throw}
-import fr.cnrs.liris.accio.agent.AgentService
+import fr.cnrs.liris.accio.client.service.AgentClientFactory
 import fr.cnrs.liris.accio.core.domain.RunId
 import fr.cnrs.liris.accio.core.infra.cli.{Cmd, Command, ExitCode, Reporter}
 import fr.cnrs.liris.accio.core.service.handler.ListLogsRequest
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 
-case class LogsFlags(
+case class LogsCommandFlags(
   @Flag(name = "stdout", help = "Include stdout logs")
   stdout: Boolean = true,
   @Flag(name = "stderr", help = "Include stderr logs")
@@ -36,19 +36,19 @@ case class LogsFlags(
 
 @Cmd(
   name = "logs",
-  flags = Array(classOf[LogsFlags]),
-  help = "Display logs.",
+  flags = Array(classOf[LogsCommandFlags], classOf[AccioAgentFlags]),
+  help = "Retrieve logs of a run.",
   allowResidue = true)
-class LogsCommand @Inject()(client: AgentService.FinagledClient) extends Command {
+class LogsCommand @Inject()(clientFactory: AgentClientFactory) extends Command {
   override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     if (flags.residue.size != 2) {
-      out.writeln("<error>[ERROR]</error> You must provide exactly a run identifier and a node name.")
+      out.writeln("<error>[ERROR]</error> You must provide a run identifier and a node name as arguments.")
       ExitCode.CommandLineError
     } else {
-      val opts = flags.as[LogsFlags]
-      val classifier = if (opts.stderr && opts.stdout) None else if (opts.stderr) Some("stderr") else Some("stdout")
-      val f = client.listLogs(ListLogsRequest(RunId(flags.residue.head), flags.residue.last, classifier, opts.n)).liftToTry
-      Await.result(f) match {
+      val opts = flags.as[LogsCommandFlags]
+      val req = createRequest(flags.residue, opts)
+      val client = clientFactory.create(flags.as[AccioAgentFlags].addr)
+      Await.result(client.listLogs(req).liftToTry) match {
         case Return(resp) =>
           resp.results.foreach { log =>
             out.writeln(s"<comment>${log.classifier}:</comment> ${log.message}")
@@ -59,5 +59,10 @@ class LogsCommand @Inject()(client: AgentService.FinagledClient) extends Command
       }
       ExitCode.Success
     }
+  }
+
+  private def createRequest(residue: Seq[String], opts: LogsCommandFlags) = {
+    val classifier = if (opts.stderr && opts.stdout) None else if (opts.stderr) Some("stderr") else Some("stdout")
+    ListLogsRequest(RunId(residue.head), residue.last, classifier, opts.n)
   }
 }

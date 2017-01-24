@@ -49,9 +49,9 @@ class CmdDispatcher @Inject()(registry: CmdRegistry, factory: CmdFactory, rcPars
     }
     val meta = registry.get(cmdName).getOrElse(registry("help"))
 
-    val parser = FlagsParser(meta.defn.allowResidue, meta.defn.flags ++ Seq(classOf[AccioCliFlags]): _*)
+    val parser = FlagsParser(meta.defn.allowResidue, meta.defn.flags ++ Seq(classOf[CliFlags]): _*)
     parser.parseAndExitUponError(commonArgs)
-    val commonOpts = parser.as[AccioCliFlags]
+    val commonOpts = parser.as[CliFlags]
 
     val out = new StreamReporter(Console.out, useColors = commonOpts.color)
 
@@ -59,7 +59,7 @@ class CmdDispatcher @Inject()(registry: CmdRegistry, factory: CmdFactory, rcPars
       out.writeln(s"<error>Unknown command '$cmdName'</error>")
     }
 
-    val accioRcArgs = rcParser.parse(commonOpts.accioRcPath, commonOpts.accioRcConfig, cmdName)
+    val accioRcArgs = rcParser.parse(commonOpts.rcPath, commonOpts.rcConfig, cmdName)
     parser.parseAndExitUponError(accioRcArgs, Priority.RcFile)
     parser.parseAndExitUponError(otherArgs)
 

@@ -15,6 +15,8 @@ accio export [options] <run id> [...]
 This command requires as argument one or many run identifiers.
 
 ## Options
+* `-addr=<string>`: Address of the Accio cluster. It can be any name following [Finagle's naming syntax](https://twitter.github.io/finagle/guide/Names.html).
+Overrides the ACCIO_ADDR environment variable. Defaults to *127.0.0.1:9999*.
 * `-out=<string>`: Path to a directory where to write the export.
 If it does not already exist, it will be created.
 If you specify a directory with a previous export, the `-append` will control whether to overwrite or append data.

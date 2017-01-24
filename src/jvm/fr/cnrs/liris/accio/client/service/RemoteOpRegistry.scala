@@ -18,21 +18,18 @@
 
 package fr.cnrs.liris.accio.client.service
 
-import com.google.inject.Inject
 import com.twitter.util.{Await, Return, Throw}
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.agent.AgentService
 import fr.cnrs.liris.accio.core.domain.{OpDef, OpRegistry}
 import fr.cnrs.liris.accio.core.service.handler.ListOperatorsRequest
 
-class RemoteOpRegistry @Inject()(client: AgentService.FinagledClient) extends OpRegistry with LazyLogging {
+class RemoteOpRegistry(client: AgentService.FinagledClient) extends OpRegistry with LazyLogging {
   private[this] lazy val index: Map[String, OpDef] = {
     val f = client.listOperators(ListOperatorsRequest(includeDeprecated = true)).liftToTry
     Await.result(f) match {
       case Return(resp) => resp.results.map(opDef => opDef.name -> opDef).toMap
-      case Throw(e) =>
-        logger.error("Error while retrieving operators", e)
-        Map.empty[String, OpDef]
+      case Throw(e) => throw AccioServerException(e)
     }
   }
 

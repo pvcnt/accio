@@ -22,15 +22,15 @@ import java.util.{Date, Locale}
 
 import com.google.inject.Inject
 import com.twitter.util.{Await, Return, Throw}
-import fr.cnrs.liris.accio.agent.AgentService
+import fr.cnrs.liris.accio.client.service.AgentClientFactory
 import fr.cnrs.liris.accio.core.domain.JsonSerializer
 import fr.cnrs.liris.accio.core.infra.cli.{Cmd, Command, ExitCode, Reporter}
-import fr.cnrs.liris.accio.core.service.handler.ListWorkflowsRequest
+import fr.cnrs.liris.accio.core.service.handler.{ListWorkflowsRequest, ListWorkflowsResponse}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.util.StringUtils.padTo
 import org.ocpsoft.prettytime.PrettyTime
 
-case class ListFlags(
+case class WorkflowsCommandFlags(
   @Flag(name = "q", help = "Print only identifiers")
   quiet: Boolean = false,
   @Flag(name = "json", help = "Print machine-readable JSON")
@@ -43,47 +43,53 @@ case class ListFlags(
   n: Option[Int])
 
 @Cmd(
-  name = "list",
-  flags = Array(classOf[ListFlags]),
+  name = "workflows",
+  flags = Array(classOf[WorkflowsCommandFlags], classOf[AccioAgentFlags]),
   help = "List workflows.",
   allowResidue = false)
-class ListCommand @Inject()(client: AgentService.FinagledClient) extends Command {
+class WorkflowsCommand @Inject()(clientFactory: AgentClientFactory) extends Command {
   override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
-    val opts = flags.as[ListFlags]
-
-    val n = opts.n.getOrElse(100)
-    val req = ListWorkflowsRequest(owner = opts.owner, name = opts.name, limit = Some(n))
-    val f = client.listWorkflows(req).liftToTry
-
-    Await.result(f) match {
+    val opts = flags.as[WorkflowsCommandFlags]
+    val req = createRequest(opts)
+    val client = clientFactory.create(flags.as[AccioAgentFlags].addr)
+    Await.result(client.listWorkflows(req).liftToTry) match {
       case Return(resp) =>
-        if (opts.quiet) {
-          if (opts.json) {
-            out.writeln("[" + resp.results.map(_.id.value).mkString(",") + "]")
-          } else {
-            resp.results.map(_.id.value).foreach(out.writeln)
-          }
-        } else {
-          if (opts.json) {
-            val serializer = new JsonSerializer
-            out.writeln("[" + resp.results.map(serializer.serialize).mkString(",") + "]")
-          } else {
-            val prettyTime = new PrettyTime().setLocale(Locale.ENGLISH)
-            out.writeln(s"<comment>${padTo("Id", 30)}  ${padTo("Owner", 15)}  ${padTo("Created", 15)}  Name</comment>")
-            resp.results.foreach { workflow =>
-              out.writeln(s"${padTo(workflow.id.value, 30)}  ${padTo(workflow.owner.name, 15)}  ${padTo(prettyTime.format(new Date(workflow.createdAt)), 15)}  ${workflow.name.getOrElse("<no name>")}")
-            }
-            if (resp.totalCount > n) {
-              out.writeln(s"${resp.totalCount - n} more...")
-            }
-          }
-        }
+        if (opts.quiet) printQuiet(resp, opts.json, out) else print(resp, opts.json, req.limit.get, out)
         ExitCode.Success
       case Throw(e) =>
         if (!opts.quiet) {
           out.writeln(s"<error>[ERROR]</error> Server error: ${e.getMessage}")
         }
         ExitCode.InternalError
+    }
+  }
+
+  private def createRequest(opts: WorkflowsCommandFlags) = {
+    val n = opts.n.getOrElse(100)
+    ListWorkflowsRequest(owner = opts.owner, name = opts.name, limit = Some(n))
+  }
+
+  private def print(resp: ListWorkflowsResponse, json: Boolean, n: Int, out: Reporter) = {
+    if (json) {
+      val serializer = new JsonSerializer
+      out.writeln("[" + resp.results.map(serializer.serialize).mkString(",") + "]")
+    } else {
+      val prettyTime = new PrettyTime().setLocale(Locale.ENGLISH)
+      out.writeln(s"<comment>${padTo("Id", 30)}  ${padTo("Owner", 15)}  ${padTo("Created", 15)}  Name</comment>")
+      resp.results.foreach { workflow =>
+        out.writeln(s"${padTo(workflow.id.value, 30)}  ${padTo(workflow.owner.name, 15)}  ${padTo(prettyTime.format(new Date(workflow.createdAt)), 15)}  ${workflow.name.getOrElse("<no name>")}")
+      }
+      if (resp.totalCount > n) {
+        out.writeln(s"${resp.totalCount - n} more...")
+      }
+    }
+  }
+
+  private def printQuiet(resp: ListWorkflowsResponse, json: Boolean, out: Reporter) = {
+    if (json) {
+      out.writeln("[" + resp.results.map(_.id.value).mkString(",") + "]")
+    } else {
+      resp.results.map(_.id.value).foreach(out.writeln)
     }
   }
 }
