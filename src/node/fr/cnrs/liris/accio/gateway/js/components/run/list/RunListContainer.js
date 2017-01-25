@@ -17,11 +17,11 @@
  */
 
 import React from "react";
-import xhr from "../../utils/xhr";
+import xhr from "../../../utils/xhr";
+import RunList from "./RunList";
 import {toPairs} from "lodash";
-import WorkflowList from "./WorkflowList";
 
-let WorkflowListContainer = React.createClass({
+let RunListContainer = React.createClass({
   getInitialState: function () {
     return {
       data: {results: null, total_count: 0},
@@ -32,7 +32,8 @@ let WorkflowListContainer = React.createClass({
 
   _loadData: function (state) {
     const qs = toPairs(state.query).map(pair => pair[0] + '=' + encodeURIComponent(pair[1])).join('&')
-    xhr('/api/v1/workflow?per_page=25&page=' + state.page + '&' + qs).then(data => this.setState({data: data}));
+    xhr('/api/v1/run?per_page=25&page=' + state.page + '&' + qs)
+      .then(data => this.setState(Object.assign(state, {data: data})));
   },
 
   _handleChange: function (state) {
@@ -44,12 +45,12 @@ let WorkflowListContainer = React.createClass({
   },
 
   render: function () {
-    return <WorkflowList page={this.state.page}
-                         query={this.state.query}
-                         workflows={this.state.data.results}
-                         totalCount={this.state.data.total_count}
-                         onChange={this._handleChange}/>;
+    return <RunList page={this.state.page}
+                    query={this.state.query}
+                    runs={this.state.data.results}
+                    totalCount={this.state.data.total_count}
+                    onChange={this._handleChange}/>;
   }
 });
 
-export default WorkflowListContainer;
+export default RunListContainer;

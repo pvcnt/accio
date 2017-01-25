@@ -16,31 +16,34 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React from "react";
-import {Row, Col, Panel} from "react-bootstrap";
+import React from 'react'
+import {Row, Col, Panel, Glyphicon} from 'react-bootstrap'
+import {prettyPrintValue, prettyPrintKind} from '../../../utils/prettyPrint'
 
-let WorkflowParamsPanel = React.createClass({
-  render: function () {
+class WorkflowParamsPanel extends React.Component {
+  render() {
     const rows = this.props.workflow.params.map((param, idx) => {
       return <Row key={idx}>
         <Col md={2} className="accio-view-label">{param.name}</Col>
-        <Col md={2}>{param.kind.base}</Col>
-        <Col md={1}>{!param.is_optional ? <span className="accio-run-param-required">Required</span> : null}</Col>
+        <Col md={2}>{prettyPrintKind(param.kind)}</Col>
+        <Col md={8}>
+          {param.default_value
+            ? prettyPrintValue(param.default_value, param.kind)
+            : param.is_optional ? <em>Optional</em> : <em>Required</em>}
+        </Col>
       </Row>;
     });
-    return (
-      <Panel header="Workflow parameters"
-             className="accio-view-panel"
-             collapsible={true}
-             defaultExpanded={true}>
-        {rows.length > 0 ? rows : <em>No workflow parameter.</em>}
-      </Panel>
-    );
+    return <Panel header="Workflow parameters"
+           className="accio-view-panel"
+           collapsible={true}
+           defaultExpanded={false}>
+      {rows.length > 0 ? rows : <em>No workflow parameter.</em>}
+    </Panel>
   }
-});
+}
 
 WorkflowParamsPanel.propTypes = {
   workflow: React.PropTypes.object.isRequired
-};
+}
 
-export default WorkflowParamsPanel;
+export default WorkflowParamsPanel

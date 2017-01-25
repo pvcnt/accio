@@ -32,6 +32,7 @@ class ListLogsHandler @Inject()(repository: ReadOnlyRunRepository) extends Handl
     val query = LogsQuery(
       runId = req.runId,
       nodeName = req.nodeName,
+      classifier = req.classifier,
       limit = req.limit,
       since = req.since.map(Time.fromMilliseconds))
     val results = repository.find(query)

@@ -27,6 +27,8 @@ ExecStart=/usr/bin/java \
   -agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=n \
   -jar /home/ubuntu/accio/dist/accio-agent.jar \
     -cluster=devcluster \
+    -admin.port=":9990" \
+    -thrift.port=":9999" \
     -scheduler.type=local \
     -scheduler.executor_uri=/home/ubuntu/accio/dist/accio-executor.jar \
     -scheduler.local.path=/var/lib/accio-agent/scheduler \

@@ -18,19 +18,14 @@
 
 import React from "react";
 import {noop} from "lodash";
-import {LinkContainer} from "react-router-bootstrap";
-import RunTable from "./RunTable";
-import RunFilter from "./RunFilter";
-import {Grid, Row, Col, Nav, NavItem, Button, Pager, Glyphicon} from "react-bootstrap";
+import moment from "moment";
+import {Link} from "react-router";
+import {Grid, Row, Col, Button, Table, FormControl, Pager} from "react-bootstrap";
 import Spinner from "react-spinkit";
+import WorkflowFilter from "./WorkflowFilter";
+import WorkflowTable from "./WorkflowTable";
 
-let RunList = React.createClass({
-  getInitialState: function() {
-    return {
-      section: 'mine',
-    };
-  },
-
+let WorkflowList = React.createClass({
   getDefaultProps: function () {
     return {
       onChange: noop,
@@ -47,7 +42,6 @@ let RunList = React.createClass({
   },
 
   _handleFilterChange: function (value) {
-    this.setState({section: 'custom'});
     this.props.onChange({query: value, page: this.props.page});
   },
 
@@ -66,25 +60,16 @@ let RunList = React.createClass({
         <Row>
           <Col sm={5}>
             <h2 className="accio-title">
-              <img src="images/bars-32px.png"/>
-              Runs
+              <img src="images/stack-32px.png"/>
+              Workflows
             </h2>
           </Col>
           <Col sm={7}>
-            <RunFilter onSubmit={this._handleFilterChange}/>
+            <WorkflowFilter onSubmit={this._handleFilterChange}/>
           </Col>
         </Row>
 
-        <div className="accio-actions">
-          <Button><Glyphicon glyph="th" /> Compare</Button>
-        </div>
-
-        <p>
-          Runs are instantiations of workflows, for some parameters.
-          They produce artifacts and various metrics, that can be viewed and compared here.
-        </p>
-
-        {(null !== this.props.runs) ? <RunTable runs={this.props.runs}/> : <Spinner spinnerName="three-bounce"/>}
+        {(null !== this.props.workflows) ? <WorkflowTable workflows={this.props.workflows}/> : <Spinner spinnerName="three-bounce"/>}
 
         <Pager onSelect={this._handlePageChange}>
           <Pager.Item previous disabled={!this._hasPreviousPage()} href="#" eventKey="previous">
@@ -99,12 +84,12 @@ let RunList = React.createClass({
   }
 });
 
-RunList.propTypes = {
+WorkflowList.propTypes = {
   onChange: React.PropTypes.func.isRequired,
   page: React.PropTypes.number.isRequired,
   query: React.PropTypes.object.isRequired,
-  runs: React.PropTypes.array,
+  workflows: React.PropTypes.array,
   totalCount: React.PropTypes.number.isRequired
 };
 
-export default RunList;
+export default WorkflowList;

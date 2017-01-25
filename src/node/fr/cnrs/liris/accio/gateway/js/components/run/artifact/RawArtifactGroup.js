@@ -16,18 +16,25 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.gateway
+import React from 'react'
+import {Row, Col} from 'react-bootstrap'
+import {isObject, isArray, toPairs, toString} from 'lodash'
+import {prettyPrint} from '../../../utils/prettyPrint'
 
-import com.google.inject.Singleton
-import com.twitter.finagle.http.Request
-import com.twitter.finatra.http.Controller
-
-@Singleton
-class UiController extends Controller {
-  get("/") { request: Request =>
-    response.ok.file("index.html")
-  }
-  get("/:*") { request: Request =>
-    response.ok.file(request.params("*"))
+class RawArtifactGroup extends React.Component {
+  render() {
+    const rows = this.props.artifacts.map((artifact, idx) => {
+      return <Row key={idx}>
+        <Col sm={2} className="accio-view-label">{artifact.name}</Col>
+        <Col sm={10}>{prettyPrint(artifact.value)}</Col>
+      </Row>
+    });
+    return <div>{rows}</div>
   }
 }
+
+RawArtifactGroup.propTypes = {
+  artifacts: React.PropTypes.arrayOf(React.PropTypes.object).isRequired,
+}
+
+export default RawArtifactGroup;

@@ -16,18 +16,29 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.gateway
+import React from "react";
+import {Panel} from "react-bootstrap";
+import Spinner from "react-spinkit";
+import RunTable from "../../run/list/RunTable";
 
-import com.google.inject.Singleton
-import com.twitter.finagle.http.Request
-import com.twitter.finatra.http.Controller
+let LastRunsPanel = React.createClass({
+  render: function () {
+    return (
+      <Panel header="Last runs"
+             className="accio-view-panel"
+             collapsible={true}
+             defaultExpanded={true}>
 
-@Singleton
-class UiController extends Controller {
-  get("/") { request: Request =>
-    response.ok.file("index.html")
+          {(this.props.runs.length) ?
+              <RunTable runs={this.props.runs} showWorkflow={false}/> :
+              <Spinner spinnerName="three-bounce"/>}
+      </Panel>
+    );
   }
-  get("/:*") { request: Request =>
-    response.ok.file(request.params("*"))
-  }
-}
+});
+
+LastRunsPanel.propTypes = {
+    runs: React.PropTypes.array.isRequired,
+};
+
+export default LastRunsPanel;

@@ -17,12 +17,12 @@
  */
 
 import React from "react";
-import {LinkContainer} from "react-router-bootstrap";
 import {Grid, Button, Glyphicon} from "react-bootstrap";
 import GraphView from "../GraphView";
-import LazyPanel from "../LazyPanel";
+import LazyPanel from "../../LazyPanel";
 import WorkflowDetailsPanel from "./WorkflowDetailsPanel";
 import WorkflowParamsPanel from "./WorkflowParamsPanel";
+import LastRunsPanel from "./LastRunsPanel";
 
 let WorkflowView = React.createClass({
   render: function () {
@@ -48,13 +48,16 @@ let WorkflowView = React.createClass({
                    defaultExpanded={false}>
           <GraphView graph={this.props.workflow.graph.nodes} height={500}/>
         </LazyPanel>
+
+        <LastRunsPanel runs={this.props.lastRuns}/>
       </Grid>
     );
   }
 });
 
 WorkflowView.propTypes = {
-  workflow: React.PropTypes.object.isRequired
+  workflow: React.PropTypes.object.isRequired,
+  lastRuns: React.PropTypes.array.isRequired,
 };
 
 export default WorkflowView;

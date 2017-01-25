@@ -49,6 +49,7 @@ class AccioGateway extends HttpServer {
     router
       .filter[CorsFilter](beforeRouting = true)
       .filter[CommonFilters]
+      .add[HealthController]
       .add[ApiController]
     if (uiFlag()) {
       router.add[UiController]

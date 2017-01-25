@@ -1,13 +1,36 @@
+/*
+ * Accio is a program whose purpose is to study location privacy.
+ * Copyright (C) 2016-2017 Vincent Primault <vincent.primault@liris.cnrs.fr>
+ *
+ * Accio is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Accio is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 import React from "react";
 import {noop} from "lodash";
-import moment from "moment";
-import {Link} from "react-router";
-import {Grid, Row, Col, Button, Table, FormControl, Pager} from "react-bootstrap";
+import {LinkContainer} from "react-router-bootstrap";
+import RunTable from "./RunTable";
+import RunFilter from "./RunFilter";
+import {Grid, Row, Col, Nav, NavItem, Button, Pager, Glyphicon} from "react-bootstrap";
 import Spinner from "react-spinkit";
-import WorkflowFilter from "./WorkflowFilter";
-import WorkflowTable from "./WorkflowTable";
 
-let WorkflowList = React.createClass({
+let RunList = React.createClass({
+  getInitialState: function() {
+    return {
+      section: 'mine',
+    };
+  },
+
   getDefaultProps: function () {
     return {
       onChange: noop,
@@ -42,22 +65,21 @@ let WorkflowList = React.createClass({
         <Row>
           <Col sm={5}>
             <h2 className="accio-title">
-              <img src="images/stack-32px.png"/>
-              Workflows
+              <img src="images/bars-32px.png"/>
+              Runs
             </h2>
           </Col>
           <Col sm={7}>
-            <WorkflowFilter onSubmit={this._handleFilterChange}/>
+            <RunFilter onSubmit={this._handleFilterChange}/>
           </Col>
         </Row>
 
-        <p>
-          Workflows define a graph of operations to execute.
-          Their are a way to package a given experiment and make it reproducible.
-          You can find here all created workflows, search for them and view their details.
-        </p>
+        <div className="accio-actions">
+          <Button><Glyphicon glyph="th" /> Compare</Button>
+          <Button disabled bsStyle="primary"><Glyphicon glyph="plus" /> Create run</Button>
+        </div>
 
-        {(null !== this.props.workflows) ? <WorkflowTable workflows={this.props.workflows}/> : <Spinner spinnerName="three-bounce"/>}
+        {(null !== this.props.runs) ? <RunTable runs={this.props.runs}/> : <Spinner spinnerName="three-bounce"/>}
 
         <Pager onSelect={this._handlePageChange}>
           <Pager.Item previous disabled={!this._hasPreviousPage()} href="#" eventKey="previous">
@@ -72,12 +94,12 @@ let WorkflowList = React.createClass({
   }
 });
 
-WorkflowList.propTypes = {
+RunList.propTypes = {
   onChange: React.PropTypes.func.isRequired,
   page: React.PropTypes.number.isRequired,
   query: React.PropTypes.object.isRequired,
-  workflows: React.PropTypes.array,
+  runs: React.PropTypes.array,
   totalCount: React.PropTypes.number.isRequired
 };
 
-export default WorkflowList;
+export default RunList;

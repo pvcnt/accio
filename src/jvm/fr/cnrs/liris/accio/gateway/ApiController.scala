@@ -26,14 +26,11 @@ import com.twitter.finatra.validation.{Max, Min}
 import fr.cnrs.liris.accio.agent.AgentService
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.service.handler._
+import fr.cnrs.liris.common.util.StringUtils.explode
 import org.joda.time.DateTime
 
 @Singleton
 class ApiController @Inject()(client: AgentService.FinagledClient) extends Controller {
-  get("/health") { req: Request =>
-    response.ok("OK")
-  }
-
   get("/api/v1/workflow") { httpReq: ListWorkflowsHttpRequest =>
     val offset = (httpReq.page - 1) * httpReq.perPage
     val req = ListWorkflowsRequest(
@@ -50,12 +47,29 @@ class ApiController @Inject()(client: AgentService.FinagledClient) extends Contr
 
   get("/api/v1/workflow/:id") { httpReq: GetWorkflowHttpRequest =>
     val req = GetWorkflowRequest(WorkflowId(httpReq.id), httpReq.version)
-    client.getWorkflow(req).map(_.result)
+    client.getWorkflow(req).map(_.result).map {
+      case Some(workflow) =>
+        if (httpReq.download) {
+          response.ok(workflow).header("Content-Disposition", s"attachment; filename=${workflow.id.value}.json")
+        } else {
+          workflow
+        }
+      case None => None
+    }
   }
 
   get("/api/v1/run") { httpReq: ListRunsHttpRequest =>
     val offset = (httpReq.page - 1) * httpReq.perPage
-    val req = ListRunsRequest(limit = Some(httpReq.perPage), offset = Some(offset))
+    val req = ListRunsRequest(
+      name = httpReq.name,
+      owner = httpReq.owner,
+      workflowId = httpReq.workflow.map(WorkflowId.apply),
+      parent = httpReq.parent.map(RunId.apply),
+      clonedFrom = httpReq.clonedFrom.map(RunId.apply),
+      status = httpReq.status.map(v => RunStatus.valueOf(v).toSet),
+      tags = httpReq.tags.map(explode(_, ",")),
+      limit = Some(httpReq.perPage),
+      offset = Some(offset))
     client.listRuns(req)
   }
 
@@ -65,30 +79,84 @@ class ApiController @Inject()(client: AgentService.FinagledClient) extends Contr
 
   get("/api/v1/run/:id") { httpReq: GetRunHttpRequest =>
     val req = GetRunRequest(RunId(httpReq.id))
-    client.getRun(req).map(_.result)
+    client.getRun(req).map(_.result).map {
+      case Some(run) =>
+        if (httpReq.download) {
+          // We download the entirety of the run, including artifacts and metrics.
+          response
+            .ok(run)
+            .header("Content-Disposition", s"attachment; filename=run-${run.id.value}.json")
+        } else {
+          // In other cases, we do not transmit metrics and artifacts.
+          run.copy(state = run.state.copy(nodes = run.state.nodes.map { node =>
+            node.copy(result = node.result.map(_.unsetArtifacts.unsetMetrics))
+          }))
+        }
+      case None => None
+    }
   }
 
-  delete("/api/v1/run/:id") { httpReq: DeleteRunHttpRequest =>
-    val req = DeleteRunRequest(RunId(httpReq.id))
-    client.deleteRun(req).map(_ => response.ok)
+  get("/api/v1/run/:id/artifacts/:node") { httpReq: ListArtifactsHttpRequest =>
+    val req = GetRunRequest(RunId(httpReq.id))
+    client.getRun(req).map(_.result).map {
+      case Some(run) => run.state.nodes.find(_.nodeName == httpReq.node).flatMap(_.result).map(_.artifacts)
+      case None => None
+    }
   }
 
-  delete("/api/v1/run/:id/logs/:node") { httpReq: ListLogsHttpRequest =>
-    val req = ListLogsRequest(RunId(httpReq.id), httpReq.node, httpReq.classifier, httpReq.limit, httpReq.since.map(_.getMillis))
-    client.listLogs(req).map(_.results)
+  get("/api/v1/run/:id/metrics/:node") { httpReq: ListMetricsHttpRequest =>
+    val req = GetRunRequest(RunId(httpReq.id))
+    client.getRun(req).map(_.result).map {
+      case Some(run) => run.state.nodes.find(_.nodeName == httpReq.node).flatMap(_.result).map(_.metrics)
+      case None => None
+    }
+  }
+
+  get("/api/v1/run/:id/logs/:node/:classifier") { httpReq: ListLogsHttpRequest =>
+    val req = ListLogsRequest(
+      runId = RunId(httpReq.id),
+      nodeName = httpReq.node,
+      classifier = Some(httpReq.classifier),
+      limit = httpReq.limit,
+      since = httpReq.since.map(_.getMillis))
+    client.listLogs(req).map(_.results).map { logs =>
+      if (httpReq.download) {
+        response
+          .ok(logs.map(_.message).mkString("\n"))
+          .header("Content-Disposition", s"attachment; filename=${req.runId.value}-${req.nodeName}-${httpReq.classifier}.txt")
+      } else {
+        logs
+      }
+    }
   }
 
   post("/api/v1/run/:id/kill") { httpReq: KillRunHttpRequest =>
     val req = KillRunRequest(RunId(httpReq.id))
     client.killRun(req).map(_ => response.ok)
   }
+
+  delete("/api/v1/run/:id") { httpReq: DeleteRunHttpRequest =>
+    val req = DeleteRunRequest(RunId(httpReq.id))
+    client.deleteRun(req).map(_ => response.ok)
+  }
 }
 
 case class ListRunsHttpRequest(
+  @QueryParam owner: Option[String],
+  @QueryParam name: Option[String],
+  @QueryParam workflow: Option[String],
+  @QueryParam status: Option[String],
+  @QueryParam parent: Option[String],
+  @QueryParam clonedFrom: Option[String],
+  @QueryParam tags: Option[String],
   @QueryParam @Min(1) page: Int = 1,
   @QueryParam @Min(0) @Max(50) perPage: Int = 15)
 
-case class GetRunHttpRequest(@RouteParam id: String)
+case class GetRunHttpRequest(@RouteParam id: String, @QueryParam download: Boolean = false)
+
+case class ListArtifactsHttpRequest(@RouteParam id: String, @RouteParam node: String)
+
+case class ListMetricsHttpRequest(@RouteParam id: String, @RouteParam node: String)
 
 case class DeleteRunHttpRequest(@RouteParam id: String)
 
@@ -100,13 +168,17 @@ case class ListWorkflowsHttpRequest(
   @QueryParam @Min(1) page: Int = 1,
   @QueryParam @Min(0) @Max(50) perPage: Int = 15)
 
-case class GetWorkflowHttpRequest(@RouteParam id: String, @RouteParam version: Option[String])
+case class GetWorkflowHttpRequest(
+  @RouteParam id: String,
+  @RouteParam version: Option[String],
+  @QueryParam download: Boolean = false)
 
 case class DeleteWorkflowHttpRequest(@RouteParam id: String)
 
 case class ListLogsHttpRequest(
   @RouteParam id: String,
   @RouteParam node: String,
-  @QueryParam classifier: Option[String],
+  @RouteParam classifier: String,
   @QueryParam @Min(1) limit: Option[Int],
-  @QueryParam @Min(0) since: Option[DateTime])
+  @QueryParam @Min(0) since: Option[DateTime],
+  @QueryParam download: Boolean = false)

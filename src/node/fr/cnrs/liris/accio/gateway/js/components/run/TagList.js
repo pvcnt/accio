@@ -16,18 +16,23 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.gateway
+import React from 'react'
+import {Label} from 'react-bootstrap'
 
-import com.google.inject.Singleton
-import com.twitter.finagle.http.Request
-import com.twitter.finatra.http.Controller
-
-@Singleton
-class UiController extends Controller {
-  get("/") { request: Request =>
-    response.ok.file("index.html")
-  }
-  get("/:*") { request: Request =>
-    response.ok.file(request.params("*"))
+class TagList extends React.Component {
+  render() {
+    const tags = (this.props.tags.length > 0)
+      ? this.props.tags.map((tag, idx) => <Label key={idx}>tag</Label>)
+      : '–';
+    return <div>{tags}</div>;
   }
 }
+
+TagList.propTypes = {
+  tags: React.PropTypes.arrayOf(React.PropTypes.string)
+}
+TagList.defaultProps = {
+  tags: []
+}
+
+export default TagList

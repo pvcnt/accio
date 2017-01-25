@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.databind.ser.std.StdSerializer
 import com.twitter.scrooge.{ThriftEnum, ThriftStruct, ThriftStructCodec, ThriftUnion}
 import fr.cnrs.liris.accio.core.domain._
+import fr.cnrs.liris.common.geo.Distance
 
 import scala.reflect.{ClassTag, classTag}
 
@@ -57,6 +58,8 @@ object AccioJacksonModule extends SimpleModule {
   addSerializer(new ScroogeArtifactSerializer)
   addSerializer(new ScroogeArgDefSerializer)
   addSerializer(new ScroogeEnumSerializer)
+
+  addSerializer(new ScroogeDistanceSerializer)
 }
 
 private class ScroogeEnumSerializer extends StdSerializer[ThriftEnum](classOf[ThriftEnum]) {
@@ -127,5 +130,11 @@ private class ScroogeArgDefSerializer extends StdSerializer[ArgDef](classOf[ArgD
       jsonGenerator.writeObjectField("default_value", Values.decode(defaultValue, t.kind))
     }
     jsonGenerator.writeEndObject()
+  }
+}
+
+private class ScroogeDistanceSerializer extends StdSerializer[Distance](classOf[Distance]) {
+  override def serialize(t: Distance, jsonGenerator: JsonGenerator, serializerProvider: SerializerProvider): Unit = {
+    jsonGenerator.writeNumber(t.meters)
   }
 }

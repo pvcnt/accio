@@ -16,18 +16,22 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.gateway
+import React from 'react'
+import Spinner from 'react-spinkit'
 
-import com.google.inject.Singleton
-import com.twitter.finagle.http.Request
-import com.twitter.finatra.http.Controller
-
-@Singleton
-class UiController extends Controller {
-  get("/") { request: Request =>
-    response.ok.file("index.html")
-  }
-  get("/:*") { request: Request =>
-    response.ok.file(request.params("*"))
+class RunLogs extends React.Component {
+  render () {
+    if (null == this.props.logs) {
+      return <Spinner spinnerName="circle"/>
+    } else {
+      const lines = this.props.logs.map((log, idx) => <div key={idx}>{log.message}</div>)
+      return lines.length ? <div className="accio-logs-lines">{lines}</div> : <p>No logs so far.</p>
+    }
   }
 }
+
+RunLogs.propTypes = {
+  logs: React.PropTypes.array,
+};
+
+export default RunLogs;

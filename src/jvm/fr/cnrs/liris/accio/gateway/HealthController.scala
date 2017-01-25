@@ -23,11 +23,8 @@ import com.twitter.finagle.http.Request
 import com.twitter.finatra.http.Controller
 
 @Singleton
-class UiController extends Controller {
-  get("/") { request: Request =>
-    response.ok.file("index.html")
-  }
-  get("/:*") { request: Request =>
-    response.ok.file(request.params("*"))
+class HealthController extends Controller {
+  get("/health") { req: Request =>
+    response.ok("OK")
   }
 }

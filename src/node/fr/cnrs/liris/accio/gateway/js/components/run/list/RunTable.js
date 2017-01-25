@@ -22,6 +22,12 @@ import {Link} from "react-router";
 import {ProgressBar, Table, Label} from "react-bootstrap";
 
 let RunTable = React.createClass({
+  getDefaultProps: function() {
+    return {
+      showWorkflow: true,
+    };
+  },
+
   render: function () {
     const rows = this.props.runs.map((run, idx) => {
       const style = (run.state.completed_at) ? (run.state.status == 'success') ? 'success' : 'danger' : 'warning';
@@ -29,11 +35,11 @@ let RunTable = React.createClass({
       const progress = Math.round(run.state.progress * 100);
       return (
         <tr key={idx}>
-          <td><input type="checkbox" /></td>
+          {this.props.showWorflow ? <td><input type="checkbox" /></td> : null}
           <td>
             <Link to={'/runs/view/' + run.id}>{run.name ? run.name : 'Untitled run #' + run.id}</Link>
           </td>
-          <td>{run.pkg.workflow_id}</td>
+          {this.props.showWorflow ? <td>{run.pkg.workflow_id}</td> : null}
           <td>{run.owner.name}</td>
           <td><ProgressBar now={progress} label={progress + '%'} bsStyle={style}/></td>
           <td>{(run.state.started_at) ? moment(run.state.started_at).fromNow() : '–'}</td>
@@ -45,9 +51,9 @@ let RunTable = React.createClass({
       <Table striped hover responsive className="accio-list-table">
         <thead>
         <tr>
-          <th></th>
+          {this.props.showWorflow ? <th>&nbsp;</th> : null}
           <th>Run name</th>
-          <th>Workflow</th>
+          {this.props.showWorflow ? <th>Workflow</th> : null}
           <th>Owner</th>
           <th>Progress</th>
           <th>Started</th>
@@ -64,6 +70,7 @@ let RunTable = React.createClass({
 
 RunTable.propTypes = {
   runs: React.PropTypes.array.isRequired,
+  showWorflow: React.PropTypes.bool,
 };
 
 export default RunTable;
