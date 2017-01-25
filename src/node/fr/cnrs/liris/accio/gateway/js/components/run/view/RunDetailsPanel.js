@@ -16,9 +16,10 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React from "react";
-import {Link} from "react-router";
-import {Row, Col, Panel} from "react-bootstrap";
+import React from "react"
+import {Link} from "react-router"
+import {Row, Col, Panel} from "react-bootstrap"
+import Username from '../../Username'
 
 let RunDetailsPanel = React.createClass({
   render: function () {
@@ -26,7 +27,7 @@ let RunDetailsPanel = React.createClass({
       <Panel header="Run details"
              className="accio-view-panel"
              collapsible={true}
-             defaultExpanded={false}>
+             defaultExpanded={true}>
         <Row>
           <Col sm={2} className="accio-view-label">Workflow</Col>
           <Col sm={10}>
@@ -37,7 +38,7 @@ let RunDetailsPanel = React.createClass({
         </Row>
         <Row>
           <Col sm={2} className="accio-view-label">Owner</Col>
-          <Col sm={10}>{this.props.run.owner.name}</Col>
+          <Col sm={10}><Username user={this.props.run.owner}/></Col>
         </Row>
         <Row>
           <Col sm={2} className="accio-view-label">Seed</Col>

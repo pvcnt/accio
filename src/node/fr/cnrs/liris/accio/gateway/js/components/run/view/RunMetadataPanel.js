@@ -18,7 +18,7 @@
 
 import React from "react";
 import {Row, Col, Panel} from "react-bootstrap";
-import TagList from "../TagList";
+import TagList from "../../TagList";
 
 let RunMetadataPanel = React.createClass({
   render: function () {
@@ -26,7 +26,7 @@ let RunMetadataPanel = React.createClass({
       <Panel header="Run metadata"
              className="accio-view-panel"
              collapsible={true}
-             defaultExpanded={false}>
+             defaultExpanded={true}>
         <Row>
           <Col sm={2} className="accio-view-label">Name</Col>
           <Col sm={10}>{this.props.run.name}</Col>

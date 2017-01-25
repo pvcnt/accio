@@ -17,22 +17,20 @@
  */
 
 import React from 'react'
-import {Label} from 'react-bootstrap'
 
-class TagList extends React.Component {
+class Username extends React.Component {
   render() {
-    const tags = (this.props.tags.length > 0)
-      ? this.props.tags.map((tag, idx) => <Label key={idx}>tag</Label>)
-      : '–';
-    return <div>{tags}</div>;
+    return <span>
+      {this.props.user.name}
+      {this.props.user.email
+        ? <span> &lt;<a href={'mailto:' + this.props.user.email}>{this.props.user.email}</a>&gt;</span>
+        : null}
+    </span>
   }
 }
 
-TagList.propTypes = {
-  tags: React.PropTypes.arrayOf(React.PropTypes.string)
-}
-TagList.defaultProps = {
-  tags: []
+Username.propTypes = {
+  user: React.PropTypes.object.isRequired
 }
 
-export default TagList
+export default Username

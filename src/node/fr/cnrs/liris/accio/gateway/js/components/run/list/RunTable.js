@@ -16,61 +16,54 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React from "react";
-import moment from "moment";
-import {Link} from "react-router";
-import {ProgressBar, Table, Label} from "react-bootstrap";
+import React from 'react'
+import moment from 'moment'
+import {Link} from 'react-router'
+import {ProgressBar, Table, Label} from 'react-bootstrap'
+import TagList from '../../TagList'
 
-let RunTable = React.createClass({
-  getDefaultProps: function() {
-    return {
-      showWorkflow: true,
-    };
-  },
-
-  render: function () {
+class RunTable extends React.Component {
+  render() {
     const rows = this.props.runs.map((run, idx) => {
-      const style = (run.state.completed_at) ? (run.state.status == 'success') ? 'success' : 'danger' : 'warning';
-      const tags = (run.tags.length > 0) ? run.tags.map((tag, idx) => <Label key={idx}>tag</Label>) : '–';
-      const progress = Math.round(run.state.progress * 100);
-      return (
-        <tr key={idx}>
-          {this.props.showWorflow ? <td><input type="checkbox" /></td> : null}
-          <td>
-            <Link to={'/runs/view/' + run.id}>{run.name ? run.name : 'Untitled run #' + run.id}</Link>
-          </td>
-          {this.props.showWorflow ? <td>{run.pkg.workflow_id}</td> : null}
-          <td>{run.owner.name}</td>
-          <td><ProgressBar now={progress} label={progress + '%'} bsStyle={style}/></td>
-          <td>{(run.state.started_at) ? moment(run.state.started_at).fromNow() : '–'}</td>
-          <td>{tags}</td>
-        </tr>
-      );
+      const style = (run.state.completed_at) ? (run.state.status == 'success') ? 'success' : 'danger' : 'warning'
+      const progress = Math.round(run.state.progress * 100)
+      return <tr key={idx}>
+        {this.props.showWorkflow ? <td><input type="checkbox" /></td> : null}
+        <td>
+          <Link to={'/runs/view/' + run.id}>{run.name ? run.name : 'Untitled run #' + run.id}</Link>
+        </td>
+        {this.props.showWorkflow ? <td>{run.pkg.workflow_id}</td> : null}
+        <td>{run.owner.name}</td>
+        <td><ProgressBar now={progress} label={progress + '%'} bsStyle={style}/></td>
+        <td>{(run.state.started_at) ? moment(run.state.started_at).fromNow() : '–'}</td>
+        <td><TagList tags={run.tags}/></td>
+      </tr>
     });
-    return (
-      <Table striped hover responsive className="accio-list-table">
-        <thead>
-        <tr>
-          {this.props.showWorflow ? <th>&nbsp;</th> : null}
-          <th>Run name</th>
-          {this.props.showWorflow ? <th>Workflow</th> : null}
-          <th>Owner</th>
-          <th>Progress</th>
-          <th>Started</th>
-          <th>Tags</th>
-        </tr>
-        </thead>
-        <tbody>
-        {rows}
-        </tbody>
-      </Table>
-    );
+    return <Table striped hover responsive className="accio-list-table">
+      <thead>
+      <tr>
+        {this.props.showWorkflow ? <th>&nbsp;</th> : null}
+        <th>Run name</th>
+        {this.props.showWorkflow ? <th>Workflow</th> : null}
+        <th>Owner</th>
+        <th>Progress</th>
+        <th>Started</th>
+        <th>Tags</th>
+      </tr>
+      </thead>
+      <tbody>
+      {rows}
+      </tbody>
+    </Table>
   }
-});
+}
 
 RunTable.propTypes = {
   runs: React.PropTypes.array.isRequired,
-  showWorflow: React.PropTypes.bool,
-};
+  showWorkflow: React.PropTypes.bool.isRequired,
+}
+RunTable.defaultProps = {
+  showWorkflow: true,
+}
 
 export default RunTable;

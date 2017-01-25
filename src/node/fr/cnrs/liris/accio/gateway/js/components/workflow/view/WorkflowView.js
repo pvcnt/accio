@@ -42,7 +42,7 @@ let WorkflowView = React.createClass({
 
         <WorkflowParamsPanel workflow={this.props.workflow}/>
 
-        <LazyPanel header="Workflow graph"
+        <LazyPanel header="Operators graph"
                    className="accio-view-panel accio-view-panel-graph"
                    collapsible={true}
                    defaultExpanded={false}>

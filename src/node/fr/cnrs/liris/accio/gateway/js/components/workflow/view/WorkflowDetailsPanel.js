@@ -16,9 +16,10 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React from "react";
-import moment from "moment";
-import {Row, Col, Panel} from "react-bootstrap";
+import React from "react"
+import moment from "moment"
+import {Row, Col, Panel} from "react-bootstrap"
+import Username from '../../Username'
 
 let WorkflowDetailsPanel = React.createClass({
   render: function () {
@@ -38,7 +39,7 @@ let WorkflowDetailsPanel = React.createClass({
         </Row>
         <Row>
           <Col md={2} className="accio-view-label">Owner</Col>
-          <Col md={10}>{workflow.owner.name}</Col>
+          <Col md={10}><Username user={workflow.owner}/></Col>
         </Row>
       </Panel>
     );
