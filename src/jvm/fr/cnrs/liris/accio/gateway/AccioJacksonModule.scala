@@ -48,17 +48,16 @@ object AccioJacksonModule extends SimpleModule {
   addSerializer(new ScroogeStructSerializer[Reference](Reference))
   addSerializer(new ScroogeStructSerializer[User](User))
   addSerializer(new ScroogeStructSerializer[DataType](DataType))
-  addSerializer(new ScroogeStructSerializer[Value](Value))
+  addSerializer(new ScroogeStructSerializer[Artifact](Artifact))
+  addSerializer(new ScroogeStructSerializer[ArgDef](ArgDef))
 
   addSerializer(new ScroogeWrappedStructSerializer[WorkflowId](WorkflowId))
   addSerializer(new ScroogeWrappedStructSerializer[RunId](RunId))
   addSerializer(new ScroogeWrappedStructSerializer[CacheKey](CacheKey))
   addSerializer(new ScroogeUnionSerializer[InputDef](InputDef))
 
-  addSerializer(new ScroogeArtifactSerializer)
-  addSerializer(new ScroogeArgDefSerializer)
+  addSerializer(new ScroogeValueSerializer)
   addSerializer(new ScroogeEnumSerializer)
-
   addSerializer(new ScroogeDistanceSerializer)
 }
 
@@ -107,29 +106,9 @@ private class ScroogeUnionSerializer[T <: ThriftStruct with ThriftUnion : ClassT
   }
 }
 
-private class ScroogeArtifactSerializer extends StdSerializer[Artifact](classOf[Artifact]) {
-  override def serialize(t: Artifact, jsonGenerator: JsonGenerator, serializerProvider: SerializerProvider): Unit = {
-    jsonGenerator.writeStartObject()
-    jsonGenerator.writeStringField("name", t.name)
-    jsonGenerator.writeObjectField("kind", t.kind)
-    jsonGenerator.writeObjectField("value", Values.decode(t.value, t.kind))
-    jsonGenerator.writeEndObject()
-  }
-}
-
-private class ScroogeArgDefSerializer extends StdSerializer[ArgDef](classOf[ArgDef]) {
-  override def serialize(t: ArgDef, jsonGenerator: JsonGenerator, serializerProvider: SerializerProvider): Unit = {
-    jsonGenerator.writeStartObject()
-    jsonGenerator.writeStringField("name", t.name)
-    jsonGenerator.writeObjectField("kind", t.kind)
-    t.help.foreach { help =>
-      jsonGenerator.writeObjectField("help", help)
-    }
-    jsonGenerator.writeObjectField("is_optional", t.isOptional)
-    t.defaultValue.foreach { defaultValue =>
-      jsonGenerator.writeObjectField("default_value", Values.decode(defaultValue, t.kind))
-    }
-    jsonGenerator.writeEndObject()
+private class ScroogeValueSerializer extends StdSerializer[Value](classOf[Value]) {
+  override def serialize(t: Value, jsonGenerator: JsonGenerator, serializerProvider: SerializerProvider): Unit = {
+    jsonGenerator.writeObject(Values.decode(t))
   }
 }
 

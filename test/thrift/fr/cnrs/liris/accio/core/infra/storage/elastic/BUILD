@@ -1,5 +1,4 @@
 java_thrift_library(
-  name='jackson',
   sources=globs('*.thrift'),
   dependencies=[
     '3rdparty/jvm:scrooge-core',

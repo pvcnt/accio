@@ -16,18 +16,17 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.infra.jackson
-
-import com.fasterxml.jackson.databind.ObjectMapper
-import fr.cnrs.liris.testing.UnitSpec
+package fr.cnrs.liris.accio.core.infra.storage.elastic
 
 /**
- * Base class for unit tests needing a mapper.
+ * Unit tests of [[ScroogeEnumDeserializer]].
  */
-private[jackson] abstract class JacksonSpec extends UnitSpec {
-  protected val mapper: ObjectMapper = {
-    val mapper = new ObjectMapper
-    mapper.registerModule(ScroogeModule)
-    mapper
+class ScroogeEnumDeserializerSpec extends JacksonSpec {
+  behavior of "ScroogeEnumDeserializer"
+
+  it should "deserialize an enum" in {
+    mapper.readValue( "0", classOf[TestEnum]) shouldBe TestEnum.Foo
+    mapper.readValue( "1", classOf[TestEnum]) shouldBe TestEnum.Bar
+    mapper.readValue( "2", classOf[TestEnum]) shouldBe TestEnum.Foobar
   }
 }

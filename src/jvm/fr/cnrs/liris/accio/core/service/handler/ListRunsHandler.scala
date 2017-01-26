@@ -34,6 +34,8 @@ class ListRunsHandler @Inject()(repository: ReadOnlyRunRepository) extends Handl
       owner = req.owner,
       workflow = req.workflowId,
       status = req.status.toSet.flatten,
+      parent = req.parent,
+      clonedFrom = req.clonedFrom,
       limit = req.limit.getOrElse(25),
       offset = req.offset)
     val res = repository.find(query)

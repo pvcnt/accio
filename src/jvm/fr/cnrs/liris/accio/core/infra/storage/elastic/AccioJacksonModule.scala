@@ -84,7 +84,7 @@ final class ThriftProtocolException(message: String) extends JsonProcessingExcep
  * @param codec Enum "codec".
  * @tparam T Type of enum being deserialized.
  */
-private class ScroogeEnumDeserializer[T <: ThriftEnum : ClassTag](codec: Any) extends StdDeserializer[T](classTag[T].runtimeClass.asInstanceOf[Class[T]]) {
+private[elastic] class ScroogeEnumDeserializer[T <: ThriftEnum : ClassTag](codec: Any) extends StdDeserializer[T](classTag[T].runtimeClass.asInstanceOf[Class[T]]) {
   // Yes, this is it. The consistency check...
   require(codec.getClass.getName == _valueClass.getName + "$")
 
@@ -98,13 +98,13 @@ private class ScroogeEnumDeserializer[T <: ThriftEnum : ClassTag](codec: Any) ex
   }
 }
 
-private class ScroogeEnumSerializer extends StdSerializer[ThriftEnum](classOf[ThriftEnum]) {
+private[elastic] class ScroogeEnumSerializer extends StdSerializer[ThriftEnum](classOf[ThriftEnum]) {
   override def serialize(t: ThriftEnum, jsonGenerator: JsonGenerator, serializerProvider: SerializerProvider): Unit = {
     jsonGenerator.writeString(t.name)
   }
 }
 
-private final class ScroogeStructDeserializer[T <: ThriftStruct : ClassTag](codec: ThriftStructCodec[T]) extends StdDeserializer[T](classTag[T].runtimeClass.asInstanceOf[Class[T]]) {
+private[elastic] final class ScroogeStructDeserializer[T <: ThriftStruct : ClassTag](codec: ThriftStructCodec[T]) extends StdDeserializer[T](classTag[T].runtimeClass.asInstanceOf[Class[T]]) {
   override def deserialize(jp: JsonParser, ctx: DeserializationContext): T = {
     val tree = jp.getCodec.readTree[JsonNode](jp)
     val fields = codec.metaData.fieldInfos.map { fieldInfo =>
@@ -194,7 +194,7 @@ private final class ScroogeStructDeserializer[T <: ThriftStruct : ClassTag](code
   }
 }
 
-private class ScroogeStructSerializer extends StdSerializer[ThriftStruct](classOf[ThriftStruct]) {
+private[elastic] class ScroogeStructSerializer extends StdSerializer[ThriftStruct](classOf[ThriftStruct]) {
   override def serialize(t: ThriftStruct, jsonGenerator: JsonGenerator, serializerProvider: SerializerProvider): Unit = {
     val transport = new TArrayByteTransport
     val protocol = new TSimpleJSONProtocol.Factory().getProtocol(transport)
@@ -204,7 +204,7 @@ private class ScroogeStructSerializer extends StdSerializer[ThriftStruct](classO
   }
 }
 
-private class ScroogeUnionDeserializer[T <: ThriftStruct with ThriftUnion : ClassTag](codec: ThriftStructCodec[T]) extends StdDeserializer[T](classTag[T].runtimeClass.asInstanceOf[Class[T]]) {
+private[elastic] class ScroogeUnionDeserializer[T <: ThriftStruct with ThriftUnion : ClassTag](codec: ThriftStructCodec[T]) extends StdDeserializer[T](classTag[T].runtimeClass.asInstanceOf[Class[T]]) {
   override def deserialize(jp: JsonParser, ctx: DeserializationContext): T = {
     val tree = jp.getCodec.readTree[JsonNode](jp)
     val maybeField = codec.metaData.unionFields.find(fieldInfo => tree.has(fieldInfo.structFieldInfo.tfield.name))

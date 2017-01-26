@@ -59,24 +59,22 @@ struct DataType {
 }
 
 struct Value {
-  1: required i32 size = 1;
+  1: required DataType kind;
   2: list<string> strings;
   3: list<i64> longs;
   4: list<double> doubles;
   5: list<i32> integers;
   6: list<bool> booleans;
   7: list<byte> bytes;
+  8: required i32 size = 1;
 }
 
 struct Artifact {
   // Artifact name.
   1: required string name;
 
-  // Data type.
-  2: required DataType kind;
-
   // Value, that should be consistent with above data type.
-  3: required Value value;
+  2: required Value value;
 }
 
 struct Metric {

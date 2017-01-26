@@ -57,12 +57,12 @@ private[storage] abstract class RunRepositorySpec extends UnitSpec {
     "FooNode" -> OpResult(
       0,
       None,
-      Set(Artifact("myint", DataType(AtomicType.Integer), Values.encodeInteger(42)), Artifact("mystr", DataType(AtomicType.String), Values.encodeString("foo str"))),
+      Set(Artifact("myint", Values.encodeInteger(42)), Artifact("mystr", Values.encodeString("foo str"))),
       Set(Metric("a", 1), Metric("b", 2))),
     "BarNode" -> OpResult(
       0,
       None,
-      Set(Artifact("dbl", DataType(AtomicType.Double), Values.encodeDouble(3.14))),
+      Set(Artifact("dbl", Values.encodeDouble(3.14))),
       Set(Metric("a", 12))))
   protected val foobarRunWithNodes = foobarRun.copy(state = foobarRun.state.copy(nodes = Set(
     NodeState(nodeName = "FooNode", status = NodeStatus.Success, cacheKey = Some(CacheKey("MyFooCacheKey")), result = Some(foobarResults("FooNode"))),
@@ -71,7 +71,7 @@ private[storage] abstract class RunRepositorySpec extends UnitSpec {
   protected val fooResults = Map("FooNode" -> OpResult(
     0,
     None,
-    Set(Artifact("myint", DataType(AtomicType.Integer), Values.encodeInteger(44)), Artifact("mystr", DataType(AtomicType.String), Values.encodeString("str"))),
+    Set(Artifact("myint", Values.encodeInteger(44)), Artifact("mystr", Values.encodeString("str"))),
     Set(Metric("a", 3), Metric("b", 4))))
   protected val fooRunWithNodes = fooRun.copy(state = fooRun.state.copy(nodes = Set(
     NodeState(nodeName = "FooNode", status = NodeStatus.Success, cacheKey = Some(CacheKey("YourFooCacheKey")), result = Some(fooResults("FooNode"))))))

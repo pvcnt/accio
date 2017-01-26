@@ -32,7 +32,7 @@ private[accio] object Operators {
     "SecondSimple",
     Seq(
       ArgDef("dbl", DataType(AtomicType.Double)),
-      ArgDef("str", DataType(AtomicType.String), defaultValue = Some(Value(strings = Seq("something")))),
+      ArgDef("str", DataType(AtomicType.String), defaultValue = Some(Values.encodeString("something"))),
       ArgDef("data", DataType(AtomicType.Dataset))),
     Seq(ArgDef("data", DataType(AtomicType.Dataset))))
   val ThirdSimple: OpDef = createOpDef(

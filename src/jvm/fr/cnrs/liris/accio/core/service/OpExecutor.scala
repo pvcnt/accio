@@ -183,7 +183,7 @@ final class OpExecutor(
       case Some(outClass) =>
         opMeta.defn.outputs.map { argDef =>
           val value = outClass.getMethod(argDef.name).invoke(out)
-          Artifact(argDef.name, argDef.kind, Values.encode(value, argDef.kind))
+          Artifact(argDef.name, Values.encode(value, argDef.kind))
         }.toSet
     }
   }
@@ -222,7 +222,7 @@ final class OpExecutor(
    */
   private def uploadArtifacts(artifacts: Set[Artifact], cacheKey: CacheKey): Set[Artifact] = {
     artifacts.map { artifact =>
-      artifact.kind.base match {
+      artifact.value.kind.base match {
         case AtomicType.Dataset =>
           val key = s"${cacheKey.hash}/${UUID.randomUUID}"
           val dataset = Values.decodeDataset(artifact.value)

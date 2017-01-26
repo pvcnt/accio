@@ -58,11 +58,11 @@ final class ElasticRunRepository(
   override def find(query: RunQuery): RunList = {
     var q = boolQuery()
     query.owner.foreach { owner =>
-      q = q.filter(termQuery("owner.name", owner))
+      q = q.must(termQuery("owner.name", owner))
     }
     if (query.status.nonEmpty) {
       val qs = query.status.map(v => termQuery("state.status", v.value))
-      q = q.should(qs)
+      q = q.should(qs).minimumShouldMatch(1)
     }
     query.workflow.foreach { workflowId =>
       q = q.filter(termQuery("pkg.workflow_id.value", workflowId.value))
@@ -71,11 +71,11 @@ final class ElasticRunRepository(
       q = q.must(matchQuery("name", name))
     }
     query.clonedFrom.foreach { clonedFrom =>
-      q = q.must(termQuery("cloned_from.value", clonedFrom.value))
+      q = q.filter(termQuery("cloned_from.value", clonedFrom.value))
     }
     query.parent match {
-      case Some(parent) => q = q.must(termQuery("parent.value", parent.value))
-      case None => q = q.must(not(existsQuery("parent")))
+      case Some(parent) => q = q.filter(termQuery("parent.value", parent.value))
+      case None => q = q.filter(not(existsQuery("parent")))
     }
 
     val s = search(runsIndex / runsType)

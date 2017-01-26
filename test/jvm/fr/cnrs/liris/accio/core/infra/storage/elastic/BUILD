@@ -1,8 +1,7 @@
 junit_tests(
-  name='elastic',
   dependencies=[
     'src/jvm/fr/cnrs/liris/accio/core/infra/storage/elastic',
-    'src/jvm/fr/cnrs/liris/accio/core/infra/jackson',
+    'test/thrift/fr/cnrs/liris/accio/core/infra/storage/elastic',
     'test/jvm/fr/cnrs/liris/accio/core/infra/storage',
     '3rdparty/jvm/com/sksamuel/elastic4s:testkit',
   ],

@@ -1,4 +1,4 @@
-package fr.cnrs.liris.accio.core.infra.jackson
+package fr.cnrs.liris.accio.core.infra.storage.elastic
 
 /**
  * Unit tests of [[ScroogeStructDeserializer]].

@@ -63,7 +63,7 @@ class CsvReportCreator {
     list.groups.foreach { group =>
       val artifacts = if (opts.aggregate) Seq(group.aggregated) else group.toSeq
       val header = asHeader(group.kind)
-      val rows = artifacts.flatMap(artifact => asString(artifact.kind, artifact.value))
+      val rows = artifacts.flatMap(artifact => asString(artifact.value))
       val lines = (Seq(header) ++ rows).map(_.mkString(opts.separator))
       if (opts.append) {
         val file = Paths.get(s"${group.name.replace("/", "-")}.csv")
@@ -94,11 +94,11 @@ class CsvReportCreator {
     case _ => Seq("value")
   }
 
-  private def asString(kind: DataType, value: Value): Seq[Seq[String]] = kind.base match {
-    case AtomicType.List => Values.decodeList(value, kind.args.head).map(v => Seq(v.toString))
-    case AtomicType.Set => Values.decodeSet(value, kind.args.head).toSeq.map(v => Seq(v.toString))
+  private def asString(value: Value): Seq[Seq[String]] = value.kind.base match {
+    case AtomicType.List => Values.decodeList(value).map(v => Seq(v.toString))
+    case AtomicType.Set => Values.decodeSet(value).toSeq.map(v => Seq(v.toString))
     case AtomicType.Map =>
-      val map = Values.decodeMap(value, kind)
+      val map = Values.decodeMap(value)
       val keysIndex = map.keys.zipWithIndex.toMap
       map.toSeq.map { case (k, v) =>
         val kIdx = keysIndex(k.asInstanceOf[Any])
@@ -106,6 +106,6 @@ class CsvReportCreator {
       }
     case AtomicType.Distance => Seq(Seq(Values.decodeDistance(value).meters.toString))
     case AtomicType.Duration => Seq(Seq(Values.decodeDuration(value).getMillis.toString))
-    case _ => Seq(Seq(Values.decode(value, kind).toString))
+    case _ => Seq(Seq(Values.decode(value).toString))
   }
 }

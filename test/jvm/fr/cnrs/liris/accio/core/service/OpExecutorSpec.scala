@@ -66,16 +66,16 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
     res.artifacts should have size 2
     res.exitCode shouldBe 0
     res.error shouldBe None
-    res.artifacts should contain(Artifact("str", DataType(AtomicType.String), Values.encodeString("foo+0")))
-    res.artifacts should contain(Artifact("b", DataType(AtomicType.Boolean), Values.encodeBoolean(false)))
+    res.artifacts should contain(Artifact("str", Values.encodeString("foo+0")))
+    res.artifacts should contain(Artifact("b", Values.encodeBoolean(false)))
 
     payload = OpPayload("Simple", 123, Map("str" -> Values.encodeString("bar"), "i" -> Values.encodeInteger(3)), CacheKey("MyCacheKey"))
     res = executor.execute(payload, OpExecutorOpts(false))
     res.artifacts should have size 2
     res.exitCode shouldBe 0
     res.error shouldBe None
-    res.artifacts should contain(Artifact("str", DataType(AtomicType.String), Values.encodeString("bar+3")))
-    res.artifacts should contain(Artifact("b", DataType(AtomicType.Boolean), Values.encodeBoolean(true)))
+    res.artifacts should contain(Artifact("str", Values.encodeString("bar+3")))
+    res.artifacts should contain(Artifact("b", Values.encodeBoolean(true)))
   }
 
   it should "execute operators with no input" in {
@@ -84,7 +84,7 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
     res.artifacts should have size 1
     res.exitCode shouldBe 0
     res.error shouldBe None
-    res.artifacts should contain(Artifact("s", DataType(AtomicType.String), Values.encodeString("foo")))
+    res.artifacts should contain(Artifact("s", Values.encodeString("foo")))
   }
 
   it should "execute operators with no output" in {
@@ -128,7 +128,7 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
     res.artifacts should have size 1
     res.exitCode shouldBe 0
     res.error shouldBe None
-    res.artifacts should contain(Artifact("lng", DataType(AtomicType.Long), Values.encodeLong(123)))
+    res.artifacts should contain(Artifact("lng", Values.encodeLong(123)))
   }
 
   it should "not give a seed to non-unstable operators" in {
@@ -149,7 +149,6 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
     res.error shouldBe None
     res.artifacts should have size 1
     res.artifacts.head.name shouldBe "data"
-    res.artifacts.head.kind shouldBe DataType(AtomicType.Dataset)
     val dataset = Values.decodeDataset(res.artifacts.head.value)
     dataset.uri should startWith("file:///mock")
     uploader.keys should contain(dataset.uri)
@@ -162,7 +161,7 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
     res.artifacts should have size 1
     res.exitCode shouldBe 0
     res.error shouldBe None
-    res.artifacts should contain(Artifact("ok", DataType(AtomicType.Boolean), Values.encodeBoolean(true)))
+    res.artifacts should contain(Artifact("ok", Values.encodeBoolean(true)))
   }
 }
 

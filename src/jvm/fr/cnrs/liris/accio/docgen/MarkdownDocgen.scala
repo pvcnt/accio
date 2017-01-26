@@ -76,7 +76,7 @@ class MarkdownDocgen @Inject()(opRegistry: OpRegistry) {
       opDef.inputs.foreach { argDef =>
         out.write(s"| `${argDef.name}` | ${Utils.describe(argDef.kind)}".getBytes)
         if (argDef.defaultValue.isDefined) {
-          out.write(s"; optional; default: ${Values.toString(argDef.defaultValue.get, argDef.kind)}".getBytes)
+          out.write(s"; optional; default: ${Values.toString(argDef.defaultValue.get)}".getBytes)
         } else if (argDef.isOptional) {
           out.write("; optional".getBytes)
         } else {

@@ -48,7 +48,7 @@ class AggregatedRuns(val runs: Seq[Run]) {
       .groupBy(_._2.name)
       .map { case (artifactName, list) =>
         val values = list.map { case (runId, art) => runId -> art.value }
-        ArtifactGroup(artifactName, list.head._2.kind, values.toMap)
+        ArtifactGroup(artifactName, list.head._2.value.kind, values.toMap)
       }.toSeq
 
     // Only keep runs for which we have at least one artifact.
@@ -120,9 +120,9 @@ case class ArtifactGroup(name: String, kind: DataType, values: Map[RunId, Value]
 
   def nonEmpty: Boolean = values.nonEmpty
 
-  def toSeq: Seq[Artifact] = values.values.map(v => Artifact(name, kind, v)).toSeq
+  def toSeq: Seq[Artifact] = values.values.map(v => Artifact(name, v)).toSeq
 
-  def aggregated: Artifact = Artifact(name, kind, aggregate(kind, values.values.toSeq))
+  def aggregated: Artifact = Artifact(name, aggregate(kind, values.values.toSeq))
 
   private def aggregate(kind: DataType, values: Seq[Value]): Value = kind.base match {
     case AtomicType.Byte => Values.encodeDouble(mean(values.map(Values.decodeByte(_).toDouble)))
@@ -135,13 +135,13 @@ case class ArtifactGroup(name: String, kind: DataType, values: Map[RunId, Value]
       Values.encodeDuration(Duration.millis(mean(values.map(Values.decodeDuration(_).getMillis.toDouble)).round))
     case AtomicType.List =>
       val of = DataType(kind.args.head)
-      aggregate(of, values.flatMap(Values.decodeList(_, kind.args.head)).map(Values.encode(_, of)))
+      aggregate(of, values.flatMap(Values.decodeList).map(Values.encode(_, of)))
     case AtomicType.Set =>
       val of = DataType(kind.args.head)
-      aggregate(of, values.flatMap(Values.decodeSet(_, kind.args.head)).map(Values.encode(_, of)))
+      aggregate(of, values.flatMap(Values.decodeSet).map(Values.encode(_, of)))
     case AtomicType.Map =>
       val ofValues = DataType(kind.args.last)
-      val valuesByKey = Seqs.index(values.flatMap(Values.decodeMap(_, kind)))
+      val valuesByKey = Seqs.index(values.flatMap(Values.decodeMap))
       val mergedMap = valuesByKey.map { case (k, vs) =>
         k -> Values.decode(aggregate(ofValues, vs.map(Values.encode(_, ofValues))), ofValues)
       }

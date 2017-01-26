@@ -16,17 +16,16 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.infra.jackson
+package fr.cnrs.liris.accio.core.infra.storage.elastic
 
 /**
- * Unit tests of [[ScroogeEnumDeserializer]].
+ * Unit tests of [[ScroogeUnionDeserializer]].
  */
-class ScroogeEnumDeserializerSpec extends JacksonSpec {
-  behavior of "ScroogeEnumDeserializer"
+class ScroogeUnionDeserializerSpec extends JacksonSpec {
+  behavior of "ScroogeUnionDeserializer"
 
-  it should "deserialize an enum" in {
-    mapper.readValue( "0", classOf[TestEnum]) shouldBe TestEnum.Foo
-    mapper.readValue( "1", classOf[TestEnum]) shouldBe TestEnum.Bar
-    mapper.readValue( "2", classOf[TestEnum]) shouldBe TestEnum.Foobar
+  it should "deserialize a union" in {
+    val json = "{\"s\":\"foo\"}"
+    mapper.readValue(json, classOf[TestUnion]) shouldBe TestUnion.S("foo")
   }
 }

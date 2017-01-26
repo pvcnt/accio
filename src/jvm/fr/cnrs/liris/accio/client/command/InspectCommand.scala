@@ -154,7 +154,7 @@ class InspectCommand @Inject()(clientFactory: AgentClientFactory) extends Comman
         out.writeln()
         out.writeln(s"<comment>${padTo("Artifact name", 25)}  Value preview</comment>")
         result.artifacts.foreach { artifact =>
-          out.writeln(s"${padTo(artifact.name, 25)}  ${Values.toString(artifact.value, artifact.kind)}</comment>")
+          out.writeln(s"${padTo(artifact.name, 25)}  ${Values.toString(artifact.value)}</comment>")
         }
       }
       if (result.metrics.nonEmpty) {

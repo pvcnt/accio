@@ -16,11 +16,24 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.infra.jackson
+package fr.cnrs.liris.accio.core.infra.storage.elastic
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.module.SimpleModule
+import fr.cnrs.liris.testing.UnitSpec
 
-object ScroogeModule extends SimpleModule {
+/**
+ * Base class for unit tests needing a mapper.
+ */
+private[elastic] abstract class JacksonSpec extends UnitSpec {
+  protected val mapper: ObjectMapper = {
+    val mapper = new ObjectMapper
+    mapper.registerModule(ScroogeModule)
+    mapper
+  }
+}
+
+private object ScroogeModule extends SimpleModule {
   addDeserializer(classOf[BigStruct], new ScroogeStructDeserializer(BigStruct))
   addDeserializer(classOf[NestedStruct], new ScroogeStructDeserializer(NestedStruct))
   addDeserializer(classOf[StructWithStrings], new ScroogeStructDeserializer[StructWithStrings](StructWithStrings))

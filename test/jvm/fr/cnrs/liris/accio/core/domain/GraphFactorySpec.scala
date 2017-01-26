@@ -36,11 +36,11 @@ class GraphFactorySpec extends UnitSpec {
       NodeDef(
         op = "FirstSimple",
         name = "FirstSimple",
-        inputs = Map("foo" -> InputDef.Value(Value(integers = Seq(42))))),
+        inputs = Map("foo" -> InputDef.Value(Values.encodeInteger(42)))),
       NodeDef(
         op = "FirstSimple",
         name = "FirstSimple1",
-        inputs = Map("foo" -> InputDef.Value(Value(integers = Seq(42))))),
+        inputs = Map("foo" -> InputDef.Value(Values.encodeInteger(42)))),
       NodeDef(
         op = "ThirdSimple",
         name = "ThirdSimple",
@@ -51,7 +51,7 @@ class GraphFactorySpec extends UnitSpec {
         op = "SecondSimple",
         name = "SecondSimple",
         inputs = Map(
-          "dbl" -> InputDef.Value(Value(doubles = Seq(3.14))),
+          "dbl" -> InputDef.Value(Values.encodeDouble(3.14)),
           "data" -> InputDef.Reference(Reference("FirstSimple", "data"))))
     ))
     val graph = factory.create(graphDef)
@@ -68,12 +68,12 @@ class GraphFactorySpec extends UnitSpec {
       NodeDef(
         op = "FirstSimple",
         name = "FirstSimple",
-        inputs = Map("foo" -> InputDef.Value(Value(integers = Seq(42))))),
+        inputs = Map("foo" -> InputDef.Value(Values.encodeInteger(42)))),
       NodeDef(
         op = "SecondSimple",
         name = "FirstSimple",
         inputs = Map(
-          "dbl" -> InputDef.Value(Value(doubles = Seq(3.14))),
+          "dbl" -> InputDef.Value(Values.encodeDouble(3.14)),
           "data" -> InputDef.Reference(Reference("FirstSimple", "data"))))
     ))
     val expected = intercept[InvalidGraphException] {
