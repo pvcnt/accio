@@ -5,6 +5,7 @@ scala_library(
     'src/jvm/fr/cnrs/liris/accio/core/api:annotations',
     'src/jvm/fr/cnrs/liris/accio/core/domain',
     'src/jvm/fr/cnrs/liris/common/reflect',
+    'src/jvm/fr/cnrs/liris/common/cache',
     '3rdparty/jvm/org/scalanlp:breeze',
     '3rdparty/jvm/com/typesafe/scala-logging',
     '3rdparty/jvm/com/google/guice',

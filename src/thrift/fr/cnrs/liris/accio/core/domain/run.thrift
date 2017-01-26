@@ -52,6 +52,9 @@ struct NodeState {
   // Cache key used for result memoization. If filled, the `result` field has to be filled too. Filling this indicates
   // the associated result can be used as a cached value.
   6: optional common.CacheKey cache_key;
+
+  // Whether it corresponds to a cache hit, i.e., the value has not been explicitly computed.
+  7: required bool cache_hit = false;
 }
 
 enum RunStatus {

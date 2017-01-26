@@ -167,7 +167,7 @@ class LocalScheduler(
               RunLog(job.runId, job.nodeName, System.currentTimeMillis(), "stdout", line.trim)
             }
             if (logs.nonEmpty) {
-              logger.debug(s"[T${job.taskId.value}] Saved ${logs.length} additional logs")
+              logger.debug(s"[T${job.taskId.value}] Saving ${logs.length} additional logs")
               runRepository.save(logs)
             }
           } catch {

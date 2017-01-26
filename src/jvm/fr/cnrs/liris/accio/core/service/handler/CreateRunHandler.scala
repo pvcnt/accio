@@ -19,10 +19,10 @@
 package fr.cnrs.liris.accio.core.service.handler
 
 import com.google.inject.Inject
-import com.twitter.util.Future
+import com.twitter.util.{Future, FuturePool}
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.domain._
-import fr.cnrs.liris.accio.core.service.RunLifecycleManager
+import fr.cnrs.liris.accio.core.service.{RunLifecycleManager, StateManager}
 
 /**
  * Handler for launching a workflow. It create one or several runs, save them and schedule them.
@@ -30,18 +30,33 @@ import fr.cnrs.liris.accio.core.service.RunLifecycleManager
  * @param runFactory    Run factory.
  * @param runRepository Run repository.
  * @param runManager    Run lifecycle manager.
+ * @param stateManager  State manager.
  */
 final class CreateRunHandler @Inject()(
   runFactory: RunFactory,
   runRepository: RunRepository,
-  runManager: RunLifecycleManager)
+  runManager: RunLifecycleManager,
+  stateManager: StateManager)
   extends Handler[CreateRunRequest, CreateRunResponse] with StrictLogging {
 
   @throws[InvalidRunDefException]
   def handle(req: CreateRunRequest): Future[CreateRunResponse] = {
     val runs = runFactory.create(req.defn, req.user)
-    val scheduledRuns = runManager.launch(runs)
-    scheduledRuns.foreach(runRepository.save)
+    runs.foreach(runRepository.save)
+
+    // We save the runs before launching them asynchronously. We can return more quickly to the client, for a
+    // better experience, as launching runs can take some times.
+    FuturePool.unboundedPool {
+      runs.foreach { run =>
+        val runLock = stateManager.lock(s"run/${run.id.value}")
+        runLock.lock()
+        try {
+          runRepository.save(runManager.launch(run))
+        } finally {
+          runLock.unlock()
+        }
+      }
+    }
     Future(CreateRunResponse(runs.map(_.id)))
   }
 }

@@ -132,7 +132,7 @@ class InspectCommand @Inject()(clientFactory: AgentClientFactory) extends Comman
       out.writeln(s"<comment>${padTo("Completed", colWidth)}</comment> ${prettyTime.format(new Date(completedAt))}")
       if (node.startedAt.isDefined) {
         out.write(s"<comment>${padTo("Duration", colWidth)}</comment> ")
-        if (node.result.exists(_.cacheHit)) {
+        if (node.cacheHit) {
           out.writeln("<cache hit>")
         } else {
           out.writeln(formatDuration(Duration.fromMilliseconds(completedAt - node.startedAt.get)))

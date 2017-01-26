@@ -43,7 +43,6 @@ object AccioJacksonModule extends SimpleModule {
   addSerializer(new ScroogeStructSerializer[RunLog](RunLog))
   addSerializer(new ScroogeStructSerializer[OpResult](OpResult))
   addSerializer(new ScroogeStructSerializer[Workflow](Workflow))
-  addSerializer(new ScroogeStructSerializer[GraphDef](GraphDef))
   addSerializer(new ScroogeStructSerializer[NodeDef](NodeDef))
   addSerializer(new ScroogeStructSerializer[Reference](Reference))
   addSerializer(new ScroogeStructSerializer[User](User))
@@ -54,6 +53,7 @@ object AccioJacksonModule extends SimpleModule {
   addSerializer(new ScroogeWrappedStructSerializer[WorkflowId](WorkflowId))
   addSerializer(new ScroogeWrappedStructSerializer[RunId](RunId))
   addSerializer(new ScroogeWrappedStructSerializer[CacheKey](CacheKey))
+  addSerializer(new ScroogeWrappedStructSerializer[GraphDef](GraphDef))
   addSerializer(new ScroogeUnionSerializer[InputDef](InputDef))
 
   addSerializer(new ScroogeValueSerializer)
@@ -108,7 +108,10 @@ private class ScroogeUnionSerializer[T <: ThriftStruct with ThriftUnion : ClassT
 
 private class ScroogeValueSerializer extends StdSerializer[Value](classOf[Value]) {
   override def serialize(t: Value, jsonGenerator: JsonGenerator, serializerProvider: SerializerProvider): Unit = {
-    jsonGenerator.writeObject(Values.decode(t))
+    jsonGenerator.writeStartObject()
+    jsonGenerator.writeObjectField("kind", t.kind)
+    jsonGenerator.writeObjectField("payload", Values.decode(t))
+    jsonGenerator.writeEndObject()
   }
 }
 

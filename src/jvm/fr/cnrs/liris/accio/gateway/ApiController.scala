@@ -93,10 +93,8 @@ class ApiController @Inject()(client: AgentService.FinagledClient) extends Contr
             .ok(run)
             .header("Content-Disposition", s"attachment; filename=run-${run.id.value}.json")
         } else {
-          // In other cases, we do not transmit metrics and artifacts.
-          run.copy(state = run.state.copy(nodes = run.state.nodes.map { node =>
-            node.copy(result = node.result.map(_.unsetArtifacts.unsetMetrics))
-          }))
+          // In other cases, we do not transmit node result.
+          run.copy(state = run.state.copy(nodes = run.state.nodes.map(_.unsetResult)))
         }
       case None => response.notFound
     }

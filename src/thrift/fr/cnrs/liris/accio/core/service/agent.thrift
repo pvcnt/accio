@@ -19,7 +19,6 @@
 namespace java fr.cnrs.liris.accio.core.service.handler
 
 include "fr/cnrs/liris/accio/core/domain/common.thrift"
-include "fr/cnrs/liris/accio/core/domain/graph.thrift"
 include "fr/cnrs/liris/accio/core/domain/workflow.thrift"
 include "fr/cnrs/liris/accio/core/domain/run.thrift"
 include "fr/cnrs/liris/accio/core/domain/operator.thrift"

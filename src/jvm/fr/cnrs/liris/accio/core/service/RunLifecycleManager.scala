@@ -18,9 +18,10 @@
 
 package fr.cnrs.liris.accio.core.service
 
-import com.google.inject.Inject
+import com.google.inject.{Inject, Singleton}
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.domain._
+import fr.cnrs.liris.common.util.cache.CacheBuilder
 
 /**
  * Coordinate between various services to manage lifecycle of runs, from initial launch to completion. All methods
@@ -29,42 +30,39 @@ import fr.cnrs.liris.accio.core.domain._
  * @param schedulerService   Scheduler service.
  * @param graphFactory       Graph factory.
  * @param workflowRepository Workflow repository (read-only).
- * @param runRepository      Run repository (read-only).
  */
+@Singleton
 final class RunLifecycleManager @Inject()(
   schedulerService: SchedulerService,
   graphFactory: GraphFactory,
-  workflowRepository: ReadOnlyWorkflowRepository,
-  runRepository: ReadOnlyRunRepository)
+  workflowRepository: ReadOnlyWorkflowRepository)
   extends StrictLogging {
 
+  private[this] val graphs = CacheBuilder().maximumSize(50).build((pkg: Package) => {
+    // Workflow does exist, because it has been validate when creating the runs.
+    val workflow = workflowRepository.get(pkg.workflowId, pkg.workflowVersion).get
+    graphFactory.create(workflow.graph)
+  })
+
   /**
-   * Launch a list of runs. Ready nodes of those runs will be submitted to the scheduler, and state of all runs
-   * will updated to reflect this.
+   * Launch a run. Ready nodes of those runs will be submitted to the scheduler.
    *
-   * @param runs Runs to launch.
+   * @param run Run to launch.
    * @return Updated run.
    */
-  def launch(runs: Seq[Run]): Seq[Run] = {
-    if (runs.isEmpty) {
-      runs
+  def launch(run: Run): Run = {
+    // Workflow does exist, because it has been validated when creating the runs.
+    val rootNodes = graphs(run.pkg).roots
+    if (run.children.nonEmpty) {
+      // Only mark a parent run as started, nothing has to be actually scheduled.
+      run.copy(state = run.state.copy(status = RunStatus.Running, startedAt = Some(System.currentTimeMillis())))
     } else {
-      // Workflow does exist, because it has been validated when creating the runs.
-      val workflow = workflowRepository.get(runs.head.pkg.workflowId, runs.head.pkg.workflowVersion).get
-      val rootNodes = graphFactory.create(workflow.graph).roots
-      runs.map { run =>
-        if (run.children.nonEmpty) {
-          // Only mark a parent run as started, nothing has to be actually scheduled.
-          run.copy(state = run.state.copy(status = RunStatus.Running, startedAt = Some(System.currentTimeMillis())))
-        } else {
-          // Submit root nodes of child runs to the scheduler.
-          var newRun = run
-          rootNodes.foreach { node =>
-            newRun = schedule(newRun, node)
-          }
-          newRun
-        }
+      // Submit root nodes of child runs to the scheduler.
+      var newRun = run
+      rootNodes.foreach { node =>
+        newRun = schedule(newRun, node)
       }
+      newRun
     }
   }
 
@@ -89,7 +87,7 @@ final class RunLifecycleManager @Inject()(
         // Mark run as started, if not already.
         newRun = newRun.copy(state = newRun.state.copy(startedAt = Some(now), status = RunStatus.Running))
       }
-      newRun
+      updateProgress(newRun)
     }
   }
 
@@ -188,7 +186,8 @@ final class RunLifecycleManager @Inject()(
           completedAt = Some(now),
           status = NodeStatus.Success,
           cacheKey = Some(cacheKey),
-          result = Some(result.copy(cacheHit = true))))
+          cacheHit = true,
+          result = Some(result)))
 
         // Schedule next nodes.
         scheduleNextNodes(newRun, node.name)
@@ -223,7 +222,7 @@ final class RunLifecycleManager @Inject()(
   }
 
   private def scheduleNextNodes(run: Run, nodeName: String): Run = {
-    val graph = getGraph(run)
+    val graph = graphs(run.pkg)
     val nextNodes = getNextNodes(run, graph, nodeName).filter { nextNode =>
       nextNode.predecessors.forall { dep =>
         run.state.nodes.find(_.nodeName == dep).get.status == NodeStatus.Success
@@ -237,7 +236,7 @@ final class RunLifecycleManager @Inject()(
   }
 
   private def cancelNextNodes(run: Run, nodeName: String): Run = {
-    val graph = getGraph(run)
+    val graph = graphs(run.pkg)
     val nextNodes = getNextNodes(run, graph, nodeName).flatMap(node => Seq(node) ++ getNextNodes(run, graph, node.name))
     var newRun = run
     nextNodes.foreach { nextNode =>
@@ -254,11 +253,5 @@ final class RunLifecycleManager @Inject()(
       .filter { nextNode =>
         run.state.nodes.find(_.nodeName == nextNode.name).get.status == NodeStatus.Waiting
       }
-  }
-
-  private def getGraph(run: Run): Graph = {
-    // Workflow does exist, because it has been validate when creating the runs.
-    val workflow = workflowRepository.get(run.pkg.workflowId, run.pkg.workflowVersion).get
-    graphFactory.create(workflow.graph)
   }
 }

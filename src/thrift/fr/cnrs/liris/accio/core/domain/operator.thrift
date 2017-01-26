@@ -130,7 +130,4 @@ struct OpResult {
   // There is no definition of metrics produced by an operator, so any relevant metrics can be included here and will
   // be exposed thereafter.
   4: required set<common.Metric> metrics;
-
-  // Whether it corresponds to a cache hit, i.e., the value has not been explicitly computed.
-  5: required bool cache_hit = false;
 }

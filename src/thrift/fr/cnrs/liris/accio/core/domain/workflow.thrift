@@ -19,8 +19,44 @@
 namespace java fr.cnrs.liris.accio.core.domain
 
 include "fr/cnrs/liris/accio/core/domain/common.thrift"
-include "fr/cnrs/liris/accio/core/domain/graph.thrift"
 include "fr/cnrs/liris/accio/core/domain/operator.thrift"
+
+/**
+ * Definition of where the value of an input comes from.
+ */
+union InputDef {
+  // If the input value comes from the value of a workflow parameter.
+  1: string param;
+
+  // If the input value comes from the output of another node.
+  2: common.Reference reference;
+
+  // If the input value is statically fixed.
+  3: common.Value value;
+}
+
+/**
+ * Definition of a node inside a graph.
+ */
+struct NodeDef {
+  // Operator name.
+  1: required string op;
+
+  // Node name.
+  2: required string name;
+
+  // Inputs of the operator. Only required inputs (i.e., those non-optional and without a default value) have to be
+  // specified here, others can be omitted.
+  3: required map<string, InputDef> inputs;
+}
+
+/**
+ * Definition of a graph.
+ */
+struct GraphDef {
+  // Definition of nodes forming this graph.
+  1: required set<NodeDef> nodes;
+}
 
 /**
  * A workflow is a basically named graph of operators. A workflow can define parameters, which are workflow-level
@@ -51,7 +87,7 @@ struct Workflow {
   6: required common.User owner;
 
   // Graph definition.
-  7: required graph.GraphDef graph;
+  7: required GraphDef graph;
 
   // Workflow parameters.
   8: required set<operator.ArgDef> params;
@@ -62,6 +98,6 @@ struct WorkflowDef {
   2: optional string version;
   3: optional string name;
   4: optional common.User owner;
-  5: required graph.GraphDef graph;
+  5: required GraphDef graph;
   6: required set<operator.ArgDef> params;
 }
