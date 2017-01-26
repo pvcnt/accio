@@ -1,5 +1,4 @@
 scala_library(
-  name='gateway',
   dependencies=[
     'src/jvm/fr/cnrs/liris/accio/core/domain',
     'src/jvm/fr/cnrs/liris/common/util',
@@ -19,7 +18,8 @@ scala_library(
     exclude('com.twitter', 'libthrift'),
   ],
   resources = [
-    'src/resources/fr/cnrs/liris/accio/agent',
+    'src/resources/fr/cnrs/liris/accio/gateway',
+    'src/node/fr/cnrs/liris/accio/gateway',
   ],
   sources=globs('*.scala')
 )

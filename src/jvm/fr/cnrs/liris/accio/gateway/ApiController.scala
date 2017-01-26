@@ -38,7 +38,10 @@ class ApiController @Inject()(client: AgentService.FinagledClient) extends Contr
       owner = httpReq.owner,
       limit = Some(httpReq.perPage),
       offset = Some(offset))
-    client.listWorkflows(req)
+
+    client.listWorkflows(req).map { resp =>
+      ResultListResponse(resp.results, resp.totalCount)
+    }
   }
 
   post("/api/v1/workflow") { req: Request =>
@@ -54,7 +57,7 @@ class ApiController @Inject()(client: AgentService.FinagledClient) extends Contr
         } else {
           workflow
         }
-      case None => None
+      case None => response.notFound
     }
   }
 
@@ -70,7 +73,10 @@ class ApiController @Inject()(client: AgentService.FinagledClient) extends Contr
       tags = httpReq.tags.map(explode(_, ",")),
       limit = Some(httpReq.perPage),
       offset = Some(offset))
-    client.listRuns(req)
+
+    client.listRuns(req).map { resp =>
+      ResultListResponse(resp.results, resp.totalCount)
+    }
   }
 
   post("/api/v1/run") { req: Request =>
@@ -92,7 +98,7 @@ class ApiController @Inject()(client: AgentService.FinagledClient) extends Contr
             node.copy(result = node.result.map(_.unsetArtifacts.unsetMetrics))
           }))
         }
-      case None => None
+      case None => response.notFound
     }
   }
 
@@ -100,7 +106,7 @@ class ApiController @Inject()(client: AgentService.FinagledClient) extends Contr
     val req = GetRunRequest(RunId(httpReq.id))
     client.getRun(req).map(_.result).map {
       case Some(run) => run.state.nodes.find(_.nodeName == httpReq.node).flatMap(_.result).map(_.artifacts)
-      case None => None
+      case None => response.notFound
     }
   }
 
@@ -108,7 +114,7 @@ class ApiController @Inject()(client: AgentService.FinagledClient) extends Contr
     val req = GetRunRequest(RunId(httpReq.id))
     client.getRun(req).map(_.result).map {
       case Some(run) => run.state.nodes.find(_.nodeName == httpReq.node).flatMap(_.result).map(_.metrics)
-      case None => None
+      case None => response.notFound
     }
   }
 
@@ -182,3 +188,5 @@ case class ListLogsHttpRequest(
   @QueryParam @Min(1) limit: Option[Int],
   @QueryParam @Min(0) since: Option[DateTime],
   @QueryParam download: Boolean = false)
+
+case class ResultListResponse[T](results: Seq[T], totalCount: Int)
