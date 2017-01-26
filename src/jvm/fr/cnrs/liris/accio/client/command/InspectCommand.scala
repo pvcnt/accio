@@ -109,15 +109,35 @@ class InspectCommand @Inject()(clientFactory: AgentClientFactory) extends Comman
           formatDuration(Duration.fromMilliseconds(completedAt - run.state.startedAt.get)))
       }
     }
-    out.writeln()
-    out.writeln(s"<comment>${padTo("Node name", 30)}  ${padTo("Status", 9)}  Duration</comment>")
-    run.state.nodes.toSeq.sortBy(_.startedAt.getOrElse(Long.MaxValue)).foreach { node =>
-      val duration = if (node.startedAt.isDefined && node.completedAt.isDefined) {
-        Some(Duration.fromMilliseconds(node.completedAt.get - node.startedAt.get))
-      } else {
-        None
+
+    if (run.params.nonEmpty) {
+      out.writeln()
+      val maxLength = run.params.keySet.map(_.length).max
+      run.params.foreach { case (name, value) =>
+        out.writeln(s"<comment>${padTo(name, maxLength)}</comment> ${Values.toString(value)}")
       }
-      out.writeln(s"${padTo(node.nodeName, 30)}  ${padTo(node.status.name, 9)}  ${duration.map(formatDuration).getOrElse("-")}")
+    }
+
+    out.writeln()
+    if (run.children.isEmpty) {
+      out.writeln(s"<comment>${padTo("Node name", 30)}  ${padTo("Status", 9)}  Duration</comment>")
+      run.state.nodes.toSeq.sortBy(_.startedAt.getOrElse(Long.MaxValue)).foreach { node =>
+        val duration = if (node.cacheHit) {
+          "<cache hit>"
+        } else if (node.startedAt.isDefined && node.completedAt.isDefined) {
+          formatDuration(Duration.fromMilliseconds(node.completedAt.get - node.startedAt.get))
+        } else {
+          "-"
+        }
+        out.writeln(s"${padTo(node.nodeName, 30)}  ${padTo(node.status.name, 9)}  $duration")
+      }
+    } else {
+      //val prettyTime = new PrettyTime().setLocale(Locale.ENGLISH)
+      //out.writeln(s"<comment>${padTo("Run id", 32)}  ${padTo("Workflow id", 15)}  ${padTo("Created", 15)}  ${padTo("Run name", 15)}  ${padTo("Status", 9)}  Nodes</comment>")
+      out.writeln(s"<comment>${padTo("Run id", 32)}</comment>")
+      run.children.get.foreach { runId =>
+        out.writeln(s"${runId.value}")
+      }
     }
   }
 

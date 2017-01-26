@@ -106,10 +106,10 @@ class PlotArtifactGroup extends React.Component {
   render() {
     const cols = this.props.artifacts.map((artifact, idx) => {
       const isSelected = this._isSelected(artifact.name)
-      const kind = (artifact.kind.base == 'map') ? artifact.kind.args[1] : artifact.kind.args[0]
+      const kind = (artifact.value.kind.base == 'map') ? artifact.value.kind.args[1] : artifact.value.kind.args[0]
       const unit = (kind == 'distance') ? 'meters' : (kind == 'duration') ? 'milliseconds' : null
 
-      let data = (artifact.kind.base == 'map') ? values(artifact.value) : artifact.value
+      let data = (artifact.value.kind.base == 'map') ? values(artifact.value.payload) : artifact.value.payload
       if (this.state.type == 'cdf') {
         data = _cdf(data, STEPS)
       } else if (this.state.type == 'pdf') {

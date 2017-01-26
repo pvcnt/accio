@@ -26,7 +26,7 @@ class RawArtifactGroup extends React.Component {
     const rows = this.props.artifacts.map((artifact, idx) => {
       return <Row key={idx}>
         <Col sm={2} className="accio-view-label">{artifact.name}</Col>
-        <Col sm={10}>{prettyPrint(artifact.value)}</Col>
+        <Col sm={10}>{prettyPrint(artifact.value.payload)}</Col>
       </Row>
     });
     return <div>{rows}</div>

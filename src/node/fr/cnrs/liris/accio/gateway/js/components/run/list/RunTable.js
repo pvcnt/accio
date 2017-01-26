@@ -19,7 +19,7 @@
 import React from 'react'
 import moment from 'moment'
 import {Link} from 'react-router'
-import {ProgressBar, Table, Label} from 'react-bootstrap'
+import {ProgressBar, Table, Label, Glyphicon} from 'react-bootstrap'
 import TagList from '../../TagList'
 
 class RunTable extends React.Component {
@@ -30,7 +30,10 @@ class RunTable extends React.Component {
       return <tr key={idx}>
         {this.props.showWorkflow ? <td><input type="checkbox" /></td> : null}
         <td>
-          <Link to={'/runs/view/' + run.id}>{run.name ? run.name : 'Untitled run #' + run.id}</Link>
+          <Link to={'/runs/view/' + run.id}>
+            {run.name ? run.name : 'Untitled run #' + run.id}
+          </Link>
+          {run.children ? <span style={{'margin-left': '10px'}}><Glyphicon glyph="tasks"/>&nbsp;{run.children.length}</span> : null}
         </td>
         {this.props.showWorkflow ? <td>{run.pkg.workflow_id}</td> : null}
         {this.props.showOwner ? <td>{run.owner.name}</td> : null}
