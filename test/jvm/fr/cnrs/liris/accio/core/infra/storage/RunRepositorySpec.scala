@@ -112,7 +112,8 @@ private[storage] abstract class RunRepositorySpec extends UnitSpec {
       foobarRun,
       foobarRun.copy(id = randomId, createdAt = System.currentTimeMillis() + 10, state = foobarRun.state.copy(status = RunStatus.Running)),
       foobarRun.copy(id = randomId, createdAt = System.currentTimeMillis() + 40, state = foobarRun.state.copy(status = RunStatus.Running), owner = User("him")),
-      foobarRun.copy(id = randomId, createdAt = System.currentTimeMillis() + 50, pkg = Package(WorkflowId("other_workflow"), "v1")))
+      foobarRun.copy(id = randomId, createdAt = System.currentTimeMillis() + 50, pkg = Package(WorkflowId("other_workflow"), "v1")),
+      foobarRun.copy(id = randomId, parent = Some(foobarRun.id)))
     runs.foreach(repo.save)
     refreshBeforeSearch()
 

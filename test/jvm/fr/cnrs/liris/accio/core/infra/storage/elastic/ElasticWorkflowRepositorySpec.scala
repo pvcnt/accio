@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit
 import com.google.inject.Guice
 import com.twitter.finatra.json.FinatraObjectMapper
 import fr.cnrs.liris.accio.core.domain._
-import fr.cnrs.liris.accio.core.infra.jackson.AccioFinatraJacksonModule
+import AccioFinatraJacksonModule
 import fr.cnrs.liris.accio.core.infra.storage.WorkflowRepositorySpec
 
 import scala.concurrent.duration.Duration

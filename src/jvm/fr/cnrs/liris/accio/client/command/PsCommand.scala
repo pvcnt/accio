@@ -108,7 +108,8 @@ class PsCommand @Inject()(clientFactory: AgentClientFactory) extends Command {
       val prettyTime = new PrettyTime().setLocale(Locale.ENGLISH)
       out.writeln(s"<comment>${padTo("Run id", 32)}  ${padTo("Workflow id", 15)}  ${padTo("Created", 15)}  ${padTo("Run name", 15)}  ${padTo("Status", 9)}  Nodes</comment>")
       resp.results.foreach { run =>
-        out.writeln(s"${run.id.value}  ${padTo(run.pkg.workflowId.value, 15)}  ${padTo(prettyTime.format(new Date(run.createdAt)), 15)}  ${padTo(run.name.getOrElse("<no name>"), 15)}  ${padTo(run.state.status.name, 9)}  ${run.state.nodes.size}")
+        val name = run.children.map("(x" + _.size + ") ").getOrElse("") + run.name.getOrElse("<no name>")
+        out.writeln(s"${run.id.value}  ${padTo(run.pkg.workflowId.value, 15)}  ${padTo(prettyTime.format(new Date(run.createdAt)), 15)}  ${padTo(name, 15)}  ${padTo(run.state.status.name, 9)}  ${run.state.nodes.size}")
       }
       if (resp.totalCount > n) {
         out.writeln(s"${resp.totalCount - n} more...")

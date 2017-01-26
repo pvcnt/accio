@@ -19,7 +19,7 @@
 package fr.cnrs.liris.accio.core.infra.storage.elastic
 
 import com.google.inject.Singleton
-import com.sksamuel.elastic4s.ElasticDsl.{search, _}
+import com.sksamuel.elastic4s.ElasticDsl._
 import com.sksamuel.elastic4s.analyzers.KeywordAnalyzer
 import com.sksamuel.elastic4s.mappings.MappingDefinition
 import com.sksamuel.elastic4s.{ElasticClient, ElasticDsl}
@@ -69,6 +69,13 @@ final class ElasticRunRepository(
     }
     query.name.foreach { name =>
       q = q.must(matchQuery("name", name))
+    }
+    query.clonedFrom.foreach { clonedFrom =>
+      q = q.must(termQuery("cloned_from.value", clonedFrom.value))
+    }
+    query.parent match {
+      case Some(parent) => q = q.must(termQuery("parent.value", parent.value))
+      case None => q = q.must(not(existsQuery("parent")))
     }
 
     val s = search(runsIndex / runsType)

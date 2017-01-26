@@ -100,18 +100,22 @@ trait ReadOnlyRunRepository {
 /**
  * Query to search for runs. Please note that you have to specify a maximum number of results.
  *
- * @param workflow Only include runs being instances of a given workflow.
- * @param owner    Only include runs initiated by a given user.
- * @param name     Only include runs whose name matches a given string. Exact interpretation can be implementation-dependant.
- * @param status   Only include runs whose status belong to those specified.
- * @param limit    Maximum number of matching runs to return. Must be in [1,100].
- * @param offset   Number of matching runs to skip.
+ * @param workflow   Only include runs being instances of a given workflow.
+ * @param owner      Only include runs initiated by a given user.
+ * @param name       Only include runs whose name matches a given string. Exact interpretation can be implementation-dependant.
+ * @param status     Only include runs whose status belong to those specified.
+ * @param parent     Only include runs being a child of a given run.
+ * @param clonedFrom Only include runs being cloned from of a given run.
+ * @param limit      Maximum number of matching runs to return. Must be in [1,100].
+ * @param offset     Number of matching runs to skip.
  */
 case class RunQuery(
   workflow: Option[WorkflowId] = None,
   owner: Option[String] = None,
   name: Option[String] = None,
   status: Set[RunStatus] = Set.empty,
+  parent: Option[RunId] = None,
+  clonedFrom: Option[RunId] = None,
   limit: Int = 50,
   offset: Option[Int] = None) {
   require(limit > 0 && limit <= 100, s"Maximum number of runs must be in [1,100] (got $limit)")

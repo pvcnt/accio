@@ -45,6 +45,11 @@ final class LocalRunRepository(rootDir: Path) extends LocalStorage with RunRepos
     if (query.status.nonEmpty) {
       results = results.filter(run => query.status.contains(run.state.status))
     }
+    query.parent match {
+      case Some(parent) => results = results.filter(_.parent.contains(parent))
+      case None => results = results.filter(_.parent.isEmpty)
+    }
+    query.clonedFrom.foreach { clonedFrom => results = results.filter(_.clonedFrom.contains(clonedFrom)) }
 
     // Sort results in descending chronological order, count and slice.
     results = results.sortWith((a, b) => a.createdAt > b.createdAt)

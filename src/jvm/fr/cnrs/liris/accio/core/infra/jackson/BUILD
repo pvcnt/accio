@@ -1,9 +1,0 @@
-scala_library(
-  name='jackson',
-  dependencies=[
-    'src/thrift/fr/cnrs/liris/accio/core/domain',
-    '3rdparty/jvm:scrooge-core',
-    '3rdparty/jvm/com/twitter/finatra:jackson',
-  ],
-  sources=globs('*.scala')
-)

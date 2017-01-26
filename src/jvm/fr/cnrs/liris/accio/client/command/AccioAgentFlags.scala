@@ -22,4 +22,4 @@ import fr.cnrs.liris.common.flags.Flag
 
 case class AccioAgentFlags(
   @Flag(name = "addr", help = "Address of the Accio agent")
-  addr: String = "127.0.0.1:9999")
+  addr: String = sys.env.getOrElse("ACCIO_ADDR", "127.0.0.1:9999"))

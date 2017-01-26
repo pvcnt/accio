@@ -2,11 +2,12 @@ scala_library(
   name='elastic',
   dependencies=[
     'src/jvm/fr/cnrs/liris/accio/core/domain',
-    'src/jvm/fr/cnrs/liris/accio/core/infra/jackson',
+    'src/thrift/fr/cnrs/liris/accio/core/domain',
     '3rdparty/jvm/com/sksamuel/elastic4s:core',
     '3rdparty/jvm/com/sksamuel/elastic4s:jackson',
     '3rdparty/jvm/com/typesafe/scala-logging',
     '3rdparty/jvm:scala-guice',
+    '3rdparty/jvm:scrooge-core',
     '3rdparty/jvm/com/twitter/finatra:jackson',
   ],
   sources=globs('*.scala')
