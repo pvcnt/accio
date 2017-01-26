@@ -20,7 +20,7 @@ import React from "react";
 import moment from "moment";
 import {Row, Col, Badge, Glyphicon, Label, Modal, Panel, Button} from "react-bootstrap";
 import {sortBy} from 'lodash'
-import RunLogsContainer from "./RunLogsContainer";
+import RunChildrenContainer from "./RunChildrenContainer";
 import NodeStatusRow from './NodeStatusRow'
 
 let RunStatusPanel = React.createClass({
@@ -62,7 +62,7 @@ let RunStatusPanel = React.createClass({
       ? (isSuccessful ? 'ok' : 'remove')
       : isStarted
       ? 'refresh'
-      : 'inbox';
+      : 'inbox'
     const statusText = isCompleted ? 'Successful' : isStarted ? 'Running' : 'Scheduled'
 
     const nodes = sortBy(run.state.nodes, ['started_at'])
@@ -86,7 +86,7 @@ let RunStatusPanel = React.createClass({
           pre>
         </Modal.Body>
       </Modal>
-    ) : null;
+    ) : null
 
     return (
       <Panel header={<h3><Glyphicon glyph={statusGlyph}/> Run status: {statusText}</h3>}
@@ -106,14 +106,16 @@ let RunStatusPanel = React.createClass({
           <Col sm={10}>{duration ? moment.duration(duration).humanize() : '–'}</Col>
         </Row>
         <Row>
-          <Col sm={2} className="accio-view-label">Nodes</Col>
-          <Col sm={10} className="accio-run-nodes-tree">
-            {nodeRows}
+          <Col sm={2} className="accio-view-label">{run.children ? 'Child runs' : 'Nodes'}</Col>
+          <Col sm={10}>
+            {run.children
+              ? <RunChildrenContainer run={run}/>
+              : nodeRows}
           </Col>
         </Row>
         {errorModal}
       </Panel>
-    );
+    )
   }
 });
 

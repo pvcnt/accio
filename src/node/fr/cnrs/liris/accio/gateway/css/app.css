@@ -131,6 +131,10 @@ footer a {
   margin-bottom: 5px;
 }
 
+.accio-taglist>span {
+  margin-right: 5px;
+}
+
 /**
  * Homepage.
  */

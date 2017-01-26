@@ -46,7 +46,7 @@ let WorkflowView = React.createClass({
                    className="accio-view-panel accio-view-panel-graph"
                    collapsible={true}
                    defaultExpanded={false}>
-          <GraphView graph={this.props.workflow.graph.nodes} height={500}/>
+          <GraphView graph={this.props.workflow.graph} height={500}/>
         </LazyPanel>
 
         <LastRunsPanel runs={this.props.lastRuns}/>
@@ -57,7 +57,7 @@ let WorkflowView = React.createClass({
 
 WorkflowView.propTypes = {
   workflow: React.PropTypes.object.isRequired,
-  lastRuns: React.PropTypes.array.isRequired,
+  lastRuns: React.PropTypes.array,
 };
 
 export default WorkflowView;

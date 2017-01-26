@@ -22,9 +22,9 @@ import {Label} from 'react-bootstrap'
 class TagList extends React.Component {
   render() {
     const tags = (this.props.tags.length > 0)
-      ? this.props.tags.map((tag, idx) => <Label key={idx}>tag</Label>)
+      ? this.props.tags.map((tag, idx) => <Label key={idx}>{tag}</Label>)
       : null
-    return <div>{tags}</div>;
+    return <div className="accio-taglist">{tags}</div>
   }
 }
 

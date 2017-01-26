@@ -22,22 +22,23 @@ import TagList from "../../TagList";
 
 let RunMetadataPanel = React.createClass({
   render: function () {
+    const {run} = this.props
     return (
       <Panel header="Run metadata"
              className="accio-view-panel"
              collapsible={true}
-             defaultExpanded={true}>
+             defaultExpanded={false}>
         <Row>
           <Col sm={2} className="accio-view-label">Name</Col>
-          <Col sm={10}>{this.props.run.name}</Col>
+          <Col sm={10}>{run.name}</Col>
         </Row>
         <Row>
           <Col sm={2} className="accio-view-label">Notes</Col>
-          <Col sm={10}>{this.props.run.notes}</Col>
+          <Col sm={10}>{run.parent ? run.parent.notes : run.notes}</Col>
         </Row>
         <Row>
           <Col sm={2} className="accio-view-label">Tags</Col>
-          <Col sm={10}><TagList tags={this.props.run.tags}/></Col>
+          <Col sm={10}><TagList tags={run.parent ? run.parent.tags : run.tags}/></Col>
         </Row>
       </Panel>
     );

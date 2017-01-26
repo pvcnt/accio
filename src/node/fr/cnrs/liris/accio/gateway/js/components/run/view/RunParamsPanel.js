@@ -16,29 +16,36 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React from "react";
-import {Panel} from "react-bootstrap";
-import Spinner from "react-spinkit";
-import RunTable from "../../run/list/RunTable";
+import React from "react"
+import {Link} from "react-router"
+import {Row, Col, Panel} from "react-bootstrap"
+import {map} from 'lodash'
+import {prettyPrintValue} from '../../../utils/prettyPrint'
+import Username from '../../Username'
 
-let LastRunsPanel = React.createClass({
+let RunParamsPanel = React.createClass({
   render: function () {
+    const rows = map(this.props.run.params, (value, name) => {
+      return (
+        <Row key={name}>
+          <Col sm={2} className="accio-view-label">{name}</Col>
+          <Col sm={10}>{prettyPrintValue(value.payload, value.kind)}</Col>
+        </Row>
+      )
+    })
     return (
-      <Panel header="Last runs"
+      <Panel header="Run parameters"
              className="accio-view-panel"
              collapsible={true}
              defaultExpanded={true}>
-
-          {(null != this.props.runs)
-            ? (this.props.runs.length > 0) ? <RunTable runs={this.props.runs} showWorkflow={false}/> : <p>This workflow has never been launched.</p>
-            : <Spinner spinnerName="three-bounce"/>}
+        {rows}
       </Panel>
     );
   }
 });
 
-LastRunsPanel.propTypes = {
-    runs: React.PropTypes.array,
+RunParamsPanel.propTypes = {
+  run: React.PropTypes.object.isRequired,
 };
 
-export default LastRunsPanel;
+export default RunParamsPanel;

@@ -20,7 +20,8 @@ import React from "react";
 import {Grid} from "react-bootstrap";
 import RunView from "./RunView";
 import xhr from "../../../utils/xhr";
-import Spinner from "react-spinkit";
+import Spinner from "react-spinkit"
+import {isEqual} from 'lodash'
 
 let RunViewContainer = React.createClass({
   getInitialState: function () {
@@ -30,22 +31,36 @@ let RunViewContainer = React.createClass({
   },
 
   _loadData: function (props) {
-    xhr('/api/v1/run/' + props.params.id).then(data => this.setState({data}));
+    xhr('/api/v1/run/' + props.params.id)
+      .then(data => {
+        if (data.parent) {
+          xhr('/api/v1/run/' + data.parent).then(data2 => {
+            data.parent = data2
+            this.setState({data})
+          })
+        } else {
+          this.setState({data})
+        }
+      })
   },
 
   componentWillReceiveProps: function (nextProps) {
     if (this.props.params.id !== nextProps.params.id) {
-      this._loadData(nextProps);
+      this._loadData(nextProps)
     }
   },
 
+  shouldComponentUpdate: function(nextProps, nextState) {
+    return !isEqual(this.state.data, nextState.data)
+  },
+
   componentDidMount: function () {
-    this._loadData(this.props);
+    this._loadData(this.props)
   },
 
   render: function () {
     return (null !== this.state.data)
-      ? <RunView run={this.state.data} {...this.props}/>
+      ? <RunView run={this.state.data}/>
       : <Grid><Spinner spinnerName="three-bounce"/></Grid>;
   }
 });

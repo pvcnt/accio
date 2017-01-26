@@ -19,6 +19,7 @@
 import React from "react";
 import d3plus from "d3plus";
 import {map, flatMap, fromPairs, toPairs, keys, identity, filter, head, uniqueId, uniq} from "lodash";
+import {prettyPrintValue} from '../../utils/prettyPrint'
 
 let GraphView = React.createClass({
   getDefaultProps: function () {
@@ -31,9 +32,12 @@ let GraphView = React.createClass({
     const nodes = this.props.graph.map(node => {
       const params = fromPairs(filter(toPairs(node.inputs), (kv) => !kv[1].reference).map(kv => {
         if (kv[1].value) {
-          return ['in:' + kv[0], '' + kv[1].value];
+          return ['in:' + kv[0], prettyPrintValue(kv[1].value.payload, kv[1].value.kind)];
         } else if (kv[1].param) {
           return ['in:' + kv[0], '$' + kv[1].param];
+        } else {
+          // Shouldn't be here.
+          return kv
         }
       }));
       let color = '#5bc0de'; // Bootstrap's "info" style

@@ -36,7 +36,7 @@ let WorkflowFilter = React.createClass({
 
   _handleSubmit: function (e) {
     e.nativeEvent.preventDefault();
-    this.props.onSubmit(this.state.value);
+    this.props.onSubmit({name: this.state.value})
   },
 
   _handleChange: function (e) {

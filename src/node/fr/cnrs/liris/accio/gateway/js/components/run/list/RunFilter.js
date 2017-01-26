@@ -16,23 +16,21 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React from "react"
-import {noop} from "lodash"
-import {Row, Col, Button, FormControl, InputGroup, Glyphicon} from "react-bootstrap"
+import React from 'react'
+import {noop} from 'lodash'
+import {Row, Col, Button, FormControl, InputGroup, Glyphicon} from 'react-bootstrap'
 import autobind from 'autobind-decorator'
 
 class RunFilter extends React.Component {
   constructor(props) {
     super(props)
-    this.state = {
-      value: this.props.defaultValue,
-    };
+    this.state = {value: this.props.defaultValue}
   }
 
   @autobind
   _handleSubmit(e) {
     e.nativeEvent.preventDefault();
-    this.props.onSubmit(this.state.value)
+    this.props.onSubmit({name: this.state.value})
   }
 
   @autobind

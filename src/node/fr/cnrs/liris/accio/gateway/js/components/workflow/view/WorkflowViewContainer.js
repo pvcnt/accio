@@ -26,7 +26,7 @@ let WorkflowViewContainer = React.createClass({
   getInitialState: function () {
     return {
       workflow: null,
-      lastRuns: [],
+      lastRuns: null,
     };
   },
 

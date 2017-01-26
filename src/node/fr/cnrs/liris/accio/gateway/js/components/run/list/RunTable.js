@@ -33,10 +33,10 @@ class RunTable extends React.Component {
           <Link to={'/runs/view/' + run.id}>{run.name ? run.name : 'Untitled run #' + run.id}</Link>
         </td>
         {this.props.showWorkflow ? <td>{run.pkg.workflow_id}</td> : null}
-        <td>{run.owner.name}</td>
+        {this.props.showOwner ? <td>{run.owner.name}</td> : null}
         <td><ProgressBar now={progress} label={progress + '%'} bsStyle={style}/></td>
         <td>{(run.state.started_at) ? moment(run.state.started_at).fromNow() : '–'}</td>
-        <td><TagList tags={run.tags}/></td>
+        {this.props.showTags ? <td><TagList tags={run.tags}/></td> : null}
       </tr>
     });
     return <Table striped hover responsive className="accio-list-table">
@@ -45,10 +45,10 @@ class RunTable extends React.Component {
         {this.props.showWorkflow ? <th>&nbsp;</th> : null}
         <th>Run name</th>
         {this.props.showWorkflow ? <th>Workflow</th> : null}
-        <th>Owner</th>
+        {this.props.showOwner ? <th>Owner</th> : null}
         <th>Progress</th>
         <th>Started</th>
-        <th>Tags</th>
+        {this.props.showTags ? <th>Tags</th> : null}
       </tr>
       </thead>
       <tbody>
@@ -61,9 +61,13 @@ class RunTable extends React.Component {
 RunTable.propTypes = {
   runs: React.PropTypes.array.isRequired,
   showWorkflow: React.PropTypes.bool.isRequired,
+  showOwner: React.PropTypes.bool.isRequired,
+  showTags: React.PropTypes.bool.isRequired,
 }
 RunTable.defaultProps = {
   showWorkflow: true,
+  showOwner: true,
+  showTags: true,
 }
 
 export default RunTable;

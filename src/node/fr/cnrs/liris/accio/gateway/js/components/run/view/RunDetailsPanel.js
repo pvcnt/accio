@@ -19,10 +19,12 @@
 import React from "react"
 import {Link} from "react-router"
 import {Row, Col, Panel} from "react-bootstrap"
+import {map} from 'lodash'
 import Username from '../../Username'
 
 let RunDetailsPanel = React.createClass({
   render: function () {
+    const {run} = this.props
     return (
       <Panel header="Run details"
              className="accio-view-panel"
@@ -31,22 +33,23 @@ let RunDetailsPanel = React.createClass({
         <Row>
           <Col sm={2} className="accio-view-label">Workflow</Col>
           <Col sm={10}>
-            <Link to={'workflows/view/' + this.props.run.pkg.workflow_id + '/' + this.props.run.pkg.workflow_version}>
-              {this.props.run.pkg.workflow_id}:{this.props.run.pkg.workflow_version}
+            <Link to={'workflows/view/' + run.pkg.workflow_id + '/' + run.pkg.workflow_version}>
+              {run.pkg.workflow_id}:{run.pkg.workflow_version}
             </Link>
           </Col>
         </Row>
+        {run.parent ?
+          <Row>
+            <Col sm={2} className="accio-view-label">Parent</Col>
+            <Col sm={10}><Link to={'/runs/view/' + run.parent.id}>{run.parent.name ? run.parent.name : 'Untitled run #' + run.parent.id}</Link></Col>
+          </Row> : null}
         <Row>
           <Col sm={2} className="accio-view-label">Owner</Col>
-          <Col sm={10}><Username user={this.props.run.owner}/></Col>
+          <Col sm={10}><Username user={run.owner}/></Col>
         </Row>
         <Row>
           <Col sm={2} className="accio-view-label">Seed</Col>
-          <Col sm={10}>{this.props.run.seed}</Col>
-        </Row>
-        <Row>
-          <Col sm={2} className="accio-view-label">Parameters</Col>
-          <Col sm={10}></Col>
+          <Col sm={10}>{run.seed}</Col>
         </Row>
       </Panel>
     );

@@ -24,6 +24,7 @@ import {Grid, Button, Glyphicon} from "react-bootstrap";
 import RunStatusPanel from "./RunStatusPanel";
 import RunDetailsPanel from "./RunDetailsPanel";
 import RunMetadataPanel from "./RunMetadataPanel";
+import RunParamsPanel from "./RunParamsPanel";
 import LazyPanel from "../../LazyPanel";
 import RunArtifactsContainer from './RunArtifactsContainer'
 
@@ -31,16 +32,21 @@ class RunView extends React.Component {
   render() {
     const {run} = this.props;
     const nodes = sortBy(run.state.nodes, ['started_at'])
-    const artifactPanels = nodes.map((node, idx) => {
-      return <LazyPanel
-        key={idx}
-        header={'Outputs: ' + node.node_name}
-        className="accio-view-panel"
-        collapsible={true}
-        defaultExpanded={false}>
-        <RunArtifactsContainer runId={run.id} nodeName={node.node_name}/>
-      </LazyPanel>
-    })
+    const artifactPanels = (!run.children && run.state.completed_at)
+      ? nodes.map((node, idx) => {
+        if (node.status == 'success') {
+          return <LazyPanel
+            key={idx}
+            header={'Outputs: ' + node.node_name}
+            className="accio-view-panel"
+            collapsible={true}
+            defaultExpanded={false}>
+            <RunArtifactsContainer runId={run.id} nodeName={node.node_name}/>
+          </LazyPanel>
+        } else {
+          return null
+        }
+      }) : null
 
     return (
       <Grid>
@@ -61,6 +67,7 @@ class RunView extends React.Component {
         <RunStatusPanel run={run}/>
         <RunMetadataPanel run={run}/>
         <RunDetailsPanel run={run}/>
+        {!run.children ? <RunParamsPanel run={run}/> : null}
 
         {artifactPanels}
       </Grid>

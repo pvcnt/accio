@@ -34,7 +34,7 @@ function _isNumeric(kind) {
 }
 
 function _detectGroup(artifact) {
-  if (_isNumeric(artifact.kind)) {
+  if (_isNumeric(artifact.value.kind)) {
     return 'plot'
   }
   return 'raw'

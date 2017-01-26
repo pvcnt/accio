@@ -28,7 +28,7 @@ class WorkflowParamsPanel extends React.Component {
         <Col md={2}>{prettyPrintKind(param.kind)}</Col>
         <Col md={8}>
           {param.default_value
-            ? prettyPrintValue(param.default_value, param.kind)
+            ? prettyPrintValue(param.default_value.payload, param.kind)
             : param.is_optional ? <em>Optional</em> : <em>Required</em>}
         </Col>
       </Row>;

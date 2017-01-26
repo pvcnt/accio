@@ -56,7 +56,9 @@ let NodeStatusRow = React.createClass({
       : isStarted
       ? 'refresh'
       : 'inbox';
-    const label = isCompleted
+    const label = node.cache_hit ?
+      <Label>Cache hit</Label>
+      : isCompleted
       ? <Label bsStyle={isSuccessful ? 'success' : 'danger'}>
         Ran for {moment.duration(duration).humanize()}
       </Label>
@@ -73,22 +75,26 @@ let NodeStatusRow = React.createClass({
         </Col>
         <Col sm={3}>{label}</Col>
         <Col sm={3}>
-          <Button
-            bsSize="xsmall"
-            onClick={e => this._handleLogsToggle(e, 'stdout')}
-            bsStyle={this.props.logs == 'stdout' ? 'primary' : 'default'}>
-              stdout
-          </Button>&nbsp;
-          <Button
-            bsSize="xsmall"
-            onClick={e => this._handleLogsToggle(e, 'stderr')}
-            bsStyle={this.props.logs == 'stderr' ? 'primary' : 'default'}>
-              stderr
-          </Button>&nbsp;
-          {this.props.logs
-            ? <Button bsSize="xsmall" href={'/api/v1/run/' + runId + '/logs/' + node.node_name + '?download=true&classifier=' + this.props.logs}>
-                <Glyphicon glyph="save"/>
-            </Button> : null}
+          {!node.cache_hit
+            ? <div>
+                <Button
+                bsSize="xsmall"
+                onClick={e => this._handleLogsToggle(e, 'stdout')}
+                bsStyle={this.props.logs == 'stdout' ? 'primary' : 'default'}>
+                  stdout
+              </Button>&nbsp;
+              <Button
+                bsSize="xsmall"
+                onClick={e => this._handleLogsToggle(e, 'stderr')}
+                bsStyle={this.props.logs == 'stderr' ? 'primary' : 'default'}>
+                  stderr
+              </Button>&nbsp;
+              {this.props.logs
+                ? <Button bsSize="xsmall" href={'/api/v1/run/' + runId + '/logs/' + node.node_name + '?download=true&classifier=' + this.props.logs}>
+                    <Glyphicon glyph="save"/>
+                </Button> : null}
+              </div>
+            : null}
       </Col>
         <Col sm={3}>{(node.result && node.result.error)
           ? (<span>
