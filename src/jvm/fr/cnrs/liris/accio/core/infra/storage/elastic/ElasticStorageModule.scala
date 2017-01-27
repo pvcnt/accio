@@ -22,7 +22,7 @@ import com.google.inject.{Provides, Singleton}
 import com.sksamuel.elastic4s.{ElasticClient, ElasticsearchClientUri}
 import com.twitter.finatra.json.FinatraObjectMapper
 import com.twitter.util.{Duration => TwitterDuration}
-import fr.cnrs.liris.accio.core.domain.{RunRepository, WorkflowRepository}
+import fr.cnrs.liris.accio.core.domain.{MutableRunRepository, MutableWorkflowRepository}
 import net.codingwell.scalaguice.ScalaModule
 import org.elasticsearch.common.settings.Settings
 
@@ -49,13 +49,13 @@ final class ElasticStorageModule(config: ElasticStorageConfig) extends ScalaModu
 
   @Singleton
   @Provides
-  def providesRunRepository(mapper: FinatraObjectMapper): RunRepository = {
+  def providesRunRepository(mapper: FinatraObjectMapper): MutableRunRepository = {
     new ElasticRunRepository(mapper, client, config.prefix, ScalaDuration.fromNanos(config.queryTimeout.inNanoseconds))
   }
 
   @Singleton
   @Provides
-  def providesWorkflowRepository(mapper: FinatraObjectMapper): WorkflowRepository = {
+  def providesWorkflowRepository(mapper: FinatraObjectMapper): MutableWorkflowRepository = {
     new ElasticWorkflowRepository(mapper, client, config.prefix, ScalaDuration.fromNanos(config.queryTimeout.inNanoseconds))
   }
 

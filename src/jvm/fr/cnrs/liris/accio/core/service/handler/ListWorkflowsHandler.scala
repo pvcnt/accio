@@ -20,14 +20,14 @@ package fr.cnrs.liris.accio.core.service.handler
 
 import com.google.inject.Inject
 import com.twitter.util.Future
-import fr.cnrs.liris.accio.core.domain.{WorkflowQuery, ReadOnlyWorkflowRepository}
+import fr.cnrs.liris.accio.core.domain.{WorkflowQuery, WorkflowRepository}
 
 /**
  * Handler retrieving workflows matching some search criteria.
  *
  * @param repository Workflow repository (read-only).
  */
-class ListWorkflowsHandler @Inject()(repository: ReadOnlyWorkflowRepository)
+class ListWorkflowsHandler @Inject()(repository: WorkflowRepository)
   extends Handler[ListWorkflowsRequest, ListWorkflowsResponse] {
 
   override def handle(req: ListWorkflowsRequest): Future[ListWorkflowsResponse] = {

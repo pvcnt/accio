@@ -22,7 +22,7 @@ import fr.cnrs.liris.accio.core.domain.{Task, TaskId}
 
 /**
  * State manager holds state about runs being executed and associated tasks. By opposition to
- * [[fr.cnrs.liris.accio.core.domain.RunRepository]], it should provide a faster and ephemeral (we can afford data
+ * [[fr.cnrs.liris.accio.core.domain.MutableRunRepository]], it should provide a faster and ephemeral (we can afford data
  * loss, even if it is not desired) storage, for small payloads. It also provides synchronization utils.
  *
  * State manager is a service which is highly solicited during run execution and highly concurrent.

@@ -21,13 +21,15 @@ package fr.cnrs.liris.accio.core.service.handler
 import com.google.inject.Inject
 import com.twitter.util.Future
 import com.typesafe.scalalogging.LazyLogging
-import fr.cnrs.liris.accio.core.domain.RunRepository
+import fr.cnrs.liris.accio.core.domain.MutableRunRepository
 
-class StreamLogsHandler @Inject()(runRepository: RunRepository)
+class StreamLogsHandler @Inject()(runRepository: MutableRunRepository)
   extends Handler[StreamLogsRequest, StreamLogsResponse] with LazyLogging {
 
   @throws[UnknownTaskException]
   override def handle(req: StreamLogsRequest): Future[StreamLogsResponse] = {
+    // There is not need to lock here, as logs are append-only. We only take care of not inserting logs belonging
+    // to an unknown run (that could have been killed or deleted in between).
     val runIds = req.logs.map(_.runId).toSet
     val unknownRunIds = runIds.filterNot(runRepository.contains)
     unknownRunIds.foreach { runId =>

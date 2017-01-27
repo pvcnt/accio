@@ -48,7 +48,7 @@ class ElasticWorkflowRepository(
   client: ElasticClient,
   prefix: String,
   queryTimeout: Duration)
-  extends WorkflowRepository with StrictLogging {
+  extends MutableWorkflowRepository with StrictLogging {
 
   initializeWorkflowsIndex()
 

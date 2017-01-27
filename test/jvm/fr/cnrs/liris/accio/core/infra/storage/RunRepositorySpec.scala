@@ -27,7 +27,7 @@ import fr.cnrs.liris.testing.UnitSpec
 import scala.collection.Map
 
 /**
- * Common unit tests for all [[RunRepository]] implementations, ensuring they all have consistent behavior.
+ * Common unit tests for all [[MutableRunRepository]] implementations, ensuring they all have consistent behavior.
  */
 private[storage] abstract class RunRepositorySpec extends UnitSpec {
   protected val foobarRun = Run(
@@ -76,7 +76,7 @@ private[storage] abstract class RunRepositorySpec extends UnitSpec {
   protected val fooRunWithNodes = fooRun.copy(state = fooRun.state.copy(nodes = Set(
     NodeState(nodeName = "FooNode", status = NodeStatus.Success, cacheKey = Some(CacheKey("YourFooCacheKey")), result = Some(fooResults("FooNode"))))))
 
-  protected def createRepository: RunRepository
+  protected def createRepository: MutableRunRepository
 
   protected def refreshBeforeSearch(): Unit = {}
 
@@ -121,11 +121,11 @@ private[storage] abstract class RunRepositorySpec extends UnitSpec {
     res.totalCount shouldBe 3
     res.results should contain theSameElementsInOrderAs Seq(runs(3), runs(1), runs(0)).map(unsetResult)
 
-    res = repo.find(RunQuery(owner = Some("me"), limit = 2))
+    res = repo.find(RunQuery(owner = Some("me"), limit = Some(2)))
     res.totalCount shouldBe 3
     res.results should contain theSameElementsInOrderAs Seq(runs(3), runs(1)).map(unsetResult)
 
-    res = repo.find(RunQuery(owner = Some("me"), limit = 2, offset = Some(2)))
+    res = repo.find(RunQuery(owner = Some("me"), limit = Some(2), offset = Some(2)))
     res.totalCount shouldBe 3
     res.results should contain theSameElementsInOrderAs Seq(runs(0)).map(unsetResult)
 

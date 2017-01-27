@@ -27,7 +27,7 @@ import fr.cnrs.liris.accio.core.infra.storage.elastic.{ElasticStorageConfig, Ela
 import fr.cnrs.liris.accio.core.infra.storage.local.{LocalStorageConfig, LocalStorageModule}
 
 /**
- * Guice module provisioning the [[RunRepository]] and [[WorkflowRepository]] services.
+ * Guice module provisioning the [[MutableRunRepository]] and [[MutableWorkflowRepository]] services.
  */
 object StorageModule extends TwitterModule {
   private[this] val storageFlag = flag("storage.type", "local", "Storage type")
@@ -52,7 +52,7 @@ object StorageModule extends TwitterModule {
     install(module)
 
     // Bind read-only repositories to read-write repositories.
-    bind[ReadOnlyRunRepository].to[RunRepository]
-    bind[ReadOnlyWorkflowRepository].to[WorkflowRepository]
+    bind[RunRepository].to[MutableRunRepository]
+    bind[WorkflowRepository].to[MutableWorkflowRepository]
   }
 }

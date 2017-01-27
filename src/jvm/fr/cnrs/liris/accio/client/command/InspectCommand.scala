@@ -25,7 +25,7 @@ import com.twitter.util.{Await, Duration, Return, Throw}
 import fr.cnrs.liris.accio.client.service.AgentClientFactory
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.infra.cli.{Cmd, Command, ExitCode, Reporter}
-import fr.cnrs.liris.accio.core.service.handler.GetRunRequest
+import fr.cnrs.liris.accio.core.service.handler.{GetRunRequest, ListRunsRequest}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.util.StringUtils.padTo
 import org.ocpsoft.prettytime.PrettyTime
@@ -74,6 +74,9 @@ class InspectCommand @Inject()(clientFactory: AgentClientFactory) extends Comman
                   val runWithoutResults = run.copy(state = run.state.copy(nodes = run.state.nodes.map(_.copy(result = None))))
                   out.writeln(new String(new JsonSerializer().serialize(runWithoutResults)))
                 } else {
+                  val children = run.children.map { _ =>
+                    client.listRuns(ListRunsRequest(parent = Some(run.id)))
+                  }.toSet
                   printRun(run, out)
                 }
               }
@@ -86,7 +89,7 @@ class InspectCommand @Inject()(clientFactory: AgentClientFactory) extends Comman
     }
   }
 
-  private def printRun(run: Run, out: Reporter) = {
+  private def printRun(run: Run, children: Seq[Run], out: Reporter) = {
     val prettyTime = new PrettyTime().setLocale(Locale.ENGLISH)
     out.writeln(s"<comment>${padTo("Id", colWidth)}</comment> ${run.id.value}")
     out.writeln(s"<comment>${padTo("Workflow", colWidth)}</comment> ${run.pkg.workflowId.value}:${run.pkg.workflowVersion}")
@@ -135,9 +138,11 @@ class InspectCommand @Inject()(clientFactory: AgentClientFactory) extends Comman
       }
     } else {
       out.writeln("<info>Child runs</info>")
-      out.writeln(s"<comment>${padTo("Run id", 32)}</comment>")
-      run.children.get.foreach { runId =>
-        out.writeln(s"${runId.value}")
+      val prettyTime = new PrettyTime().setLocale(Locale.ENGLISH)
+      out.writeln(s"<comment>${padTo("Run id", 32)}  ${padTo("Created", 15)}  ${padTo("Run name", 15)}  Status</comment>")
+      children.foreach { run =>
+        val name = run.name.getOrElse("<no name>")
+        out.writeln(s"${run.id.value}  ${padTo(prettyTime.format(new Date(run.createdAt)), 15)}  ${padTo(name, 15)}  ${run.state.status.name}")
       }
     }
   }

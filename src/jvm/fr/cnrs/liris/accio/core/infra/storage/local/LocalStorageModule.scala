@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.core.infra.storage.local
 import java.nio.file.Path
 
 import com.google.inject.{AbstractModule, Provides, Singleton}
-import fr.cnrs.liris.accio.core.domain.{RunRepository, WorkflowRepository}
+import fr.cnrs.liris.accio.core.domain.{MutableRunRepository, MutableWorkflowRepository}
 import net.codingwell.scalaguice.ScalaModule
 
 /**
@@ -43,9 +43,9 @@ final class LocalStorageModule(config: LocalStorageConfig) extends AbstractModul
 
   @Singleton
   @Provides
-  def providesRunRepository: RunRepository = new LocalRunRepository(config.path.resolve("runs"))
+  def providesRunRepository: MutableRunRepository = new LocalRunRepository(config.path.resolve("runs"))
 
   @Singleton
   @Provides
-  def providesWorkflowRepository: WorkflowRepository = new LocalWorkflowRepository(config.path.resolve("workflows"))
+  def providesWorkflowRepository: MutableWorkflowRepository = new LocalWorkflowRepository(config.path.resolve("workflows"))
 }

@@ -19,27 +19,9 @@
 package fr.cnrs.liris.accio.core.domain
 
 /**
- * Repository persisting workflows. For now, there is intentionally no method to remove a workflow, because it is
- * not desirable to delete a workflow with runs referencing it.
- *
- * Repositories are *not* required to be thread-safe. Mutating methods might need to be wrapped inside transactions
- * on the application-level. However, repositories should still take care not to leave data in a corrupted state,
- * which can be hard to recover from.
+ * Repository persisting workflows.
  */
-trait WorkflowRepository extends ReadOnlyWorkflowRepository {
-  /**
-   * Save a run. It will either create a new workflow or a new version if there is already one with the same
-   * identifier. Workflows are never replaced.
-   *
-   * @param workflow Workflow to save.
-   */
-  def save(workflow: Workflow): Unit
-}
-
-/**
- * Read-only workflow repository.
- */
-trait ReadOnlyWorkflowRepository {
+trait WorkflowRepository {
   /**
    * Search for workflows matching a given query. Runs are returned ordered in inverse chronological order, the most
    * recent matching workflow being the first result. It will only consider the latest version of each workflow, and
@@ -82,6 +64,24 @@ trait ReadOnlyWorkflowRepository {
    * @return True if the workflow exists, false otherwise.
    */
   def contains(id: WorkflowId, version: String): Boolean
+}
+
+/**
+ * Mutable workflow repository. For now, there is intentionally no method to remove a workflow, because it is
+ * not desirable to delete a workflow with runs referencing it.
+ *
+ * Repositories are *not* required to be thread-safe. Mutating methods might need to be wrapped inside transactions
+ * on the application-level. However, repositories should still take care not to leave data in a corrupted state,
+ * which can be hard to recover from.
+ */
+trait MutableWorkflowRepository extends WorkflowRepository {
+  /**
+   * Save a run. It will either create a new workflow or a new version if there is already one with the same
+   * identifier. Workflows are never replaced.
+   *
+   * @param workflow Workflow to save.
+   */
+  def save(workflow: Workflow): Unit
 }
 
 /**

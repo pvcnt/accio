@@ -22,7 +22,7 @@ import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.testing.UnitSpec
 
 /**
- * Common unit tests for all [[WorkflowRepository]] implementations, ensuring they all have consistent behavior.
+ * Common unit tests for all [[MutableWorkflowRepository]] implementations, ensuring they all have consistent behavior.
  */
 private[storage] abstract class WorkflowRepositorySpec extends UnitSpec {
   private[this] val workflow1 = Workflow(
@@ -63,7 +63,7 @@ private[storage] abstract class WorkflowRepositorySpec extends UnitSpec {
           "dbl" -> InputDef.Param("bar"),
           "data" -> InputDef.Reference(Reference("FirstSimple", "data")))))))
 
-  protected def createRepository: WorkflowRepository
+  protected def createRepository: MutableWorkflowRepository
 
   protected def refreshBeforeSearch(): Unit = {}
 

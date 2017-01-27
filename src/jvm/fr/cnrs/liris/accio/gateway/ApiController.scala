@@ -108,6 +108,16 @@ class ApiController @Inject()(client: AgentService.FinagledClient) extends Contr
     }
   }
 
+  post("/api/v1/run/:id/kill") { httpReq: KillRunHttpRequest =>
+    val req = KillRunRequest(RunId(httpReq.id))
+    client.killRun(req).map(_ => response.ok)
+  }
+
+  delete("/api/v1/run/:id") { httpReq: DeleteRunHttpRequest =>
+    val req = DeleteRunRequest(RunId(httpReq.id))
+    client.deleteRun(req).map(_ => response.ok)
+  }
+
   get("/api/v1/run/:id/metrics/:node") { httpReq: ListMetricsHttpRequest =>
     val req = GetRunRequest(RunId(httpReq.id))
     client.getRun(req).map(_.result).map {
@@ -132,16 +142,6 @@ class ApiController @Inject()(client: AgentService.FinagledClient) extends Contr
         logs
       }
     }
-  }
-
-  post("/api/v1/run/:id/kill") { httpReq: KillRunHttpRequest =>
-    val req = KillRunRequest(RunId(httpReq.id))
-    client.killRun(req).map(_ => response.ok)
-  }
-
-  delete("/api/v1/run/:id") { httpReq: DeleteRunHttpRequest =>
-    val req = DeleteRunRequest(RunId(httpReq.id))
-    client.deleteRun(req).map(_ => response.ok)
   }
 }
 

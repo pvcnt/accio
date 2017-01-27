@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.core.domain
 /**
  * A run repository doing nothing.
  */
-class NullRunRepository extends RunRepository {
+class NullRunRepository extends MutableRunRepository {
   override def save(run: Run): Unit = {}
 
   override def save(logs: Seq[RunLog]): Unit = {}

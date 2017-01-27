@@ -20,14 +20,14 @@ package fr.cnrs.liris.accio.core.service.handler
 
 import com.google.inject.Inject
 import com.twitter.util.Future
-import fr.cnrs.liris.accio.core.domain.ReadOnlyRunRepository
+import fr.cnrs.liris.accio.core.domain.RunRepository
 
 /**
  * Handler retrieving a single run, if it exists.
  *
  * @param repository Run repository (read-only).
  */
-class GetRunHandler @Inject()(repository: ReadOnlyRunRepository) extends Handler[GetRunRequest, GetRunResponse] {
+class GetRunHandler @Inject()(repository: RunRepository) extends Handler[GetRunRequest, GetRunResponse] {
   override def handle(req: GetRunRequest): Future[GetRunResponse] = {
     val maybeRun = repository.get(req.id)
     Future(GetRunResponse(maybeRun))

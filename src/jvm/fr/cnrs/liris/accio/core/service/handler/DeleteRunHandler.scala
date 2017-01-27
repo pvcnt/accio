@@ -21,18 +21,23 @@ package fr.cnrs.liris.accio.core.service.handler
 import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.core.service.StateManager
-import fr.cnrs.liris.accio.core.domain.RunRepository
+import fr.cnrs.liris.accio.core.domain.MutableRunRepository
 
-final class DeleteRunHandler @Inject()(runRepository: RunRepository, stateManager: StateManager)
-  extends Handler[DeleteRunRequest, DeleteRunResponse] {
+final class DeleteRunHandler @Inject()(runRepository: MutableRunRepository, stateManager: StateManager)
+  extends AbstractHandler[DeleteRunRequest, DeleteRunResponse](stateManager) {
 
   override def handle(req: DeleteRunRequest): Future[DeleteRunResponse] = {
-    val runLock = stateManager.lock(s"run/${req.id.value}")
-    runLock.lock()
-    try {
-      runRepository.remove(req.id)
-    } finally {
-      runLock.unlock()
+    withLock(req.id) {
+      runRepository.get(req.id).foreach { run =>
+        // First delete child runs, if any.
+        run.children.toSet.flatten.foreach { childId =>
+          withLock(childId) {
+            runRepository.remove(childId)
+          }
+        }
+        // Finally delete parent run.
+        runRepository.remove(run.id)
+      }
     }
     Future(DeleteRunResponse())
   }

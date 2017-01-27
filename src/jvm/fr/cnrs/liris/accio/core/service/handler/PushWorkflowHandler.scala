@@ -22,7 +22,7 @@ import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.core.domain._
 
-class PushWorkflowHandler @Inject()(workflowFactory: WorkflowFactory, workflowRepository: WorkflowRepository)
+class PushWorkflowHandler @Inject()(workflowFactory: WorkflowFactory, workflowRepository: MutableWorkflowRepository)
   extends Handler[PushWorkflowRequest, PushWorkflowResponse] {
 
   @throws[InvalidWorkflowDefException]

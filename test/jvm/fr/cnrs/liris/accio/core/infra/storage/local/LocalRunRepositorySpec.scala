@@ -26,7 +26,7 @@ import fr.cnrs.liris.testing.WithTmpDirectory
  * Unit tests of [[LocalRunRepository]].
  */
 class LocalRunRepositorySpec extends RunRepositorySpecWithoutMemoization with WithTmpDirectory {
-  override protected def createRepository: RunRepository = new LocalRunRepository(tmpDir)
+  override protected def createRepository: MutableRunRepository = new LocalRunRepository(tmpDir)
 
   behavior of "LocalRunRepository"
 }

@@ -24,19 +24,15 @@ import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.core.service.StateManager
 
 class HeartbeatHandler @Inject()(stateManager: StateManager)
-  extends Handler[HeartbeatRequest, HeartbeatResponse] with LazyLogging {
+  extends AbstractHandler[HeartbeatRequest, HeartbeatResponse](stateManager) with LazyLogging {
 
   override def handle(req: HeartbeatRequest): Future[HeartbeatResponse] = {
-    val taskLock = stateManager.lock(s"task/${req.taskId.value}")
-    taskLock.lock()
-    try {
+    withLock(req.taskId) {
       stateManager.get(req.taskId).foreach { task =>
         val newTask = task.copy(state = task.state.copy(heartbeatAt = Some(System.currentTimeMillis())))
         stateManager.save(newTask)
         logger.debug(s"[T${req.taskId.value}] Received heartbeat")
       }
-    } finally {
-      taskLock.unlock()
     }
     Future(HeartbeatResponse())
   }

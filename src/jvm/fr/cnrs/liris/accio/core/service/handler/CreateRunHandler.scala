@@ -34,10 +34,10 @@ import fr.cnrs.liris.accio.core.service.{RunLifecycleManager, StateManager}
  */
 final class CreateRunHandler @Inject()(
   runFactory: RunFactory,
-  runRepository: RunRepository,
+  runRepository: MutableRunRepository,
   runManager: RunLifecycleManager,
   stateManager: StateManager)
-  extends Handler[CreateRunRequest, CreateRunResponse] with StrictLogging {
+  extends AbstractHandler[CreateRunRequest, CreateRunResponse](stateManager) with StrictLogging {
 
   @throws[InvalidRunDefException]
   def handle(req: CreateRunRequest): Future[CreateRunResponse] = {
@@ -45,15 +45,12 @@ final class CreateRunHandler @Inject()(
     runs.foreach(runRepository.save)
 
     // We save the runs before launching them asynchronously. We can return more quickly to the client, for a
-    // better experience, as launching runs can take some times.
+    // better experience, as launching runs can take some times. Moreover, we must save runs first before launching
+    // them, otherwise tasks referencing unknown runs could be running.
     FuturePool.unboundedPool {
       runs.foreach { run =>
-        val runLock = stateManager.lock(s"run/${run.id.value}")
-        runLock.lock()
-        try {
+        withLock(run.id) {
           runRepository.save(runManager.launch(run))
-        } finally {
-          runLock.unlock()
         }
       }
     }

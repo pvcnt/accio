@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.core.domain
 /**
  * A workflow repository doing nothing.
  */
-class NullWorkflowRepository extends WorkflowRepository {
+class NullWorkflowRepository extends MutableWorkflowRepository {
   override def save(workflow: Workflow): Unit = {}
 
   override def find(query: WorkflowQuery): WorkflowList = WorkflowList(Seq.empty, 0)

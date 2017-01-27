@@ -50,7 +50,7 @@ final class ElasticRunRepository(
   client: ElasticClient,
   prefix: String,
   queryTimeout: Duration)
-  extends RunRepository with StrictLogging {
+  extends MutableRunRepository with StrictLogging {
 
   initializeRunsIndex()
   initializeLogsIndex()
@@ -82,7 +82,7 @@ final class ElasticRunRepository(
       .query(q)
       .sourceExclude("state.nodes.result")
       .sortBy(fieldSort("created_at").order(SortOrder.DESC))
-      .limit(query.limit)
+      .limit(query.limit.getOrElse(10000)) // Max limit defaults to 10000.
       .from(query.offset.getOrElse(0))
 
     val f = client.execute(s).map { resp =>
@@ -155,49 +155,43 @@ final class ElasticRunRepository(
   }
 
   override def get(id: RunId): Option[Run] = {
-    val f = client.execute {
-      ElasticDsl.get(id.value).from(runsIndex / runsType)
-    }.map { resp =>
-      if (resp.isSourceEmpty) {
-        None
-      } else {
-        Some(mapper.parse[Run](resp.sourceAsString))
+    val f = client.execute(ElasticDsl.get(id.value).from(runsIndex / runsType))
+      .map { resp =>
+        if (resp.isSourceEmpty) {
+          None
+        } else {
+          Some(mapper.parse[Run](resp.sourceAsString))
+        }
       }
-    }.recover {
-      case _: IndexNotFoundException => None
-      case e: Throwable =>
-        logger.error(s"Error while retrieving run ${id.value}", e)
-        None
-    }
+      .recover {
+        case _: IndexNotFoundException => None
+        case e: Throwable =>
+          logger.error(s"Error while retrieving run ${id.value}", e)
+          None
+      }
     Await.result(f, queryTimeout)
   }
 
   override def contains(id: RunId): Boolean = {
-    val f = client.execute {
-      ElasticDsl.get(id.value).from(runsIndex / runsType)
-    }.map { resp =>
-      !resp.isSourceEmpty
-    }.recover {
-      case _: IndexNotFoundException => false
-      case e: Throwable =>
-        logger.error(s"Error while retrieving run ${id.value}", e)
-        false
-    }
+    val f = client.execute(ElasticDsl.get(id.value).from(runsIndex / runsType))
+      .map(resp => !resp.isSourceEmpty)
+      .recover {
+        case _: IndexNotFoundException => false
+        case e: Throwable =>
+          logger.error(s"Error while retrieving run ${id.value}", e)
+          false
+      }
     Await.result(f, queryTimeout)
   }
 
   override def remove(id: RunId): Unit = {
-    val f = client.execute {
-      delete(id.value).from(runsIndex / runsType)
-    }.flatMap { _ =>
-      client.execute {
-        deleteIn(logsIndex).by(termQuery("id.value", id.value))
-      }
-    }
-    f.onSuccess {
+    val fs = Future.sequence(Seq(
+      client.execute(delete(id.value).from(runsIndex / runsType)),
+      client.execute(deleteIn(logsIndex).by(termQuery("id.value", id.value)))))
+    fs.onSuccess {
       case _ => logger.debug(s"Removed run ${id.value}")
     }
-    Await.ready(f, queryTimeout)
+    Await.ready(fs, queryTimeout)
   }
 
   override def get(cacheKey: CacheKey): Option[OpResult] = {

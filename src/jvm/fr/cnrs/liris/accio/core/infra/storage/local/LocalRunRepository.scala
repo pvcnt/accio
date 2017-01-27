@@ -34,7 +34,7 @@ import scala.collection.JavaConverters._
  *
  * @param rootDir Root directory under which to store files.
  */
-final class LocalRunRepository(rootDir: Path) extends LocalStorage with RunRepository with StrictLogging {
+final class LocalRunRepository(rootDir: Path) extends LocalStorage with MutableRunRepository with StrictLogging {
   override def find(query: RunQuery): RunList = {
     var results = listIds(runsPath).flatMap(id => get(RunId(id)))
 
@@ -55,7 +55,7 @@ final class LocalRunRepository(rootDir: Path) extends LocalStorage with RunRepos
     results = results.sortWith((a, b) => a.createdAt > b.createdAt)
     val totalCount = results.size
     query.offset.foreach { offset => results = results.drop(offset) }
-    results = results.take(query.limit)
+    query.limit.foreach { limit => results = results.take(limit) }
 
     // Remove the result of each node, that we do not want to return.
     results = results.map(run => run.copy(state = run.state.copy(nodes = run.state.nodes.map(_.unsetResult))))

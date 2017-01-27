@@ -19,7 +19,31 @@
 package fr.cnrs.liris.accio.core.service.handler
 
 import com.twitter.util.Future
+import fr.cnrs.liris.accio.core.domain.{RunId, TaskId}
+import fr.cnrs.liris.accio.core.service.StateManager
 
 trait Handler[Req, Res] {
   def handle(req: Req): Future[Res]
+}
+
+abstract class AbstractHandler[Req, Res](stateManager: StateManager) extends Handler[Req, Res] {
+  protected def withLock[T](runId: RunId)(f: => T): T = {
+    val lock = stateManager.lock(s"run/${runId.value}")
+    lock.lock()
+    try {
+      f
+    } finally {
+      lock.unlock()
+    }
+  }
+
+  protected def withLock[T](taskId: TaskId)(f: => T): T = {
+    val lock = stateManager.lock(s"task/${taskId.value}")
+    lock.lock()
+    try {
+      f
+    } finally {
+      lock.unlock()
+    }
+  }
 }

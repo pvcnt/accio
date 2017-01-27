@@ -44,7 +44,7 @@ object AgentModule extends TwitterModule {
 
   @Singleton
   @Provides
-  def providesLostTaskObserver(stateManager: StateManager, runRepository: RunRepository, runManager: RunLifecycleManager): LostTaskObserver = {
+  def providesLostTaskObserver(stateManager: StateManager, runRepository: MutableRunRepository, runManager: RunLifecycleManager): LostTaskObserver = {
     new LostTaskObserver(taskTimeout(), stateManager, runRepository, runManager)
   }
 }

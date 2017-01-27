@@ -23,8 +23,8 @@ import com.twitter.util.Future
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.service.{RunLifecycleManager, StateManager}
 
-class StartTaskHandler @Inject()(runRepository: RunRepository, stateManager: StateManager, runManager: RunLifecycleManager)
-  extends Handler[StartTaskRequest, StartTaskResponse] {
+class StartTaskHandler @Inject()(runRepository: MutableRunRepository, stateManager: StateManager, runManager: RunLifecycleManager)
+  extends AbstractHandler[StartTaskRequest, StartTaskResponse](stateManager) {
 
   @throws[UnknownTaskException]
   @throws[UnknownRunException]
@@ -34,9 +34,7 @@ class StartTaskHandler @Inject()(runRepository: RunRepository, stateManager: Sta
     stateManager.get(req.taskId) match {
       case None => throw new UnknownTaskException(req.taskId)
       case Some(task) =>
-        val runLock = stateManager.lock(s"run/${task.runId.value}")
-        runLock.lock()
-        try {
+        withLock(task.runId) {
           runRepository.get(task.runId) match {
             case None =>
               // Illegal state: no run found for this task.
@@ -55,8 +53,6 @@ class StartTaskHandler @Inject()(runRepository: RunRepository, stateManager: Sta
               // Transmit payload to the executor.
               Future(StartTaskResponse(task.runId, task.nodeName, task.payload))
           }
-        } finally {
-          runLock.unlock()
         }
     }
   }

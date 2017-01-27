@@ -35,7 +35,7 @@ import fr.cnrs.liris.common.util.cache.CacheBuilder
 final class RunLifecycleManager @Inject()(
   schedulerService: SchedulerService,
   graphFactory: GraphFactory,
-  workflowRepository: ReadOnlyWorkflowRepository)
+  workflowRepository: WorkflowRepository)
   extends StrictLogging {
 
   private[this] val graphs = CacheBuilder().maximumSize(50).build((pkg: Package) => {

@@ -34,7 +34,7 @@ class ElasticWorkflowRepositorySpec extends WorkflowRepositorySpec with ElasticS
   private[this] var i = 0
   private[this] val injector = Guice.createInjector(AccioFinatraJacksonModule)
 
-  override protected def createRepository: WorkflowRepository = {
+  override protected def createRepository: MutableWorkflowRepository = {
     // The node is node teared down at each test, which means data persists. We use a different indice each time to
     // start from a clean slate at each test.
     i += 1

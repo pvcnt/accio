@@ -22,13 +22,13 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 import com.twitter.util.{Duration, Time}
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.core.domain.{RunRepository, Task, TaskStatus}
+import fr.cnrs.liris.accio.core.domain.{MutableRunRepository, Task, TaskStatus}
 import fr.cnrs.liris.accio.core.service.{RunLifecycleManager, StateManager}
 
 /**
  * Observer tracking lost tasks.
  */
-class LostTaskObserver(taskTimeout: Duration, stateManager: StateManager, runRepository: RunRepository, runManager: RunLifecycleManager)
+class LostTaskObserver(taskTimeout: Duration, stateManager: StateManager, runRepository: MutableRunRepository, runManager: RunLifecycleManager)
   extends Runnable with StrictLogging {
 
   private[this] val killed = new AtomicBoolean(false)

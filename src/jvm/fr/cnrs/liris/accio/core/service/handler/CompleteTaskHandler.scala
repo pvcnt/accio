@@ -25,20 +25,16 @@ import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.service.{RunLifecycleManager, StateManager}
 
 final class CompleteTaskHandler @Inject()(
-  runRepository: RunRepository,
+  runRepository: MutableRunRepository,
   stateManager: StateManager,
   runManager: RunLifecycleManager)
-  extends Handler[CompleteTaskRequest, CompleteTaskResponse] with StrictLogging {
+  extends AbstractHandler[CompleteTaskRequest, CompleteTaskResponse](stateManager) with StrictLogging {
 
   override def handle(req: CompleteTaskRequest): Future[CompleteTaskResponse] = {
-    val taskLock = stateManager.lock(s"task/${req.taskId.value}")
-    taskLock.lock()
-    try {
+    withLock(req.taskId) {
       stateManager.get(req.taskId).foreach { task =>
         stateManager.remove(task.id)
-        val runLock = stateManager.lock(s"run/${task.runId.value}")
-        runLock.lock()
-        try {
+        withLock(task.runId) {
           runRepository.get(task.runId).foreach { run =>
             val newRun = if (req.result.exitCode == 0) {
               runManager.onSuccess(run, task.nodeName, req.result, Some(task.payload.cacheKey))
@@ -47,13 +43,9 @@ final class CompleteTaskHandler @Inject()(
             }
             runRepository.save(newRun)
           }
-        } finally {
-          runLock.unlock()
         }
       }
       Future(CompleteTaskResponse())
-    } finally {
-      taskLock.unlock()
     }
   }
 }

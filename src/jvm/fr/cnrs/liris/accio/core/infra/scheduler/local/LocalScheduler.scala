@@ -25,7 +25,7 @@ import com.google.common.io.ByteStreams
 import com.twitter.concurrent.NamedPoolThreadFactory
 import com.twitter.util.{ExecutorServiceFuturePool, Return, Throw}
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.core.domain.{RunLog, RunRepository}
+import fr.cnrs.liris.accio.core.domain.{RunLog, MutableRunRepository}
 import fr.cnrs.liris.accio.core.service.{Downloader, Job, Scheduler}
 import fr.cnrs.liris.common.util.{FileUtils, Platform}
 
@@ -50,7 +50,7 @@ class LocalScheduler(
   executorUri: String,
   javaHome: Option[String],
   executorArgs: Seq[String],
-  runRepository: RunRepository)
+  runRepository: MutableRunRepository)
   extends Scheduler with StrictLogging {
 
   private[this] val monitors = new ConcurrentHashMap[String, TaskMonitor].asScala

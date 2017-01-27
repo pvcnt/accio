@@ -22,39 +22,8 @@ import com.twitter.util.Time
 
 /**
  * Repository persisting runtime data collected as runs are executed.
- *
- * Repositories are *not* required to be thread-safe. Mutating methods might need to be wrapped inside transactions
- * on the application-level. However, repositories should still take care not to leave data in a corrupted state,
- * which can be hard to recover from.
  */
-trait RunRepository extends ReadOnlyRunRepository {
-  /**
-   * Save a run. It will either create a new run or replace an existing one with the same identifier.
-   *
-   * @param run Run to save.
-   */
-  def save(run: Run): Unit
-
-  /**
-   * Save some logs. Since they are small objects, they can be saved in a batch (details are implementation-dependant).
-   * Logs are append-only.
-   *
-   * @param logs Logs to save.
-   */
-  def save(logs: Seq[RunLog]): Unit
-
-  /**
-   * Delete a run, if it exists. It will also delete all associated logs.
-   *
-   * @param id Run identifier.
-   */
-  def remove(id: RunId): Unit
-}
-
-/**
- * Read-only run repository.
- */
-trait ReadOnlyRunRepository {
+trait RunRepository {
   /**
    * Search for runs matching a given query. Runs are returned ordered in inverse chronological order, the most
    * recent matching run being the first result. It does *not* include the result of each node.
@@ -98,6 +67,38 @@ trait ReadOnlyRunRepository {
 }
 
 /**
+ * Mutable run repository.
+ *
+ * Repositories are *not* required to be thread-safe. Mutating methods might need to be wrapped inside transactions
+ * on the application-level. However, repositories should still take care not to leave data in a corrupted state,
+ * which can be hard to recover from.
+ */
+trait MutableRunRepository extends RunRepository {
+  /**
+   * Save a run. It will either create a new run or replace an existing one with the same identifier.
+   *
+   * @param run Run to save.
+   */
+  def save(run: Run): Unit
+
+  /**
+   * Save some logs. Since they are small objects, they can be saved in a batch (details are implementation-dependant).
+   * Logs are append-only.
+   *
+   * @param logs Logs to save.
+   */
+  def save(logs: Seq[RunLog]): Unit
+
+  /**
+   * Delete a run, if it exists. It will also delete all associated logs. It does *not* remove child runs, it is up
+   * to client code to do this.
+   *
+   * @param id Run identifier.
+   */
+  def remove(id: RunId): Unit
+}
+
+/**
  * Query to search for runs. Please note that you have to specify a maximum number of results.
  *
  * @param workflow   Only include runs being instances of a given workflow.
@@ -106,7 +107,7 @@ trait ReadOnlyRunRepository {
  * @param status     Only include runs whose status belong to those specified.
  * @param parent     Only include runs being a child of a given run.
  * @param clonedFrom Only include runs being cloned from of a given run.
- * @param limit      Maximum number of matching runs to return. Must be in [1,100].
+ * @param limit      Maximum number of matching runs to return.
  * @param offset     Number of matching runs to skip.
  */
 case class RunQuery(
@@ -116,10 +117,8 @@ case class RunQuery(
   status: Set[RunStatus] = Set.empty,
   parent: Option[RunId] = None,
   clonedFrom: Option[RunId] = None,
-  limit: Int = 50,
-  offset: Option[Int] = None) {
-  require(limit > 0 && limit <= 100, s"Maximum number of runs must be in [1,100] (got $limit)")
-}
+  limit: Option[Int] = None,
+  offset: Option[Int] = None)
 
 /**
  * List of runs and total number of results.

@@ -30,7 +30,7 @@ import scala.util.Random
  *
  * @param workflowRepository Workflow repository (read-only).
  */
-final class RunFactory @Inject()(workflowRepository: ReadOnlyWorkflowRepository) {
+final class RunFactory @Inject()(workflowRepository: WorkflowRepository) {
   /**
    * Create one or several runs from a run definition.
    *

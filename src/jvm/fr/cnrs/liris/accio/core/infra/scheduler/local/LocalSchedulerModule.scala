@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.core.infra.scheduler.local
 import java.nio.file.Path
 
 import com.google.inject.{Provides, Singleton}
-import fr.cnrs.liris.accio.core.domain.RunRepository
+import fr.cnrs.liris.accio.core.domain.MutableRunRepository
 import fr.cnrs.liris.accio.core.service.{Downloader, Scheduler}
 import net.codingwell.scalaguice.ScalaModule
 
@@ -51,7 +51,7 @@ class LocalSchedulerModule(config: LocalSchedulerConfig) extends ScalaModule {
 
   @Singleton
   @Provides
-  def providesScheduler(downloader: Downloader, runRepository: RunRepository): Scheduler = {
+  def providesScheduler(downloader: Downloader, runRepository: MutableRunRepository): Scheduler = {
     val executorArgs = Seq("-addr", config.agentAddr) ++ config.executorArgs
     new LocalScheduler(downloader, config.workDir, config.executorUri, config.javaHome, executorArgs, runRepository)
   }

@@ -38,7 +38,7 @@ final class SchedulerService @Inject()(
   scheduler: Scheduler,
   stateManager: StateManager,
   opRegistry: OpRegistry,
-  runRepository: ReadOnlyRunRepository)
+  runRepository: RunRepository)
   extends StrictLogging {
 
   /**

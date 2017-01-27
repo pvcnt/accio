@@ -20,14 +20,14 @@ package fr.cnrs.liris.accio.core.service.handler
 
 import com.google.inject.Inject
 import com.twitter.util.{Future, Time}
-import fr.cnrs.liris.accio.core.domain.{LogsQuery, ReadOnlyRunRepository}
+import fr.cnrs.liris.accio.core.domain.{LogsQuery, RunRepository}
 
 /**
  * Handler retrieving logs matching some search criteria.
  *
  * @param repository Run repository (read-only).
  */
-class ListLogsHandler @Inject()(repository: ReadOnlyRunRepository) extends Handler[ListLogsRequest, ListLogsResponse] {
+class ListLogsHandler @Inject()(repository: RunRepository) extends Handler[ListLogsRequest, ListLogsResponse] {
   override def handle(req: ListLogsRequest): Future[ListLogsResponse] = {
     val query = LogsQuery(
       runId = req.runId,
