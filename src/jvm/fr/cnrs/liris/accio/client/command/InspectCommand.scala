@@ -74,10 +74,10 @@ class InspectCommand @Inject()(clientFactory: AgentClientFactory) extends Comman
                   val runWithoutResults = run.copy(state = run.state.copy(nodes = run.state.nodes.map(_.copy(result = None))))
                   out.writeln(new String(new JsonSerializer().serialize(runWithoutResults)))
                 } else {
-                  val children = run.children.map { _ =>
-                    client.listRuns(ListRunsRequest(parent = Some(run.id)))
-                  }.toSet
-                  printRun(run, out)
+                  val children = run.children.toSeq.flatMap { _ =>
+                    Await.result(client.listRuns(ListRunsRequest(parent = Some(run.id)))).results
+                  }.sortBy(_.createdAt)
+                  printRun(run, children, out)
                 }
               }
               ExitCode.Success

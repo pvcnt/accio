@@ -68,10 +68,11 @@ class ExportCommand @Inject()(clientFactory: AgentClientFactory) extends Command
 
       val runs = getRuns(flags.residue, flags.as[AccioAgentFlags].addr)
       val artifacts = getArtifacts(runs, opts)
-      val metrics = getArtifacts(runs, opts)
+      val metrics = getMetrics(runs, opts)
       val reportCreator = new CsvReportCreator
       val reportCreatorOpts = CsvReportOpts(separator = opts.separator, split = opts.split, aggregate = opts.aggregate, append = opts.append)
       reportCreator.write(artifacts, workDir, reportCreatorOpts)
+      reportCreator.write(metrics, workDir, reportCreatorOpts)
 
       out.writeln(s"<info>[OK]</info> Done in ${TimeUtils.prettyTime(elapsed())}.")
       ExitCode.Success
