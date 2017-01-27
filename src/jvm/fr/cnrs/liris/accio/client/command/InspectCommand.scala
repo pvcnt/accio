@@ -112,6 +112,7 @@ class InspectCommand @Inject()(clientFactory: AgentClientFactory) extends Comman
 
     if (run.params.nonEmpty) {
       out.writeln()
+      out.writeln("<info>Parameters</info>")
       val maxLength = run.params.keySet.map(_.length).max
       run.params.foreach { case (name, value) =>
         out.writeln(s"<comment>${padTo(name, maxLength)}</comment> ${Values.toString(value)}")
@@ -120,6 +121,7 @@ class InspectCommand @Inject()(clientFactory: AgentClientFactory) extends Comman
 
     out.writeln()
     if (run.children.isEmpty) {
+      out.writeln("<info>Nodes</info>")
       out.writeln(s"<comment>${padTo("Node name", 30)}  ${padTo("Status", 9)}  Duration</comment>")
       run.state.nodes.toSeq.sortBy(_.startedAt.getOrElse(Long.MaxValue)).foreach { node =>
         val duration = if (node.cacheHit) {
@@ -132,8 +134,7 @@ class InspectCommand @Inject()(clientFactory: AgentClientFactory) extends Comman
         out.writeln(s"${padTo(node.nodeName, 30)}  ${padTo(node.status.name, 9)}  $duration")
       }
     } else {
-      //val prettyTime = new PrettyTime().setLocale(Locale.ENGLISH)
-      //out.writeln(s"<comment>${padTo("Run id", 32)}  ${padTo("Workflow id", 15)}  ${padTo("Created", 15)}  ${padTo("Run name", 15)}  ${padTo("Status", 9)}  Nodes</comment>")
+      out.writeln("<info>Child runs</info>")
       out.writeln(s"<comment>${padTo("Run id", 32)}</comment>")
       run.children.get.foreach { runId =>
         out.writeln(s"${runId.value}")
@@ -172,14 +173,16 @@ class InspectCommand @Inject()(clientFactory: AgentClientFactory) extends Comman
       }
       if (result.artifacts.nonEmpty) {
         out.writeln()
-        out.writeln(s"<comment>${padTo("Artifact name", 25)}  Value preview</comment>")
+        out.writeln("<info>Artifacts</info>")
+        out.writeln(s"<comment>${padTo("Name", 25)}  Value (preview)</comment>")
         result.artifacts.foreach { artifact =>
           out.writeln(s"${padTo(artifact.name, 25)}  ${Values.toString(artifact.value)}</comment>")
         }
       }
       if (result.metrics.nonEmpty) {
         out.writeln()
-        out.writeln(s"<comment>${padTo("Metric name", 25)}  Value</comment>")
+        out.writeln("<info>Metrics</info>")
+        out.writeln(s"<comment>${padTo("Name", 25)}  Value</comment>")
         result.metrics.foreach { metric =>
           out.writeln(s"${padTo(metric.name, 25)}  ${metric.value}")
         }
