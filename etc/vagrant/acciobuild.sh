@@ -50,6 +50,10 @@ function build_executor {
 }
 
 function build_gateway {
+  pushd src/node/fr/cnrs/liris/accio/gateway
+    yarn install
+    npm run build
+  popd
   ./pants binary src/jvm/fr/cnrs/liris/accio/gateway:bin
 }
 
