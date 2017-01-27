@@ -43,6 +43,7 @@ Created         2 minutes ago
 Owner           vincent
 Name            <no name>
 Tags            <none>
+Seed            3320693330992270466
 Status          Scheduled
 Progress        17 %
 Started         1 minute ago
@@ -63,12 +64,15 @@ Node name       EventSource
 Status          Success
 Started         3 minutes ago
 Completed       2 minutes ago
+Duration        65 seconds
 Exit code       0
 
-Artifact name              Value preview
+Artifacts
+Name                       Value preview
 data                       Dataset(/tmp/accio-agent/uploads/0d684aee0b4bde2704eb937412be92b456a4dcad/data)
 
-Metric name                Value
+Metrics
+Name                       Value
 memory_used_bytes          1.20014304E8
 memory_reserved_bytes      2.07683584E8
 system_time_nanos          0.0

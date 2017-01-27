@@ -24,10 +24,10 @@ import java.util.UUID
 import com.google.inject.Inject
 import com.twitter.util.{Await, Stopwatch}
 import fr.cnrs.liris.accio.client.service.AgentClientFactory
-import fr.cnrs.liris.accio.core.domain.RunId
+import fr.cnrs.liris.accio.core.domain.{Run, RunId}
 import fr.cnrs.liris.accio.core.infra.cli.{Cmd, Command, ExitCode, Reporter}
-import fr.cnrs.liris.accio.core.service.handler.GetRunRequest
-import fr.cnrs.liris.accio.core.service.{AggregatedRuns, ArtifactList, CsvReportCreator, CsvReportOpts}
+import fr.cnrs.liris.accio.core.service.handler.{GetRunRequest, ListRunsRequest}
+import fr.cnrs.liris.accio.core.service._
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.util.{FileUtils, HashUtils, StringUtils, TimeUtils}
 
@@ -36,8 +36,10 @@ case class ExportCommandFlags(
   out: Option[String],
   @Flag(name = "separator", help = "Separator to use in generated files")
   separator: String = " ",
-  @Flag(name = "artifacts", help = "Comma-separated list of artifacts to take into account, or NUMERIC for only those of a numeric type")
+  @Flag(name = "artifacts", help = "Comma-separated list of artifacts to take into account. Special values: ALL, NUMERIC (for only those of a numeric type), NONE.")
   artifacts: String = "NUMERIC",
+  @Flag(name = "metrics", help = "Comma-separated list of metrics to export. Special values: ALL, NONE.")
+  metrics: String = "NONE",
   @Flag(name = "split", help = "Whether to split the export by workflow parameters")
   split: Boolean = false,
   @Flag(name = "aggregate", help = "Whether to aggregate artifact values across multiple runs into a single value")
@@ -64,7 +66,9 @@ class ExportCommand @Inject()(clientFactory: AgentClientFactory) extends Command
       val workDir = getWorkDir(opts)
       out.writeln(s"<info>[OK]</info> Writing export to <comment>${workDir.toAbsolutePath}</comment>")
 
-      val artifacts = getArtifacts(flags.residue, opts, flags.as[AccioAgentFlags].addr)
+      val runs = getRuns(flags.residue, flags.as[AccioAgentFlags].addr)
+      val artifacts = getArtifacts(runs, opts)
+      val metrics = getArtifacts(runs, opts)
       val reportCreator = new CsvReportCreator
       val reportCreatorOpts = CsvReportOpts(separator = opts.separator, split = opts.split, aggregate = opts.aggregate, append = opts.append)
       reportCreator.write(artifacts, workDir, reportCreatorOpts)
@@ -81,12 +85,33 @@ class ExportCommand @Inject()(clientFactory: AgentClientFactory) extends Command
       Paths.get(s"accio-export-$uid")
   }
 
-  private def getArtifacts(residue: Seq[String], opts: ExportCommandFlags, addr: String): ArtifactList = {
+  private def getRuns(residue: Seq[String], addr: String): AggregatedRuns = {
     val client = clientFactory.create(addr)
     val runs = residue.flatMap { id =>
-      Await.result(client.getRun(GetRunRequest(RunId(id)))).result
+      Await.result(client.getRun(GetRunRequest(RunId(id)))).result.toSeq.flatMap { run =>
+        if (run.children.nonEmpty) {
+          Await.result(client.listRuns(ListRunsRequest(parent = Some(run.id)))).results
+        } else {
+          Seq(run)
+        }
+      }
     }
-    val aggRuns = new AggregatedRuns(runs)
-    aggRuns.artifacts.filter(StringUtils.explode(opts.artifacts))
+    new AggregatedRuns(runs)
+  }
+
+  private def getArtifacts(runs: AggregatedRuns, opts: ExportCommandFlags): ArtifactList = {
+    if (opts.artifacts.isEmpty || opts.artifacts == "NONE") {
+      ArtifactList(Seq.empty, Map.empty, Seq.empty)
+    } else {
+      runs.artifacts.filter(StringUtils.explode(opts.artifacts, ","))
+    }
+  }
+
+  private def getMetrics(runs: AggregatedRuns, opts: ExportCommandFlags): MetricList = {
+    if (opts.metrics.isEmpty || opts.metrics == "NONE") {
+      MetricList(Seq.empty, Map.empty, Seq.empty)
+    } else {
+      runs.metrics.filter(StringUtils.explode(opts.metrics, ","))
+    }
   }
 }

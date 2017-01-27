@@ -57,6 +57,32 @@ class AggregatedRuns(val runs: Seq[Run]) {
 
     ArtifactList(effectiveRuns, Map.empty, groups)
   }
+
+  /**
+   * Return an aggregated description of the metrics contained inside those runs.
+   */
+  def metrics: MetricList = {
+    // Group all metrics by run id.
+    val metricsByRun = runs.flatMap { run =>
+      run.state.nodes.flatMap { node =>
+        node.result.toSeq.flatMap(_.metrics.map(metric => run.id -> metric.copy(name = s"${node.nodeName}/${metric.name}")))
+      }
+    }
+
+    // Group metrics by their name, and then by run id..
+    val groups = metricsByRun
+      .groupBy(_._2.name)
+      .map { case (metricName, list) =>
+        val values = list.map { case (runId, art) => runId -> art.value }
+        MetricGroup(metricName, values.toMap)
+      }.toSeq
+
+    // Only keep runs for which we have at least one artifact.
+    val runIds = metricsByRun.map(_._1).toSet
+    val effectiveRuns = runs.filter(run => runIds.contains(run.id))
+
+    MetricList(effectiveRuns, Map.empty, groups)
+  }
 }
 
 /**
@@ -114,12 +140,6 @@ case class ArtifactList(runs: Seq[Run], params: Map[String, Value], groups: Seq[
  * @param values Artifact values, keyed by run id.
  */
 case class ArtifactGroup(name: String, kind: DataType, values: Map[RunId, Value]) {
-  def size: Int = values.size
-
-  def isEmpty: Boolean = values.isEmpty
-
-  def nonEmpty: Boolean = values.nonEmpty
-
   def toSeq: Seq[Artifact] = values.values.map(v => Artifact(name, v)).toSeq
 
   def aggregated: Artifact = Artifact(name, aggregate(kind, values.values.toSeq))
@@ -148,4 +168,57 @@ case class ArtifactGroup(name: String, kind: DataType, values: Map[RunId, Value]
       Values.encodeMap(mergedMap, kind)
     case _ => throw new IllegalArgumentException(s"Cannot aggregate $kind values")
   }
+}
+
+/**
+ * A list of metrics.
+ *
+ * @param runs
+ * @param params
+ * @param groups
+ */
+case class MetricList(runs: Seq[Run], params: Map[String, Value], groups: Seq[MetricGroup]) {
+  /**
+   * Filter the metrics being aggregated to only include those specified.
+   *
+   * @param names List of metric names.
+   * @return A copy including only specified metrics.
+   */
+  def filter(names: Set[String]): MetricList = {
+    if (names.isEmpty) {
+      this
+    } else {
+      val newGroups = groups.filter(group => names.contains(group.name))
+      copy(groups = newGroups)
+    }
+  }
+
+  /**
+   * Split this list of metrics into several lists, one per unique workflow parametrization. If this instance has
+   * already been split, it will result in a singleton composed of itself.
+   */
+  def split: Seq[MetricList] = {
+    runs
+      .groupBy(_.params)
+      .map { case (someParams, someRuns) =>
+        val runIds = someRuns.map(_.id)
+        val newGroups = groups.map { group =>
+          val newValues = group.values.filter { case (runId, _) => runIds.contains(runId) }
+          group.copy(values = newValues)
+        }
+        MetricList(someRuns, someParams.toMap, newGroups)
+      }.toSeq
+  }
+}
+
+/**
+ * A group of metrics.
+ *
+ * @param name   Metric name.
+ * @param values Metric values, keyed by run id.
+ */
+case class MetricGroup(name: String, values: Map[RunId, Double]) {
+  def toSeq: Seq[Metric] = values.values.map(v => Metric(name, v)).toSeq
+
+  def aggregated: Metric = Metric(name, mean(values.values.toSeq))
 }
