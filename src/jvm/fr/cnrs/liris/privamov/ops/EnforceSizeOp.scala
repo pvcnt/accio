@@ -18,11 +18,8 @@
 
 package fr.cnrs.liris.privamov.ops
 
-import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.api._
-import fr.cnrs.liris.privamov.core.io.{Decoder, Encoder}
 import fr.cnrs.liris.privamov.core.model.Trace
-import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 
 @Op(
   category = "prepare",
@@ -30,15 +27,10 @@ import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
   description = "Larger traces will be truncated, smaller traces will be discarded.",
   cpu = 4,
   ram = "2G")
-class EnforceSizeOp @Inject()(
-  override protected val env: SparkleEnv,
-  override protected val decoders: Set[Decoder[_]],
-  override protected val encoders: Set[Encoder[_]])
-  extends Operator[EnforceSizeIn, EnforceSizeOut] with SparkleOperator {
-
+class EnforceSizeOp  extends Operator[EnforceSizeIn, EnforceSizeOut] {
   override def execute(in: EnforceSizeIn, ctx: OpContext): EnforceSizeOut = {
-    val data = read[Trace](in.data)
-    val output = write(data.flatMap(transform(_, in.minSize, in.maxSize)), ctx.workDir)
+    val data = ctx.read[Trace](in.data)
+    val output = ctx.write(data.flatMap(transform(_, in.minSize, in.maxSize)))
     EnforceSizeOut(output)
   }
 

@@ -22,10 +22,9 @@ import java.util.{Date, Locale}
 
 import com.google.inject.Inject
 import com.twitter.util.{Await, Return, Throw}
-import fr.cnrs.liris.accio.client.service.AgentClientFactory
+import fr.cnrs.liris.accio.agent.{ListRunsRequest, ListRunsResponse}
 import fr.cnrs.liris.accio.core.domain.{JsonSerializer, RunStatus}
 import fr.cnrs.liris.accio.core.infra.cli.{Cmd, Command, ExitCode, Reporter}
-import fr.cnrs.liris.accio.core.service.handler.{ListRunsRequest, ListRunsResponse}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.util.StringUtils.{explode, padTo}
 import org.ocpsoft.prettytime.PrettyTime
@@ -108,7 +107,7 @@ class PsCommand @Inject()(clientFactory: AgentClientFactory) extends Command {
       val prettyTime = new PrettyTime().setLocale(Locale.ENGLISH)
       out.writeln(s"<comment>${padTo("Run id", 32)}  ${padTo("Workflow id", 15)}  ${padTo("Created", 15)}  ${padTo("Run name", 15)}  Status</comment>")
       resp.results.foreach { run =>
-        val name = run.children.map("(" + _.size + ") ").getOrElse("") + run.name.getOrElse("<no name>")
+        val name = (if (run.children > 0) s"(${run.children})" else "") + run.name.getOrElse("<no name>")
         out.writeln(s"${run.id.value}  ${padTo(run.pkg.workflowId.value, 15)}  ${padTo(prettyTime.format(new Date(run.createdAt)), 15)}  ${padTo(name, 15)}  ${run.state.status.name}")
       }
       if (resp.totalCount > n) {

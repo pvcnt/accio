@@ -19,13 +19,9 @@
 package fr.cnrs.liris.privamov.ops
 
 import com.github.nscala_time.time.Imports._
-import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.api._
-import fr.cnrs.liris.common.stats.AggregatedStats
 import fr.cnrs.liris.common.util.Requirements._
-import fr.cnrs.liris.privamov.core.io.Decoder
 import fr.cnrs.liris.privamov.core.model.Trace
-import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 import org.joda.time.Instant
 
 @Op(
@@ -33,14 +29,10 @@ import org.joda.time.Instant
   help = "Compute temporal distortion difference between two datasets of traces",
   cpu = 3,
   ram = "6G")
-class SpatioTemporalDistortionOp @Inject()(
-  override protected val env: SparkleEnv,
-  override protected val decoders: Set[Decoder[_]])
-  extends Operator[SpatioTemporalDistortionIn, SpatioTemporalDistortionOut] with SparkleReadOperator {
-
+class SpatioTemporalDistortionOp extends Operator[SpatioTemporalDistortionIn, SpatioTemporalDistortionOut] {
   override def execute(in: SpatioTemporalDistortionIn, ctx: OpContext): SpatioTemporalDistortionOut = {
-    val train = read[Trace](in.train)
-    val test = read[Trace](in.test)
+    val train = ctx.read[Trace](in.train)
+    val test = ctx.read[Trace](in.test)
     val metrics = train.zip(test).map { case (ref, res) => evaluate(ref, res) }.toArray
     SpatioTemporalDistortionOut(
       min = metrics.map { case (k, v) => k -> v.min }.toMap,

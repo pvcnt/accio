@@ -19,12 +19,9 @@
 package fr.cnrs.liris.privamov.ops
 
 import com.github.nscala_time.time.Imports._
-import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.common.geo.Point
-import fr.cnrs.liris.privamov.core.io.{Decoder, Encoder}
 import fr.cnrs.liris.privamov.core.model.{Event, Trace}
-import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 
 @Op(
   category = "prepare",
@@ -32,15 +29,10 @@ import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
   description = "Apply gaussian kernel smoothing on a trace, attenuating the impact of noisy observations.",
   cpu = 4,
   ram = "2G")
-class GaussianKernelSmoothingOp @Inject()(
-  override protected val env: SparkleEnv,
-  override protected val decoders: Set[Decoder[_]],
-  override protected val encoders: Set[Encoder[_]])
-  extends Operator[GaussianKernelSmoothingIn, GaussianKernelSmoothingOut] with SparkleOperator {
-
+class GaussianKernelSmoothingOp extends Operator[GaussianKernelSmoothingIn, GaussianKernelSmoothingOut] {
   override def execute(in: GaussianKernelSmoothingIn, ctx: OpContext): GaussianKernelSmoothingOut = {
-    val data = read[Trace](in.data)
-    val output = write(data.map(transform(_, in.omega)), ctx.workDir)
+    val data = ctx.read[Trace](in.data)
+    val output = ctx.write(data.map(transform(_, in.omega)))
     GaussianKernelSmoothingOut(output)
   }
 

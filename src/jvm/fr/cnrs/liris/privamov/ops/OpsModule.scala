@@ -18,10 +18,10 @@
 
 package fr.cnrs.liris.privamov.ops
 
-import com.google.inject.{Provides, Singleton, TypeLiteral}
+import com.google.inject.TypeLiteral
 import fr.cnrs.liris.accio.core.api.Operator
-import fr.cnrs.liris.privamov.core.io._
-import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
+import fr.cnrs.liris.accio.core.api.io.{Decoder, Encoder}
+import fr.cnrs.liris.privamov.core.io.{CsvEventCodec, CsvPoiCodec, CsvPoiSetCodec, CsvTraceCodec}
 import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
 
 /**
@@ -31,19 +31,17 @@ object OpsModule extends ScalaModule {
   override def configure(): Unit = {
     // List of available encoders.
     val encoders = ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Encoder[_]] {})
-    encoders.addBinding.toInstance(new StringEncoder)
-    encoders.addBinding.to[CsvEventEncoder]
-    encoders.addBinding.to[CsvTraceEncoder]
-    encoders.addBinding.to[CsvPoiEncoder]
-    encoders.addBinding.to[CsvPoiSetEncoder]
+    encoders.addBinding.to[CsvEventCodec]
+    encoders.addBinding.to[CsvTraceCodec]
+    encoders.addBinding.to[CsvPoiCodec]
+    encoders.addBinding.to[CsvPoiSetCodec]
 
     // List of available decoders.
     val decoders = ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Decoder[_]] {})
-    decoders.addBinding.toInstance(new StringDecoder)
-    decoders.addBinding.to[CsvEventDecoder]
-    decoders.addBinding.to[CsvTraceDecoder]
-    decoders.addBinding.to[CsvPoiDecoder]
-    decoders.addBinding.to[CsvPoiSetDecoder]
+    decoders.addBinding.to[CsvEventCodec]
+    decoders.addBinding.to[CsvTraceCodec]
+    decoders.addBinding.to[CsvPoiCodec]
+    decoders.addBinding.to[CsvPoiSetCodec]
 
     // List of available operators.
     val ops = ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Class[_ <: Operator[_, _]]] {})
@@ -62,7 +60,6 @@ object OpsModule extends ScalaModule {
     ops.addBinding.toInstance(classOf[PoisAnalyzerOp])
     ops.addBinding.toInstance(classOf[PoisExtractionOp])
     ops.addBinding.toInstance(classOf[PoisRetrievalOp])
-    ops.addBinding.toInstance(classOf[PoisRetrieval2Op])
     ops.addBinding.toInstance(classOf[PromesseOp])
     ops.addBinding.toInstance(classOf[PoisReidentOp])
     ops.addBinding.toInstance(classOf[SequentialSplittingOp])
@@ -76,12 +73,5 @@ object OpsModule extends ScalaModule {
     ops.addBinding.toInstance(classOf[TemporalSamplingOp])
     ops.addBinding.toInstance(classOf[UniformSamplingOp])
     ops.addBinding.toInstance(classOf[Wait4MeOp])
-  }
-
-  @Provides
-  @Singleton
-  def providesSparkleEnv: SparkleEnv = {
-    val cores = sys.env.get("ACCIO_CPU").map(_.toDouble.round.toInt).getOrElse(sys.runtime.availableProcessors)
-    new SparkleEnv(math.max(1, cores))
   }
 }

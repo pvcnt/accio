@@ -18,13 +18,8 @@
 
 package fr.cnrs.liris.privamov.ops
 
-import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.api._
-import fr.cnrs.liris.common.geo.Distance
-import fr.cnrs.liris.privamov.core.clustering.DTClusterer
-import fr.cnrs.liris.privamov.core.io.Decoder
-import fr.cnrs.liris.privamov.core.model.{Poi, PoiSet, Trace}
-import fr.cnrs.liris.privamov.core.sparkle.{DataFrame, SparkleEnv}
+import fr.cnrs.liris.privamov.core.model.PoiSet
 
 /**
  * Implementation of a re-identification attack using the points of interest as a discriminating information. The POIs
@@ -39,18 +34,10 @@ import fr.cnrs.liris.privamov.core.sparkle.{DataFrame, SparkleEnv}
   help = "Re-identification attack using POIs a the discriminating information.",
   cpu = 6,
   ram = "3G")
-class PoisReidentOp @Inject()(
-  override protected val env: SparkleEnv,
-  override protected val decoders: Set[Decoder[_]]
-) extends Operator[ReidentificationIn, ReidentificationOut] with SparkleReadOperator {
-
+class PoisReidentOp extends Operator[ReidentificationIn, ReidentificationOut] {
   override def execute(in: ReidentificationIn, ctx: OpContext): ReidentificationOut = {
-    val trainDs = read[Trace](in.train)
-    val testDs = read[Trace](in.test)
-    val trainClusterer = new DTClusterer(in.duration, in.diameter)
-    val testClusterer = new DTClusterer(in.testDuration.getOrElse(in.duration), in.testDiameter.getOrElse(in.diameter))
-    val trainPois = getPois(trainDs, trainClusterer)
-    val testPois = getPois(testDs, testClusterer)
+    val trainPois = ctx.read[PoiSet](in.train).toArray
+    val testPois = ctx.read[PoiSet](in.test).toArray
 
     val distances = getDistances(trainPois, testPois)
     val matches = getMatches(distances)
@@ -59,12 +46,7 @@ class PoisReidentOp @Inject()(
     ReidentificationOut(distances.map { case (k, v) => k -> v.toMap }, matches, successRate)
   }
 
-  private def getPois(data: DataFrame[Trace], clusterer: DTClusterer) = {
-    val allPois = data.flatMap(clusterer.cluster(_).map(c => Poi(c.events))).toArray
-    allPois.groupBy(_.user).map { case (user, pois) => PoiSet(user, pois) }.toSeq
-  }
-
-  private def getDistances(trainPois: Seq[PoiSet], testPois: Seq[PoiSet]) = {
+  private def getDistances(trainPois: Array[PoiSet], testPois: Array[PoiSet]) = {
     val costs = collection.mutable.Map[String, Map[String, Double]]()
     testPois.foreach { pois =>
       val distances = if (pois.nonEmpty) {
@@ -93,24 +75,16 @@ class PoisReidentOp @Inject()(
     }
   }
 
-  private def getSuccessRate(trainPois: Seq[PoiSet], matches: Map[String, String]) = {
+  private def getSuccessRate(trainPois: Array[PoiSet], matches: Map[String, String]) = {
     val trainUsers = trainPois.map(_.user)
     matches.map { case (testUser, trainUser) => if (testUser == trainUser) 1 else 0 }.sum / trainUsers.size.toDouble
   }
 }
 
 case class ReidentificationIn(
-  @Arg(help = "Clustering maximum diameter")
-  diameter: Distance,
-  @Arg(help = "Clustering minimum duration")
-  duration: org.joda.time.Duration,
-  @Arg(help = "Override the clustering maximum diameter to use with the test dataset only")
-  testDiameter: Option[Distance],
-  @Arg(help = "Override the clustering minimum duration to use with the test dataset only")
-  testDuration: Option[org.joda.time.Duration],
-  @Arg(help = "Train dataset")
+  @Arg(help = "Train dataset (POIs)")
   train: Dataset,
-  @Arg(help = "Test dataset")
+  @Arg(help = "Test dataset (POIs)")
   test: Dataset)
 
 case class ReidentificationOut(

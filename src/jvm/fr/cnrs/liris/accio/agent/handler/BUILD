@@ -1,0 +1,19 @@
+scala_library(
+  dependencies=[
+    ':annotations',
+    'src/jvm/fr/cnrs/liris/accio/core/statemgr',
+    'src/jvm/fr/cnrs/liris/accio/core/storage',
+    'src/jvm/fr/cnrs/liris/accio/core/runtime',
+    'src/jvm/fr/cnrs/liris/accio/core/dsl',
+    'src/thrift/fr/cnrs/liris/accio/core/domain',
+    'src/thrift/fr/cnrs/liris/accio/agent',
+    '3rdparty/jvm/com/typesafe/scala-logging',
+    '3rdparty/jvm/com/google/guice',
+  ],
+  sources=globs('*.scala')
+)
+
+scala_library(
+  name='annotations',
+  sources=globs('*.java')
+)

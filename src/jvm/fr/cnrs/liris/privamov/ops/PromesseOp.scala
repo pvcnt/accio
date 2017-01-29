@@ -18,29 +18,21 @@
 
 package fr.cnrs.liris.privamov.ops
 
-import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.common.geo.Distance
-import fr.cnrs.liris.privamov.core.io.{Decoder, Encoder}
 import fr.cnrs.liris.privamov.core.lppm.SpeedSmoothing
 import fr.cnrs.liris.privamov.core.model.Trace
-import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 
 @Op(
   category = "lppm",
   help = "Enforce speed smoothing guarantees on traces.",
   cpu = 4,
   ram = "2G")
-class PromesseOp @Inject()(
-  override protected val env: SparkleEnv,
-  override protected val decoders: Set[Decoder[_]],
-  override protected val encoders: Set[Encoder[_]])
-  extends Operator[PromesseIn, PromesseOut] with SparkleOperator {
-
+class PromesseOp extends Operator[PromesseIn, PromesseOut] {
   override def execute(in: PromesseIn, ctx: OpContext): PromesseOut = {
     val lppm = new SpeedSmoothing(in.epsilon)
-    val output = read[Trace](in.data).map(lppm.transform)
-    PromesseOut(write(output, ctx.workDir))
+    val output = ctx.read[Trace](in.data).map(lppm.transform)
+    PromesseOut(ctx.write(output))
   }
 }
 

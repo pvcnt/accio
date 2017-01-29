@@ -23,12 +23,11 @@ import java.nio.file.{Files, Path, Paths, StandardOpenOption}
 import java.util.Locale
 
 import com.google.common.io.Resources
-import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.api._
+import fr.cnrs.liris.accio.core.api.io.{CsvSink, DataSink}
 import fr.cnrs.liris.common.geo.{Distance, Point}
-import fr.cnrs.liris.privamov.core.io._
+import fr.cnrs.liris.privamov.core.io.{CsvEventCodec, CsvTraceCodec}
 import fr.cnrs.liris.privamov.core.model.{Event, Trace}
-import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 import org.joda.time.{Duration, Instant}
 
 import scala.collection.JavaConverters._
@@ -46,14 +45,9 @@ import scala.collection.mutable
   help = "Time-tolerant k-anonymization",
   description = "Wrapper around the implementation of the Wait4Me algorithm provided by their authors.",
   category = "lppm")
-class Wait4MeOp @Inject()(
-  override protected val env: SparkleEnv,
-  override protected val decoders: Set[Decoder[_]],
-  override protected val encoders: Set[Encoder[_]])
-  extends Operator[Wait4MeIn, Wait4MeOut] with SparkleOperator {
-
+class Wait4MeOp extends Operator[Wait4MeIn, Wait4MeOut] {
   override def execute(in: Wait4MeIn, ctx: OpContext): Wait4MeOut = {
-    val input = read[Trace](in.data)
+    val input = ctx.read[Trace](in.data)
     if (input.count() == 0) {
       Wait4MeOut(
         data = in.data,
@@ -110,7 +104,7 @@ class Wait4MeOp @Inject()(
 
       // We convert back the result into a conventional dataset format.
       val w4mOutputPath = tmpDir.resolve(f"out_${in.k}_${"%.3f".formatLocal(Locale.ENGLISH, in.delta.meters)}.txt").toAbsolutePath
-      val output = writeOutput(input.keys, w4mOutputPath, ctx.workDir)
+      val output = writeOutput(input.keys, w4mOutputPath, ctx)
 
       // We extract metrics from the captured stdout. This is quite ugly, but this works.
       // After header and progress information, result looks like:
@@ -177,17 +171,17 @@ class Wait4MeOp @Inject()(
     localBinary
   }
 
-  private def writeOutput(keys: Seq[String], w4mOutputPath: Path, workDir: Path) = {
+  private def writeOutput(keys: Seq[String], w4mOutputPath: Path, ctx: OpContext) = {
     val keysReverseIndex = keys.zipWithIndex.map { case (k, v) => v -> k }.toMap
     var currIdx: Option[Int] = None
     val events = mutable.ListBuffer.empty[Event]
-    val outputUri = workDir.resolve("data").toAbsolutePath.toString
-    val sink = new CsvSink(outputUri, new CsvTraceEncoder, failOnNonEmptyDirectory = false)
+    val outputUri = ctx.workDir.resolve("data").toAbsolutePath.toString
+    val sink = new CsvSink(outputUri, new CsvTraceCodec(new CsvEventCodec), failOnNonEmptyDirectory = false)
     Files.readAllLines(w4mOutputPath).asScala.foreach { line =>
       val parts = line.trim.split("\t")
       val idx = parts(0).toInt
       if (events.nonEmpty && currIdx.get != idx) {
-        env.parallelize(keysReverseIndex(currIdx.get) -> Seq(Trace(keysReverseIndex(currIdx.get), events.toList))).write(sink)
+        ctx.env.parallelize(keysReverseIndex(currIdx.get) -> Seq(Trace(keysReverseIndex(currIdx.get), events.toList))).write(sink)
         events.clear()
         currIdx = Some(idx)
       } else if (currIdx.isEmpty) {
@@ -196,7 +190,7 @@ class Wait4MeOp @Inject()(
       events += Event(keysReverseIndex(idx).split("-").head, Point(parts(2).toDouble, parts(3).toDouble), new Instant(parts(1).toLong))
     }
     if (events.nonEmpty) {
-      env.parallelize(keysReverseIndex(currIdx.get) -> Seq(Trace(keysReverseIndex(currIdx.get), events.toList))).write(sink)
+      ctx.env.parallelize(keysReverseIndex(currIdx.get) -> Seq(Trace(keysReverseIndex(currIdx.get), events.toList))).write(sink)
     }
     Dataset(outputUri)
   }
@@ -231,7 +225,7 @@ case class Wait4MeOut(
   @Arg(help = "Mean temporal translation (per point)") meanTemporalPointTranslation: Duration)
 
 private class W4MSink(uri: String, keysIndex: Map[String, Int]) extends DataSink[Trace] {
-  val path = Paths.get(uri)
+  private[this] val path = Paths.get(uri)
   Files.createDirectories(path.getParent)
 
   override def write(key: String, elements: TraversableOnce[Trace]): Unit = synchronized {

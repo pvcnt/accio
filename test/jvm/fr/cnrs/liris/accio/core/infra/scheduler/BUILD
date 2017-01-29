@@ -1,9 +1,0 @@
-junit_tests(
-  name='scheduler',
-  dependencies=[
-    'src/jvm/fr/cnrs/liris/accio/core/service',
-    'test/jvm/fr/cnrs/liris/testing',
-    '3rdparty/jvm/com/twitter/util:core',
-  ],
-  sources=globs('*.scala'),
-)

@@ -18,8 +18,6 @@
 
 package fr.cnrs.liris.accio.core.api
 
-import java.nio.file.Path
-
 /**
  * An operator is the basic processing unit of Accio. It takes a typed input and produces a type output. Input and
  * output types must be case classes, whose fields are one of the allowed types. All operators should be annotated
@@ -34,31 +32,10 @@ trait Operator[In, Out] {
    *
    * Implementations can use a seed if they need to use some randomness. Outside of this, the execution should be
    * perfectly deterministic. A working directory is provided for operators who need to write results somewhere.
-   * This is generally a good idea for large that would not fit comfortably in the JVM ram or inside the JSON
-   * file report.
    *
    * @param in  Inputs.
    * @param ctx Execution context.
    * @return Outputs.
    */
   def execute(in: In, ctx: OpContext): Out
-}
-
-/**
- * Execution context of an operator.
- *
- * @param _seed   Seed used by an unstable operator, if it is the case.
- * @param workDir Working directory where temporary data can be written. It will be removed after operator completion.
- */
-class OpContext(_seed: Option[Long], val workDir: Path) {
-  /**
-   * Return the seed to use for an unstable operator.
-   *
-   * @throws IllegalStateException If the operator is not declared as unstable.
-   */
-  @throws[IllegalStateException]
-  def seed: Long = _seed match {
-    case None => throw new IllegalStateException("Operator is not declared as unstable, cannot access the seed")
-    case Some(s) => s
-  }
 }

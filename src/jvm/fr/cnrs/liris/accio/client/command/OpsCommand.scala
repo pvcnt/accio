@@ -19,7 +19,8 @@
 package fr.cnrs.liris.accio.client.command
 
 import com.google.inject.Inject
-import fr.cnrs.liris.accio.client.service.{AccioServerException, AgentClientFactory, RemoteOpRegistry}
+import com.twitter.util.Await
+import fr.cnrs.liris.accio.agent.{GetOperatorRequest, ListOperatorsRequest}
 import fr.cnrs.liris.accio.core.domain.{OpDef, Utils}
 import fr.cnrs.liris.accio.core.infra.cli._
 import fr.cnrs.liris.common.flags.FlagsProvider
@@ -37,10 +38,10 @@ class OpsCommand @Inject()(clientFactory: AgentClientFactory) extends Command {
       out.writeln("<error>[ERROR]</error> You can specify only one operator name.")
       ExitCode.CommandLineError
     } else {
-      val registry = new RemoteOpRegistry(clientFactory.create(flags.as[AccioAgentFlags].addr))
+      val client = clientFactory.create(flags.as[AccioAgentFlags].addr)
       try {
         if (flags.residue.nonEmpty) {
-          registry.get(flags.residue.head) match {
+          Await.result(client.getOperator(GetOperatorRequest(flags.residue.head))).result match {
             case Some(opDef) =>
               print(opDef, out)
               ExitCode.Success
@@ -49,7 +50,8 @@ class OpsCommand @Inject()(clientFactory: AgentClientFactory) extends Command {
               ExitCode.CommandLineError
           }
         } else {
-          printSummary(registry.ops, out)
+          val ops = Await.result(client.listOperators(ListOperatorsRequest())).results
+          printSummary(ops, out)
           ExitCode.Success
         }
       } catch {
@@ -60,15 +62,14 @@ class OpsCommand @Inject()(clientFactory: AgentClientFactory) extends Command {
     }
   }
 
-  private def printSummary(ops: Set[OpDef], out: Reporter) = {
+  private def printSummary(ops: Seq[OpDef], out: Reporter) = {
     val maxLength = ops.map(_.name.length).max
-    ops.toSeq.sortBy(_.name).groupBy(_.category).foreach { case (category, categoryOps) =>
+    ops.sortBy(_.name).groupBy(_.category).foreach { case (category, categoryOps) =>
       out.writeln(s"<info>Operators in $category category:</info>")
       categoryOps.foreach { op =>
         val padding = " " * (maxLength - op.name.length)
         out.writeln(s"  <comment>${op.name}</comment>$padding ${op.help.getOrElse("")}")
       }
-      out.writeln()
     }
   }
 

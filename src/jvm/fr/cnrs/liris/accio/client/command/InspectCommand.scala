@@ -22,10 +22,9 @@ import java.util.{Date, Locale}
 
 import com.google.inject.Inject
 import com.twitter.util.{Await, Duration, Return, Throw}
-import fr.cnrs.liris.accio.client.service.AgentClientFactory
+import fr.cnrs.liris.accio.agent.{GetRunRequest, ListRunsRequest}
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.infra.cli.{Cmd, Command, ExitCode, Reporter}
-import fr.cnrs.liris.accio.core.service.handler.{GetRunRequest, ListRunsRequest}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.util.StringUtils.padTo
 import org.ocpsoft.prettytime.PrettyTime
@@ -58,7 +57,7 @@ class InspectCommand @Inject()(clientFactory: AgentClientFactory) extends Comman
               ExitCode.CommandLineError
             case Some(run) =>
               if (flags.residue.size == 2) {
-                run.state.nodes.find(_.nodeName == flags.residue.last) match {
+                run.state.nodes.find(_.name == flags.residue.last) match {
                   case None =>
                     out.writeln(s"<error>[ERROR]</error> Unknown node: ${flags.residue.last}")
                     ExitCode.CommandLineError
@@ -74,9 +73,9 @@ class InspectCommand @Inject()(clientFactory: AgentClientFactory) extends Comman
                   val runWithoutResults = run.copy(state = run.state.copy(nodes = run.state.nodes.map(_.copy(result = None))))
                   out.writeln(new String(new JsonSerializer().serialize(runWithoutResults)))
                 } else {
-                  val children = run.children.toSeq.flatMap { _ =>
-                    Await.result(client.listRuns(ListRunsRequest(parent = Some(run.id)))).results
-                  }.sortBy(_.createdAt)
+                  val children = if (run.children > 0) {
+                    Await.result(client.listRuns(ListRunsRequest(parent = Some(run.id)))).results.sortBy(_.createdAt)
+                  } else Seq.empty
                   printRun(run, children, out)
                 }
               }
@@ -123,7 +122,7 @@ class InspectCommand @Inject()(clientFactory: AgentClientFactory) extends Comman
     }
 
     out.writeln()
-    if (run.children.isEmpty) {
+    if (run.children == 0) {
       out.writeln("<info>Nodes</info>")
       out.writeln(s"<comment>${padTo("Node name", 30)}  ${padTo("Status", 9)}  Duration</comment>")
       run.state.nodes.toSeq.sortBy(_.startedAt.getOrElse(Long.MaxValue)).foreach { node =>
@@ -134,7 +133,7 @@ class InspectCommand @Inject()(clientFactory: AgentClientFactory) extends Comman
         } else {
           "-"
         }
-        out.writeln(s"${padTo(node.nodeName, 30)}  ${padTo(node.status.name, 9)}  $duration")
+        out.writeln(s"${padTo(node.name, 30)}  ${padTo(node.status.name, 9)}  $duration")
       }
     } else {
       out.writeln("<info>Child runs</info>")
@@ -149,7 +148,7 @@ class InspectCommand @Inject()(clientFactory: AgentClientFactory) extends Comman
 
   private def printNode(node: NodeState, out: Reporter) = {
     val prettyTime = new PrettyTime().setLocale(Locale.ENGLISH)
-    out.writeln(s"<comment>${padTo("Node name", colWidth)}</comment> ${node.nodeName}")
+    out.writeln(s"<comment>${padTo("Node name", colWidth)}</comment> ${node.name}")
     out.writeln(s"<comment>${padTo("Status", colWidth)}</comment> ${node.status.name}")
     node.startedAt.foreach { startedAt =>
       out.writeln(s"<comment>${padTo("Started", colWidth)}</comment> ${prettyTime.format(new Date(startedAt))}")

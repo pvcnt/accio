@@ -1,0 +1,10 @@
+junit_tests(
+  dependencies=[
+    'src/jvm/fr/cnrs/liris/accio/core/runtime',
+    'src/jvm/fr/cnrs/liris/common/geo',
+    'test/jvm/fr/cnrs/liris/testing',
+    'test/jvm/fr/cnrs/liris/accio/testing',
+    '3rdparty/jvm:scala-guice',
+  ],
+  sources=globs('*.scala'),
+)

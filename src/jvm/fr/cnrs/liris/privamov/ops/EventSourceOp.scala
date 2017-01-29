@@ -18,36 +18,32 @@
 
 package fr.cnrs.liris.privamov.ops
 
-import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.api._
+import fr.cnrs.liris.accio.core.api.io.CsvSource
 import fr.cnrs.liris.common.util.FileUtils
 import fr.cnrs.liris.privamov.core.io._
-import fr.cnrs.liris.privamov.core.sparkle._
 
 @Op(
   category = "source",
   help = "Read a dataset of traces.",
   description = "This operator can manipulate the source dataset, essentially to reduce its size, through some basic preprocessing.")
-class EventSourceOp @Inject()(
-  override protected val env: SparkleEnv,
-  override protected val decoders: Set[Decoder[_]],
-  override protected val encoders: Set[Encoder[_]])
-  extends Operator[EventSourceIn, EventSourceOut] with SparkleOperator {
-
+class EventSourceOp extends Operator[EventSourceIn, EventSourceOut] {
   override def execute(in: EventSourceIn, ctx: OpContext): EventSourceOut = {
     val source = in.kind match {
-      case "csv" => new CsvSource(FileUtils.expand(in.url), new CsvTraceDecoder)
+      case "csv" => new CsvSource(FileUtils.expand(in.url), new CsvTraceCodec(new CsvEventCodec))
       case "cabspotting" => CabspottingSource(FileUtils.expand(in.url))
       case "geolife" => GeolifeSource(FileUtils.expand(in.url))
       case _ => throw new IllegalArgumentException(s"Unknown kind: ${in.kind}")
     }
     val output = if (willWrite(in)) {
-      var data = env.read(source)
+      var data = ctx.env.read(source)
       if (in.users.nonEmpty) {
         data = data.restrict(in.users.toSet)
       }
-      write(data, ctx.workDir)
-    } else Dataset(in.url)
+      ctx.write(data)
+    } else {
+      Dataset(in.url)
+    }
     EventSourceOut(output)
   }
 

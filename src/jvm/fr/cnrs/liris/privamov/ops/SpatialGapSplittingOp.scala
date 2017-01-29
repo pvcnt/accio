@@ -18,28 +18,20 @@
 
 package fr.cnrs.liris.privamov.ops
 
-import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.common.geo.Distance
-import fr.cnrs.liris.privamov.core.io.{Decoder, Encoder}
 import fr.cnrs.liris.privamov.core.model.{Event, Trace}
-import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 
 @Op(
   category = "prepare",
   help = "Split traces, when there is a too huge distance between consecutive events.",
   cpu = 4,
   ram = "2G")
-class SpatialGapSplittingOp @Inject()(
-  override protected val env: SparkleEnv,
-  override protected val decoders: Set[Decoder[_]],
-  override protected val encoders: Set[Encoder[_]])
-  extends Operator[SpatialGapSplittingIn, SpatialGapSplittingOut] with SlidingSplitting with SparkleOperator {
-
+class SpatialGapSplittingOp extends Operator[SpatialGapSplittingIn, SpatialGapSplittingOut] with SlidingSplitting {
   override def execute(in: SpatialGapSplittingIn, ctx: OpContext): SpatialGapSplittingOut = {
     val split = (buffer: Seq[Event], curr: Event) => buffer.last.point.distance(curr.point) >= in.distance
-    val output = read[Trace](in.data).flatMap(transform(_, split))
-    SpatialGapSplittingOut(write(output, ctx.workDir))
+    val output = ctx.read[Trace](in.data).flatMap(transform(_, split))
+    SpatialGapSplittingOut(ctx.write(output))
   }
 }
 

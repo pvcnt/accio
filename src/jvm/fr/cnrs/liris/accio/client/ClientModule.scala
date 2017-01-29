@@ -38,7 +38,7 @@ object ClientModule extends AbstractModule with ScalaModule {
     commands.addBinding.toInstance(classOf[PsCommand])
     commands.addBinding.toInstance(classOf[PushCommand])
     commands.addBinding.toInstance(classOf[SubmitCommand])
-    //commands.addBinding.toInstance(classOf[ValidateCommand])
+    commands.addBinding.toInstance(classOf[ValidateCommand])
     commands.addBinding.toInstance(classOf[VersionCommand])
   }
 }

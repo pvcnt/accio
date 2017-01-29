@@ -25,7 +25,7 @@ import fr.cnrs.liris.testing.UnitSpec
 /**
  * Unit tests for [[SizeSplittingOp]].
  */
-class SizeSplittingOpSpec extends UnitSpec with WithTraceGenerator with WithSparkleEnv {
+class SizeSplittingOpSpec extends UnitSpec with WithTraceGenerator with OperatorSpec {
   behavior of "SizeSplittingOp"
 
   it should "split by size" in {
@@ -48,9 +48,8 @@ class SizeSplittingOpSpec extends UnitSpec with WithTraceGenerator with WithSpar
   }
 
   private def transform(data: Seq[Trace], size: Int) = {
-    val ds = write(data: _*)
-    val op = new SizeSplittingOp(env, decoders, encoders)
-    val res = op.execute(SizeSplittingIn(size = size, data = ds), ctx)
-    read(res.data)
+    val ds = writeTraces(data: _*)
+    val res = new SizeSplittingOp().execute(SizeSplittingIn(size = size, data = ds), ctx)
+    readTraces(res.data)
   }
 }

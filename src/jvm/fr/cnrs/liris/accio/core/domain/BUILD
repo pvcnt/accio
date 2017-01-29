@@ -6,7 +6,6 @@ scala_library(
     'src/jvm/fr/cnrs/liris/common/util',
     'src/thrift/fr/cnrs/liris/accio/core/domain',
     '3rdparty/jvm/org/joda/time',
-    '3rdparty/jvm/com/google/guice',
   ],
   sources=globs('*.scala')
 )

@@ -22,15 +22,22 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 import com.twitter.util.{Duration, Time}
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.core.domain.{MutableRunRepository, Task, TaskStatus}
-import fr.cnrs.liris.accio.core.service.{RunLifecycleManager, StateManager}
+import fr.cnrs.liris.accio.core.domain.{Run, Task, TaskStatus}
+import fr.cnrs.liris.accio.core.runtime.RunManager
+import fr.cnrs.liris.accio.core.statemgr.{LockService, StateManager}
+import fr.cnrs.liris.accio.core.storage.MutableRunRepository
 
 /**
  * Observer tracking lost tasks.
  */
-class LostTaskObserver(taskTimeout: Duration, stateManager: StateManager, runRepository: MutableRunRepository, runManager: RunLifecycleManager)
+final class LostTaskObserver(
+  taskTimeout: Duration,
+  stateManager: StateManager,
+  runRepository: MutableRunRepository,
+  runManager: RunManager,
+  lockService: LockService)
   extends Runnable with StrictLogging {
-
+  // Flag to indicate when this has been killed.
   private[this] val killed = new AtomicBoolean(false)
 
   override def run(): Unit = {
@@ -67,17 +74,26 @@ class LostTaskObserver(taskTimeout: Duration, stateManager: StateManager, runRep
   }
 
   private def handleLostTask(task: Task) = {
-    val runLock = stateManager.lock(s"run/${task.runId.value}")
-    runLock.lock()
-    try {
-      runRepository.get(task.runId).foreach { run =>
-        val newRun = runManager.onLost(run, task.nodeName)
-        runRepository.save(newRun)
+    lockService.withLock(task.id) {
+      lockService.withLock(task.runId) {
+        runRepository.get(task.runId).foreach { run =>
+          run.parent match {
+            case Some(parentId) =>
+              lockService.withLock(parentId) {
+                processRun(run, task, runRepository.get(parentId))
+              }
+            case None => processRun(run, task, None)
+          }
+        }
       }
-    } finally {
-      runLock.unlock()
+      stateManager.remove(task.id)
     }
-    stateManager.remove(task.id)
     logger.debug(s"[T${task.id.value}] Lost task")
+  }
+
+  private def processRun(run: Run, task: Task, parent: Option[Run]) = {
+    val (newRun, newParent) = runManager.onLost(run, task.nodeName, parent)
+    runRepository.save(newRun)
+    newParent.foreach(runRepository.save)
   }
 }

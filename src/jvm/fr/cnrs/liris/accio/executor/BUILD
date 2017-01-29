@@ -1,10 +1,11 @@
 scala_library(
-  name='executor',
   dependencies=[
     'src/jvm/fr/cnrs/liris/accio/core/domain',
-    'src/jvm/fr/cnrs/liris/accio/core/service',
-    'src/jvm/fr/cnrs/liris/accio/core/infra/downloader',
-    'src/jvm/fr/cnrs/liris/accio/core/infra/inject',
+    'src/jvm/fr/cnrs/liris/accio/core/runtime',
+    'src/jvm/fr/cnrs/liris/accio/core/downloader',
+    'src/jvm/fr/cnrs/liris/accio/core/downloader/inject',
+    'src/jvm/fr/cnrs/liris/accio/core/uploader',
+    'src/jvm/fr/cnrs/liris/accio/core/uploader/inject',
     'src/thrift/fr/cnrs/liris/accio/core/domain',
     'src/thrift/fr/cnrs/liris/accio/agent',
     'src/jvm/fr/cnrs/liris/privamov/ops',

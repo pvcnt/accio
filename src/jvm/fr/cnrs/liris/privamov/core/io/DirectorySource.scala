@@ -20,6 +20,8 @@ package fr.cnrs.liris.privamov.core.io
 
 import java.nio.file.{Files, Paths}
 
+import fr.cnrs.liris.accio.core.api.io.{DataSource, Decoder}
+
 /**
  * A data source generating one key per file inside a given directory. It is *not* recursive.
  *

@@ -29,6 +29,6 @@ jvm_binary(
   dependencies=[
     ':gateway',
   ],
-  main='fr.cnrs.liris.accio.gateway.AccioGatewayMain',
+  main='fr.cnrs.liris.accio.gateway.GatewayServerMain',
   basename='accio-gateway',
 )

@@ -1,5 +1,8 @@
 scala_library(
-  name='api',
+  dependencies=[
+    'src/jvm/fr/cnrs/liris/accio/core/api/sparkle',
+    'src/jvm/fr/cnrs/liris/accio/core/api/io',
+  ],
   sources=globs('*.scala')
 )
 

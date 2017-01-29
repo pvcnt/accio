@@ -1,3 +1,21 @@
+/*
+ * Accio is a program whose purpose is to study location privacy.
+ * Copyright (C) 2016-2017 Vincent Primault <vincent.primault@liris.cnrs.fr>
+ *
+ * Accio is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Accio is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package fr.cnrs.liris.privamov.ops
 
 import fr.cnrs.liris.privamov.core.model.Trace
@@ -7,7 +25,7 @@ import fr.cnrs.liris.testing.UnitSpec
 /**
  * Unit tests for [[SequentialSplittingOp]].
  */
-class SequentialSplittingOpSpec extends UnitSpec with WithTraceGenerator with WithSparkleEnv {
+class SequentialSplittingOpSpec extends UnitSpec with WithTraceGenerator with OperatorSpec {
   behavior of "SequentialSplittingOp"
 
   it should "split a trace with an even number of events without losing any of them" in {
@@ -67,11 +85,10 @@ class SequentialSplittingOpSpec extends UnitSpec with WithTraceGenerator with Wi
   }
 
   private def transform(data: Seq[Trace], percent: Double): (Seq[Trace], Seq[Trace]) = {
-    val ds = write(data: _*)
-    val op = new SequentialSplittingOp(env, decoders, encoders)
-    val res1 = op.execute(SequentialSplittingIn(percentBegin = 0, percentEnd = percent, complement = false, data = ds), ctx)
-    val res2 = op.execute(SequentialSplittingIn(percentBegin = 0, percentEnd = percent, complement = true, data = ds), ctx)
-    (read(res1.data), read(res2.data))
+    val ds = writeTraces(data: _*)
+    val res1 = new SequentialSplittingOp().execute(SequentialSplittingIn(percentBegin = 0, percentEnd = percent, complement = false, data = ds), ctx)
+    val res2 = new SequentialSplittingOp().execute(SequentialSplittingIn(percentBegin = 0, percentEnd = percent, complement = true, data = ds), ctx)
+    (readTraces(res1.data), readTraces(res2.data))
   }
 
   private def assertTraceIsSplit(t: Trace, t1: Trace, t2: Trace, s1: Int): Unit = {

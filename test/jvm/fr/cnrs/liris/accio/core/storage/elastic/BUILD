@@ -1,0 +1,9 @@
+junit_tests(
+  dependencies=[
+    'src/jvm/fr/cnrs/liris/accio/core/storage/elastic',
+    'test/thrift/fr/cnrs/liris/accio/core/storage/elastic',
+    'test/jvm/fr/cnrs/liris/accio/core/storage',
+    '3rdparty/jvm/com/sksamuel/elastic4s:testkit',
+  ],
+  sources=globs('*.scala'),
+)

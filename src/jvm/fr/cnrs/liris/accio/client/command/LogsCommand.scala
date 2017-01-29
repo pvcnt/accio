@@ -20,10 +20,9 @@ package fr.cnrs.liris.accio.client.command
 
 import com.google.inject.Inject
 import com.twitter.util.{Await, Return, Throw}
-import fr.cnrs.liris.accio.client.service.AgentClientFactory
+import fr.cnrs.liris.accio.agent.ListLogsRequest
 import fr.cnrs.liris.accio.core.domain.RunId
 import fr.cnrs.liris.accio.core.infra.cli.{Cmd, Command, ExitCode, Reporter}
-import fr.cnrs.liris.accio.core.service.handler.ListLogsRequest
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 
 case class LogsCommandFlags(

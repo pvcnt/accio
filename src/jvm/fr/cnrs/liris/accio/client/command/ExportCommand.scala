@@ -23,11 +23,10 @@ import java.util.UUID
 
 import com.google.inject.Inject
 import com.twitter.util.{Await, Stopwatch}
-import fr.cnrs.liris.accio.client.service.AgentClientFactory
-import fr.cnrs.liris.accio.core.domain.{Run, RunId}
+import fr.cnrs.liris.accio.agent.{GetRunRequest, ListRunsRequest}
+import fr.cnrs.liris.accio.core.analysis._
+import fr.cnrs.liris.accio.core.domain.RunId
 import fr.cnrs.liris.accio.core.infra.cli.{Cmd, Command, ExitCode, Reporter}
-import fr.cnrs.liris.accio.core.service.handler.{GetRunRequest, ListRunsRequest}
-import fr.cnrs.liris.accio.core.service._
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.util.{FileUtils, HashUtils, StringUtils, TimeUtils}
 
@@ -90,7 +89,7 @@ class ExportCommand @Inject()(clientFactory: AgentClientFactory) extends Command
     val client = clientFactory.create(addr)
     val runs = residue.flatMap { id =>
       Await.result(client.getRun(GetRunRequest(RunId(id)))).result.toSeq.flatMap { run =>
-        if (run.children.nonEmpty) {
+        if (run.children > 0) {
           Await.result(client.listRuns(ListRunsRequest(parent = Some(run.id)))).results
         } else {
           Seq(run)

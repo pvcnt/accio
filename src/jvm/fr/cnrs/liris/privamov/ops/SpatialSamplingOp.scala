@@ -18,12 +18,9 @@
 
 package fr.cnrs.liris.privamov.ops
 
-import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.common.geo.Distance
-import fr.cnrs.liris.privamov.core.io.{Decoder, Encoder}
 import fr.cnrs.liris.privamov.core.model.{Event, Trace}
-import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 
 @Op(
   category = "prepare",
@@ -32,16 +29,11 @@ import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
     "that fulfills the minimum distance requirement.",
   cpu = 4,
   ram = "2G")
-class SpatialSamplingOp @Inject()(
-  override protected val env: SparkleEnv,
-  override protected val decoders: Set[Decoder[_]],
-  override protected val encoders: Set[Encoder[_]])
-  extends Operator[SpatialSamplingIn, SpatialSamplingOut] with SlidingSampling with SparkleOperator {
-
+class SpatialSamplingOp extends Operator[SpatialSamplingIn, SpatialSamplingOut] with SlidingSampling {
   override def execute(in: SpatialSamplingIn, ctx: OpContext): SpatialSamplingOut = {
     val sample = (prev: Event, curr: Event) => prev.point.distance(curr.point) >= in.distance
-    val output = read[Trace](in.data).map(transform(_, sample))
-    SpatialSamplingOut(write(output, ctx.workDir))
+    val output = ctx.read[Trace](in.data).map(transform(_, sample))
+    SpatialSamplingOut(ctx.write(output))
   }
 }
 

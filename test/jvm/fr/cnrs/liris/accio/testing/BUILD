@@ -3,6 +3,7 @@ junit_tests(
   dependencies=[
     'src/jvm/fr/cnrs/liris/accio/core/domain',
     'src/thrift/fr/cnrs/liris/accio/core/domain',
+    'test/jvm/fr/cnrs/liris/testing',
   ],
   sources=globs('*.scala'),
 )

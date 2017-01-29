@@ -18,15 +18,19 @@
 
 package fr.cnrs.liris.accio.client.command
 
+import java.nio.ByteBuffer
+import java.nio.file.Files
+
 import com.google.inject.Inject
 import com.twitter.util.{Await, Return, Stopwatch, Throw}
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.client.service.{AgentClientFactory, ParsingException, WorkflowDefFactory}
-import fr.cnrs.liris.accio.core.domain.{InvalidWorkflowDefException, Utils}
+import fr.cnrs.liris.accio.agent.{AgentService, ParseWorkflowRequest, PushWorkflowRequest}
+import fr.cnrs.liris.accio.core.domain.{InvalidSpecException, InvalidSpecMessage, Utils}
 import fr.cnrs.liris.accio.core.infra.cli.{Cmd, Command, ExitCode, Reporter}
-import fr.cnrs.liris.accio.core.service.handler.PushWorkflowRequest
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
-import fr.cnrs.liris.common.util.TimeUtils
+import fr.cnrs.liris.common.util.{FileUtils, TimeUtils}
+
+import scala.collection.JavaConverters._
 
 case class PushCommandFlags(
   @Flag(name = "q", help = "Print only identifiers")
@@ -37,7 +41,7 @@ case class PushCommandFlags(
   flags = Array(classOf[PushCommandFlags], classOf[AccioAgentFlags]),
   help = "Push a workflow.",
   allowResidue = true)
-class PushCommand @Inject()(clientFactory: AgentClientFactory, factory: WorkflowDefFactory)
+class PushCommand @Inject()(clientFactory: AgentClientFactory)
   extends Command with StrictLogging {
 
   def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
@@ -46,9 +50,9 @@ class PushCommand @Inject()(clientFactory: AgentClientFactory, factory: Workflow
       ExitCode.CommandLineError
     } else {
       val opts = flags.as[PushCommandFlags]
-      val addr = flags.as[AccioAgentFlags].addr
+      val client = clientFactory.create(flags.as[AccioAgentFlags].addr)
       val elapsed = Stopwatch.start()
-      val outcomes = flags.residue.map(uri => tryPush(uri, opts, addr, out))
+      val outcomes = flags.residue.map(uri => tryPush(uri, opts, client, out))
       if (!opts.quiet) {
         out.writeln(s"<info>[OK]</info> Done in ${TimeUtils.prettyTime(elapsed())}.")
       }
@@ -56,36 +60,63 @@ class PushCommand @Inject()(clientFactory: AgentClientFactory, factory: Workflow
     }
   }
 
-  private def tryPush(uri: String, opts: PushCommandFlags, addr: String, out: Reporter): Boolean = {
-    val defn = try {
-      factory.create(uri, addr)
-    } catch {
-      case e: ParsingException =>
-        if (!opts.quiet) {
-          out.writeln(s"<error>[ERROR]</error> Workflow definition parse error: ${e.getMessage}")
-        }
-        return false
-      case e: InvalidWorkflowDefException =>
-        if (!opts.quiet) {
-          out.writeln(s"<error>[ERROR]</error> Workflow definition error: ${e.getMessage}")
-        }
-        return false
-    }
-    val req = PushWorkflowRequest(defn, Utils.DefaultUser)
-    val client = clientFactory.create(addr)
-    Await.result(client.pushWorkflow(req).liftToTry) match {
-      case Return(_) =>
-        if (!opts.quiet) {
-          out.writeln(s"<info>[OK]</info> Pushed workflow: ${defn.id.value}")
-        } else {
-          out.writeln(defn.id.value)
-        }
-        true
-      case Throw(e) =>
-        if (!opts.quiet) {
-          out.writeln(s"<error>[ERROR]</error> Server error: ${e.getMessage}")
-        }
-        false
+  private def tryPush(uri: String, opts: PushCommandFlags, client: AgentService.FinagledClient, out: Reporter): Boolean = {
+    val path = FileUtils.expandPath(uri)
+    val file = path.toFile
+    if (!file.exists || !file.canRead) {
+      out.writeln(s"<error>[ERROR]</error> Cannot read workflow definition file: ${path.toAbsolutePath}")
+      false
+    } else {
+      val content = Files.readAllLines(path).asScala.mkString
+      val parseReq = ParseWorkflowRequest(content, Some(path.getFileName.toString))
+      Await.result(client.parseWorkflow(parseReq).liftToTry) match {
+        case Return(parseResp) =>
+          if (!opts.quiet) {
+            parseResp.warnings.foreach { warning =>
+              out.writeln(s"<comment>[WARN]</comment> $warning")
+            }
+          }
+          parseResp.workflow match {
+            case Some(spec) =>
+              val pushReq = PushWorkflowRequest(spec, Utils.DefaultUser)
+              Await.result(client.pushWorkflow(pushReq).liftToTry) match {
+                case Return(_) =>
+                  if (!opts.quiet) {
+                    out.writeln(s"<info>[OK]</info> Pushed workflow: ${spec.id.value}")
+                  } else {
+                    out.writeln(spec.id.value)
+                  }
+                  true
+                case Throw(e: InvalidSpecException) =>
+                  e.warnings.foreach { warning =>
+                    out.writeln(s"<comment>[WARN]</comment> $warning")
+                  }
+                  e.errors.foreach { error =>
+                    out.writeln(s"<error>[ERROR]</error> $error")
+                  }
+                  false
+                case Throw(e) =>
+                  if (!opts.quiet) {
+                    out.writeln(s"<error>[ERROR]</error> Server error: ${e.getMessage}")
+                  }
+                  false
+              }
+            case None =>
+              if (!opts.quiet) {
+                out.writeln("<error>[ERROR]</error> Some errors where found in the workflow definition")
+                parseResp.errors.foreach { error =>
+                  out.writeln(s"<error>[ERROR]</error>   - $error")
+                }
+              }
+              false
+          }
+        case Throw(e) =>
+          if (!opts.quiet) {
+            out.writeln(s"<error>[ERROR]</error> Server error: ${e.getMessage}")
+          }
+          false
+      }
     }
   }
+
 }

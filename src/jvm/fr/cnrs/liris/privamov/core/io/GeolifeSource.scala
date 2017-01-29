@@ -21,6 +21,7 @@ package fr.cnrs.liris.privamov.core.io
 import java.nio.file.{Files, Path, Paths}
 
 import com.google.common.base.MoreObjects
+import fr.cnrs.liris.accio.core.api.io.{DataSource, Decoder, TextLineDecoder}
 import fr.cnrs.liris.common.geo.LatLng
 import fr.cnrs.liris.privamov.core.model.{Event, Trace}
 import org.joda.time.Instant
@@ -41,7 +42,7 @@ case class GeolifeSource(uri: String) extends DataSource[Trace] {
   require(path.toFile.isDirectory, s"$uri is not a directory")
   require(path.toFile.canRead, s"$uri is unreadable")
 
-  override lazy val keys =
+  override lazy val keys: Seq[String] =
     path.toFile
       .listFiles
       .filter(_.isDirectory)

@@ -18,43 +18,34 @@
 
 package fr.cnrs.liris.privamov.ops
 
-import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.common.geo.Distance
 import fr.cnrs.liris.common.util.Requirements._
-import fr.cnrs.liris.privamov.core.clustering.{Cluster, DTClusterer}
-import fr.cnrs.liris.privamov.core.io.Decoder
-import fr.cnrs.liris.privamov.core.model.Trace
-import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
+import fr.cnrs.liris.privamov.core.model.{Poi, PoiSet}
 
 @Op(
   category = "metric",
-  help = "Compute POIs retrieval difference between two datasets of traces")
-class PoisRetrievalOp @Inject()(
-  override protected val env: SparkleEnv,
-  override protected val decoders: Set[Decoder[_]])
-  extends Operator[PoisRetrievalIn, PoisRetrievalOut] with SparkleReadOperator {
-
+  help = "Compute POIs retrieval difference between two POIs datasets",
+  cpu = 2,
+  ram = "1G")
+class PoisRetrievalOp  extends Operator[PoisRetrievalIn, PoisRetrievalOut] {
   override def execute(in: PoisRetrievalIn, ctx: OpContext): PoisRetrievalOut = {
-    val train = read[Trace](in.train)
-    val test = read[Trace](in.test)
-    val clusterer = new DTClusterer(in.duration, in.diameter)
-    val metrics = train.zip(test).map { case (ref, res) => evaluate(ref, res, clusterer, in.threshold) }.toArray
+    val train = ctx.read[PoiSet](in.train)
+    val test = ctx.read[PoiSet](in.test)
+    val metrics = train.zip(test).map { case (ref, res) => evaluate(ref, res, in.threshold) }.toArray
     PoisRetrievalOut(
       precision = metrics.map { case (k, v) => k -> v._1 }.toMap,
       recall = metrics.map { case (k, v) => k -> v._2 }.toMap,
       fscore = metrics.map { case (k, v) => k -> v._3 }.toMap)
   }
 
-  private def evaluate(ref: Trace, res: Trace, clusterer: DTClusterer, threshold: Distance) = {
+  private def evaluate(ref: PoiSet, res: PoiSet, threshold: Distance) = {
     requireState(ref.id == res.id, s"Trace mismatch: ${ref.id} / ${res.id}")
-    val refPois = clusterer.cluster(ref.events)
-    val resPois = clusterer.cluster(res.events)
-    val matched = resPois.flatMap(resPoi => remap(resPoi, refPois, threshold)).distinct.size
-    ref.id -> (MetricUtils.precision(resPois.size, matched), MetricUtils.recall(refPois.size, matched), MetricUtils.fscore(refPois.size, resPois.size, matched))
+    val matched = res.pois.flatMap(resPoi => remap(resPoi, ref.pois, threshold)).distinct.size
+    ref.id -> (MetricUtils.precision(res.size, matched), MetricUtils.recall(ref.size, matched), MetricUtils.fscore(ref.size, res.size, matched))
   }
 
-  private def remap(resPoi: Cluster, refPois: Seq[Cluster], threshold: Distance) = {
+  private def remap(resPoi: Poi, refPois: Seq[Poi], threshold: Distance) = {
     val matchingPois = refPois.zipWithIndex
       .map { case (refPoi, idx) => (idx, refPoi.centroid.distance(resPoi.centroid)) }
       .filter { case (_, d) => d <= threshold }
@@ -63,11 +54,9 @@ class PoisRetrievalOp @Inject()(
 }
 
 case class PoisRetrievalIn(
-  @Arg(help = "Clustering maximum diameter") diameter: Distance,
-  @Arg(help = "Clustering minimum duration") duration: org.joda.time.Duration,
   @Arg(help = "Matching threshold") threshold: Distance,
-  @Arg(help = "Train dataset") train: Dataset,
-  @Arg(help = "Test dataset") test: Dataset)
+  @Arg(help = "Train dataset (POIs)") train: Dataset,
+  @Arg(help = "Test dataset (POIs)") test: Dataset)
 
 case class PoisRetrievalOut(
   @Arg(help = "POIs retrieval precision") precision: Map[String, Double],

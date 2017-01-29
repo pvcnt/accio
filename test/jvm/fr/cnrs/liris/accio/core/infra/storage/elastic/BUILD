@@ -1,9 +1,0 @@
-junit_tests(
-  dependencies=[
-    'src/jvm/fr/cnrs/liris/accio/core/infra/storage/elastic',
-    'test/thrift/fr/cnrs/liris/accio/core/infra/storage/elastic',
-    'test/jvm/fr/cnrs/liris/accio/core/infra/storage',
-    '3rdparty/jvm/com/sksamuel/elastic4s:testkit',
-  ],
-  sources=globs('*.scala'),
-)

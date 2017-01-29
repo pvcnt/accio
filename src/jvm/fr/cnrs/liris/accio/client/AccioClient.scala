@@ -24,7 +24,6 @@ import ch.qos.logback.core.joran.spi.JoranException
 import ch.qos.logback.core.util.StatusPrinter
 import com.google.inject.Guice
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.client.service.ParserFinatraJacksonModule
 import fr.cnrs.liris.accio.core.infra.cli.CmdDispatcher
 import org.slf4j.LoggerFactory
 import org.slf4j.bridge.SLF4JBridgeHandler
@@ -40,7 +39,7 @@ class AccioClient extends StrictLogging {
     loadLogbackConfig()
     attemptSlf4jBridgeHandlerInstallation()
 
-    val injector = Guice.createInjector(ClientModule, ParserFinatraJacksonModule)
+    val injector = Guice.createInjector(ClientModule)
     val dispatcher = injector.getInstance(classOf[CmdDispatcher])
     val exitCode = dispatcher.exec(args)
 

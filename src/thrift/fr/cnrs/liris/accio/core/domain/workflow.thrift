@@ -93,7 +93,7 @@ struct Workflow {
   8: required set<operator.ArgDef> params;
 }
 
-struct WorkflowDef {
+struct WorkflowSpec {
   1: required common.WorkflowId id;
   2: optional string version;
   3: optional string name;

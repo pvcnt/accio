@@ -20,8 +20,7 @@ package fr.cnrs.liris.accio.docgen
 
 import com.google.inject.{AbstractModule, TypeLiteral}
 import fr.cnrs.liris.accio.core.api.Operator
-import fr.cnrs.liris.accio.core.service.{ReflectOpMetaReader, RuntimeOpRegistry}
-import fr.cnrs.liris.accio.core.domain.{OpMetaReader, OpRegistry}
+import fr.cnrs.liris.accio.core.runtime.{OpMetaReader, OpRegistry, ReflectOpMetaReader, RuntimeOpRegistry}
 import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
 
 /**

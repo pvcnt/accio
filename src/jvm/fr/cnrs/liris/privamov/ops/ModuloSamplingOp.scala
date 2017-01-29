@@ -18,11 +18,8 @@
 
 package fr.cnrs.liris.privamov.ops
 
-import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.api._
-import fr.cnrs.liris.privamov.core.io.{Decoder, Encoder}
 import fr.cnrs.liris.privamov.core.model.Trace
-import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 
 @Op(
   category = "prepare",
@@ -30,16 +27,11 @@ import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
   description = "It will ensure that the final number of events is exactly (+/- 1) the one required, and that events are regularly sampled (i.e., one out of x).",
   cpu = 4,
   ram = "2G")
-class ModuloSamplingOp @Inject()(
-  override protected val env: SparkleEnv,
-  override protected val decoders: Set[Decoder[_]],
-  override protected val encoders: Set[Encoder[_]])
-  extends Operator[ModuloSamplingIn, ModuloSamplingOut] with SparkleOperator {
-
+class ModuloSamplingOp extends Operator[ModuloSamplingIn, ModuloSamplingOut] {
   override def execute(in: ModuloSamplingIn, ctx: OpContext): ModuloSamplingOut = {
-    val input = read[Trace](in.data)
+    val input = ctx.read[Trace](in.data)
     val output = input.map(trace => transform(trace, in.n))
-    ModuloSamplingOut(write(output, ctx.workDir))
+    ModuloSamplingOut(ctx.write(output))
   }
 
   private def transform(trace: Trace, n: Int) = {

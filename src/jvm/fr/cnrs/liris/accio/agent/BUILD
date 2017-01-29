@@ -1,8 +1,13 @@
 scala_library(
   dependencies=[
-    'src/jvm/fr/cnrs/liris/accio/core/service/handler',
-    'src/jvm/fr/cnrs/liris/accio/core/infra/downloader',
-    'src/jvm/fr/cnrs/liris/accio/core/infra/inject',
+    'src/jvm/fr/cnrs/liris/accio/agent/handler',
+    'src/jvm/fr/cnrs/liris/accio/core/downloader/inject',
+    'src/jvm/fr/cnrs/liris/accio/core/statemgr/inject',
+    'src/jvm/fr/cnrs/liris/accio/core/storage/inject',
+    'src/jvm/fr/cnrs/liris/accio/core/scheduler/inject',
+    'src/jvm/fr/cnrs/liris/accio/core/uploader/inject',
+    'src/jvm/fr/cnrs/liris/accio/core/dsl/inject',
+    'src/jvm/fr/cnrs/liris/accio/core/runtime',
     'src/jvm/fr/cnrs/liris/privamov/ops',
     'src/thrift/fr/cnrs/liris/accio/agent',
     '3rdparty/jvm/com/twitter/finatra:thrift',
@@ -41,6 +46,6 @@ jvm_binary(
   dependencies=[
     ':agent',
   ],
-  main='fr.cnrs.liris.accio.agent.AccioAgentMain',
+  main='fr.cnrs.liris.accio.agent.AgentServerMain',
   basename='accio-agent',
 )

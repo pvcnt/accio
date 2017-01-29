@@ -23,9 +23,8 @@ import com.twitter.finagle.http.Request
 import com.twitter.finatra.http.Controller
 import com.twitter.finatra.request.{QueryParam, RouteParam}
 import com.twitter.finatra.validation.{Max, Min}
-import fr.cnrs.liris.accio.agent.AgentService
+import fr.cnrs.liris.accio.agent._
 import fr.cnrs.liris.accio.core.domain._
-import fr.cnrs.liris.accio.core.service.handler._
 import fr.cnrs.liris.common.util.StringUtils.explode
 import org.joda.time.DateTime
 
@@ -103,7 +102,7 @@ class ApiController @Inject()(client: AgentService.FinagledClient) extends Contr
   get("/api/v1/run/:id/artifacts/:node") { httpReq: ListArtifactsHttpRequest =>
     val req = GetRunRequest(RunId(httpReq.id))
     client.getRun(req).map(_.result).map {
-      case Some(run) => run.state.nodes.find(_.nodeName == httpReq.node).flatMap(_.result).map(_.artifacts)
+      case Some(run) => run.state.nodes.find(_.name == httpReq.node).flatMap(_.result).map(_.artifacts)
       case None => response.notFound
     }
   }
@@ -121,7 +120,7 @@ class ApiController @Inject()(client: AgentService.FinagledClient) extends Contr
   get("/api/v1/run/:id/metrics/:node") { httpReq: ListMetricsHttpRequest =>
     val req = GetRunRequest(RunId(httpReq.id))
     client.getRun(req).map(_.result).map {
-      case Some(run) => run.state.nodes.find(_.nodeName == httpReq.node).flatMap(_.result).map(_.metrics)
+      case Some(run) => run.state.nodes.find(_.name == httpReq.node).flatMap(_.result).map(_.metrics)
       case None => response.notFound
     }
   }

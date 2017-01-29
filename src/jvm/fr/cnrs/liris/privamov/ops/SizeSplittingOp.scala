@@ -18,27 +18,19 @@
 
 package fr.cnrs.liris.privamov.ops
 
-import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.api._
-import fr.cnrs.liris.privamov.core.io.{Decoder, Encoder}
 import fr.cnrs.liris.privamov.core.model.{Event, Trace}
-import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 
 @Op(
   category = "prepare",
   help = "Split traces, ensuring a maximum size for each one.",
   cpu = 4,
   ram = "2G")
-class SizeSplittingOp @Inject()(
-  override protected val env: SparkleEnv,
-  override protected val decoders: Set[Decoder[_]],
-  override protected val encoders: Set[Encoder[_]])
-  extends Operator[SizeSplittingIn, SizeSplittingOut] with SlidingSplitting with SparkleOperator {
-
+class SizeSplittingOp extends Operator[SizeSplittingIn, SizeSplittingOut] with SlidingSplitting {
   override def execute(in: SizeSplittingIn, ctx: OpContext): SizeSplittingOut = {
     val split = (buffer: Seq[Event], curr: Event) => buffer.size >= in.size
-    val output = read[Trace](in.data).flatMap(transform(_, split))
-    SizeSplittingOut(write(output, ctx.workDir))
+    val output = ctx.read[Trace](in.data).flatMap(transform(_, split))
+    SizeSplittingOut(ctx.write(output))
   }
 }
 

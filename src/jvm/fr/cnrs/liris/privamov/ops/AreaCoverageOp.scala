@@ -19,26 +19,19 @@
 package fr.cnrs.liris.privamov.ops
 
 import com.google.common.geometry.S2CellId
-import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.common.util.Requirements._
-import fr.cnrs.liris.privamov.core.io.Decoder
 import fr.cnrs.liris.privamov.core.model.Trace
-import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 
 @Op(
   category = "metric",
   help = "Compute area coverage difference between two datasets of traces",
   cpu = 4,
   ram = "2G")
-class AreaCoverageOp @Inject()(
-  override protected val env: SparkleEnv,
-  override protected val decoders: Set[Decoder[_]])
-  extends Operator[AreaCoverageIn, AreaCoverageOut] with SparkleReadOperator {
-
+class AreaCoverageOp extends Operator[AreaCoverageIn, AreaCoverageOut] {
   override def execute(in: AreaCoverageIn, ctx: OpContext): AreaCoverageOut = {
-    val train = read[Trace](in.train)
-    val test = read[Trace](in.test)
+    val train = ctx.read[Trace](in.train)
+    val test = ctx.read[Trace](in.test)
     val metrics = train.zip(test).map { case (ref, res) => evaluate(ref, res, in.level) }.toArray
     AreaCoverageOut(
       precision = metrics.map { case (k, v) => k -> v._1 }.toMap,

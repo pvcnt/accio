@@ -26,10 +26,9 @@ import com.google.inject.Inject
 import com.twitter.concurrent.NamedPoolThreadFactory
 import com.twitter.util._
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.agent.AgentService
+import fr.cnrs.liris.accio.agent._
 import fr.cnrs.liris.accio.core.domain._
-import fr.cnrs.liris.accio.core.service.handler._
-import fr.cnrs.liris.accio.core.service.{OpExecutor, OpExecutorOpts}
+import fr.cnrs.liris.accio.core.runtime.{OpExecutor, OpExecutorOpts}
 
 import scala.collection.mutable
 
@@ -61,14 +60,11 @@ class TaskExecutor @Inject()(opExecutor: OpExecutor, client: AgentService.Finagl
    */
   def execute(taskId: TaskId): Future[Unit] = {
     client.startTask(StartTaskRequest(taskId)).transform {
-      case Throw(UnknownTaskException(_)) =>
-        logger.error(s"[T${taskId.value}] Unknown task")
-        Future.Done
-      case Throw(UnknownRunException(_)) =>
-        logger.error(s"[T${taskId.value}] Unknown run")
+      case Throw(InvalidTaskException()) =>
+        logger.error(s"[T${taskId.value}] Invalid task")
         Future.Done
       case Throw(e) =>
-        logger.error("[T${taskId.value}] Error while registering executor", e)
+        logger.error(s"[T${taskId.value}] Error while starting task", e)
         Future.Done
       case Return(resp) => start(taskId, resp.runId, resp.nodeName, resp.payload)
     }
@@ -96,12 +92,10 @@ class TaskExecutor @Inject()(opExecutor: OpExecutor, client: AgentService.Finagl
     }.handle {
       case e: Throwable =>
         logger.error(s"[T${taskId.value}] Operator raised an unexpected error", e)
-        OpResult(-999, Some(ErrorFactory.create(e)))
+        OpResult(-999, Some(Errors.create(e)))
     }.flatMap { result =>
       client.completeTask(CompleteTaskRequest(taskId, result))
-        .onFailure {
-          case e: Throwable => logger.error(s"[T${taskId.value}] Error while marking task as completed", e)
-        }
+        .onFailure(e => logger.error(s"[T${taskId.value}] Error while marking task as completed", e))
     }.unit
   }
 
@@ -114,8 +108,12 @@ class TaskExecutor @Inject()(opExecutor: OpExecutor, client: AgentService.Finagl
         // We want to send only meaningful logs.
         val logs = extractLogs(stdoutBytes, "stdout") ++ extractLogs(stderrBytes, "stderr")
         if (logs.nonEmpty) {
-          Await.ready(client.streamLogs(StreamLogsRequest(logs)))
-          trySleep(Duration.fromSeconds(5))
+          val f = Await.result(client.streamLogs(StreamLogsRequest(logs)).liftToTry)
+          f match {
+            case Return(_) => trySleep(Duration.fromSeconds(5))
+            case Throw(InvalidTaskException()) => // Stop sending logs, task is now invalid.
+            case Throw(e) => logger.error(s"[T${taskId.value}] Error while sending logs", e)
+          }
         } else {
           trySleep(Duration.fromSeconds(2))
         }
@@ -143,8 +141,12 @@ class TaskExecutor @Inject()(opExecutor: OpExecutor, client: AgentService.Finagl
       while (!stopped.get()) {
         // Do not log anything here, if communication with agent is broken it will be eventually detected on the
         // agent side. We want to send only meaningful logs.
-        Await.ready(client.heartbeat(HeartbeatRequest(taskId)))
-        trySleep(Duration.fromSeconds(15))
+        val f = Await.result(client.heartbeat(HeartbeatRequest(taskId)).liftToTry)
+        f match {
+          case Return(_) => trySleep(Duration.fromSeconds(15))
+          case Throw(InvalidTaskException()) => // Stop sending logs, task is now invalid.
+          case Throw(e) => logger.error(s"[T${taskId.value}] Error while heartbeat logs", e)
+        }
       }
       logger.debug(s"[T${taskId.value}] Heartbeat thread stopped")
     }

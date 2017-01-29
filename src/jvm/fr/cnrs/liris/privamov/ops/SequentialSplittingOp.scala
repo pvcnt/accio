@@ -18,26 +18,18 @@
 
 package fr.cnrs.liris.privamov.ops
 
-import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.api._
-import fr.cnrs.liris.privamov.core.io.{Decoder, Encoder}
 import fr.cnrs.liris.privamov.core.model.Trace
-import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 
 @Op(
   category = "prepare",
   help = "Split traces sequentially, according to chronological order.",
   cpu = 4,
   ram = "2G")
-class SequentialSplittingOp @Inject()(
-  override protected val env: SparkleEnv,
-  override protected val decoders: Set[Decoder[_]],
-  override protected val encoders: Set[Encoder[_]])
-  extends Operator[SequentialSplittingIn, SequentialSplittingOut] with SparkleOperator {
-
+class SequentialSplittingOp extends Operator[SequentialSplittingIn, SequentialSplittingOut] {
   override def execute(in: SequentialSplittingIn, ctx: OpContext): SequentialSplittingOut = {
-    val output = read[Trace](in.data).map(transform(_, in.percentBegin, in.percentEnd, in.complement))
-    SequentialSplittingOut(write(output, ctx.workDir))
+    val output = ctx.read[Trace](in.data).map(transform(_, in.percentBegin, in.percentEnd, in.complement))
+    SequentialSplittingOut(ctx.write(output))
   }
 
   private def transform(trace: Trace, percentBegin: Double, percentEnd: Double, complement: Boolean): Trace = {

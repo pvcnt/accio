@@ -19,13 +19,10 @@
 package fr.cnrs.liris.privamov.ops
 
 import com.github.nscala_time.time.Imports._
-import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.common.geo.{Distance, Point}
 import fr.cnrs.liris.common.util.MathUtils
-import fr.cnrs.liris.privamov.core.io.{Decoder, Encoder}
 import fr.cnrs.liris.privamov.core.model.{Poi, PoiSet}
-import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 
 import scala.collection.mutable
 
@@ -34,15 +31,9 @@ import scala.collection.mutable
   category = "metric",
   cpu = 4,
   ram = "2G")
-class PoisAnalyzerOp @Inject()(
-  override protected val env: SparkleEnv,
-  override protected val decoders: Set[Decoder[_]],
-  override protected val encoders: Set[Encoder[_]])
-  extends Operator[PoisAnalyzerIn, PoisAnalyzerOut] with SparkleOperator {
-
+class PoisAnalyzerOp extends Operator[PoisAnalyzerIn, PoisAnalyzerOut]  {
   override def execute(in: PoisAnalyzerIn, ctx: OpContext): PoisAnalyzerOut = {
-    val trainPois = read[PoiSet](in.train).flatMap(_.pois).toArray
-
+    val trainPois = ctx.read[PoiSet](in.train).flatMap(_.pois).toArray
     val pois = mutable.ListBuffer.empty[AggregatedPoi]
     trainPois.foreach { trainPoi =>
       pois.find(p => p.centroid.distance(trainPoi.centroid) <= in.threshold) match {
@@ -50,9 +41,8 @@ class PoisAnalyzerOp @Inject()(
         case None => pois += new AggregatedPoi(trainPoi.centroid, Seq(trainPoi), Seq.empty)
       }
     }
-
     in.test.foreach { test =>
-      val testPois = read[PoiSet](test).flatMap(_.pois)
+      val testPois = ctx.read[PoiSet](test).flatMap(_.pois)
       testPois.foreach { testPoi =>
         pois.find(p => p.centroid.distance(testPoi.centroid) <= in.threshold).foreach { matchingPoi =>
           matchingPoi synchronized {
@@ -84,7 +74,7 @@ class PoisAnalyzerOp @Inject()(
         fields.map(_.toString).mkString(",")
       }
     }
-    val output = write(Seq(header) ++ lines, "pois", ctx.workDir)
+    val output = ctx.write(Seq(header) ++ lines, "pois")
 
     PoisAnalyzerOut(output)
   }

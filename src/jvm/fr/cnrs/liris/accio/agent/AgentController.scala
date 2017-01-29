@@ -23,8 +23,9 @@ import com.twitter.finagle.Service
 import com.twitter.finatra.thrift.Controller
 import com.twitter.inject.Injector
 import com.twitter.scrooge.ThriftException
-import fr.cnrs.liris.accio.agent.AgentService._
-import fr.cnrs.liris.accio.core.service.handler._
+import com.twitter.util.Future
+import fr.cnrs.liris.accio.agent.AgentService.{Update, _}
+import fr.cnrs.liris.accio.agent.handler._
 
 import scala.util.control.NonFatal
 
@@ -52,6 +53,10 @@ class AgentController @Inject()(injector: Injector) extends Controller with Agen
     reportException(injector.instance[ListWorkflowsHandler].handle(args.req))
   }
 
+  override val parseWorkflow = handle(ParseWorkflow) { args: ParseWorkflow.Args =>
+    reportException(injector.instance[ParseWorkflowHandler].handle(args.req))
+  }
+
   override val createRun = handle(CreateRun) { args: CreateRun.Args =>
     reportException(injector.instance[CreateRunHandler].handle(args.req))
   }
@@ -72,8 +77,24 @@ class AgentController @Inject()(injector: Injector) extends Controller with Agen
     reportException(injector.instance[KillRunHandler].handle(args.req))
   }
 
+  override val updateRun = handle(UpdateRun) { args: UpdateRun.Args =>
+    reportException(injector.instance[UpdateRunHandler].handle(args.req))
+  }
+
+  override val parseRun = handle(ParseRun) { args: ParseRun.Args =>
+    reportException(injector.instance[ParseRunHandler].handle(args.req))
+  }
+
   override val listLogs = handle(ListLogs) { args: ListLogs.Args =>
     reportException(injector.instance[ListLogsHandler].handle(args.req))
+  }
+
+  override val update = handle(Update) { args: Update.Args =>
+    reportException(injector.instance[UpdateHandler].handle(args.req))
+  }
+
+  override val info = handle(Info) { args: Info.Args =>
+    Future(InfoResponse("default", "unknown"))
   }
 
   override val heartbeat: Service[Heartbeat.Args, Heartbeat.Result] =

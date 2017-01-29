@@ -21,7 +21,8 @@ package fr.cnrs.liris.accio.docgen
 import java.io.{BufferedOutputStream, FileOutputStream, OutputStream}
 
 import com.google.inject.Inject
-import fr.cnrs.liris.accio.core.domain.{OpDef, OpRegistry, Utils, Values}
+import fr.cnrs.liris.accio.core.domain.{OpDef, Utils, Values}
+import fr.cnrs.liris.accio.core.runtime.OpRegistry
 
 /**
  * Generate documentation for all operators known to a registry in Markdown format.

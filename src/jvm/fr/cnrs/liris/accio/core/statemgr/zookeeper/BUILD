@@ -1,0 +1,9 @@
+scala_library(
+  dependencies=[
+    'src/jvm/fr/cnrs/liris/accio/core/statemgr',
+    '3rdparty/jvm/com/typesafe/scala-logging',
+    '3rdparty/jvm/org/apache/curator:framework',
+    '3rdparty/jvm/org/apache/curator:recipes',
+  ],
+  sources=globs('*.scala')
+)

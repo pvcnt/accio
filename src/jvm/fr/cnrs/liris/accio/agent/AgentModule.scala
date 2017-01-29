@@ -18,19 +18,25 @@
 
 package fr.cnrs.liris.accio.agent
 
+import java.util.concurrent.Executors
+
 import com.google.inject.{Provides, Singleton, TypeLiteral}
+import com.twitter.concurrent.NamedPoolThreadFactory
 import com.twitter.inject.TwitterModule
-import com.twitter.util.Duration
+import com.twitter.util.{Duration, ExecutorServiceFuturePool, FuturePool}
+import fr.cnrs.liris.accio.agent.handler.WorkerPool
 import fr.cnrs.liris.accio.core.api.Operator
-import fr.cnrs.liris.accio.core.domain._
-import fr.cnrs.liris.accio.core.service._
+import fr.cnrs.liris.accio.core.runtime._
+import fr.cnrs.liris.accio.core.statemgr.{LockService, StateManager}
+import fr.cnrs.liris.accio.core.storage.MutableRunRepository
 import net.codingwell.scalaguice.ScalaMultibinder
 
 /**
  * Guice module provisioning services for the Accio agent.
  */
 object AgentModule extends TwitterModule {
-  private[this] val clusterFlag = flag("cluster", "default", "Cluster name") // Not used yet.
+  private[this] val clusterFlag = flag("cluster", "default", "Cluster name")
+  // Not used yet.
   private[this] val taskTimeout = flag("task_timeout", Duration.fromSeconds(30), "Time after which a task is considered lost")
 
   protected override def configure(): Unit = {
@@ -44,7 +50,15 @@ object AgentModule extends TwitterModule {
 
   @Singleton
   @Provides
-  def providesLostTaskObserver(stateManager: StateManager, runRepository: MutableRunRepository, runManager: RunLifecycleManager): LostTaskObserver = {
-    new LostTaskObserver(taskTimeout(), stateManager, runRepository, runManager)
+  def providesLostTaskObserver(stateManager: StateManager, runRepository: MutableRunRepository, runManager: RunManager, lockService: LockService): LostTaskObserver = {
+    new LostTaskObserver(taskTimeout(), stateManager, runRepository, runManager, lockService)
+  }
+
+  @Provides
+  @Singleton
+  @WorkerPool
+  def providesWorkerPool: FuturePool = {
+    val executorService = Executors.newCachedThreadPool(new NamedPoolThreadFactory("accio/worker"))
+    new ExecutorServiceFuturePool(executorService)
   }
 }

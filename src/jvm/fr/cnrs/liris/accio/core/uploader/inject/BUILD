@@ -1,0 +1,9 @@
+scala_library(
+  dependencies=[
+    'src/jvm/fr/cnrs/liris/accio/core/uploader',
+    'src/jvm/fr/cnrs/liris/accio/core/uploader/local',
+    'src/jvm/fr/cnrs/liris/accio/core/uploader/scp',
+    '3rdparty/jvm/com/twitter/inject:app',
+  ],
+  sources=globs('*.scala')
+)

@@ -108,3 +108,13 @@ struct Reference {
   1: required string node;
   2: required string port;
 }
+
+struct InvalidSpecMessage {
+  1: required string message;
+  2: optional string path;
+}
+
+exception InvalidSpecException {
+  1: required list<InvalidSpecMessage> errors;
+  2: required list<InvalidSpecMessage> warnings;
+}

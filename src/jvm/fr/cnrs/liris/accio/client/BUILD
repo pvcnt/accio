@@ -16,10 +16,8 @@
 
 scala_library(
   dependencies=[
-    'src/jvm/fr/cnrs/liris/accio/core/infra/cli',
+    'src/jvm/fr/cnrs/liris/common/cli',
     'src/jvm/fr/cnrs/liris/accio/client/command',
-    'src/jvm/fr/cnrs/liris/accio/client/service',
-
     '3rdparty/jvm/com/typesafe/scala-logging',
     '3rdparty/jvm:scala-guice',
     '3rdparty/jvm:logback',

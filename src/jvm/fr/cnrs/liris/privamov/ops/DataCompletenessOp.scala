@@ -18,24 +18,19 @@
 
 package fr.cnrs.liris.privamov.ops
 
-import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.common.util.Requirements._
-import fr.cnrs.liris.privamov.core.io.Decoder
 import fr.cnrs.liris.privamov.core.model.Trace
-import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 
 @Op(
   category = "metric",
-  help = "Compute data completeness difference between two datasets of traces.")
-class DataCompletenessOp @Inject()(
-  override protected val env: SparkleEnv,
-  override protected val decoders: Set[Decoder[_]])
-  extends Operator[DataCompletenessIn, DataCompletenessOut] with SparkleReadOperator {
-
+  help = "Compute data completeness difference between two datasets of traces.",
+  cpu = 2,
+  ram = "1G")
+class DataCompletenessOp extends Operator[DataCompletenessIn, DataCompletenessOut] {
   override def execute(in: DataCompletenessIn, ctx: OpContext): DataCompletenessOut = {
-    val train = read[Trace](in.train)
-    val test = read[Trace](in.test)
+    val train = ctx.read[Trace](in.train)
+    val test = ctx.read[Trace](in.test)
     val values = train.zip(test).map { case (ref, res) => evaluate(ref, res) }.toArray
     DataCompletenessOut(values.toMap)
   }

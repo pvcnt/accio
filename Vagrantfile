@@ -15,27 +15,24 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 Vagrant.configure(2) do |config|
+  # Ubuntu 16.04 LTS.
   config.vm.box = "ubuntu/xenial64"
 
-  # Create a forwarded port mapping which allows access to a specific port
-  # within the machine from a port on the host machine. In the example below,
-  # accessing "localhost:8080" will access port 80 on the guest machine.
-  # config.vm.network "forwarded_port", guest: 80, host: 8080
+  # Forward agent's ports.
+  config.vm.network "forwarded_port", guest: 8880, host: 8880
+  config.vm.network "forwarded_port", guest: 8888, host: 8888
 
-  # Create a private network, which allows host-only access to the machine
-  # using a specific IP.
-  # config.vm.network "private_network", ip: "192.168.33.10"
+  # Forward gateway's ports.
+  config.vm.network "forwarded_port", guest: 9990, host: 9990
+  config.vm.network "forwarded_port", guest: 9999, host: 9999
 
-  # Create a public network, which generally matched to bridged network.
-  # Bridged networks make the machine appear as another physical device on
-  # your network.
-  # config.vm.network "public_network"
-
+  # Configure Virtualbox.
   config.vm.provider "virtualbox" do |vb|
       vb.name = "accio.local"
       vb.memory = "4096"
       vb.cpus = 4
     end
 
+  # Initial provisioning.
   config.vm.provision "shell", path: "etc/vagrant/provision-dev-cluster.sh"
 end

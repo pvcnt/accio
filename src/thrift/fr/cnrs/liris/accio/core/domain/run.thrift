@@ -22,20 +22,34 @@ include "fr/cnrs/liris/accio/core/domain/common.thrift"
 include "fr/cnrs/liris/accio/core/domain/workflow.thrift"
 include "fr/cnrs/liris/accio/core/domain/operator.thrift"
 
+/**
+ * Status of the execution of a node.
+ **/
 enum NodeStatus {
+  // Waiting for all dependencies to be satisfied.
   WAITING,
+  // Submitted to the scheduler.
   SCHEDULED,
+  // A task executing this node is running.
   RUNNING,
+  // Completed, successfully.
   SUCCESS,
+  // Completed, but resulted in a failure.
   FAILED,
+  // Killed by the client.
   KILLED,
+  // Cancelled, because a dependency resulted in a failure.
   CANCELLED,
-  LOST
+  // Lost, got no heartbeat from the task executing this node.
+  LOST,
 }
 
+/**
+ * State of a node, as part of a run. This structure is regularly updated as the execution of a node progresses.
+ */
 struct NodeState {
   // Name of the node this state is about.
-  1: required string node_name;
+  1: required string name;
 
   // Node execution status.
   2: required NodeStatus status;
@@ -49,19 +63,27 @@ struct NodeState {
   // Result of the node execution, either success or failed. Should be filled when the node is completed.
   5: optional operator.OpResult result;
 
-  // Cache key used for result memoization. If filled, the `result` field has to be filled too. Filling this indicates
-  // the associated result can be used as a cached value.
+  // Cache key used for result memoization. If filled, the `result` field has to be filled too.
   6: optional common.CacheKey cache_key;
 
-  // Whether it corresponds to a cache hit, i.e., the value has not been explicitly computed.
+  // Whether it corresponds to a cache hit, i.e., the value has not been explicitly computed. If true, the `result`
+  // field has to be filled.
   7: required bool cache_hit = false;
 }
 
+/**
+ * Status of the execution of a run.
+ */
 enum RunStatus {
+  // Root nodes have been submitted to the scheduler but have not yet started.
   SCHEDULED,
+  // Run is active, nodes have been executed or are still running.
   RUNNING,
+  // Completed, successfully (i.e., all nodes completed successfully).
   SUCCESS,
+  // Completed, but resulted in a failure (i.e., at least one node resulted in a failure).
   FAILED,
+  // Killed by the client.
   KILLED,
 }
 
@@ -82,7 +104,7 @@ struct Package {
  * A run is a particular instantiation of a workflow, where everything is well defined (i.e., all workflow parameters
  * have been affected a value).
  *
- * Runs can be single runs, cloned from another run or belong to a parameter sweep. Clones have their `clonedFrom`
+ * Runs can be single runs, cloned from another run or belong to a parameter sweep. Clones have their `cloned_from`
  * property defined to the identifier of the run they have been cloned from, and with which they share the same
  * workflow, cluster and environment. Runs that are part of a parameter sweep have their `parent` property set to the
  * identifier of the run that acts as a root for the parameter sweep. All runs that are part of a same parameter sweep
@@ -105,6 +127,9 @@ struct Run {
   // Time at which this run has been created.
   4: required common.Timestamp created_at;
 
+  // Cluster this run belongs to.
+  15: required string cluster;
+
   // Human-readable name.
   6: optional string name;
 
@@ -123,8 +148,8 @@ struct Run {
   // Identifier of the run this instance is a child of.
   11: optional common.RunId parent;
 
-  // Identifiers of the runs this instance is a parent of.
-  12: optional set<common.RunId> children;
+  // Number of child runs, for a parent run.
+  12: required i32 children = 0;
 
   // Identifier of the run this instance has been cloned from.
   13: optional common.RunId cloned_from;
@@ -133,7 +158,15 @@ struct Run {
   14: required RunState state;
 }
 
-struct RunDef {
+struct RunLog {
+  1: required common.RunId run_id;
+  2: required string node_name;
+  3: required common.Timestamp created_at;
+  4: required string classifier;
+  5: required string message;
+}
+
+struct RunSpec {
   // Specification of the associated workflow.
   1: required Package pkg;
 
@@ -161,12 +194,4 @@ struct RunDef {
 
   // Identifier of the run this instance has been cloned from.
   9: optional common.RunId cloned_from;
-}
-
-struct RunLog {
-  1: required common.RunId run_id;
-  2: required string node_name;
-  3: required common.Timestamp created_at;
-  4: required string classifier;
-  5: required string message;
 }

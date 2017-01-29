@@ -1,9 +1,0 @@
-scala_library(
-  name='downloader',
-  dependencies=[
-    'src/jvm/fr/cnrs/liris/accio/core/service',
-    'src/jvm/fr/cnrs/liris/common/getter',
-    '3rdparty/jvm:scala-guice',
-  ],
-  sources=globs('*.scala')
-)

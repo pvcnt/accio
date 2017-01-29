@@ -18,11 +18,16 @@
 
 package fr.cnrs.liris.accio.client.command
 
-import com.twitter.finatra.json.internal.caseclass.exceptions.CaseClassMappingException
-import com.twitter.finatra.validation.ErrorCode._
-import com.typesafe.scalalogging.StrictLogging
+import java.nio.ByteBuffer
+import java.nio.file.{Files, Path}
+
+import com.twitter.util.{Await, Return, Throw}
+import fr.cnrs.liris.accio.agent.{AgentService, ParseRunRequest, ParseWorkflowRequest}
 import fr.cnrs.liris.accio.core.infra.cli.{Cmd, Command, ExitCode, Reporter}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
+import fr.cnrs.liris.common.util.FileUtils
+
+import scala.collection.JavaConverters._
 
 case class ValidateFlags(
   @Flag(name = "keep_going", help = "Whether to continue validating other files once an error occurred")
@@ -33,8 +38,7 @@ case class ValidateFlags(
   help = "Validate the syntax of Accio configuration files.",
   flags = Array(classOf[ValidateFlags]),
   allowResidue = true)
-class ValidateCommand extends Command with StrictLogging {
-
+class ValidateCommand(clientFactory: AgentClientFactory) extends Command {
   def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     if (flags.residue.isEmpty) {
       out.writeln("<error>[ERROR]</error> You must specify some files to validate as argument.")
@@ -43,8 +47,9 @@ class ValidateCommand extends Command with StrictLogging {
       val opts = flags.as[ValidateFlags]
       var valid = true
       var i = 0
+      val client = clientFactory.create(flags.as[AccioAgentFlags].addr)
       while (i < flags.residue.size) {
-        if (validate(flags.residue(i), out)) {
+        if (validate(flags.residue(i), client, out)) {
           i += 1
         } else {
           valid = false
@@ -52,7 +57,6 @@ class ValidateCommand extends Command with StrictLogging {
         }
       }
       if (valid) {
-        out.writeln(s"<info>${flags.residue.size} valid files.</info>")
         ExitCode.Success
       } else {
         ExitCode.ValidateFailure
@@ -60,106 +64,62 @@ class ValidateCommand extends Command with StrictLogging {
     }
   }
 
-  /**
-   * Validate a single definition file. If the definition is invalid, more information will be printed using
-   * the `out` reporter.
-   *
-   * @param uri URI to an experiment or workflow definition.
-   * @param out Reporter where to write output.
-   * @return True if the definition is valid, false otherwise.
-   */
-  private def validate(uri: String, out: Reporter): Boolean = {
-    /*if (experimentParser.supports(uri)) {
-      validateExperiment(uri, out)
-    } else if (workflowParser.supports(uri)) {
-      validateWorkflow(uri, out)
-    } else {
-      out.writeln(s"<error>- Error validating $uri: Neither an experiment or a workflow file.</error>")
+  private def validate(uri: String, client: AgentService.FinagledClient, out: Reporter): Boolean = {
+    val path = FileUtils.expandPath(uri)
+    if (!path.toFile.exists || !path.toFile.canRead) {
+      out.writeln(s"<error>[ERROR]</error> Cannot read file: ${path.toAbsolutePath}")
       false
-    }*/
-    true
+    } else {
+      val content = Files.readAllLines(path).asScala.mkString
+      if (content.contains("\"workflow\"")) {
+        validateRun(content, path, client, out)
+      } else {
+        validateWorkflow(content, path, client, out)
+      }
+    }
   }
 
-  /**
-   * Validate a single experiment definition file. If the definition is invalid, more information will be printed
-   * using the `out` reporter.
-   *
-   * @param uri URI to an experiment definition.
-   * @param out Reporter where to write output.
-   * @return True if the definition is valid, false otherwise.
-   */
-  private def validateExperiment(uri: String, out: Reporter) = {
-    /*try {
-      experimentFactory.create(uri, ExperimentArgs())
-      true
-    } catch {
-      case e: IllegalExperimentException =>
-        out.writeln(s"<error>- Error validating experiment $uri</error>")
-        explainException(e, out, level = 1)
-        false
-      case e: IllegalWorkflowException =>
-        out.writeln(s"<error>- Error while validating workflow of experiment $uri</error>")
-        out.writeln(s"<error>Try 'accio validate $uri' for more information.</error>")
-        false
-    }*/
-  }
-
-  /**
-   * Validate a single workflow definition file. If the definition is invalid, more information will be printed
-   * using the `out` reporter.
-   *
-   * @param uri URI to a workflow definition.
-   * @param out Reporter where to write output.
-   * @return True if the definition is valid, false otherwise.
-   */
-  private def validateWorkflow(uri: String, out: Reporter) = {
-    /*try {
-      workflowFactory.create(uri, User.Default)
-      true
-    } catch {
-      case e: IllegalWorkflowException =>
-        out.writeln(s"<error>- Error validating workflow $uri</error>")
-        explainException(e, out, level = 1)
-        false
-    }*/
-  }
-
-  /**
-   * Print human-readable information about an exception, recursively.
-   *
-   * @param e
-   * @param out
-   * @param level
-   */
-  private def explainException(e: Throwable, out: Reporter, level: Int): Unit = {
-    Option(e) match {
-      case None => // No cause, do nothing.
-      case Some(e: CaseClassMappingException) =>
-        // Special handling for JSON parse exception, print meaningful error message.
-        e.errors.foreach { err =>
-          val more = err.reason.code match {
-            case InvalidCountryCodes(codes) => s"Invalid country code, must be one of ${codes.mkString(", ")}"
-            case InvalidTimeGranularity(time, targetGranularity) => s"Invalid time granularity, must be $targetGranularity"
-            case InvalidUUID(uuid) => "Invalid UUID"
-            case InvalidValues(invalid, valid) => s"Invalid values, must belong to ${valid.mkString(", ")}"
-            case JsonProcessingError(cause) => cause.getMessage
-            case RequiredFieldMissing => "Required field is missing"
-            case SizeOutOfRange(size, min, max) => s"Size out of range, must be between $min and $max"
-            case TimeNotFuture(time) => "Time must be future"
-            case TimeNotPast(time) => "Time must be past"
-            case ValueCannotBeEmpty => "Value cannot be empty"
-            case ValueOutOfRange(value, min, max) => s"Value out of range, must be between $min and $max"
-            case ValueTooLarge(maxValue, value) => s"Value is too large, must be at most $maxValue"
-            case ValueTooSmall(minValue, value) => s"Value is too small, must be at least $minValue"
-            case Unknown => "Unknown error"
-          }
-          out.writeln(s"<error>${" " * level * 2}Error at ${err.path.prettyString}: ${err.reason.message}</error>")
-          out.writeln(s"<error>${" " * level * 2}$more</error>")
+  private def validateRun(content: String, path: Path, client: AgentService.FinagledClient, out: Reporter) = {
+    val req = ParseRunRequest(content, Map.empty, Some(path.getFileName.toString))
+    Await.result(client.parseRun(req).liftToTry) match {
+      case Return(resp) =>
+        resp.warnings.foreach { warning =>
+          out.writeln(s"<comment>[WARN]</comment> $warning")
         }
-      case Some(e: Throwable) =>
-        // General handling of exceptions, print their message and recurse to print parent cause.
-        out.writeln(s"<error>${" " * level * 2}Caused by: ${e.getMessage.trim}</error>")
-        explainException(e.getCause, out, level + 1)
+        resp.errors.foreach { error =>
+          out.writeln(s"<error>[ERROR]</error> $error")
+        }
+        if (resp.run.isDefined) {
+          out.writeln(s"<info>[OK]</info> Validated file: ${path.toAbsolutePath}")
+          true
+        } else {
+          false
+        }
+      case Throw(e) =>
+        out.writeln(s"<error>[ERROR]</error> Server error: ${e.getMessage}")
+        false
+    }
+  }
+
+  private def validateWorkflow(content: String, path: Path, client: AgentService.FinagledClient, out: Reporter) = {
+    val req = ParseWorkflowRequest(content, Some(path.getFileName.toString))
+    Await.result(client.parseWorkflow(req).liftToTry) match {
+      case Return(resp) =>
+        resp.warnings.foreach { warning =>
+          out.writeln(s"<comment>[WARN]</comment> $warning")
+        }
+        resp.errors.foreach { error =>
+          out.writeln(s"<error>[ERROR]</error> $error")
+        }
+        if (resp.workflow.isDefined) {
+          out.writeln(s"<info>[OK]</info> Validated file: ${path.toAbsolutePath}")
+          true
+        } else {
+          false
+        }
+      case Throw(e) =>
+        out.writeln(s"<error>[ERROR]</error> Server error: ${e.getMessage}")
+        false
     }
   }
 }

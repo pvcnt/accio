@@ -18,28 +18,20 @@
 
 package fr.cnrs.liris.privamov.ops
 
-import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.common.geo.Point
-import fr.cnrs.liris.common.stats.AggregatedStats
 import fr.cnrs.liris.common.util.Requirements._
-import fr.cnrs.liris.privamov.core.io.Decoder
 import fr.cnrs.liris.privamov.core.model.Trace
-import fr.cnrs.liris.privamov.core.sparkle.SparkleEnv
 
 @Op(
   category = "metric",
   help = "Compute spatial distortion between two datasets of traces",
   cpu = 3,
   ram = "6G")
-class SpatialDistortionOp @Inject()(
-  override protected val env: SparkleEnv,
-  override protected val decoders: Set[Decoder[_]]
-) extends Operator[SpatialDistortionIn, SpatialDistortionOut] with SparkleReadOperator {
-
+class SpatialDistortionOp extends Operator[SpatialDistortionIn, SpatialDistortionOut] {
   override def execute(in: SpatialDistortionIn, ctx: OpContext): SpatialDistortionOut = {
-    val train = read[Trace](in.train)
-    val test = read[Trace](in.test)
+    val train = ctx.read[Trace](in.train)
+    val test = ctx.read[Trace](in.test)
     val metrics = train.zip(test).map { case (ref, res) => evaluate(ref, res, in.interpolate) }.toArray
     SpatialDistortionOut(
       min = metrics.map { case (k, v) => k -> v.min }.toMap,
