@@ -33,18 +33,18 @@ private[core] trait BaseFactory {
     }
   }
 
-  protected def newError(message: String, warnings: Option[mutable.Set[InvalidSpecMessage]]) =
-    new InvalidSpecException(Seq(InvalidSpecMessage(message)), warnings.toSeq.flatten)
+  protected def newError(message: String, warnings: mutable.Set[InvalidSpecMessage]) =
+    new InvalidSpecException(Seq(InvalidSpecMessage(message)), warnings.toSeq)
 
-  protected def newError(message: String, path: String, warnings: Option[mutable.Set[InvalidSpecMessage]]) =
-    new InvalidSpecException(Seq(InvalidSpecMessage(message, Some(path))), warnings.toSeq.flatten)
+  protected def newError(message: String, path: String, warnings: mutable.Set[InvalidSpecMessage]) =
+    new InvalidSpecException(Seq(InvalidSpecMessage(message, Some(path))), warnings.toSeq)
 
-  protected def newError(messages: Iterable[String], warnings: Option[mutable.Set[InvalidSpecMessage]]) =
-    new InvalidSpecException(messages.map(InvalidSpecMessage(_)).toSeq, warnings.toSeq.flatten)
+  protected def newError(messages: Iterable[String], warnings: mutable.Set[InvalidSpecMessage]) =
+    new InvalidSpecException(messages.map(InvalidSpecMessage(_)).toSeq, warnings.toSeq)
 
-  protected def newError(message: String, paths: Iterable[String], warnings: Option[mutable.Set[InvalidSpecMessage]]) =
-    new InvalidSpecException(paths.map(path => InvalidSpecMessage(message, Some(path))).toSeq, warnings.toSeq.flatten)
+  protected def newError(message: String, paths: Iterable[String], warnings: mutable.Set[InvalidSpecMessage]) =
+    new InvalidSpecException(paths.map(path => InvalidSpecMessage(message, Some(path))).toSeq, warnings.toSeq)
 
-  protected def newError(messages: Iterable[String], paths: Iterable[String], warnings: Option[mutable.Set[InvalidSpecMessage]]) =
-    new InvalidSpecException(messages.zip(paths).map { case (message, path) => InvalidSpecMessage(message, Some(path)) }.toSeq, warnings.toSeq.flatten)
+  protected def newError(messages: Iterable[String], paths: Iterable[String], warnings: mutable.Set[InvalidSpecMessage]) =
+    new InvalidSpecException(messages.zip(paths).map { case (message, path) => InvalidSpecMessage(message, Some(path)) }.toSeq, warnings.toSeq)
 }

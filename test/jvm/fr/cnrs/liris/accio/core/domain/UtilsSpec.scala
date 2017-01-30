@@ -79,34 +79,4 @@ class UtilsSpec extends UnitSpec {
     Utils.parseDataType(Utils.toString(DataType(AtomicType.Set, Seq(AtomicType.Timestamp)))) shouldBe DataType(AtomicType.Set, Seq(AtomicType.Timestamp))
     Utils.parseDataType(Utils.toString(DataType(AtomicType.Map, Seq(AtomicType.Duration, AtomicType.String)))) shouldBe DataType(AtomicType.Map, Seq(AtomicType.Duration, AtomicType.String))
   }
-
-  it should "detect non-parsable data type strings" in {
-    val expected = intercept[IllegalArgumentException] {
-      Utils.parseDataType("foo")
-    }
-    expected.getMessage shouldBe "Invalid data type: foo"
-  }
-
-  it should "parse references" in {
-    Utils.parseReference("foo/bar") shouldBe Reference("foo", "bar")
-  }
-
-  it should "return a parsable reference string representation" in {
-    Utils.parseReference(Utils.toString(Reference("foo", "bar"))) shouldBe Reference("foo", "bar")
-  }
-
-  it should "detect non-parsable reference strings" in {
-    an[IllegalArgumentException] shouldBe thrownBy {
-      Utils.parseReference("foo")
-    }
-    an[IllegalArgumentException] shouldBe thrownBy {
-      Utils.parseReference("foo/bar/baz")
-    }
-    an[IllegalArgumentException] shouldBe thrownBy {
-      Utils.parseReference("foo/")
-    }
-    an[IllegalArgumentException] shouldBe thrownBy {
-      Utils.parseReference("/foo")
-    }
-  }
 }

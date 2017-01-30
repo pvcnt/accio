@@ -42,7 +42,7 @@ final class WorkflowFactory @Inject()(graphFactory: GraphFactory, opRegistry: Op
    * @throws InvalidSpecException If the workflow specification is invalid.
    */
   @throws[InvalidSpecException]
-  def create(spec: WorkflowSpec, user: User, warnings: Option[mutable.Set[InvalidSpecMessage]] = None): Workflow = {
+  def create(spec: WorkflowSpec, user: User, warnings: mutable.Set[InvalidSpecMessage] = mutable.Set.empty[InvalidSpecMessage]): Workflow = {
     val graph = graphFactory.create(spec.graph, warnings)
     val params = getParams(graph, spec.params.toSet, warnings)
     val owner = spec.owner.getOrElse(user)
@@ -65,7 +65,7 @@ final class WorkflowFactory @Inject()(graphFactory: GraphFactory, opRegistry: Op
    * @param spec Workflow specification.
    */
   def validate(spec: WorkflowSpec): ValidationResult = {
-    doValidate(warnings => create(spec, User("dummy user"), Some(warnings)))
+    doValidate(warnings => create(spec, User("dummy user"), warnings))
   }
 
   /**
@@ -88,7 +88,7 @@ final class WorkflowFactory @Inject()(graphFactory: GraphFactory, opRegistry: Op
    * @param params   Workflow parameters.
    * @param warnings Mutable list collecting warnings.
    */
-  private def getParams(graph: Graph, params: Set[ArgDef], warnings: Option[mutable.Set[InvalidSpecMessage]]) = {
+  private def getParams(graph: Graph, params: Set[ArgDef], warnings: mutable.Set[InvalidSpecMessage]) = {
     case class ParamUsage(ref: Reference, argDef: ArgDef)
 
     // First we extract all references to parameters with their names and references to ports where they are used.
@@ -104,8 +104,7 @@ final class WorkflowFactory @Inject()(graphFactory: GraphFactory, opRegistry: Op
     // Check for undeclared params usage.
     val undeclaredParams = paramUsages.keySet.diff(params.map(_.name))
     if (undeclaredParams.nonEmpty) {
-      val messages = undeclaredParams.map(paramName => InvalidSpecMessage(s"Param is not declared", Some(s"params.$paramName")))
-      throw new InvalidSpecException(messages.toSeq, warnings.toSeq.flatten)
+      throw newError("Param is not declared", undeclaredParams.map(paramName => s"params.$paramName"), warnings)
     }
 
     params.map { argDef =>

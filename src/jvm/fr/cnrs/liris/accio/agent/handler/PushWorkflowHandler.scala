@@ -25,6 +25,8 @@ import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.runtime.WorkflowFactory
 import fr.cnrs.liris.accio.core.storage.MutableWorkflowRepository
 
+import scala.collection.mutable
+
 /**
  * Handle the creation of update of a workflow.
  *
@@ -36,8 +38,9 @@ class PushWorkflowHandler @Inject()(workflowFactory: WorkflowFactory, workflowRe
 
   @throws[InvalidSpecException]
   override def handle(req: PushWorkflowRequest): Future[PushWorkflowResponse] = {
-    val workflow = workflowFactory.create(req.spec, req.user)
+    val warnings = mutable.Set.empty[InvalidSpecMessage]
+    val workflow = workflowFactory.create(req.spec, req.user, warnings)
     workflowRepository.save(workflow)
-    Future(PushWorkflowResponse(workflow))
+    Future(PushWorkflowResponse(workflow, warnings.toSeq))
   }
 }

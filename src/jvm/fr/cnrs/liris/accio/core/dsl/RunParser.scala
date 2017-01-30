@@ -34,7 +34,7 @@ class RunParser(mapper: FinatraObjectMapper, workflowRepository: WorkflowReposit
   extends BaseFactory with LazyLogging {
 
   @throws[InvalidSpecException]
-  def parse(content: String, params: Map[String, String], warnings: Option[mutable.Set[InvalidSpecMessage]] = None): RunSpec = {
+  def parse(content: String, params: Map[String, String], warnings: mutable.Set[InvalidSpecMessage] = mutable.Set.empty[InvalidSpecMessage]): RunSpec = {
     var (workflow, spec) = if (content.startsWith("{")) {
       // Content begins with a brace, it should be a JSON object.
       parseWorkflow(content, warnings)
@@ -51,7 +51,7 @@ class RunParser(mapper: FinatraObjectMapper, workflowRepository: WorkflowReposit
     // Validate the specification would generate valid run(s).
     val validationResult = factory.validate(spec)
     validationResult.maybeThrowException()
-    warnings.foreach(_ ++= validationResult.warnings)
+    warnings ++= validationResult.warnings
 
     spec
   }
@@ -63,7 +63,7 @@ class RunParser(mapper: FinatraObjectMapper, workflowRepository: WorkflowReposit
    * @param params   Mapping between parameter names and string values.
    * @param warnings Mutable list collecting warnings.
    */
-  private def parseParams(workflow: Workflow, params: Map[String, String], warnings: Option[mutable.Set[InvalidSpecMessage]]) = {
+  private def parseParams(workflow: Workflow, params: Map[String, String], warnings: mutable.Set[InvalidSpecMessage]) = {
     params.map { case (paramName, strValue) =>
       workflow.params.find(_.name == paramName) match {
         case None => throw newError(s"Unknown param: $paramName", warnings)
@@ -78,7 +78,7 @@ class RunParser(mapper: FinatraObjectMapper, workflowRepository: WorkflowReposit
     }
   }
 
-  private def findWorkflow(str: String, warnings: Option[mutable.Set[InvalidSpecMessage]]): Workflow = {
+  private def findWorkflow(str: String, warnings: mutable.Set[InvalidSpecMessage]): Workflow = {
     val maybeWorkflow = str.split(":") match {
       case Array(id) => workflowRepository.get(WorkflowId(id))
       case Array(id, version) => workflowRepository.get(WorkflowId(id), version)
@@ -90,7 +90,7 @@ class RunParser(mapper: FinatraObjectMapper, workflowRepository: WorkflowReposit
     }
   }
 
-  private def parseWorkflow(content: String, warnings: Option[mutable.Set[InvalidSpecMessage]]) = {
+  private def parseWorkflow(content: String, warnings: mutable.Set[InvalidSpecMessage]) = {
     val json = try {
       mapper.parse[JsonRunDef](content)
     } catch {

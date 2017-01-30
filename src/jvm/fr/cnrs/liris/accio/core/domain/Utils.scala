@@ -148,21 +148,6 @@ object Utils {
 
   def describe(atomicType: AtomicType): String = toString(atomicType)
 
-  /**
-   * Parse a string into a dependency.
-   *
-   * @param str String to parse.
-   * @throws IllegalArgumentException If the string is not formatted as a valid reference.
-   */
-  @throws[IllegalArgumentException]
-  def parseReference(str: String): Reference = str.split("/") match {
-    case Array(node, port) =>
-      require(node.nonEmpty, s"Invalid reference, empty node name: $str")
-      require(port.nonEmpty, s"Invalid reference, empty port name: $str")
-      Reference(node, port)
-    case _ => throw new IllegalArgumentException(s"Invalid reference: $str")
-  }
-
   private[this] val UserRegex = "(.+)<(.+)>".r
 
   /**

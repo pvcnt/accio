@@ -22,10 +22,12 @@ import com.google.inject.Inject
 import com.twitter.util.{Future, FuturePool}
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.agent.{CreateRunRequest, CreateRunResponse}
-import fr.cnrs.liris.accio.core.domain.{InvalidSpecException, RunId}
+import fr.cnrs.liris.accio.core.domain.{InvalidSpecException, InvalidSpecMessage, RunId}
 import fr.cnrs.liris.accio.core.runtime.{RunFactory, RunManager}
 import fr.cnrs.liris.accio.core.statemgr.LockService
 import fr.cnrs.liris.accio.core.storage.MutableRunRepository
+
+import scala.collection.mutable
 
 /**
  * Launch a workflow, through one or several runs. It saves them and asynchronously schedules them.
@@ -46,7 +48,8 @@ final class CreateRunHandler @Inject()(
 
   @throws[InvalidSpecException]
   def handle(req: CreateRunRequest): Future[CreateRunResponse] = {
-    val runs = runFactory.create(req.spec, req.user)
+    val warnings = mutable.Set.empty[InvalidSpecMessage]
+    val runs = runFactory.create(req.spec, req.user, warnings)
     runs.foreach(runRepository.save)
 
     // We save the runs before launching them asynchronously. It allows to return more quickly to the client, as
@@ -55,7 +58,7 @@ final class CreateRunHandler @Inject()(
       // Maybe it could happen that an unfortunate parameter sweep generate no run...
       pool(launch(runs.map(_.id)))
     }
-    Future(CreateRunResponse(runs.map(_.id)))
+    Future(CreateRunResponse(runs.map(_.id), warnings.toSeq))
   }
 
   /**

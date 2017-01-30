@@ -71,7 +71,7 @@ class PoisReidentOpSpec extends UnitSpec with OperatorSpec {
     val testDs = writePois(resPois1, resPois2, resPois3)
 
     val res = new PoisReidentOp().execute(ReidentificationIn(trainDs, testDs), ctx)
-    res.rate shouldBe closeTo(1 / 3, 0.001)
+    res.rate shouldBe closeTo(1d / 3, 0.001)
     res.matches("user1") shouldBe "user1"
     res.matches("user2") shouldBe "user3"
     res.matches("user3") shouldBe "user2"

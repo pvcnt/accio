@@ -38,7 +38,7 @@ final class GraphFactory @Inject()(opRegistry: OpRegistry) extends BaseFactory {
    * @throws InvalidSpecException If the graph definition is invalid.
    */
   @throws[InvalidSpecException]
-  def create(graphDef: GraphDef, warnings: Option[mutable.Set[InvalidSpecMessage]] = None): Graph = {
+  def create(graphDef: GraphDef, warnings: mutable.Set[InvalidSpecMessage] = mutable.Set.empty[InvalidSpecMessage]): Graph = {
     // Check for duplicate node names.
     val duplicateNodeNames = graphDef.nodes.groupBy(_.name).filter(_._2.size > 1).keySet
     if (duplicateNodeNames.nonEmpty) {
@@ -60,7 +60,7 @@ final class GraphFactory @Inject()(opRegistry: OpRegistry) extends BaseFactory {
     graph
   }
 
-  private def createNode(nodeDef: NodeDef, warnings: Option[mutable.Set[InvalidSpecMessage]]) = {
+  private def createNode(nodeDef: NodeDef, warnings: mutable.Set[InvalidSpecMessage]) = {
     opRegistry.get(nodeDef.op) match {
       case None => throw newError(s"Unknown operator: ${nodeDef.op}", s"graph.${nodeDef.name}.op", warnings)
       case Some(opDef) =>
@@ -69,7 +69,7 @@ final class GraphFactory @Inject()(opRegistry: OpRegistry) extends BaseFactory {
     }
   }
 
-  private def validateGraph(graph: Graph, warnings: Option[mutable.Set[InvalidSpecMessage]]): Unit = {
+  private def validateGraph(graph: Graph, warnings: mutable.Set[InvalidSpecMessage]): Unit = {
     if (graph.roots.isEmpty) {
       throw newError("No root node", warnings)
     }
@@ -80,7 +80,7 @@ final class GraphFactory @Inject()(opRegistry: OpRegistry) extends BaseFactory {
     }
   }
 
-  private def validateNode(node: Node, nodes: Map[String, Node], warnings: Option[mutable.Set[InvalidSpecMessage]]): Unit = {
+  private def validateNode(node: Node, nodes: Map[String, Node], warnings: mutable.Set[InvalidSpecMessage]): Unit = {
     if (Utils.NodeRegex.findFirstIn(node.name).isEmpty) {
       throw newError(s"Invalid node name: ${node.name}", warnings)
     }
@@ -91,7 +91,7 @@ final class GraphFactory @Inject()(opRegistry: OpRegistry) extends BaseFactory {
 
       // Check operator is not deprecated.
       thisOp.deprecation.foreach { message =>
-        warnings.foreach(_ += InvalidSpecMessage(s"Operator is deprecated: $message", Some(s"graph.${node.name}.inputs.$thisPort")))
+        warnings += InvalidSpecMessage(s"Operator is deprecated: $message", Some(s"graph.${node.name}.inputs.$thisPort"))
       }
 
       thisOp.inputs.find(_.name == thisPort) match {
@@ -138,7 +138,7 @@ final class GraphFactory @Inject()(opRegistry: OpRegistry) extends BaseFactory {
     node.copy(outputs = outputs)
   }
 
-  private def getInputs(nodeDef: NodeDef, opDef: OpDef, warnings: Option[mutable.Set[InvalidSpecMessage]]): Map[String, Input] = {
+  private def getInputs(nodeDef: NodeDef, opDef: OpDef, warnings: mutable.Set[InvalidSpecMessage]): Map[String, Input] = {
     val unknownInputs = nodeDef.inputs.keySet.diff(opDef.inputs.map(_.name).toSet)
     if (unknownInputs.nonEmpty) {
       throw newError("Unknown input port", unknownInputs.map(name => s"graph.${nodeDef.name}.inputs.$name"), warnings)

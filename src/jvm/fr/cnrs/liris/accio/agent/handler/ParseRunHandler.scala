@@ -36,7 +36,7 @@ final class ParseRunHandler @Inject()(runParser: RunParser) extends Handler[Pars
   override def handle(req: ParseRunRequest): Future[ParseRunResponse] = {
     val warnings = mutable.Set.empty[InvalidSpecMessage]
     try {
-      val run = runParser.parse(req.content, req.params.toMap, Some(warnings))
+      val run = runParser.parse(req.content, req.params.toMap, warnings)
       Future(ParseRunResponse(run = Some(run), warnings = warnings.toSeq))
     } catch {
       case e: InvalidSpecException =>

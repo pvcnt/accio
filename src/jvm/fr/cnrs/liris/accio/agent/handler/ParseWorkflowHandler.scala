@@ -38,7 +38,7 @@ final class ParseWorkflowHandler @Inject()(workflowParser: WorkflowParser)
   override def handle(req: ParseWorkflowRequest): Future[ParseWorkflowResponse] = {
     val warnings = mutable.Set.empty[InvalidSpecMessage]
     try {
-      val workflow = workflowParser.parse(req.content, req.filename, Some(warnings))
+      val workflow = workflowParser.parse(req.content, req.filename, warnings)
       Future(ParseWorkflowResponse(workflow = Some(workflow), warnings = warnings.toSeq))
     } catch {
       case e: InvalidSpecException =>

@@ -50,7 +50,7 @@ final class RunFactory @Inject()(workflowRepository: WorkflowRepository) extends
    * @return List of runs.
    */
   @throws[InvalidSpecException]
-  def create(spec: RunSpec, user: User, warnings: Option[mutable.Set[InvalidSpecMessage]] = None): Seq[Run] = {
+  def create(spec: RunSpec, user: User, warnings: mutable.Set[InvalidSpecMessage] = mutable.Set.empty[InvalidSpecMessage]): Seq[Run] = {
     // Extract the workflow.
     val workflow = getWorkflow(spec.pkg, warnings)
 
@@ -97,7 +97,7 @@ final class RunFactory @Inject()(workflowRepository: WorkflowRepository) extends
    * @param spec Run specification.
    */
   def validate(spec: RunSpec): ValidationResult = {
-    doValidate(warnings => create(spec, User("dummy user"), Some(warnings)))
+    doValidate(warnings => create(spec, User("dummy user"), warnings))
   }
 
   /**
@@ -229,7 +229,7 @@ final class RunFactory @Inject()(workflowRepository: WorkflowRepository) extends
    * @param pkg      Package.
    * @param warnings Mutable list collecting warnings.
    */
-  private def getWorkflow(pkg: Package, warnings: Option[mutable.Set[InvalidSpecMessage]]) = {
+  private def getWorkflow(pkg: Package, warnings: mutable.Set[InvalidSpecMessage]) = {
     val maybeWorkflow = workflowRepository.get(pkg.workflowId, pkg.workflowVersion)
     maybeWorkflow match {
       case None => throw newError(s"Workflow not found: ${pkg.workflowId.value}@${pkg.workflowVersion}", "pkg", warnings)

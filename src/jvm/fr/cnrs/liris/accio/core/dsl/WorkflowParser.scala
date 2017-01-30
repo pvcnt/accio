@@ -45,7 +45,7 @@ class WorkflowParser(mapper: FinatraObjectMapper, opRegistry: OpRegistry, factor
    * @throws InvalidSpecException If the workflow specification is invalid.
    */
   @throws[InvalidSpecException]
-  def parse(content: String, filename: Option[String], warnings: Option[mutable.Set[InvalidSpecMessage]] = None): WorkflowSpec = {
+  def parse(content: String, filename: Option[String], warnings: mutable.Set[InvalidSpecMessage] = mutable.Set.empty[InvalidSpecMessage]): WorkflowSpec = {
     val json = parse(content, warnings)
     val id = json.id.orElse(filename.map(defaultId)).getOrElse(throw newError("No workflow identifier", warnings))
     val owner = json.owner.map(Utils.parseUser)
@@ -60,12 +60,12 @@ class WorkflowParser(mapper: FinatraObjectMapper, opRegistry: OpRegistry, factor
     // Validate the specification would generate a valid workflow.
     val validationResult = factory.validate(spec)
     validationResult.maybeThrowException()
-    warnings.foreach(_ ++= validationResult.warnings)
+    warnings ++= validationResult.warnings
 
     spec
   }
 
-  private def parse(content: String, warnings: Option[mutable.Set[InvalidSpecMessage]]): JsonWorkflowDef =
+  private def parse(content: String, warnings: mutable.Set[InvalidSpecMessage]): JsonWorkflowDef =
     try {
       mapper.parse[JsonWorkflowDef](content)
     } catch {
@@ -79,17 +79,21 @@ class WorkflowParser(mapper: FinatraObjectMapper, opRegistry: OpRegistry, factor
 
   private def defaultId(filename: String) = filename.substring(0, filename.indexOf("."))
 
-  private def getNode(node: JsonNodeDef, opRegistry: OpRegistry, warnings: Option[mutable.Set[InvalidSpecMessage]]) = {
-    val inputs = node.inputs.map {
+  private def getNode(node: JsonNodeDef, opRegistry: OpRegistry, warnings: mutable.Set[InvalidSpecMessage]) = {
+    val inputs = node.inputs.flatMap {
       case (argName, JsonValueInputDef(rawValue)) =>
         opRegistry.get(node.op) match {
           case Some(opDef) =>
-            val value = Values.encode(rawValue, opDef.inputs.find(_.name == argName).get.kind)
-            argName -> InputDef.Value(value)
+            opDef.inputs.find(_.name == argName) match {
+              case Some(argDef) => Some(argName -> InputDef.Value(Values.encode(rawValue, argDef.kind)))
+              case None =>
+                warnings += InvalidSpecMessage("Unknown input port", Some(s"graph.${node.name}.inputs.$argName"))
+                None
+            }
           case None => throw newError(s"Unknown operator: ${node.op}", s"graph.${node.name}.op", warnings)
         }
-      case (argName, JsonReferenceInputDef(ref)) => argName -> InputDef.Reference(Utils.parseReference(ref))
-      case (argName, JsonParamInputDef(paramName)) => argName -> InputDef.Param(paramName)
+      case (argName, JsonReferenceInputDef(ref)) => Some(argName -> InputDef.Reference(References.parse(ref)))
+      case (argName, JsonParamInputDef(paramName)) => Some(argName -> InputDef.Param(paramName))
     }
     NodeDef(node.op, node.name.getOrElse(node.op), inputs)
   }
