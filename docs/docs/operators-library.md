@@ -1,6 +1,6 @@
 ---
-nav: docs
 layout: docs
+nav: docs
 title: Operators library
 ---
 
@@ -254,7 +254,7 @@ Generate locations satisfying geo-indistinguishability properties. The method us
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `epsilon` | double; optional; default: 0 | Privacy budget |
+| `epsilon` | double; optional; default: 0.001 | Privacy budget |
 | `data` | dataset; required | Input dataset |
 {: class="table table-striped"}
 
@@ -290,7 +290,7 @@ Wrapper around the implementation of the Wait4Me algorithm provided by their aut
 | `k` | integer; required | Anonymity level |
 | `delta` | distance; required | Uncertainty |
 | `radiusMax` | distance; optional | Initial maximum radius used in clustering |
-| `trashMax` | double; optional; default: 0 | Global maximum trash size, in percentage of the dataset size |
+| `trashMax` | double; optional; default: 0.1 | Global maximum trash size, in percentage of the dataset size |
 | `chunk` | boolean; optional; default: false | Whether to chunk the input dataset |
 {: class="table table-striped"}
 
@@ -321,6 +321,7 @@ Compute area coverage difference between two datasets of traces
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
 | `level` | integer; required | S2 cells levels |
+| `temporal` | boolean; optional; default: false | Whether to include the temporal component |
 | `train` | dataset; required | Train dataset |
 | `test` | dataset; required | Test dataset |
 {: class="table table-striped"}
@@ -405,12 +406,8 @@ Re-identification attack using POIs a the discriminating information.
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `diameter` | distance; required | Clustering maximum diameter |
-| `duration` | duration; required | Clustering minimum duration |
-| `testDiameter` | distance; optional | Override the clustering maximum diameter to use with the test dataset only |
-| `testDuration` | duration; optional | Override the clustering minimum duration to use with the test dataset only |
-| `train` | dataset; required | Train dataset |
-| `test` | dataset; required | Test dataset |
+| `train` | dataset; required | Train dataset (POIs) |
+| `test` | dataset; required | Test dataset (POIs) |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
@@ -422,33 +419,14 @@ Re-identification attack using POIs a the discriminating information.
 
 ### PoisRetrieval
 
-Compute POIs retrieval difference between two datasets of traces
-
-| Input name | Type | Description |
-|:-----------|:-----|:------------|
-| `diameter` | distance; required | Clustering maximum diameter |
-| `duration` | duration; required | Clustering minimum duration |
-| `threshold` | distance; required | Matching threshold |
-| `train` | dataset; required | Train dataset |
-| `test` | dataset; required | Test dataset |
-{: class="table table-striped"}
-
-| Output name | Type | Description |
-|:------------|:-----|:------------|
-| `precision` | map of string => double | POIs retrieval precision |
-| `recall` | map of string => double | POIs retrieval recall |
-| `fscore` | map of string => double | POIs retrieval F-Score |
-{: class="table table-striped"}
-
-### PoisRetrieval2
-
 Compute POIs retrieval difference between two POIs datasets
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
 | `threshold` | distance; required | Matching threshold |
-| `train` | dataset; required | Train dataset |
-| `test` | dataset; required | Test dataset |
+| `temporal` | boolean; optional; default: false | Whether to include the temporal component |
+| `train` | dataset; required | Train dataset (POIs) |
+| `test` | dataset; required | Test dataset (POIs) |
 {: class="table table-striped"}
 
 | Output name | Type | Description |

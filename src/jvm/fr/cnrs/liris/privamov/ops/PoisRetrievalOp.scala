@@ -28,33 +28,42 @@ import fr.cnrs.liris.privamov.core.model.{Poi, PoiSet}
   help = "Compute POIs retrieval difference between two POIs datasets",
   cpu = 2,
   ram = "1G")
-class PoisRetrievalOp  extends Operator[PoisRetrievalIn, PoisRetrievalOut] {
+class PoisRetrievalOp extends Operator[PoisRetrievalIn, PoisRetrievalOut] {
   override def execute(in: PoisRetrievalIn, ctx: OpContext): PoisRetrievalOut = {
     val train = ctx.read[PoiSet](in.train)
     val test = ctx.read[PoiSet](in.test)
-    val metrics = train.zip(test).map { case (ref, res) => evaluate(ref, res, in.threshold) }.toArray
+    val metrics = train.zip(test).map { case (ref, res) => evaluate(ref, res, in.threshold, in.temporal) }.toArray
     PoisRetrievalOut(
       precision = metrics.map { case (k, v) => k -> v._1 }.toMap,
       recall = metrics.map { case (k, v) => k -> v._2 }.toMap,
       fscore = metrics.map { case (k, v) => k -> v._3 }.toMap)
   }
 
-  private def evaluate(ref: PoiSet, res: PoiSet, threshold: Distance) = {
+  private def evaluate(ref: PoiSet, res: PoiSet, threshold: Distance, temporal: Boolean) = {
     requireState(ref.id == res.id, s"Trace mismatch: ${ref.id} / ${res.id}")
-    val matched = res.pois.flatMap(resPoi => remap(resPoi, ref.pois, threshold)).distinct.size
+    val matched = res.pois.flatMap(resPoi => remap(resPoi, ref.pois, threshold, temporal)).distinct.size
     ref.id -> (MetricUtils.precision(res.size, matched), MetricUtils.recall(ref.size, matched), MetricUtils.fscore(ref.size, res.size, matched))
   }
 
-  private def remap(resPoi: Poi, refPois: Seq[Poi], threshold: Distance) = {
+  private def remap(resPoi: Poi, refPois: Seq[Poi], threshold: Distance, temporal: Boolean) = {
     val matchingPois = refPois.zipWithIndex
+      .filter { case (refPoi, _) => matches(refPoi, resPoi, threshold, temporal) }
       .map { case (refPoi, idx) => (idx, refPoi.centroid.distance(resPoi.centroid)) }
-      .filter { case (_, d) => d <= threshold }
     if (matchingPois.nonEmpty) Some(matchingPois.minBy(_._2)._1) else None
+  }
+
+  private def matches(refPoi: Poi, resPoi: Poi, threshold: Distance, temporal: Boolean) = {
+    if (refPoi.centroid.distance(resPoi.centroid) > threshold) {
+      false
+    } else {
+      !temporal || refPoi.lastSeen.isAfter(resPoi.firstSeen) || resPoi.lastSeen.isAfter(refPoi.firstSeen)
+    }
   }
 }
 
 case class PoisRetrievalIn(
   @Arg(help = "Matching threshold") threshold: Distance,
+  @Arg(help = "Whether to include the temporal component") temporal: Boolean = false,
   @Arg(help = "Train dataset (POIs)") train: Dataset,
   @Arg(help = "Test dataset (POIs)") test: Dataset)
 
