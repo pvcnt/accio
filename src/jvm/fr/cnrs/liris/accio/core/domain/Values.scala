@@ -276,12 +276,14 @@ object Values {
 
   private def toString(obj: Any): String =
     obj match {
-      case d: Double => if (d >= 1) roundAt4(d).toString else d.toString
-      case d: Distance => Distance.meters(roundAt4(d.meters)).toString
+      case d: Double => roundAt6(d).toString
+      case d: Distance => Distance.meters(roundAt2(d.meters)).toString
       case _ => obj.toString
     }
 
-  private def roundAt4(d: Double) = (d * 10000).round / 10000
+  private def roundAt2(d: Double) = (d * 100).round / 100d
+
+  private def roundAt6(d: Double) = (d * 1000000).round / 1000000d
 
   def decode(value: Value, kind: DataType): Any = decode(checkType(kind, value))
 
