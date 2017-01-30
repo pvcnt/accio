@@ -90,21 +90,16 @@ final class SchedulerService @Inject()(
    * @param opDef Operator definition for the node.
    */
   private def createPayload(run: Run, node: Node, opDef: OpDef): OpPayload = {
-    val inputs = node.inputs.map { case (portName, input) =>
-      val value = input match {
-        case ParamInput(paramName) => run.params(paramName)
+    val inputs = node.inputs.flatMap { case (portName, input) =>
+      val maybeValue = input match {
+        case ParamInput(paramName) => run.params.get(paramName)
         case ReferenceInput(ref) =>
-          val maybeArtifact = run.state.nodes.find(_.name == ref.node)
+          run.state.nodes.find(_.name == ref.node)
             .flatMap(node => node.result.flatMap(_.artifacts.find(_.name == ref.port)))
-          maybeArtifact match {
-            case None =>
-              // Should never be there...
-              throw new IllegalStateException(s"Artifact of ${ref.node}/${ref.port} in run ${run.id.value} is not available")
-            case Some(artifact) => artifact.value
-          }
-        case ValueInput(v) => v
+            .map(_.value)
+        case ValueInput(v) => Some(v)
       }
-      portName -> value
+      maybeValue.map(value => portName -> value)
     }
     val cacheKey = generateCacheKey(opDef, inputs, run.seed)
     OpPayload(node.op, run.seed, inputs, cacheKey)

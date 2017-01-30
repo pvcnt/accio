@@ -21,18 +21,41 @@ import {sortBy, noop} from 'lodash'
 import CopyToClipboard from 'react-copy-to-clipboard'
 import {Grid, Button, Glyphicon, Checkbox, Form} from 'react-bootstrap'
 import autobind from 'autobind-decorator'
+import xhr from '../../../utils/xhr'
 import StatusPanel from './StatusPanel'
 import DetailsPanel from './DetailsPanel'
 import MetadataPanel from './MetadataPanel'
 import ParamsPanel from './ParamsPanel'
 import LazyPanel from '../../LazyPanel'
+import ConfirmModal from '../../ConfirmModal'
 import RunArtifactsContainer from './RunArtifactsContainer'
 
 class RunView extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {killShown: false, deleteShown: false}
+  }
+
+  @autobind
+  _handleKillShow() {
+    this.setState({killShown: true})
+  }
+
+  @autobind
+  _handleKillCancel() {
+    this.setState({killShown: false})
+  }
+
+  @autobind
+  _handleKillConfirm() {
+    xhr('/api/v1/run/' + this.props.run.id + '/kill', {method: 'POST'}, false)
+      .then(data => this.setState({killShown: false}))
+  }
+
   render() {
     const {run} = this.props;
     const nodes = sortBy(run.state.nodes, ['started_at'])
-    const artifactPanels = (!run.children && run.state.completed_at)
+    const artifactPanels = (!run.children.length && run.state.completed_at)
       ? nodes.map((node, idx) => {
         if (node.status == 'success') {
           return <LazyPanel
@@ -56,11 +79,23 @@ class RunView extends React.Component {
           {run.name ? run.name : 'Untitled run #' + run.id}
         </h2>
 
+        {this.state.killShown
+          ? <ConfirmModal
+              title="Cancel run"
+              question="Are you sure that you want to cancel this run?"
+              onCancel={this._handleKillCancel}
+              onConfirm={this._handleKillConfirm}/>
+          : null}
+
         <div className="accio-actions">
+          {run.state.status === 'running'
+            ? <Button onClick={this._handleKillShow} bsStyle="primary">
+                <Glyphicon glyph="exclamation-sign"/> Cancel run
+            </Button>
+            : null}
           <Button href={'/api/v1/run/' + run.id + '?download=true'}>
             <Glyphicon glyph="save"/> Download as JSON
           </Button>
-
           <CopyToClipboard text={run.id}>
             <Button><Glyphicon glyph="copy"/> Copy ID to clipboard</Button>
           </CopyToClipboard>
@@ -69,7 +104,7 @@ class RunView extends React.Component {
         <StatusPanel run={run}/>
         <MetadataPanel run={run} onChange={this.props.onChange}/>
         <DetailsPanel run={run}/>
-        {!run.children ? <ParamsPanel run={run}/> : null}
+        {!run.children.length ? <ParamsPanel run={run}/> : null}
 
         {artifactPanels}
       </Grid>

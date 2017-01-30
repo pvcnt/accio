@@ -66,8 +66,8 @@ final class RunFactory @Inject()(workflowRepository: WorkflowRepository) extends
       throw newError("Required param is missing", missingParams.map(paramName => s"params.$paramName"), warnings)
     }
 
-    val defaultParams = workflow.params.filterNot(p => spec.params.contains(p.name)).map { argDef =>
-      argDef.name -> argDef.defaultValue.get
+    val defaultParams = workflow.params.filterNot(p => spec.params.contains(p.name)).flatMap { argDef =>
+      argDef.defaultValue.map(defaultValue => argDef.name -> defaultValue)
     }.toMap
 
     // Check the repeat parameter is correct.
@@ -171,21 +171,7 @@ final class RunFactory @Inject()(workflowRepository: WorkflowRepository) extends
     val actualSeed = seed.getOrElse(Random.nextLong())
     val now = System.currentTimeMillis()
     val random = new Random(actualSeed)
-
-    val parent = Run(
-      id = randomId,
-      pkg = pkg,
-      owner = owner,
-      cluster = "default",
-      name = name,
-      notes = notes,
-      tags = tags,
-      seed = actualSeed,
-      params = Map.empty,
-      children = expandedParams.size,
-      clonedFrom = clonedFrom,
-      createdAt = now,
-      state = initialState(workflow.graph))
+    val parentId = randomId
 
     // Impl. note: As of now, with Scala 2.11.8, I have to explicitly write the type of `children` to be Seq[Run].
     // If I don't force it, I get the strangest compiler error (head lines follow):
@@ -203,10 +189,25 @@ final class RunFactory @Inject()(workflowRepository: WorkflowRepository) extends
         cluster = "default",
         seed = random.nextLong(),
         params = defaultParams ++ params,
-        parent = Some(parent.id),
+        parent = Some(parentId),
         createdAt = now,
         state = initialState(workflow.graph))
     }
+
+    val parent = Run(
+      id = parentId,
+      pkg = pkg,
+      owner = owner,
+      cluster = "default",
+      name = name,
+      notes = notes,
+      tags = tags,
+      seed = actualSeed,
+      params = Map.empty,
+      children = children.map(_.id),
+      clonedFrom = clonedFrom,
+      createdAt = now,
+      state = initialState(workflow.graph))
 
     Seq(parent) ++ children
   }

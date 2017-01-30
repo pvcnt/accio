@@ -100,9 +100,9 @@ class StatusPanel extends React.Component {
           <Col sm={10}>{duration ? moment.duration(duration).humanize() : '–'}</Col>
         </Row>
         <Row>
-          <Col sm={2} className="accio-view-label">{run.children ? 'Child runs' : 'Nodes'}</Col>
+          <Col sm={2} className="accio-view-label">{run.children.length ? 'Child runs' : 'Nodes'}</Col>
           <Col sm={10}>
-            {run.children
+            {run.children.length
               ? <ChildrenTableContainer run={run}/>
               : nodeRows}
           </Col>

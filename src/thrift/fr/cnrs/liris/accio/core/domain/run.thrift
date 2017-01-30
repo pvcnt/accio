@@ -148,8 +148,8 @@ struct Run {
   // Identifier of the run this instance is a child of.
   11: optional common.RunId parent;
 
-  // Number of child runs, for a parent run.
-  12: required i32 children = 0;
+  // Identifiers of children that are parent of this run.
+  12: required list<common.RunId> children;
 
   // Identifier of the run this instance has been cloned from.
   13: optional common.RunId cloned_from;

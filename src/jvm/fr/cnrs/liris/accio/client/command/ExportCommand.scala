@@ -89,7 +89,7 @@ class ExportCommand @Inject()(clientFactory: AgentClientFactory) extends Command
     val client = clientFactory.create(addr)
     val runs = residue.flatMap { id =>
       Await.result(client.getRun(GetRunRequest(RunId(id)))).result.toSeq.flatMap { run =>
-        if (run.children > 0) {
+        if (run.children.nonEmpty) {
           Await.result(client.listRuns(ListRunsRequest(parent = Some(run.id)))).results
         } else {
           Seq(run)

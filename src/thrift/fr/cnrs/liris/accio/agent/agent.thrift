@@ -184,6 +184,9 @@ struct UpdateResponse {
 exception InvalidTaskException {
 }
 
+exception UnknownRunException {
+}
+
 /**
  * Communication protocol with executors.
  */
@@ -248,11 +251,11 @@ service AgentService {
 
   ListRunsResponse listRuns(1: ListRunsRequest req);
 
-  DeleteRunResponse deleteRun(1: DeleteRunRequest req);
+  DeleteRunResponse deleteRun(1: DeleteRunRequest req) throws (1: UnknownRunException unknown);
 
-  KillRunResponse killRun(1: KillRunRequest req);
+  KillRunResponse killRun(1: KillRunRequest req) throws (1: UnknownRunException unknown);
 
-  UpdateRunResponse updateRun(1: UpdateRunRequest req);
+  UpdateRunResponse updateRun(1: UpdateRunRequest req) throws (1: UnknownRunException unknown);
 
   ListLogsResponse listLogs(1: ListLogsRequest req);
 

@@ -20,9 +20,9 @@ package fr.cnrs.liris.accio.agent.handler
 
 import com.google.inject.Inject
 import com.twitter.util.Future
-import fr.cnrs.liris.accio.agent.{DeleteRunRequest, DeleteRunResponse}
+import fr.cnrs.liris.accio.agent.{DeleteRunRequest, DeleteRunResponse, UnknownRunException}
 import fr.cnrs.liris.accio.core.statemgr.LockService
-import fr.cnrs.liris.accio.core.storage.{MutableRunRepository, RunQuery}
+import fr.cnrs.liris.accio.core.storage.MutableRunRepository
 
 /**
  * Delete a run, and all its children if it is a parent run.
@@ -35,28 +35,31 @@ final class DeleteRunHandler @Inject()(runRepository: MutableRunRepository, lock
 
   override def handle(req: DeleteRunRequest): Future[DeleteRunResponse] = {
     lockService.withLock(req.id) {
-      runRepository.get(req.id).foreach { run =>
-        if (run.children > 0) {
-          // Delete child runs, if any.
-          val children = runRepository.find(RunQuery(parent = Some(run.id))).results
-          children.foreach { child =>
-            lockService.withLock(child.id) {
-              runRepository.remove(child.id)
+      runRepository.get(req.id) match {
+        case None => throw new UnknownRunException()
+        case Some(run) =>
+          if (run.children.nonEmpty) {
+            // If is a parent run, delete child all runs.
+            run.children.foreach { childId =>
+              lockService.withLock(childId) {
+                runRepository.remove(childId)
+              }
             }
-          }
-        } else if (run.parent.isDefined) {
-          // Update parent run, if any.
-          lockService.withLock(run.parent.get) {
-            runRepository.get(run.parent.get).foreach { parent =>
-              if (parent.children > 1) {
-                runRepository.save(parent.copy(children = parent.children - 1))
-              } else {
-                runRepository.remove(parent.id)
+          } else if (run.parent.isDefined) {
+            // It is a child run, update parent run.
+            lockService.withLock(run.parent.get) {
+              runRepository.get(run.parent.get).foreach { parent =>
+                if (parent.children.size > 1) {
+                  // There are several child runs left, remove current one from the list.
+                  runRepository.save(parent.copy(children = parent.children.filterNot(_ == run.id)))
+                } else {
+                  // It was the last child of this run, delete it as it is now useless.
+                  runRepository.remove(parent.id)
+                }
               }
             }
           }
-        }
-        runRepository.remove(run.id)
+          runRepository.remove(run.id)
       }
     }
     Future(DeleteRunResponse())

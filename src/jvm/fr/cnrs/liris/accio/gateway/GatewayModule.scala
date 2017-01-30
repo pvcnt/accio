@@ -26,12 +26,13 @@ import fr.cnrs.liris.accio.agent.AgentService
 
 object GatewayModule extends TwitterModule {
   private[this] val addrFlag = flag[String]("addr", "Address to contact the Accio agent")
+  private[this] val timeoutFlag = flag[Duration]("timeout", Duration.fromSeconds(10), "Timeout when querying the Accio agent")
 
   @Singleton
   @Provides
   def providesClient: AgentService.FinagledClient = {
     val service = Thrift.client
-      .withRequestTimeout(Duration.fromSeconds(10))
+      .withRequestTimeout(timeoutFlag())
       .newService(addrFlag())
     new AgentService.FinagledClient(service)
   }

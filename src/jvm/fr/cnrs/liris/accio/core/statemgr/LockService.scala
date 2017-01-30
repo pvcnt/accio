@@ -44,6 +44,13 @@ final class LockService(stateManager: StateManager) {
     }
   }
 
+  def withLock[T](maybeRunId: Option[RunId])(f: => T): T = {
+    maybeRunId match {
+      case Some(runId) => withLock(runId)(f)
+      case None => f
+    }
+  }
+
   /**
    * Execute a block of code, with a lock around a task acquired.
    *

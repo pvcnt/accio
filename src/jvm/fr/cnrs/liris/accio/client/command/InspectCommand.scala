@@ -73,7 +73,7 @@ class InspectCommand @Inject()(clientFactory: AgentClientFactory) extends Comman
                   val runWithoutResults = run.copy(state = run.state.copy(nodes = run.state.nodes.map(_.copy(result = None))))
                   out.writeln(new String(new JsonSerializer().serialize(runWithoutResults)))
                 } else {
-                  val children = if (run.children > 0) {
+                  val children = if (run.children.nonEmpty) {
                     Await.result(client.listRuns(ListRunsRequest(parent = Some(run.id)))).results.sortBy(_.createdAt)
                   } else Seq.empty
                   printRun(run, children, out)
@@ -90,24 +90,24 @@ class InspectCommand @Inject()(clientFactory: AgentClientFactory) extends Comman
 
   private def printRun(run: Run, children: Seq[Run], out: Reporter) = {
     val prettyTime = new PrettyTime().setLocale(Locale.ENGLISH)
-    out.writeln(s"${padTo("Id", colWidth)} ${run.id.value}")
-    out.writeln(s"${padTo("Workflow", colWidth)} ${run.pkg.workflowId.value}:${run.pkg.workflowVersion}")
-    out.writeln(s"${padTo("Created", colWidth)} ${prettyTime.format(new Date(run.createdAt))}")
-    out.writeln(s"${padTo("Owner", colWidth)} ${Utils.toString(run.owner)}")
-    out.writeln(s"${padTo("Name", colWidth)} ${run.name.getOrElse("<no name>")}")
-    out.writeln(s"${padTo("Tags", colWidth)} ${if (run.tags.nonEmpty) run.tags.mkString(", ") else "<none>"}")
-    out.writeln(s"${padTo("Seed", colWidth)} ${run.seed}")
-    out.writeln(s"${padTo("Status", colWidth)} ${run.state.status.name}")
+    out.writeln(s"<comment>${padTo("Id", colWidth)}</comment> ${run.id.value}")
+    out.writeln(s"<comment>${padTo("Workflow", colWidth)}</comment> ${run.pkg.workflowId.value}:${run.pkg.workflowVersion}")
+    out.writeln(s"<comment>${padTo("Created", colWidth)}</comment> ${prettyTime.format(new Date(run.createdAt))}")
+    out.writeln(s"<comment>${padTo("Owner", colWidth)}</comment> ${Utils.toString(run.owner)}")
+    out.writeln(s"<comment>${padTo("Name", colWidth)}</comment> ${run.name.getOrElse("<no name>")}")
+    out.writeln(s"<comment>${padTo("Tags", colWidth)}</comment> ${if (run.tags.nonEmpty) run.tags.mkString(", ") else "<none>"}")
+    out.writeln(s"<comment>${padTo("Seed", colWidth)}</comment> ${run.seed}")
+    out.writeln(s"<comment>${padTo("Status", colWidth)}</comment> ${run.state.status.name}")
     if (!Utils.isCompleted(run.state.status)) {
-      out.writeln(s"${padTo("Progress", colWidth)} ${(run.state.progress * 100).round} %")
+      out.writeln(s"<comment>${padTo("Progress", colWidth)}</comment> ${(run.state.progress * 100).round} %")
     }
     run.state.startedAt.foreach { startedAt =>
-      out.writeln(s"${padTo("Started", colWidth)} ${prettyTime.format(new Date(startedAt))}")
+      out.writeln(s"<comment>${padTo("Started", colWidth)}</comment> ${prettyTime.format(new Date(startedAt))}")
     }
     run.state.completedAt.foreach { completedAt =>
-      out.writeln(s"${padTo("Completed", colWidth)} ${prettyTime.format(new Date(completedAt))}")
+      out.writeln(s"<comment>${padTo("Completed", colWidth)}</comment> ${prettyTime.format(new Date(completedAt))}")
       if (run.state.startedAt.isDefined) {
-        out.writeln(s"${padTo("Duration", colWidth)} " +
+        out.writeln(s"<comment>${padTo("Duration", colWidth)}</comment> " +
           formatDuration(Duration.fromMilliseconds(completedAt - run.state.startedAt.get)))
       }
     }
@@ -122,7 +122,7 @@ class InspectCommand @Inject()(clientFactory: AgentClientFactory) extends Comman
     }
 
     out.writeln()
-    if (run.children == 0) {
+    if (run.children.isEmpty) {
       out.writeln("== Nodes ==")
       out.writeln(s"<comment>${padTo("Node name", 30)}  ${padTo("Status", 9)}  Duration</comment>")
       run.state.nodes.toSeq.sortBy(_.startedAt.getOrElse(Long.MaxValue)).foreach { node =>
@@ -148,15 +148,15 @@ class InspectCommand @Inject()(clientFactory: AgentClientFactory) extends Comman
 
   private def printNode(node: NodeState, out: Reporter) = {
     val prettyTime = new PrettyTime().setLocale(Locale.ENGLISH)
-    out.writeln(s"${padTo("Node name", colWidth)} ${node.name}")
-    out.writeln(s"${padTo("Status", colWidth)} ${node.status.name}")
+    out.writeln(s"<comment>${padTo("Node name", colWidth)}</comment> ${node.name}")
+    out.writeln(s"<comment>${padTo("Status", colWidth)}</comment> ${node.status.name}")
     node.startedAt.foreach { startedAt =>
-      out.writeln(s"${padTo("Started", colWidth)} ${prettyTime.format(new Date(startedAt))}")
+      out.writeln(s"<comment>${padTo("Started", colWidth)}</comment> ${prettyTime.format(new Date(startedAt))}")
     }
     node.completedAt.foreach { completedAt =>
-      out.writeln(s"${padTo("Completed", colWidth)} ${prettyTime.format(new Date(completedAt))}")
+      out.writeln(s"<comment>${padTo("Completed", colWidth)}</comment> ${prettyTime.format(new Date(completedAt))}")
       if (node.startedAt.isDefined) {
-        out.write(s"${padTo("Duration", colWidth)} ")
+        out.write(s"<comment>${padTo("Duration", colWidth)}</comment> ")
         if (node.cacheHit) {
           out.writeln("<cache hit>")
         } else {
@@ -166,12 +166,12 @@ class InspectCommand @Inject()(clientFactory: AgentClientFactory) extends Comman
     }
 
     node.result.foreach { result =>
-      out.writeln(s"${padTo("Exit code", colWidth)} ${result.exitCode}")
+      out.writeln(s"<comment>${padTo("Exit code", colWidth)}</comment> ${result.exitCode}")
       result.error.foreach { error =>
         out.writeln()
-        out.writeln(s"${padTo("Error class", colWidth)} ${error.root.classifier}")
-        out.writeln(s"${padTo("Error message", colWidth)} ${error.root.message}")
-        out.writeln(s"${padTo("Error stack", colWidth)} " +
+        out.writeln(s"<error>${padTo("Error class", colWidth)}</error> ${error.root.classifier}")
+        out.writeln(s"<error>${padTo("Error message", colWidth)}</error> ${error.root.message}")
+        out.writeln(s"<error>${padTo("Error stack", colWidth)}</error> " +
           error.root.stacktrace.headOption.getOrElse("") + "\n" +
           error.root.stacktrace.tail.map(s => (" " * (colWidth + 1)) + s).mkString("\n"))
       }

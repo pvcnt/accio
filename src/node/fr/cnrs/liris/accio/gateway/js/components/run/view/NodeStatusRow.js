@@ -52,7 +52,7 @@ let NodeStatusRow = React.createClass({
       ? moment().valueOf() - node.started_at
       : null
     const glyph = isCompleted
-      ? (isSuccessful ? 'ok' : node.status == 'lost' ? 'time' : 'remove')
+      ? (isSuccessful ? 'ok' : node.status == 'lost' ? 'time' : node.status == 'killed' ? 'exclamation-sign' : 'remove')
       : isStarted
       ? 'refresh'
       : 'upload'

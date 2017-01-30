@@ -40,7 +40,7 @@ final class RunManager @Inject()(
   workflowRepository: WorkflowRepository)
   extends StrictLogging {
 
-  private[this] val graphs = CacheBuilder().maximumSize(50).build((pkg: Package) => {
+  private[this] val graphs = CacheBuilder().maximumSize(25).build((pkg: Package) => {
     // Workflow does exist, because it has been validate when creating the runs.
     val workflow = workflowRepository.get(pkg.workflowId, pkg.workflowVersion).get
     graphFactory.create(workflow.graph)
@@ -49,11 +49,12 @@ final class RunManager @Inject()(
   /**
    * Launch a run. Ready nodes of those runs will be submitted to the scheduler.
    *
-   * @param run Run to launch.
-   * @return Updated run.
+   * @param run    Run to launch.
+   * @param parent Parent run, if any.
+   * @return Updated run and parent run.
    */
   def launch(run: Run, parent: Option[Run]): (Run, Option[Run]) = {
-    if (run.children > 0) {
+    if (run.children.nonEmpty) {
       // A parent run is never launched, only mark it as started.
       (run.copy(state = run.state.copy(startedAt = Some(System.currentTimeMillis()), status = RunStatus.Running)), parent)
     } else {
@@ -62,6 +63,30 @@ final class RunManager @Inject()(
       val newRun = schedule(run, rootNodes)
       updateProgress(newRun, parent)
     }
+  }
+
+  /**
+   * Mark a list of nodes as killed.
+   *
+   * @param run       Run.
+   * @param nodeNames Nodes that have been killed, as part of the run.
+   * @param parent    Parent run, if any.
+   * @return Updated run and parent run.
+   */
+  def onKill(run: Run, nodeNames: Set[String], parent: Option[Run]): (Run, Option[Run]) = {
+    var newRun = run
+    nodeNames.foreach { nodeName =>
+      val nodeState = run.state.nodes.find(_.name == nodeName).get
+      if (nodeState.completedAt.isDefined) {
+        // On race requests, node state could be already marked as completed.
+        (run, parent)
+      } else {
+        val newNodeState = nodeState.copy(completedAt = Some(System.currentTimeMillis()), status = NodeStatus.Killed)
+        newRun = replace(run, nodeState, newNodeState)
+        newRun = cancelNextNodes(newRun, nodeName)
+      }
+    }
+    updateProgress(newRun, parent)
   }
 
   /**
@@ -96,7 +121,8 @@ final class RunManager @Inject()(
    * @param run      Run.
    * @param nodeName Node that has failed, as part of the run.
    * @param result   Node result.
-   * @return Updated run.
+   * @param parent   Parent run, if any.
+   * @return Updated run and parent run.
    */
   def onFailed(run: Run, nodeName: String, result: OpResult, parent: Option[Run]): (Run, Option[Run]) = {
     val nodeState = run.state.nodes.find(_.name == nodeName).get
@@ -120,7 +146,8 @@ final class RunManager @Inject()(
    *
    * @param run      Run.
    * @param nodeName Node that has failed, as part of the run.
-   * @return Updated run.
+   * @param parent   Parent run, if any.
+   * @return Updated run and parent run.
    */
   def onLost(run: Run, nodeName: String, parent: Option[Run]): (Run, Option[Run]) = {
     val nodeState = run.state.nodes.find(_.name == nodeName).get
@@ -142,7 +169,8 @@ final class RunManager @Inject()(
    * @param run      Run.
    * @param nodeName Node that completed, as part of the run.
    * @param result   Node result.
-   * @return Updated run.
+   * @param parent   Parent run, if any.
+   * @return Updated run and parent run.
    */
   def onSuccess(run: Run, nodeName: String, result: OpResult, cacheKey: Option[CacheKey], parent: Option[Run]): (Run, Option[Run]) = {
     val nodeState = run.state.nodes.find(_.name == nodeName).get
@@ -211,6 +239,8 @@ final class RunManager @Inject()(
         // Mark run as completed, if all nodes are completed. It is successful if all nodes were successful.
         val newRunStatus = if (newRun.state.nodes.forall(_.status == NodeStatus.Success)) {
           RunStatus.Success
+        } else if (newRun.state.nodes.exists(_.status == NodeStatus.Killed)) {
+          RunStatus.Killed
         } else {
           RunStatus.Failed
         }
@@ -233,12 +263,12 @@ final class RunManager @Inject()(
           .filter(_.id != run.id)
           .map(_.state.progress)
           .sum + run.state.progress
-        if (progressSum == parent.children.toDouble) {
+        if (progressSum == parent.children.size) {
           // Mark parent run as completed if all children are completed. It is always successful.
           parent.copy(state = parent.state.copy(progress = 1, status = RunStatus.Success, completedAt = Some(System.currentTimeMillis())))
         } else {
           // Parent is not yet completed, only update progress.
-          val progress = progressSum / parent.children
+          val progress = progressSum / parent.children.size
           parent.copy(state = parent.state.copy(progress = progress))
         }
       } else {

@@ -23,6 +23,7 @@ import com.twitter.finagle.http.Request
 import com.twitter.finatra.http.Controller
 import com.twitter.finatra.request.{QueryParam, RouteParam}
 import com.twitter.finatra.validation.{Max, Min}
+import com.twitter.util.{Return, Throw}
 import fr.cnrs.liris.accio.agent._
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.common.util.StringUtils.explode
@@ -117,17 +118,26 @@ class ApiController @Inject()(client: AgentService.FinagledClient) extends Contr
 
   post("/api/v1/run/:id/kill") { httpReq: KillRunHttpRequest =>
     val req = KillRunRequest(RunId(httpReq.id))
-    client.killRun(req).map(_ => response.ok)
+    client.killRun(req).liftToTry.map {
+      case Return(_) => response.ok
+      case Throw(UnknownRunException()) => response.notFound
+    }
   }
 
   post("/api/v1/run/:id") { httpReq: UpdateRunHttpRequest =>
     val req = UpdateRunRequest(RunId(httpReq.id), httpReq.name, httpReq.notes, httpReq.tags)
-    client.updateRun(req).map(_ => response.ok)
+    client.updateRun(req).liftToTry.map {
+      case Return(_) => response.ok
+      case Throw(UnknownRunException()) => response.notFound
+    }
   }
 
   delete("/api/v1/run/:id") { httpReq: DeleteRunHttpRequest =>
     val req = DeleteRunRequest(RunId(httpReq.id))
-    client.deleteRun(req).map(_ => response.ok)
+    client.deleteRun(req).liftToTry.map {
+      case Return(_) => response.ok
+      case Throw(UnknownRunException()) => response.notFound
+    }
   }
 
   get("/api/v1/run/:id/metrics/:node") { httpReq: ListMetricsHttpRequest =>

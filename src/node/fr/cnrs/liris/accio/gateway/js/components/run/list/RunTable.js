@@ -33,7 +33,7 @@ class RunTable extends React.Component {
           <Link to={'/runs/view/' + run.id}>
             {run.name ? run.name : 'Untitled run #' + run.id}
           </Link>
-          {run.children ? <span style={{marginLeft: '10px'}}><Glyphicon glyph="tasks"/>&nbsp;{run.children}</span> : null}
+          {run.children.length ? <span style={{marginLeft: '10px'}}><Glyphicon glyph="tasks"/>&nbsp;{run.children.length}</span> : null}
         </td>
         {this.props.showWorkflow ? <td>{run.pkg.workflow_id}</td> : null}
         {this.props.showOwner ? <td>{run.owner.name}</td> : null}

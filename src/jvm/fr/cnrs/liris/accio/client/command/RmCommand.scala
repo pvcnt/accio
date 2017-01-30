@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.client.command
 
 import com.google.inject.Inject
 import com.twitter.util.{Await, Return, Stopwatch, Throw}
-import fr.cnrs.liris.accio.agent.DeleteRunRequest
+import fr.cnrs.liris.accio.agent.{DeleteRunRequest, UnknownRunException}
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.common.cli.{Cmd, Command, ExitCode, Reporter}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
@@ -33,35 +33,39 @@ case class RmCommandFlags(
 @Cmd(
   name = "rm",
   flags = Array(classOf[AccioAgentFlags], classOf[RmCommandFlags]),
-  help = "Delete runs.",
+  help = "Delete a run.",
   allowResidue = true)
 class RmCommand @Inject()(clientFactory: AgentClientFactory) extends Command {
   override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
-    if (flags.residue.isEmpty) {
-      out.writeln("<error>[ERROR]</error> You must provide some run identifiers.")
+    if (flags.residue.size != 1) {
+      out.writeln("<error>[ERROR]</error> You must provide a single run identifier.")
       ExitCode.CommandLineError
     } else {
       val opts = flags.as[RmCommandFlags]
       val elapsed = Stopwatch.start()
       val client = clientFactory.create(flags.as[AccioAgentFlags].addr)
-      val outcomes = flags.residue.map { id =>
-        Await.result(client.deleteRun(DeleteRunRequest(RunId(id))).liftToTry) match {
-          case Return(_) =>
-            if (!opts.quiet) {
-              out.writeln(s"<info>[INFO]</info> Deleted run $id")
-            }
-            ExitCode.Success
-          case Throw(e) =>
-            if (!opts.quiet) {
-              out.writeln(s"<error>[ERROR]</error> Server error: ${e.getMessage}")
-            }
-            ExitCode.InternalError
-        }
+      val req = DeleteRunRequest(RunId(flags.residue.head))
+      val exitCode = Await.result(client.deleteRun(req).liftToTry) match {
+        case Return(_) =>
+          if (!opts.quiet) {
+            out.writeln(s"<info>[INFO]</info> Deleted run ${flags.residue.head}")
+          }
+          ExitCode.Success
+        case Throw(UnknownRunException()) =>
+          if (!opts.quiet) {
+            out.writeln(s"<error>[ERROR]</error> Unknown run ${flags.residue.head}")
+          }
+          ExitCode.CommandLineError
+        case Throw(e) =>
+          if (!opts.quiet) {
+            out.writeln(s"<error>[ERROR]</error> Server error: ${e.getMessage}")
+          }
+          ExitCode.InternalError
       }
       if (!opts.quiet) {
         out.writeln(s"<info>[OK]</info> Done in ${TimeUtils.prettyTime(elapsed())}.")
       }
-      ExitCode.select(outcomes)
+      exitCode
     }
   }
 }
