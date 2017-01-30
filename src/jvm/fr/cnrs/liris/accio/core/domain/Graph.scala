@@ -111,15 +111,6 @@ case class Node private[domain](
    * @return List of node names.
    */
   def successors: Set[String] = outputs.values.flatten.map(_.node).toSet
-
-  override def equals(other: Any): Boolean = other match {
-    case n: Node => n.name == name && n.op == op && n.inputs == inputs && n.outputs == outputs
-    case _ => false
-  }
-
-  // I can't tell why it is necessary to explicitly specify that. I always thought it was case classes' default
-  // behavior to compare each field for equality, but apparently not. If I do not overwrite this method, nodes with
-  // different inputs appear as equal, which is obviously not the case. :o
 }
 
 /**

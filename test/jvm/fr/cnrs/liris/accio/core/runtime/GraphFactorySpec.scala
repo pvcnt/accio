@@ -18,9 +18,11 @@
 
 package fr.cnrs.liris.accio.core.runtime
 
-import fr.cnrs.liris.accio.core.domain._
+import fr.cnrs.liris.accio.core.domain.{InvalidSpecMessage, _}
 import fr.cnrs.liris.accio.testing.Operators
 import fr.cnrs.liris.testing.UnitSpec
+
+import scala.collection.mutable
 
 /**
  * Unit tests for [[GraphFactory]].
@@ -200,6 +202,17 @@ class GraphFactorySpec extends UnitSpec {
           "dbl" -> InputDef.Value(Values.encodeDouble(3.14)),
           "data" -> InputDef.Reference(Reference("ThirdSimple", "data"))))))
     assertErrors(graphDef, InvalidSpecMessage("Cycle detected: ThirdSimple -> SecondSimple -> ThirdSimple"))
+  }
+
+  it should "detect deprecated operators" in {
+    val graphDef = GraphDef(Set(
+      NodeDef(
+        op = "Deprecated",
+        name = "Deprecated",
+        inputs = Map("foo" -> InputDef.Value(Values.encodeInteger(42))))))
+    val warnings = mutable.Set.empty[InvalidSpecMessage]
+    factory.create(graphDef, warnings)
+    warnings should contain(InvalidSpecMessage("Operator is deprecated: Do not use it!", Some("graph.Deprecated")))
   }
 
   private def assertErrors(graphDef: GraphDef, errors: InvalidSpecMessage*) = {

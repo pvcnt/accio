@@ -26,7 +26,7 @@ import fr.cnrs.liris.testing.UnitSpec
  */
 class StaticOpRegistrySpec extends UnitSpec {
   private val registry = new StaticOpRegistry(Operators.ops)
-  private val names = Set("FirstSimple", "SecondSimple", "ThirdSimple")
+  private val names = Set("FirstSimple", "SecondSimple", "ThirdSimple", "Deprecated")
 
   behavior of "StaticOpRegistry"
 
@@ -53,7 +53,7 @@ class StaticOpRegistrySpec extends UnitSpec {
 
   it should "return all registered operators" in {
     val ops = registry.ops
-    ops should have size 3
+    ops should have size 4
     ops.map(_.name) should contain theSameElementsAs names
   }
 }

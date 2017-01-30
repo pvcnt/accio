@@ -41,8 +41,13 @@ private[accio] object Operators {
       ArgDef("data1", DataType(AtomicType.Dataset)),
       ArgDef("data2", DataType(AtomicType.Dataset))),
     Seq(ArgDef("data", DataType(AtomicType.Dataset))))
+  val Deprecated: OpDef = createOpDef(
+    "Deprecated",
+    Seq(ArgDef("foo", DataType(AtomicType.Integer))),
+    Seq(ArgDef("data", DataType(AtomicType.Dataset))))
+    .copy(deprecation = Some("Do not use it!"))
 
-  val ops: Set[OpDef] = Set(FirstSimple, SecondSimple, ThirdSimple)
+  val ops: Set[OpDef] = Set(FirstSimple, SecondSimple, ThirdSimple, Deprecated)
 
   private def createOpDef(name: String, inputs: Seq[ArgDef], outputs: Seq[ArgDef]) = {
     OpDef(

@@ -25,7 +25,8 @@ import fr.cnrs.liris.common.util.Seqs
 import scala.collection.mutable
 
 /**
- * Factory for [[Graph]].
+ * Factory for [[Graph]]. Graph definitions are used to define graph in a compact format, but may need to be converted
+ * into [[Graph]]s to be more exploitable.
  *
  * @param opRegistry Operator registry.
  */
@@ -60,99 +61,41 @@ final class GraphFactory @Inject()(opRegistry: OpRegistry) extends BaseFactory {
     graph
   }
 
+  /**
+   * Create a node from its definition. Check the operator does exist.
+   *
+   * @param nodeDef  Node definition.
+   * @param warnings Mutable list collecting warnings.
+   */
   private def createNode(nodeDef: NodeDef, warnings: mutable.Set[InvalidSpecMessage]) = {
     opRegistry.get(nodeDef.op) match {
       case None => throw newError(s"Unknown operator: ${nodeDef.op}", s"graph.${nodeDef.name}.op", warnings)
       case Some(opDef) =>
         // Outputs will be populated later.
-        Node(nodeDef.name, nodeDef.op, getInputs(nodeDef, opDef, warnings), Map.empty)
+        Node(nodeDef.name, nodeDef.op, createInputs(nodeDef, opDef, warnings), Map.empty)
     }
   }
 
-  private def validateGraph(graph: Graph, warnings: mutable.Set[InvalidSpecMessage]): Unit = {
-    if (graph.roots.isEmpty) {
-      throw newError("No root node", warnings)
-    }
-    val cycles = detectCycles(graph)
-    if (cycles.nonEmpty) {
-      val messages = cycles.map(cycle => s"Cycle detected: ${cycle.mkString(" -> ")}")
-      throw newError(messages, warnings)
-    }
-  }
-
-  private def validateNode(node: Node, nodes: Map[String, Node], warnings: mutable.Set[InvalidSpecMessage]): Unit = {
-    if (Utils.NodeRegex.findFirstIn(node.name).isEmpty) {
-      throw newError(s"Invalid node name: ${node.name}", warnings)
-    }
-
-    node.inputs.foreach { case (thisPort, in) =>
-      // Operator existence has already been validated previously.
-      val thisOp = opRegistry(node.op)
-
-      // Check operator is not deprecated.
-      thisOp.deprecation.foreach { message =>
-        warnings += InvalidSpecMessage(s"Operator is deprecated: $message", Some(s"graph.${node.name}.inputs.$thisPort"))
-      }
-
-      thisOp.inputs.find(_.name == thisPort) match {
-        case None => throw newError("Unknown input port", s"graph.${node.name}.inputs.$thisPort", warnings)
-        case Some(thisArg) =>
-          in match {
-            case ReferenceInput(ref) =>
-              // Check input is defined for a valid operator and port.
-              // We could do it sooner, but we are sure here that all op names are valid.
-              nodes.get(ref.node) match {
-                case None => throw newError(s"Unknown node: ${ref.node}", s"graph.${node.name}.inputs.$thisPort", warnings)
-                case Some(otherNode) =>
-                  val otherOp = opRegistry(otherNode.op)
-                  otherOp.outputs.find(_.name == ref.port) match {
-                    case None => throw newError(s"Unknown output port: ${ref.node}/${ref.port}", s"graph.${node.name}.inputs.$thisPort", warnings)
-                    case Some(otherArg) =>
-                      if (otherArg.kind != thisArg.kind) {
-                        throw newError(
-                          s"Data type mismatch: requires ${Utils.toString(thisArg.kind)}, got ${Utils.toString(otherArg.kind)}",
-                          s"graph.${node.name}.inputs.$thisPort",
-                          warnings)
-                      }
-                  }
-              }
-            case _ => // Nothing to check here.
-          }
-      }
-    }
-  }
-
-  private def wireNode(node: Node, nodes: Map[String, Node]): Node = {
-    // Look for all nodes consuming outputs of this one and connect them.
-    val outputs = Seqs.index(nodes.values.flatMap { otherNode =>
-      otherNode.inputs.flatMap {
-        case (otherPort, ReferenceInput(ref)) =>
-          if (ref.node == node.name) {
-            Some(ref.port -> Reference(otherNode.name, otherPort))
-          } else {
-            None
-          }
-        case _ => None
-      }
-    }.toSet)
-    node.copy(outputs = outputs)
-  }
-
-  private def getInputs(nodeDef: NodeDef, opDef: OpDef, warnings: mutable.Set[InvalidSpecMessage]): Map[String, Input] = {
+  /**
+   * Create the inputs of a node, from its definition. Check the input is defined (if non-optional) and valid.
+   *
+   * @param nodeDef  Node definition.
+   * @param opDef    Operator definition (matching node's op).
+   * @param warnings Mutable list collecting warnings.
+   */
+  private def createInputs(nodeDef: NodeDef, opDef: OpDef, warnings: mutable.Set[InvalidSpecMessage]): Map[String, Input] = {
     val unknownInputs = nodeDef.inputs.keySet.diff(opDef.inputs.map(_.name).toSet)
     if (unknownInputs.nonEmpty) {
       throw newError("Unknown input port", unknownInputs.map(name => s"graph.${nodeDef.name}.inputs.$name"), warnings)
     }
     opDef.inputs.flatMap { argDef =>
       val value = nodeDef.inputs.get(argDef.name) match {
-        case None => argDef.defaultValue match {
-          case Some(defaultValue) => Some(ValueInput(defaultValue))
-          case None =>
-            if (!argDef.isOptional) {
-              throw newError(s"No value for required input", s"graph.${nodeDef.name}.inputs.${argDef.name}", warnings)
-            }
-            None
-        }
+        case None =>
+          val defaultValue = argDef.defaultValue.map(ValueInput.apply)
+          if (defaultValue.isEmpty && !argDef.isOptional) {
+            throw newError(s"No value for required input", s"graph.${nodeDef.name}.inputs.${argDef.name}", warnings)
+          }
+          defaultValue
         case Some(InputDef.Value(v)) =>
           if (v.kind != argDef.kind) {
             throw newError(
@@ -170,10 +113,109 @@ final class GraphFactory @Inject()(opRegistry: OpRegistry) extends BaseFactory {
     }.toMap
   }
 
+  /**
+   * Validate a single node.
+   *
+   * @param node     Node to validate.
+   * @param nodes    All nodes inside the graph, indexed by name. They have not necessarily been validated.
+   * @param warnings Mutable list collecting warnings.
+   */
+  private def validateNode(node: Node, nodes: Map[String, Node], warnings: mutable.Set[InvalidSpecMessage]): Unit = {
+    if (Utils.NodeRegex.findFirstIn(node.name).isEmpty) {
+      throw newError(s"Invalid node name: ${node.name}", warnings)
+    }
+
+    // Operator existence has already been validated previously in `createNode`.
+    val thisOp = opRegistry(node.op)
+    thisOp.deprecation.foreach { message =>
+      warnings += InvalidSpecMessage(s"Operator is deprecated: $message", Some(s"graph.${node.name}"))
+    }
+
+    node.inputs.foreach {
+      case (thisPort, ReferenceInput(ref)) =>
+        // Check input is defined for a valid operator and port, and data types are consistent.
+        // We could do it sooner, but we are sure here that all op names are valid.
+        nodes.get(ref.node) match {
+          case None => throw newError(s"Unknown node: ${ref.node}", s"graph.${node.name}.inputs.$thisPort", warnings)
+          case Some(otherNode) =>
+            val otherOp = opRegistry(otherNode.op)
+            otherOp.outputs.find(_.name == ref.port) match {
+              case None =>
+                throw newError(
+                  s"Unknown output port: ${ref.node}/${ref.port}",
+                  s"graph.${node.name}.inputs.$thisPort",
+                  warnings)
+              case Some(otherArg) =>
+                val thisArg = thisOp.inputs.find(_.name == thisPort).get
+                if (otherArg.kind != thisArg.kind) {
+                  throw newError(
+                    s"Data type mismatch: requires ${Utils.toString(thisArg.kind)}, got ${Utils.toString(otherArg.kind)}",
+                    s"graph.${node.name}.inputs.$thisPort",
+                    warnings)
+                }
+            }
+        }
+      case _ => // Nothing to check here.
+    }
+  }
+
+  /**
+   * Create connections between outputs of a node and all other nodes consuming them.
+   *
+   * @param node  Node to connect.
+   * @param nodes All nodes inside the graph, indexed by name. They have already been validated.
+   * @return Updated node, with outputs connected.
+   */
+  private def wireNode(node: Node, nodes: Map[String, Node]): Node = {
+    val outputs = Seqs.index(nodes.values.flatMap { otherNode =>
+      otherNode.inputs.flatMap {
+        case (otherPort, ReferenceInput(ref)) =>
+          if (ref.node == node.name) {
+            Some(ref.port -> Reference(otherNode.name, otherPort))
+          } else {
+            None
+          }
+        case _ => None
+      }
+    }.toSet)
+    node.copy(outputs = outputs)
+  }
+
+  /**
+   * Validate that a graph is actually a directed acyclic graph (DAG).
+   *
+   * @param graph    Graph to validate.
+   * @param warnings Mutable list collecting warnings.
+   */
+  private def validateGraph(graph: Graph, warnings: mutable.Set[InvalidSpecMessage]): Unit = {
+    if (graph.roots.isEmpty) {
+      throw newError("No root node", warnings)
+    }
+    val cycles = detectCycles(graph)
+    if (cycles.nonEmpty) {
+      val messages = cycles.map(cycle => s"Cycle detected: ${cycle.mkString(" -> ")}")
+      throw newError(messages, warnings)
+    }
+  }
+
+  /**
+   * Detect cycles inside a graph.
+   *
+   * @param graph Graph to validate.
+   * @return List of cycles, each cycle being the sequence of node names composing it.
+   */
   private def detectCycles(graph: Graph): Set[Seq[String]] = {
     graph.roots.map(node => visit(graph, node.name, Seq.empty)).filter(_.nonEmpty)
   }
 
+  /**
+   * Recursively visit nodes of a graph.
+   *
+   * @param graph    Graph to visit.
+   * @param nodeName Current name of node to visit.
+   * @param visited  Previously visited node names.
+   * @return New list of visited node names.
+   */
   private def visit(graph: Graph, nodeName: String, visited: Seq[String]): Seq[String] = {
     val node = graph(nodeName)
     if (visited.contains(nodeName)) {
