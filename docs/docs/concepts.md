@@ -33,7 +33,7 @@ Operators can be defined as unstable.
 This unstable status can be defined depending on some inputs, but should be known before actually executing the operator.
 Unstable operators are allowed to used a seed they have access to through the operator execution context.
 This seed can be considered as an additional input and should be their only source of randomness.
-It means that given some inputs **and a seed**, unstable operators are expected to produce the exact same outputs at each execution.
+It means that given **a set of inputs and a seed**, unstable operators are expected to produce the exact same outputs at each execution.
 
 ## Workflows
 

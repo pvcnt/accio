@@ -5,11 +5,11 @@ section: client
 title: "Command: rm"
 ---
 
-The `rm` command is used to delete specific runs.
+The `kill` command is used to stop a run being executed.
 
 ## Usage
 ```
-accio rm [options] <run id> [...]
+accio rm [options] <run id>
 ```
 
 This command requires a single argument, which is the identifier of the run to kill.

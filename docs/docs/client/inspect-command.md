@@ -12,13 +12,12 @@ The `inspect` command is used to query the status of a specific run.
 accio inspect [options] <run id> [<node name>]
 ```
 
-This command requires as argument the identifier of a run.
+This command requires a single argument, which is the identifier of the run to inspect.
 You can also specify as a second argument a node name that is part of the run.
 
-When used to inspect a run, this command returns metadata about the run (e.g., name, creation time) and status of the nodes.
-When used to inspect a node, this command returns metadata about the node (e.g., creation time, exit code).
-If the node is completed, it also prints the outcome: metrics, error information if it failed or artifacts if it was successful.
-Please note that when `-json` is not enabled, only a preview of the artifacts is shown, to keep the output readable.
+When used to inspect a run, this command returns information about the run and status of the nodes.
+When used to inspect a node, this command returns information about the node as well as, if the node is completed, its outcome: metrics, error (if failed) or artifacts (if successful).
+Please note that only a preview of the artifacts is shown, to keep the output readable.
 If you want the full results, please enable the `-json` option, or use the [`export` command](export-command.md).
 
 ## Options
@@ -36,46 +35,60 @@ Notably happens when the run or node does not exist.
 Getting the status of a run:
 
 ```bash
-$ accio inspect e38283871cce42759279d459c8ed45ca
-Id              e38283871cce42759279d459c8ed45ca
-Workflow        workflow_Cab_Geo-I:ef2388d2c93e724c36933283b5a3815faf7d33a8
-Created         2 minutes ago
-Owner           vincent
+$ accio inspect 026f42d37ed14401bee76d67dc53ef1d
+Id              026f42d37ed14401bee76d67dc53ef1d
+Workflow        workflow_Geo-I:657cfdbee26bc779df0a5d0a8070e7970fa505bf
+Created         27 minutes ago
+Owner           vprimault
 Name            <no name>
 Tags            <none>
-Seed            3320693330992270466
-Status          Scheduled
-Progress        17 %
-Started         1 minute ago
+Seed            630005313758984082
+Status          Success
+Started         27 minutes ago
+Completed       26 minutes ago
+Duration        76 seconds
 
-Node name                       Status
-PoisRetrieval                   Waiting
-SpatialDistortion               Waiting
-GeoIndistinguishability         Waiting
-AreaCoverage                    Waiting
-EventSource                     Success
-DurationSplitting               Running
+== Parameters ==
+level          15
+pois_threshold 100.0.meters
+pois_diameter  200.0.meters
+pois_duration  PT900S
+url            /data/accio/cabspotting-tree
+split_duration PT14400S
+
+== Nodes ==
+Node name                       Status     Duration
+EventSource                     Success    <cache hit>
+DurationSplitting               Success    <cache hit>
+TrainPoisExtraction             Success    <cache hit>
+GeoIndistinguishability         Success    18 seconds
+TestPoisExtraction              Success    17 seconds
+AreaCoverage                    Success    24 seconds
+SpatialDistortion               Success    55 seconds
+PoisRetrieval                   Success    7569 milliseconds
 ```
 
-Getting the status of the `EventSource` node of this run:
+Getting the status of the `PoisRetrieval` node of this run:
 ```bash
-$ accio inspect e38283871cce42759279d459c8ed45ca EventSource
-Node name       EventSource
+$ accio inspect e38283871cce42759279d459c8ed45ca PoisRetrieval
+Node name       PoisRetrieval
 Status          Success
-Started         3 minutes ago
-Completed       2 minutes ago
-Duration        65 seconds
+Started         26 minutes ago
+Completed       26 minutes ago
+Duration        7569 milliseconds
 Exit code       0
 
-Artifacts
-Name                       Value preview
-data                       Dataset(/tmp/accio-agent/uploads/0d684aee0b4bde2704eb937412be92b456a4dcad/data)
+== Artifacts ==
+Name                       Value (preview)
+fscore                     orsyalf-54=0.0, odlorhem-5=0.0, <28964 more>
+recall                     orsyalf-54=0.0, odlorhem-5=0.0, <28964 more>
+precision                  orsyalf-54=1.0, odlorhem-5=1.0, <28964 more>
 
-Metrics
+== Metrics ==
 Name                       Value
-memory_used_bytes          1.20014304E8
-memory_reserved_bytes      2.07683584E8
-system_time_nanos          0.0
-user_time_nanos            2627000.0
-cpu_time_nanos             3400000.0
+memory_reserved_bytes      9.32798464E8
+wall_time_millis           4938.0
+memory_used_bytes          4.83494448E8
+cpu_time_millis            2384.0
+user_time_millis           2330.0
 ```

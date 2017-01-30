@@ -19,11 +19,17 @@ Runs are returned in reverse chronological order, the most recently created one 
 ## Options
 * `-addr=<string>`: Address of the Accio cluster. It can be any name following [Finagle's naming syntax](https://twitter.github.io/finagle/guide/Names.html).
 Overrides the ACCIO_ADDR environment variable. Defaults to *127.0.0.1:9999*.
-* `-no_active`: Hide active (i.e., scheduled or running) runs.
-* `-completed`: Include completed (i.e., successful or failed) runs. Implies `-success` and `-failed`.
-* `-success`: Include successful runs.
-* `-failed`: Include failed runs.
-* `-all`: Include all runs, whatever their state. Implies `-completed`.
+* `-[no]active`: Hide active (i.e., scheduled or running) runs.
+Defaults to true.
+* `-[no]completed`: Include completed (i.e., successful or failed) runs.
+Implies `-success` and `-failed`.
+Defaults to false.
+* `-[no]success`: Include successful runs.
+Defaults to false.
+* `-[no]failed`: Include failed runs.
+Defaults to false.
+* `-[no]all`: Include all runs, whatever their state. Implies `-completed`.
+Defaults to false.
 * `-owner=<string>`: Include only runs belonging to a given owner.
 * `-name=<string>`: Include only runs whose name matches a given string.
 * `-n=<integer>`: Limit the number of results.

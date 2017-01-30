@@ -12,6 +12,7 @@ They will not be repeated when listing the options of each command in this secti
 * `-logging=<string>`: Logging level for the client, one of *trace*, *debug*, *info*, *warn*, *error*, *all* or *off*. Defaults to *warn*.
 * `-rc=<string>`: Path to the .acciorc configuration file.
 * `-config=<string>`: Name of the configuration to use, conjointly with the .acciorc configuration file.
-* `-no_color`: Disable colored output.
+* `-[no]color`: Enable or disable colored output.
+Defaults to true.
 
 The `ACCIO_USER` environment variable can be used to specify the actual user's name.
