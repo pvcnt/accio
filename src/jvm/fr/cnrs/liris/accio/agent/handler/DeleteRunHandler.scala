@@ -36,14 +36,26 @@ final class DeleteRunHandler @Inject()(runRepository: MutableRunRepository, lock
   override def handle(req: DeleteRunRequest): Future[DeleteRunResponse] = {
     lockService.withLock(req.id) {
       runRepository.get(req.id).foreach { run =>
-        // First delete child runs, if any.
-        val children = runRepository.find(RunQuery(parent = Some(run.id))).results
-        children.foreach { child =>
-          lockService.withLock(child.id) {
-            runRepository.remove(child.id)
+        if (run.children > 0) {
+          // Delete child runs, if any.
+          val children = runRepository.find(RunQuery(parent = Some(run.id))).results
+          children.foreach { child =>
+            lockService.withLock(child.id) {
+              runRepository.remove(child.id)
+            }
+          }
+        } else if (run.parent.isDefined) {
+          // Update parent run, if any.
+          lockService.withLock(run.parent.get) {
+            runRepository.get(run.parent.get).foreach { parent =>
+              if (parent.children > 1) {
+                runRepository.save(parent.copy(children = parent.children - 1))
+              } else {
+                runRepository.remove(parent.id)
+              }
+            }
           }
         }
-        // Finally delete parent run.
         runRepository.remove(run.id)
       }
     }
