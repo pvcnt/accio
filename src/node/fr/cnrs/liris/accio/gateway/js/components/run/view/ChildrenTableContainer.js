@@ -15,12 +15,10 @@
  * You should have received a copy of the GNU General Public License
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-import React from 'react'
-import Spinner from 'react-spinkit'
-import autobind from 'autobind-decorator'
-import xhr from '../../../utils/xhr'
-import ChildrenTable from './ChildrenTable'
+import React from "react";
+import Spinner from "react-spinkit";
+import xhr from "../../../utils/xhr";
+import ChildrenTable from "./ChildrenTable";
 
 class ChildrenTableContainer extends React.Component {
   constructor(props) {
@@ -28,9 +26,8 @@ class ChildrenTableContainer extends React.Component {
     this.state = {data: null}
   }
 
-  @autobind
   _loadData (props) {
-    xhr('/api/v1/run?per_page=50&parent=' + props.run.id)
+    this.xhr = xhr('/api/v1/run?per_page=50&parent=' + props.run.id)
       .then(data => this.setState({data: data.results}))
   }
 
@@ -40,6 +37,12 @@ class ChildrenTableContainer extends React.Component {
 
   componentWillReceiveProps(nextProps) {
     this._loadData(nextProps)
+  }
+
+  componentWillUnmount() {
+    if (this.xhr) {
+      this.xhr.cancel()
+    }
   }
 
   render() {

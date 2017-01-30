@@ -17,23 +17,24 @@
  */
 
 import React from 'react'
-import {Row, Col} from 'react-bootstrap'
-import {prettyPrintValue} from '../../../utils/prettyPrint'
+import {Row, Col, Glyphicon} from 'react-bootstrap'
 
-class RawArtifactGroup extends React.Component {
+class MetricGroup extends React.Component {
   render() {
-    const rows = this.props.artifacts.map((artifact, idx) => {
+    const rows = this.props.metrics.map((metric, idx) => {
       return <Row key={idx}>
-        <Col sm={3} className="accio-view-label">{artifact.name}</Col>
-        <Col sm={9}>{prettyPrintValue(artifact.value.payload, artifact.value.kind)}</Col>
+        <Col sm={3} className="accio-view-label">
+          {metric.name}&nbsp;<Glyphicon glyph="dashboard"/>
+          </Col>
+        <Col sm={9}>{metric.value}</Col>
       </Row>
     });
     return <div>{rows}</div>
   }
 }
 
-RawArtifactGroup.propTypes = {
-  artifacts: React.PropTypes.arrayOf(React.PropTypes.object).isRequired,
+MetricGroup.propTypes = {
+  metrics: React.PropTypes.arrayOf(React.PropTypes.object).isRequired,
 }
 
-export default RawArtifactGroup;
+export default MetricGroup;

@@ -16,15 +16,16 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React from "react";
-import {sortBy, noop} from "lodash";
-import CopyToClipboard from "react-copy-to-clipboard";
-import {Grid, Button, Glyphicon} from "react-bootstrap";
-import StatusPanel from "./StatusPanel";
-import DetailsPanel from "./DetailsPanel";
-import MetadataPanel from "./MetadataPanel";
-import ParamsPanel from "./ParamsPanel";
-import LazyPanel from "../../LazyPanel";
+import React from 'react'
+import {sortBy, noop} from 'lodash'
+import CopyToClipboard from 'react-copy-to-clipboard'
+import {Grid, Button, Glyphicon, Checkbox, Form} from 'react-bootstrap'
+import autobind from 'autobind-decorator'
+import StatusPanel from './StatusPanel'
+import DetailsPanel from './DetailsPanel'
+import MetadataPanel from './MetadataPanel'
+import ParamsPanel from './ParamsPanel'
+import LazyPanel from '../../LazyPanel'
 import RunArtifactsContainer from './RunArtifactsContainer'
 
 class RunView extends React.Component {

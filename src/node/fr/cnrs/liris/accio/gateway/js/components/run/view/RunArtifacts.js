@@ -19,6 +19,7 @@
 import React from "react";
 import PlotArtifactGroup from '../artifact/PlotArtifactGroup'
 import RawArtifactGroup from '../artifact/RawArtifactGroup'
+import MetricGroup from '../artifact/MetricGroup'
 import {map} from 'lodash'
 
 const NUMERICS = ['byte', 'integer', 'double', 'distance', 'duration']
@@ -42,28 +43,39 @@ function _detectGroup(artifact) {
 
 class RunArtifacts extends React.Component {
   render() {
-    const groups = {}
-    this.props.artifacts.forEach(artifact => {
-      const group = _detectGroup(artifact)
-      if (!groups[group]) {
-        groups[group] = []
-      }
-      groups[group].push(artifact)
-    })
-    const elements = map(groups, (artifacts, type) => {
-      if (type == 'plot') {
-        return <PlotArtifactGroup key={type} artifacts={artifacts}/>
-      } else if (type == 'raw') {
-        return <RawArtifactGroup key={type} artifacts={artifacts}/>
-      }
-    })
+    let elements = []
+
+    if (this.props.artifacts) {
+      const groups = {}
+      this.props.artifacts.forEach(artifact => {
+        const group = _detectGroup(artifact)
+        if (!groups[group]) {
+          groups[group] = []
+        }
+        groups[group].push(artifact)
+      })
+      map(groups, (artifacts, type) => {
+        const key = 'artifact:' + type
+        if (type == 'plot') {
+          return <PlotArtifactGroup key={key} artifacts={artifacts}/>
+        } else if (type == 'raw') {
+          return <RawArtifactGroup key={key} artifacts={artifacts}/>
+        }
+      }).forEach(el => elements.push(el))
+    }
+
+    if (this.props.metrics) {
+      elements.push(<MetricGroup key="metrics" metrics={this.props.metrics}/>)
+    }
+
     return <div>{elements}</div>
   }
 }
 
 RunArtifacts.propTypes = {
   nodeName: React.PropTypes.string.isRequired,
-  artifacts: React.PropTypes.arrayOf(React.PropTypes.object).isRequired,
-};
+  artifacts: React.PropTypes.arrayOf(React.PropTypes.object),
+  metrics: React.PropTypes.arrayOf(React.PropTypes.object),
+}
 
 export default RunArtifacts;

@@ -30,12 +30,11 @@ class RunLogsContainer extends React.Component {
 
   _loadData(props) {
     const qs = this.state.since ? '&since=' + moment(this.state.since).format() : '';
-    xhr('/api/v1/run/' + props.runId + '/logs/' + props.nodeName + '/' + props.classifier + '?' + qs)
-      .then(data => {
-        const newData = (null == this.state.data) ? data : concat(this.state.data, data);
-        const newSince = (newData.length > 0) ? last(newData).created_at : null
-        this.setState({since: newSince, data: newData});
-      });
+    this.xhr = xhr('/api/v1/run/' + props.runId + '/logs/' + props.nodeName + '/' + props.classifier + '?' + qs).then(data => {
+      const newData = (null == this.state.data) ? data : concat(this.state.data, data);
+      const newSince = (newData.length > 0) ? last(newData).created_at : null
+      this.setState({since: newSince, data: newData});
+    });
   }
 
   componentDidMount() {
@@ -48,6 +47,7 @@ class RunLogsContainer extends React.Component {
   componentWillReceiveProps(nextProps) {
     if (this.intervalId) {
       clearInterval(this.intervalId)
+      this.intervalId = null
     }
     this._loadData(nextProps)
     if (props.stream) {
@@ -57,7 +57,11 @@ class RunLogsContainer extends React.Component {
 
   componentWillUnmount() {
     if (this.intervalId) {
-      clearInterval(this.intervalId);
+      clearInterval(this.intervalId)
+      this.intervalId = null
+    }
+    if (this.xhr) {
+      this.xhr.cancel()
     }
   }
 

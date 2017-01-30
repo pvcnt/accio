@@ -16,6 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import React from 'react'
 import {isObject, isArray, toPairs, toString} from 'lodash'
 
 function prettyPrint(obj) {
@@ -43,6 +44,8 @@ function prettyPrintValue(value, kind) {
     return value + ' meters'
   } else if (kind.base === 'duration') {
     return value + ' millis'
+  } else if (kind.base === 'dataset') {
+    return <a href={value.uri}>{value.uri}</a>
   } else {
     return prettyPrint(value)
   }

@@ -16,6 +16,8 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import {noop} from 'lodash'
+
 const status = (response) => {
   if (response.status >= 200 && response.status < 300) {
     return Promise.resolve(response);
@@ -39,7 +41,39 @@ const xhr = (url, params = {}, decodeJson = true) => {
     method: 'GET',
   }, params)
   const f = fetch(url, params).then(status)
-  return decodeJson ? f.then(json) : f
+  return makeCancelable(decodeJson ? f.then(json) : f)
 };
+
+
+const makeCancelable = (promise) => {
+  let hasCanceled_ = false
+
+  function wrap(promise) {
+    let richPromise = new Promise((resolve, reject) => {
+      promise.then((val) => {
+        if (!hasCanceled_) {
+          resolve(val)
+        }
+      })
+      promise.catch((error) => {
+        if (!hasCanceled_) {
+          reject(error)
+        }
+      })
+    })
+    richPromise.then = function (onFulfilled, onRejected) {
+      return wrap(promise.then(onFulfilled, onRejected))
+    }
+    richPromise.catch = function (onRejected) {
+      return wrap(promise.catch(onRejected))
+    }
+    richPromise.cancel = function () {
+      hasCanceled_ = true
+    }
+    return richPromise
+  }
+
+  return wrap(promise)
+}
 
 export default xhr;

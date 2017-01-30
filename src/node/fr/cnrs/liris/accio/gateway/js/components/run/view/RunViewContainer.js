@@ -31,17 +31,22 @@ class RunViewContainer extends React.Component {
   }
 
   _loadData(props) {
-    xhr('/api/v1/run/' + props.params.id)
-      .then(data => {
-        if (data.parent) {
-          xhr('/api/v1/run/' + data.parent).then(data2 => {
-            data.parent = data2
-            this.setState({data})
-          })
-        } else {
+    this.xhr = xhr('/api/v1/run/' + props.params.id).then(data => {
+      if (data.parent) {
+        this.xhr = xhr('/api/v1/run/' + data.parent).then(data2 => {
+          data.parent = data2
           this.setState({data})
-        }
-      })
+        })
+      } else {
+        this.setState({data})
+      }
+    })
+  }
+
+  componentWillUnmount() {
+    if (this.xhr) {
+      this.xhr.cancel()
+    }
   }
 
   @autobind
