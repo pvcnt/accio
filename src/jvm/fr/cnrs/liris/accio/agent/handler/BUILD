@@ -15,5 +15,8 @@ scala_library(
 
 scala_library(
   name='annotations',
+  dependencies=[
+    '3rdparty/jvm/com/google/guice',
+  ],
   sources=globs('*.java')
 )

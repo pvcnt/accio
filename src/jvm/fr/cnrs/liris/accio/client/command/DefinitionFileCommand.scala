@@ -16,20 +16,23 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.agent.handler;
+package fr.cnrs.liris.accio.client.command
 
-import com.google.inject.BindingAnnotation;
+import fr.cnrs.liris.accio.core.domain.InvalidSpecMessage
+import fr.cnrs.liris.common.cli.Reporter
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+trait DefinitionFileCommand {
+  protected def printErrors(errors: Seq[InvalidSpecMessage], out: Reporter): Unit = {
+    errors.foreach { error =>
+      val explanation = error.message + error.path.map(path => s" (at $path)").getOrElse("")
+      out.writeln(s"<error>[ERROR]</error> $explanation")
+    }
+  }
 
-/**
- * Annotation requesting injection of a generic worker pool.
- */
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-@BindingAnnotation
-public @interface WorkerPool {
+  protected def printWarnings(warnings: Seq[InvalidSpecMessage], out: Reporter): Unit = {
+    warnings.foreach { warning =>
+      val explanation = warning.message + warning.path.map(path => s" (at $path)").getOrElse("")
+      out.writeln(s"<comment>[WARN]</comment> $explanation")
+    }
+  }
 }

@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.core.dsl
 
-import com.fasterxml.jackson.annotation.{JsonIgnoreProperties, JsonSubTypes}
+import com.fasterxml.jackson.annotation.{JsonIgnoreProperties, JsonProperty, JsonSubTypes}
 import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.JsonMappingException
 import com.twitter.finatra.json.FinatraObjectMapper
@@ -95,7 +95,7 @@ class WorkflowParser(mapper: FinatraObjectMapper, opRegistry: OpRegistry, factor
       case (argName, JsonReferenceInputDef(ref)) => Some(argName -> InputDef.Reference(References.parse(ref)))
       case (argName, JsonParamInputDef(paramName)) => Some(argName -> InputDef.Param(paramName))
     }
-    NodeDef(node.op, node.name.getOrElse(node.op), inputs)
+    NodeDef(node.op, node.name, inputs)
   }
 }
 
@@ -108,7 +108,9 @@ private case class JsonWorkflowDef(
 
 private case class JsonArgDef(name: String, kind: String, defaultValue: Option[Any])
 
-private case class JsonNodeDef(op: String, name: Option[String], inputs: Map[String, JsonInputDef] = Map.empty)
+private case class JsonNodeDef(op: String, @JsonProperty("name") customName: Option[String], inputs: Map[String, JsonInputDef] = Map.empty) {
+  def name: String = customName.getOrElse(op)
+}
 
 @JsonSubTypes(Array(
   new JsonSubTypes.Type(value = classOf[JsonValueInputDef], name = "value"),

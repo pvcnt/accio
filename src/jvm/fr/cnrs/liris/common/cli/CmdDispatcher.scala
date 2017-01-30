@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.infra.cli
+package fr.cnrs.liris.common.cli
 
 import ch.qos.logback.classic.{Level, Logger}
 import com.google.inject.Inject
@@ -41,31 +41,30 @@ class CmdDispatcher @Inject()(registry: CmdRegistry, factory: CmdFactory, rcPars
    * @return Exit code.
    */
   def exec(args: Seq[String]): ExitCode = {
-    val cmdNamePos = args.indexWhere(s => !s.startsWith("-"))
-    val (commonArgs, cmdName, otherArgs) = if (cmdNamePos > -1) {
-      (args.take(cmdNamePos), args(cmdNamePos), args.drop(cmdNamePos + 1))
-    } else {
-      (args, "help", Seq.empty[String])
-    }
-    val meta = registry.get(cmdName).getOrElse(registry("help"))
+    val (cmdName, positionalArgs) =
+      if (args.isEmpty || !registry.contains(args.head)) {
+        ("help", Seq.empty[String])
+      } else {
+        (args.head, args.tail)
+      }
+    val meta = registry(cmdName)
 
     val parser = FlagsParser(meta.defn.allowResidue, meta.defn.flags ++ Seq(classOf[CliFlags]): _*)
-    parser.parseAndExitUponError(commonArgs)
-    val commonOpts = parser.as[CliFlags]
+    parser.parseAndExitUponError(positionalArgs)
+    val opts = parser.as[CliFlags]
 
-    val out = new StreamReporter(Console.out, useColors = commonOpts.color)
+    val accioRcArgs = rcParser.parse(opts.rcPath, opts.rcConfig, cmdName)
+    parser.parseAndExitUponError(accioRcArgs, Priority.RcFile)
+
+    val out = new StreamReporter(Console.out, useColors = opts.color)
 
     if (!registry.contains(cmdName)) {
-      out.writeln(s"<error>Unknown command '$cmdName'</error>")
+      out.writeln(s"<error>[ERROR]</error> Unknown command '$cmdName'")
     }
-
-    val accioRcArgs = rcParser.parse(commonOpts.rcPath, commonOpts.rcConfig, cmdName)
-    parser.parseAndExitUponError(accioRcArgs, Priority.RcFile)
-    parser.parseAndExitUponError(otherArgs)
 
     // Configure logging level for Accio-related code. Other logging configuration is done in an ordinary
     // logback.xml loaded at the very beginning of the main.
-    val logLevel = Level.toLevel(commonOpts.logLevel)
+    val logLevel = Level.toLevel(opts.logLevel)
     LoggerFactory.getLogger("fr.cnrs.liris.accio").asInstanceOf[Logger].setLevel(logLevel)
     logger.info(s"Set logging level: $logLevel")
 
@@ -74,7 +73,7 @@ class CmdDispatcher @Inject()(registry: CmdRegistry, factory: CmdFactory, rcPars
       command.execute(parser, out)
     } catch {
       case e: IllegalArgumentException =>
-        out.writeln(s"<error>${e.getMessage.stripPrefix("requirement failed: ")}</error>")
+        out.writeln(s"<error>[ERROR]</error> ${e.getMessage.stripPrefix("requirement failed: ")}")
         ExitCode.RuntimeError
       case NonFatal(e) =>
         logger.error("Uncaught exception", e)

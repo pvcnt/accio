@@ -18,7 +18,8 @@
 
 package fr.cnrs.liris.accio.client.command
 
-import fr.cnrs.liris.accio.core.infra.cli.{Cmd, Command, ExitCode, Reporter}
+import fr.cnrs.liris.accio.core.domain.Version
+import fr.cnrs.liris.common.cli.{Cmd, Command, ExitCode, Reporter}
 import fr.cnrs.liris.common.flags.FlagsProvider
 
 @Cmd(
@@ -26,7 +27,7 @@ import fr.cnrs.liris.common.flags.FlagsProvider
   help = "Display build information.")
 class VersionCommand extends Command {
   override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
-    out.writeln("Accio development version")
+    out.writeln(s"Build version: ${Version.Current.toString}")
     ExitCode.Success
   }
 }

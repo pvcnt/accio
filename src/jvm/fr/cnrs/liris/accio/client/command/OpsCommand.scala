@@ -22,7 +22,7 @@ import com.google.inject.Inject
 import com.twitter.util.Await
 import fr.cnrs.liris.accio.agent.{GetOperatorRequest, ListOperatorsRequest}
 import fr.cnrs.liris.accio.core.domain.{OpDef, Utils}
-import fr.cnrs.liris.accio.core.infra.cli._
+import fr.cnrs.liris.common.cli._
 import fr.cnrs.liris.common.flags.FlagsProvider
 import fr.cnrs.liris.common.util.StringUtils
 

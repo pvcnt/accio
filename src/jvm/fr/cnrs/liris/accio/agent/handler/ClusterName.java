@@ -26,10 +26,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation requesting injection of a generic worker pool.
+ * Annotation requesting injection of Accio cluster name.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @BindingAnnotation
-public @interface WorkerPool {
+public @interface ClusterName {
 }

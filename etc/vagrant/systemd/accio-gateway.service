@@ -27,5 +27,5 @@ ExecStart=/usr/bin/java \
   -agentlib:jdwp=transport=dt_socket,server=y,address=8001,suspend=n \
   -jar /home/ubuntu/accio/dist/accio-gateway.jar \
     -ui \
-    -addr=localhost:9990 \
+    -addr=localhost:9999 \
     -local.doc.root=/vagrant/src/node/fr/cnrs/liris/accio/gateway

@@ -16,20 +16,18 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.agent.handler;
+package fr.cnrs.liris.accio.agent.handler
 
-import com.google.inject.BindingAnnotation;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import com.google.inject.Inject
+import com.twitter.util.Future
+import fr.cnrs.liris.accio.agent.{InfoRequest, InfoResponse}
+import fr.cnrs.liris.accio.core.domain.Version
 
 /**
- * Annotation requesting injection of a generic worker pool.
+ * Return metadata about the agent.
  */
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-@BindingAnnotation
-public @interface WorkerPool {
+class InfoHandler @Inject()(@ClusterName clusterName: String) extends Handler[InfoRequest, InfoResponse] {
+  override def handle(req: InfoRequest): Future[InfoResponse] = {
+    Future(InfoResponse(clusterName, Version.Current.toString))
+  }
 }

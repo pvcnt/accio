@@ -24,7 +24,7 @@ import com.google.inject.Inject
 import com.twitter.util.{Await, Return, Throw}
 import fr.cnrs.liris.accio.agent.{ListWorkflowsRequest, ListWorkflowsResponse}
 import fr.cnrs.liris.accio.core.domain.JsonSerializer
-import fr.cnrs.liris.accio.core.infra.cli.{Cmd, Command, ExitCode, Reporter}
+import fr.cnrs.liris.common.cli.{Cmd, Command, ExitCode, Reporter}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.util.StringUtils.padTo
 import org.ocpsoft.prettytime.PrettyTime

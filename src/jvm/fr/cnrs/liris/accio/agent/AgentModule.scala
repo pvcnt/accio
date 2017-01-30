@@ -24,7 +24,7 @@ import com.google.inject.{Provides, Singleton, TypeLiteral}
 import com.twitter.concurrent.NamedPoolThreadFactory
 import com.twitter.inject.TwitterModule
 import com.twitter.util.{Duration, ExecutorServiceFuturePool, FuturePool}
-import fr.cnrs.liris.accio.agent.handler.WorkerPool
+import fr.cnrs.liris.accio.agent.handler.{ClusterName, WorkerPool}
 import fr.cnrs.liris.accio.core.api.Operator
 import fr.cnrs.liris.accio.core.runtime._
 import fr.cnrs.liris.accio.core.statemgr.{LockService, StateManager}
@@ -46,6 +46,7 @@ object AgentModule extends TwitterModule {
     // Bind remaining implementations.
     bind[OpMetaReader].to[ReflectOpMetaReader]
     bind[OpRegistry].to[RuntimeOpRegistry]
+    bind[String].annotatedWith[ClusterName].toInstance(clusterFlag())
   }
 
   @Singleton

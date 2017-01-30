@@ -21,6 +21,7 @@ package fr.cnrs.liris.accio.gateway
 import com.google.inject.{Provides, Singleton}
 import com.twitter.finagle.Thrift
 import com.twitter.inject.TwitterModule
+import com.twitter.util.Duration
 import fr.cnrs.liris.accio.agent.AgentService
 
 object GatewayModule extends TwitterModule {
@@ -29,7 +30,9 @@ object GatewayModule extends TwitterModule {
   @Singleton
   @Provides
   def providesClient: AgentService.FinagledClient = {
-    val service = Thrift.newService(addrFlag())
+    val service = Thrift.client
+      .withRequestTimeout(Duration.fromSeconds(10))
+      .newService(addrFlag())
     new AgentService.FinagledClient(service)
   }
 }

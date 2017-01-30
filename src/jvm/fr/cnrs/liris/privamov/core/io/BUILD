@@ -5,7 +5,6 @@ scala_library(
     'src/jvm/fr/cnrs/liris/common/geo',
     'src/jvm/fr/cnrs/liris/privamov/core/model',
     '3rdparty/jvm/com/google/guice',
-    '3rdparty/jvm/com/typesafe/scala-logging',
   ],
   sources=globs('*.scala')
 )

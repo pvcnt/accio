@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.infra.cli
+package fr.cnrs.liris.common.cli
 
 /**
  * A command line exit code.
@@ -36,4 +36,15 @@ object ExitCode {
   val ValidateFailure = ExitCode(3, "VALIDATE_FAILURE")
   val RuntimeError = ExitCode(4, "RUNTIME_ERROR")
   val InternalError = ExitCode(5, "INTERNAL_ERROR")
+
+  def values: Seq[ExitCode] = Seq(CommandLineError, DefinitionError, ValidateFailure, RuntimeError, InternalError, Success)
+
+  def select(codes: Seq[ExitCode]): ExitCode = {
+    values.foreach { code =>
+      if (codes.contains(code)) {
+        return code
+      }
+    }
+    ExitCode.Success
+  }
 }

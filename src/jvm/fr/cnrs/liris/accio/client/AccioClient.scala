@@ -24,7 +24,7 @@ import ch.qos.logback.core.joran.spi.JoranException
 import ch.qos.logback.core.util.StatusPrinter
 import com.google.inject.Guice
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.core.infra.cli.CmdDispatcher
+import fr.cnrs.liris.common.cli.CmdDispatcher
 import org.slf4j.LoggerFactory
 import org.slf4j.bridge.SLF4JBridgeHandler
 
@@ -32,7 +32,7 @@ object AccioClientMain extends AccioClient
 
 /**
  * Entry point of the Accio command line application. Very little is done here, it is the job of
- * [[fr.cnrs.liris.accio.core.infra.cli.Command]]s to actually handle the payload.
+ * [[fr.cnrs.liris.common.cli.Command]]s to actually handle the payload.
  */
 class AccioClient extends StrictLogging {
   def main(args: Array[String]): Unit = {

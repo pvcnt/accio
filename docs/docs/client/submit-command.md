@@ -24,14 +24,20 @@ Once a workflow has been successfully launched, this command prints the identifi
 The progress of the execution can then be tracked with the `accio status` command and the run identifiers that have been provided.
 
 ## Options
-* `-addr=<string>`: Address of the Accio cluster. It can be any name following [Finagle's naming syntax](https://twitter.github.io/finagle/guide/Names.html).
-Overrides the ACCIO_ADDR environment variable. Defaults to *127.0.0.1:9999*.
-* `-name=<string>`: Run name. Overrides the value defined in the run file, if any.
-* `-tags=<string>[,...]`: Run tags (comma-separated). Overrides the value defined in the run file, if any.
-* `-notes=<string>`: Run notes. Overrides the value defined in the run file, if specified.
+* `-addr=<string>`: Address of the Accio cluster.
+It can be any name following [Finagle's naming syntax](https://twitter.github.io/finagle/guide/Names.html).
+Overrides the ACCIO_ADDR environment variable.
+Defaults to *127.0.0.1:9999*.
+* `-name=<string>`: Run name.
+Overrides the value defined in the run file, if any.
+* `-tags=<string>[,...]`: Run tags (comma-separated).
+Overrides the value defined in the run file, if any.
+* `-notes=<string>`: Run notes.
+Overrides the value defined in the run file, if specified.
 * `-repeat=<integer>`: Number of times to repeat each run. Overrides the value defined in the run file, if any.
 * `-seed=<long>`: Run seed. Overrides the value defined in the run file, if any.
-* `-q`: Prints only run identifiers (one per line), if the command was successful. Otherwise, you can still use the exit code to determine the outcome of the command.
+* `-q`: Prints only run identifiers (one per line), if the command was successful.
+You can still use the exit code to determine the outcome of the command.
 * `-json`: Prints pretty human-readable (but still machine-parsable) JSON.
 
 ## Exit codes

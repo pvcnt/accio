@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.client
 
 import com.google.inject.{AbstractModule, TypeLiteral}
 import fr.cnrs.liris.accio.client.command._
-import fr.cnrs.liris.accio.core.infra.cli.{Command, HelpCommand}
+import fr.cnrs.liris.common.cli.{Command, HelpCommand}
 import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
 
 /**
@@ -37,6 +37,7 @@ object ClientModule extends AbstractModule with ScalaModule {
     commands.addBinding.toInstance(classOf[OpsCommand])
     commands.addBinding.toInstance(classOf[PsCommand])
     commands.addBinding.toInstance(classOf[PushCommand])
+    commands.addBinding.toInstance(classOf[RmCommand])
     commands.addBinding.toInstance(classOf[SubmitCommand])
     commands.addBinding.toInstance(classOf[ValidateCommand])
     commands.addBinding.toInstance(classOf[VersionCommand])

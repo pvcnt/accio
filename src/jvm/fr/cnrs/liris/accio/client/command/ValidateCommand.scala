@@ -18,57 +18,41 @@
 
 package fr.cnrs.liris.accio.client.command
 
-import java.nio.ByteBuffer
 import java.nio.file.{Files, Path}
 
-import com.twitter.util.{Await, Return, Throw}
+import com.google.inject.Inject
+import com.twitter.util.{Await, Return, Stopwatch, Throw}
 import fr.cnrs.liris.accio.agent.{AgentService, ParseRunRequest, ParseWorkflowRequest}
-import fr.cnrs.liris.accio.core.infra.cli.{Cmd, Command, ExitCode, Reporter}
-import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
-import fr.cnrs.liris.common.util.FileUtils
+import fr.cnrs.liris.common.cli.{Cmd, Command, ExitCode, Reporter}
+import fr.cnrs.liris.common.flags.FlagsProvider
+import fr.cnrs.liris.common.util.{FileUtils, TimeUtils}
 
 import scala.collection.JavaConverters._
 
-case class ValidateFlags(
-  @Flag(name = "keep_going", help = "Whether to continue validating other files once an error occurred")
-  keepGoing: Boolean = true)
-
 @Cmd(
   name = "validate",
-  help = "Validate the syntax of Accio configuration files.",
-  flags = Array(classOf[ValidateFlags]),
+  help = "Validate the syntax of Accio definition files.",
+  flags = Array(classOf[AccioAgentFlags]),
   allowResidue = true)
-class ValidateCommand(clientFactory: AgentClientFactory) extends Command {
+class ValidateCommand @Inject()(clientFactory: AgentClientFactory) extends Command with DefinitionFileCommand {
   def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     if (flags.residue.isEmpty) {
       out.writeln("<error>[ERROR]</error> You must specify some files to validate as argument.")
       ExitCode.CommandLineError
     } else {
-      val opts = flags.as[ValidateFlags]
-      var valid = true
-      var i = 0
+      val elapsed = Stopwatch.start()
       val client = clientFactory.create(flags.as[AccioAgentFlags].addr)
-      while (i < flags.residue.size) {
-        if (validate(flags.residue(i), client, out)) {
-          i += 1
-        } else {
-          valid = false
-          i = if (opts.keepGoing) i + 1 else flags.residue.size
-        }
-      }
-      if (valid) {
-        ExitCode.Success
-      } else {
-        ExitCode.ValidateFailure
-      }
+      val outcomes = flags.residue.map(uri => validate(uri, client, out))
+      out.writeln(s"<info>[OK]</info> Done in ${TimeUtils.prettyTime(elapsed())}.")
+      ExitCode.select(outcomes)
     }
   }
 
-  private def validate(uri: String, client: AgentService.FinagledClient, out: Reporter): Boolean = {
+  private def validate(uri: String, client: AgentService.FinagledClient, out: Reporter): ExitCode = {
     val path = FileUtils.expandPath(uri)
     if (!path.toFile.exists || !path.toFile.canRead) {
       out.writeln(s"<error>[ERROR]</error> Cannot read file: ${path.toAbsolutePath}")
-      false
+      ExitCode.DefinitionError
     } else {
       val content = Files.readAllLines(path).asScala.mkString
       if (content.contains("\"workflow\"")) {
@@ -79,47 +63,39 @@ class ValidateCommand(clientFactory: AgentClientFactory) extends Command {
     }
   }
 
-  private def validateRun(content: String, path: Path, client: AgentService.FinagledClient, out: Reporter) = {
+  private def validateRun(content: String, path: Path, client: AgentService.FinagledClient, out: Reporter): ExitCode = {
     val req = ParseRunRequest(content, Map.empty, Some(path.getFileName.toString))
     Await.result(client.parseRun(req).liftToTry) match {
       case Return(resp) =>
-        resp.warnings.foreach { warning =>
-          out.writeln(s"<comment>[WARN]</comment> $warning")
-        }
-        resp.errors.foreach { error =>
-          out.writeln(s"<error>[ERROR]</error> $error")
-        }
+        printWarnings(resp.warnings, out)
+        printErrors(resp.errors, out)
         if (resp.run.isDefined) {
           out.writeln(s"<info>[OK]</info> Validated file: ${path.toAbsolutePath}")
-          true
+          ExitCode.Success
         } else {
-          false
+          ExitCode.DefinitionError
         }
       case Throw(e) =>
         out.writeln(s"<error>[ERROR]</error> Server error: ${e.getMessage}")
-        false
+        ExitCode.InternalError
     }
   }
 
-  private def validateWorkflow(content: String, path: Path, client: AgentService.FinagledClient, out: Reporter) = {
+  private def validateWorkflow(content: String, path: Path, client: AgentService.FinagledClient, out: Reporter): ExitCode = {
     val req = ParseWorkflowRequest(content, Some(path.getFileName.toString))
     Await.result(client.parseWorkflow(req).liftToTry) match {
       case Return(resp) =>
-        resp.warnings.foreach { warning =>
-          out.writeln(s"<comment>[WARN]</comment> $warning")
-        }
-        resp.errors.foreach { error =>
-          out.writeln(s"<error>[ERROR]</error> $error")
-        }
+        printWarnings(resp.warnings, out)
+        printErrors(resp.errors, out)
         if (resp.workflow.isDefined) {
           out.writeln(s"<info>[OK]</info> Validated file: ${path.toAbsolutePath}")
-          true
+          ExitCode.Success
         } else {
-          false
+          ExitCode.DefinitionError
         }
       case Throw(e) =>
         out.writeln(s"<error>[ERROR]</error> Server error: ${e.getMessage}")
-        false
+        ExitCode.InternalError
     }
   }
 }

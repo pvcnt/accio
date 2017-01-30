@@ -18,15 +18,14 @@
 
 package fr.cnrs.liris.accio.client.command
 
-import java.nio.ByteBuffer
 import java.nio.file.Files
 
 import com.google.inject.Inject
 import com.twitter.util.{Await, Return, Stopwatch, Throw}
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.agent.{CreateRunRequest, ParseRunRequest}
+import fr.cnrs.liris.accio.agent.{AgentService, CreateRunRequest, ParseRunRequest}
 import fr.cnrs.liris.accio.core.domain.{InvalidSpecException, RunSpec, Utils}
-import fr.cnrs.liris.accio.core.infra.cli.{Cmd, Command, ExitCode, Reporter}
+import fr.cnrs.liris.common.cli.{Cmd, Command, ExitCode, Reporter}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.util.{FileUtils, StringUtils, TimeUtils}
 
@@ -52,7 +51,7 @@ case class SubmitCommandFlags(
   help = "Launch an Accio workflow.",
   allowResidue = true)
 class SubmitCommand @Inject()(clientFactory: AgentClientFactory)
-  extends Command with StrictLogging {
+  extends Command with DefinitionFileCommand with StrictLogging {
 
   def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     if (flags.residue.isEmpty) {
@@ -72,75 +71,88 @@ class SubmitCommand @Inject()(clientFactory: AgentClientFactory)
           return ExitCode.CommandLineError
       }
 
-      val path = FileUtils.expandPath(flags.residue.head)
-      val file = path.toFile
-      val content = if (file.exists) {
-        /*if (!file.canRead) {
-          if (!opts.quiet) {
-            out.writeln(s"<error>[ERROR]</error> Cannot read workflow definition file: ${path.toAbsolutePath}")
-          }
-        }*/
-        Files.readAllLines(path).asScala.mkString
-      } else {
-        flags.residue.head
-      }
-
       val client = clientFactory.create(flags.as[AccioAgentFlags].addr)
-      val parseReq = ParseRunRequest(content, params, Some(path.getFileName.toString))
-      Await.result(client.parseRun(parseReq).liftToTry) match {
-        case Return(parseResp) =>
-          if (!opts.quiet) {
-            parseResp.warnings.foreach { warning =>
-              out.writeln(s"<comment>[WARN]</comment> $warning")
-            }
-          }
-          parseResp.run match {
-            case Some(spec) =>
-              val mergedSpec = mergeRun(spec, opts)
-              val pushReq = CreateRunRequest(mergedSpec, Utils.DefaultUser)
-              Await.result(client.createRun(pushReq).liftToTry) match {
-                case Return(createResp) =>
-                  if (opts.quiet) {
-                    createResp.ids.map(_.value).foreach(out.writeln)
-                  } else {
-                    createResp.ids.foreach { runId =>
-                      out.writeln(s"<info>[OK]</info> Created run: ${runId.value}")
-                    }
-                    if (createResp.ids.size > 1) {
-                      out.writeln(s"<info>[OK]</info> Created ${createResp.ids.size} runs successfully")
-                    }
-                    out.writeln(s"<info>[OK]</info> Done in ${TimeUtils.prettyTime(elapsed())}.")
-                  }
-                  ExitCode.Success
-                case Throw(e: InvalidSpecException) =>
-                  e.warnings.foreach { warning =>
-                    out.writeln(s"<comment>[WARN]</comment> $warning")
-                  }
-                  e.errors.foreach { error =>
-                    out.writeln(s"<error>[ERROR]</error> $error")
-                  }
-                  ExitCode.DefinitionError
-                case Throw(e) =>
-                  if (!opts.quiet) {
-                    out.writeln(s"<error>[ERROR]</error> Server error: ${e.getMessage}")
-                  }
-                  ExitCode.InternalError
-              }
-            case None =>
-              if (!opts.quiet) {
-                out.writeln("<error>[ERROR]</error> Some errors where found in the workflow definition")
-                parseResp.errors.foreach { error =>
-                  out.writeln(s"<error>[ERROR]</error>   - $error")
-                }
-              }
-              ExitCode.DefinitionError
-          }
-        case Throw(e) =>
-          if (!opts.quiet) {
-            out.writeln(s"<error>[ERROR]</error> Server error: ${e.getMessage}")
-          }
-          ExitCode.InternalError
+      val exitCode = parseAndSubmit(flags.residue.head, params, opts, client, out)
+      if (!opts.quiet) {
+        out.writeln(s"<info>[OK]</info> Done in ${TimeUtils.prettyTime(elapsed())}.")
       }
+      exitCode
+    }
+  }
+
+  private def parseAndSubmit(uri: String, params: Map[String, String], opts: SubmitCommandFlags, client: AgentService.FinagledClient, out: Reporter): ExitCode = {
+    val path = FileUtils.expandPath(uri)
+    val file = path.toFile
+    val content = if (file.exists) {
+      if (!file.canRead) {
+        if (!opts.quiet) {
+          out.writeln(s"<error>[ERROR]</error> Cannot read workflow definition file: ${path.toAbsolutePath}")
+        }
+        return ExitCode.DefinitionError
+      }
+      Files.readAllLines(path).asScala.mkString
+    } else {
+      uri
+    }
+
+    val req = ParseRunRequest(content, params, Some(path.getFileName.toString))
+    Await.result(client.parseRun(req).liftToTry) match {
+      case Return(resp) =>
+        if (!opts.quiet) {
+          printWarnings(resp.warnings, out)
+          printErrors(resp.errors, out)
+        }
+        resp.run match {
+          case Some(spec) =>
+            val mergedSpec = mergeRun(spec, opts)
+            submit(mergedSpec, opts, client, out)
+          case None =>
+            if (!opts.quiet) {
+              out.writeln("<error>[ERROR]</error> Some errors where found in the workflow definition")
+            }
+            ExitCode.DefinitionError
+        }
+      case Throw(e) =>
+        if (!opts.quiet) {
+          out.writeln(s"<error>[ERROR]</error> Server error: ${e.getMessage}")
+        }
+        ExitCode.InternalError
+    }
+  }
+
+  private def submit(spec: RunSpec, opts: SubmitCommandFlags, client: AgentService.FinagledClient, out: Reporter) = {
+    val req = CreateRunRequest(spec, Utils.DefaultUser)
+    Await.result(client.createRun(req).liftToTry) match {
+      case Return(resp) =>
+        if (opts.quiet) {
+          resp.ids.map(_.value).foreach(out.writeln)
+        } else {
+          resp.ids.foreach {
+            runId =>
+              out.writeln(s"<info>[OK]</info> Created run: ${
+                runId.value
+              }")
+          }
+          if (resp.ids.size > 1) {
+            out.writeln(s"<info>[OK]</info> Created ${
+              resp.ids.size
+            } runs successfully")
+          }
+        }
+        ExitCode.Success
+      case Throw(e: InvalidSpecException) =>
+        if (!opts.quiet) {
+          printWarnings(e.warnings, out)
+          printErrors(e.errors, out)
+        }
+        ExitCode.DefinitionError
+      case Throw(e) =>
+        if (!opts.quiet) {
+          out.writeln(s"<error>[ERROR]</error> Server error: ${
+            e.getMessage
+          }")
+        }
+        ExitCode.InternalError
     }
   }
 
@@ -155,22 +167,25 @@ class SubmitCommand @Inject()(clientFactory: AgentClientFactory)
 
   private def mergeRun(spec: RunSpec, opts: SubmitCommandFlags) = {
     var newSpec = spec
-    opts.name.foreach { name =>
-      newSpec = newSpec.copy(name = Some(name))
+    opts.name.foreach {
+      name =>
+        newSpec = newSpec.copy(name = Some(name))
     }
-    opts.notes.foreach { notes =>
-      newSpec = newSpec.copy(notes = Some(notes))
+    opts.notes.foreach {
+      notes =>
+        newSpec = newSpec.copy(notes = Some(notes))
     }
     val tags = StringUtils.explode(opts.tags, ",")
     if (tags.nonEmpty) {
       newSpec = newSpec.copy(tags = newSpec.tags ++ tags)
     }
-    opts.repeat.foreach { repeat =>
-      //TODO: validate >= 1
-      newSpec = newSpec.copy(repeat = Some(repeat))
+    opts.repeat.foreach {
+      repeat =>
+        newSpec = newSpec.copy(repeat = Some(repeat))
     }
-    opts.seed.foreach { seed =>
-      newSpec = newSpec.copy(seed = Some(seed))
+    opts.seed.foreach {
+      seed =>
+        newSpec = newSpec.copy(seed = Some(seed))
     }
     newSpec
   }

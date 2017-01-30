@@ -23,7 +23,6 @@ import com.twitter.finagle.Service
 import com.twitter.finatra.thrift.Controller
 import com.twitter.inject.Injector
 import com.twitter.scrooge.ThriftException
-import com.twitter.util.Future
 import fr.cnrs.liris.accio.agent.AgentService.{Update, _}
 import fr.cnrs.liris.accio.agent.handler._
 
@@ -94,7 +93,7 @@ class AgentController @Inject()(injector: Injector) extends Controller with Agen
   }
 
   override val info = handle(Info) { args: Info.Args =>
-    Future(InfoResponse("default", "unknown"))
+    injector.instance[InfoHandler].handle(args.req)
   }
 
   override val heartbeat: Service[Heartbeat.Args, Heartbeat.Result] =

@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.infra.cli
+package fr.cnrs.liris.common.cli
 
 import java.nio.file.Path
 

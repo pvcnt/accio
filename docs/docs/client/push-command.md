@@ -19,7 +19,8 @@ Once a workflow has been successfully pushed, this command prints the identifier
 ## Options
 * `-addr=<string>`: Address of the Accio cluster. It can be any name following [Finagle's naming syntax](https://twitter.github.io/finagle/guide/Names.html).
 Overrides the ACCIO_ADDR environment variable. Defaults to *127.0.0.1:9999*.
-* `-q`: Print only workflow identifier, if the command was successful. Otherwise, you can still use the exit code to determine the outcome of the command.
+* `-q`: Print only workflow identifier, if the command was successful.
+You can still use the exit code to determine the outcome of the command.
 
 ## Exit codes
 * `0`: Success.

@@ -30,6 +30,14 @@ import org.joda.time.DateTime
 
 @Singleton
 class ApiController @Inject()(client: AgentService.FinagledClient) extends Controller {
+  get("/api/v1") { httpReq: Request =>
+    client.info(InfoRequest()).map { resp =>
+      Map(
+        "cluster_name" -> resp.clusterName,
+        "version" -> resp.version)
+    }
+  }
+
   get("/api/v1/workflow") { httpReq: ListWorkflowsHttpRequest =>
     val offset = (httpReq.page - 1) * httpReq.perPage
     val req = ListWorkflowsRequest(
@@ -112,6 +120,11 @@ class ApiController @Inject()(client: AgentService.FinagledClient) extends Contr
     client.killRun(req).map(_ => response.ok)
   }
 
+  post("/api/v1/run/:id") { httpReq: UpdateRunHttpRequest =>
+    val req = UpdateRunRequest(RunId(httpReq.id), httpReq.name, httpReq.notes, httpReq.tags.map(explode(_, ",")))
+    client.updateRun(req).map(_ => response.ok)
+  }
+
   delete("/api/v1/run/:id") { httpReq: DeleteRunHttpRequest =>
     val req = DeleteRunRequest(RunId(httpReq.id))
     client.deleteRun(req).map(_ => response.ok)
@@ -156,6 +169,12 @@ case class ListRunsHttpRequest(
   @QueryParam @Min(0) @Max(50) perPage: Int = 15)
 
 case class GetRunHttpRequest(@RouteParam id: String, @QueryParam download: Boolean = false)
+
+case class UpdateRunHttpRequest(
+  @RouteParam id: String,
+  name: Option[String],
+  notes: Option[String],
+  tags: Option[String])
 
 case class ListArtifactsHttpRequest(@RouteParam id: String, @RouteParam node: String)
 

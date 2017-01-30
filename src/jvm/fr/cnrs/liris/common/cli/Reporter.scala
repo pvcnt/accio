@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.infra.cli
+package fr.cnrs.liris.common.cli
 
 import java.io.{BufferedOutputStream, FileOutputStream, PrintStream}
 import java.nio.file.Path

@@ -26,7 +26,7 @@ import com.twitter.util.{Await, Stopwatch}
 import fr.cnrs.liris.accio.agent.{GetRunRequest, ListRunsRequest}
 import fr.cnrs.liris.accio.core.analysis._
 import fr.cnrs.liris.accio.core.domain.RunId
-import fr.cnrs.liris.accio.core.infra.cli.{Cmd, Command, ExitCode, Reporter}
+import fr.cnrs.liris.common.cli.{Cmd, Command, ExitCode, Reporter}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.util.{FileUtils, HashUtils, StringUtils, TimeUtils}
 

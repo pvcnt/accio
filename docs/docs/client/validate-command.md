@@ -20,7 +20,6 @@ Once validated, a file is guaranteed to be accepted by [push](push-command.html)
 ## Options
 * `-addr=<string>`: Address of the Accio cluster. It can be any name following [Finagle's naming syntax](https://twitter.github.io/finagle/guide/Names.html).
 Overrides the ACCIO_ADDR environment variable. Defaults to *127.0.0.1:9999*.
-* `-no_keep_going`: Once a file is found to be invalid, it will stop analysis of remaining files.
 
 ## Exit codes
 * `0`: Success.
