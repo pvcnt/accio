@@ -23,33 +23,14 @@ import {map, forEach, toPairs} from 'lodash'
 import {ProgressBar, Table, Glyphicon} from 'react-bootstrap'
 import {prettyPrintValue} from '../../../utils/prettyPrint'
 
-class RunChildren extends React.Component {
+class ChildrenTable extends React.Component {
   render() {
-    let paramsValues = {}
-    this.props.runs.forEach(run => {
-      forEach(run.params, (value, key) => {
-        if (!(key in paramsValues)) {
-          paramsValues[key] = new Set()
-        }
-        if (paramsValues[key].size < 2) {
-          paramsValues[key].add(value.payload)
-        }
-      })
-    })
-    const commonParams = toPairs(paramsValues).filter(kv => kv[1].size == 1).map(kv => kv[0])
-
     const rows = this.props.runs.map((run, idx) => {
       const style = (run.state.completed_at) ? (run.state.status == 'success') ? 'success' : 'danger' : 'warning'
       const progress = Math.round(run.state.progress * 100)
-      const name = toPairs(run.params)
-          .filter(kv => commonParams.indexOf(kv[0]) == -1)
-          .map(kv => kv[0] + '=' + prettyPrintValue(kv[1].payload, kv[1].kind))
-          .sort()
-          .join(' ')
       return <tr key={idx}>
         <td>
-          <Link to={'/runs/view/' + run.id}>{name}</Link>
-          {run.children ? <span style={{marginLeft: '10px'}}><Glyphicon glyph="tasks"/>&nbsp;{run.children}</span> : null}
+          <Link to={'/runs/view/' + run.id}>{run.name ? run.name : 'Untitled run #' + run.id}</Link>
         </td>
         <td><ProgressBar now={progress} label={progress + '%'} bsStyle={style}/></td>
         <td>{(run.state.started_at) ? moment(run.state.started_at).fromNow() : '–'}</td>
@@ -70,8 +51,8 @@ class RunChildren extends React.Component {
   }
 }
 
-RunChildren.propTypes = {
+ChildrenTable.propTypes = {
   runs: React.PropTypes.array.isRequired,
 }
 
-export default RunChildren;
+export default ChildrenTable;

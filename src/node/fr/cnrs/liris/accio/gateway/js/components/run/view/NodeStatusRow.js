@@ -19,7 +19,7 @@
 import React from "react";
 import moment from "moment";
 import {noop} from "lodash";
-import {Row, Col, Badge, Glyphicon, Label, Modal, Panel, Button} from "react-bootstrap";
+import {Row, Col, Glyphicon, Label, Button} from "react-bootstrap";
 import RunLogsContainer from "./RunLogsContainer";
 
 let NodeStatusRow = React.createClass({
@@ -32,7 +32,7 @@ let NodeStatusRow = React.createClass({
 
   _handleErrorModalShow: function (e) {
     e.nativeEvent.preventDefault();
-    this.props.onErrorShow(this.props.node.node_ame, this.props.node.result.error);
+    this.props.onErrorShow(this.props.node.name, this.props.node.result.error);
   },
 
   _handleLogsToggle: function (e, classifier) {
@@ -52,12 +52,14 @@ let NodeStatusRow = React.createClass({
       ? moment().valueOf() - node.started_at
       : null
     const glyph = isCompleted
-      ? (isSuccessful ? 'ok' : 'remove')
+      ? (isSuccessful ? 'ok' : node.status == 'lost' ? 'time' : 'remove')
       : isStarted
       ? 'refresh'
-      : 'inbox';
-    const label = node.cache_hit ?
-      <Label>Cache hit</Label>
+      : 'upload'
+    const label = node.cache_hit
+      ? <Label>Cache hit</Label>
+      : node.status == 'cancelled'
+      ? <Label bsStyle="danger">Cancelled</Label>
       : isCompleted
       ? <Label bsStyle={isSuccessful ? 'success' : 'danger'}>
         Ran for {moment.duration(duration).humanize()}

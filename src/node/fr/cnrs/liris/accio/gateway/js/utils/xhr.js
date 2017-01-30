@@ -32,16 +32,14 @@ const json = (response) => {
   }
 };
 
-const xhr = (url, params = {}) => {
+const xhr = (url, params = {}, decodeJson = true) => {
   params = Object.assign({
     headers: {'Content-Type': 'application/json'},
     credentials: 'same-origin',
     method: 'GET',
-  }, params);
-
-  return fetch(url, params)
-    .then(status)
-    .then(json);
+  }, params)
+  const f = fetch(url, params).then(status)
+  return decodeJson ? f.then(json) : f
 };
 
 export default xhr;

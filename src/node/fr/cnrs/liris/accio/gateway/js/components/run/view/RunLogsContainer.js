@@ -21,7 +21,6 @@ import xhr from "../../../utils/xhr";
 import moment from "moment";
 import RunLogs from "./RunLogs";
 import {last, concat} from "lodash";
-import autobind from 'autobind-decorator'
 
 class RunLogsContainer extends React.Component {
   constructor(props) {
@@ -29,7 +28,6 @@ class RunLogsContainer extends React.Component {
     this.state = {data: null, since: null};
   }
 
-  @autobind
   _loadData(props) {
     const qs = this.state.since ? '&since=' + moment(this.state.since).format() : '';
     xhr('/api/v1/run/' + props.runId + '/logs/' + props.nodeName + '/' + props.classifier + '?' + qs)

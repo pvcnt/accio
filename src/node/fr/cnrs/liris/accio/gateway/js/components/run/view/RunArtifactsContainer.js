@@ -18,8 +18,8 @@
 
 import React from 'react'
 import Spinner from 'react-spinkit'
-import xhr from '../../../utils/xhr'
 import autobind from 'autobind-decorator'
+import xhr from '../../../utils/xhr'
 import RunArtifacts from './RunArtifacts'
 
 class RunArtifactsContainer extends React.Component {

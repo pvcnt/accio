@@ -17,14 +17,13 @@
  */
 
 import React from "react";
-import {sortBy} from "lodash";
-import {LinkContainer} from "react-router-bootstrap";
+import {sortBy, noop} from "lodash";
 import CopyToClipboard from "react-copy-to-clipboard";
 import {Grid, Button, Glyphicon} from "react-bootstrap";
-import RunStatusPanel from "./RunStatusPanel";
-import RunDetailsPanel from "./RunDetailsPanel";
-import RunMetadataPanel from "./RunMetadataPanel";
-import RunParamsPanel from "./RunParamsPanel";
+import StatusPanel from "./StatusPanel";
+import DetailsPanel from "./DetailsPanel";
+import MetadataPanel from "./MetadataPanel";
+import ParamsPanel from "./ParamsPanel";
 import LazyPanel from "../../LazyPanel";
 import RunArtifactsContainer from './RunArtifactsContainer'
 
@@ -51,7 +50,9 @@ class RunView extends React.Component {
     return (
       <Grid>
         <h2 className="accio-title">
-          <img src="images/bars-32px.png"/> {run.name ? run.name : 'Untitled run #' + run.id}
+          <img src="images/bars-32px.png"/>
+          {run.parent ? (run.parent.name ? run.parent.name : 'Untitled run #' + run.parent.id) + ' / ' : ''}
+          {run.name ? run.name : 'Untitled run #' + run.id}
         </h2>
 
         <div className="accio-actions">
@@ -64,19 +65,23 @@ class RunView extends React.Component {
           </CopyToClipboard>
         </div>
 
-        <RunStatusPanel run={run}/>
-        <RunMetadataPanel run={run}/>
-        <RunDetailsPanel run={run}/>
-        {!run.children ? <RunParamsPanel run={run}/> : null}
+        <StatusPanel run={run}/>
+        <MetadataPanel run={run} onChange={this.props.onChange}/>
+        <DetailsPanel run={run}/>
+        {!run.children ? <ParamsPanel run={run}/> : null}
 
         {artifactPanels}
       </Grid>
-    );
+    )
   }
 }
 
 RunView.propTypes = {
   run: React.PropTypes.object.isRequired,
-};
+  onChange: React.PropTypes.func.isRequired,
+}
+RunView.defaultProps = {
+  onChange: noop,
+}
 
-export default RunView;
+export default RunView

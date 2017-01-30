@@ -16,21 +16,21 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React from "react";
-import {Grid} from "react-bootstrap";
-import RunView from "./RunView";
-import xhr from "../../../utils/xhr";
-import Spinner from "react-spinkit"
+import React from 'react'
+import {Grid} from 'react-bootstrap'
+import RunView from './RunView'
+import autobind from 'autobind-decorator'
+import Spinner from 'react-spinkit'
 import {isEqual} from 'lodash'
+import xhr from '../../../utils/xhr'
 
-let RunViewContainer = React.createClass({
-  getInitialState: function () {
-    return {
-      data: null,
-    };
-  },
+class RunViewContainer extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {data: null}
+  }
 
-  _loadData: function (props) {
+  _loadData(props) {
     xhr('/api/v1/run/' + props.params.id)
       .then(data => {
         if (data.parent) {
@@ -42,33 +42,38 @@ let RunViewContainer = React.createClass({
           this.setState({data})
         }
       })
-  },
+  }
 
-  componentWillReceiveProps: function (nextProps) {
+  @autobind
+  _handleChange(newRun) {
+    this.setState({data: newRun})
+  }
+
+  componentWillReceiveProps(nextProps) {
     if (this.props.params.id !== nextProps.params.id) {
       this._loadData(nextProps)
     }
-  },
-
-  shouldComponentUpdate: function(nextProps, nextState) {
-    return !isEqual(this.state.data, nextState.data)
-  },
-
-  componentDidMount: function () {
-    this._loadData(this.props)
-  },
-
-  render: function () {
-    return (null !== this.state.data)
-      ? <RunView run={this.state.data}/>
-      : <Grid><Spinner spinnerName="three-bounce"/></Grid>;
   }
-});
+
+  shouldComponentUpdate(nextProps, nextState) {
+    return !isEqual(this.state.data, nextState.data)
+  }
+
+  componentDidMount() {
+    this._loadData(this.props)
+  }
+
+  render() {
+    return (null !== this.state.data)
+      ? <RunView run={this.state.data} onChange={this._handleChange}/>
+      : <Grid><Spinner spinnerName="three-bounce"/></Grid>
+  }
+}
 
 RunViewContainer.propTypes = {
   params: React.PropTypes.shape({
     id: React.PropTypes.string.isRequired,
   })
-};
+}
 
-export default RunViewContainer;
+export default RunViewContainer

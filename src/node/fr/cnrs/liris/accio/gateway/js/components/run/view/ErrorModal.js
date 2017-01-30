@@ -17,21 +17,33 @@
  */
 
 import React from 'react'
-import Spinner from 'react-spinkit'
+import {Modal} from 'react-bootstrap'
+import {noop} from 'lodash'
 
-class RunLogs extends React.Component {
-  render () {
-    if (null == this.props.logs) {
-      return <Spinner spinnerName="circle"/>
-    } else {
-      const lines = this.props.logs.map((log, idx) => <div key={idx}>{log.message}</div>)
-      return lines.length ? <div className="accio-logs-lines">{lines}</div> : <p>No logs so far.</p>
-    }
+class ErrorModal extends React.Component {
+  render() {
+    const {nodeName, error} = this.props
+    return (
+      <Modal show={true} onHide={this._handleErrorModalClose} keyboard={true} bsSize="large">
+        <Modal.Header closeButton>
+          <Modal.Title>Exception for {nodeName}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {error.root.classifier}: {error.root.message}
+          <pre>{error.root.stacktrace.join("\n")}</pre>
+        </Modal.Body>
+      </Modal>
+    )
   }
 }
 
-RunLogs.propTypes = {
-  logs: React.PropTypes.array,
+ErrorModal.propTypes = {
+  nodeName: React.PropTypes.string.isRequired,
+  error: React.PropTypes.object.isRequired,
+  onClose: React.PropTypes.func.isRequired,
+}
+ErrorModal.defaultProps = {
+  onClose: noop,
 }
 
-export default RunLogs
+export default ErrorModal

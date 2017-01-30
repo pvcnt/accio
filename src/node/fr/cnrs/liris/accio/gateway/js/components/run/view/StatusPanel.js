@@ -16,38 +16,41 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React from "react";
-import moment from "moment";
-import {Row, Col, Badge, Glyphicon, Label, Modal, Panel, Button} from "react-bootstrap";
+import React from 'react'
+import moment from 'moment'
+import {Row, Col, Glyphicon, Panel} from 'react-bootstrap'
+import autobind from 'autobind-decorator'
 import {sortBy} from 'lodash'
-import RunChildrenContainer from "./RunChildrenContainer";
+import ChildrenTableContainer from './ChildrenTableContainer'
 import NodeStatusRow from './NodeStatusRow'
+import ErrorModal from './ErrorModal'
 
-let RunStatusPanel = React.createClass({
-  getInitialState: function () {
-    return {
-      error: null,
-      logs: null,
-    };
-  },
+class StatusPanel extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {error: null, logs: null}
+  }
 
-  _handleErrorModalClose: function () {
-    this.setState({error: null});
-  },
+  @autobind
+  _handleErrorModalClose() {
+    this.setState({error: null})
+  }
 
-  _handleErrorModalShow: function (node, error) {
-    this.setState({error: {data: error, node: node}});
-  },
+  @autobind
+  _handleErrorModalShow(node, error) {
+    this.setState({error: {data: error, node: node}})
+  }
 
-  _handleLogsToggle: function (node, classifier) {
+  @autobind
+  _handleLogsToggle(node, classifier) {
     if (this.state.logs && this.state.logs.node == node && this.state.logs.classifier == classifier) {
-      this.setState({logs: null});
+      this.setState({logs: null})
     } else {
-      this.setState({logs: null}, () => this.setState({logs: {node, classifier}}));
+      this.setState({logs: null}, () => this.setState({logs: {node, classifier}}))
     }
-  },
+  }
 
-  render: function () {
+  render() {
     const run = this.props.run;
     const isStarted = (run.state.started_at != null);
     const isCompleted = (run.state.completed_at != null);
@@ -62,8 +65,12 @@ let RunStatusPanel = React.createClass({
       ? (isSuccessful ? 'ok' : 'remove')
       : isStarted
       ? 'refresh'
-      : 'inbox'
-    const statusText = isCompleted ? 'Successful' : isStarted ? 'Running' : 'Scheduled'
+      : 'upload'
+    const statusText = isCompleted
+      ? (isSuccessful ? 'Successful' : 'Failed')
+      : isStarted
+      ? 'Running'
+      : 'Scheduled'
 
     const nodes = sortBy(run.state.nodes, ['started_at'])
     const nodeRows = nodes.map((node, idx) =>
@@ -73,20 +80,7 @@ let RunStatusPanel = React.createClass({
                      logs={this.state.logs && this.state.logs.node == node.name ? this.state.logs.classifier : null}
                      onLogsShow={this._handleLogsToggle}
                      onErrorShow={this._handleErrorModalShow}/>
-    );
-
-    const errorModal = (null !== this.state.error) ? (
-      <Modal show={true} onHide={this._handleErrorModalClose} keyboard={true} bsSize="large">
-        <Modal.Header closeButton>
-          <Modal.Title>Exception for {this.state.error.node}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {this.state.error.data.root.classifier}: {this.state.error.data.root.message}
-          <pre>{this.state.error.data.root.stacktrace.join("\n")}</pre>
-          pre>
-        </Modal.Body>
-      </Modal>
-    ) : null
+    )
 
     return (
       <Panel header={<h3><Glyphicon glyph={statusGlyph}/> Run status: {statusText}</h3>}
@@ -109,18 +103,23 @@ let RunStatusPanel = React.createClass({
           <Col sm={2} className="accio-view-label">{run.children ? 'Child runs' : 'Nodes'}</Col>
           <Col sm={10}>
             {run.children
-              ? <RunChildrenContainer run={run}/>
+              ? <ChildrenTableContainer run={run}/>
               : nodeRows}
           </Col>
         </Row>
-        {errorModal}
+        {(null !== this.state.error)
+          ? <ErrorModal
+              nodeName={this.state.error.node}
+              error={this.state.error.data}
+              onClose={this._handleErrorModalClose}/>
+          : null}
       </Panel>
     )
   }
-});
+}
 
-RunStatusPanel.propTypes = {
+StatusPanel.propTypes = {
   run: React.PropTypes.object.isRequired
-};
+}
 
-export default RunStatusPanel;
+export default StatusPanel

@@ -20,32 +20,44 @@ import React from "react"
 import {Link} from "react-router"
 import {Row, Col, Panel} from "react-bootstrap"
 import {map} from 'lodash'
-import {prettyPrintValue} from '../../../utils/prettyPrint'
 import Username from '../../Username'
 
-let RunParamsPanel = React.createClass({
+let DetailsPanel = React.createClass({
   render: function () {
-    const rows = map(this.props.run.params, (value, name) => {
-      return (
-        <Row key={name}>
-          <Col sm={2} className="accio-view-label">{name}</Col>
-          <Col sm={10}>{prettyPrintValue(value.payload, value.kind)}</Col>
-        </Row>
-      )
-    })
+    const {run} = this.props
     return (
-      <Panel header="Run parameters"
+      <Panel header="Run details"
              className="accio-view-panel"
              collapsible={true}
              defaultExpanded={true}>
-        {rows}
+        <Row>
+          <Col sm={2} className="accio-view-label">Workflow</Col>
+          <Col sm={10}>
+            <Link to={'workflows/view/' + run.pkg.workflow_id + '/' + run.pkg.workflow_version}>
+              {run.pkg.workflow_id}:{run.pkg.workflow_version}
+            </Link>
+          </Col>
+        </Row>
+        {run.parent ?
+          <Row>
+            <Col sm={2} className="accio-view-label">Parent</Col>
+            <Col sm={10}><Link to={'/runs/view/' + run.parent.id}>{run.parent.name ? run.parent.name : 'Untitled run #' + run.parent.id}</Link></Col>
+          </Row> : null}
+        <Row>
+          <Col sm={2} className="accio-view-label">Owner</Col>
+          <Col sm={10}><Username user={run.owner}/></Col>
+        </Row>
+        <Row>
+          <Col sm={2} className="accio-view-label">Seed</Col>
+          <Col sm={10}>{run.seed}</Col>
+        </Row>
       </Panel>
     );
   }
 });
 
-RunParamsPanel.propTypes = {
+DetailsPanel.propTypes = {
   run: React.PropTypes.object.isRequired,
 };
 
-export default RunParamsPanel;
+export default DetailsPanel;

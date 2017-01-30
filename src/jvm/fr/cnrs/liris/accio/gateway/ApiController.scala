@@ -121,7 +121,7 @@ class ApiController @Inject()(client: AgentService.FinagledClient) extends Contr
   }
 
   post("/api/v1/run/:id") { httpReq: UpdateRunHttpRequest =>
-    val req = UpdateRunRequest(RunId(httpReq.id), httpReq.name, httpReq.notes, httpReq.tags.map(explode(_, ",")))
+    val req = UpdateRunRequest(RunId(httpReq.id), httpReq.name, httpReq.notes, httpReq.tags)
     client.updateRun(req).map(_ => response.ok)
   }
 
@@ -174,7 +174,7 @@ case class UpdateRunHttpRequest(
   @RouteParam id: String,
   name: Option[String],
   notes: Option[String],
-  tags: Option[String])
+  tags: Option[Set[String]])
 
 case class ListArtifactsHttpRequest(@RouteParam id: String, @RouteParam node: String)
 

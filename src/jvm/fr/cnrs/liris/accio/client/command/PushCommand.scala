@@ -72,7 +72,7 @@ class PushCommand @Inject()(clientFactory: AgentClientFactory)
         case Return(resp) =>
           if (!opts.quiet) {
             printWarnings(resp.warnings, out)
-            printErrors(resp.warnings, out)
+            printErrors(resp.errors, out)
           }
           resp.workflow match {
             case Some(spec) => push(spec, opts, client, out)

@@ -20,9 +20,9 @@ import React from 'react'
 import Spinner from 'react-spinkit'
 import autobind from 'autobind-decorator'
 import xhr from '../../../utils/xhr'
-import RunChildren from './RunChildren'
+import ChildrenTable from './ChildrenTable'
 
-class RunChildrenContainer extends React.Component {
+class ChildrenTableContainer extends React.Component {
   constructor(props) {
     super(props)
     this.state = {data: null}
@@ -44,12 +44,12 @@ class RunChildrenContainer extends React.Component {
 
   render() {
     return (null != this.state.data)
-      ? <RunChildren runs={this.state.data}/>
+      ? <ChildrenTable runs={this.state.data}/>
       : <Spinner spinnerName="three-bounce"/>
   }
 }
-RunChildrenContainer.propTypes = {
+ChildrenTableContainer.propTypes = {
   run: React.PropTypes.object.isRequired,
 }
 
-export default RunChildrenContainer
+export default ChildrenTableContainer

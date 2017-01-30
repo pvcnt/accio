@@ -16,37 +16,34 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React from "react";
-import {Row, Col, Panel} from "react-bootstrap";
-import TagList from "../../TagList";
+import React from "react"
+import {Row, Col, Panel} from "react-bootstrap"
+import {map} from 'lodash'
+import {prettyPrintValue} from '../../../utils/prettyPrint'
 
-let RunMetadataPanel = React.createClass({
-  render: function () {
-    const {run} = this.props
+class ParamsPanel extends React.Component {
+  render() {
+    const rows = map(this.props.run.params, (value, name) => {
+      return (
+        <Row key={name}>
+          <Col sm={2} className="accio-view-label">{name}</Col>
+          <Col sm={10}>{prettyPrintValue(value.payload, value.kind)}</Col>
+        </Row>
+      )
+    })
     return (
-      <Panel header="Run metadata"
+      <Panel header="Run parameters"
              className="accio-view-panel"
              collapsible={true}
-             defaultExpanded={false}>
-        <Row>
-          <Col sm={2} className="accio-view-label">Name</Col>
-          <Col sm={10}>{run.name}</Col>
-        </Row>
-        <Row>
-          <Col sm={2} className="accio-view-label">Notes</Col>
-          <Col sm={10}>{run.parent ? run.parent.notes : run.notes}</Col>
-        </Row>
-        <Row>
-          <Col sm={2} className="accio-view-label">Tags</Col>
-          <Col sm={10}><TagList tags={run.parent ? run.parent.tags : run.tags}/></Col>
-        </Row>
+             defaultExpanded={true}>
+        {rows}
       </Panel>
-    );
+    )
   }
-});
+}
 
-RunMetadataPanel.propTypes = {
+ParamsPanel.propTypes = {
   run: React.PropTypes.object.isRequired,
-};
+}
 
-export default RunMetadataPanel;
+export default ParamsPanel
