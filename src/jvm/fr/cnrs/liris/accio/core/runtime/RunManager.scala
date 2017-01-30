@@ -206,8 +206,6 @@ final class RunManager @Inject()(
   private def updateProgress(run: Run, parent: Option[Run]): (Run, Option[Run]) = {
     val now = System.currentTimeMillis()
     var newRun = run
-    var newParent = parent
-
     if (newRun.state.completedAt.isEmpty) {
       if (newRun.state.nodes.forall(s => Utils.isCompleted(s.status))) {
         // Mark run as completed, if all nodes are completed. It is successful if all nodes were successful.
@@ -217,21 +215,6 @@ final class RunManager @Inject()(
           RunStatus.Failed
         }
         newRun = newRun.copy(state = newRun.state.copy(progress = 1, status = newRunStatus, completedAt = Some(now)))
-        newParent = newParent.map { parent =>
-          if (parent.state.completedAt.isEmpty) {
-            val completedCount = runRepository.find(RunQuery(parent = Some(parent.id), status = Set(RunStatus.Success, RunStatus.Failed, RunStatus.Killed))).totalCount + 1
-            if (completedCount == parent.children) {
-              // Mark parent run as completed if all children are completed. It is always successful.
-              parent.copy(state = parent.state.copy(progress = 1, status = RunStatus.Success, completedAt = Some(now)))
-            } else {
-              // Parent is not yet completed, only update progress.
-              val progress = completedCount.toDouble / parent.children
-              parent.copy(state = parent.state.copy(progress = progress))
-            }
-          } else {
-            parent
-          }
-        }
       } else {
         // Run is not yet completed, only update progress.
         val progress = newRun.state.nodes.count(s => Utils.isCompleted(s.status)).toDouble / newRun.state.nodes.size
@@ -239,7 +222,29 @@ final class RunManager @Inject()(
       }
     }
 
-    (newRun, newParent)
+    (newRun, updateParentProgress(newRun, parent))
+  }
+
+  private def updateParentProgress(run: Run, parent: Option[Run]): Option[Run] = {
+    parent.map { parent =>
+      if (parent.state.completedAt.isEmpty) {
+        val progressSum = runRepository.find(RunQuery(parent = Some(parent.id)))
+          .results
+          .filter(_.id != run.id)
+          .map(_.state.progress)
+          .sum + run.state.progress
+        if (progressSum == parent.children.toDouble) {
+          // Mark parent run as completed if all children are completed. It is always successful.
+          parent.copy(state = parent.state.copy(progress = 1, status = RunStatus.Success, completedAt = Some(System.currentTimeMillis())))
+        } else {
+          // Parent is not yet completed, only update progress.
+          val progress = progressSum / parent.children
+          parent.copy(state = parent.state.copy(progress = progress))
+        }
+      } else {
+        parent
+      }
+    }
   }
 
   private def scheduleNextNodes(run: Run, nodeName: String): Run = {

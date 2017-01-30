@@ -64,13 +64,13 @@ object Utils {
    */
   def label(params: Seq[(String, Value)]): String = {
     params.map { case (k, v) =>
-      var vStr = v.toString
+      var vStr = Values.toString(v)
       if (vStr.contains('/')) {
         // Remove any slash that would be polluting directory name.
         vStr = vStr.substring(vStr.lastIndexOf('/') + 1)
       }
       s"$k=$vStr"
-    }.mkString(",")
+    }.mkString(" ")
   }
 
   /**

@@ -85,8 +85,9 @@ final class RunFactory @Inject()(workflowRepository: WorkflowRepository) extends
       Seq(createSingle(workflow, owner, spec.name, spec.notes,
         spec.tags.toSet, spec.seed, defaultParams ++ expandedParams.head, spec.clonedFrom))
     } else {
+      val fixedParams = spec.params.filter(_._2.size <= 1).keySet
       createSweep(workflow, owner, spec.name, spec.notes, spec.tags.toSet,
-        spec.seed, defaultParams, expandedParams, repeat, spec.clonedFrom)
+        spec.seed, defaultParams, fixedParams.toSet, expandedParams, repeat, spec.clonedFrom)
     }
   }
 
@@ -147,6 +148,7 @@ final class RunFactory @Inject()(workflowRepository: WorkflowRepository) extends
    * @param tags           Arbitrary tags used when looking for runs.
    * @param seed           Seed used by unstable operators.
    * @param defaultParams  Default values for workflow parameters.
+   * @param fixedParams    Names of parameters whose value does not vary across runs.
    * @param expandedParams List of values of workflow parameters.
    * @param repeat         Number of times to repeat each run.
    * @param clonedFrom     Identifier of the run this instance has been cloned from.
@@ -160,6 +162,7 @@ final class RunFactory @Inject()(workflowRepository: WorkflowRepository) extends
     tags: Set[String],
     seed: Option[Long],
     defaultParams: Map[String, Value],
+    fixedParams: Set[String],
     expandedParams: Seq[Map[String, Value]],
     repeat: Int,
     clonedFrom: Option[RunId]): Seq[Run] = {
@@ -191,10 +194,12 @@ final class RunFactory @Inject()(workflowRepository: WorkflowRepository) extends
     //     while compiling: /path/to/code/src/jvm/fr/cnrs/liris/accio/core/domain/RunFactory.scala
     //       during phase: superaccessors
     val children: Seq[Run] = expandedParams.map { params =>
+      val name = Utils.label(params.filter { case (key, _) => !fixedParams.contains(key) })
       Run(
         id = randomId,
         pkg = pkg,
         owner = owner,
+        name = Some(name),
         cluster = "default",
         seed = random.nextLong(),
         params = defaultParams ++ params,

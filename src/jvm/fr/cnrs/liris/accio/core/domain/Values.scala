@@ -29,7 +29,7 @@ import scala.collection.JavaConverters._
  * Factory and converters for [[Value]].
  */
 object Values {
-  private[this] val AbbreviateThreshold = 9
+  private[this] val AbbreviateThreshold = 3
 
   val instantOrdering = new Ordering[Instant] {
     override def compare(x: Instant, y: Instant): Int = x.compareTo(y)
@@ -276,7 +276,7 @@ object Values {
 
   private def toString(obj: Any): String =
     obj match {
-      case d: Double => roundAt4(d).toString
+      case d: Double => if (d >= 1) roundAt4(d).toString else d.toString
       case d: Distance => Distance.meters(roundAt4(d.meters)).toString
       case _ => obj.toString
     }
