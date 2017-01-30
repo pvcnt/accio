@@ -17,10 +17,10 @@
  */
 
 import React from 'react'
-import xhr from '../../../utils/xhr'
-import RunTable from '../list/RunTable'
 import Spinner from 'react-spinkit'
 import autobind from 'autobind-decorator'
+import xhr from '../../../utils/xhr'
+import RunChildren from './RunChildren'
 
 class RunChildrenContainer extends React.Component {
   constructor(props) {
@@ -44,7 +44,7 @@ class RunChildrenContainer extends React.Component {
 
   render() {
     return (null != this.state.data)
-      ? <RunTable runs={this.state.data} showWorkflow={false} showTags={false} showOwner={false}/>
+      ? <RunChildren runs={this.state.data}/>
       : <Spinner spinnerName="three-bounce"/>
   }
 }

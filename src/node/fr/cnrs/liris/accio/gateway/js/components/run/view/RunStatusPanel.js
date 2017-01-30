@@ -70,7 +70,7 @@ let RunStatusPanel = React.createClass({
       <NodeStatusRow key={idx}
                      runId={run.id}
                      node={node}
-                     logs={this.state.logs && this.state.logs.node == node.node_name ? this.state.logs.classifier : null}
+                     logs={this.state.logs && this.state.logs.node == node.name ? this.state.logs.classifier : null}
                      onLogsShow={this._handleLogsToggle}
                      onErrorShow={this._handleErrorModalShow}/>
     );

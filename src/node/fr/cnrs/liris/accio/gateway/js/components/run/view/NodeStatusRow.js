@@ -37,7 +37,7 @@ let NodeStatusRow = React.createClass({
 
   _handleLogsToggle: function (e, classifier) {
     e.nativeEvent.preventDefault();
-    this.props.onLogsShow(this.props.node.node_name, classifier);
+    this.props.onLogsShow(this.props.node.name, classifier);
   },
 
   render: function () {
@@ -71,7 +71,7 @@ let NodeStatusRow = React.createClass({
     return (<div>
       <Row>
         <Col sm={3}>
-          <Glyphicon glyph={glyph}/>&nbsp;{node.node_name}
+          <Glyphicon glyph={glyph}/>&nbsp;{node.name}
         </Col>
         <Col sm={3}>{label}</Col>
         <Col sm={3}>
@@ -90,7 +90,7 @@ let NodeStatusRow = React.createClass({
                   stderr
               </Button>&nbsp;
               {this.props.logs
-                ? <Button bsSize="xsmall" href={'/api/v1/run/' + runId + '/logs/' + node.node_name + '?download=true&classifier=' + this.props.logs}>
+                ? <Button bsSize="xsmall" href={'/api/v1/run/' + runId + '/logs/' + node.name + '/' + this.props.logs + '?download=true'}>
                     <Glyphicon glyph="save"/>
                 </Button> : null}
               </div>
@@ -106,7 +106,7 @@ let NodeStatusRow = React.createClass({
       {(null != this.props.logs)
         ? <RunLogsContainer
             runId={runId}
-            nodeName={node.node_name}
+            nodeName={node.name}
             classifier={this.props.logs}
             stream={!isCompleted}/>
         : null}

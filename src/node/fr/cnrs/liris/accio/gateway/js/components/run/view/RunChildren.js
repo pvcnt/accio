@@ -19,39 +19,48 @@
 import React from 'react'
 import moment from 'moment'
 import {Link} from 'react-router'
-import {ProgressBar, Table, Label, Glyphicon} from 'react-bootstrap'
-import TagList from '../../TagList'
+import {map, forEach, toPairs} from 'lodash'
+import {ProgressBar, Table, Glyphicon} from 'react-bootstrap'
+import {prettyPrintValue} from '../../../utils/prettyPrint'
 
-class RunTable extends React.Component {
+class RunChildren extends React.Component {
   render() {
+    let paramsValues = {}
+    this.props.runs.forEach(run => {
+      forEach(run.params, (value, key) => {
+        if (!(key in paramsValues)) {
+          paramsValues[key] = new Set()
+        }
+        if (paramsValues[key].size < 2) {
+          paramsValues[key].add(value.payload)
+        }
+      })
+    })
+    const commonParams = toPairs(paramsValues).filter(kv => kv[1].size == 1).map(kv => kv[0])
+
     const rows = this.props.runs.map((run, idx) => {
       const style = (run.state.completed_at) ? (run.state.status == 'success') ? 'success' : 'danger' : 'warning'
       const progress = Math.round(run.state.progress * 100)
+      const name = toPairs(run.params)
+          .filter(kv => commonParams.indexOf(kv[0]) == -1)
+          .map(kv => kv[0] + '=' + prettyPrintValue(kv[1].payload, kv[1].kind))
+          .sort()
+          .join(' ')
       return <tr key={idx}>
-        {this.props.showWorkflow ? <td><input type="checkbox" /></td> : null}
         <td>
-          <Link to={'/runs/view/' + run.id}>
-            {run.name ? run.name : 'Untitled run #' + run.id}
-          </Link>
+          <Link to={'/runs/view/' + run.id}>{name}</Link>
           {run.children ? <span style={{marginLeft: '10px'}}><Glyphicon glyph="tasks"/>&nbsp;{run.children}</span> : null}
         </td>
-        {this.props.showWorkflow ? <td>{run.pkg.workflow_id}</td> : null}
-        {this.props.showOwner ? <td>{run.owner.name}</td> : null}
         <td><ProgressBar now={progress} label={progress + '%'} bsStyle={style}/></td>
         <td>{(run.state.started_at) ? moment(run.state.started_at).fromNow() : '–'}</td>
-        {this.props.showTags ? <td><TagList tags={run.tags}/></td> : null}
       </tr>
     });
     return <Table striped hover responsive className="accio-list-table">
       <thead>
       <tr>
-        {this.props.showWorkflow ? <th>&nbsp;</th> : null}
-        <th>Run name</th>
-        {this.props.showWorkflow ? <th>Workflow</th> : null}
-        {this.props.showOwner ? <th>Owner</th> : null}
+        <th>Parameters</th>
         <th>Progress</th>
         <th>Started</th>
-        {this.props.showTags ? <th>Tags</th> : null}
       </tr>
       </thead>
       <tbody>
@@ -61,16 +70,8 @@ class RunTable extends React.Component {
   }
 }
 
-RunTable.propTypes = {
+RunChildren.propTypes = {
   runs: React.PropTypes.array.isRequired,
-  showWorkflow: React.PropTypes.bool.isRequired,
-  showOwner: React.PropTypes.bool.isRequired,
-  showTags: React.PropTypes.bool.isRequired,
-}
-RunTable.defaultProps = {
-  showWorkflow: true,
-  showOwner: true,
-  showTags: true,
 }
 
-export default RunTable;
+export default RunChildren;

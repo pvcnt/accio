@@ -37,11 +37,11 @@ class RunView extends React.Component {
         if (node.status == 'success') {
           return <LazyPanel
             key={idx}
-            header={'Outputs: ' + node.node_name}
+            header={'Outputs: ' + node.name}
             className="accio-view-panel"
             collapsible={true}
             defaultExpanded={false}>
-            <RunArtifactsContainer runId={run.id} nodeName={node.node_name}/>
+            <RunArtifactsContainer runId={run.id} nodeName={node.name}/>
           </LazyPanel>
         } else {
           return null
