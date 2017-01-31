@@ -37,7 +37,7 @@ object StorageModule extends TwitterModule {
   // Elasticsearch storage configuration.
   private[this] val esStorageAddrFlag = flag("storage.es.addr", "127.0.0.1:9300", "Address to Elasticsearch cluster")
   private[this] val esStoragePrefixFlag = flag("storage.es.prefix", "accio_", "Prefix of Elasticsearch indices")
-  private[this] val esStorageQueryTimeoutFlag = flag("storage.es.query_timeout", Duration.fromSeconds(15), "Elasticsearch query timeout")
+  private[this] val esStorageQueryTimeoutFlag = flag("storage.es.query_timeout", Duration.Top, "Elasticsearch query timeout")
 
   protected override def configure(): Unit = {
     val module = storageFlag() match {

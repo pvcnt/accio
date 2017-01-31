@@ -22,6 +22,7 @@ import com.google.common.geometry.S2CellId
 import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.common.util.Requirements._
 import fr.cnrs.liris.privamov.core.model.Trace
+import org.joda.time.Duration
 
 @Op(
   category = "metric",
@@ -53,6 +54,7 @@ class AreaCoverageOp extends Operator[AreaCoverageIn, AreaCoverageOut] {
 
 case class AreaCoverageIn(
   @Arg(help = "S2 cells levels") level: Int,
+  @Arg(help = "Maximum duration between two events to consider they match") temporalOverlap: Option[Duration],
   @Arg(help = "Train dataset") train: Dataset,
   @Arg(help = "Test dataset") test: Dataset)
 

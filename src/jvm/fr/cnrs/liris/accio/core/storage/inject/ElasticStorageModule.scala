@@ -47,17 +47,17 @@ final class ElasticStorageModule(config: ElasticStorageConfig) extends ScalaModu
 
   @Singleton
   @Provides
-  def providesRunRepository: MutableRunRepository = {
+  def providesRunRepository(mapperFactory: ObjectMapperFactory): MutableRunRepository = {
+    val mapper = mapperFactory.create()
     new ElasticRunRepository(mapper, client, config.prefix, ScalaDuration.fromNanos(config.queryTimeout.inNanoseconds))
   }
 
   @Singleton
   @Provides
-  def providesWorkflowRepository: MutableWorkflowRepository = {
+  def providesWorkflowRepository(mapperFactory: ObjectMapperFactory): MutableWorkflowRepository = {
+    val mapper = mapperFactory.create()
     new ElasticWorkflowRepository(mapper, client, config.prefix, ScalaDuration.fromNanos(config.queryTimeout.inNanoseconds))
   }
-
-  private lazy val mapper = new ObjectMapperFactory().create()
 
   private lazy val client = {
     val settings = Settings.builder()
@@ -66,9 +66,6 @@ final class ElasticStorageModule(config: ElasticStorageConfig) extends ScalaModu
       .build()
     val uri = ElasticsearchClientUri(s"elasticsearch://${config.addr}")
     val client = ElasticClient.transport(settings, uri)
-
-    sys.addShutdownHook(client.close())
-
     client
   }
 }

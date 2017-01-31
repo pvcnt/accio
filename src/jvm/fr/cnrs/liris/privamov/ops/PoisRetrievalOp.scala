@@ -62,7 +62,7 @@ class PoisRetrievalOp extends Operator[PoisRetrievalIn, PoisRetrievalOut] {
 }
 
 case class PoisRetrievalIn(
-  @Arg(help = "Matching threshold") threshold: Distance,
+  @Arg(help = "Maximum distance between two POIs to consider they match") threshold: Distance,
   @Arg(help = "Whether to include the temporal component") temporal: Boolean = false,
   @Arg(help = "Train dataset (POIs)") train: Dataset,
   @Arg(help = "Test dataset (POIs)") test: Dataset)
