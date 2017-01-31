@@ -1,7 +1,6 @@
 ---
 layout: docs
 nav: docs
-section: developpers
 title: Code organization
 ---
 
@@ -53,7 +52,7 @@ Accio core is grouped under the `fr.cnrs.liris.accio.core` package, which contai
   * `api`: it is the only dependency that modules defining custom operators need to rely on.
   It is a very light package that only defines an interface to be implemented by operators and some data types.
   You can find more information about implementing custom operators in [the dedicated section](operator.html).
-  * `framework`: it contains classes defining the Accio framework, including operators metadata discovery, workflows and experiments discovery, data structures for [Accio concepts](../basics/concepts.html) and associated factories.
+  * `framework`: it contains classes defining the Accio framework, including operators metadata discovery, workflows and experiments discovery, data structures for [Accio concepts](../concepts/index.html) and associated factories.
   * `runtime`: it contains code needed to actually execute workflows in various environments.
 
 ## Command-line application

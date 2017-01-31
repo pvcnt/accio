@@ -83,9 +83,9 @@ final class RunManager @Inject()(
       } else {
         val newNodeState = nodeState.copy(completedAt = Some(System.currentTimeMillis()), status = NodeStatus.Killed)
         newRun = replace(run, nodeState, newNodeState)
-        newRun = cancelNextNodes(newRun, nodeName)
       }
     }
+    newRun = cancelAllNodes(newRun)
     updateProgress(newRun, parent)
   }
 
@@ -258,17 +258,20 @@ final class RunManager @Inject()(
   private def updateParentProgress(run: Run, parent: Option[Run]): Option[Run] = {
     parent.map { parent =>
       if (parent.state.completedAt.isEmpty) {
-        val progressSum = runRepository.find(RunQuery(parent = Some(parent.id)))
-          .results
-          .filter(_.id != run.id)
-          .map(_.state.progress)
-          .sum + run.state.progress
-        if (progressSum == parent.children.size) {
-          // Mark parent run as completed if all children are completed. It is always successful.
-          parent.copy(state = parent.state.copy(progress = 1, status = RunStatus.Success, completedAt = Some(System.currentTimeMillis())))
+        val siblings = runRepository.find(RunQuery(parent = Some(parent.id))).results.filter(_.id != run.id) ++ Seq(run)
+        if (siblings.forall(s => Utils.isCompleted(s.state.status))) {
+          // Mark parent run as completed if all children are completed. It is successful if all runs were successful.
+          val newRunState = if (siblings.forall(_.state.status == RunStatus.Success)) {
+            RunStatus.Success
+          } else if (siblings.exists(_.state.status == RunStatus.Killed)) {
+            RunStatus.Killed
+          } else {
+            RunStatus.Failed
+          }
+          parent.copy(state = parent.state.copy(progress = 1, status = newRunState, completedAt = Some(System.currentTimeMillis())))
         } else {
           // Parent is not yet completed, only update progress.
-          val progress = progressSum / parent.children.size
+          val progress = siblings.map(_.state.progress).sum / parent.children.size
           parent.copy(state = parent.state.copy(progress = progress))
         }
       } else {
@@ -295,6 +298,19 @@ final class RunManager @Inject()(
       val nodeState = newRun.state.nodes.find(_.name == nextNode.name).get
       val newNodeState = nodeState.copy(completedAt = Some(System.currentTimeMillis()), status = NodeStatus.Cancelled)
       newRun = replace(newRun, nodeState, newNodeState)
+    }
+    newRun
+  }
+
+  private def cancelAllNodes(run: Run): Run = {
+    val graph = graphs(run.pkg)
+    var newRun = run
+    graph.nodes.foreach { node =>
+      val nodeState = newRun.state.nodes.find(_.name == node.name).get
+      if (!Utils.isCompleted(nodeState.status)) {
+        val newNodeState = nodeState.copy(completedAt = Some(System.currentTimeMillis()), status = NodeStatus.Cancelled)
+        newRun = replace(newRun, nodeState, newNodeState)
+      }
     }
     newRun
   }

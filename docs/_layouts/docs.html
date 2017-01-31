@@ -12,18 +12,18 @@ layout: base
           Introduction
         </a>
       </li>
-      <li{% if url[2] == 'concepts.html' %} class="active"{% endif %}>
-        <a href="{{ "/docs/concepts.html" | prepend: site.baseurl }}">
+      <li{% if url[2] == 'concepts' %} class="active"{% endif %}>
+        <a href="{{ "/docs/concepts/index.html" | prepend: site.baseurl }}">
           Concepts
         </a>
       </li>
-      <li{% if url[2] == 'architecture.html' %} class="active"{% endif %}>
-        <a href="{{ "/docs/architecture.html" | prepend: site.baseurl }}">
+      <li{% if url[2] == 'architecture' %} class="active"{% endif %}>
+        <a href="{{ "/docs/architecture/index.html" | prepend: site.baseurl }}">
           Architecture
         </a>
       </li>
-      <li{% if url[2] == 'getting-started.html' %} class="active"{% endif %}>
-        <a href="{{ "/docs/getting-started.html" | prepend: site.baseurl }}">
+      <li{% if url[2] == 'getting-started' %} class="active"{% endif %}>
+        <a href="{{ "/docs/getting-started/index.html" | prepend: site.baseurl }}">
           Getting started
         </a>
       </li>
@@ -31,13 +31,13 @@ layout: base
 
     <hr />
     <ul class="docs-menu">
-      <li{% if url[2] == 'workflow-dsl.html' %} class="active"{% endif %}>
-        <a href="{{ "/docs/workflow-dsl.html" | prepend: site.baseurl }}">
+      <li{% if url[2] == 'workflow-dsl' %} class="active"{% endif %}>
+        <a href="{{ "/docs/workflow-dsl/index.html" | prepend: site.baseurl }}">
           Workflow definition
         </a>
       </li>
-      <li{% if url[2] == 'run-dsl.html' %} class="active"{% endif %}>
-        <a href="{{ "/docs/run-dsl.html" | prepend: site.baseurl }}">
+      <li{% if url[2] == 'run-dsl' %} class="active"{% endif %}>
+        <a href="{{ "/docs/run-dsl/index.html" | prepend: site.baseurl }}">
           Run definition
         </a>
       </li>
@@ -47,106 +47,127 @@ layout: base
         </a>
         {% if page.section == 'users' %}
         <ul>
-          <li><a href="{{ "/docs/users/authoring.html" | prepend: site.baseurl }}">
-            Authoring experiment
-          </a></li>
-          <li><a href="{{ "/docs/users/monitoring.html" | prepend: site.baseurl }}">
-            Monitoring experiments
-          </a></li>
-          <li><a href="{{ "/docs/users/analysing.html" | prepend: site.baseurl }}">
-            Analysing results
-          </a></li>
-          <li><a href="{{ "/docs/users/debugging.html" | prepend: site.baseurl }}">
-            Debugging failures
-          </a></li>
+          <li{% if url[3] == 'authoring.html' %} class="active"{% endif %}>
+            <a href="{{ "/docs/users/authoring.html" | prepend: site.baseurl }}">
+              Authoring experiment
+            </a>
+          </li>
+          <li{% if url[3] == 'monitoring.html' %} class="active"{% endif %}>
+            <a href="{{ "/docs/users/monitoring.html" | prepend: site.baseurl }}">
+              Monitoring runs
+            </a>
+          </li>
+          <li{% if url[3] == 'analyzing.html' %} class="active"{% endif %}>
+            <a href="{{ "/docs/users/analyzing.html" | prepend: site.baseurl }}">
+              Analyzing results
+            </a>
+          </li>
+          <li{% if url[3] == 'debugging.html' %} class="active"{% endif %}>
+            <a href="{{ "/docs/users/debugging.html" | prepend: site.baseurl }}">
+              Debugging failures
+            </a>
+          </li>
         </ul>
         {% endif %}
       </li>
-      <li{% if url[2] == 'client' %} class="active"{% endif %}>
-        <a href="{{ "/docs/client/index.html" | prepend: site.baseurl }}">
-          Client (CLI)
+      <li{% if url[2] == 'commands' %} class="active"{% endif %}>
+        <a href="{{ "/docs/commands/index.html" | prepend: site.baseurl }}">
+          Commands (CLI)
         </a>
-        {% if page.section == 'client' %}
+        {% if url[2] == 'commands' %}
         <ul>
-          <li><a href="{{ "/docs/client/acciorc.html" | prepend: site.baseurl }}">
-            .acciorc configuration
-          </a></li>
-          <li><a href="{{ "/docs/client/export-command.html" | prepend: site.baseurl }}">
-            Command: export
-          </a></li>
-          <li><a href="{{ "/docs/client/help-command.html" | prepend: site.baseurl }}">
-            Command: help
-          </a></li>
-          <li><a href="{{ "/docs/client/inspect-command.html" | prepend: site.baseurl }}">
-            Command: inspect
-          </a></li>
-          <li><a href="{{ "/docs/client/kill-command.html" | prepend: site.baseurl }}">
-            Command: kill
-          </a></li>
-          <li><a href="{{ "/docs/client/ops-command.html" | prepend: site.baseurl }}">
-            Command: ops
-          </a></li>
-          <li><a href="{{ "/docs/client/ps-command.html" | prepend: site.baseurl }}">
-            Command: ps
-          </a></li>
-          <li><a href="{{ "/docs/client/push-command.html" | prepend: site.baseurl }}">
-            Command: push
-          </a></li>
-          <li><a href="{{ "/docs/client/rm-command.html" | prepend: site.baseurl }}">
-            Command: rm
-          </a></li>
-          <li><a href="{{ "/docs/client/submit-command.html" | prepend: site.baseurl }}">
-            Command: submit
-          </a></li>
-          <li><a href="{{ "/docs/client/validate-command.html" | prepend: site.baseurl }}">
-            Command: validate
-          </a></li>
-          <li><a href="{{ "/docs/client/version-command.html" | prepend: site.baseurl }}">
-            Command: version
-          </a></li>
-          <li><a href="{{ "/docs/client/workflows-command.html" | prepend: site.baseurl }}">
-            Command: workflows
-          </a></li>
+          <li{% if url[3] == 'export.html' %} class="active"{% endif %}>
+            <a href="{{ "/docs/commands/export.html" | prepend: site.baseurl }}">
+              Command: export
+            </a>
+          </li>
+          <li{% if url[3] == 'help.html' %} class="active"{% endif %}>
+            <a href="{{ "/docs/commands/help.html" | prepend: site.baseurl }}">
+              Command: help
+            </a>
+          </li>
+          <li{% if url[3] == 'inspect.html' %} class="active"{% endif %}>
+            <a href="{{ "/docs/commands/inspect.html" | prepend: site.baseurl }}">
+              Command: inspect
+            </a>
+          </li>
+          <li{% if url[3] == 'kill.html' %} class="active"{% endif %}>
+            <a href="{{ "/docs/commands/kill.html" | prepend: site.baseurl }}">
+              Command: kill
+            </a>
+          </li>
+          <li{% if url[3] == 'ops.html' %} class="active"{% endif %}>
+            <a href="{{ "/docs/commands/ops.html" | prepend: site.baseurl }}">
+              Command: ops
+            </a>
+          </li>
+          <li{% if url[3] == 'ps.html' %} class="active"{% endif %}>
+            <a href="{{ "/docs/commands/ps.html" | prepend: site.baseurl }}">
+              Command: ps
+            </a>
+          </li>
+          <li{% if url[3] == 'push.html' %} class="active"{% endif %}>
+            <a href="{{ "/docs/commands/push.html" | prepend: site.baseurl }}">
+              Command: push
+            </a>
+          </li>
+          <li{% if url[3] == 'rm.html' %} class="active"{% endif %}>
+            <a href="{{ "/docs/commands/rm.html" | prepend: site.baseurl }}">
+              Command: rm
+            </a>
+          </li>
+          <li{% if url[3] == 'submit.html' %} class="active"{% endif %}>
+            <a href="{{ "/docs/commands/submit.html" | prepend: site.baseurl }}">
+              Command: submit
+            </a>
+          </li>
+          <li{% if url[3] == 'validate.html' %} class="active"{% endif %}>
+            <a href="{{ "/docs/commands/validate.html" | prepend: site.baseurl }}">
+              Command: validate
+            </a>
+          </li>
+          <li{% if url[3] == 'version.html' %} class="active"{% endif %}>
+            <a href="{{ "/docs/commands/version.html" | prepend: site.baseurl }}">
+              Command: version
+            </a>
+          </li>
+          <li{% if url[3] == 'workflows.html' %} class="active"{% endif %}>
+            <a href="{{ "/docs/commands/workflows.html" | prepend: site.baseurl }}">
+              Command: workflows
+            </a>
+          </li>
         </ul>
         {% endif %}
       </li>
-      <li{% if url[2] == 'web-ui.html' %} class="active"{% endif %}>
-        <a href="{{ "/docs/web-ui.html" | prepend: site.baseurl }}">
-          Web UI
+      <li{% if url[2] == 'location-privacy' %} class="active"{% endif %}>
+        <a href="{{ "/docs/location-privacy/index.html" | prepend: site.baseurl }}">
+          Location privacy
         </a>
       </li>
-      <li{% if url[2] == 'rest-api.html' %} class="active"{% endif %}>
-        <a href="{{ "/docs/rest-api.html" | prepend: site.baseurl }}">
+      <li{% if url[2] == 'operators' %} class="active"{% endif %}>
+        <a href="{{ "/docs/operators/index.html" | prepend: site.baseurl }}">
+          Operators library
+        </a>
+      </li>
+      <li{% if url[2] == 'web-ui' %} class="active"{% endif %}>
+        <a href="{{ "/docs/web-ui/index.html" | prepend: site.baseurl }}">
+          Web interface
+        </a>
+      </li>
+      <li{% if url[2] == 'rest' %} class="active"{% endif %}>
+        <a href="{{ "/docs/rest/index.html" | prepend: site.baseurl }}">
           REST API
         </a>
       </li>
     </ul>
 
-    <hr />
-    <ul class="docs-menu">
-      <li{% if url[2] == 'location-privacy.html' %} class="active"{% endif %}>
-        <a href="{{ "/docs/location-privacy.html" | prepend: site.baseurl }}">
-          Location privacy
-        </a>
-      </li>
-      <li><a href="{{ "/docs/data-model.html" | prepend: site.baseurl }}">
-        Data model
-      </a></li>
-      <li><a href="{{ "/docs/operators-library.html" | prepend: site.baseurl }}">
-        Operators library
-      </a></li>
-      <li><a href="{{ "/docs/extending.html" | prepend: site.baseurl }}">
-        Extending Accio
-      </a></li>
-    </ul>
-
     <hr/>
     <ul class="docs-menu">
-      <li{% if page.section == 'admins' %} class="active"{% endif %}>
+      <li{% if url[2] == 'admins' %} class="active"{% endif %}>
         <a href="{{ "/docs/admins/index.html" | prepend: site.baseurl }}">
           Administrating a cluster
         </a>
-        {% if page.section == 'admins' %}
+        {% if url[2] == 'admins' %}
         <ul>
           <li><a href="{{ "/docs/admins/install.html" | prepend: site.baseurl }}">
             Installation
@@ -175,33 +196,66 @@ layout: base
         </ul>
         {% endif %}
       </li>
-      <li{% if page.section == 'developpers' %} class="active"{% endif %}>
+      <li{% if url[2] == 'extending' %} class="active"{% endif %}>
+        <a href="{{ "/docs/extending/index.html" | prepend: site.baseurl }}">
+          Extending Accio
+        </a>
+        {% if url[2] == 'extending' %}
+        <ul>
+          <li{% if url[3] == 'custom-operator.html' %} class="active"{% endif %}>
+            <a href="{{ "/docs/extending/custom-operator.html" | prepend: site.baseurl }}">
+              Custom operator
+            </a>
+          </li>
+          <li{% if url[3] == 'documenting-operators.html' %} class="active"{% endif %}>
+            <a href="{{ "/docs/extending/documenting-operators.html" | prepend: site.baseurl }}">
+              Documenting operators
+            </a>
+          </li>
+          <li{% if url[3] == 'sparkle.html' %} class="active"{% endif %}>
+            <a href="{{ "/docs/extending/sparkle.html" | prepend: site.baseurl }}">
+              Sparkle
+            </a>
+          </li>
+          <li{% if url[3] == 'simulator.html' %} class="active"{% endif %}>
+            <a href="{{ "/docs/extending/simulator.html" | prepend: site.baseurl }}">
+              Simulator mode
+            </a>
+          </li>
+        </ul>
+        {% endif %}
+      </li>
+      <li{% if url[2] == 'developpers' %} class="active"{% endif %}>
         <a href="{{ "/docs/developpers/index.html" | prepend: site.baseurl }}">
           Developping Accio
         </a>
-        {% if page.section == 'developpers' %}
+        {% if url[2] == 'developpers' %}
         <ul>
-          <li><a href="{{ "/docs/developpers/compiling.html" | prepend: site.baseurl }}">
-            Compiling code
-          </a></li>
-          <li><a href="{{ "/docs/developpers/testing.html" | prepend: site.baseurl }}">
-            Running tests
-          </a></li>
-          <li><a href="{{ "/docs/developpers/codebase.html" | prepend: site.baseurl }}">
-            Code organization
-          </a></li>
-          <li><a href="{{ "/docs/developpers/custom-operator.html" | prepend: site.baseurl }}">
-            Custom operator
-          </a></li>
-          <li><a href="{{ "/docs/developpers/documenting.html" | prepend: site.baseurl }}">
-            Documenting operators
-          </a></li>
-          <li><a href="{{ "/docs/developpers/sparkle.html" | prepend: site.baseurl }}">
-            Sparkle
-          </a></li>
-          <li><a href="{{ "/docs/developpers/simulator.html" | prepend: site.baseurl }}">
-            Simulator mode
-          </a></li>
+          <li{% if url[3] == 'compiling.html' %} class="active"{% endif %}>
+            <a href="{{ "/docs/developpers/compiling.html" | prepend: site.baseurl }}">
+              Compiling code
+            </a>
+          </li>
+          <li{% if url[3] == 'codebase.html' %} class="active"{% endif %}>
+            <a href="{{ "/docs/developpers/codebase.html" | prepend: site.baseurl }}">
+              Code organization
+            </a>
+          </li>
+          <li{% if url[3] == 'server.html' %} class="active"{% endif %}>
+            <a href="{{ "/docs/developpers/server.html" | prepend: site.baseurl }}">
+              Developping the server
+            </a>
+          </li>
+          <li{% if url[3] == 'client.html' %} class="active"{% endif %}>
+            <a href="{{ "/docs/developpers/client.html" | prepend: site.baseurl }}">
+              Developping the client
+            </a>
+          </li>
+          <li{% if url[3] == 'ui.html' %} class="active"{% endif %}>
+            <a href="{{ "/docs/developpers/ui.html" | prepend: site.baseurl }}">
+              Developping the UI
+            </a>
+          </li>
         </ul>
         {% endif %}
       </li>

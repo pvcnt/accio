@@ -4,6 +4,11 @@ nav: research
 layout: default
 ---
 
+<div style="float: right; position: relative; top: -10px; margin-left: 15px;">
+  <img style="height: 50px; display: block;" src="images/liris-big.png"/>
+  <img style="width: 110px; margin-top: 15px; display: block;" src="images/gipsa.gif"/>
+</div>
+
 Accio is a research project developed at the [LIRIS laboratory](https://liris.cnrs.fr) (Lyon, France).
 It originated from the [Priva'Mov project](https://privamov.liris.cnrs.fr), whose purpose was to collect mobility data in order to study location privacy.
 Accio is currently being used by the [DRIM team](https://liris.cnrs.fr/drim/) at the LIRIS and by the [SYSCO team](http://www.gipsa-lab.grenoble-inp.fr/sysco/accueil-sysco.php) at the [GIPSA laboratory](http://www.gipsa-lab.fr/) (Grenoble, France).

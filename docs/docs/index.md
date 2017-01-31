@@ -35,6 +35,6 @@ The key features of Accio are:
   * **Extensible:** Accio is to be extensible. New workflow operators can be easily added and system-based plugins can be used or written to finely tune Accio behavior and integrate it into any existing architecture.
 
 ## What next?
-If you are completly new to Accio, you should begin with the [getting started guide](getting-started.html), which will get you quickly familiar with Accio.
+If you are completly new to Accio, you should begin with the [getting started guide](getting-started/index.html), which will get you quickly familiar with Accio.
 Already familiar users might be interested in the [user manual](users/index.html).
 More specific guides are available to [administrators](admins/index.html) and [developpers](developpers/index.html).

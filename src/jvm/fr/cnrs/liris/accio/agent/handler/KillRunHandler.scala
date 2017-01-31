@@ -49,15 +49,23 @@ final class KillRunHandler @Inject()(
         case None => throw new UnknownRunException
         case Some(run) =>
           if (run.children.nonEmpty) {
+            var newParent = run
             // If is a parent run, kill child all runs.
             run.children.foreach { childId =>
               lockService.withLock(childId) {
-                runRepository.get(childId).foreach(cancelRun(_, Some(run)))
+                runRepository.get(childId).foreach { child =>
+                  val res = cancelRun(child, Some(run))
+                  runRepository.save(res._1)
+                  res._2.foreach(p => newParent = p)
+                }
               }
             }
+            runRepository.save(newParent)
           } else {
             lockService.withLock(run.parent) {
-              cancelRun(run, run.parent.flatMap(runRepository.get))
+              val (newRun, newParent) = cancelRun(run, run.parent.flatMap(runRepository.get))
+              runRepository.save(newRun)
+              newParent.foreach(runRepository.save)
             }
           }
       }
@@ -73,8 +81,6 @@ final class KillRunHandler @Inject()(
         stateManager.remove(task.id)
       }
     }
-    val (newRun, newParent) = runManager.onKill(run, tasks.map(_.nodeName), None)
-    runRepository.save(newRun)
-    newParent.foreach(runRepository.save)
+    runManager.onKill(run, tasks.map(_.nodeName), None)
   }
 }
