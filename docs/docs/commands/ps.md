@@ -32,10 +32,28 @@ Defaults to false.
 * `-owner=<string>`: Include only runs belonging to a given owner.
 * `-name=<string>`: Include only runs whose name matches a given string.
 * `-n=<integer>`: Limit the number of results.
-* `-q`: Print only run identifiers, if the command was successful.
+* `-quiet`: Print only run identifiers, if the command was successful.
 Otherwise, you can still use the exit code to determine the outcome of the command.
 * `-json`: Print JSON output.
 
 ## Exit codes
 * `0`: Success.
 * `5`: Internal error.
+
+## Examples
+List all active runs:
+
+```bash
+$ accio ps
+Run id                            Workflow id      Created          Run name         Status
+b69c1e3358f147deb0da8ec9497340aa  workflow_Promes  21 minutes ago   (15) Promesse e  Running
+14fa9822df5b4446873cfbcceb69039f  workflow_Geo-I   26 minutes ago   <no name>        Running
+```
+
+List my own failed runs:
+
+```bash
+$ accio ps -failed -owner=jdoe
+Run id                            Workflow id      Created          Run name         Status
+6c4a54d5922545e5990fc1f6bd8194c4  workflow_Geo-I   2 days ago       <no name>        Failed
+```

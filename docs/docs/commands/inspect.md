@@ -32,7 +32,7 @@ Notably happens when the run or node does not exist.
 * `5`: Internal error.
 
 ## Examples
-Getting the status of a run:
+Get status of run 026f42d37ed14401bee76d67dc53ef1d:
 
 ```bash
 $ accio inspect 026f42d37ed14401bee76d67dc53ef1d
@@ -68,7 +68,8 @@ SpatialDistortion               Success    55 seconds
 PoisRetrieval                   Success    7569 milliseconds
 ```
 
-Getting the status of the `PoisRetrieval` node of this run:
+Get status of the `PoisRetrieval` node of this run:
+
 ```bash
 $ accio inspect e38283871cce42759279d459c8ed45ca PoisRetrieval
 Node name       PoisRetrieval

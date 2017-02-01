@@ -21,7 +21,7 @@ Overrides the ACCIO_ADDR environment variable. Defaults to *127.0.0.1:9999*.
 * `-owner=<string>`: Include only workflows belonging to a given owner.
 * `-name=<string>`: Include only workflows whose name matches a given string.
 * `-n=<integer>`: Limit the number of results.
-* `-q`: Print only workflow identifiers, if the command was successful.
+* `-quiet`: Print only workflow identifiers, if the command was successful.
 Otherwise, you can still use the exit code to determine the outcome of the command.
 * `-json`: Print JSON output.
 
@@ -35,7 +35,7 @@ List all workflows:
 ```bash
 $ accio workflows
 Id                              Owner            Created          Name
-workflow_Cab_Geo-I              Awesome person   1 hour ago       Geo-I Cab nominal workflow
-workflow_Cab_W4M                Awesome person   1 hour ago       W4M Cab nominal workflow
-workflow_Cab_Promesse           Awesome person   1 hour ago       Promesse Cab nominal workflow
+workflow_Geo-I                  Awesome person   2 hours ago      Geo-I nominal workflow
+workflow_W4M                    Awesome person   1 hour ago       W4M nominal workflow
+workflow_Promesse               Awesome person   1 hour ago       Promesse nominal workflow
 ```

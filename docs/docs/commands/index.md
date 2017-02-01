@@ -8,14 +8,20 @@ Accio comes with a command-line interface that can be used to perform most of th
 There is a single binary, that can be invoked by calling `accio` in your favorite shell, which comes with several commands, e.g., `ops`  or `submit`.
 The exhaustive list of commands is in the navigation menu on the left.
 
+The command to invoke is specified first, and is generally followed by options and arguments.
 By default, if you specify no command, the [`help` command](help.html) will be invoked, giving you access to a built-in help.
+Options begin with a single dash, e.g., `-repeat`; their value can be specified either after an equal sign, e.g., `-repeat=3` or after a space, e.g., `-repeat 3`.
+There is an exception for boolean options that do not need a value to be specified; instead they can be negated with `no`, e.g., `-color` or `-nocolor` to enable or disabled colored output. 
+Arguments are everything else that is not part of an option.
+Options and arguments for each command are documented on their dedicated help page.
 
-* TOC
-{:toc}
+Accio returns an exit code indicating the outcome of the execution.
+It follows Unix convention by returning `0` if everything went well and another value in case of an error.
+Exit codes for each command are documented on their dedicated help page and can help to disambiguate and failed command.
 
 ## Common options
 The following options are common to all commands.
-They will not be repeated when listing the options of each command in this section.
+They will not be repeated when listing options of each command in this section.
 
 * `-logging=<string>`: Logging level for the client, one of *trace*, *debug*, *info*, *warn*, *error*, *all* or *off*.
 Defaults to *warn*.
@@ -24,7 +30,7 @@ Defaults to *warn*.
 * `-[no]color`: Enable or disable colored output.
 Defaults to true.
 
-The `ACCIO_USER` environment variable can be used to specify the actual user's name.
+The `ACCIO_USER` environment variable can be used to specify the actual user's name, which defaults to the current user's shell login.
 
 ## .acciorc configuration file
 Accio accepts many options.
@@ -48,3 +54,11 @@ In configuration files, commands names may suffixed by `:config`, `config` being
 These options are ignored by default, but can be included with the `-config` option.
 The goal of this is to package command line options that work together.
 For example, a `run:twice -repeat=2` line in a configuration file combined with an `accio run -config=twice /path/to/workflow.json` Accio invocation in running twice any workflow.
+
+## Client/server implementation
+The CLI interface is a client to the Accio agent.
+It means that all operations it performs are actually performed by an Accio agent (i.e., a server).
+Which Accio agent to contact is controlled by the `-addr` option, which is available on nearly all commands for this reason;
+it is a very good candidate to be specified in the .acciorc configuration file.
+It also means that a client is not bound to a particular Accio cluster, but can instead communicate with multiple clusters.
+However, clients and agents must be at the same minor version, because the communication protocol between can evolve in a backwards incompatible way.

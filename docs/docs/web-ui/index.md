@@ -16,12 +16,12 @@ It allows to do almost the same operations that can be done via the [CLI applica
 ## Workflow view
 ![Workflow view](../../images/ui/workflow.jpeg)
 
-![Workflow graph](../images/ui/workflow_graph.jpeg)
+![Workflow graph](../../images/ui/workflow_graph.jpeg)
 
 ## Runs list
-![Runs list](../images/ui/runs.jpeg)
+![Runs list](../../images/ui/runs.jpeg)
 
 ## Run view
-![Run view](../images/ui/run.jpeg)
+![Run view](../../images/ui/run.jpeg)
 
-![Run outputs](../images/ui/run_outputs.jpeg)
+![Run outputs](../../images/ui/run_outputs.jpeg)

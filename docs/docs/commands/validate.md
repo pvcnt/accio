@@ -24,6 +24,6 @@ Overrides the ACCIO_ADDR environment variable. Defaults to *127.0.0.1:9999*.
 ## Exit codes
 * `0`: Success.
 * `1`: Bad command-line, there was an error with the arguments/options/environment variables combination.
-* `3`: Failed to validate at least one definition file.
+* `2`: Failed to validate at least one definition file.
 * `5`: Internal error.
 

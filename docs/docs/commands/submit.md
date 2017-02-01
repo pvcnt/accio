@@ -35,7 +35,7 @@ Overrides the value defined in the run file, if any.
 Overrides the value defined in the run file, if specified.
 * `-repeat=<integer>`: Number of times to repeat each run. Overrides the value defined in the run file, if any.
 * `-seed=<long>`: Run seed. Overrides the value defined in the run file, if any.
-* `-q`: Prints only run identifiers (one per line), if the command was successful.
+* `-quiet`: Prints only run identifiers (one per line), if the command was successful.
 You can still use the exit code to determine the outcome of the command.
 * `-json`: Prints pretty human-readable (but still machine-parsable) JSON.
 
