@@ -223,7 +223,11 @@ case class MetricList(runs: Seq[Run], params: Map[String, Value], groups: Seq[Me
  * @param values Metric values, keyed by run id.
  */
 case class MetricGroup(name: String, values: Map[RunId, Double]) {
-  def toSeq: Seq[Metric] = values.values.map(v => Metric(name, v)).toSeq
+  val nodeName: String = name.take(name.indexOf("/"))
 
-  def aggregated: Metric = Metric(name, mean(values.values.toSeq))
+  val metricName: String = name.drop(name.indexOf("/") + 1)
+
+  def toSeq: Seq[Metric] = values.values.map(v => Metric(metricName, v)).toSeq
+
+  def aggregated: Metric = Metric(metricName, mean(values.values.toSeq))
 }

@@ -35,9 +35,11 @@ Defaults to a new random directory created in your working directory.
 * `-separator=<string>`: Separator to use in generated files between fields.
 Defaults to a space.
 * `-artifacts=<string>[,...]`: Include only specified artifacts in the export.
+Artifact names must be fully qualified, including node name, e.g., `AreaCoverage/fscore`.
 Special artifact names are: *NUMERIC*, to include only artifacts with a numeric type, *ALL* and *NONE*.
 Defaults to *NUMERIC*.
 * `-metrics=<string>[,...]`: Include only specified metrics in the export.
+Metric names must be fully qualified, including node name, e.g., `Promesse/wall_time_millis`.
 Special metric names are: *ALL* and *NONE*.
 Defaults to *NONE*.
 * `-[no]split`: Split the export by workflow parameters.

@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.core.analysis
 
-import java.nio.file.{Files, Path, Paths, StandardOpenOption}
+import java.nio.file.{Files, Path, StandardOpenOption}
 
 import fr.cnrs.liris.accio.core.domain._
 
@@ -81,8 +81,8 @@ class CsvReportCreator {
   private def doWrite(list: ArtifactList, workDir: Path, opts: CsvReportOpts): Unit = {
     Files.createDirectories(workDir)
     list.groups.foreach { group =>
-      val artifacts = if (opts.aggregate) Seq(group.aggregated) else group.toSeq
       val header = asHeader(group.kind)
+      val artifacts = if (opts.aggregate) Seq(group.aggregated) else group.toSeq
       val rows = artifacts.flatMap(artifact => asString(artifact.value))
       val lines = (Seq(header) ++ rows).map(_.mkString(opts.separator))
       val filename = group.name.replace("/", "-")
@@ -92,12 +92,13 @@ class CsvReportCreator {
 
   private def doWrite(list: MetricList, workDir: Path, opts: CsvReportOpts): Unit = {
     Files.createDirectories(workDir)
-    list.groups.foreach { group =>
-      val metrics = if (opts.aggregate) Seq(group.aggregated) else group.toSeq
+    list.groups.groupBy(_.nodeName).foreach { case (nodeName, groups) =>
       val header = Seq("metric_name", "value")
-      val rows = metrics.map(metric => Seq(metric.name, metric.value.toString))
+      val rows = groups.flatMap { group =>
+        if (opts.aggregate) Seq(group.aggregated) else group.toSeq
+      }.map(metric => Seq(metric.name, metric.value.toString))
       val lines = (Seq(header) ++ rows).map(_.mkString(opts.separator))
-      doWrite(lines, workDir, group.name, opts)
+      doWrite(lines, workDir, nodeName, opts)
     }
   }
 

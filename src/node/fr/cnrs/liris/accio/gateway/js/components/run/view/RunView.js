@@ -88,7 +88,7 @@ class RunView extends React.Component {
           : null}
 
         <div className="accio-actions">
-          {run.state.status === 'running'
+          {(run.state.status === 'running' || run.state.status === 'scheduled')
             ? <Button onClick={this._handleKillShow} bsStyle="primary">
                 <Glyphicon glyph="exclamation-sign"/> Cancel run
             </Button>
