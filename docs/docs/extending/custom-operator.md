@@ -6,7 +6,7 @@ title: Implementing a custom operator
 
 Operators are the basic building block of workflows.
 Accio comes with some built-in operators, but you may need to implement new ones.
-Opeators need to be implemented directly in Scala, though this may evolve in the future.
+Opeators need to be implemented directly in [Scala](http://www.scala-lang.org), though this may evolve in the future.
 
 * TOC
 {:toc}
@@ -91,7 +91,7 @@ A bunch of new things are worth noting.
 Operator and port annotations come with various options useful to document them.
 It can even be used to automatically generate a documentation ready to be integrated on a web site.
 You can learn more about this topic on the [dedicated page](documenting-operators.html).
-  
+
 ## 4. Implement your operator
 Most of the work for a developper is to implement the body of the `execute` method.
 You have access to a context, which gives you access to the following methods:

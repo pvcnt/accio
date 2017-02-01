@@ -28,7 +28,7 @@ Notably happens if specified operator does not exist.
 ## Examples
 List all available operators (truncated output):
 
-```bash
+```
 $ accio ops
 Operators in source category:
   EventSource              Read a dataset of traces.
@@ -48,7 +48,7 @@ Operators in metric category:
 
 Get information about the `GaussianKernelSmoothing` operator:
 
-```bash
+```
 $ accio ops GaussianKernelSmoothing
 GaussianKernelSmoothing (prepare)
 

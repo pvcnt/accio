@@ -23,7 +23,7 @@ The exact procedure depends on the platform.
 OpenJDK 8 is not available on Trusty.
 To install Oracle JDK 8:
 
-```bash
+```
 $ sudo add-apt-repository ppa:webupd8team/java
 $ sudo apt-get update
 $ sudo apt-get install oracle-java8-installer
@@ -35,7 +35,7 @@ See [here](http://manpages.ubuntu.com/manpages/wily/man1/add-apt-repository.1.ht
 **Ubuntu Wily (15.10).**
 To install OpenJDK 8:
 
-```bash
+```
 $ sudo apt-get install openjdk-8-jdk
 ```
 
@@ -52,12 +52,12 @@ You can download the latest version of Accio as a pre-compiled JAR from [GitHub 
 
 You should then be able to run the downloaded JAR the usual way:
 
-```bash
+```
 $ java -jar accio.jar <command> <options>...
 ```
 
 When running experiments, you may need to tune JVM memory options, like increasing the quantity of available memory:
 
-```bash
+```
 $ java -Xmx8G -jar accio.jar <command> <options>...
 ```

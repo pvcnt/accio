@@ -45,7 +45,7 @@ Accio comes with a tool to automatically generate a documentation page for regis
 This tool is under the `fr.cnrs.liris.accio.docgen` package, and can be built as usual using Pants.
 You can build and run it in two simple steps:
 
-```bash
+```
 $ ./pants binary src/jvm/fr/cnrs/liris/accio/docgen:bin
 $ java -jar dist/accio-docgen.jar -out=docs/docs/operators/index.md
 ```

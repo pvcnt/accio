@@ -19,7 +19,7 @@
 function install_packages() {
   curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
   echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
-  DEBIAN_FRONTEND=noninteractive sudo apt-get install -y --force-yes \
+  DEBIAN_FRONTEND=noninteractive sudo apt-get update && sudo apt-get install -y --force-yes \
         python-dev \
         libffi-dev \
         openjdk-8-jdk-headless \

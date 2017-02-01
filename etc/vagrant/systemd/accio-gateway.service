@@ -28,4 +28,6 @@ ExecStart=/usr/bin/java \
   -jar /home/ubuntu/accio/dist/accio-gateway.jar \
     -ui \
     -addr=localhost:9999 \
+    -admin.port=":8880" \
+    -http.port=":80" \
     -local.doc.root=/vagrant/src/node/fr/cnrs/liris/accio/gateway

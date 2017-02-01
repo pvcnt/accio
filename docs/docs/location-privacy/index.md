@@ -11,12 +11,11 @@ Moreover, Accio is for now only packaged with a operators aiming at studying loc
 The standard set of operators encompasses many state-of-the-art algorithms about location privacy, such as Location Privacy Protection Mechanisms (LPPMs), evaluation metrics, as well as generic spatio-temporal data manipulation tools.
 Accio has been used and is being used by privacy researchers to help them launch experiments and analyze their results.
 
-Please make sure to take a look at [the library of operators](../operators/index.html) we defined.
+Please make sure to take a look at [the library of operators](../operators/index.html) built-in into Accio.
 
 ## Data model
 
-We propose a simple data model for studying location privacy.
-We use some of the vocabulary introduced in the paper [Quantifying Loction Privacy](https://infoscience.epfl.ch/record/164572/) (Shokri, Reza, Theodorakopoulos, Georgios, Le Boudec, Jean-Yves and Hubaux, Jean-Pierre; published in Proceedings of the 2011 Symposium on Security and Privacy).
+We propose a simple data model suited for studying location privacy.
 
 ### Events
 An event is the smallest piece of information in our model.

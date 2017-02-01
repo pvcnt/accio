@@ -32,7 +32,7 @@ Otherwise, you can still use the exit code to determine the outcome of the comma
 ## Examples
 List all workflows:
 
-```bash
+```
 $ accio workflows
 Id                              Owner            Created          Name
 workflow_Geo-I                  Awesome person   2 hours ago      Geo-I nominal workflow

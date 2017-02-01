@@ -34,7 +34,7 @@ Notably happens when the run or node does not exist.
 ## Examples
 Get status of run 026f42d37ed14401bee76d67dc53ef1d:
 
-```bash
+```
 $ accio inspect 026f42d37ed14401bee76d67dc53ef1d
 Id              026f42d37ed14401bee76d67dc53ef1d
 Workflow        workflow_Geo-I:657cfdbee26bc779df0a5d0a8070e7970fa505bf
@@ -70,7 +70,7 @@ PoisRetrieval                   Success    7569 milliseconds
 
 Get status of the `PoisRetrieval` node of this run:
 
-```bash
+```
 $ accio inspect e38283871cce42759279d459c8ed45ca PoisRetrieval
 Node name       PoisRetrieval
 Status          Success

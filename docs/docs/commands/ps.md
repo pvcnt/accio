@@ -43,7 +43,7 @@ Otherwise, you can still use the exit code to determine the outcome of the comma
 ## Examples
 List all active runs:
 
-```bash
+```
 $ accio ps
 Run id                            Workflow id      Created          Run name         Status
 b69c1e3358f147deb0da8ec9497340aa  workflow_Promes  21 minutes ago   (15) Promesse e  Running
@@ -52,7 +52,7 @@ b69c1e3358f147deb0da8ec9497340aa  workflow_Promes  21 minutes ago   (15) Promess
 
 List my own failed runs:
 
-```bash
+```
 $ accio ps -failed -owner=jdoe
 Run id                            Workflow id      Created          Run name         Status
 6c4a54d5922545e5990fc1f6bd8194c4  workflow_Geo-I   2 days ago       <no name>        Failed

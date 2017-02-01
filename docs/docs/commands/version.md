@@ -20,7 +20,7 @@ It prints the current version of the Accio client binary.
 ## Examples
 Get client build information:
 
-```bash
+```
 $ accio version
 Build version: 2.0.0-dev
 ```

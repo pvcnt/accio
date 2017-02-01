@@ -18,13 +18,8 @@ Vagrant.configure(2) do |config|
   # Ubuntu 16.04 LTS.
   config.vm.box = "ubuntu/xenial64"
 
-  # Forward agent's ports.
-  config.vm.network "forwarded_port", guest: 8880, host: 8880
-  config.vm.network "forwarded_port", guest: 8888, host: 8888
-
-  # Forward gateway's ports.
-  config.vm.network "forwarded_port", guest: 9990, host: 9990
-  config.vm.network "forwarded_port", guest: 9999, host: 9999
+  # Create a private network.
+  config.vm.network "private_network", ip: "192.168.50.4"
 
   # Configure Virtualbox.
   config.vm.provider "virtualbox" do |vb|
