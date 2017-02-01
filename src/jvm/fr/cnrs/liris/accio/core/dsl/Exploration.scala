@@ -123,7 +123,7 @@ private[dsl] case class RangeExploration(from: Any, to: Any, step: Any, log: Boo
 
   private def checkNotLogarithmic(kind: AtomicType) = {
     if (log || log2 || log10) {
-      logger.error(s"Cannot use logarithmic progression with ${Utils.describe(kind)}s")
+      logger.error(s"Cannot use logarithmic progression with ${Utils.toString(kind)}s")
     }
   }
 

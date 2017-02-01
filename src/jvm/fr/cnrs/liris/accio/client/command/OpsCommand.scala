@@ -95,7 +95,7 @@ class OpsCommand @Inject()(clientFactory: AgentClientFactory) extends Command {
   private def printOpInputs(out: Reporter, opDef: OpDef) = {
     out.writeln(s"<info>Available inputs:</info>")
     opDef.inputs.foreach { argDef =>
-      out.write(s"  - ${argDef.name} (${Utils.describe(argDef.kind)}")
+      out.write(s"  - ${argDef.name} (${Utils.toString(argDef.kind)}")
       if (argDef.defaultValue.isDefined) {
         out.write(s"; default: ${argDef.defaultValue.get}")
       }
@@ -112,7 +112,7 @@ class OpsCommand @Inject()(clientFactory: AgentClientFactory) extends Command {
     if (opDef.outputs.nonEmpty) {
       out.writeln("<info>Available outputs:</info>")
       opDef.outputs.foreach { outputDef =>
-        out.write(s"  - ${outputDef.name} (${Utils.describe(outputDef.kind)})")
+        out.write(s"  - ${outputDef.name} (${Utils.toString(outputDef.kind)})")
         out.writeln()
         outputDef.help.foreach(help => out.writeln(StringUtils.paragraphFill(help, 80, 4)))
       }

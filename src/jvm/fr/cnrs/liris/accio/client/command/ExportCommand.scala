@@ -53,7 +53,6 @@ case class ExportCommandFlags(
   description = "This command is intended to create summarized and readable CSV reports from run results.",
   allowResidue = true)
 class ExportCommand @Inject()(clientFactory: AgentClientFactory) extends Command {
-
   override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     if (flags.residue.isEmpty) {
       out.writeln("<error>[ERROR]</error> You must specify at least one run as argument.")
@@ -65,7 +64,9 @@ class ExportCommand @Inject()(clientFactory: AgentClientFactory) extends Command
       val workDir = getWorkDir(opts)
       out.writeln(s"<info>[OK]</info> Writing export to <comment>${workDir.toAbsolutePath}</comment>")
 
-      val runs = getRuns(flags.residue, flags.as[AccioAgentFlags].addr)
+      val runs = getRuns(flags.residue, flags.as[AccioAgentFlags].addr, out)
+      out.writeln(s"<info>[OK]</info> Found ${runs.size} matching runs</comment>")
+
       val artifacts = getArtifacts(runs, opts)
       val metrics = getMetrics(runs, opts)
       val reportCreator = new CsvReportCreator
@@ -85,15 +86,20 @@ class ExportCommand @Inject()(clientFactory: AgentClientFactory) extends Command
       Paths.get(s"accio-export-$uid")
   }
 
-  private def getRuns(residue: Seq[String], addr: String): AggregatedRuns = {
+  private def getRuns(residue: Seq[String], addr: String, out: Reporter): AggregatedRuns = {
     val client = clientFactory.create(addr)
     val runs = residue.flatMap { id =>
-      Await.result(client.getRun(GetRunRequest(RunId(id)))).result.toSeq.flatMap { run =>
-        if (run.children.nonEmpty) {
-          Await.result(client.listRuns(ListRunsRequest(parent = Some(run.id)))).results
-        } else {
-          Seq(run)
-        }
+      val maybeRun = Await.result(client.getRun(GetRunRequest(RunId(id)))).result
+      maybeRun match {
+        case None =>
+          out.writeln(s"<comment>[WARN]</comment> Unknown run $id")
+          Seq.empty
+        case Some(run) =>
+          if (run.children.nonEmpty) {
+            run.children.flatMap(childId => Await.result(client.getRun(GetRunRequest(childId))).result)
+          } else {
+            Seq(run)
+          }
       }
     }
     new AggregatedRuns(runs)

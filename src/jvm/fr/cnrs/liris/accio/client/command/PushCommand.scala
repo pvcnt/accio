@@ -32,7 +32,7 @@ import fr.cnrs.liris.common.util.{FileUtils, TimeUtils}
 import scala.collection.JavaConverters._
 
 case class PushCommandFlags(
-  @Flag(name = "q", help = "Print only identifiers")
+  @Flag(name = "quiet", help = "Print only identifiers")
   quiet: Boolean = false)
 
 @Cmd(

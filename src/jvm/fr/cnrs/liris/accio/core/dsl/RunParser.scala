@@ -71,7 +71,7 @@ class RunParser(mapper: FinatraObjectMapper, workflowRepository: WorkflowReposit
           val value = try {
             Values.encode(Values.parse(strValue, param.kind), param.kind)
           } catch {
-            case NonFatal(_) => throw newError(s"Cannot parse param $paramName as ${Utils.describe(param.kind)}", warnings)
+            case NonFatal(_) => throw newError(s"Cannot parse param $paramName as ${Utils.toString(param.kind)}", warnings)
           }
           paramName -> Seq(value)
       }

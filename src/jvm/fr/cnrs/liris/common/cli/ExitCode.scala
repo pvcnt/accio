@@ -33,11 +33,10 @@ object ExitCode {
   val Success = ExitCode(0, "SUCCESS")
   val CommandLineError = ExitCode(1, "COMMAND_LINE_ERROR")
   val DefinitionError = ExitCode(2, "DEFINITION_ERROR")
-  val ValidateFailure = ExitCode(3, "VALIDATE_FAILURE")
   val RuntimeError = ExitCode(4, "RUNTIME_ERROR")
   val InternalError = ExitCode(5, "INTERNAL_ERROR")
 
-  def values: Seq[ExitCode] = Seq(CommandLineError, DefinitionError, ValidateFailure, RuntimeError, InternalError, Success)
+  def values: Seq[ExitCode] = Seq(CommandLineError, DefinitionError, RuntimeError, InternalError, Success)
 
   def select(codes: Seq[ExitCode]): ExitCode = {
     values.foreach { code =>

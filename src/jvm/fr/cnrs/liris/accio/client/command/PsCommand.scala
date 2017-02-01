@@ -32,7 +32,7 @@ import org.ocpsoft.prettytime.PrettyTime
 import scala.collection.mutable
 
 case class PsCommandFlags(
-  @Flag(name = "q", help = "Print only identifiers")
+  @Flag(name = "quiet", help = "Print only identifiers")
   quiet: Boolean = false,
   @Flag(name = "json", help = "Print machine-readable JSON")
   json: Boolean = false,

@@ -1,0 +1,45 @@
+#orig_url = "https://github.com/pvcnt/location-privacy.git"
+orig_url = "file:///home/vincent/workspace/location-privacy"
+
+#dest_url = "https://github.com/privamov/accio.git"
+dest_url = "file:///home/vincent/workspace/accio"
+
+core.workflow(
+  name = "default",
+  origin = git.origin(
+    url = orig_url,
+    ref = "master",
+  ),
+  destination = git.destination(
+    url = dest_url,
+    fetch = "master",
+    push = "master",
+  ),
+
+  origin_files = glob(
+    include = [
+      "**"
+    ],
+    exclude = [
+      "copy.bara.sky",
+      "README.md",
+      "bin/**",
+      "etc/accio/**",
+      "etc/docker/**",
+      "etc/helios/**",
+      "src/jvm/com/twitter/querulous/**",
+      "test/jvm/com/twitter/querulous/**",
+      "src/jvm/fr/cnrs/liris/privamov/gateway/**",
+      "src/jvm/fr/cnrs/liris/privamov/query/**",
+      "src/jvm/fr/cnrs/liris/privamov/indexer/**",
+      "src/resources/fr/cnrs/liris/privamov/svc/**",
+      "src/node/fr/cnrs/liris/privamov/**"
+    ]
+  ),
+
+  destination_files = glob(["**"]),
+
+  authoring = authoring.pass_thru("Priva'Mov <privamov@liris.cnrs.fr>"),
+  mode = "ITERATIVE",
+  transformations = []
+)

@@ -32,6 +32,8 @@ import org.joda.time.Duration
 class AggregatedRuns(val runs: Seq[Run]) {
   require(runs.nonEmpty, "You must provide some runs to aggregate")
 
+  def size: Int = runs.size
+
   /**
    * Return an aggregated description of the artifacts contained inside those runs.
    */
@@ -104,11 +106,12 @@ case class ArtifactList(runs: Seq[Run], params: Map[String, Value], groups: Seq[
   def filter(names: Set[String]): ArtifactList = {
     if (names.isEmpty) {
       this
+    } else if (names.contains("ALL")) {
+      this
     } else {
       val includeNumeric = names.contains("NUMERIC")
-      val includeAll = names.contains("ALL")
       val newGroups = groups.filter { group =>
-        includeAll || names.contains(group.name) || (includeNumeric && Utils.isNumeric(group.kind))
+        names.contains(group.name) || (includeNumeric && Utils.isNumeric(group.kind))
       }
       copy(groups = newGroups)
     }
@@ -186,6 +189,8 @@ case class MetricList(runs: Seq[Run], params: Map[String, Value], groups: Seq[Me
    */
   def filter(names: Set[String]): MetricList = {
     if (names.isEmpty) {
+      this
+    } else if (names.contains("ALL")) {
       this
     } else {
       val newGroups = groups.filter(group => names.contains(group.name))

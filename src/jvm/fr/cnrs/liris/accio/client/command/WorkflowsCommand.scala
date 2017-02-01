@@ -30,7 +30,7 @@ import fr.cnrs.liris.common.util.StringUtils.padTo
 import org.ocpsoft.prettytime.PrettyTime
 
 case class WorkflowsCommandFlags(
-  @Flag(name = "q", help = "Print only identifiers")
+  @Flag(name = "quiet", help = "Print only identifiers")
   quiet: Boolean = false,
   @Flag(name = "json", help = "Print machine-readable JSON")
   json: Boolean = false,

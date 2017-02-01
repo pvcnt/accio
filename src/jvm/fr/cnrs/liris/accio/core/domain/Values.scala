@@ -264,6 +264,7 @@ object Values {
             case s => s // For the last <xx more>
           }
         toString(seq, abbreviate)
+      case AtomicType.Dataset => decodeDataset(value).uri
       case _ => toString(decode(value))
     }
 

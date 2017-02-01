@@ -18,23 +18,16 @@
 
 package fr.cnrs.liris.accio.client.command
 
-import com.google.inject.Inject
-import com.twitter.util.Await
-import fr.cnrs.liris.accio.agent.InfoRequest
 import fr.cnrs.liris.accio.core.domain.Version
 import fr.cnrs.liris.common.cli.{Cmd, Command, ExitCode, Reporter}
 import fr.cnrs.liris.common.flags.FlagsProvider
 
 @Cmd(
   name = "version",
-  help = "Display build information.",
-  flags = Array(classOf[AccioAgentFlags]))
-class VersionCommand @Inject()(clientFactory: AgentClientFactory) extends Command {
+  help = "Display client build information.")
+class VersionCommand extends Command {
   override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
-    val client = clientFactory.create(flags.as[AccioAgentFlags].addr)
-    val resp = Await.result(client.info(InfoRequest()).map(_.version).liftToTry)
-    out.writeln(s"Accio client: v${Version.Current.toString}")
-    out.writeln(s"Accio agent: v${if (resp.isReturn) resp() else "unknown"}")
+    out.writeln(s"Build version: ${Version.Current.toString}")
     ExitCode.Success
   }
 }

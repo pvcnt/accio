@@ -42,7 +42,7 @@ case class SubmitCommandFlags(
   repeat: Option[Int],
   @Flag(name = "seed", help = "Seed to use for unstable operators")
   seed: Option[Long],
-  @Flag(name = "q", help = "Print only identifiers")
+  @Flag(name = "quiet", help = "Print only identifiers")
   quiet: Boolean = false)
 
 @Cmd(

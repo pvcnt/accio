@@ -103,8 +103,8 @@ class CsvReportCreator {
 
   private def doWrite(lines: Seq[String], workDir: Path, filename: String, opts: CsvReportOpts): Unit = {
     if (opts.append) {
-      val file = Paths.get(s"$filename.csv")
-      Files.write(file, lines.asJava, StandardOpenOption.CREATE, StandardOpenOption.APPEND)
+      val file = workDir.resolve(s"$filename.csv")
+      Files.write(file, lines.asJava, StandardOpenOption.CREATE, StandardOpenOption.APPEND, StandardOpenOption.WRITE)
     } else {
       val file = getFileName(workDir, filename, ".csv")
       Files.write(file, lines.asJava)
@@ -114,7 +114,7 @@ class CsvReportCreator {
   private def getFileName(dirPath: Path, prefix: String, suffix: String) = {
     var idx = 0
     var filePath = dirPath.resolve(prefix + suffix)
-    while (!dirPath.toFile.exists) {
+    while (filePath.toFile.exists) {
       idx += 1
       filePath = dirPath.resolve(s"$prefix-$idx$suffix")
     }

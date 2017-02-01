@@ -136,17 +136,7 @@ object Utils {
       case base => toString(base)
     }
 
-  private def toString(atomicType: AtomicType): String = atomicType.getClass.getSimpleName.stripSuffix("$").toLowerCase
-
-  def describe(dataType: DataType): String =
-    dataType.base match {
-      case AtomicType.List => s"list of ${describe(dataType.args.head)}"
-      case AtomicType.Set => s"set of ${describe(dataType.args.head)}"
-      case AtomicType.Map => s"map of ${describe(dataType.args.head)} => ${describe(dataType.args.last)}"
-      case base => toString(base)
-    }
-
-  def describe(atomicType: AtomicType): String = toString(atomicType)
+  def toString(atomicType: AtomicType): String = atomicType.getClass.getSimpleName.stripSuffix("$").toLowerCase
 
   private[this] val UserRegex = "(.+)<(.+)>".r
 
