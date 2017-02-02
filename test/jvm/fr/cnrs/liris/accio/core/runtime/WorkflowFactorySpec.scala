@@ -64,6 +64,12 @@ class WorkflowFactorySpec extends UnitSpec {
       ArgDef("string", DataType(AtomicType.String), isOptional = true))
   }
 
+  it should "detect an invalid identifier" in {
+    assertErrors(
+      Workflows.workflow2.copy(id = WorkflowId("workflow!id")),
+      InvalidSpecMessage("Invalid workflow identifier: workflow!id", Some("id")))
+  }
+
   it should "detect param heterogeneous data types" in {
     assertErrors(Workflows.heterogeneousWorkflow,
       InvalidSpecMessage("Param is used with heterogeneous types: double, integer", Some("params.foo")))

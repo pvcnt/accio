@@ -47,6 +47,9 @@ final class WorkflowFactory @Inject()(graphFactory: GraphFactory, opRegistry: Op
     val params = getParams(graph, spec.params.toSet, warnings)
     val owner = spec.owner.getOrElse(user)
     val version = spec.version.getOrElse(defaultVersion(spec.id, spec.name, owner, spec.graph, params))
+    if (Utils.WorkflowRegex.findFirstIn(spec.id.value).isEmpty) {
+      throw newError(s"Invalid workflow identifier: ${spec.id.value}", "id", warnings)
+    }
     Workflow(
       id = spec.id,
       version = version,

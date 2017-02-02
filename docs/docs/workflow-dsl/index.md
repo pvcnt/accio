@@ -15,7 +15,7 @@ A workflow file should contain a single JSON object formed of the following fiel
 
 | Name | Type | Description |
 |:-----|:-----|:------------|
-| id | string; optional | Unique identifier. If not specified, it will be set to the filename (without its extension). |
+| id | string; optional | Unique identifier. If not specified, it will be set to the filename (without its extension). Must match `[a-zA-Z][a-zA-Z0-9_.-]+`. |
 | name | string; optional | Human-readable name. |
 | owner | string; optional | Person owning the workflow. It can include an email address between chevrons. |
 | params | object[]; optional | Workflow parameters. The order in which they are defined does not matter. |
@@ -24,7 +24,7 @@ A workflow file should contain a single JSON object formed of the following fiel
 | params[].default_value | any; optional | Default value. |
 | graph | object[]; required | Nodes composing the workflow graph. The order in which they are defined does not matter. |
 | graph[].op | string; required | Operator name. |
-| graph[].name | string; optional | Node name. By default it will be the operator's name. |
+| graph[].name | string; optional | Node name. By default it will be the operator's name. Must match `[A-Z][a-zA-Z0-9_]+`. |
 | graph[].inputs | object; optional | Mapping between input names and their values. All parameters without a default value should be specified. |
 {: class="table table-striped"}
 
