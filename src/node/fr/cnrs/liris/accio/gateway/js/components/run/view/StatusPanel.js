@@ -89,7 +89,7 @@ class StatusPanel extends React.Component {
              defaultExpanded={!isCompleted}>
         <Row>
           <Col sm={2} className="accio-view-label">Started</Col>
-          <Col sm={10}>{moment(run.state.started_at).format('MMM Do YYYY, hh:mma')}</Col>
+          <Col sm={10}>{run.state.started_at ? moment(run.state.started_at).format('MMM Do YYYY, hh:mma') : '–'}</Col>
         </Row>
         <Row>
           <Col sm={2} className="accio-view-label">Completed</Col>

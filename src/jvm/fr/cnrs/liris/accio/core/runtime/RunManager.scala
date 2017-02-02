@@ -215,13 +215,18 @@ final class RunManager @Inject()(
       case Some((cacheKey, result)) =>
         // Save node result.
         val now = System.currentTimeMillis()
-        val newRun = replace(run, nodeState, nodeState.copy(
+        var newRun = replace(run, nodeState, nodeState.copy(
           startedAt = Some(now),
           completedAt = Some(now),
           status = NodeStatus.Success,
           cacheKey = Some(cacheKey),
           cacheHit = true,
           result = Some(result)))
+
+        // Mark run as started, if not already.
+        if (newRun.state.startedAt.isEmpty) {
+          newRun = newRun.copy(state = newRun.state.copy(startedAt = Some(now), status = RunStatus.Running))
+        }
 
         // Schedule next nodes.
         scheduleNextNodes(newRun, node.name)
