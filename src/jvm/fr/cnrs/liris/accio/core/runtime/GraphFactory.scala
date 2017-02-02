@@ -122,7 +122,7 @@ final class GraphFactory @Inject()(opRegistry: OpRegistry) extends BaseFactory {
    */
   private def validateNode(node: Node, nodes: Map[String, Node], warnings: mutable.Set[InvalidSpecMessage]): Unit = {
     if (Utils.NodeRegex.findFirstIn(node.name).isEmpty) {
-      throw newError(s"Invalid node name: ${node.name}", warnings)
+      throw newError(s"Invalid node name: ${node.name} (should match ${Utils.NodePattern})", warnings)
     }
 
     // Operator existence has already been validated previously in `createNode`.

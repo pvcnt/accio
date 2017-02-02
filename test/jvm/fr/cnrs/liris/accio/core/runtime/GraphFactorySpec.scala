@@ -180,7 +180,7 @@ class GraphFactorySpec extends UnitSpec {
         op = "FirstSimple",
         name = "First/Simple",
         inputs = Map("foo" -> InputDef.Value(Values.encodeInteger(42))))))
-    assertErrors(graphDef, InvalidSpecMessage("Invalid node name: First/Simple"))
+    assertErrors(graphDef, InvalidSpecMessage("Invalid node name: First/Simple (should match [A-Z][a-zA-Z0-9_]+)"))
   }
 
   it should "detect cycles" in {

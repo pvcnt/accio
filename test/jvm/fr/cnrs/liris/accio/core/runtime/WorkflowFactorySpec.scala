@@ -67,7 +67,7 @@ class WorkflowFactorySpec extends UnitSpec {
   it should "detect an invalid identifier" in {
     assertErrors(
       Workflows.workflow2.copy(id = WorkflowId("workflow!id")),
-      InvalidSpecMessage("Invalid workflow identifier: workflow!id", Some("id")))
+      InvalidSpecMessage("Invalid workflow identifier: workflow!id (should match [a-zA-Z][a-zA-Z0-9_.-]+)", Some("id")))
   }
 
   it should "detect param heterogeneous data types" in {
@@ -84,7 +84,7 @@ class WorkflowFactorySpec extends UnitSpec {
   it should "detect invalid param name" in {
     assertErrors(
       Workflows.invalidParamNameWorkflow,
-      InvalidSpecMessage("Invalid param name: foo/foo"))
+      InvalidSpecMessage("Invalid param name: foo/foo (should match [a-z][a-zA-Z0-9_]+)"))
   }
 
   it should "detect undeclared param" in {

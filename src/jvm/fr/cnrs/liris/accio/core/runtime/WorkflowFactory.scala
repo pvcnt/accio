@@ -48,7 +48,7 @@ final class WorkflowFactory @Inject()(graphFactory: GraphFactory, opRegistry: Op
     val owner = spec.owner.getOrElse(user)
     val version = spec.version.getOrElse(defaultVersion(spec.id, spec.name, owner, spec.graph, params))
     if (Utils.WorkflowRegex.findFirstIn(spec.id.value).isEmpty) {
-      throw newError(s"Invalid workflow identifier: ${spec.id.value}", "id", warnings)
+      throw newError(s"Invalid workflow identifier: ${spec.id.value} (should match ${Utils.WorkflowPattern})", "id", warnings)
     }
     Workflow(
       id = spec.id,
@@ -113,7 +113,7 @@ final class WorkflowFactory @Inject()(graphFactory: GraphFactory, opRegistry: Op
     params.map { argDef =>
       // Check the parameter name is valid.
       if (Utils.ArgRegex.findFirstIn(argDef.name).isEmpty) {
-        throw newError(s"Invalid param name: ${argDef.name}", warnings)
+        throw newError(s"Invalid param name: ${argDef.name} (should match ${Utils.ArgPattern})", warnings)
       }
 
       // Check the parameter is homogeneous, i.e., it is used in ports of the same type, and consistent with the type
