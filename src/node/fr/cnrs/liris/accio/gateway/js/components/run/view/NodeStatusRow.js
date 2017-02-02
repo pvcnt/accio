@@ -68,16 +68,19 @@ let NodeStatusRow = React.createClass({
       ? <Label bsStyle="info">
         Running for {moment.duration(duration).humanize()}
       </Label>
-      : <Label>Waiting</Label>
+      : node.status === 'waiting'
+      ? <Label>Waiting</Label>
+      : <Label>Scheduled</Label>
+    const hasLogs = !node.cache_hit && node.status !== 'waiting' && node.status !== 'scheduled'
 
     return (<div>
       <Row>
-        <Col sm={3}>
+        <Col sm={5}>
           <Glyphicon glyph={glyph}/>&nbsp;{node.name}
         </Col>
         <Col sm={3}>{label}</Col>
-        <Col sm={3}>
-          {!node.cache_hit
+        <Col sm={4}>
+          {hasLogs
             ? <div>
                 <Button
                 bsSize="xsmall"
@@ -97,12 +100,13 @@ let NodeStatusRow = React.createClass({
                 </Button> : null}
               </div>
             : null}
-      </Col>
-        <Col sm={3}>{(node.result && node.result.error)
-          ? (<span>
-            <Glyphicon glyph="warning-sign"/>&nbsp;
-            <a href="#" onClick={e => this._handleErrorModalShow(e)}>Show exception details</a>
-          </span>) : null}
+          {(node.result && node.result.error)
+          ? <Button
+              bsSize="xsmall"
+              onClick={e => this._handleErrorModalShow(e)}
+              bsStyle="danger">
+              error
+            </Button> : null}
         </Col>
       </Row>
       {(null != this.props.logs)

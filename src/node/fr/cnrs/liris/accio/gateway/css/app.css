@@ -111,8 +111,8 @@ footer a {
  * Runs.
  */
 .accio-summary-resize {
-  /*position: relative;
-  top: -10px;*/
+  position: relative;
+  top: -30px;
 }
 
 .accio-run-nodes-tree .row {
@@ -133,6 +133,21 @@ footer a {
 
 .accio-taglist>span {
   margin-right: 5px;
+}
+
+.run-list .run-item:first-child {
+  border-top: 1px solid #ddd;
+}
+
+.run-item {
+  border-bottom: 1px solid #ddd;
+  border-left: 1px solid #ddd;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+.run-item-status {
+    color: #777;
 }
 
 /**

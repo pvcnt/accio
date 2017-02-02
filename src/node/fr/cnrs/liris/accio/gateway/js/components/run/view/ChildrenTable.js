@@ -19,35 +19,45 @@
 import React from 'react'
 import moment from 'moment'
 import {Link} from 'react-router'
-import {map, forEach, toPairs} from 'lodash'
-import {ProgressBar, Table, Glyphicon} from 'react-bootstrap'
-import {prettyPrintValue} from '../../../utils/prettyPrint'
+import {find} from 'lodash'
+import {ProgressBar, Row, Col, Glyphicon} from 'react-bootstrap'
 
 class ChildrenTable extends React.Component {
   render() {
     const rows = this.props.runs.map((run, idx) => {
       const style = (run.state.completed_at) ? (run.state.status == 'success') ? 'success' : 'danger' : 'warning'
       const progress = Math.round(run.state.progress * 100)
-      return <tr key={idx}>
-        <td>
-          <Link to={'/runs/view/' + run.id}>{run.name ? run.name : 'Untitled run #' + run.id}</Link>
-        </td>
-        <td><ProgressBar now={progress} label={progress + '%'} bsStyle={style}/></td>
-        <td>{(run.state.started_at) ? moment(run.state.started_at).fromNow() : '–'}</td>
-      </tr>
-    });
-    return <Table striped hover responsive className="accio-list-table">
-      <thead>
-      <tr>
-        <th>Parameters</th>
-        <th>Progress</th>
-        <th>Started</th>
-      </tr>
-      </thead>
-      <tbody>
-      {rows}
-      </tbody>
-    </Table>
+      let label = null
+      if (run.state.status === 'running') {
+        const activeNodes = run.state.nodes.filter(node => node.status === 'running');
+        if (activeNodes.length > 0) {
+          label = 'Running ' + activeNodes.map(node => node.name).join(', ')
+        } else {
+          const waitingNode = find(run.state.nodes, node => node.status === 'waiting')
+          label = 'Waiting for ' + waitingNode.name
+        }
+      } else if (run.state.status === 'failed') {
+        const failedNode = find(run.state.nodes, node => node.status === 'failed')
+        label = 'Failed in ' + failedNode.name
+      }
+      const startedAt = run.state.started_at
+        ? <span><Glyphicon glyph="play"/>&nbsp;{moment(run.state.started_at).format('MMM D, HH:mm')}</span>
+        : <span><Glyphicon glyph="upload"/>&nbsp;{moment(run.created_at).format('MMM D, HH:mm')}</span>
+      const stoppedAt = run.state.completed_at
+        ? <span><Glyphicon glyph="stop"/>&nbsp;{moment(run.state.completed_at).format('MMM D, HH:mm')}</span>
+        : run.state.started_at
+        ? <span><Glyphicon glyph="hourglass"/>&nbsp;{moment.duration(moment().valueOf() - run.state.started_at).humanize()}</span>
+        : null
+      return <Row key={idx} className="run-item">
+        <Col md={2}>{startedAt}<br/>{stoppedAt}</Col>
+        <Col md={6}>
+          <Link to={'/runs/view/' + run.id}>{run.name ? run.name : 'Untitled run #' + run.id}</Link><br/>
+          <span className="run-item-status">{label}</span>
+        </Col>
+        <Col md={4}><ProgressBar now={progress} label={progress + '%'} bsStyle={style}/></Col>
+      </Row>
+    })
+    return <div className="run-list">{rows}</div>
   }
 }
 

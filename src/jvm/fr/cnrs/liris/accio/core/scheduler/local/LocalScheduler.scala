@@ -36,34 +36,6 @@ import fr.cnrs.liris.common.util.{FileUtils, Platform}
 
 import scala.collection.JavaConverters._
 
-object LocalScheduler {
-
-  private object Stats {
-    def apply(statsReceiver: StatsReceiver): Stats = {
-      Stats(
-        statsReceiver.scope("scheduler").stat("running"),
-        statsReceiver.scope("scheduler").stat("waiting"),
-        statsReceiver.scope("scheduler").scope("cpu").stat("used"),
-        statsReceiver.scope("scheduler").scope("cpu").stat("available"),
-        statsReceiver.scope("scheduler").scope("ram").stat("used_mb"),
-        statsReceiver.scope("scheduler").scope("ram").stat("available"),
-        statsReceiver.scope("scheduler").scope("disk").stat("used"),
-        statsReceiver.scope("scheduler").scope("disk").stat("available"))
-    }
-  }
-
-  private case class Stats(
-    running: Stat,
-    waiting: Stat,
-    usedCpu: Stat,
-    availableCpu: Stat,
-    usedRam: Stat,
-    availableRam: Stat,
-    usedDisk: Stat,
-    availableDisk: Stat)
-
-}
-
 /**
  * Scheduler executing tasks locally, in the same machine. Each task is started inside a new Java process. Intended
  * for testing or use in single-node development clusters.
@@ -103,12 +75,12 @@ class LocalScheduler @Inject()(
 
   override def submit(job: Job): String = {
     synchronized {
-      if (isSatisfied(job)) {
+      if (isEnoughResource(job)) {
         start(job)
       } else {
         queue.add(job)
         if (monitors.isEmpty) {
-          logger.warn(s"Unable to schedule job: $job")
+          logger.error(s"Not enough resource to schedule job")
         }
       }
     }
@@ -132,6 +104,29 @@ class LocalScheduler @Inject()(
     monitors.clear()
   }
 
+  private def scheduleNext(): Unit = {
+    synchronized {
+      val it = queue.iterator
+      while (it.hasNext) {
+        val job = it.next()
+        if (isEnoughResource(job)) {
+          start(job)
+          it.remove()
+        }
+      }
+    }
+    if (monitors.isEmpty && !queue.isEmpty) {
+      logger.warn(s"Not enough resources to schedule any job")
+    }
+    recordStats()
+  }
+
+  private def usedCpu = monitors.values.map(_.job.resource.cpu).sum
+
+  private def usedRam = StorageUnit.fromMegabytes(monitors.values.map(_.job.resource.ramMb).sum)
+
+  private def usedDisk = StorageUnit.fromMegabytes(monitors.values.map(_.job.resource.diskMb).sum)
+
   private def start(job: Job): Unit = {
     // We do not synchronized here, are it is already called from synchronized sections.
     val monitor = new TaskMonitor(job)
@@ -148,28 +143,7 @@ class LocalScheduler @Inject()(
       }
   }
 
-  private def scheduleNext(): Unit = synchronized {
-    val it = queue.iterator
-    while (it.hasNext) {
-      val job = it.next()
-      if (isSatisfied(job)) {
-        start(job)
-        it.remove()
-      }
-    }
-    if (monitors.isEmpty && !queue.isEmpty) {
-      logger.warn(s"Unable to schedule any job. First: ${queue.peek}")
-    }
-    recordStats()
-  }
-
-  private def usedCpu = monitors.values.map(_.job.resource.cpu).sum
-
-  private def usedRam = StorageUnit.fromMegabytes(monitors.values.map(_.job.resource.ramMb).sum)
-
-  private def usedDisk = StorageUnit.fromMegabytes(monitors.values.map(_.job.resource.diskMb).sum)
-
-  private def isSatisfied(job: Job): Boolean = {
+  private def isEnoughResource(job: Job): Boolean = {
     job.resource.cpu <= (totalCpu - usedCpu) &&
       totalRam.forall(ram => job.resource.ramMb <= (ram - usedRam).inMegabytes) &&
       totalDisk.forall(disk => job.resource.diskMb <= (disk - usedDisk).inMegabytes)
@@ -258,5 +232,48 @@ class LocalScheduler @Inject()(
       pb.start()
     }
   }
+
+}
+
+/**
+ * Utils for [[LocalScheduler]].
+ */
+object LocalScheduler {
+
+  private object Stats {
+    def apply(statsReceiver: StatsReceiver): Stats = {
+      Stats(
+        statsReceiver.scope("sched").stat("running"),
+        statsReceiver.scope("sched").stat("waiting"),
+        statsReceiver.scope("sched").scope("cpu").stat("used"),
+        statsReceiver.scope("sched").scope("cpu").stat("available"),
+        statsReceiver.scope("sched").scope("ram").stat("used_mb"),
+        statsReceiver.scope("sched").scope("ram").stat("available"),
+        statsReceiver.scope("sched").scope("disk").stat("used"),
+        statsReceiver.scope("sched").scope("disk").stat("available"))
+    }
+  }
+
+  /**
+   * Runtime metrics.
+   *
+   * @param running       Number of running jobs.
+   * @param waiting       Number of queued jobs.
+   * @param usedCpu       CPU used by running jobs.
+   * @param availableCpu  CPU available for new jobs.
+   * @param usedRam       RAM used by running jobs, in bytes.
+   * @param availableRam  RAM available for new jobs, in bytes.
+   * @param usedDisk      Disk used by running jobs, in bytes.
+   * @param availableDisk Disk availble for new jobs, in bytes.
+   */
+  private case class Stats(
+    running: Stat,
+    waiting: Stat,
+    usedCpu: Stat,
+    availableCpu: Stat,
+    usedRam: Stat,
+    availableRam: Stat,
+    usedDisk: Stat,
+    availableDisk: Stat)
 
 }
