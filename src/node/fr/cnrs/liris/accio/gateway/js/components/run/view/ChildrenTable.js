@@ -33,12 +33,23 @@ class ChildrenTable extends React.Component {
         if (activeNodes.length > 0) {
           label = 'Running ' + activeNodes.map(node => node.name).join(', ')
         } else {
-          const waitingNode = find(run.state.nodes, node => node.status === 'waiting')
-          label = 'Waiting for ' + waitingNode.name
+          const waitingNode = find(run.state.nodes, node => node.status === 'scheduled')
+          if (waitingNode) {
+            label = 'Waiting for ' + waitingNode.name
+          }
         }
+      } else if (run.state.status === 'killed') {
+        label = 'Cancelled'
       } else if (run.state.status === 'failed') {
         const failedNode = find(run.state.nodes, node => node.status === 'failed')
-        label = 'Failed in ' + failedNode.name
+        if (failedNode) {
+          label = 'Failed in ' + failedNode.name
+        } else {
+          const lostNode = find(run.state.nodes, node => node.status === 'lost')
+          if (lostNode) {
+            label = 'Lost ' + lostNode.name
+          }
+        }
       }
       const startedAt = run.state.started_at
         ? <span><Glyphicon glyph="play"/>&nbsp;{moment(run.state.started_at).format('MMM D, HH:mm')}</span>

@@ -53,13 +53,17 @@ class LocalScheduler @Inject()(
     with Configurable[LocalSchedulerConfig]
     with StrictLogging {
 
+  // Monitors for currently running tasks.
   private[this] val monitors = new ConcurrentHashMap[String, TaskMonitor].asScala
+  // Queue of waiting tasks.
   private[this] val queue = new ConcurrentLinkedQueue[Job]
+  // Total amount of system resources.
   private[this] val totalCpu = sys.runtime.availableProcessors
   private[this] val totalRam = Platform.totalMemory
   private[this] val totalDisk = Platform.totalDiskSpace
+  // Pool for monitor threads.
   private[this] val pool = new ExecutorServiceFuturePool(Executors.newCachedThreadPool(new NamedPoolThreadFactory("accio/scheduler")))
-  private[this] val stats = LocalScheduler.Stats(statsReceiver)
+  // Download the executor locally. It will always be downloaded at startup time, but reused for multiple tasks.
   private[this] lazy val localExecutorPath = {
     val targetPath = config.workDir.resolve("executor.jar")
     if (targetPath.toFile.exists()) {
@@ -69,6 +73,8 @@ class LocalScheduler @Inject()(
     downloader.download(config.executorUri, targetPath)
     targetPath.toAbsolutePath
   }
+  // Set up telemetry.
+  private[this] val stats = LocalScheduler.Stats(statsReceiver)
   recordStats()
 
   override def configClass: Class[LocalSchedulerConfig] = classOf[LocalSchedulerConfig]
@@ -76,10 +82,11 @@ class LocalScheduler @Inject()(
   override def submit(job: Job): String = {
     synchronized {
       if (isEnoughResource(job)) {
-        start(job)
+        startProcess(job)
       } else {
         queue.add(job)
         if (monitors.isEmpty) {
+          // It is an error because the system is stuck and cannot recover.
           logger.error(s"Not enough resource to schedule job")
         }
       }
@@ -104,31 +111,48 @@ class LocalScheduler @Inject()(
     monitors.clear()
   }
 
-  private def scheduleNext(): Unit = {
+  /**
+   * Start all tasks that can be started, w.r.t. to resource constraints.
+   */
+  private def startNext(): Unit = {
     synchronized {
       val it = queue.iterator
       while (it.hasNext) {
         val job = it.next()
         if (isEnoughResource(job)) {
-          start(job)
+          startProcess(job)
           it.remove()
         }
       }
     }
     if (monitors.isEmpty && !queue.isEmpty) {
-      logger.warn(s"Not enough resources to schedule any job")
+      // It is an error because the system is stuck and cannot recover.
+      logger.error(s"Not enough resources to schedule any job")
     }
     recordStats()
   }
 
-  private def usedCpu = monitors.values.map(_.job.resource.cpu).sum
+  /**
+   * Return total number of CPUs reserved by running tasks.
+   */
+  private def reservedCpu = monitors.values.map(_.job.resource.cpu).sum
 
-  private def usedRam = StorageUnit.fromMegabytes(monitors.values.map(_.job.resource.ramMb).sum)
+  /**
+   * Return total RAM reserved by running tasks.
+   */
+  private def reservedRam = StorageUnit.fromMegabytes(monitors.values.map(_.job.resource.ramMb).sum)
 
-  private def usedDisk = StorageUnit.fromMegabytes(monitors.values.map(_.job.resource.diskMb).sum)
+  /**
+   * Return total disk space reserved by running tasks.
+   */
+  private def reservedDisk = StorageUnit.fromMegabytes(monitors.values.map(_.job.resource.diskMb).sum)
 
-  private def start(job: Job): Unit = {
-    // We do not synchronized here, are it is already called from synchronized sections.
+  /**
+   * Start a job as an external process. This method should be called from a synchronized section.
+   *
+   * @param job Job to start.
+   */
+  private def startProcess(job: Job): Unit = {
     val monitor = new TaskMonitor(job)
     logger.debug(s"[T${job.taskId.value}] Starting task")
     monitors(job.taskId.value) = monitor
@@ -136,29 +160,43 @@ class LocalScheduler @Inject()(
       .respond {
         case Throw(e) =>
           logger.error(s"[T${job.taskId.value}] Error in monitoring thread", e)
-          scheduleNext()
+          startNext()
         case Return(_) =>
           logger.debug(s"[T${job.taskId.value}] Monitoring thread completed")
-          scheduleNext()
+          startNext()
       }
   }
 
+  /**
+   * Check if there is enough resources left to launch a job.
+   *
+   * @param job Candidate job.
+   * @return True if there is enough resources, false otherwise.
+   */
   private def isEnoughResource(job: Job): Boolean = {
-    job.resource.cpu <= (totalCpu - usedCpu) &&
-      totalRam.forall(ram => job.resource.ramMb <= (ram - usedRam).inMegabytes) &&
-      totalDisk.forall(disk => job.resource.diskMb <= (disk - usedDisk).inMegabytes)
+    job.resource.cpu <= (totalCpu - reservedCpu) &&
+      totalRam.forall(ram => job.resource.ramMb <= (ram - reservedRam).inMegabytes) &&
+      totalDisk.forall(disk => job.resource.diskMb <= (disk - reservedDisk).inMegabytes)
   }
 
+  /**
+   * Return the path to the sandbox for a given key.
+   *
+   * @param key Task key.
+   */
   private def getSandboxPath(key: String) = config.workDir.resolve(key)
 
+  /**
+   * Record statistics about this scheduler.
+   */
   private def recordStats() = {
     stats.availableCpu.add(totalCpu)
     totalRam.foreach(ram => stats.availableRam.add(ram.inBytes))
     totalDisk.foreach(disk => stats.availableDisk.add(disk.inBytes))
 
-    stats.usedCpu.add(usedCpu.toFloat)
-    stats.usedRam.add(usedRam.inBytes)
-    stats.usedDisk.add(usedDisk.inBytes)
+    stats.reservedCpu.add(reservedCpu.toFloat)
+    stats.reservedRam.add(reservedRam.inBytes)
+    stats.reservedDisk.add(reservedDisk.inBytes)
 
     stats.waiting.add(queue.size)
     stats.running.add(monitors.size)
@@ -240,40 +278,48 @@ class LocalScheduler @Inject()(
  */
 object LocalScheduler {
 
+  /**
+   * Factory for [[Stats]].
+   */
   private object Stats {
+    /**
+     * Create metrics for a given stats receiver. All metrics are scoped under `sched/`.
+     *
+     * @param statsReceiver Stats receiver.
+     */
     def apply(statsReceiver: StatsReceiver): Stats = {
       Stats(
         statsReceiver.scope("sched").stat("running"),
         statsReceiver.scope("sched").stat("waiting"),
-        statsReceiver.scope("sched").scope("cpu").stat("used"),
+        statsReceiver.scope("sched").scope("cpu").stat("reserved"),
         statsReceiver.scope("sched").scope("cpu").stat("available"),
-        statsReceiver.scope("sched").scope("ram").stat("used_mb"),
+        statsReceiver.scope("sched").scope("ram").stat("reserved"),
         statsReceiver.scope("sched").scope("ram").stat("available"),
-        statsReceiver.scope("sched").scope("disk").stat("used"),
+        statsReceiver.scope("sched").scope("disk").stat("reserved"),
         statsReceiver.scope("sched").scope("disk").stat("available"))
     }
   }
 
   /**
-   * Runtime metrics.
+   * Local scheduler metrics.
    *
    * @param running       Number of running jobs.
    * @param waiting       Number of queued jobs.
-   * @param usedCpu       CPU used by running jobs.
-   * @param availableCpu  CPU available for new jobs.
-   * @param usedRam       RAM used by running jobs, in bytes.
+   * @param reservedCpu   Number of CPUs reserved for running jobs.
+   * @param availableCpu  Number of CPUs available for new jobs.
+   * @param reservedRam   RAM reserved for running jobs, in bytes.
    * @param availableRam  RAM available for new jobs, in bytes.
-   * @param usedDisk      Disk used by running jobs, in bytes.
-   * @param availableDisk Disk availble for new jobs, in bytes.
+   * @param reservedDisk  Disk space reserved for running jobs, in bytes.
+   * @param availableDisk Disk space available for new jobs, in bytes.
    */
   private case class Stats(
     running: Stat,
     waiting: Stat,
-    usedCpu: Stat,
+    reservedCpu: Stat,
     availableCpu: Stat,
-    usedRam: Stat,
+    reservedRam: Stat,
     availableRam: Stat,
-    usedDisk: Stat,
+    reservedDisk: Stat,
     availableDisk: Stat)
 
 }
