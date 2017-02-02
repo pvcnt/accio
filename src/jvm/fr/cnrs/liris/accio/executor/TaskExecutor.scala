@@ -79,6 +79,11 @@ class TaskExecutor @Inject()(opExecutor: OpExecutor, client: AgentService.Finagl
     threads.foreach(_.interrupt())
   }
 
+  def exit(): Unit = {
+    close()
+    sys.exit(1)
+  }
+
   private def start(taskId: TaskId, runId: RunId, nodeName: String, payload: OpPayload): Future[Unit] = {
     // Swap output streams.
     System.setOut(new PrintStream(stdoutBytes))
@@ -111,7 +116,9 @@ class TaskExecutor @Inject()(opExecutor: OpExecutor, client: AgentService.Finagl
           val f = Await.result(client.streamLogs(StreamLogsRequest(logs)).liftToTry)
           f match {
             case Return(_) => trySleep(Duration.fromSeconds(5))
-            case Throw(InvalidTaskException()) => // Stop sending logs, task is now invalid.
+            case Throw(InvalidTaskException()) =>
+              // Stop everything, task is now invalid.
+              exit()
             case Throw(e) => logger.error(s"[T${taskId.value}] Error while sending logs", e)
           }
         } else {
@@ -144,7 +151,9 @@ class TaskExecutor @Inject()(opExecutor: OpExecutor, client: AgentService.Finagl
         val f = Await.result(client.heartbeat(HeartbeatRequest(taskId)).liftToTry)
         f match {
           case Return(_) => trySleep(Duration.fromSeconds(15))
-          case Throw(InvalidTaskException()) => // Stop sending logs, task is now invalid.
+          case Throw(InvalidTaskException()) =>
+            // Stop everything, task is now invalid.
+            exit()
           case Throw(e) => logger.error(s"[T${taskId.value}] Error while heartbeat logs", e)
         }
       }

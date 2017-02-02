@@ -4,9 +4,11 @@ scala_library(
     'src/jvm/fr/cnrs/liris/accio/core/scheduler',
     'src/jvm/fr/cnrs/liris/accio/core/downloader',
     'src/jvm/fr/cnrs/liris/accio/core/storage',
+    'src/jvm/fr/cnrs/liris/accio/core/util',
     'src/jvm/fr/cnrs/liris/common/util',
     '3rdparty/jvm/com/typesafe/scala-logging',
     '3rdparty/jvm/com/google/guava',
+    '3rdparty/jvm/com/google/guice',
   ],
   sources=globs('*.scala')
 )

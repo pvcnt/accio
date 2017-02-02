@@ -16,25 +16,22 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.scheduler.inject
+package fr.cnrs.liris.accio.core.scheduler.local
 
-import com.google.inject.Inject
-import fr.cnrs.liris.accio.core.scheduler.Scheduler
-import fr.cnrs.liris.accio.core.scheduler.local.{LocalScheduler, LocalSchedulerConfig}
-import net.codingwell.scalaguice.ScalaModule
+import java.nio.file.Path
 
 /**
- * Guice module provisioning a local scheduler.
+ * Local scheduler configuration.
  *
- * @param config Local scheduler configuration.
+ * @param workDir      Working directory where sandboxes will be stored.
+ * @param agentAddr    Agent address.
+ * @param executorUri  URI where to fetch the executor.
+ * @param javaHome     Java home to be used when running nodes.
+ * @param executorArgs Arguments to pass to the executors.
  */
-class LocalSchedulerModule(config: LocalSchedulerConfig) extends ScalaModule {
-  override protected def configure(): Unit = {
-    bind[Scheduler].to[LocalScheduler]
-  }
-
-  @Inject
-  def configureScheduler(scheduler: LocalScheduler): Unit = {
-    scheduler.initialize(config)
-  }
-}
+case class LocalSchedulerConfig(
+  workDir: Path,
+  agentAddr: String,
+  executorUri: String,
+  javaHome: Option[String],
+  executorArgs: Seq[String])

@@ -18,42 +18,68 @@
 
 package fr.cnrs.liris.accio.core.scheduler.local
 
-import java.nio.file.{Files, Path}
+import java.nio.file.Files
 import java.util.concurrent.{ConcurrentHashMap, ConcurrentLinkedQueue, Executors}
 
 import com.google.common.io.ByteStreams
+import com.google.inject.{Inject, Singleton}
 import com.twitter.concurrent.NamedPoolThreadFactory
-import com.twitter.util.{ExecutorServiceFuturePool, Return, Throw}
+import com.twitter.finagle.stats.{Stat, StatsReceiver}
+import com.twitter.util.{ExecutorServiceFuturePool, Return, StorageUnit, Throw}
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.domain.RunLog
 import fr.cnrs.liris.accio.core.downloader.Downloader
 import fr.cnrs.liris.accio.core.scheduler.{Job, Scheduler}
 import fr.cnrs.liris.accio.core.storage.MutableRunRepository
+import fr.cnrs.liris.accio.core.util.Configurable
 import fr.cnrs.liris.common.util.{FileUtils, Platform}
 
 import scala.collection.JavaConverters._
 
+object LocalScheduler {
+
+  private object Stats {
+    def apply(statsReceiver: StatsReceiver): Stats = {
+      Stats(
+        statsReceiver.scope("scheduler").stat("running"),
+        statsReceiver.scope("scheduler").stat("waiting"),
+        statsReceiver.scope("scheduler").scope("cpu").stat("used"),
+        statsReceiver.scope("scheduler").scope("cpu").stat("available"),
+        statsReceiver.scope("scheduler").scope("ram").stat("used_mb"),
+        statsReceiver.scope("scheduler").scope("ram").stat("available"),
+        statsReceiver.scope("scheduler").scope("disk").stat("used"),
+        statsReceiver.scope("scheduler").scope("disk").stat("available"))
+    }
+  }
+
+  private case class Stats(
+    running: Stat,
+    waiting: Stat,
+    usedCpu: Stat,
+    availableCpu: Stat,
+    usedRam: Stat,
+    availableRam: Stat,
+    usedDisk: Stat,
+    availableDisk: Stat)
+
+}
+
 /**
- * Scheduler executing tasks locally, in the same machine. Each task is started inside a new Java process.
- *
- * Intended for testing or use in single-node development clusters, as it does not support cluster-mode
- * (by definition...) nor resource constraints.
+ * Scheduler executing tasks locally, in the same machine. Each task is started inside a new Java process. Intended
+ * for testing or use in single-node development clusters.
  *
  * @param downloader    Downloader.
- * @param workDir       Working directory where sandboxes will be stored.
- * @param executorUri   URI where to fetch the executor.
- * @param javaHome      Java home to be used when running nodes.
- * @param executorArgs  Arguments to pass to the executors.
  * @param runRepository Run repository.
+ * @param statsReceiver Stats receiver.
  */
-class LocalScheduler(
+@Singleton
+class LocalScheduler @Inject()(
   downloader: Downloader,
-  workDir: Path,
-  executorUri: String,
-  javaHome: Option[String],
-  executorArgs: Seq[String],
-  runRepository: MutableRunRepository)
-  extends Scheduler with StrictLogging {
+  runRepository: MutableRunRepository,
+  statsReceiver: StatsReceiver)
+  extends Scheduler
+    with Configurable[LocalSchedulerConfig]
+    with StrictLogging {
 
   private[this] val monitors = new ConcurrentHashMap[String, TaskMonitor].asScala
   private[this] val queue = new ConcurrentLinkedQueue[Job]
@@ -61,17 +87,19 @@ class LocalScheduler(
   private[this] val totalRam = Platform.totalMemory
   private[this] val totalDisk = Platform.totalDiskSpace
   private[this] val pool = new ExecutorServiceFuturePool(Executors.newCachedThreadPool(new NamedPoolThreadFactory("accio/scheduler")))
+  private[this] val stats = LocalScheduler.Stats(statsReceiver)
   private[this] lazy val localExecutorPath = {
-    val targetPath = workDir.resolve("executor.jar")
+    val targetPath = config.workDir.resolve("executor.jar")
     if (targetPath.toFile.exists()) {
       targetPath.toFile.delete()
     }
     logger.info(s"Downloading executor JAR to ${targetPath.toAbsolutePath}")
-    downloader.download(executorUri, targetPath)
+    downloader.download(config.executorUri, targetPath)
     targetPath.toAbsolutePath
   }
+  recordStats()
 
-  logger.info(s"Available CPU: $totalCpu, RAM: ${totalRam.map(_.toHuman).getOrElse("<unknown>")}, disk: ${totalDisk.map(_.toHuman).getOrElse("<unknown>")}")
+  override def configClass: Class[LocalSchedulerConfig] = classOf[LocalSchedulerConfig]
 
   override def submit(job: Job): String = {
     synchronized {
@@ -80,12 +108,11 @@ class LocalScheduler(
       } else {
         queue.add(job)
         if (monitors.isEmpty) {
-          logger.warn(s"Unable to schedule job: $job, CPU: $totalCpu, RAM: ${totalRam.map(_.toHuman).getOrElse("-")}, disk: ${totalDisk.map(_.toHuman).getOrElse("-")}")
-        } else {
-          logger.debug(s"Running jobs: ${monitors.size}, waiting jobs: ${queue.size}")
+          logger.warn(s"Unable to schedule job: $job")
         }
       }
     }
+    recordStats()
     job.taskId.value
   }
 
@@ -97,6 +124,7 @@ class LocalScheduler(
         it.remove()
       }
     }
+    recordStats()
   }
 
   override def close(): Unit = {
@@ -130,22 +158,37 @@ class LocalScheduler(
       }
     }
     if (monitors.isEmpty && !queue.isEmpty) {
-      logger.warn(s"Unable to schedule jobs. First job: ${queue.peek}, CPU: $totalCpu, RAM: ${totalRam.map(_.toHuman).getOrElse("-")}, disk: ${totalDisk.map(_.toHuman).getOrElse("-")}")
-    } else {
-      logger.debug(s"Running jobs: ${monitors.size}, waiting jobs: ${queue.size}")
+      logger.warn(s"Unable to schedule any job. First: ${queue.peek}")
     }
+    recordStats()
   }
+
+  private def usedCpu = monitors.values.map(_.job.resource.cpu).sum
+
+  private def usedRam = StorageUnit.fromMegabytes(monitors.values.map(_.job.resource.ramMb).sum)
+
+  private def usedDisk = StorageUnit.fromMegabytes(monitors.values.map(_.job.resource.diskMb).sum)
 
   private def isSatisfied(job: Job): Boolean = {
-    val usedCpu = monitors.values.map(_.job.resource.cpu).sum
-    val usedRamMb = monitors.values.map(_.job.resource.ramMb).sum
-    val usedDiskMb = monitors.values.map(_.job.resource.diskMb).sum
     job.resource.cpu <= (totalCpu - usedCpu) &&
-      totalRam.forall(ram => job.resource.ramMb <= (ram.inMegabytes - usedRamMb)) &&
-      totalDisk.forall(disk => job.resource.diskMb <= (disk.inMegabytes - usedDiskMb))
+      totalRam.forall(ram => job.resource.ramMb <= (ram - usedRam).inMegabytes) &&
+      totalDisk.forall(disk => job.resource.diskMb <= (disk - usedDisk).inMegabytes)
   }
 
-  private def getSandboxPath(key: String) = workDir.resolve(key)
+  private def getSandboxPath(key: String) = config.workDir.resolve(key)
+
+  private def recordStats() = {
+    stats.availableCpu.add(totalCpu)
+    totalRam.foreach(ram => stats.availableRam.add(ram.inBytes))
+    totalDisk.foreach(disk => stats.availableDisk.add(disk.inBytes))
+
+    stats.usedCpu.add(usedCpu.toFloat)
+    stats.usedRam.add(usedRam.inBytes)
+    stats.usedDisk.add(usedDisk.inBytes)
+
+    stats.waiting.add(queue.size)
+    stats.running.add(monitors.size)
+  }
 
   private class TaskMonitor(val job: Job) extends Runnable with StrictLogging {
     private[this] var killed = false
@@ -197,7 +240,11 @@ class LocalScheduler(
     }
 
     private def startProcess(job: Job): Process = {
-      val cmd = createCommandLine(job, localExecutorPath.toString, executorArgs, javaHome.orElse(sys.env.get("JAVA_HOME")))
+      val cmd = createCommandLine(
+        job,
+        localExecutorPath.toString,
+        config.executorArgs ++ Seq("-addr", config.agentAddr),
+        config.javaHome.orElse(sys.env.get("JAVA_HOME")))
       logger.debug(s"[T${job.taskId.value}] Command-line: ${cmd.mkString(" ")}")
 
       val sandboxDir = getSandboxPath(job.taskId.value)

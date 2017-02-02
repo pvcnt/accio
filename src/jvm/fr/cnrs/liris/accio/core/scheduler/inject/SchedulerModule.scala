@@ -22,6 +22,7 @@ import java.nio.file.Paths
 
 import com.twitter.inject.{Injector, TwitterModule}
 import fr.cnrs.liris.accio.core.scheduler.Scheduler
+import fr.cnrs.liris.accio.core.scheduler.local.LocalSchedulerConfig
 import fr.cnrs.liris.accio.core.uploader.inject.UploaderModule
 
 /**
