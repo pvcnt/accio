@@ -22,7 +22,7 @@ import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.agent.{KillRunRequest, KillRunResponse, UnknownRunException}
 import fr.cnrs.liris.accio.core.domain.Run
-import fr.cnrs.liris.accio.core.runtime.RunManager
+import fr.cnrs.liris.accio.core.runtime.{RunManager, SchedulerService}
 import fr.cnrs.liris.accio.core.scheduler.Scheduler
 import fr.cnrs.liris.accio.core.statemgr.{LockService, StateManager}
 import fr.cnrs.liris.accio.core.storage.MutableRunRepository
@@ -30,16 +30,16 @@ import fr.cnrs.liris.accio.core.storage.MutableRunRepository
 /**
  * Kill a run and all running tasks.
  *
- * @param runRepository Run repository.
- * @param stateManager  State manager.
- * @param scheduler     Scheduler.
- * @param runManager    Run manager.
- * @param lockService   Lock service.
+ * @param runRepository    Run repository.
+ * @param stateManager     State manager.
+ * @param schedulerService Scheduler service.
+ * @param runManager       Run manager.
+ * @param lockService      Lock service.
  */
 final class KillRunHandler @Inject()(
   runRepository: MutableRunRepository,
   stateManager: StateManager,
-  scheduler: Scheduler,
+  schedulerService: SchedulerService,
   runManager: RunManager,
   lockService: LockService) extends Handler[KillRunRequest, KillRunResponse] {
 
@@ -77,8 +77,7 @@ final class KillRunHandler @Inject()(
     val tasks = stateManager.tasks.filter(_.runId == run.id)
     tasks.foreach { task =>
       lockService.withLock(task.id) {
-        scheduler.kill(task.key)
-        stateManager.remove(task.id)
+        schedulerService.kill(task)
       }
     }
     runManager.onKill(run, tasks.map(_.nodeName), None)

@@ -59,7 +59,7 @@ object AgentModule extends TwitterModule {
   @Singleton
   @WorkerPool
   def providesWorkerPool: FuturePool = {
-    val executorService = Executors.newCachedThreadPool(new NamedPoolThreadFactory("accio/worker"))
+    val executorService = Executors.newCachedThreadPool(new NamedPoolThreadFactory("agent/worker"))
     new ExecutorServiceFuturePool(executorService)
   }
 }

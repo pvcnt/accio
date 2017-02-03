@@ -82,6 +82,11 @@ final class SchedulerService @Inject()(
     }
   }
 
+  def kill(task: Task): Unit = {
+    scheduler.kill(task.key)
+    stateManager.remove(task.id)
+  }
+
   /**
    * Create the payload for a given node, by resolving the inputs.
    *

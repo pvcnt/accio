@@ -21,16 +21,24 @@ package fr.cnrs.liris.accio.agent.handler
 import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.agent.{DeleteRunRequest, DeleteRunResponse, UnknownRunException}
-import fr.cnrs.liris.accio.core.statemgr.LockService
+import fr.cnrs.liris.accio.core.domain.RunId
+import fr.cnrs.liris.accio.core.runtime.SchedulerService
+import fr.cnrs.liris.accio.core.statemgr.{LockService, StateManager}
 import fr.cnrs.liris.accio.core.storage.MutableRunRepository
 
 /**
  * Delete a run, and all its children if it is a parent run.
  *
- * @param runRepository Run repository.
- * @param lockService   Lock service.
+ * @param runRepository    Run repository.
+ * @param lockService      Lock service.
+ * @param stateManager     State manager.
+ * @param schedulerService Scheduler service.
  */
-final class DeleteRunHandler @Inject()(runRepository: MutableRunRepository, lockService: LockService)
+final class DeleteRunHandler @Inject()(
+  runRepository: MutableRunRepository,
+  lockService: LockService,
+  stateManager: StateManager,
+  schedulerService: SchedulerService)
   extends Handler[DeleteRunRequest, DeleteRunResponse] {
 
   override def handle(req: DeleteRunRequest): Future[DeleteRunResponse] = {
@@ -39,14 +47,15 @@ final class DeleteRunHandler @Inject()(runRepository: MutableRunRepository, lock
         case None => throw new UnknownRunException()
         case Some(run) =>
           if (run.children.nonEmpty) {
-            // If is a parent run, delete child all runs.
+            // It is a parent run, cancel and delete child all runs.
+            cancelRuns(run.children)
             run.children.foreach { childId =>
               lockService.withLock(childId) {
                 runRepository.remove(childId)
               }
             }
           } else if (run.parent.isDefined) {
-            // It is a child run, update parent run.
+            // It is a child run, update or delete parent run.
             lockService.withLock(run.parent.get) {
               runRepository.get(run.parent.get).foreach { parent =>
                 if (parent.children.size > 1) {
@@ -58,10 +67,23 @@ final class DeleteRunHandler @Inject()(runRepository: MutableRunRepository, lock
                 }
               }
             }
+          } else {
+            // It is a single run, cancel it.
+            cancelRuns(Seq(run.id))
           }
+          // Finally, delete the run.
           runRepository.remove(run.id)
       }
     }
     Future(DeleteRunResponse())
+  }
+
+  private def cancelRuns(ids: Seq[RunId]) = {
+    val tasks = stateManager.tasks.filter(task => ids.contains(task.runId))
+    tasks.foreach { task =>
+      lockService.withLock(task.id) {
+        schedulerService.kill(task)
+      }
+    }
   }
 }
