@@ -39,9 +39,11 @@ trait Configurable[T] {
    * Initialize this instance with a given config.
    *
    * @param config Configuration object.
+   * @return Current instance.
    */
-  def initialize(config: T): Unit = {
+  final def initialize(config: T): this.type = {
     _config = Some(config)
+    this
   }
 
   /**
@@ -49,7 +51,7 @@ trait Configurable[T] {
    *
    * @throws IllegalStateException If this method is called before this instance has been initialized.
    */
-  protected def config: T = _config match {
+  final protected def config: T = _config match {
     case None => throw new IllegalStateException(s"${getClass.getName} has not been initialized")
     case Some(config) => config
   }

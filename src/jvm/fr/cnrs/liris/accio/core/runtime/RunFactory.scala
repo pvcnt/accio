@@ -208,7 +208,7 @@ final class RunFactory @Inject()(workflowRepository: WorkflowRepository) extends
       children = children.map(_.id),
       clonedFrom = clonedFrom,
       createdAt = now,
-      state = initialState(workflow.graph))
+      state = RunState(progress = 0, status = RunStatus.Scheduled))
 
     Seq(parent) ++ children
   }

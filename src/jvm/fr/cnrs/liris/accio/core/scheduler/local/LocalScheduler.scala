@@ -24,7 +24,7 @@ import java.util.concurrent.{ConcurrentHashMap, ConcurrentLinkedQueue, Executors
 import com.google.common.io.ByteStreams
 import com.google.inject.{Inject, Singleton}
 import com.twitter.concurrent.NamedPoolThreadFactory
-import com.twitter.finagle.stats.{Stat, StatsReceiver}
+import com.twitter.finagle.stats.StatsReceiver
 import com.twitter.util.{ExecutorServiceFuturePool, Return, StorageUnit, Throw}
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.domain.RunLog
@@ -35,6 +35,7 @@ import fr.cnrs.liris.accio.core.util.Configurable
 import fr.cnrs.liris.common.util.{FileUtils, Platform}
 
 import scala.collection.JavaConverters._
+import scala.collection.mutable
 
 /**
  * Scheduler executing tasks locally, in the same machine. Each task is started inside a new Java process. Intended
@@ -73,9 +74,11 @@ class LocalScheduler @Inject()(
     downloader.download(config.executorUri, targetPath)
     targetPath.toAbsolutePath
   }
+  // Set used for keeping track of gauges (otherwise only weakly referenced).
+  private[this] val gauges = mutable.Set.empty[Any]
   // Set up telemetry.
-  private[this] val stats = LocalScheduler.Stats(statsReceiver)
-  recordStats()
+  registerStats()
+  logger.debug(s"Detected resources: CPU $totalCpu, RAM ${totalRam.map(_.inMegabytes + "Mb").getOrElse("-")}, disk ${totalDisk.map(_.inMegabytes + "Mb").getOrElse("-")}")
 
   override def configClass: Class[LocalSchedulerConfig] = classOf[LocalSchedulerConfig]
 
@@ -91,22 +94,30 @@ class LocalScheduler @Inject()(
         }
       }
     }
-    recordStats()
     job.taskId.value
   }
 
   override def kill(key: String): Unit = synchronized {
-    monitors.get(key).foreach(_.kill())
-    val it = queue.iterator
-    while (it.hasNext) {
-      if (it.next.taskId.value == key) {
-        it.remove()
-      }
+    monitors.get(key) match {
+      case Some(monitor) =>
+        monitor.kill()
+        logger.debug(s"[T$key] Killed running task")
+      case None =>
+        val it = queue.iterator
+        while (it.hasNext) {
+          if (it.next.taskId.value == key) {
+            it.remove()
+          }
+        }
+        logger.debug(s"[T$key] Killed waiting task")
     }
-    recordStats()
+
+    // Try to start subsequent tasks.
+    startNext()
   }
 
-  override def close(): Unit = {
+  override def close(): Unit = synchronized {
+    queue.clear()
     monitors.values.foreach(_.kill())
     monitors.clear()
   }
@@ -129,7 +140,6 @@ class LocalScheduler @Inject()(
       // It is an error because the system is stuck and cannot recover.
       logger.error(s"Not enough resources to schedule any job")
     }
-    recordStats()
   }
 
   /**
@@ -185,22 +195,6 @@ class LocalScheduler @Inject()(
    * @param key Task key.
    */
   private def getSandboxPath(key: String) = config.workDir.resolve(key)
-
-  /**
-   * Record statistics about this scheduler.
-   */
-  private def recordStats() = {
-    stats.availableCpu.add(totalCpu)
-    totalRam.foreach(ram => stats.availableRam.add(ram.inBytes))
-    totalDisk.foreach(disk => stats.availableDisk.add(disk.inBytes))
-
-    stats.reservedCpu.add(reservedCpu.toFloat)
-    stats.reservedRam.add(reservedRam.inBytes)
-    stats.reservedDisk.add(reservedDisk.inBytes)
-
-    stats.waiting.add(queue.size)
-    stats.running.add(monitors.size)
-  }
 
   private class TaskMonitor(val job: Job) extends Runnable with StrictLogging {
     private[this] var killed = false
@@ -271,55 +265,23 @@ class LocalScheduler @Inject()(
     }
   }
 
-}
+  private def registerStats(): Unit = {
+    val stats = statsReceiver.scope("accio", "sched")
 
-/**
- * Utils for [[LocalScheduler]].
- */
-object LocalScheduler {
+    gauges += stats.addGauge("cpu", "max")(totalCpu)
+    gauges += totalRam.foreach(ram => stats.addGauge("ram", "max")(ram.inBytes))
+    gauges += totalDisk.foreach(disk => stats.addGauge("disk", "max")(disk.inBytes))
 
-  /**
-   * Factory for [[Stats]].
-   */
-  private object Stats {
-    /**
-     * Create metrics for a given stats receiver. All metrics are scoped under `sched/`.
-     *
-     * @param statsReceiver Stats receiver.
-     */
-    def apply(statsReceiver: StatsReceiver): Stats = {
-      Stats(
-        statsReceiver.scope("sched").stat("running"),
-        statsReceiver.scope("sched").stat("waiting"),
-        statsReceiver.scope("sched").scope("cpu").stat("reserved"),
-        statsReceiver.scope("sched").scope("cpu").stat("available"),
-        statsReceiver.scope("sched").scope("ram").stat("reserved"),
-        statsReceiver.scope("sched").scope("ram").stat("available"),
-        statsReceiver.scope("sched").scope("disk").stat("reserved"),
-        statsReceiver.scope("sched").scope("disk").stat("available"))
-    }
+    gauges += stats.addGauge("cpu", "available")(totalCpu - reservedCpu.toFloat)
+    gauges += totalRam.foreach(ram => stats.addGauge("ram", "available")((ram - reservedRam).inBytes))
+    gauges += totalDisk.foreach(disk => stats.addGauge("disk", "available")((disk - reservedDisk).inBytes))
+
+    gauges += stats.addGauge("cpu", "reserved")(reservedCpu.toFloat)
+    gauges += stats.addGauge("ram", "reserved")(reservedRam.inBytes)
+    gauges += stats.addGauge("disk", "reserved")(reservedDisk.inBytes)
+
+    gauges += stats.addGauge("waiting")(queue.size)
+    gauges += stats.addGauge("running")(monitors.size)
   }
-
-  /**
-   * Local scheduler metrics.
-   *
-   * @param running       Number of running jobs.
-   * @param waiting       Number of queued jobs.
-   * @param reservedCpu   Number of CPUs reserved for running jobs.
-   * @param availableCpu  Number of CPUs available for new jobs.
-   * @param reservedRam   RAM reserved for running jobs, in bytes.
-   * @param availableRam  RAM available for new jobs, in bytes.
-   * @param reservedDisk  Disk space reserved for running jobs, in bytes.
-   * @param availableDisk Disk space available for new jobs, in bytes.
-   */
-  private case class Stats(
-    running: Stat,
-    waiting: Stat,
-    reservedCpu: Stat,
-    availableCpu: Stat,
-    reservedRam: Stat,
-    availableRam: Stat,
-    reservedDisk: Stat,
-    availableDisk: Stat)
 
 }
