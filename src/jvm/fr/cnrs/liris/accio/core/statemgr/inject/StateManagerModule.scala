@@ -20,10 +20,8 @@ package fr.cnrs.liris.accio.core.statemgr.inject
 
 import java.nio.file.Paths
 
-import com.google.inject.Provides
 import com.twitter.inject.TwitterModule
 import com.twitter.util.Duration
-import fr.cnrs.liris.accio.core.statemgr.{LockService, StateManager}
 
 /**
  * Guice module provisioning the [[fr.cnrs.liris.accio.core.statemgr.StateManager]] service.
@@ -50,10 +48,5 @@ object StateManagerModule extends TwitterModule {
       case unknown => throw new IllegalArgumentException(s"Unknown state manager type: $unknown")
     }
     install(module)
-  }
-
-  @Provides
-  def providesLockService(stateManager: StateManager): LockService = {
-    new LockService(stateManager)
   }
 }

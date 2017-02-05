@@ -24,7 +24,7 @@ import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.agent.{CreateRunRequest, CreateRunResponse}
 import fr.cnrs.liris.accio.core.domain.{InvalidSpecException, InvalidSpecMessage, RunId}
 import fr.cnrs.liris.accio.core.runtime.{RunFactory, RunManager}
-import fr.cnrs.liris.accio.core.statemgr.LockService
+import fr.cnrs.liris.accio.core.statemgr.StateManager
 import fr.cnrs.liris.accio.core.storage.MutableRunRepository
 
 import scala.collection.mutable
@@ -35,14 +35,14 @@ import scala.collection.mutable
  * @param runFactory    Run factory.
  * @param runRepository Run repository.
  * @param runManager    Run lifecycle manager.
- * @param lockService   Lock service.
+ * @param stateManager  State manager.
  * @param pool          Worker pool.
  */
 final class CreateRunHandler @Inject()(
   runFactory: RunFactory,
   runRepository: MutableRunRepository,
   runManager: RunManager,
-  lockService: LockService,
+  stateManager: StateManager,
   @WorkerPool pool: FuturePool)
   extends Handler[CreateRunRequest, CreateRunResponse] with StrictLogging {
 
@@ -69,7 +69,9 @@ final class CreateRunHandler @Inject()(
    *            parent and the other its children.
    */
   private def launch(ids: Seq[RunId]) = {
-    lockService.withLock(ids.head) {
+    val lock = stateManager.lock("write")
+    lock.lock()
+    try {
       // We do not reuse runs from the `handle` method, as they could have been modified in-between by other calls.
       // This is why we fetch them back from the repository.
       runRepository.get(ids.head).foreach { parent =>
@@ -79,20 +81,20 @@ final class CreateRunHandler @Inject()(
 
         // Sequentially launch other runs, which are children of the first run.
         ids.tail.foreach { childId =>
-          lockService.withLock(childId) {
             runRepository.get(childId).foreach { run =>
               val res = runManager.launch(run, Some(newParent))
               runRepository.save(res._1)
               res._2.foreach { nextParent =>
                 newParent = nextParent
               }
-            }
           }
         }
         // We finally save the parent run.
         // TODO: maybe we should save it after each child run started.
         runRepository.save(newParent)
       }
+    } finally {
+      lock.unlock()
     }
   }
 }

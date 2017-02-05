@@ -23,8 +23,7 @@ import com.twitter.util.Future
 import fr.cnrs.liris.accio.agent.{KillRunRequest, KillRunResponse, UnknownRunException}
 import fr.cnrs.liris.accio.core.domain.Run
 import fr.cnrs.liris.accio.core.runtime.{RunManager, SchedulerService}
-import fr.cnrs.liris.accio.core.scheduler.Scheduler
-import fr.cnrs.liris.accio.core.statemgr.{LockService, StateManager}
+import fr.cnrs.liris.accio.core.statemgr.StateManager
 import fr.cnrs.liris.accio.core.storage.MutableRunRepository
 
 /**
@@ -34,17 +33,18 @@ import fr.cnrs.liris.accio.core.storage.MutableRunRepository
  * @param stateManager     State manager.
  * @param schedulerService Scheduler service.
  * @param runManager       Run manager.
- * @param lockService      Lock service.
  */
 final class KillRunHandler @Inject()(
   runRepository: MutableRunRepository,
   stateManager: StateManager,
   schedulerService: SchedulerService,
-  runManager: RunManager,
-  lockService: LockService) extends Handler[KillRunRequest, KillRunResponse] {
+  runManager: RunManager)
+  extends Handler[KillRunRequest, KillRunResponse] {
 
   override def handle(req: KillRunRequest): Future[KillRunResponse] = {
-    lockService.withLock(req.id) {
+    val lock = stateManager.lock("write")
+    lock.lock()
+    try {
       runRepository.get(req.id) match {
         case None => throw new UnknownRunException
         case Some(run) =>
@@ -52,34 +52,28 @@ final class KillRunHandler @Inject()(
             var newParent = run
             // If is a parent run, kill child all runs.
             run.children.foreach { childId =>
-              lockService.withLock(childId) {
-                runRepository.get(childId).foreach { child =>
-                  val res = cancelRun(child, Some(run))
-                  runRepository.save(res._1)
-                  res._2.foreach(p => newParent = p)
-                }
+              runRepository.get(childId).foreach { child =>
+                val res = cancelRun(child, Some(run))
+                runRepository.save(res._1)
+                res._2.foreach(p => newParent = p)
               }
             }
             runRepository.save(newParent)
           } else {
-            lockService.withLock(run.parent) {
-              val (newRun, newParent) = cancelRun(run, run.parent.flatMap(runRepository.get))
-              runRepository.save(newRun)
-              newParent.foreach(runRepository.save)
-            }
+            val (newRun, newParent) = cancelRun(run, run.parent.flatMap(runRepository.get))
+            runRepository.save(newRun)
+            newParent.foreach(runRepository.save)
           }
       }
+      Future(KillRunResponse())
+    } finally {
+      lock.unlock()
     }
-    Future(KillRunResponse())
   }
 
   private def cancelRun(run: Run, parent: Option[Run]) = {
     val tasks = stateManager.tasks.filter(_.runId == run.id)
-    tasks.foreach { task =>
-      lockService.withLock(task.id) {
-        schedulerService.kill(task)
-      }
-    }
+    tasks.foreach(schedulerService.kill)
     runManager.onKill(run, tasks.map(_.nodeName), None)
   }
 }

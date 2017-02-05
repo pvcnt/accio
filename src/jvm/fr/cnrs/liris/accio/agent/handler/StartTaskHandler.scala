@@ -23,7 +23,7 @@ import com.twitter.util.Future
 import fr.cnrs.liris.accio.agent.{InvalidTaskException, StartTaskRequest, StartTaskResponse}
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.runtime.RunManager
-import fr.cnrs.liris.accio.core.statemgr.{LockService, StateManager}
+import fr.cnrs.liris.accio.core.statemgr.StateManager
 import fr.cnrs.liris.accio.core.storage.MutableRunRepository
 
 /**
@@ -33,23 +33,21 @@ import fr.cnrs.liris.accio.core.storage.MutableRunRepository
  * @param runRepository Run repository.
  * @param stateManager  State manager.
  * @param runManager    Run lifecycle manager.
- * @param lockService   Lock service.
  */
 class StartTaskHandler @Inject()(
   runRepository: MutableRunRepository,
   stateManager: StateManager,
-  runManager: RunManager,
-  lockService: LockService)
+  runManager: RunManager)
   extends Handler[StartTaskRequest, StartTaskResponse] {
 
   @throws[InvalidTaskException]
   override def handle(req: StartTaskRequest): Future[StartTaskResponse] = {
-    // We do not need to lock around the task because there should not be any lock yet. Until a payload has been
-    // received by the executor, there should not be any heartbeat or task completed request.
-    stateManager.get(req.taskId) match {
-      case None => throw new InvalidTaskException
-      case Some(task) =>
-        lockService.withLock(task.runId) {
+    val lock = stateManager.lock("write")
+    lock.lock()
+    try {
+      stateManager.get(req.taskId) match {
+        case None => throw new InvalidTaskException
+        case Some(task) =>
           runRepository.get(task.runId) match {
             case None =>
               // Illegal state: no run found for this task.
@@ -67,7 +65,9 @@ class StartTaskHandler @Inject()(
 
               Future(StartTaskResponse(task.runId, task.nodeName, task.payload))
           }
-        }
+      }
+    } finally {
+      lock.unlock()
     }
   }
 }

@@ -22,33 +22,34 @@ import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.agent.{UnknownRunException, UpdateRunRequest, UpdateRunResponse}
 import fr.cnrs.liris.accio.core.domain.Run
-import fr.cnrs.liris.accio.core.statemgr.LockService
+import fr.cnrs.liris.accio.core.statemgr.StateManager
 import fr.cnrs.liris.accio.core.storage.MutableRunRepository
 
 /**
  * Update metadata of a run.
  *
  * @param runRepository Run repository.
- * @param lockService   Lock service.
+ * @param stateManager  State manager.
  */
-final class UpdateRunHandler @Inject()(runRepository: MutableRunRepository, lockService: LockService)
+final class UpdateRunHandler @Inject()(runRepository: MutableRunRepository, stateManager: StateManager)
   extends Handler[UpdateRunRequest, UpdateRunResponse] {
 
   override def handle(req: UpdateRunRequest): Future[UpdateRunResponse] = {
-    lockService.withLock(req.id) {
+    val lock = stateManager.lock("write")
+    lock.lock()
+    try {
       runRepository.get(req.id) match {
         case None => throw new UnknownRunException()
         case Some(run) =>
           run.parent match {
             case None => process(run, req)
-            case Some(parentId) =>
-              lockService.withLock(parentId) {
-                runRepository.get(parentId).foreach(process(_, req))
-              }
+            case Some(parentId) => runRepository.get(parentId).foreach(process(_, req))
           }
       }
+      Future(UpdateRunResponse())
+    } finally {
+      lock.unlock()
     }
-    Future(UpdateRunResponse())
   }
 
   private def process(run: Run, req: UpdateRunRequest) = {

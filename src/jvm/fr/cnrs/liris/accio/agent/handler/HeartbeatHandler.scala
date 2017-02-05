@@ -22,25 +22,28 @@ import com.google.inject.Inject
 import com.twitter.util.Future
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.agent.{HeartbeatRequest, HeartbeatResponse}
-import fr.cnrs.liris.accio.core.statemgr.{LockService, StateManager}
+import fr.cnrs.liris.accio.core.statemgr.StateManager
 
 /**
  * Receive heartbeat for a task.
  *
  * @param stateManager State manager.
- * @param lockService  Lock service.
  */
-class HeartbeatHandler @Inject()(stateManager: StateManager, lockService: LockService)
+class HeartbeatHandler @Inject()(stateManager: StateManager)
   extends Handler[HeartbeatRequest, HeartbeatResponse] with LazyLogging {
 
   override def handle(req: HeartbeatRequest): Future[HeartbeatResponse] = {
-    lockService.withLock(req.taskId) {
+    val lock = stateManager.lock("write")
+    lock.lock()
+    try {
       stateManager.get(req.taskId).foreach { task =>
         val newTask = task.copy(state = task.state.copy(heartbeatAt = Some(System.currentTimeMillis())))
         stateManager.save(newTask)
         logger.debug(s"[T${req.taskId.value}] Received heartbeat")
       }
+      Future(HeartbeatResponse())
+    } finally {
+      lock.unlock()
     }
-    Future(HeartbeatResponse())
   }
 }

@@ -23,48 +23,42 @@ import com.twitter.util.Future
 import fr.cnrs.liris.accio.agent.{DeleteRunRequest, DeleteRunResponse, UnknownRunException}
 import fr.cnrs.liris.accio.core.domain.RunId
 import fr.cnrs.liris.accio.core.runtime.SchedulerService
-import fr.cnrs.liris.accio.core.statemgr.{LockService, StateManager}
+import fr.cnrs.liris.accio.core.statemgr.StateManager
 import fr.cnrs.liris.accio.core.storage.MutableRunRepository
 
 /**
  * Delete a run, and all its children if it is a parent run.
  *
  * @param runRepository    Run repository.
- * @param lockService      Lock service.
  * @param stateManager     State manager.
  * @param schedulerService Scheduler service.
  */
 final class DeleteRunHandler @Inject()(
   runRepository: MutableRunRepository,
-  lockService: LockService,
   stateManager: StateManager,
   schedulerService: SchedulerService)
   extends Handler[DeleteRunRequest, DeleteRunResponse] {
 
   override def handle(req: DeleteRunRequest): Future[DeleteRunResponse] = {
-    lockService.withLock(req.id) {
+    val lock = stateManager.lock("write")
+    lock.lock()
+    try {
       runRepository.get(req.id) match {
         case None => throw new UnknownRunException()
         case Some(run) =>
           if (run.children.nonEmpty) {
             // It is a parent run, cancel and delete child all runs.
             cancelRuns(run.children)
-            run.children.foreach { childId =>
-              lockService.withLock(childId) {
-                runRepository.remove(childId)
-              }
-            }
+            run.children.foreach(runRepository.remove)
           } else if (run.parent.isDefined) {
             // It is a child run, update or delete parent run.
-            lockService.withLock(run.parent.get) {
-              runRepository.get(run.parent.get).foreach { parent =>
-                if (parent.children.size > 1) {
-                  // There are several child runs left, remove current one from the list.
-                  runRepository.save(parent.copy(children = parent.children.filterNot(_ == run.id)))
-                } else {
-                  // It was the last child of this run, delete it as it is now useless.
-                  runRepository.remove(parent.id)
-                }
+            runRepository.get(run.parent.get).foreach { parent =>
+              if (parent.children.size > 1) {
+                // There are several child runs left, remove current one from the list.
+                runRepository.save(parent.copy(children = parent.children.filterNot(_ == run.id)))
+              } else {
+                // It was the last child of this run, delete it as it is now useless.
+                runRepository.remove(parent.id)
               }
             }
           } else {
@@ -74,16 +68,14 @@ final class DeleteRunHandler @Inject()(
           // Finally, delete the run.
           runRepository.remove(run.id)
       }
+      Future(DeleteRunResponse())
+    } finally {
+      lock.unlock()
     }
-    Future(DeleteRunResponse())
   }
 
   private def cancelRuns(ids: Seq[RunId]) = {
     val tasks = stateManager.tasks.filter(task => ids.contains(task.runId))
-    tasks.foreach { task =>
-      lockService.withLock(task.id) {
-        schedulerService.kill(task)
-      }
-    }
+    tasks.foreach(schedulerService.kill)
   }
 }

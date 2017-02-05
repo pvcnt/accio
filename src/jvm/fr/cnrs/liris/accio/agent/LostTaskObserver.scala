@@ -24,7 +24,7 @@ import com.twitter.util.{Duration, Time}
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.domain.{Run, Task, TaskStatus}
 import fr.cnrs.liris.accio.core.runtime.RunManager
-import fr.cnrs.liris.accio.core.statemgr.{LockService, StateManager}
+import fr.cnrs.liris.accio.core.statemgr.StateManager
 import fr.cnrs.liris.accio.core.storage.MutableRunRepository
 
 /**
@@ -34,8 +34,7 @@ final class LostTaskObserver(
   taskTimeout: Duration,
   stateManager: StateManager,
   runRepository: MutableRunRepository,
-  runManager: RunManager,
-  lockService: LockService)
+  runManager: RunManager)
   extends Runnable with StrictLogging {
   // Flag to indicate when this has been killed.
   private[this] val killed = new AtomicBoolean(false)
@@ -46,7 +45,13 @@ final class LostTaskObserver(
       val lock = stateManager.lock("lost-tasks")
       if (lock.tryLock()) {
         try {
-          lostTasks.foreach(handleLostTask)
+          val lock = stateManager.lock("write")
+          lock.lock()
+          try {
+            lostTasks.foreach(handleLostTask)
+          } finally {
+            lock.unlock()
+          }
         } finally {
           lock.unlock()
         }
@@ -74,20 +79,13 @@ final class LostTaskObserver(
   }
 
   private def handleLostTask(task: Task) = {
-    lockService.withLock(task.id) {
-      lockService.withLock(task.runId) {
-        runRepository.get(task.runId).foreach { run =>
-          run.parent match {
-            case Some(parentId) =>
-              lockService.withLock(parentId) {
-                processRun(run, task, runRepository.get(parentId))
-              }
-            case None => processRun(run, task, None)
-          }
-        }
+    runRepository.get(task.runId).foreach { run =>
+      run.parent match {
+        case Some(parentId) => processRun(run, task, runRepository.get(parentId))
+        case None => processRun(run, task, None)
       }
-      stateManager.remove(task.id)
     }
+    stateManager.remove(task.id)
     logger.debug(s"[T${task.id.value}] Lost task")
   }
 

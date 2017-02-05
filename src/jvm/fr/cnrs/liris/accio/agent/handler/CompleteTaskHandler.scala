@@ -24,7 +24,7 @@ import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.agent.{CompleteTaskRequest, CompleteTaskResponse, InvalidTaskException}
 import fr.cnrs.liris.accio.core.domain.{OpResult, Run, Task}
 import fr.cnrs.liris.accio.core.runtime.RunManager
-import fr.cnrs.liris.accio.core.statemgr.{LockService, StateManager}
+import fr.cnrs.liris.accio.core.statemgr.StateManager
 import fr.cnrs.liris.accio.core.storage.MutableRunRepository
 
 /**
@@ -33,18 +33,18 @@ import fr.cnrs.liris.accio.core.storage.MutableRunRepository
  * @param runRepository Run repository.
  * @param stateManager  State manager.
  * @param runManager    Run lifecycle manager.
- * @param lockService   Lock service.
  */
 final class CompleteTaskHandler @Inject()(
   runRepository: MutableRunRepository,
   stateManager: StateManager,
-  runManager: RunManager,
-  lockService: LockService)
+  runManager: RunManager)
   extends Handler[CompleteTaskRequest, CompleteTaskResponse] with StrictLogging {
 
   @throws[InvalidTaskException]
   override def handle(req: CompleteTaskRequest): Future[CompleteTaskResponse] = {
-    lockService.withLock(req.taskId) {
+    val lock = stateManager.lock("write")
+    lock.lock()
+    try {
       stateManager.get(req.taskId) match {
         case None => throw new InvalidTaskException
         case Some(task) =>
@@ -52,22 +52,19 @@ final class CompleteTaskHandler @Inject()(
           stateManager.remove(task.id)
 
           // Update run (and maybe its parent).
-          lockService.withLock(task.runId) {
-            runRepository.get(task.runId) match {
-              case None => throw new InvalidTaskException
-              case Some(run) =>
-                run.parent match {
-                  case Some(parentId) =>
-                    lockService.withLock(parentId) {
-                      processRun(run, task, req.result, runRepository.get(parentId))
-                    }
-                  case None => processRun(run, task, req.result, None)
-                }
+          runRepository.get(task.runId) match {
+            case None => throw new InvalidTaskException
+            case Some(run) =>
+              run.parent match {
+                case Some(parentId) => processRun(run, task, req.result, runRepository.get(parentId))
+                case None => processRun(run, task, req.result, None)
+              }
 
-            }
           }
       }
       Future(CompleteTaskResponse())
+    } finally {
+      lock.unlock()
     }
   }
 

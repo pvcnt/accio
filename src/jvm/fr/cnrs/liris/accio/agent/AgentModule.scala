@@ -27,7 +27,7 @@ import com.twitter.util.{Duration, ExecutorServiceFuturePool, FuturePool}
 import fr.cnrs.liris.accio.agent.handler.{ClusterName, WorkerPool}
 import fr.cnrs.liris.accio.core.api.Operator
 import fr.cnrs.liris.accio.core.runtime._
-import fr.cnrs.liris.accio.core.statemgr.{LockService, StateManager}
+import fr.cnrs.liris.accio.core.statemgr.StateManager
 import fr.cnrs.liris.accio.core.storage.MutableRunRepository
 import net.codingwell.scalaguice.ScalaMultibinder
 
@@ -51,8 +51,8 @@ object AgentModule extends TwitterModule {
 
   @Singleton
   @Provides
-  def providesLostTaskObserver(stateManager: StateManager, runRepository: MutableRunRepository, runManager: RunManager, lockService: LockService): LostTaskObserver = {
-    new LostTaskObserver(taskTimeout(), stateManager, runRepository, runManager, lockService)
+  def providesLostTaskObserver(stateManager: StateManager, runRepository: MutableRunRepository, runManager: RunManager): LostTaskObserver = {
+    new LostTaskObserver(taskTimeout(), stateManager, runRepository, runManager)
   }
 
   @Provides
