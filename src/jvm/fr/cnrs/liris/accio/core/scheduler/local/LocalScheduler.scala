@@ -212,6 +212,7 @@ class LocalScheduler @Inject()(
         case Some(p) =>
           logger.debug(s"[T${job.taskId.value}] Waiting for process completion")
           try {
+            ByteStreams.copy(p.getInputStream, ByteStreams.nullOutputStream)
             p.waitFor()
           } catch {
             case e: InterruptedException => logger.warn(s"[T${job.taskId.value}] Interrupted while waiting", e)
@@ -251,7 +252,6 @@ class LocalScheduler @Inject()(
         .command(cmd: _*)
         .directory(sandboxDir.toFile)
         .redirectErrorStream(true)
-        .inheritIO()
 
       pb.start()
     }

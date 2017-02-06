@@ -33,9 +33,7 @@ import org.joda.time.DateTime
 class ApiController @Inject()(client: AgentService.FinagledClient) extends Controller {
   get("/api/v1") { httpReq: Request =>
     client.info(InfoRequest()).map { resp =>
-      Map(
-        "cluster_name" -> resp.clusterName,
-        "version" -> resp.version)
+      Map("cluster_name" -> resp.clusterName, "version" -> resp.version)
     }
   }
 
