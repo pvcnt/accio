@@ -20,9 +20,10 @@ package fr.cnrs.liris.privamov.ops
 
 import com.google.common.geometry.S2CellId
 import fr.cnrs.liris.accio.core.api._
+import fr.cnrs.liris.common.geo.LatLng
 import fr.cnrs.liris.common.util.Requirements._
 import fr.cnrs.liris.privamov.core.model.Trace
-import org.joda.time.Duration
+import org.joda.time.{Duration, Instant}
 
 @Op(
   category = "metric",
@@ -33,28 +34,42 @@ class AreaCoverageOp extends Operator[AreaCoverageIn, AreaCoverageOut] {
   override def execute(in: AreaCoverageIn, ctx: OpContext): AreaCoverageOut = {
     val train = ctx.read[Trace](in.train)
     val test = ctx.read[Trace](in.test)
-    val metrics = train.zip(test).map { case (ref, res) => evaluate(ref, res, in.level) }.toArray
+    val metrics = train.zip(test).map { case (ref, res) => evaluate(ref, res, in.level, in.bucketSize) }.toArray
     AreaCoverageOut(
       precision = metrics.map { case (k, v) => k -> v._1 }.toMap,
       recall = metrics.map { case (k, v) => k -> v._2 }.toMap,
       fscore = metrics.map { case (k, v) => k -> v._3 }.toMap)
   }
 
-  private def evaluate(ref: Trace, res: Trace, level: Int) = {
+  private def evaluate(ref: Trace, res: Trace, level: Int, bucketSize: Option[Duration]) = {
     requireState(ref.id == res.id, s"Trace mismatch: ${ref.id} / ${res.id}")
-    val refCells = getCells(ref, level)
-    val resCells = getCells(res, level)
+    val refCells = getCells(ref, level, bucketSize)
+    val resCells = getCells(res, level, bucketSize)
     val matched = resCells.intersect(refCells).size
-    (ref.id, (MetricUtils.precision(resCells.size, matched), MetricUtils.recall(refCells.size, matched), MetricUtils.fscore(refCells.size, resCells.size, matched)))
+    val metrics = (
+      MetricUtils.precision(resCells.size, matched),
+      MetricUtils.recall(refCells.size, matched),
+      MetricUtils.fscore(refCells.size, resCells.size, matched))
+    (ref.id, metrics)
   }
 
-  private def getCells(trace: Trace, level: Int) =
-    trace.events.map(rec => S2CellId.fromLatLng(rec.point.toLatLng.toS2).parent(level)).toSet
+  private def getCells(trace: Trace, level: Int, bucketSize: Option[Duration]) = {
+    trace.events.map { rec =>
+      bucketSize match {
+        case None => truncate(rec.point.toLatLng, level).toString
+        case Some(precision) => truncate(rec.point.toLatLng, level) + "|" + truncate(rec.time, precision)
+      }
+    }.toSet
+  }
+
+  private def truncate(latLng: LatLng, level: Int): Long = S2CellId.fromLatLng(latLng.toS2).parent(level).id
+
+  private def truncate(instant: Instant, precision: Duration): Long = instant.getMillis / precision.getMillis
 }
 
 case class AreaCoverageIn(
   @Arg(help = "S2 cells levels") level: Int,
-  @Arg(help = "Maximum duration between two events to consider they match") temporalOverlap: Option[Duration],
+  @Arg(help = "Width of time buckets") bucketSize: Option[Duration],
   @Arg(help = "Train dataset") train: Dataset,
   @Arg(help = "Test dataset") test: Dataset)
 

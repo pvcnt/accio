@@ -19,7 +19,7 @@ This operator can manipulate the source dataset, essentially to reduce its size,
 |:-----------|:-----|:------------|
 | `url` | string; required | Dataset URL |
 | `kind` | string; optional; default: csv | Kind of dataset |
-| `users` | list of string; optional; default:  | Users to include |
+| `users` | list(string); optional; default:  | Users to include |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
@@ -321,16 +321,16 @@ Compute area coverage difference between two datasets of traces
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
 | `level` | integer; required | S2 cells levels |
-| `temporal` | boolean; optional; default: false | Whether to include the temporal component |
+| `bucketSize` | duration; optional | Width of time buckets |
 | `train` | dataset; required | Train dataset |
 | `test` | dataset; required | Test dataset |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `precision` | map of string => double | Area coverage precision |
-| `recall` | map of string => double | Area coverage recall |
-| `fscore` | map of string => double | Area coverage F-score |
+| `precision` | map(string,double) | Area coverage precision |
+| `recall` | map(string,double) | Area coverage recall |
+| `fscore` | map(string,double) | Area coverage F-score |
 {: class="table table-striped"}
 
 ### BasicAnalyzer
@@ -344,9 +344,9 @@ Compute basic statistics about traces.
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `size` | map of string => long | Trace size |
-| `length` | map of string => double | Trace length |
-| `duration` | map of string => long | Trace duration |
+| `size` | map(string,long) | Trace size |
+| `length` | map(string,double) | Trace length |
+| `duration` | map(string,long) | Trace duration |
 {: class="table table-striped"}
 
 ### CountQueriesDistortion
@@ -366,7 +366,7 @@ Evaluate count query distortion between to datasets.
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `value` | list of double | Count query distortion |
+| `value` | list(double) | Count query distortion |
 {: class="table table-striped"}
 
 ### DataCompleteness
@@ -381,7 +381,7 @@ Compute data completeness difference between two datasets of traces.
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `value` | map of string => double | Data completeness |
+| `value` | map(string,double) | Data completeness |
 {: class="table table-striped"}
 
 ### PoisAnalyzer
@@ -412,8 +412,8 @@ Re-identification attack using POIs a the discriminating information.
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `distances` | map of string => map | Distances between users from test and train datasets |
-| `matches` | map of string => string | Matches between users from test and train datasets |
+| `distances` | map(string,map) | Distances between users from test and train datasets |
+| `matches` | map(string,string) | Matches between users from test and train datasets |
 | `rate` | double | Correct re-identifications rate |
 {: class="table table-striped"}
 
@@ -423,17 +423,17 @@ Compute POIs retrieval difference between two POIs datasets
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `threshold` | distance; required | Matching threshold |
-| `temporal` | boolean; optional; default: false | Whether to include the temporal component |
+| `threshold` | distance; required | Maximum distance between two POIs to consider they match |
+| `overlap` | duration; optional | Minimum overlap between two POIs to consider they match |
 | `train` | dataset; required | Train dataset (POIs) |
 | `test` | dataset; required | Test dataset (POIs) |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `precision` | map of string => double | POIs retrieval precision |
-| `recall` | map of string => double | POIs retrieval recall |
-| `fscore` | map of string => double | POIs retrieval F-Score |
+| `precision` | map(string,double) | POIs retrieval precision |
+| `recall` | map(string,double) | POIs retrieval recall |
+| `fscore` | map(string,double) | POIs retrieval F-Score |
 {: class="table table-striped"}
 
 ### SpatialDistortion
@@ -449,11 +449,11 @@ Compute spatial distortion between two datasets of traces
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `min` | map of string => double | Spatial distortion min |
-| `max` | map of string => double | Spatial distortion max |
-| `stddev` | map of string => double | Spatial distortion stddev |
-| `avg` | map of string => double | Spatial distortion avg |
-| `median` | map of string => double | Spatial distortion median |
+| `min` | map(string,double) | Spatial distortion min |
+| `max` | map(string,double) | Spatial distortion max |
+| `stddev` | map(string,double) | Spatial distortion stddev |
+| `avg` | map(string,double) | Spatial distortion avg |
+| `median` | map(string,double) | Spatial distortion median |
 {: class="table table-striped"}
 
 ### SpatioTemporalDistortion
@@ -468,11 +468,11 @@ Compute temporal distortion difference between two datasets of traces
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `min` | map of string => double | Temporal distortion min |
-| `max` | map of string => double | Temporal distortion max |
-| `stddev` | map of string => double | Temporal distortion stddev |
-| `avg` | map of string => double | Temporal distortion avg |
-| `median` | map of string => double | Temporal distortion median |
+| `min` | map(string,double) | Temporal distortion min |
+| `max` | map(string,double) | Temporal distortion max |
+| `stddev` | map(string,double) | Temporal distortion stddev |
+| `avg` | map(string,double) | Temporal distortion avg |
+| `median` | map(string,double) | Temporal distortion median |
 {: class="table table-striped"}
 
 ### TransmissionDelay
@@ -487,7 +487,7 @@ Compute transmission delay between two datasets of traces
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `value` | map of string => long | Transmission delay |
+| `value` | map(string,long) | Transmission delay |
 {: class="table table-striped"}
 
 ## Transform operators
