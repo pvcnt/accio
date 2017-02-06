@@ -27,6 +27,7 @@ import fr.cnrs.liris.privamov.ops.OpsModule
 
 object AccioExecutorMain {
   def main(args: Array[String]): Unit = {
+    StdOutErr.record()
     new AccioExecutor().main(args)
 
     // Long story short: Yes, we need this.

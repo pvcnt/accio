@@ -18,7 +18,6 @@
 
 package fr.cnrs.liris.accio.executor
 
-import java.io.{ByteArrayOutputStream, PrintStream}
 import java.util.concurrent.Executors
 
 import com.google.inject.Inject
@@ -43,8 +42,6 @@ import scala.util.control.NonFatal
 final class TaskExecutor @Inject()(opExecutor: OpExecutor, client: AgentService.FinagledClient) extends StrictLogging {
   private[this] val pool = FuturePool.interruptible(Executors.newCachedThreadPool(new NamedPoolThreadFactory("exec/worker")))
   private[this] val futures = mutable.Set.empty[Future[_]]
-  private[this] val stdoutBytes = new ByteArrayOutputStream
-  private[this] val stderrBytes = new ByteArrayOutputStream
 
   /**
    * Trigger the execution of a task.
@@ -74,10 +71,6 @@ final class TaskExecutor @Inject()(opExecutor: OpExecutor, client: AgentService.
   }
 
   private def start(taskId: TaskId, runId: RunId, nodeName: String, payload: OpPayload): Future[Unit] = {
-    // Swap output streams.
-    System.setOut(new PrintStream(stdoutBytes))
-    System.setErr(new PrintStream(stderrBytes))
-
     futures += pool(new Heartbeat(taskId).run())
     futures += pool(new StreamLogs(taskId, runId, nodeName).run())
     val mainFuture = pool(new Main(taskId, payload).run())
@@ -107,7 +100,7 @@ final class TaskExecutor @Inject()(opExecutor: OpExecutor, client: AgentService.
       while (true) {
         // Do not log anything here, otherwise it will create a logging loop, even if nothing else is printed.
         // We want to send only meaningful logs.
-        val logs = extractLogs(stdoutBytes, "stdout") ++ extractLogs(stderrBytes, "stderr")
+        val logs = extractLogs(StdOutErr.stdoutAsString, "stdout") ++ extractLogs(StdOutErr.stderrAsString, "stderr")
         if (logs.nonEmpty) {
           val f = Await.result(client.streamLogs(StreamLogsRequest(logs)).liftToTry)
           f match {
@@ -123,9 +116,7 @@ final class TaskExecutor @Inject()(opExecutor: OpExecutor, client: AgentService.
       }
     }
 
-    private def extractLogs(baos: ByteArrayOutputStream, classifier: String) = {
-      val content = new String(baos.toByteArray)
-      baos.reset()
+    private def extractLogs(content: String, classifier: String) = {
       val at = System.currentTimeMillis
       content.trim
         .split("\n")

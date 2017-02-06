@@ -84,7 +84,7 @@ class LocalScheduler @Inject()(
 
   override def submit(job: Job): String = {
     synchronized {
-      if (isEnoughResource(job)) {
+      if (isSchedulable(job)) {
         startProcess(job)
       } else {
         queue.add(job)
@@ -130,7 +130,7 @@ class LocalScheduler @Inject()(
       val it = queue.iterator
       while (it.hasNext) {
         val job = it.next()
-        if (isEnoughResource(job)) {
+        if (isSchedulable(job)) {
           startProcess(job)
           it.remove()
         }
@@ -183,7 +183,7 @@ class LocalScheduler @Inject()(
    * @param job Candidate job.
    * @return True if there is enough resources, false otherwise.
    */
-  private def isEnoughResource(job: Job): Boolean = {
+  private def isSchedulable(job: Job): Boolean = {
     job.resource.cpu <= (totalCpu - reservedCpu) &&
       totalRam.forall(ram => job.resource.ramMb <= (ram - reservedRam).inMegabytes) &&
       totalDisk.forall(disk => job.resource.diskMb <= (disk - reservedDisk).inMegabytes)
@@ -212,16 +212,7 @@ class LocalScheduler @Inject()(
         case Some(p) =>
           logger.debug(s"[T${job.taskId.value}] Waiting for process completion")
           try {
-            // TODO: have a thread consuming output, separating between stdout and stderr.
-            val out = new String(ByteStreams.toByteArray(p.getInputStream))
             p.waitFor()
-            val logs = out.trim.split("\n").map { line =>
-              RunLog(job.runId, job.nodeName, System.currentTimeMillis(), "stdout", line.trim)
-            }
-            if (logs.nonEmpty) {
-              logger.debug(s"[T${job.taskId.value}] Saving ${logs.length} additional logs")
-              runRepository.save(logs)
-            }
           } catch {
             case e: InterruptedException => logger.warn(s"[T${job.taskId.value}] Interrupted while waiting", e)
           } finally {
@@ -260,6 +251,7 @@ class LocalScheduler @Inject()(
         .command(cmd: _*)
         .directory(sandboxDir.toFile)
         .redirectErrorStream(true)
+        .inheritIO()
 
       pb.start()
     }
