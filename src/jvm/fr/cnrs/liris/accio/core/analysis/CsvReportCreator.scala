@@ -49,8 +49,8 @@ class CsvReportCreator {
     if (opts.split) {
       // When splitting, one sub-directory is created per combination of workflow parameters.
       artifacts.split.foreach { list =>
-        val label = Utils.label(list.params)
-        doWrite(list, workDir.resolve(label), opts)
+        val filename = Utils.label(list.params).replace(" ", ",")
+        doWrite(list, workDir.resolve(filename), opts)
       }
     } else {
       // When not splitting, we write report directory inside the working directory.
@@ -69,8 +69,8 @@ class CsvReportCreator {
     if (opts.split) {
       // When splitting, one sub-directory is created per combination of workflow parameters.
       metrics.split.foreach { list =>
-        val label = Utils.label(list.params)
-        doWrite(list, workDir.resolve(label), opts)
+        val filename = Utils.label(list.params).replace(" ", ",")
+        doWrite(list, workDir.resolve(filename), opts)
       }
     } else {
       // When not splitting, we write report directory inside the working directory.
@@ -136,7 +136,7 @@ class CsvReportCreator {
     case AtomicType.Set => Values.decodeSet(value).toSeq.map(v => Seq(v.toString))
     case AtomicType.Map =>
       val map = Values.decodeMap(value)
-      val keysIndex = map.keys.zipWithIndex.toMap
+      val keysIndex = map.keySet.zipWithIndex.toMap
       map.toSeq.map { case (k, v) =>
         val kIdx = keysIndex(k.asInstanceOf[Any])
         Seq(k.toString, kIdx.toString, v.toString)

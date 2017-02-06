@@ -122,16 +122,18 @@ case class ArtifactList(runs: Seq[Run], params: Map[String, Value], groups: Seq[
    * already been split, it will result in a singleton composed of itself.
    */
   def split: Seq[ArtifactList] = {
-    runs
-      .groupBy(_.params)
-      .map { case (someParams, someRuns) =>
-        val runIds = someRuns.map(_.id)
-        val newGroups = groups.map { group =>
-          val newValues = group.values.filter { case (runId, _) => runIds.contains(runId) }
-          group.copy(values = newValues)
-        }
-        ArtifactList(someRuns, someParams.toMap, newGroups)
-      }.toSeq
+    val commonParams = Seqs.index(runs.flatMap(run => run.params.toSeq))
+      .filter { case (_, values) => values.toSet.size == 1 }
+      .keySet
+    val runsByParams = runs.groupBy(_.params)
+    runsByParams.map { case (someParams, someRuns) =>
+      val runIds = someRuns.map(_.id)
+      val newGroups = groups.map { group =>
+        val newValues = group.values.filter { case (runId, _) => runIds.contains(runId) }
+        group.copy(values = newValues)
+      }
+      ArtifactList(someRuns, someParams.filterKeys(key => !commonParams.contains(key)).toMap, newGroups)
+    }.toSeq
   }
 }
 

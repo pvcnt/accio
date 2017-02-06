@@ -211,7 +211,7 @@ object Values {
 
   def encodeLocation(v: Location): Value = {
     val latLng = v.asInstanceOf[Location].toLatLng
-    Value(DataType(AtomicType.Location), doubles = Seq(latLng.lat.degrees, latLng.lng.degrees))
+    Value(DataType(AtomicType.Location), doubles = Seq(latLng.lat.radians, latLng.lng.radians))
   }
 
   def encodeTimestamp(v: Instant): Value = Value(DataType(AtomicType.Timestamp), longs = Seq(v.getMillis))
@@ -321,7 +321,7 @@ object Values {
 
   def decodeLocation(value: Value): LatLng = {
     checkType(AtomicType.Location, value)
-    LatLng.degrees(value.doubles.head, value.doubles.last)
+    LatLng.radians(value.doubles.head, value.doubles.last)
   }
 
   def decodeTimestamp(value: Value): Instant = new Instant(checkType(AtomicType.Timestamp, value).longs.head)
@@ -330,19 +330,19 @@ object Values {
 
   def decodeList(value: Value): Seq[Any] = {
     checkType(AtomicType.List, value)
-    split(value, DataType(value.kind.args.head)).map(decode)
+    split(value, value.kind.args.head).map(decode)
   }
 
   def decodeSet(value: Value): Set[Any] = {
     checkType(AtomicType.Set, value)
-    split(value, DataType(value.kind.args.head)).map(decode).toSet
+    split(value, value.kind.args.head).map(decode).toSet
   }
 
   def decodeMap(value: Value): Map[Any, Any] = {
     checkType(AtomicType.Map, value)
-    val keysValues = split(value.copy(size = 2), value.kind)
-    val keys = split(keysValues.head.copy(size = value.size / 2), DataType(value.kind.args.head)).map(decode)
-    val values = split(keysValues.last.copy(size = value.size / 2), DataType(value.kind.args.last)).map(decode)
+    val (keysValue, valuesValue) = splitKeysValues(value)
+    val keys = split(keysValue, value.kind.args.head).map(decode)
+    val values = split(valuesValue, value.kind.args.last).map(decode)
     Map(keys.zip(values): _*)
   }
 
@@ -468,25 +468,67 @@ object Values {
       size = size)
   }
 
-  private def split(value: Value, kind: DataType): Seq[Value] = {
+  private def splitKeysValues(value: Value): (Value, Value) = {
+    val (keySlotKind, keySlotSize) = slotUsage(value.kind.args.head)
+    val (valueSlotKind, _) = slotUsage(value.kind.args.last)
+    if (keySlotKind == valueSlotKind) {
+      keySlotKind match {
+        case AtomicType.Byte =>
+          (value.copy(bytes = value.bytes.take(value.size * keySlotSize)), value.copy(bytes = value.bytes.drop(value.size * keySlotSize)))
+        case AtomicType.Integer =>
+          (value.copy(integers = value.integers.take(value.size * keySlotSize)), value.copy(integers = value.integers.drop(value.size * keySlotSize)))
+        case AtomicType.Long =>
+          (value.copy(longs = value.longs.take(value.size * keySlotSize)), value.copy(longs = value.longs.drop(value.size * keySlotSize)))
+        case AtomicType.Double =>
+          (value.copy(doubles = value.doubles.take(value.size * keySlotSize)), value.copy(doubles = value.doubles.drop(value.size * keySlotSize)))
+        case AtomicType.String =>
+          (value.copy(strings = value.strings.take(value.size * keySlotSize)), value.copy(strings = value.strings.drop(value.size * keySlotSize)))
+        case AtomicType.Boolean =>
+          (value.copy(booleans = value.booleans.take(value.size * keySlotSize)), value.copy(booleans = value.booleans.drop(value.size * keySlotSize)))
+        case _ => throw new IllegalArgumentException(s"Invalid slot kind: $keySlotKind")
+      }
+    } else {
+      (value, value)
+    }
+  }
+
+  private def slotUsage(kind: AtomicType): (AtomicType, Int) =
+    kind match {
+      case AtomicType.Byte => (AtomicType.Byte, 1)
+      case AtomicType.Integer => (AtomicType.Integer, 1)
+      case AtomicType.Long => (AtomicType.Long, 1)
+      case AtomicType.Double => (AtomicType.Double, 1)
+      case AtomicType.String => (AtomicType.String, 1)
+      case AtomicType.Boolean => (AtomicType.Boolean, 1)
+      case AtomicType.Location => (AtomicType.Double, 2)
+      case AtomicType.Timestamp => (AtomicType.Long, 1)
+      case AtomicType.Duration => (AtomicType.Long, 1)
+      case AtomicType.Distance => (AtomicType.Double, 1)
+      case AtomicType.Dataset => (AtomicType.String, 1)
+      case _ => throw new IllegalArgumentException(s"Invalid slot kind: $kind")
+    }
+
+  private def split(value: Value, kind: AtomicType): Seq[Value] = {
+    val (slotKind, slotSize) = slotUsage(kind)
+
     def slice[T](i: Int, seq: Seq[T]): Seq[T] = {
       if (seq.isEmpty) {
         seq
       } else {
-        val n = seq.size / value.size
-        seq.slice(i * n, (i + 1) * n)
+        seq.slice(i * slotSize, (i + 1) * slotSize)
       }
     }
 
     Seq.tabulate(value.size) { i =>
-      Value(
-        kind,
-        bytes = slice(i, value.bytes),
-        integers = slice(i, value.integers),
-        longs = slice(i, value.longs),
-        doubles = slice(i, value.doubles),
-        booleans = slice(i, value.booleans),
-        strings = slice(i, value.strings))
+      slotKind match {
+        case AtomicType.Byte => Value(DataType(kind), bytes = slice(i, value.bytes))
+        case AtomicType.Integer => Value(DataType(kind), integers = slice(i, value.integers))
+        case AtomicType.Long => Value(DataType(kind), longs = slice(i, value.longs))
+        case AtomicType.Double => Value(DataType(kind), doubles = slice(i, value.doubles))
+        case AtomicType.String => Value(DataType(kind), strings = slice(i, value.strings))
+        case AtomicType.Boolean => Value(DataType(kind), booleans = slice(i, value.booleans))
+        case _ => throw new IllegalArgumentException(s"Invalid kind: $kind")
+      }
     }
   }
 

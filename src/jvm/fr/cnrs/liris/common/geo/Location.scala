@@ -104,6 +104,7 @@ class LatLng private(private val inner: S2LatLng) extends Location {
 
   override def equals(other: Any): Boolean = other match {
     case ll: LatLng => ll.inner == inner
+    case pt: Point => equals(pt.toLatLng)
     case _ => false
   }
 
@@ -239,6 +240,12 @@ case class Point(x: Double, y: Double) extends Location {
   override def toPoint: Point = this
 
   override def toSeq: Seq[Double] = Seq(x, y)
+
+  override def equals(other: Any): Boolean = other match {
+    case pt: Point => pt.x == x && pt.y == y
+    case ll: LatLng => equals(ll.toPoint)
+    case _ => false
+  }
 }
 
 /**
