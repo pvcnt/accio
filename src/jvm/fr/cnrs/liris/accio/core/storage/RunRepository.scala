@@ -57,14 +57,6 @@ trait RunRepository {
    * @param cacheKey Cache key.
    */
   def get(cacheKey: CacheKey): Option[OpResult]
-
-  /**
-   * Check whether a specific run exists.
-   *
-   * @param id Run identifier.
-   * @return True if the run exists, false otherwise.
-   */
-  def contains(id: RunId): Boolean
 }
 
 /**
@@ -100,7 +92,7 @@ trait MutableRunRepository extends RunRepository {
 }
 
 /**
- * Query to search for runs. Please note that you have to specify a maximum number of results.
+ * Query to search for runs.
  *
  * @param workflow   Only include runs being instances of a given workflow.
  * @param owner      Only include runs initiated by a given user.
@@ -131,7 +123,7 @@ case class RunList(results: Seq[Run], totalCount: Int)
 
 /**
  * Query to search for logs. It is only possible to search for logs issued by a specific task (i.e., a run/node
- * combination). Please note that you have to specify a maximum number of results.
+ * combination).
  *
  * @param runId      Run for which to retrieve the logs.
  * @param nodeName   Node for which to retrieve the logs.

@@ -69,19 +69,15 @@ private[storage] abstract class WorkflowRepositorySpec extends UnitSpec {
 
   it should "save and retrieve workflows" in {
     val repo = createRepository
-    repo.contains(workflow1.id) shouldBe false
     repo.get(workflow1.id) shouldBe None
-    repo.contains(workflow2.id) shouldBe false
     repo.get(workflow2.id) shouldBe None
 
     repo.save(workflow1)
     refreshBeforeSearch()
-    repo.contains(workflow1.id) shouldBe true
     repo.get(workflow1.id) shouldBe Some(workflow1)
 
     repo.save(workflow2)
     refreshBeforeSearch()
-    repo.contains(workflow2.id) shouldBe true
     repo.get(workflow2.id) shouldBe Some(workflow2)
   }
 
@@ -108,22 +104,6 @@ private[storage] abstract class WorkflowRepositorySpec extends UnitSpec {
     res = repo.find(WorkflowQuery(owner = Some("me"), limit = 2, offset = Some(2)))
     res.totalCount shouldBe 3
     res.results should contain theSameElementsInOrderAs Seq(workflows(1)).map(unsetNodes)
-  }
-
-  it should "check whether a workflow exists at a specific version" in {
-    val repo = createRepository
-    val workflows = Seq(
-      workflow1,
-      workflow1.copy(version = "v2"),
-      workflow2)
-    workflows.foreach(repo.save)
-    refreshBeforeSearch()
-
-    repo.contains(workflow1.id, "v1") shouldBe true
-    repo.contains(workflow1.id, "v2") shouldBe true
-    repo.contains(workflow1.id, "v3") shouldBe false
-    repo.contains(workflow2.id, "v1") shouldBe true
-    repo.contains(workflow2.id, "v2") shouldBe false
   }
 
   it should "retrieve a workflow at a specific version" in {

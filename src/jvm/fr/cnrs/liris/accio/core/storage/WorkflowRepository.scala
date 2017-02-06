@@ -49,23 +49,6 @@ trait WorkflowRepository {
    * @param version Version identifier.
    */
   def get(id: WorkflowId, version: String): Option[Workflow]
-
-  /**
-   * Check whether a specific workflow exists.
-   *
-   * @param id Workflow identifier.
-   * @return True if the workflow exists, false otherwise.
-   */
-  def contains(id: WorkflowId): Boolean
-
-  /**
-   * Check whether a specific workflow exists at a specific version.
-   *
-   * @param id      Workflow identifier.
-   * @param version Version identifier.
-   * @return True if the workflow exists, false otherwise.
-   */
-  def contains(id: WorkflowId, version: String): Boolean
 }
 
 /**

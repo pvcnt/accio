@@ -88,17 +88,13 @@ final class LocalRunRepository(rootDir: Path) extends LocalStorage with MutableR
         }
       }
     }
-    logger.debug(s"Saved ${logs.size} logs")
   }
 
   override def get(id: RunId): Option[Run] = read(runPath(id), Run)
 
-  override def contains(id: RunId): Boolean = runPath(id).toFile.exists()
-
   override def remove(id: RunId): Unit = {
     FileUtils.safeDelete(runPath(id))
     FileUtils.safeDelete(logsPath(id))
-    logger.debug(s"Removed run ${id.value}")
   }
 
   override def get(cacheKey: CacheKey): Option[OpResult] = None

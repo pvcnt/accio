@@ -70,11 +70,7 @@ final class LocalWorkflowRepository(rootDir: Path) extends LocalStorage with Mut
 
   override def get(id: WorkflowId, version: String): Option[Workflow] = read(id, version)
 
-  override def contains(id: WorkflowId): Boolean = latestPath(id).toFile.exists
-
-  override def contains(id: WorkflowId, version: String): Boolean = {
-    workflowPath(id, version).toFile.exists
-  }
+  private def contains(id: WorkflowId, version: String): Boolean = workflowPath(id, version).toFile.exists
 
   private def workflowPath(id: WorkflowId): Path = rootDir.resolve(id.value)
 

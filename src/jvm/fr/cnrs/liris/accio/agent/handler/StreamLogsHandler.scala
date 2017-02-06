@@ -34,15 +34,8 @@ class StreamLogsHandler @Inject()(runRepository: MutableRunRepository)
 
   @throws[InvalidTaskException]
   override def handle(req: StreamLogsRequest): Future[StreamLogsResponse] = {
-    // There is not need to lock here, as logs are append-only. We only take care of not inserting logs belonging
-    // to an unknown run (that could have been killed or deleted in between).
-    val runIds = req.logs.map(_.runId).toSet
-    val unknownRunIds = runIds.filterNot(runRepository.contains)
-    unknownRunIds.foreach { runId =>
-      // We do not throw an exception because it can be a "normal" situation (if the thread sending logs is stopping).
-      logger.warn(s"Received logs from unknown run ${runId.value}")
-    }
-    runRepository.save(req.logs.filterNot(log => unknownRunIds.contains(log.runId)))
+    // There is not need to lock here, as logs are append-only.
+    runRepository.save(req.logs)
     Future(StreamLogsResponse())
   }
 }

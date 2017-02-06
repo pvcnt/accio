@@ -131,9 +131,6 @@ final class ElasticRunRepository(
     val f = client.execute {
       indexInto(runsIndex / runsType).id(run.id.value).source(json)
     }
-    f.onSuccess {
-      case _ => logger.debug(s"Saved run ${run.id.value}")
-    }
     f.onFailure {
       case e: Throwable => logger.error(s"Error while saving run ${run.id.value}", e)
     }
@@ -146,9 +143,6 @@ final class ElasticRunRepository(
       indexInto(logsIndex / logsType).source(json)
     }
     val f = client.execute(bulk(actions))
-    f.onSuccess {
-      case resp => logger.debug(s"Saved ${resp.successes.size}/${logs.size} logs")
-    }
     f.onFailure {
       case e: Throwable => logger.error(s"Error while saving ${logs.size} logs", e)
     }
@@ -169,18 +163,6 @@ final class ElasticRunRepository(
         case e: Throwable =>
           logger.error(s"Error while retrieving run ${id.value}", e)
           None
-      }
-    Await.result(f, queryTimeout)
-  }
-
-  override def contains(id: RunId): Boolean = {
-    val f = client.execute(ElasticDsl.get(id.value).from(runsIndex / runsType))
-      .map(resp => !resp.isSourceEmpty)
-      .recover {
-        case _: IndexNotFoundException => false
-        case e: Throwable =>
-          logger.error(s"Error while retrieving run ${id.value}", e)
-          false
       }
     Await.result(f, queryTimeout)
   }

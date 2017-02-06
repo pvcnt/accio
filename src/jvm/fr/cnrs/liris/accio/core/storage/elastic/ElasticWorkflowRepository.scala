@@ -162,31 +162,6 @@ class ElasticWorkflowRepository(
     Await.result(f, queryTimeout)
   }
 
-  override def contains(id: WorkflowId): Boolean = {
-    val f = client.execute {
-      search(workflowsIndex / workflowsType).query(termQuery("id.value", id.value)).size(1)
-    }.map { resp =>
-      resp.totalHits > 0
-    }.recover {
-      case _: IndexNotFoundException => false
-      case e: Throwable =>
-        logger.error(s"Error while retrieving workflow ${id.value}", e)
-        false
-    }
-    Await.result(f, queryTimeout)
-  }
-
-  override def contains(id: WorkflowId, version: String): Boolean = {
-    val f = client.execute {
-      ElasticDsl.get(s"${id.value}:$version").from(workflowsIndex / workflowsType)
-    }.map { resp =>
-      !resp.isSourceEmpty
-    }.recover {
-      case _: Throwable => false
-    }
-    Await.result(f, queryTimeout)
-  }
-
   private def internalId(id: WorkflowId, version: String) = s"${id.value}:$version"
 
   private def workflowsIndex = s"${prefix}workflows"

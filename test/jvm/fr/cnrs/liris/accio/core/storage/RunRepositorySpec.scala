@@ -84,28 +84,27 @@ private[storage] abstract class RunRepositorySpec extends UnitSpec {
 
   it should "save and retrieve runs" in {
     val repo = createRepository
-    repo.contains(foobarRun.id) shouldBe false
     repo.get(foobarRun.id) shouldBe None
-    repo.contains(fooRun.id) shouldBe false
     repo.get(fooRun.id) shouldBe None
 
     repo.save(foobarRun)
     refreshBeforeSearch()
-    repo.contains(foobarRun.id) shouldBe true
     repo.get(foobarRun.id) shouldBe Some(foobarRun)
 
     repo.save(fooRun)
     refreshBeforeSearch()
     repo.get(fooRun.id) shouldBe Some(fooRun)
-    repo.contains(fooRun.id) shouldBe true
   }
 
   it should "delete runs" in {
     val repo = createRepository
     repo.save(foobarRun)
-    repo.contains(foobarRun.id) shouldBe true
+    refreshBeforeSearch()
+    repo.get(foobarRun.id) shouldBe Some(foobarRun)
+
     repo.remove(foobarRun.id)
-    repo.contains(foobarRun.id) shouldBe false
+    refreshBeforeSearch()
+    repo.get(foobarRun.id) shouldBe None
   }
 
   it should "search for runs" in {
