@@ -100,6 +100,7 @@ trait MutableRunRepository extends RunRepository {
  * @param status     Only include runs whose status belong to those specified.
  * @param parent     Only include runs being a child of a given run.
  * @param clonedFrom Only include runs being cloned from of a given run.
+ * @param q          Multi-criteria search among workflow, owner, name and tags.
  * @param limit      Maximum number of matching runs to return.
  * @param offset     Number of matching runs to skip.
  */
@@ -110,6 +111,7 @@ case class RunQuery(
   status: Set[RunStatus] = Set.empty,
   parent: Option[RunId] = None,
   clonedFrom: Option[RunId] = None,
+  q: Option[String] = None,
   limit: Option[Int] = None,
   offset: Option[Int] = None) {
 

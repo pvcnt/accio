@@ -19,7 +19,7 @@
 package fr.cnrs.liris.accio.core.storage.elastic
 
 import com.google.inject.Singleton
-import com.sksamuel.elastic4s.ElasticDsl._
+import com.sksamuel.elastic4s.ElasticDsl.{matchQuery, _}
 import com.sksamuel.elastic4s.analyzers.KeywordAnalyzer
 import com.sksamuel.elastic4s.mappings.MappingDefinition
 import com.sksamuel.elastic4s.{ElasticClient, ElasticDsl}
@@ -59,7 +59,7 @@ final class ElasticRunRepository(
   override def find(query: RunQuery): RunList = {
     var q = boolQuery()
     query.owner.foreach { owner =>
-      q = q.must(termQuery("owner.name", owner))
+      q = q.must(matchQuery("owner.name", owner))
     }
     if (query.status.nonEmpty) {
       q = q.filter(termsQuery("state.status", query.status.map(_.value)))
@@ -76,6 +76,14 @@ final class ElasticRunRepository(
     query.parent match {
       case Some(parent) => q = q.filter(termQuery("parent.value", parent.value))
       case None => q = q.filter(not(existsQuery("parent")))
+    }
+    query.q.foreach { qs =>
+      q = q.must(boolQuery()
+        .should(matchQuery("owner.name", qs))
+        .should(matchQuery("name", qs))
+        .should(termQuery("pkg.workflow_id.value", qs))
+        .should(qs.split(" ").map(s => termQuery("tags", s)))
+        .minimumShouldMatch(1))
     }
 
     val s = search(runsIndex / runsType)

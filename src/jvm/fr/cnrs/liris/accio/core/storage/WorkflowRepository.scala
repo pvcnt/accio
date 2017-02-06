@@ -74,12 +74,14 @@ trait MutableWorkflowRepository extends WorkflowRepository {
  *
  * @param owner  Only include workflows owner by a given user.
  * @param name   Only include runs whose name matches a given string. Exact interpretation can be implementation-dependant.
+ * @param q      Multi-criteria search among owner and name.
  * @param limit  Maximum number of matching workflows to return. Must be in [1,100].
  * @param offset Number of matching workflows to skip.
  */
 case class WorkflowQuery(
   owner: Option[String] = None,
   name: Option[String] = None,
+  q: Option[String] = None,
   limit: Int = 25,
   offset: Option[Int] = None) {
   require(limit > 0 && limit <= 100, s"Maximum number of workflow must be in [1,100] (got $limit)")

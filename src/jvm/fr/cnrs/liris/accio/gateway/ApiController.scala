@@ -44,9 +44,9 @@ class ApiController @Inject()(client: AgentService.FinagledClient) extends Contr
     val req = ListWorkflowsRequest(
       name = httpReq.name,
       owner = httpReq.owner,
+      q = httpReq.q,
       limit = Some(httpReq.perPage),
       offset = Some(offset))
-
     client.listWorkflows(req).map { resp =>
       ResultListResponse(resp.results, resp.totalCount)
     }
@@ -79,9 +79,9 @@ class ApiController @Inject()(client: AgentService.FinagledClient) extends Contr
       clonedFrom = httpReq.clonedFrom.map(RunId.apply),
       status = httpReq.status.map(v => RunStatus.valueOf(v).toSet),
       tags = httpReq.tags.map(explode(_, ",")),
+      q = httpReq.q,
       limit = Some(httpReq.perPage),
       offset = Some(offset))
-
     client.listRuns(req).map { resp =>
       ResultListResponse(resp.results, resp.totalCount)
     }
@@ -175,6 +175,7 @@ case class ListRunsHttpRequest(
   @QueryParam parent: Option[String],
   @QueryParam clonedFrom: Option[String],
   @QueryParam tags: Option[String],
+  @QueryParam q: Option[String],
   @QueryParam @Min(1) page: Int = 1,
   @QueryParam @Min(0) @Max(50) perPage: Int = 15)
 
@@ -197,6 +198,7 @@ case class KillRunHttpRequest(@RouteParam id: String)
 case class ListWorkflowsHttpRequest(
   @QueryParam owner: Option[String],
   @QueryParam name: Option[String],
+  @QueryParam q: Option[String],
   @QueryParam @Min(1) page: Int = 1,
   @QueryParam @Min(0) @Max(50) perPage: Int = 15)
 

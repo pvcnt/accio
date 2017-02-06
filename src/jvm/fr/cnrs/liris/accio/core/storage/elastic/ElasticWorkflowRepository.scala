@@ -56,10 +56,16 @@ class ElasticWorkflowRepository(
   override def find(query: WorkflowQuery): WorkflowList = {
     var q = boolQuery().filter(termQuery("is_active", 1))
     query.owner.foreach { owner =>
-      q = q.filter(termQuery("owner.name", owner))
+      q = q.must(matchQuery("owner.name", owner))
     }
     query.name.foreach { name =>
       q = q.must(matchQuery("name", name))
+    }
+    query.q.foreach { qs =>
+      q = q.must(boolQuery()
+        .should(matchQuery("name", qs))
+        .should(matchQuery("owner.name", qs))
+        .minimumShouldMatch(1))
     }
 
     val s = search(workflowsIndex / workflowsType)

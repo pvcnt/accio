@@ -64,8 +64,9 @@ struct GetWorkflowResponse {
 struct ListWorkflowsRequest {
   1: optional string owner;
   2: optional string name;
-  3: optional i32 limit;
-  4: optional i32 offset;
+  3: optional string q;
+  4: optional i32 limit;
+  5: optional i32 offset;
 }
 
 struct ListWorkflowsResponse {
@@ -99,6 +100,7 @@ struct ListRunsRequest {
   6: optional set<string> tags;
   7: optional common.RunId parent;
   8: optional common.RunId cloned_from;
+  9: optional string q;
   10: optional i32 limit;
   11: optional i32 offset;
 }
