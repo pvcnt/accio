@@ -38,7 +38,7 @@ import scala.collection.JavaConverters._
 final class LocalRunRepository(rootDir: Path) extends LocalStorage with MutableRunRepository with StrictLogging {
   override def find(query: RunQuery): RunList = {
     var results = listIds(runsPath)
-      .flatMap(id => get(RunId(id))).filter(matches(_, query))
+      .flatMap(id => get(RunId(id))).filter(query.matches)
       .sortWith((a, b) => a.createdAt > b.createdAt)
 
     val totalCount = results.size
@@ -98,35 +98,6 @@ final class LocalRunRepository(rootDir: Path) extends LocalStorage with MutableR
   }
 
   override def get(cacheKey: CacheKey): Option[OpResult] = None
-
-  private def matches(run: Run, query: RunQuery): Boolean = {
-    if (query.workflow.isDefined && query.workflow.get != run.pkg.workflowId) {
-      return false
-    }
-    if (query.name.isDefined && !run.name.contains(query.name.get)) {
-      return false
-    }
-    if (query.owner.isDefined && query.owner.get != run.owner.name) {
-      return false
-    }
-    if (query.status.nonEmpty && !query.status.contains(run.state.status)) {
-      return false
-    }
-    if (query.clonedFrom.isDefined && !run.clonedFrom.contains(query.clonedFrom.get)) {
-      return false
-    }
-    query.parent match {
-      case Some(parent) =>
-        if (!run.parent.contains(parent)) {
-          return false
-        }
-      case None =>
-        if (run.parent.isDefined) {
-          return false
-        }
-    }
-    true
-  }
 
   private def runsPath = rootDir.resolve("runs")
 

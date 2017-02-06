@@ -39,13 +39,9 @@ final class LocalWorkflowRepository(rootDir: Path) extends LocalStorage with Mut
       .filter(_.isDirectory)
       .map(_.getName)
       .flatMap(dirname => get(WorkflowId(dirname)))
+      .filter(query.matches)
+      .sortWith((a, b) => a.createdAt > b.createdAt)
 
-    // Filter results by specified criteria.
-    query.owner.foreach { owner => results = results.filter(_.owner.name == owner) }
-    query.name.foreach { name => results = results.filter(_.name.contains(name)) }
-
-    // Sort the results in descending chronological order (after filtering and before slicing), count and slice.
-    results = results.sortWith((a, b) => a.createdAt > b.createdAt)
     val totalCount = results.size
     query.offset.foreach { offset => results = results.drop(offset) }
     results = results.take(query.limit)

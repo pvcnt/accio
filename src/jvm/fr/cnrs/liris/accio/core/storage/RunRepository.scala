@@ -111,7 +111,27 @@ case class RunQuery(
   parent: Option[RunId] = None,
   clonedFrom: Option[RunId] = None,
   limit: Option[Int] = None,
-  offset: Option[Int] = None)
+  offset: Option[Int] = None) {
+
+  def matches(run: Run): Boolean = {
+    if (workflow.isDefined && workflow.get != run.pkg.workflowId) {
+      false
+    } else if (name.isDefined && !run.name.contains(name.get)) {
+      false
+    } else if (owner.isDefined && owner.get != run.owner.name) {
+      false
+    } else if (status.nonEmpty && !status.contains(run.state.status)) {
+      false
+    } else if (clonedFrom.isDefined && !run.clonedFrom.contains(clonedFrom.get)) {
+      false
+    } else {
+      parent match {
+        case Some(parentId) => run.parent.contains(parentId)
+        case None => run.parent.isEmpty
+      }
+    }
+  }
+}
 
 /**
  * List of runs and total number of results.

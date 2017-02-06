@@ -83,6 +83,16 @@ case class WorkflowQuery(
   limit: Int = 25,
   offset: Option[Int] = None) {
   require(limit > 0 && limit <= 100, s"Maximum number of workflow must be in [1,100] (got $limit)")
+
+  def matches(workflow: Workflow): Boolean = {
+    if (name.isDefined && !workflow.name.contains(name.get)) {
+      false
+    } else if (owner.isDefined && owner.get != workflow.owner.name) {
+      false
+    } else {
+      true
+    }
+  }
 }
 
 /**
