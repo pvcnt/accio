@@ -99,11 +99,12 @@ private[storage] abstract class RunRepositorySpec extends UnitSpec {
   it should "delete runs" in {
     val repo = createRepository
     repo.save(foobarRun)
+    repo.save(fooRun)
     refreshBeforeSearch()
-    repo.get(foobarRun.id) shouldBe Some(foobarRun)
 
     repo.remove(foobarRun.id)
     refreshBeforeSearch()
+    repo.get(fooRun.id) shouldBe Some(fooRun)
     repo.get(foobarRun.id) shouldBe None
   }
 
@@ -174,7 +175,7 @@ private[storage] abstract class RunRepositorySpec extends UnitSpec {
 
   private def unsetResult(run: Run) = run.copy(state = run.state.copy(nodes = run.state.nodes.map(_.unsetResult)))
 
-  private[this] def randomId: RunId = RunId(UUID.randomUUID().toString)
+  private def randomId: RunId = RunId(UUID.randomUUID().toString)
 }
 
 private[storage] trait RunRepositorySpecWithMemoization extends RunRepositorySpec {

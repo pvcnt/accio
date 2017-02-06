@@ -20,7 +20,6 @@ package fr.cnrs.liris.accio.core.storage.local
 
 import java.nio.file.{Files, Path, StandardOpenOption}
 
-import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.storage.{LogsQuery, MutableRunRepository, RunList, RunQuery}
 import fr.cnrs.liris.accio.core.util.LocalStorage
@@ -35,7 +34,7 @@ import scala.collection.JavaConverters._
  *
  * @param rootDir Root directory under which to store files.
  */
-final class LocalRunRepository(rootDir: Path) extends LocalStorage with MutableRunRepository with StrictLogging {
+final class LocalRunRepository(rootDir: Path) extends LocalStorage with MutableRunRepository {
   override def find(query: RunQuery): RunList = {
     var results = listIds(runsPath)
       .flatMap(id => get(RunId(id))).filter(query.matches)
@@ -73,7 +72,6 @@ final class LocalRunRepository(rootDir: Path) extends LocalStorage with MutableR
 
   override def save(run: Run): Unit = {
     write(run, runPath(run.id))
-    logger.debug(s"Saved run ${run.id.value}")
   }
 
   override def save(logs: Seq[RunLog]): Unit = {

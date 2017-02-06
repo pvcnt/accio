@@ -62,8 +62,7 @@ final class ElasticRunRepository(
       q = q.must(termQuery("owner.name", owner))
     }
     if (query.status.nonEmpty) {
-      val qs = query.status.map(v => termQuery("state.status", v.value))
-      q = q.should(qs).minimumShouldMatch(1)
+      q = q.filter(termsQuery("state.status", query.status.map(_.value)))
     }
     query.workflow.foreach { workflowId =>
       q = q.filter(termQuery("pkg.workflow_id.value", workflowId.value))

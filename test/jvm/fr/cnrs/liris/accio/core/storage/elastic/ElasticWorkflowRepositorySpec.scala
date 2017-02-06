@@ -19,6 +19,7 @@
 package fr.cnrs.liris.accio.core.storage.elastic
 
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 
 import fr.cnrs.liris.accio.core.storage.{MutableWorkflowRepository, WorkflowRepositorySpec}
 
@@ -28,19 +29,16 @@ import scala.concurrent.duration.Duration
  * Unit tests of [[ElasticWorkflowRepository]].
  */
 class ElasticWorkflowRepositorySpec extends WorkflowRepositorySpec with ElasticStorageSpec {
-  private[this] var i = 0
+  behavior of "ElasticWorkflowRepository"
+
+  private[this] val i = new AtomicInteger
 
   override protected def createRepository: MutableWorkflowRepository = {
     // The node is node teared down at each test, which means data persists. We use a different indice each time to
     // start from a clean slate at each test.
-    i += 1
     val mapper = new ObjectMapperFactory().create()
-    new ElasticWorkflowRepository(mapper, client, s"accio$i", Duration.create(10, TimeUnit.SECONDS))
+    new ElasticWorkflowRepository(mapper, client, s"accio${i.incrementAndGet}", Duration.create(15, TimeUnit.SECONDS))
   }
 
-  override protected def refreshBeforeSearch(): Unit = {
-    refreshAll()
-  }
-
-  behavior of "ElasticWorkflowRepository"
+  override protected def refreshBeforeSearch(): Unit = refreshAll()
 }

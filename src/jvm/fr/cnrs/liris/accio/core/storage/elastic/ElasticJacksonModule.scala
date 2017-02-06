@@ -59,8 +59,15 @@ object ElasticJacksonModule extends SimpleModule {
   addDeserializer(classOf[GraphDef], new ScroogeStructDeserializer[GraphDef](GraphDef))
   addDeserializer(classOf[NodeDef], new ScroogeStructDeserializer[NodeDef](NodeDef))
   addDeserializer(classOf[ArgDef], new ScroogeStructDeserializer[ArgDef](ArgDef))
-  addDeserializer(classOf[InputDef], new ScroogeUnionDeserializer[InputDef](InputDef))
   addDeserializer(classOf[Reference], new ScroogeStructDeserializer[Reference](Reference))
+  addDeserializer(classOf[InputDef], new ScroogeUnionDeserializer[InputDef](InputDef))
+
+  // Task-related deserializers.
+  addDeserializer(classOf[TaskId], new ScroogeStructDeserializer[TaskId](TaskId))
+  addDeserializer(classOf[Task], new ScroogeStructDeserializer[Task](Task))
+  addDeserializer(classOf[OpPayload], new ScroogeStructDeserializer[OpPayload](OpPayload))
+  addDeserializer(classOf[TaskState], new ScroogeStructDeserializer[TaskState](TaskState))
+  addDeserializer(classOf[TaskStatus], new ScroogeEnumDeserializer[TaskStatus](TaskStatus))
 
   // Misc deserializers.
   addDeserializer(classOf[Value], new ScroogeStructDeserializer[Value](Value))

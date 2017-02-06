@@ -21,23 +21,23 @@ package fr.cnrs.liris.accio.core.storage.elastic
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
-import fr.cnrs.liris.accio.core.storage.{MutableRunRepository, RunRepositorySpecWithMemoization}
+import fr.cnrs.liris.accio.core.storage.{MutableTaskRepository, TaskRepositorySpec}
 
 import scala.concurrent.duration.Duration
 
 /**
- * Unit tests of [[ElasticRunRepository]].
+ * Unit tests of [[ElasticTaskRepository]].
  */
-class ElasticRunRepositorySpec extends RunRepositorySpecWithMemoization with ElasticStorageSpec {
-  behavior of "ElasticRunRepository"
+class ElasticTaskRepositorySpec extends TaskRepositorySpec with ElasticStorageSpec {
+  behavior of "ElasticTaskRepository"
 
   private[this] val i = new AtomicInteger
 
-  override protected def createRepository: MutableRunRepository = {
+  override protected def createRepository: MutableTaskRepository = {
     // The node is node teared down at each test, which means data persists. We use a different indice each time to
     // start from a clean slate at each test.
     val mapper = new ObjectMapperFactory().create()
-    new ElasticRunRepository(mapper, client, s"accio${i.incrementAndGet}", Duration.create(15, TimeUnit.SECONDS))
+    new ElasticTaskRepository(mapper, client, s"accio${i.incrementAndGet}", Duration.create(15, TimeUnit.SECONDS))
   }
 
   override protected def refreshBeforeSearch(): Unit = refreshAll()
