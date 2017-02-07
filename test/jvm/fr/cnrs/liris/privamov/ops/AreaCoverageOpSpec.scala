@@ -84,7 +84,7 @@ class AreaCoverageOpSpec extends UnitSpec with WithTraceGenerator with OperatorS
   it should "compute area coverage w.r.t. bucket size" in {
     val now = Instant.now()
     val level = 10
-    for (bucketSize <- Seq(Duration.standardSeconds(30), Duration.standardMinutes(5), Duration.standardMinutes(30), Duration.standardHours(1), Duration.standardDays(1))) {
+    for (width <- Seq(Duration.standardSeconds(30), Duration.standardMinutes(5), Duration.standardMinutes(30), Duration.standardHours(1), Duration.standardDays(1))) {
       val pt = LatLng.degrees(Random.nextDouble() * 180 - 90, Random.nextDouble() * 360 - 180)
       val cell = S2CellId.fromLatLng(pt.toS2).parent(level)
       val pts = Seq(
@@ -104,14 +104,14 @@ class AreaCoverageOpSpec extends UnitSpec with WithTraceGenerator with OperatorS
       val t2 = Trace(Me, Seq(
         Event(Me, pts(0).toPoint, now),
         Event(Me, pts(0).toPoint, now),
-        Event(Me, pts(0).toPoint, now.plus(bucketSize.getMillis + 1)),
-        Event(Me, pts(1).toPoint, now.plus(bucketSize.getMillis + 1)),
-        Event(Me, pts(1).toPoint, now.minus(bucketSize.getMillis + 1)),
+        Event(Me, pts(0).toPoint, now.plus(width.getMillis + 1)),
+        Event(Me, pts(1).toPoint, now.plus(width.getMillis + 1)),
+        Event(Me, pts(1).toPoint, now.minus(width.getMillis + 1)),
         Event(Me, pts(2).toPoint, now),
-        Event(Me, pts(3).toPoint, now.minus(bucketSize.getMillis + 1)),
+        Event(Me, pts(3).toPoint, now.minus(width.getMillis + 1)),
         Event(Me, pts(3).toPoint, now),
         Event(Me, pts(4).toPoint, now)))
-      val res = execute(Seq(t1), Seq(t2), level, Some(bucketSize))
+      val res = execute(Seq(t1), Seq(t2), level, Some(width))
       res.precision(Me) shouldBe 2d / 8
       res.recall(Me) shouldBe closeTo(2d / 3, eps)
       res.fscore(Me) shouldBe closeTo(2d * 2 / 8 * 2 / 3 * 1 / (2d / 8 + 2d / 3), eps)
@@ -121,6 +121,6 @@ class AreaCoverageOpSpec extends UnitSpec with WithTraceGenerator with OperatorS
   private def execute(train: Seq[Trace], test: Seq[Trace], level: Int, bucketSize: Option[Duration]) = {
     val trainDs = writeTraces(train: _*)
     val testDs = writeTraces(test: _*)
-    new AreaCoverageOp().execute(AreaCoverageIn(train = trainDs, test = testDs, level = level, bucketSize = bucketSize), ctx)
+    new AreaCoverageOp().execute(AreaCoverageIn(train = trainDs, test = testDs, level = level, width = bucketSize), ctx)
   }
 }

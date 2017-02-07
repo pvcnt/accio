@@ -321,7 +321,7 @@ Compute area coverage difference between two datasets of traces
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
 | `level` | integer; required | S2 cells levels |
-| `bucketSize` | duration; optional | Width of time buckets |
+| `width` | duration; optional | Width of time buckets |
 | `train` | dataset; required | Train dataset |
 | `test` | dataset; required | Test dataset |
 {: class="table table-striped"}

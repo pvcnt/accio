@@ -34,7 +34,7 @@ class AreaCoverageOp extends Operator[AreaCoverageIn, AreaCoverageOut] {
   override def execute(in: AreaCoverageIn, ctx: OpContext): AreaCoverageOut = {
     val train = ctx.read[Trace](in.train)
     val test = ctx.read[Trace](in.test)
-    val metrics = train.zip(test).map { case (ref, res) => evaluate(ref, res, in.level, in.bucketSize) }.toArray
+    val metrics = train.zip(test).map { case (ref, res) => evaluate(ref, res, in.level, in.width) }.toArray
     AreaCoverageOut(
       precision = metrics.map { case (k, v) => k -> v._1 }.toMap,
       recall = metrics.map { case (k, v) => k -> v._2 }.toMap,
@@ -69,7 +69,7 @@ class AreaCoverageOp extends Operator[AreaCoverageIn, AreaCoverageOut] {
 
 case class AreaCoverageIn(
   @Arg(help = "S2 cells levels") level: Int,
-  @Arg(help = "Width of time buckets") bucketSize: Option[Duration],
+  @Arg(help = "Width of time buckets") width: Option[Duration],
   @Arg(help = "Train dataset") train: Dataset,
   @Arg(help = "Test dataset") test: Dataset)
 
