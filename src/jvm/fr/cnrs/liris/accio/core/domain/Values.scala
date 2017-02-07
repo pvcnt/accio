@@ -265,6 +265,7 @@ object Values {
           }
         toString(seq, abbreviate)
       case AtomicType.Dataset => decodeDataset(value).uri
+      case AtomicType.Duration => TwitterDuration.fromMilliseconds(decodeDuration(value).getMillis).toString
       case _ => toString(decode(value))
     }
 

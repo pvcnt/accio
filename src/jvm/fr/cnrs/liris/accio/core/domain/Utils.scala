@@ -90,7 +90,7 @@ object Utils {
    */
   def label(params: Map[String, Value]): String = label(params.toSeq)
 
-  // In the following regex, +? is a so-called reluctant quantifier (i.e., not greedy).
+  // In the following regex, +? is a reluctant quantifier (i.e., not greedy).
   private[this] val ListRegex = "^list\\s*\\(\\s*(.+?)\\s*\\)$".r
   private[this] val SetRegex = "^set\\s*\\(\\s*(.+?)\\s*\\)$".r
   private[this] val MapRegex = "^map\\s*\\(\\s*(.+?),\\s*(.+?)\\s*\\)$".r
@@ -142,7 +142,7 @@ object Utils {
     dataType.base match {
       case AtomicType.List => s"list(${toString(dataType.args.head)})"
       case AtomicType.Set => s"set(${toString(dataType.args.head)})"
-      case AtomicType.Map => s"map(${toString(dataType.args.head)},${toString(dataType.args.last)})"
+      case AtomicType.Map => s"map(${toString(dataType.args.head)}, ${toString(dataType.args.last)})"
       case base => toString(base)
     }
 

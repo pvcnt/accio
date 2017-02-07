@@ -328,9 +328,9 @@ Compute area coverage difference between two datasets of traces
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `precision` | map(string,double) | Area coverage precision |
-| `recall` | map(string,double) | Area coverage recall |
-| `fscore` | map(string,double) | Area coverage F-score |
+| `precision` | map(string, double) | Area coverage precision |
+| `recall` | map(string, double) | Area coverage recall |
+| `fscore` | map(string, double) | Area coverage F-score |
 {: class="table table-striped"}
 
 ### BasicAnalyzer
@@ -344,9 +344,9 @@ Compute basic statistics about traces.
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `size` | map(string,long) | Trace size |
-| `length` | map(string,double) | Trace length |
-| `duration` | map(string,long) | Trace duration |
+| `size` | map(string, long) | Trace size |
+| `length` | map(string, double) | Trace length |
+| `duration` | map(string, long) | Trace duration |
 {: class="table table-striped"}
 
 ### CountQueriesDistortion
@@ -358,8 +358,8 @@ Evaluate count query distortion between to datasets.
 | `n` | integer; optional; default: 1000 | Number of queries to generate |
 | `minSize` | distance; optional; default: 500.0.meters | Minimum size of the generated queries' geographical area |
 | `maxSize` | distance; optional; default: 2000.0.meters | Maximum size of the generated queries' geographical area |
-| `minDuration` | duration; optional; default: PT7200S | Minimum duration of the generated queries' temporal window |
-| `maxDuration` | duration; optional; default: PT14400S | Maximum duration of the generated queries' temporal window |
+| `minDuration` | duration; optional; default: 2.hours | Minimum duration of the generated queries' temporal window |
+| `maxDuration` | duration; optional; default: 4.hours | Maximum duration of the generated queries' temporal window |
 | `train` | dataset; required | Train dataset |
 | `test` | dataset; required | Test dataset |
 {: class="table table-striped"}
@@ -381,7 +381,7 @@ Compute data completeness difference between two datasets of traces.
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `value` | map(string,double) | Data completeness |
+| `value` | map(string, double) | Data completeness |
 {: class="table table-striped"}
 
 ### PoisAnalyzer
@@ -412,8 +412,8 @@ Re-identification attack using POIs a the discriminating information.
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `distances` | map(string,map) | Distances between users from test and train datasets |
-| `matches` | map(string,string) | Matches between users from test and train datasets |
+| `distances` | map(string, map) | Distances between users from test and train datasets |
+| `matches` | map(string, string) | Matches between users from test and train datasets |
 | `rate` | double | Correct re-identifications rate |
 {: class="table table-striped"}
 
@@ -431,9 +431,9 @@ Compute POIs retrieval difference between two POIs datasets
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `precision` | map(string,double) | POIs retrieval precision |
-| `recall` | map(string,double) | POIs retrieval recall |
-| `fscore` | map(string,double) | POIs retrieval F-Score |
+| `precision` | map(string, double) | POIs retrieval precision |
+| `recall` | map(string, double) | POIs retrieval recall |
+| `fscore` | map(string, double) | POIs retrieval F-Score |
 {: class="table table-striped"}
 
 ### SpatialDistortion
@@ -449,11 +449,11 @@ Compute spatial distortion between two datasets of traces
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `min` | map(string,double) | Spatial distortion min |
-| `max` | map(string,double) | Spatial distortion max |
-| `stddev` | map(string,double) | Spatial distortion stddev |
-| `avg` | map(string,double) | Spatial distortion avg |
-| `median` | map(string,double) | Spatial distortion median |
+| `min` | map(string, double) | Spatial distortion min |
+| `max` | map(string, double) | Spatial distortion max |
+| `stddev` | map(string, double) | Spatial distortion stddev |
+| `avg` | map(string, double) | Spatial distortion avg |
+| `median` | map(string, double) | Spatial distortion median |
 {: class="table table-striped"}
 
 ### SpatioTemporalDistortion
@@ -468,11 +468,11 @@ Compute temporal distortion difference between two datasets of traces
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `min` | map(string,double) | Temporal distortion min |
-| `max` | map(string,double) | Temporal distortion max |
-| `stddev` | map(string,double) | Temporal distortion stddev |
-| `avg` | map(string,double) | Temporal distortion avg |
-| `median` | map(string,double) | Temporal distortion median |
+| `min` | map(string, double) | Temporal distortion min |
+| `max` | map(string, double) | Temporal distortion max |
+| `stddev` | map(string, double) | Temporal distortion stddev |
+| `avg` | map(string, double) | Temporal distortion avg |
+| `median` | map(string, double) | Temporal distortion median |
 {: class="table table-striped"}
 
 ### TransmissionDelay
@@ -487,7 +487,7 @@ Compute transmission delay between two datasets of traces
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `value` | map(string,long) | Transmission delay |
+| `value` | map(string, long) | Transmission delay |
 {: class="table table-striped"}
 
 ## Transform operators
