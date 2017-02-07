@@ -65,7 +65,7 @@ class SpatialDistortionOpSpec extends UnitSpec with WithTraceGenerator with Oper
     metrics.stddev(Me) shouldBe 0d
   }
 
-  it should "compute the spatial distortion" in {
+  it should "compute spatial distortion" in {
     val t1 = randomTrace(Me, 120)
     val distances = DenseVector(Seq.fill(120)(Random.nextInt(5000).toDouble): _*)
     val t2 = t1.replace { events =>

@@ -18,8 +18,6 @@
 
 package fr.cnrs.liris.privamov.core.model
 
-import java.sql.Timestamp
-
 import com.github.nscala_time.time.Imports._
 import fr.cnrs.liris.common.geo.Point
 import org.joda.time.Instant
@@ -63,25 +61,4 @@ object Event {
    * @param time  Timestamp.
    */
   def apply(user: String, point: Point, time: Instant): Event = new Event(user, point, time, Map.empty)
-
-  /**
-   * Create an event.
-   *
-   * @param user  User identifier.
-   * @param point Location.
-   * @param time  SQL timestamp.
-   */
-  def apply(user: String, point: Point, time: Timestamp): Event =
-  new Event(user, point, new Instant(time.getTime), Map.empty)
-
-  /**
-   * Create an event with additional numeric properties.
-   *
-   * @param user  User identifier.
-   * @param point Location.
-   * @param time  Timestamp.
-   * @param props Numeric properties.
-   */
-  def apply(user: String, point: Point, time: Timestamp, props: Map[String, Double]): Event =
-  new Event(user, point, new Instant(time.getTime), props)
 }
