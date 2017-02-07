@@ -21,8 +21,8 @@ package fr.cnrs.liris.accio.core.storage.inject
 import java.nio.file.Path
 
 import com.google.inject.{AbstractModule, Provides, Singleton}
-import fr.cnrs.liris.accio.core.storage.{MutableRunRepository, MutableWorkflowRepository}
-import fr.cnrs.liris.accio.core.storage.local.{LocalRunRepository, LocalWorkflowRepository}
+import fr.cnrs.liris.accio.core.storage.{MutableRunRepository, MutableTaskRepository, MutableWorkflowRepository}
+import fr.cnrs.liris.accio.core.storage.local.{LocalRunRepository, LocalTaskRepository, LocalWorkflowRepository}
 import net.codingwell.scalaguice.ScalaModule
 
 /**
@@ -52,5 +52,12 @@ final class LocalStorageModule(config: LocalStorageConfig) extends AbstractModul
   def providesWorkflowRepository: MutableWorkflowRepository = {
     // Repository must be a singleton, otherwise the locking mechanism won't work.
     new LocalWorkflowRepository(config.path.resolve("workflows"))
+  }
+
+  @Singleton
+  @Provides
+  def providesTaskRepository: MutableTaskRepository = {
+    // Repository must be a singleton, otherwise the locking mechanism won't work.
+    new LocalTaskRepository(config.path.resolve("tasks"))
   }
 }

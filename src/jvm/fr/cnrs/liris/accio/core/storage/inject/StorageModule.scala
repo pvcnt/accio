@@ -22,14 +22,13 @@ import java.nio.file.Paths
 
 import com.twitter.inject.TwitterModule
 import com.twitter.util.Duration
-import fr.cnrs.liris.accio.core.storage.{MutableRunRepository, MutableWorkflowRepository, RunRepository, WorkflowRepository}
+import fr.cnrs.liris.accio.core.storage._
 
 /**
- * Guice module provisioning the [[fr.cnrs.liris.accio.core.storage.MutableRunRepository]] and
- * [[fr.cnrs.liris.accio.core.storage.MutableWorkflowRepository]] services.
+ * Guice module provisioning storage-related services.
  */
 object StorageModule extends TwitterModule {
-  private[this] val storageFlag = flag("storage.type", "local", "Storage type")
+  private[this] val storageFlag = flag("storage.type", "memory", "Storage type")
 
   // Local storage configuration.
   private[this] val localStoragePathFlag = flag[String]("storage.local.path", "Path where to store data")
@@ -41,8 +40,8 @@ object StorageModule extends TwitterModule {
 
   protected override def configure(): Unit = {
     val module = storageFlag() match {
-      case "local" =>
-        new LocalStorageModule(LocalStorageConfig(Paths.get(localStoragePathFlag())))
+      case "memory" => new MemoryStorageModule
+      case "local" => new LocalStorageModule(LocalStorageConfig(Paths.get(localStoragePathFlag())))
       case "es" =>
         val config = ElasticStorageConfig(esStorageAddrFlag(), esStoragePrefixFlag(), esStorageQueryTimeoutFlag())
         new ElasticStorageModule(config)
@@ -53,5 +52,6 @@ object StorageModule extends TwitterModule {
     // Bind read-only repositories to mutable repositories.
     bind[RunRepository].to[MutableRunRepository]
     bind[WorkflowRepository].to[MutableWorkflowRepository]
+    bind[TaskRepository].to[MutableTaskRepository]
   }
 }

@@ -158,4 +158,17 @@ case class LogsQuery(
   nodeName: String,
   classifier: Option[String] = None,
   limit: Option[Int] = None,
-  since: Option[Time] = None)
+  since: Option[Time] = None) {
+
+  def matches(log: RunLog): Boolean = {
+    if (log.runId != runId || log.nodeName != nodeName) {
+      false
+    } else if (classifier.isDefined && log.classifier != classifier.get) {
+      false
+    } else if (since.isDefined && log.createdAt <= since.get.inMillis) {
+      false
+    } else {
+      true
+    }
+  }
+}

@@ -37,7 +37,8 @@ import scala.collection.JavaConverters._
 final class LocalRunRepository(rootDir: Path) extends LocalStorage with MutableRunRepository {
   override def find(query: RunQuery): RunList = {
     var results = listIds(runsPath)
-      .flatMap(id => get(RunId(id))).filter(query.matches)
+      .flatMap(id => get(RunId(id)))
+      .filter(query.matches)
       .sortWith((a, b) => a.createdAt > b.createdAt)
 
     val totalCount = results.size

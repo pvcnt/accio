@@ -25,23 +25,34 @@ import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Charsets
 
 /**
- * Helper managing recording of output streams.
+ * Helper allowing to record stdout and stderr.
  */
 object StdOutErr {
   private[this] val stdoutBytes = new ByteArrayOutputStream
   private[this] val stderrBytes = new ByteArrayOutputStream
 
+  /**
+   * Start recording stdout and stderr. It does not suppress the console output. This method is *not* thread-safe.
+   */
   def record(): Unit = {
     System.setOut(new PrintStream(new ComposedOutputStream(Seq(System.out, stdoutBytes))))
     System.setErr(new PrintStream(new ComposedOutputStream(Seq(System.err, stderrBytes))))
   }
 
+  /**
+   * Return stdout since last call to this method. This method is not strictly thread-safe, i.e., if something is
+   * written to stdout between the time the stdout record is read and flushed, it will be lost.
+   */
   def stdoutAsString: String = synchronized {
     val content = new String(stdoutBytes.toByteArray, Charsets.UTF_8)
     stdoutBytes.reset()
     content
   }
 
+  /**
+   * Return stderr since last call to this method. This method is not strictly thread-safe, i.e., if something is
+   * written to stderr between the time the stderr record is read and flushed, it will be lost.
+   */
   def stderrAsString: String = synchronized {
     val content = new String(stderrBytes.toByteArray, Charsets.UTF_8)
     stderrBytes.reset()
@@ -49,6 +60,11 @@ object StdOutErr {
   }
 }
 
+/**
+ * Implementation of an output stream forwarding calls to multiple underlying output streams.
+ *
+ * @param streams Output streams to forward calls to.
+ */
 @VisibleForTesting
 private[executor] class ComposedOutputStream(streams: Seq[OutputStream]) extends OutputStream {
   override def write(i: Int): Unit = streams.foreach(_.write(i))

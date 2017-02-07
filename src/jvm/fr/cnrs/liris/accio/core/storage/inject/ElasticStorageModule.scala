@@ -21,8 +21,8 @@ package fr.cnrs.liris.accio.core.storage.inject
 import com.google.inject.{Provides, Singleton}
 import com.sksamuel.elastic4s.{ElasticClient, ElasticsearchClientUri}
 import com.twitter.util.{Duration => TwitterDuration}
-import fr.cnrs.liris.accio.core.storage.elastic.{ElasticRunRepository, ElasticWorkflowRepository, ObjectMapperFactory}
-import fr.cnrs.liris.accio.core.storage.{MutableRunRepository, MutableWorkflowRepository}
+import fr.cnrs.liris.accio.core.storage.elastic.{ElasticRunRepository, ElasticTaskRepository, ElasticWorkflowRepository, ObjectMapperFactory}
+import fr.cnrs.liris.accio.core.storage.{MutableRunRepository, MutableTaskRepository, MutableWorkflowRepository}
 import net.codingwell.scalaguice.ScalaModule
 import org.elasticsearch.common.settings.Settings
 
@@ -57,6 +57,13 @@ final class ElasticStorageModule(config: ElasticStorageConfig) extends ScalaModu
   def providesWorkflowRepository(mapperFactory: ObjectMapperFactory): MutableWorkflowRepository = {
     val mapper = mapperFactory.create()
     new ElasticWorkflowRepository(mapper, client, config.prefix, ScalaDuration.fromNanos(config.queryTimeout.inNanoseconds))
+  }
+
+  @Singleton
+  @Provides
+  def providesTaskRepository(mapperFactory: ObjectMapperFactory): MutableTaskRepository = {
+    val mapper = mapperFactory.create()
+    new ElasticTaskRepository(mapper, client, config.prefix, ScalaDuration.fromNanos(config.queryTimeout.inNanoseconds))
   }
 
   private lazy val client = {

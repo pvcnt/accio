@@ -61,7 +61,7 @@ trait WorkflowRepository {
  */
 trait MutableWorkflowRepository extends WorkflowRepository {
   /**
-   * Save a run. It will either create a new workflow or a new version if there is already one with the same
+   * Save a workflow. It will either create a new workflow or a new version if there is already one with the same
    * identifier. Workflows are never replaced.
    *
    * @param workflow Workflow to save.
