@@ -16,23 +16,22 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.scheduler.inject
+package fr.cnrs.liris.accio.core.scheduler.gridengine
 
 import com.google.inject.Provides
 import fr.cnrs.liris.accio.core.scheduler.Scheduler
-import fr.cnrs.liris.accio.core.scheduler.local.{LocalScheduler, LocalSchedulerConfig}
 import net.codingwell.scalaguice.ScalaModule
 
 /**
- * Guice module provisioning a local scheduler.
+ * Guice module provisioning a GridEngine scheduler.
  *
- * @param config Local scheduler configuration.
+ * @param config GridEngine scheduler configuration.
  */
-class LocalSchedulerModule(config: LocalSchedulerConfig) extends ScalaModule {
+class GridEngineSchedulerModule(config: GridEngineSchedulerConfig) extends ScalaModule {
   override protected def configure(): Unit = {}
 
   @Provides
-  def providesScheduler(scheduler: LocalScheduler): Scheduler = {
+  def providesScheduler(scheduler: GridEngineScheduler): Scheduler = {
     scheduler.initialize(config)
   }
 }

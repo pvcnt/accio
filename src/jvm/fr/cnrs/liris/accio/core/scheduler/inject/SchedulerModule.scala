@@ -22,14 +22,16 @@ import java.nio.file.Paths
 
 import com.twitter.inject.{Injector, TwitterModule}
 import fr.cnrs.liris.accio.core.scheduler.Scheduler
-import fr.cnrs.liris.accio.core.scheduler.local.LocalSchedulerConfig
+import fr.cnrs.liris.accio.core.scheduler.gridengine.{GridEngineSchedulerConfig, GridEngineSchedulerModule}
+import fr.cnrs.liris.accio.core.scheduler.local.{LocalSchedulerConfig, LocalSchedulerModule}
 import fr.cnrs.liris.accio.core.uploader.inject.UploaderModule
 
 /**
- * Guice module provisioning the [[fr.cnrs.liris.accio.core.scheduler.Scheduler]] service.
+ * Guice module provisioning the [[Scheduler]] service.
  */
 object SchedulerModule extends TwitterModule {
   private[this] val advertiseFlag = flag("advertise", "127.0.0.1:9999", "Address to advertise to executors")
+
   private[this] val schedulerFlag = flag("scheduler.type", "local", "Scheduler type")
   private[this] val executorUriFlag = flag[String]("scheduler.executor_uri", "URI to the executor JAR")
   private[this] val javaHomeFlag = flag[String]("scheduler.java_home", "Path to JRE when launching the executor")

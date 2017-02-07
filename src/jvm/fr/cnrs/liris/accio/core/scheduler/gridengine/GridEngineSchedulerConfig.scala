@@ -16,16 +16,9 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.scheduler.inject
+package fr.cnrs.liris.accio.core.scheduler.gridengine
 
 import java.nio.file.Path
-
-import com.google.inject.{Provides, Singleton}
-import fr.cnrs.liris.accio.core.downloader.Downloader
-import fr.cnrs.liris.accio.core.scheduler.Scheduler
-import fr.cnrs.liris.accio.core.scheduler.gridengine.GridEngineScheduler
-import net.codingwell.scalaguice.ScalaModule
-import net.schmizz.sshj.SSHClient
 
 /**
  * Grid Engine scheduler configuration.
@@ -48,19 +41,3 @@ case class GridEngineSchedulerConfig(
   executorUri: String,
   javaHome: Option[String],
   executorArgs: Seq[String])
-
-/**
- * Guice module provisioning a local scheduler.
- *
- * @param config Configuration.
- */
-class GridEngineSchedulerModule(config: GridEngineSchedulerConfig) extends ScalaModule {
-  override protected def configure(): Unit = {}
-
-  @Singleton
-  @Provides
-  def providesScheduler(downloader: Downloader): Scheduler = {
-    val executorArgs = Seq("-addr", config.agentAddr) ++ config.executorArgs
-    new GridEngineScheduler(new SSHClient, downloader, config.workDir, config.host, config.user, config.prefix, config.executorUri, config.javaHome, executorArgs)
-  }
-}

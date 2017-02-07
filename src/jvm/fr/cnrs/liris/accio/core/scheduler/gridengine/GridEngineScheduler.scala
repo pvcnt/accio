@@ -19,11 +19,12 @@
 package fr.cnrs.liris.accio.core.scheduler.gridengine
 
 import java.io.{ByteArrayInputStream, InputStream}
-import java.nio.file.Path
 
+import com.google.inject.{Inject, Singleton}
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.downloader.Downloader
 import fr.cnrs.liris.accio.core.scheduler.{Job, Scheduler}
+import fr.cnrs.liris.accio.core.util.Configurable
 import net.schmizz.sshj.SSHClient
 import net.schmizz.sshj.common.IOUtils
 import net.schmizz.sshj.connection.channel.direct.Session
@@ -31,34 +32,30 @@ import net.schmizz.sshj.xfer.{FileSystemFile, InMemorySourceFile}
 
 import scala.collection.mutable
 
-class GridEngineScheduler(
-  client: SSHClient,
-  downloader: Downloader,
-  workDir: Path,
-  host: String,
-  user: String,
-  prefix: String,
-  executorUri: String,
-  javaHome: Option[String],
-  executorArgs: Seq[String])
-  extends Scheduler with StrictLogging {
+@Singleton
+class GridEngineScheduler @Inject()(client: SSHClient, downloader: Downloader)
+  extends Scheduler
+    with StrictLogging
+    with Configurable[GridEngineSchedulerConfig] {
 
   private[this] lazy val localExecutorPath = {
-    val targetPath = workDir.resolve("executor.jar")
+    val targetPath = config.workDir.resolve("executor.jar")
     if (targetPath.toFile.exists()) {
       targetPath.toFile.delete()
     }
     logger.info(s"Downloading executor JAR to ${targetPath.toAbsolutePath}")
-    downloader.download(executorUri, targetPath)
+    downloader.download(config.executorUri, targetPath)
     targetPath.toAbsolutePath
   }
   private[this] val executorUploadLock = new Object
   private[this] var executorUploaded = false
 
+  override def configClass: Class[GridEngineSchedulerConfig] = classOf[GridEngineSchedulerConfig]
+
   override def submit(job: Job): String = {
     if (!client.isConnected) {
-      client.connect(host)
-      client.authPublickey(user)
+      client.connect(config.host)
+      client.authPublickey(config.user)
       client.useCompression()
     }
     val session = client.startSession()
@@ -73,7 +70,17 @@ class GridEngineScheduler(
   }
 
   override def kill(key: String): Unit = {
-
+    val session = client.startSession()
+    try {
+      val cmd = session.exec(s"qdel $key")
+      val out = IOUtils.readFully(cmd.getInputStream).toString()
+      cmd.join()
+      if (cmd.getExitStatus != 0) {
+        throw new RuntimeException(s"Error running qdel: $out")
+      }
+    } finally {
+      session.close()
+    }
   }
 
   override def close(): Unit = {
@@ -109,9 +116,14 @@ class GridEngineScheduler(
   }
 
   private def uploadScript(job: Job, remoteWorkDir: String) = {
-    val executorCmd = createCommandLine(job, localExecutorPath.toString, executorArgs, javaHome)
+    val executorCmd = createCommandLine(
+      job,
+      localExecutorPath.toString,
+      config.executorArgs ++ Seq("-addr", config.agentAddr),
+      config.javaHome)
     val wrapperScript = "#!/bin/bash\n" + executorCmd.mkString(" ")
-    client.newSCPFileTransfer().upload(new WrapperScript(s"$prefix${job.taskId.value}.sh", wrapperScript.getBytes), remoteWorkDir)
+    client.newSCPFileTransfer()
+      .upload(new WrapperScript(s"${config.prefix}${job.taskId.value}.sh", wrapperScript.getBytes), remoteWorkDir)
   }
 
   private[this] val QsubOutputRegex = "^Your job ([0-9]+) ".r
@@ -142,7 +154,7 @@ class GridEngineScheduler(
     } else {
       cmd ++= Seq("-q", "long")
     }
-    cmd += s"$prefix${job.taskId.value}.sh"
+    cmd += s"${config.prefix}${job.taskId.value}.sh"
     logger.debug(s"Command-line: ${cmd.mkString(" ")}")
     cmd
   }
