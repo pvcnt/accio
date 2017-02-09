@@ -20,6 +20,7 @@ package fr.cnrs.liris.accio.core.runtime
 
 import fr.cnrs.liris.accio.core.domain.{InvalidSpecMessage, _}
 import fr.cnrs.liris.accio.testing.Operators
+import fr.cnrs.liris.dal.core.api.Values
 import fr.cnrs.liris.testing.UnitSpec
 
 import scala.collection.mutable

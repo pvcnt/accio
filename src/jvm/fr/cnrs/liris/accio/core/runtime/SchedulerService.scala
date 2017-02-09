@@ -28,6 +28,7 @@ import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.scheduler.{Job, Scheduler}
 import fr.cnrs.liris.accio.core.statemgr.StateManager
 import fr.cnrs.liris.accio.core.storage.RunRepository
+import fr.cnrs.liris.dal.core.api.Value
 
 /**
  * Wrapper around the actual scheduler, handling task creation.

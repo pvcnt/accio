@@ -19,7 +19,7 @@
 package fr.cnrs.liris.privamov.core.io
 
 import com.google.inject.Inject
-import fr.cnrs.liris.accio.core.api.io.{Codec, TextLineDecoder}
+import fr.cnrs.liris.dal.core.io.{Codec, TextLineDecoder}
 import fr.cnrs.liris.common.util.ByteUtils
 import fr.cnrs.liris.privamov.core.model.PoiSet
 

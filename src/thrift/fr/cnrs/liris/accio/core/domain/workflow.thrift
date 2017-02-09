@@ -18,6 +18,7 @@
 
 namespace java fr.cnrs.liris.accio.core.domain
 
+include "fr/cnrs/liris/dal/core/api/dal.thrift"
 include "fr/cnrs/liris/accio/core/domain/common.thrift"
 include "fr/cnrs/liris/accio/core/domain/operator.thrift"
 
@@ -32,7 +33,7 @@ union InputDef {
   2: common.Reference reference;
 
   // If the input value is statically fixed.
-  3: common.Value value;
+  3: dal.Value value;
 }
 
 /**

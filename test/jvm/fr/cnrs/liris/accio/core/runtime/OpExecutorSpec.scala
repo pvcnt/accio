@@ -27,6 +27,7 @@ import fr.cnrs.liris.accio.core.downloader.Downloader
 import fr.cnrs.liris.accio.core.uploader.Uploader
 import fr.cnrs.liris.accio.testing.WithSparkleEnv
 import fr.cnrs.liris.common.util.FileUtils
+import fr.cnrs.liris.dal.core.api.{Dataset, Values}
 import fr.cnrs.liris.testing.UnitSpec
 import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}

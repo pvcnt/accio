@@ -1,6 +1,6 @@
 scala_library(
   dependencies=[
-    'src/jvm/fr/cnrs/liris/accio/core/api/io',
+    'src/jvm/fr/cnrs/liris/dal/core/io',
     'src/jvm/fr/cnrs/liris/common/random',
     '3rdparty/jvm/com/typesafe/scala-logging',
     '3rdparty/jvm/com/google/guava',

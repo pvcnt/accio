@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.{JsonIgnoreProperties, JsonSubTypes}
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.common.geo.Distance
+import fr.cnrs.liris.dal.core.api._
 import org.joda.time.{Duration, Instant}
 
 /**
@@ -123,7 +124,7 @@ private[dsl] case class RangeExploration(from: Any, to: Any, step: Any, log: Boo
 
   private def checkNotLogarithmic(kind: AtomicType) = {
     if (log || log2 || log10) {
-      logger.error(s"Cannot use logarithmic progression with ${Utils.toString(kind)}s")
+      logger.error(s"Cannot use logarithmic progression with ${DataTypes.toString(kind)}s")
     }
   }
 

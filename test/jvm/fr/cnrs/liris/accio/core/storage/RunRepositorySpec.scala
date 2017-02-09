@@ -22,6 +22,7 @@ import java.util.UUID
 
 import com.twitter.util.Time
 import fr.cnrs.liris.accio.core.domain._
+import fr.cnrs.liris.dal.core.api.Values
 import fr.cnrs.liris.testing.UnitSpec
 
 import scala.collection.Map

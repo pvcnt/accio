@@ -22,6 +22,7 @@ import breeze.stats._
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.common.geo.Distance
 import fr.cnrs.liris.common.util.Seqs
+import fr.cnrs.liris.dal.core.api._
 import org.joda.time.Duration
 
 /**
@@ -111,7 +112,7 @@ case class ArtifactList(runs: Seq[Run], params: Map[String, Value], groups: Seq[
     } else {
       val includeNumeric = names.contains("NUMERIC")
       val newGroups = groups.filter { group =>
-        names.contains(group.name) || (includeNumeric && Utils.isNumeric(group.kind))
+        names.contains(group.name) || (includeNumeric && DataTypes.isNumeric(group.kind))
       }
       copy(groups = newGroups)
     }

@@ -16,26 +16,28 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.api.io
+package fr.cnrs.liris.dal.core.io
 
 import java.nio.charset.Charset
 
 import com.google.common.base.Charsets
-import fr.cnrs.liris.common.util.ByteUtils
 
 import scala.reflect._
 
 /**
- * A decoder that writes a file as a list of elements, each one being delimited by an end-of-line character ('\n').
+ * A decoder that reads a file as a list of elements, each one being delimited by an end-of-line character ('\n').
+ * It therefore assumes textual content.
  *
- * @param encoder Encoder to apply on each element.
- * @param charset Charset to use when writing a line.
- * @tparam T Type of elements being written.
+ * @param decoder     Decoder to apply on each line.
+ * @param headerLines Number of header lines to ignore.
+ * @param charset     Charset to use when decoding a line.
+ * @tparam T Elements' type.
  */
-class TextLineEncoder[T: ClassTag](encoder: Encoder[T], charset: Charset = Charsets.UTF_8) extends Encoder[Seq[T]] {
-  override def encode(obj: Seq[T]): Array[Byte] = {
-    val lines = obj.map(encoder.encode)
-    ByteUtils.foldLines(lines)
+class TextLineDecoder[T: ClassTag](decoder: Decoder[T], headerLines: Int = 0, charset: Charset = Charsets.UTF_8) extends Decoder[Seq[T]] {
+  override def decode(key: String, bytes: Array[Byte]): Option[Seq[T]] = {
+    val lines = new String(bytes, charset).split("\n").drop(headerLines)
+    val elements = lines.flatMap(line => decoder.decode(key, line.getBytes(charset)))
+    if (elements.nonEmpty) Some(elements) else None
   }
 
   override def elementClassTag: ClassTag[Seq[T]] = classTag[Seq[T]]

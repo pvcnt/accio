@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.api.sparkle
+package fr.cnrs.liris.dal.core.sparkle
 
 import fr.cnrs.liris.testing.UnitSpec
 import org.scalatest.BeforeAndAfter

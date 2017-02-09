@@ -26,6 +26,7 @@ import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.runtime.{BaseFactory, RunFactory}
 import fr.cnrs.liris.accio.core.storage.WorkflowRepository
+import fr.cnrs.liris.dal.core.api.{DataTypes, Values}
 
 import scala.collection.mutable
 import scala.util.control.NonFatal
@@ -71,7 +72,7 @@ class RunParser(mapper: FinatraObjectMapper, workflowRepository: WorkflowReposit
           val value = try {
             Values.encode(Values.parse(strValue, param.kind), param.kind)
           } catch {
-            case NonFatal(_) => throw newError(s"Cannot parse param $paramName as ${Utils.toString(param.kind)}", warnings)
+            case NonFatal(_) => throw newError(s"Cannot parse param $paramName as ${DataTypes.toString(param.kind)}", warnings)
           }
           paramName -> Seq(value)
       }

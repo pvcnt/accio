@@ -19,7 +19,7 @@
 package fr.cnrs.liris.privamov.core.io
 
 import com.google.common.base.Charsets
-import fr.cnrs.liris.accio.core.api.io.Codec
+import fr.cnrs.liris.dal.core.io.Codec
 import fr.cnrs.liris.common.geo.LatLng
 import fr.cnrs.liris.privamov.core.model.Event
 import org.joda.time.Instant

@@ -19,7 +19,8 @@
 package fr.cnrs.liris.privamov.ops
 
 import fr.cnrs.liris.accio.core.api._
-import fr.cnrs.liris.accio.core.api.io.CsvSource
+import fr.cnrs.liris.dal.core.api.Dataset
+import fr.cnrs.liris.dal.core.io.CsvSource
 import fr.cnrs.liris.common.util.FileUtils
 import fr.cnrs.liris.privamov.core.io._
 

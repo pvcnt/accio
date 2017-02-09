@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer
 import com.twitter.scrooge.{ThriftEnum, ThriftStruct, ThriftStructCodec, ThriftUnion}
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.common.geo.Distance
+import fr.cnrs.liris.dal.core.api.{DataType, Value, Values}
 
 import scala.reflect.{ClassTag, classTag}
 

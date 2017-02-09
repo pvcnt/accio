@@ -18,6 +18,7 @@
 
 namespace java fr.cnrs.liris.accio.core.domain
 
+include "fr/cnrs/liris/dal/core/api/dal.thrift"
 include "fr/cnrs/liris/accio/core/domain/common.thrift"
 include "fr/cnrs/liris/accio/core/domain/workflow.thrift"
 include "fr/cnrs/liris/accio/core/domain/operator.thrift"
@@ -143,7 +144,7 @@ struct Run {
   9: required i64 seed;
 
   // Values of workflow parameters.
-  10: required map<string, common.Value> params;
+  10: required map<string, dal.Value> params;
 
   // Identifier of the run this instance is a child of.
   11: optional common.RunId parent;
@@ -187,7 +188,7 @@ struct RunSpec {
 
   // Values of workflow parameters. There can possibly be many values for a single parameter, which will cause a
   // parameter sweep to be executed.
-  7: required map<string, list<common.Value>> params;
+  7: required map<string, list<dal.Value>> params;
 
   // Number of times to repeat each run.
   8: optional i32 repeat;

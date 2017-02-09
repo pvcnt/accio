@@ -16,19 +16,20 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.api.sparkle
-
-import scala.reflect.ClassTag
+package fr.cnrs.liris.dal.core.io
 
 /**
- * A data frame reading its data from the memory.
+ * A sink is responsible for persisting elements. If they need to be read back later, you need to implement a
+ * matching [[DataSource]].
  *
- * @param data Data, indexed by key.
- * @param env  Sparkle environment.
- * @tparam T Elements' type.
+ * @tparam T Type of elements being written.
  */
-private[sparkle] class ParallelCollectionDataFrame[T: ClassTag](data: Map[String, Seq[T]], env: SparkleEnv) extends DataFrame[T](env) {
-  override def keys: Seq[String] = data.keySet.toSeq
-
-  override def load(key: String): Iterator[T] = if (data.contains(key)) data(key).iterator else Iterator.empty
+trait DataSink[T] {
+  /**
+   * Persist some elements associated with the same key.
+   *
+   * @param key Key elements are associated to.
+   * @param elements Elements to write.
+   */
+  def write(key: String, elements: TraversableOnce[T]): Unit
 }

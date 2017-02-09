@@ -2,7 +2,7 @@ scala_library(
   dependencies=[
     'src/jvm/fr/cnrs/liris/accio/core/api',
     'src/jvm/fr/cnrs/liris/accio/core/api:annotations',
-    'src/jvm/fr/cnrs/liris/accio/core/api/sparkle',
+    'src/jvm/fr/cnrs/liris/dal/core/sparkle',
     'src/jvm/fr/cnrs/liris/privamov/core/model',
     'src/jvm/fr/cnrs/liris/privamov/core/lppm',
     'src/jvm/fr/cnrs/liris/privamov/core/clustering',

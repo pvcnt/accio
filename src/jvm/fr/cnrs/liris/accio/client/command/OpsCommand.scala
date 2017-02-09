@@ -21,10 +21,11 @@ package fr.cnrs.liris.accio.client.command
 import com.google.inject.Inject
 import com.twitter.util.Await
 import fr.cnrs.liris.accio.agent.{GetOperatorRequest, ListOperatorsRequest}
-import fr.cnrs.liris.accio.core.domain.{OpDef, Utils}
+import fr.cnrs.liris.accio.core.domain.OpDef
 import fr.cnrs.liris.common.cli._
 import fr.cnrs.liris.common.flags.FlagsProvider
 import fr.cnrs.liris.common.util.StringUtils
+import fr.cnrs.liris.dal.core.api.DataTypes
 
 @Cmd(
   name = "ops",
@@ -95,7 +96,7 @@ class OpsCommand @Inject()(clientFactory: AgentClientFactory) extends Command {
   private def printOpInputs(out: Reporter, opDef: OpDef) = {
     out.writeln(s"<info>Available inputs:</info>")
     opDef.inputs.foreach { argDef =>
-      out.write(s"  - ${argDef.name} (${Utils.toString(argDef.kind)}")
+      out.write(s"  - ${argDef.name} (${DataTypes.toString(argDef.kind)}")
       if (argDef.defaultValue.isDefined) {
         out.write(s"; default: ${argDef.defaultValue.get}")
       }
@@ -112,7 +113,7 @@ class OpsCommand @Inject()(clientFactory: AgentClientFactory) extends Command {
     if (opDef.outputs.nonEmpty) {
       out.writeln("<info>Available outputs:</info>")
       opDef.outputs.foreach { outputDef =>
-        out.write(s"  - ${outputDef.name} (${Utils.toString(outputDef.kind)})")
+        out.write(s"  - ${outputDef.name} (${DataTypes.toString(outputDef.kind)})")
         out.writeln()
         outputDef.help.foreach(help => out.writeln(StringUtils.paragraphFill(help, 80, 4)))
       }

@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.{DeserializationContext, JsonNode, Seriali
 import com.google.common.annotations.VisibleForTesting
 import com.twitter.scrooge._
 import fr.cnrs.liris.accio.core.domain._
+import fr.cnrs.liris.dal.core.api.{AtomicType, DataType, Value}
 import org.apache.thrift.protocol.{TSimpleJSONProtocol, TType}
 
 import scala.collection.JavaConverters._
@@ -70,7 +71,6 @@ object ElasticJacksonModule extends SimpleModule {
   addDeserializer(classOf[TaskStatus], new ScroogeEnumDeserializer[TaskStatus](TaskStatus))
 
   // Misc deserializers.
-  addDeserializer(classOf[Value], new ScroogeStructDeserializer[Value](Value))
   addDeserializer(classOf[User], new ScroogeStructDeserializer[User](User))
   addDeserializer(classOf[Value], new ScroogeStructDeserializer[Value](Value))
   addDeserializer(classOf[DataType], new ScroogeStructDeserializer[DataType](DataType))

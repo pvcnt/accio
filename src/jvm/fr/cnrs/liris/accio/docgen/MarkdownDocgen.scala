@@ -21,8 +21,9 @@ package fr.cnrs.liris.accio.docgen
 import java.io.{BufferedOutputStream, FileOutputStream, OutputStream}
 
 import com.google.inject.Inject
-import fr.cnrs.liris.accio.core.domain.{OpDef, Utils, Values}
+import fr.cnrs.liris.accio.core.domain.OpDef
 import fr.cnrs.liris.accio.core.runtime.OpRegistry
+import fr.cnrs.liris.dal.core.api.{DataTypes, Values}
 
 /**
  * Generate documentation for all operators known to a registry in Markdown format.
@@ -75,7 +76,7 @@ class MarkdownDocgen @Inject()(opRegistry: OpRegistry) {
       out.write("| Input name | Type | Description |\n".getBytes)
       out.write("|:-----------|:-----|:------------|\n".getBytes)
       opDef.inputs.foreach { argDef =>
-        out.write(s"| `${argDef.name}` | ${Utils.toString(argDef.kind)}".getBytes)
+        out.write(s"| `${argDef.name}` | ${DataTypes.toString(argDef.kind)}".getBytes)
         if (argDef.defaultValue.isDefined) {
           out.write(s"; optional; default: ${Values.toString(argDef.defaultValue.get)}".getBytes)
         } else if (argDef.isOptional) {
@@ -91,7 +92,7 @@ class MarkdownDocgen @Inject()(opRegistry: OpRegistry) {
       out.write("| Output name | Type | Description |\n".getBytes)
       out.write("|:------------|:-----|:------------|\n".getBytes)
       opDef.outputs.foreach { argDef =>
-        out.write(s"| `${argDef.name}` | ${Utils.toString(argDef.kind)} | ${argDef.help.getOrElse("-")} |\n".getBytes)
+        out.write(s"| `${argDef.name}` | ${DataTypes.toString(argDef.kind)} | ${argDef.help.getOrElse("-")} |\n".getBytes)
       }
       out.write("{: class=\"table table-striped\"}\n\n".getBytes)
     }

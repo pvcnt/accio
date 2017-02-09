@@ -21,7 +21,8 @@ package fr.cnrs.liris.privamov.ops
 import java.util.concurrent.atomic.AtomicLong
 
 import fr.cnrs.liris.accio.core.api._
-import fr.cnrs.liris.accio.core.api.sparkle.DataFrame
+import fr.cnrs.liris.dal.core.api.Dataset
+import fr.cnrs.liris.dal.core.sparkle.DataFrame
 import fr.cnrs.liris.common.geo.{BoundingBox, Distance, Point}
 import fr.cnrs.liris.common.random.RandomUtils
 import fr.cnrs.liris.privamov.core.model.Trace

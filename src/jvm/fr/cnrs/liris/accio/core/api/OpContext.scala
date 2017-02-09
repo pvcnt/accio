@@ -20,9 +20,10 @@ package fr.cnrs.liris.accio.core.api
 
 import java.nio.file.{Files, Path}
 
-import fr.cnrs.liris.accio.core.api.io._
-import fr.cnrs.liris.accio.core.api.sparkle._
+import fr.cnrs.liris.dal.core.io._
+import fr.cnrs.liris.dal.core.sparkle._
 import fr.cnrs.liris.common.util.Identified
+import fr.cnrs.liris.dal.core.api.Dataset
 
 import scala.reflect.{ClassTag, classTag}
 

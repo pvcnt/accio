@@ -18,6 +18,7 @@
 
 namespace java fr.cnrs.liris.accio.core.domain
 
+include "fr/cnrs/liris/dal/core/api/dal.thrift"
 include "fr/cnrs/liris/accio/core/domain/common.thrift"
 
 /**
@@ -42,7 +43,7 @@ struct ArgDef {
   1: required string name;
 
   // Data type.
-  2: required common.DataType kind;
+  2: required dal.DataType kind;
 
   // One-line help text.
   3: optional string help;
@@ -51,7 +52,7 @@ struct ArgDef {
   4: required bool is_optional = false;
 
   // Default value taken by this input if none is specified. It should be empty for output ports.
-  5: optional common.Value default_value;
+  5: optional dal.Value default_value;
 }
 
 /**
@@ -101,7 +102,7 @@ struct OpPayload {
   2: required i64 seed;
 
   // Mapping between a port name and its value. It should contain at least required inputs.
-  3: required map<string, common.Value> inputs;
+  3: required map<string, dal.Value> inputs;
 
   // Cache key associated with this payload, used for further memoization.
   4: required common.CacheKey cache_key;

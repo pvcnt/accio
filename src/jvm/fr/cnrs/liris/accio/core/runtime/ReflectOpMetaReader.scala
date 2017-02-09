@@ -27,6 +27,7 @@ import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.common.reflect.{CaseClass, PlainClass, ScalaType}
 import fr.cnrs.liris.common.util.ResourceFileLoader
 import fr.cnrs.liris.common.util.StringUtils.maybe
+import fr.cnrs.liris.dal.core.api.{AtomicType, DataType, Values}
 
 /**
  * Read operator metadata from information gathered by Scala reflection and annotations.

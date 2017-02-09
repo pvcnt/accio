@@ -16,12 +16,12 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.api.sparkle
+package fr.cnrs.liris.dal.core.sparkle
 
 import java.util.concurrent.{Executors, TimeUnit}
 
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.core.api.io.DataSource
+import fr.cnrs.liris.dal.core.io.DataSource
 
 import scala.collection.immutable.ListMap
 import scala.concurrent.duration.Duration

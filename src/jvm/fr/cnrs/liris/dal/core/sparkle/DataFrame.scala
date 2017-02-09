@@ -16,11 +16,11 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.api.sparkle
+package fr.cnrs.liris.dal.core.sparkle
 
 import com.google.common.base.MoreObjects
 import com.typesafe.scalalogging.LazyLogging
-import fr.cnrs.liris.accio.core.api.io.DataSink
+import fr.cnrs.liris.dal.core.io.DataSink
 import fr.cnrs.liris.common.random._
 
 import scala.collection.mutable

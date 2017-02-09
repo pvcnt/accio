@@ -19,6 +19,7 @@
 package fr.cnrs.liris.accio.testing
 
 import fr.cnrs.liris.accio.core.domain._
+import fr.cnrs.liris.dal.core.api.{AtomicType, DataType, Values}
 
 /**
  * Static definition of operators to be used in tests.

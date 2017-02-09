@@ -20,6 +20,7 @@ package fr.cnrs.liris.privamov.ops
 
 import com.github.nscala_time.time.Imports._
 import fr.cnrs.liris.accio.core.api._
+import fr.cnrs.liris.dal.core.api.Dataset
 import fr.cnrs.liris.common.util.Requirements._
 import fr.cnrs.liris.privamov.core.model.Trace
 import org.joda.time.Instant

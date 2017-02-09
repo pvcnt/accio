@@ -16,18 +16,26 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.api.io
+package fr.cnrs.liris.accio.core.api
 
-import java.nio.charset.Charset
+/**
+ * Describes a version using semantic versioning.
+ *
+ * @param major Major component.
+ * @param minor Minor component.
+ * @param patch Patch component.
+ * @param label Additional label.
+ */
+case class Version private(major: Int, minor: Int, patch: Int, label: Option[String]) {
+  override def toString: String = s"$major.$minor.$patch${label.map(str => s"-$str").getOrElse("")}"
+}
 
-import com.google.common.base.Charsets
-
-import scala.reflect._
-
-class StringCodec(charset: Charset = Charsets.UTF_8) extends Codec[String] {
-  override def decode(key: String, bytes: Array[Byte]): Option[String] = Some(new String(bytes, charset))
-
-  override def encode(obj: String): Array[Byte] = obj.getBytes(charset)
-
-  override def elementClassTag: ClassTag[String] = classTag[String]
+/**
+ * Factory for [[Version]].
+ */
+object Version {
+  /**
+   * Return the current version of Accio.
+   */
+  val Current = Version(2, 0, 0, Some("dev"))
 }

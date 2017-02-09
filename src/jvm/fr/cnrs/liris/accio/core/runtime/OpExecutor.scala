@@ -22,13 +22,14 @@ import java.nio.file.{Files, Path, Paths}
 import java.util.UUID
 
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.core.api.io.{Decoder, Encoder}
-import fr.cnrs.liris.accio.core.api.sparkle.SparkleEnv
+import fr.cnrs.liris.dal.core.io.{Decoder, Encoder}
+import fr.cnrs.liris.dal.core.sparkle.SparkleEnv
 import fr.cnrs.liris.accio.core.api.{OpContext, Operator}
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.downloader.Downloader
 import fr.cnrs.liris.accio.core.uploader.Uploader
 import fr.cnrs.liris.common.util.FileUtils
+import fr.cnrs.liris.dal.core.api.{AtomicType, Value, Values}
 
 import scala.util.control.NonFatal
 

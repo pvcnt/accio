@@ -16,16 +16,18 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.domain
+package fr.cnrs.liris.accio.core.runtime
 
+import fr.cnrs.liris.accio.core.domain.Reference
 import fr.cnrs.liris.common.util.Named
+import fr.cnrs.liris.dal.core.api.Value
 
 /**
  * An executable graph of operators.
  *
  * @param nodes Nodes forming this graph.
  */
-case class Graph private[domain](nodes: Set[Node]) {
+case class Graph private[runtime](nodes: Set[Node]) {
   private[this] val index = nodes.map(n => n.name -> n).toMap
 
   /**
@@ -68,7 +70,7 @@ case class Graph private[domain](nodes: Set[Node]) {
  * @param inputs  Inputs of the operator.
  * @param outputs Outputs of the operator, i.e., references to ports of other nodes where outputs are consumed.
  */
-case class Node private[domain](
+case class Node private[runtime](
   name: String,
   op: String,
   inputs: Map[String, Input],

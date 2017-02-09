@@ -23,6 +23,7 @@ import java.util.Objects
 import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.common.util.{HashUtils, Seqs}
+import fr.cnrs.liris.dal.core.api.DataTypes
 
 import scala.collection.mutable
 
@@ -121,11 +122,11 @@ final class WorkflowFactory @Inject()(graphFactory: GraphFactory, opRegistry: Op
       val usages = paramUsages.getOrElse(argDef.name, Set.empty)
       val dataTypes = usages.map(_.argDef).map(_.kind)
       if (dataTypes.size > 1) {
-        val message = s"Param is used with heterogeneous types: " + dataTypes.map(Utils.toString).toSeq.sorted.mkString(", ")
+        val message = s"Param is used with heterogeneous types: " + dataTypes.map(DataTypes.toString).toSeq.sorted.mkString(", ")
         throw newError(message, s"params.${argDef.name}", warnings)
       }
       if (dataTypes.head != argDef.kind) {
-        val message = s"Param declared as ${Utils.toString(argDef.kind)} is used as ${Utils.toString(dataTypes.head)}"
+        val message = s"Param declared as ${DataTypes.toString(argDef.kind)} is used as ${DataTypes.toString(dataTypes.head)}"
         throw newError(message, s"params.${argDef.name}", warnings)
       }
 

@@ -27,6 +27,7 @@ import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.common.cli.{Cmd, Command, ExitCode, Reporter}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.util.StringUtils.padTo
+import fr.cnrs.liris.dal.core.api.Values
 import org.ocpsoft.prettytime.PrettyTime
 
 case class InspectCommandFlags(

@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.privamov.core.io
 
-import fr.cnrs.liris.accio.core.api.io.Decoder
+import fr.cnrs.liris.dal.core.io.Decoder
 import fr.cnrs.liris.common.geo.LatLng
 import fr.cnrs.liris.privamov.core.model.Poi
 import org.joda.time.Instant

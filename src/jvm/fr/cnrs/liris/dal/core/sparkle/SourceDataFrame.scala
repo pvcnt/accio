@@ -16,26 +16,27 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.domain
+package fr.cnrs.liris.dal.core.sparkle
+
+import com.google.common.base.MoreObjects
+import fr.cnrs.liris.dal.core.io.DataSource
+
+import scala.reflect.ClassTag
 
 /**
- * Describes a version using semantic versioning.
+ * A dataframe loading its data on the fly using a data source.
  *
- * @param major Major component.
- * @param minor Minor component.
- * @param patch Patch component.
- * @param label Additional label.
+ * @param source Data source.
+ * @tparam T Elements' type.
  */
-case class Version(major: Int, minor: Int, patch: Int, label: Option[String]) {
-  override def toString: String = s"$major.$minor.$patch${label.map(str => s"-$str").getOrElse("")}"
-}
+private[sparkle] class SourceDataFrame[T: ClassTag](source: DataSource[T], env: SparkleEnv) extends DataFrame[T](env) {
+  override lazy val keys = source.keys
 
-/**
- * Factory for [[Version]].
- */
-object Version {
-  /**
-   * Return the current version of Accio.
-   */
-  val Current = Version(2, 0, 0, Some("dev"))
+  override def load(key: String): Iterator[T] = source.read(key).iterator
+
+  override def toString: String =
+    MoreObjects.toStringHelper(this)
+      .addValue(elementClassTag)
+      .add("source", source)
+      .toString
 }

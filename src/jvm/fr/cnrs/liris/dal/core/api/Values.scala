@@ -16,20 +16,19 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.domain
+package fr.cnrs.liris.dal.core.api
 
 import com.twitter.util.{Duration => TwitterDuration}
-import fr.cnrs.liris.accio.core.api.Dataset
 import fr.cnrs.liris.common.geo.{Distance, LatLng, Location}
 import org.joda.time.{Instant, Duration => JodaDuration}
 
 import scala.collection.JavaConverters._
 
 /**
- * Factory and converters for [[Value]].
+ * Utils to deal with [[Value]]s.
  */
 object Values {
-  private[this] val AbbreviateThreshold = 3
+  private val AbbreviateThreshold = 3
 
   val instantOrdering = new Ordering[Instant] {
     override def compare(x: Instant, y: Instant): Int = x.compareTo(y)

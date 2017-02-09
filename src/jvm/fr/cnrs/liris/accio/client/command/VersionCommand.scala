@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.client.command
 
-import fr.cnrs.liris.accio.core.domain.Version
+import fr.cnrs.liris.accio.core.api.Version
 import fr.cnrs.liris.common.cli.{Cmd, Command, ExitCode, Reporter}
 import fr.cnrs.liris.common.flags.FlagsProvider
 

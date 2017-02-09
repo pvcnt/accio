@@ -21,6 +21,7 @@ package fr.cnrs.liris.accio.core.runtime
 import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.common.geo.{Distance, LatLng, Location}
+import fr.cnrs.liris.dal.core.api.{AtomicType, DataType, Dataset, Values}
 import fr.cnrs.liris.testing.UnitSpec
 import org.joda.time.{Duration, Instant}
 

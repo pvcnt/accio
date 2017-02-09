@@ -1,6 +1,6 @@
 scala_library(
-  name='domain',
   dependencies=[
+    'src/jvm/fr/cnrs/liris/dal/core/api',
     'src/jvm/fr/cnrs/liris/accio/core/api',
     'src/jvm/fr/cnrs/liris/common/geo',
     'src/jvm/fr/cnrs/liris/common/util',

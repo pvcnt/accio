@@ -21,7 +21,7 @@ package fr.cnrs.liris.privamov.core.io
 import java.nio.file.{Files, Path, Paths}
 
 import com.google.common.base.MoreObjects
-import fr.cnrs.liris.accio.core.api.io.{DataSource, Decoder, TextLineDecoder}
+import fr.cnrs.liris.dal.core.io.{DataSource, Decoder, TextLineDecoder}
 import fr.cnrs.liris.common.geo.LatLng
 import fr.cnrs.liris.privamov.core.model.{Event, Trace}
 import org.joda.time.Instant

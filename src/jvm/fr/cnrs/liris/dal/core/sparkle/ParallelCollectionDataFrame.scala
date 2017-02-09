@@ -16,16 +16,19 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.domain
+package fr.cnrs.liris.dal.core.sparkle
 
-import com.twitter.scrooge.{TArrayByteTransport, ThriftStruct}
-import org.apache.thrift.protocol.TSimpleJSONProtocol
+import scala.reflect.ClassTag
 
-class JsonSerializer {
-  def serialize(struct: ThriftStruct): Array[Byte] = {
-    val transport = new TArrayByteTransport
-    val protocol = new TSimpleJSONProtocol.Factory().getProtocol(transport)
-    struct.write(protocol)
-    transport.toByteArray
-  }
+/**
+ * A data frame reading its data from the memory.
+ *
+ * @param data Data, indexed by key.
+ * @param env  Sparkle environment.
+ * @tparam T Elements' type.
+ */
+private[sparkle] class ParallelCollectionDataFrame[T: ClassTag](data: Map[String, Seq[T]], env: SparkleEnv) extends DataFrame[T](env) {
+  override def keys: Seq[String] = data.keySet.toSeq
+
+  override def load(key: String): Iterator[T] = if (data.contains(key)) data(key).iterator else Iterator.empty
 }

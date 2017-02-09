@@ -25,6 +25,7 @@ import com.twitter.finatra.json.FinatraObjectMapper
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.core.domain.{InvalidSpecException, _}
 import fr.cnrs.liris.accio.core.runtime.{BaseFactory, OpRegistry, WorkflowFactory}
+import fr.cnrs.liris.dal.core.api.{DataTypes, Values}
 
 import scala.collection.mutable
 import scala.util.control.NonFatal
@@ -51,7 +52,7 @@ class WorkflowParser(mapper: FinatraObjectMapper, opRegistry: OpRegistry, factor
     val owner = json.owner.map(Utils.parseUser)
     val nodes = json.graph.map(getNode(_, opRegistry, warnings)).toSet
     val params = json.params.map { paramDef =>
-      val kind = Utils.parseDataType(paramDef.kind)
+      val kind = DataTypes.parse(paramDef.kind)
       val defaultValue = paramDef.defaultValue.map(Values.encode(_, kind))
       ArgDef(name = paramDef.name, kind = kind, defaultValue = defaultValue)
     }.toSet

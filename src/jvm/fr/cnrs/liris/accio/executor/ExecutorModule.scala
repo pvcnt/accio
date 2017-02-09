@@ -25,8 +25,8 @@ import com.twitter.finagle.Thrift
 import com.twitter.inject.{Injector, TwitterModule}
 import fr.cnrs.liris.accio.agent.AgentService
 import fr.cnrs.liris.accio.core.api.Operator
-import fr.cnrs.liris.accio.core.api.io.{Decoder, Encoder, StringCodec}
-import fr.cnrs.liris.accio.core.api.sparkle.SparkleEnv
+import fr.cnrs.liris.dal.core.io.{Decoder, Encoder, StringCodec}
+import fr.cnrs.liris.dal.core.sparkle.SparkleEnv
 import fr.cnrs.liris.accio.core.downloader.Downloader
 import fr.cnrs.liris.accio.core.runtime._
 import fr.cnrs.liris.accio.core.uploader.Uploader

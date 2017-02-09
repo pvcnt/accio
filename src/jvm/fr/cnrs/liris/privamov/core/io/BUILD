@@ -1,6 +1,6 @@
 scala_library(
   dependencies=[
-    'src/jvm/fr/cnrs/liris/accio/core/api/io',
+    'src/jvm/fr/cnrs/liris/dal/core/io',
     'src/jvm/fr/cnrs/liris/common/util',
     'src/jvm/fr/cnrs/liris/common/geo',
     'src/jvm/fr/cnrs/liris/privamov/core/model',

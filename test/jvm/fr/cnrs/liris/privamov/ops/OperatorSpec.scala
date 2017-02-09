@@ -20,9 +20,10 @@ package fr.cnrs.liris.privamov.ops
 
 import java.nio.file.Files
 
-import fr.cnrs.liris.accio.core.api.io.{CsvSink, CsvSource}
-import fr.cnrs.liris.accio.core.api.{Dataset, OpContext}
+import fr.cnrs.liris.accio.core.api.OpContext
+import fr.cnrs.liris.dal.core.io.{CsvSink, CsvSource}
 import fr.cnrs.liris.accio.testing.WithSparkleEnv
+import fr.cnrs.liris.dal.core.api.Dataset
 import fr.cnrs.liris.privamov.core.io.{CsvEventCodec, CsvPoiCodec, CsvPoiSetCodec, CsvTraceCodec}
 import fr.cnrs.liris.privamov.core.model.{PoiSet, Trace}
 import org.scalatest.FlatSpec

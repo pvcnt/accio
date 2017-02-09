@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.api.io
+package fr.cnrs.liris.dal.core.io
 
 import scala.reflect.ClassTag
 

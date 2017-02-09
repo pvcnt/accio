@@ -21,6 +21,7 @@ package fr.cnrs.liris.accio.core.analysis
 import java.nio.file.{Files, Path, StandardOpenOption}
 
 import fr.cnrs.liris.accio.core.domain._
+import fr.cnrs.liris.dal.core.api.{AtomicType, DataType, Value, Values}
 
 import scala.collection.JavaConverters._
 

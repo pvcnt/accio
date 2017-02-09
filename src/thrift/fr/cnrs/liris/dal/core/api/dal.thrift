@@ -16,20 +16,37 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.api.io
+namespace java fr.cnrs.liris.dal.core.api
 
-/**
- * A sink is responsible for persisting elements. If they need to be read back later, you need to implement a
- * matching [[DataSource]].
- *
- * @tparam T Type of elements being written.
- */
-trait DataSink[T] {
-  /**
-   * Persist some elements associated with the same key.
-   *
-   * @param key Key elements are associated to.
-   * @param elements Elements to write.
-   */
-  def write(key: String, elements: TraversableOnce[T]): Unit
+enum AtomicType {
+  BYTE,
+  INTEGER,
+  LONG,
+  DOUBLE,
+  STRING,
+  BOOLEAN,
+  LOCATION,
+  TIMESTAMP,
+  DURATION,
+  DISTANCE,
+  DATASET,
+  LIST,
+  SET,
+  MAP,
+}
+
+struct DataType {
+  1: required AtomicType base;
+  2: required list<AtomicType> args;
+}
+
+struct Value {
+  1: required DataType kind;
+  2: list<string> strings;
+  3: list<i64> longs;
+  4: list<double> doubles;
+  5: list<i32> integers;
+  6: list<bool> booleans;
+  7: list<byte> bytes;
+  8: required i32 size = 1;
 }

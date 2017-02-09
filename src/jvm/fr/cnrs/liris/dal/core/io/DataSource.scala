@@ -16,27 +16,25 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.api.sparkle
-
-import com.google.common.base.MoreObjects
-import fr.cnrs.liris.accio.core.api.io.DataSource
-
-import scala.reflect.ClassTag
+package fr.cnrs.liris.dal.core.io
 
 /**
- * A dataframe loading its data on the fly using a data source.
+ * A source is responsible for reading elements. Each element is identified by a unique key.
  *
- * @param source Data source.
- * @tparam T Elements' type.
+ * @tparam T Type of elements being read.
  */
-private[sparkle] class SourceDataFrame[T: ClassTag](source: DataSource[T], env: SparkleEnv) extends DataFrame[T](env) {
-  override lazy val keys = source.keys
+trait DataSource[T] {
+  /**
+   * Return the list of the keys of elements available in this data source. Each key should be present only once,
+   * but the list should be ordered in a deterministic order.
+   */
+  def keys: Seq[String]
 
-  override def load(key: String): Iterator[T] = source.read(key).iterator
-
-  override def toString: String =
-    MoreObjects.toStringHelper(this)
-      .addValue(elementClassTag)
-      .add("source", source)
-      .toString
+  /**
+   * Read the element associated with a given key, if any.
+   *
+   * @param key Key.
+   * @return The element stored under that key, if any.
+   */
+  def read(key: String): Option[T]
 }

@@ -16,11 +16,10 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.api
+package fr.cnrs.liris.dal.core.api
 
 /**
- * Descriptor of a dataset that can be used as a data type for operators. It is basically just a handle to an URI
- * where the dataset is written.
+ * Descriptor of a dataset.
  *
  * @param uri URI where the dataset is written.
  */

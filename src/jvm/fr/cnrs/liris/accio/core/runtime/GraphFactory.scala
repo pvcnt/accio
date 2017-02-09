@@ -21,6 +21,7 @@ package fr.cnrs.liris.accio.core.runtime
 import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.common.util.Seqs
+import fr.cnrs.liris.dal.core.api.DataTypes
 
 import scala.collection.mutable
 
@@ -99,7 +100,7 @@ final class GraphFactory @Inject()(opRegistry: OpRegistry) extends BaseFactory {
         case Some(InputDef.Value(v)) =>
           if (v.kind != argDef.kind) {
             throw newError(
-              s"Data type mismatch: requires ${Utils.toString(argDef.kind)}, got ${Utils.toString(v.kind)}",
+              s"Data type mismatch: requires ${DataTypes.toString(argDef.kind)}, got ${DataTypes.toString(v.kind)}",
               s"graph.${nodeDef.name}.inputs.${argDef.name}",
               warnings)
           }
@@ -149,7 +150,7 @@ final class GraphFactory @Inject()(opRegistry: OpRegistry) extends BaseFactory {
                 val thisArg = thisOp.inputs.find(_.name == thisPort).get
                 if (otherArg.kind != thisArg.kind) {
                   throw newError(
-                    s"Data type mismatch: requires ${Utils.toString(thisArg.kind)}, got ${Utils.toString(otherArg.kind)}",
+                    s"Data type mismatch: requires ${DataTypes.toString(thisArg.kind)}, got ${DataTypes.toString(otherArg.kind)}",
                     s"graph.${node.name}.inputs.$thisPort",
                     warnings)
                 }
