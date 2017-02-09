@@ -4,6 +4,8 @@ scala_library(
     'src/jvm/fr/cnrs/liris/common/util',
     '3rdparty/jvm/com/typesafe/scala-logging',
     '3rdparty/jvm/org/apache/commons/compress',
+    '3rdparty/jvm/com/hierynomus/sshj',
+    '3rdparty/jvm/io/minio',
     '3rdparty/jvm:scala-guice',
   ],
   sources=globs('*.scala')

@@ -16,25 +16,28 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.uploader.local
+package fr.cnrs.liris.accio.core.uploader.s3
 
-import java.nio.file.{Files, Path}
+import java.nio.file.Path
 
-import fr.cnrs.liris.accio.core.uploader.Uploader
+import fr.cnrs.liris.accio.core.uploader.{Archiver, Uploader}
 import fr.cnrs.liris.accio.core.util.Configurable
-import fr.cnrs.liris.common.util.FileUtils
+import io.minio.MinioClient
 
 /**
- * Uploader copying files locally.
+ * Uploader copying files on S3/Minio.
  */
-class LocalUploader extends Uploader with Configurable[LocalUploaderConfig] {
-  override def configClass: Class[LocalUploaderConfig] = classOf[LocalUploaderConfig]
+class S3Uploader extends Uploader with Archiver with Configurable[S3UploaderConfig] {
+  private[this] lazy val client = new MinioClient(config.uri, config.accessKey, config.secretKey)
 
-  override def upload(src: Path, dst: String): String = {
-    // We copy files to target path. We do *not* want to symlink them, as original files can disappear at any time.
-    val target = config.path.resolve(dst)
-    Files.createDirectories(target.getParent)
-    FileUtils.recursiveCopy(src, target)
-    target.toAbsolutePath.toString
+  override def configClass: Class[S3UploaderConfig] = classOf[S3UploaderConfig]
+
+  override def upload(src: Path, key: String): String = {
+    if (!client.bucketExists(config.bucket)) {
+      client.makeBucket(config.bucket)
+    }
+    val tarGzFile = archiveAndCompress(src)
+    client.putObject(config.bucket, s"$key.tar.gz", tarGzFile.toAbsolutePath.toString)
+    s"s3::${config.uri.stripSuffix("/")}/${config.bucket}/$key.tar.gz"
   }
 }

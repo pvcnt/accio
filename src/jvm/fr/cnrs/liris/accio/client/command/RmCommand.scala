@@ -48,7 +48,7 @@ class RmCommand @Inject()(clientFactory: AgentClientFactory) extends Command {
       val exitCode = Await.result(client.deleteRun(req).liftToTry) match {
         case Return(_) =>
           if (!opts.quiet) {
-            out.writeln(s"<info>[INFO]</info> Deleted run ${flags.residue.head}")
+            out.writeln(s"<info>[OK]</info> Deleted run ${flags.residue.head}")
           }
           ExitCode.Success
         case Throw(UnknownRunException()) =>

@@ -18,23 +18,11 @@
 
 package fr.cnrs.liris.accio.core.uploader.local
 
-import java.nio.file.{Files, Path}
-
-import fr.cnrs.liris.accio.core.uploader.Uploader
-import fr.cnrs.liris.accio.core.util.Configurable
-import fr.cnrs.liris.common.util.FileUtils
+import java.nio.file.Path
 
 /**
- * Uploader copying files locally.
+ * Local uploader configuration.
+ *
+ * @param path Root directory under which to store files.
  */
-class LocalUploader extends Uploader with Configurable[LocalUploaderConfig] {
-  override def configClass: Class[LocalUploaderConfig] = classOf[LocalUploaderConfig]
-
-  override def upload(src: Path, dst: String): String = {
-    // We copy files to target path. We do *not* want to symlink them, as original files can disappear at any time.
-    val target = config.path.resolve(dst)
-    Files.createDirectories(target.getParent)
-    FileUtils.recursiveCopy(src, target)
-    target.toAbsolutePath.toString
-  }
-}
+case class LocalUploaderConfig(path: Path)

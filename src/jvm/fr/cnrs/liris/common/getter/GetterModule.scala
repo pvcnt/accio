@@ -19,7 +19,7 @@
 package fr.cnrs.liris.common.getter
 
 import com.google.inject.{AbstractModule, Provides}
-import net.codingwell.scalaguice.{ScalaMapBinder, ScalaModule, ScalaMultibinder}
+import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
 
 object GetterModule extends AbstractModule with ScalaModule {
   override def configure(): Unit = {
@@ -39,6 +39,7 @@ object GetterModule extends AbstractModule with ScalaModule {
     val getters = ScalaMultibinder.newSetBinder[Getter](binder)
     getters.addBinding.to[FileGetter]
     getters.addBinding.to[HttpGetter]
+    getters.addBinding.to[ScpGetter]
   }
 
   @Provides

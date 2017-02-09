@@ -20,14 +20,31 @@ package fr.cnrs.liris.common.getter
 
 import java.io.IOException
 import java.net.URI
-import java.nio.file.Path
+import java.nio.file.{Files, Path}
 
-/**
- * Getter defines the interface that schemes must implement to download this.
- */
-trait Getter {
-  @throws[IOException]
-  def get(src: URI, dst: Path): Unit
+import net.schmizz.sshj.SSHClient
+import net.schmizz.sshj.xfer.FileSystemFile
 
-  def schemes: Set[String]
+class ScpGetter extends Getter {
+  override def get(src: URI, dst: Path): Unit = {
+    // Destination must not already exist.
+    if (dst.toFile.exists()) {
+      throw new IOException(s"Destination already exists: ${dst.toAbsolutePath}")
+    }
+
+    // Create parent directories.
+    Files.createDirectories(dst.getParent)
+
+    val client = new SSHClient
+    client.connect(src.getHost, src.getPort)
+    try {
+      client.authPublickey(src.getUserInfo)
+      client.useCompression()
+      client.newSCPFileTransfer.download(src.getPath, new FileSystemFile(dst.toAbsolutePath.toFile))
+    } finally {
+      client.disconnect()
+    }
+  }
+
+  override def schemes: Set[String] = Set("scp")
 }

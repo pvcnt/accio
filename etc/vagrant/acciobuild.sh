@@ -55,6 +55,7 @@ function build_gateway {
     npm run build
   popd
   ./pants binary src/jvm/fr/cnrs/liris/accio/gateway:bin
+  upstart_update accio-gateway
 }
 
 function build_all {

@@ -14,6 +14,6 @@
 # You should have received a copy of the GNU General Public License
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION = '3.0.1'
+VERSION = '3.0.3'
 
 jar_library(name='minio', jars=[jar('io.minio', 'minio', VERSION)])

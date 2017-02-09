@@ -18,23 +18,18 @@
 
 package fr.cnrs.liris.accio.core.uploader.local
 
-import java.nio.file.{Files, Path}
-
+import com.google.inject.Provides
 import fr.cnrs.liris.accio.core.uploader.Uploader
-import fr.cnrs.liris.accio.core.util.Configurable
-import fr.cnrs.liris.common.util.FileUtils
+import net.codingwell.scalaguice.ScalaModule
 
 /**
- * Uploader copying files locally.
+ * Guice module provisioning a local uploader.
+ *
+ * @param config Configuration.
  */
-class LocalUploader extends Uploader with Configurable[LocalUploaderConfig] {
-  override def configClass: Class[LocalUploaderConfig] = classOf[LocalUploaderConfig]
+final class LocalUploaderModule(config: LocalUploaderConfig) extends ScalaModule {
+  override protected def configure(): Unit = {}
 
-  override def upload(src: Path, dst: String): String = {
-    // We copy files to target path. We do *not* want to symlink them, as original files can disappear at any time.
-    val target = config.path.resolve(dst)
-    Files.createDirectories(target.getParent)
-    FileUtils.recursiveCopy(src, target)
-    target.toAbsolutePath.toString
-  }
+  @Provides
+  def providesUploader(uploader: LocalUploader): Uploader = uploader.initialize(config)
 }

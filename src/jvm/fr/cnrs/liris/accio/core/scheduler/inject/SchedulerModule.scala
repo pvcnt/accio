@@ -45,11 +45,8 @@ object SchedulerModule extends TwitterModule {
   private[this] val geUserFlag = flag[String]("scheduler.ge.user", "Gateway username (authentication is done by public key)")
   private[this] val gePrefixFlag = flag[String]("scheduler.ge.prefix", "", "Prefix on remote host where to store Accio files (under home directory)")
 
-  // Flags that will be forwarded "as-is" when invoking the executor.
-  private[this] val executorPassthroughFlags = Seq(UploaderModule.uploaderFlag, UploaderModule.localUploaderPathFlag)
-
   protected override def configure(): Unit = {
-    val executorArgs = executorPassthroughFlags.flatMap { flag =>
+    val executorArgs = UploaderModule.executorPassthroughFlags.flatMap { flag =>
       flag.getWithDefault.map(v => Seq(s"-${flag.name}", v)).getOrElse(Seq.empty[String])
     }
     val module = schedulerFlag() match {

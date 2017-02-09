@@ -16,25 +16,14 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.uploader.local
-
-import java.nio.file.{Files, Path}
-
-import fr.cnrs.liris.accio.core.uploader.Uploader
-import fr.cnrs.liris.accio.core.util.Configurable
-import fr.cnrs.liris.common.util.FileUtils
+package fr.cnrs.liris.accio.core.uploader.scp
 
 /**
- * Uploader copying files locally.
+ * SCP uploader configuration.
+ *
+ * @param host Host where to upload files.
+ * @param port SSH port on the host.
+ * @param user Username. Authentication is done by public key.
+ * @param path Path on remote host where to store files, either absolute or relative to home directory.
  */
-class LocalUploader extends Uploader with Configurable[LocalUploaderConfig] {
-  override def configClass: Class[LocalUploaderConfig] = classOf[LocalUploaderConfig]
-
-  override def upload(src: Path, dst: String): String = {
-    // We copy files to target path. We do *not* want to symlink them, as original files can disappear at any time.
-    val target = config.path.resolve(dst)
-    Files.createDirectories(target.getParent)
-    FileUtils.recursiveCopy(src, target)
-    target.toAbsolutePath.toString
-  }
-}
+case class ScpUploaderConfig(host: String, port: Int, user: String, path: String)

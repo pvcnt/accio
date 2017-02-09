@@ -20,32 +20,38 @@ package fr.cnrs.liris.accio.core.uploader.scp
 
 import java.nio.file.Path
 
-import fr.cnrs.liris.accio.core.uploader.Uploader
+import fr.cnrs.liris.accio.core.uploader.{Archiver, Uploader}
+import fr.cnrs.liris.accio.core.util.Configurable
 import net.schmizz.sshj.SSHClient
 import net.schmizz.sshj.xfer.FileSystemFile
 
 /**
  * Uploader using an SCP client to uploader files. Authentication is done by public key.
- *
- * @param client SSH client (should be in a disconnected state).
- * @param host   Host where to upload files.
- * @param user   Username.
- * @param path   Root path where to upload files.
  */
-class ScpUploader(client: SSHClient, host: String, user: String, path: String) extends Uploader {
+class ScpUploader extends Uploader with Archiver with Configurable[ScpUploaderConfig] {
+  private[this] val client = new SSHClient
+
+  override def configClass: Class[ScpUploaderConfig] = classOf[ScpUploaderConfig]
+
   override def upload(src: Path, key: String): String = {
-    if (!client.isConnected) {
-      client.connect(host)
-      client.authPublickey(user)
-      client.useCompression()
-    }
-    client.newSCPFileTransfer().upload(new FileSystemFile(src.toAbsolutePath.toString), s"$path/$key")
-    s"$user@$host/$path/$key"
+    connect()
+    val tarGzFile = archiveAndCompress(src)
+    val path = s"${config.path}$key.tar.gz"
+    client.newSCPFileTransfer().upload(new FileSystemFile(tarGzFile.toAbsolutePath.toString), path)
+    s"scp::${config.user}@${config.host}:${config.port}/$path"
   }
 
   override def close(): Unit = {
     if (client.isConnected) {
       client.disconnect()
+    }
+  }
+
+  private def connect() = {
+    if (!client.isConnected) {
+      client.connect(config.host, config.port)
+      client.authPublickey(config.user)
+      client.useCompression()
     }
   }
 }

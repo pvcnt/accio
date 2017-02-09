@@ -1,7 +1,7 @@
 scala_library(
   name='docgen',
   dependencies=[
-    'src/jvm/fr/cnrs/liris/accio/core/domain',
+    'src/jvm/fr/cnrs/liris/accio/core/api',
     'src/jvm/fr/cnrs/liris/accio/core/runtime',
     'src/jvm/fr/cnrs/liris/privamov/ops',
     'src/jvm/fr/cnrs/liris/common/flags',

@@ -16,34 +16,20 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.uploader.inject
+package fr.cnrs.liris.accio.core.uploader.s3
 
-import com.google.inject.{Provides, Singleton}
+import com.google.inject.Provides
 import fr.cnrs.liris.accio.core.uploader.Uploader
-import fr.cnrs.liris.accio.core.uploader.scp.ScpUploader
 import net.codingwell.scalaguice.ScalaModule
-import net.schmizz.sshj.SSHClient
 
 /**
- * SCP uploader configuration.
- *
- * @param host Host where to upload files.
- * @param user Username. Authentication is done by public key.
- * @param path Root path where to upload files.
- */
-case class ScpUploaderConfig(host: String, user: String, path: String)
-
-/**
- * Guice module provisioning a local scheduler.
+ * Guice module provisioning an S3 uploader.
  *
  * @param config Configuration.
  */
-class ScpUploaderModule(config: ScpUploaderConfig) extends ScalaModule {
+final class S3UploaderModule(config: S3UploaderConfig) extends ScalaModule {
   override protected def configure(): Unit = {}
 
-  @Singleton
   @Provides
-  def providesUploader: Uploader = {
-    new ScpUploader(new SSHClient, config.host, config.user, config.path)
-  }
+  def providesUploader(uploader: S3Uploader): Uploader = uploader.initialize(config)
 }

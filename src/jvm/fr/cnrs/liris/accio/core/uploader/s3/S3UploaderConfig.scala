@@ -16,30 +16,14 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.uploader.inject
-
-import java.nio.file.Path
-
-import com.google.inject.Provides
-import fr.cnrs.liris.accio.core.uploader.Uploader
-import fr.cnrs.liris.accio.core.uploader.local.LocalUploader
-import net.codingwell.scalaguice.ScalaModule
+package fr.cnrs.liris.accio.core.uploader.s3
 
 /**
- * Local uploader configuration.
+ * S3 uploader configuration.
  *
- * @param path Root directory under which to store files.
+ * @param uri       URI to the S3/Minio service.
+ * @param accessKey Access key.
+ * @param secretKey Secret key.
+ * @param bucket    Bucket name.
  */
-case class LocalUploaderConfig(path: Path)
-
-/**
- * Guice module provisioning a local uploader.
- *
- * @param config Configuration
- */
-final class LocalUploaderModule(config: LocalUploaderConfig) extends ScalaModule {
-  override protected def configure(): Unit = {}
-
-  @Provides
-  def providesUploader: Uploader = new LocalUploader(config.path)
-}
+case class S3UploaderConfig(uri: String, accessKey: String, secretKey: String, bucket: String)
