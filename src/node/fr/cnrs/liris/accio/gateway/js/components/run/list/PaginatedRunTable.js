@@ -47,7 +47,6 @@ class PaginatedRunTable extends React.Component {
     return (
       <div>
         {(null !== this.props.runs) ? <RunTable runs={this.props.runs}/> : <Spinner spinnerName="three-bounce"/>}
-
         <Pager onSelect={this._handlePageChange}>
           <Pager.Item previous disabled={!this._hasPreviousPage()} href="#" eventKey="previous">
             &larr; Previous page

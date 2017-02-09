@@ -16,13 +16,13 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React from "react";
-import moment from "moment";
-import {Link} from "react-router";
-import {Table} from "react-bootstrap";
+import React from 'react'
+import moment from 'moment'
+import {Link} from 'react-router'
+import {Table} from 'react-bootstrap'
 
-let WorkflowTable = React.createClass({
-  render: function () {
+class WorkflowTable extends React.Component {
+  render() {
     const rows = this.props.workflows.map((workflow, idx) => {
       return (
         <tr key={idx}>
@@ -31,32 +31,30 @@ let WorkflowTable = React.createClass({
               {workflow.id}
             </Link>
           </td>
-          <td>{workflow.owner.name}</td>
           <td>{workflow.name ? workflow.name : '&gt;no name&lt;'}</td>
+          <td>{workflow.owner.name}</td>
           <td>{moment(workflow.created_at).fromNow()}</td>
         </tr>
-      );
-    });
+      )
+    })
     return (
-        <Table striped hover responsive className="accio-list-table">
-          <thead>
-          <tr>
-            <th>Workflow</th>
-            <th>Owner</th>
-            <th>Name</th>
-            <th>Created</th>
-          </tr>
-          </thead>
-          <tbody>
-          {rows}
-          </tbody>
-        </Table>
-    );
+      <Table striped hover responsive className="accio-list-table">
+        <thead>
+        <tr>
+          <th>Workflow</th>
+          <th>Name</th>
+          <th>Owner</th>
+          <th>Updated</th>
+        </tr>
+        </thead>
+        <tbody>{rows}</tbody>
+      </Table>
+    )
   }
-});
+}
 
 WorkflowTable.propTypes = {
   workflows: React.PropTypes.array.isRequired,
-};
+}
 
-export default WorkflowTable;
+export default WorkflowTable

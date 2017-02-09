@@ -62,18 +62,20 @@ class ElasticWorkflowRepository(
       q = q.must(matchQuery("name", name))
     }
     query.q.foreach { qs =>
-      q = q.must(boolQuery()
+      q = q
         .should(matchQuery("name", qs))
         .should(matchQuery("owner.name", qs))
-        .minimumShouldMatch(1))
+        .minimumShouldMatch(1)
     }
 
-    val s = search(workflowsIndex / workflowsType)
+    var s = search(workflowsIndex / workflowsType)
       .query(q)
       .sourceExclude("graph.nodes")
-      .sortBy(fieldSort("created_at").order(SortOrder.DESC))
       .limit(query.limit)
       .from(query.offset.getOrElse(0))
+    if (query.q.isEmpty) {
+      s = s.sortBy(fieldSort("created_at").order(SortOrder.DESC))
+    }
 
     val f = client.execute(s).map { resp =>
       val results = resp.hits.toSeq.map(hit => mapper.parse[Workflow](hit.sourceAsBytes))

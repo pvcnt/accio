@@ -16,45 +16,42 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React from "react";
-import {noop} from "lodash";
-import moment from "moment";
-import {Link} from "react-router";
-import {Grid, Row, Col, Button, Table, FormControl, Pager} from "react-bootstrap";
-import Spinner from "react-spinkit";
-import WorkflowFilter from "./WorkflowFilter";
-import WorkflowTable from "./WorkflowTable";
+import React from 'react'
+import {noop} from 'lodash'
+import autobind from 'autobind-decorator'
+import {Grid, Row, Col, Pager} from 'react-bootstrap'
+import Spinner from 'react-spinkit'
+import WorkflowFilter from './WorkflowFilter'
+import WorkflowTable from './WorkflowTable'
 
-let WorkflowList = React.createClass({
-  getDefaultProps: function () {
-    return {
-      onChange: noop,
-    };
-  },
+class WorkflowList extends React.Component {
+  @autobind
+  _hasNextPage() {
+    const maxPages = Math.ceil(this.props.totalCount / 25)
+    return this.props.page < maxPages
+  }
 
-  _hasNextPage: function () {
-    const maxPages = Math.ceil(this.props.totalCount / 25);
-    return this.props.page < maxPages;
-  },
+  @autobind
+  _hasPreviousPage() {
+    return this.props.page > 1
+  }
 
-  _hasPreviousPage: function () {
-    return this.props.page > 1;
-  },
+  @autobind
+  _handleFilterChange(value) {
+    this.props.onChange({query: value, page: this.props.page})
+  }
 
-  _handleFilterChange: function (value) {
-    this.props.onChange({query: value, page: this.props.page});
-  },
-
-  _handlePageChange: function (eventKey, e) {
-    e.nativeEvent.preventDefault();
+  @autobind
+  _handlePageChange(eventKey, e) {
+    e.nativeEvent.preventDefault()
     if ('next' === eventKey && this._hasNextPage()) {
-      this.props.onChange({query: this.props.query, page: this.props.page + 1});
+      this.props.onChange({query: this.props.query, page: this.props.page + 1})
     } else if ('previous' === eventKey && this._hasPreviousPage()) {
-      this.props.onChange({query: this.props.query, page: this.props.page - 1});
+      this.props.onChange({query: this.props.query, page: this.props.page - 1})
     }
-  },
+  }
 
-  render: function () {
+  render() {
     return (
       <Grid className="accio-list">
         <Row>
@@ -80,16 +77,19 @@ let WorkflowList = React.createClass({
           </Pager.Item>
         </Pager>
       </Grid>
-    );
+    )
   }
-});
+}
 
 WorkflowList.propTypes = {
   onChange: React.PropTypes.func.isRequired,
   page: React.PropTypes.number.isRequired,
   query: React.PropTypes.object.isRequired,
   workflows: React.PropTypes.array,
-  totalCount: React.PropTypes.number.isRequired
-};
+  totalCount: React.PropTypes.number.isRequired,
+}
+WorkflowList.defaultProps = {
+  onChange: noop,
+}
 
-export default WorkflowList;
+export default WorkflowList

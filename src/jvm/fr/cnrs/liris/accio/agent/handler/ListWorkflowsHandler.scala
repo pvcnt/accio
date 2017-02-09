@@ -35,6 +35,7 @@ class ListWorkflowsHandler @Inject()(repository: WorkflowRepository)
     val query = WorkflowQuery(
       name = req.name,
       owner = req.owner,
+      q = req.q,
       limit = req.limit.getOrElse(25),
       offset = req.offset)
     val res = repository.find(query)

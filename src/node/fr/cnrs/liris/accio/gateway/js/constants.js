@@ -16,29 +16,10 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React from "react";
-import {Panel} from "react-bootstrap";
-import Spinner from "react-spinkit";
-import RunTable from "../../run/list/RunTable";
+const RUNS_PER_PAGE = 15
+const WORKFLOWS_PER_PAGE = 25
 
-let LastRunsPanel = React.createClass({
-  render: function () {
-    return (
-      <Panel header="Last runs"
-             className="accio-view-panel"
-             collapsible={true}
-             defaultExpanded={true}>
-
-          {(null != this.props.runs)
-            ? (this.props.runs.length > 0) ? <RunTable runs={this.props.runs} showWorkflow={false}/> : <p>This workflow has never been launched.</p>
-            : <Spinner spinnerName="three-bounce"/>}
-      </Panel>
-    );
-  }
-});
-
-LastRunsPanel.propTypes = {
-    runs: React.PropTypes.array,
-};
-
-export default LastRunsPanel;
+export {
+  RUNS_PER_PAGE,
+  WORKFLOWS_PER_PAGE,
+}

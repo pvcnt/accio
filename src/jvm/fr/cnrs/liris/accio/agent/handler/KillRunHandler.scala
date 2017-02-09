@@ -45,7 +45,7 @@ final class KillRunHandler @Inject()(
     val lock = stateManager.lock("write")
     lock.lock()
     try {
-      runRepository.get(req.id) match {
+      val newRun = runRepository.get(req.id) match {
         case None => throw new UnknownRunException
         case Some(run) =>
           if (run.children.nonEmpty) {
@@ -59,13 +59,15 @@ final class KillRunHandler @Inject()(
               }
             }
             runRepository.save(newParent)
+            newParent
           } else {
             val (newRun, newParent) = cancelRun(run, run.parent.flatMap(runRepository.get))
             runRepository.save(newRun)
             newParent.foreach(runRepository.save)
+            newRun
           }
       }
-      Future(KillRunResponse())
+      Future(KillRunResponse(newRun))
     } finally {
       lock.unlock()
     }

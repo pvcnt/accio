@@ -16,41 +16,48 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React from "react";
-import xhr from "../../../utils/xhr";
-import RunList from "./RunList";
-import {toPairs} from "lodash";
+import React from 'react'
+import autobind from 'autobind-decorator'
+import {toPairs} from 'lodash'
+import xhr from '../../../utils/xhr'
+import RunList from './RunList'
+import {RUNS_PER_PAGE} from '../../../constants'
 
-let RunListContainer = React.createClass({
-  getInitialState: function () {
-    return {
+class RunListContainer extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
       data: {results: null, total_count: 0},
       query: {},
       page: 1,
-    };
-  },
-
-  _loadData: function (state) {
-    const qs = toPairs(state.query).map(pair => pair[0] + '=' + encodeURIComponent(pair[1])).join('&')
-    xhr('/api/v1/run?per_page=25&page=' + state.page + '&' + qs)
-      .then(data => this.setState(Object.assign(state, {data: data})));
-  },
-
-  _handleChange: function (state) {
-    this._loadData(state);
-  },
-
-  componentDidMount: function () {
-    this._loadData(this.state);
-  },
-
-  render: function () {
-    return <RunList page={this.state.page}
-                    query={this.state.query}
-                    runs={this.state.data.results}
-                    totalCount={this.state.data.total_count}
-                    onChange={this._handleChange}/>;
+    }
   }
-});
 
-export default RunListContainer;
+  _loadData(state) {
+    const qs = toPairs(state.query).map(pair => pair[0] + '=' + encodeURIComponent(pair[1])).join('&')
+    xhr('/api/v1/run?per_page=' + RUNS_PER_PAGE + '&page=' + state.page + '&' + qs)
+      .then(data => this.setState(Object.assign(state, {data: data})));
+  }
+
+  @autobind
+  _handleChange(state) {
+    this._loadData(state)
+  }
+
+  componentDidMount() {
+    this._loadData(this.state)
+  }
+
+  render() {
+    return (
+      <RunList
+        page={this.state.page}
+        query={this.state.query}
+        runs={this.state.data.results}
+        totalCount={this.state.data.total_count}
+        onChange={this._handleChange}/>
+    )
+  }
+}
+
+export default RunListContainer

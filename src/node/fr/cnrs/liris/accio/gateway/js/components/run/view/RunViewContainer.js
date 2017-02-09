@@ -18,11 +18,11 @@
 
 import React from 'react'
 import {Grid} from 'react-bootstrap'
-import RunView from './RunView'
 import autobind from 'autobind-decorator'
 import Spinner from 'react-spinkit'
 import {isEqual} from 'lodash'
 import xhr from '../../../utils/xhr'
+import RunView from './RunView'
 
 class RunViewContainer extends React.Component {
   constructor(props) {

@@ -16,41 +16,47 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React from "react";
-import xhr from "../../../utils/xhr";
-import {toPairs} from "lodash";
-import WorkflowList from "./WorkflowList";
+import React from 'react'
+import {toPairs} from 'lodash'
+import autobind from 'autobind-decorator'
+import xhr from '../../../utils/xhr'
+import WorkflowList from './WorkflowList'
 
-let WorkflowListContainer = React.createClass({
-  getInitialState: function () {
-    return {
+class WorkflowListContainer extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
       data: {results: null, total_count: 0},
       query: {},
       page: 1,
-    };
-  },
+    }
+  }
 
-  _loadData: function (state) {
+  _loadData(state) {
     const qs = toPairs(state.query).map(pair => pair[0] + '=' + encodeURIComponent(pair[1])).join('&')
     xhr('/api/v1/workflow?per_page=25&page=' + state.page + '&' + qs)
-    .then(data => this.setState(Object.assign(state, {data: data})));
-  },
-
-  _handleChange: function (state) {
-    this._loadData(state);
-  },
-
-  componentDidMount: function () {
-    this._loadData(this.state);
-  },
-
-  render: function () {
-    return <WorkflowList page={this.state.page}
-                         query={this.state.query}
-                         workflows={this.state.data.results}
-                         totalCount={this.state.data.total_count}
-                         onChange={this._handleChange}/>;
+      .then(data => this.setState(Object.assign(state, {data: data})));
   }
-});
 
-export default WorkflowListContainer;
+  @autobind
+  _handleChange(state) {
+    this._loadData(state)
+  }
+
+  componentDidMount() {
+    this._loadData(this.state)
+  }
+
+  render() {
+    return (
+      <WorkflowList
+        page={this.state.page}
+        query={this.state.query}
+        workflows={this.state.data.results}
+        totalCount={this.state.data.total_count}
+        onChange={this._handleChange}/>
+    )
+  }
+}
+
+export default WorkflowListContainer

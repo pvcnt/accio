@@ -28,25 +28,25 @@ class HomePage extends React.Component {
     return <div>
       <div className="home-banner">
         <h1>Power your experiments</h1>
-        <p>Accio is a scientific experimentation platform.</p>
+        <p>Accio is your scientific workflow management platform.</p>
       </div>
       <Grid>
         <Row>
+          <Col sm={3} className="home-box">
+            <Link to="/runs">
+              <img src="/images/bars-128px.png"/>
+              <h3>Analyze runs</h3>
+              <p>
+                Monitor the execution of runs and visualize their results.
+              </p>
+            </Link>
+          </Col>
           <Col sm={3} className="home-box">
             <Link to="/workflows">
               <img src="/images/bookshelf-128px.png"/>
               <h3>Explore workflows</h3>
               <p>
                 Explore the library of available workflows and view their details.
-              </p>
-            </Link>
-          </Col>
-          <Col sm={3} className="home-box">
-            <Link to="/runs">
-              <img src="/images/bars-128px.png"/>
-              <h3>Analyse runs</h3>
-              <p>
-                Monitor the execution of runs and visualise their results.
               </p>
             </Link>
           </Col>

@@ -16,53 +16,58 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React from "react";
-import {noop} from "lodash";
-import {Row, Col, Button, FormControl, InputGroup, Glyphicon} from "react-bootstrap";
+import React from 'react'
+import {noop} from 'lodash'
+import autobind from 'autobind-decorator'
+import {Button, FormControl, InputGroup, Glyphicon} from 'react-bootstrap'
 
-let WorkflowFilter = React.createClass({
-  getInitialState: function () {
-    return {
-      value: this.props.defaultValue,
-    };
-  },
+class WorkflowFilter extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {value: this.props.defaultValue}
+  }
 
-  getDefaultProps: function () {
-    return {
-      defaultValue: '',
-      onSubmit: noop
-    };
-  },
+  @autobind
+  _handleClear() {
+    this.setState({value: ''}, () => this.props.onSubmit({q: this.state.value}))
+  }
 
-  _handleSubmit: function (e) {
+  @autobind
+  _handleSubmit(e) {
     e.nativeEvent.preventDefault();
-    this.props.onSubmit({name: this.state.value})
-  },
+    this.props.onSubmit({q: this.state.value})
+  }
 
-  _handleChange: function (e) {
+  @autobind
+  _handleChange(e) {
     this.setState({value: e.target.value});
-  },
+  }
 
-  render: function () {
+  render() {
     return (
       <form onSubmit={this._handleSubmit} className="accio-list-filter">
         <InputGroup>
-          <FormControl type="text"
+          <FormControl type='text'
                       value={this.state.value}
                       onChange={this._handleChange}
                       placeholder="Search by name or owner..."/>
           <InputGroup.Button>
+            {this.state.value ? <Button onClick={this._handleClear}><Glyphicon glyph="remove" /></Button> : null}
             <Button type="submit"><Glyphicon glyph="search" /></Button>
           </InputGroup.Button>
         </InputGroup>
       </form>
-    );
+    )
   }
-});
+}
 
 WorkflowFilter.propTypes = {
   defaultValue: React.PropTypes.string.isRequired,
   onSubmit: React.PropTypes.func.isRequired,
-};
+}
+WorkflowFilter.defaultProps = {
+  defaultValue: '',
+  onSubmit: noop,
+}
 
-export default WorkflowFilter;
+export default WorkflowFilter

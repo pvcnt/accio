@@ -49,7 +49,10 @@ class RunView extends React.Component {
   @autobind
   _handleKillConfirm() {
     xhr('/api/v1/run/' + this.props.run.id + '/kill', {method: 'POST'}, false)
-      .then(data => this.setState({killShown: false}))
+      .then(data => {
+        this.setState({killShown: false})
+        this.props.onChange(data)
+      })
   }
 
   render() {

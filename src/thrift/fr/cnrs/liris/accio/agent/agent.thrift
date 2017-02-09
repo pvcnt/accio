@@ -122,6 +122,7 @@ struct KillRunRequest {
 }
 
 struct KillRunResponse {
+  1: required run.Run run;
 }
 
 struct UpdateRunRequest {

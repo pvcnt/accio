@@ -78,20 +78,22 @@ final class ElasticRunRepository(
       case None => q = q.filter(not(existsQuery("parent")))
     }
     query.q.foreach { qs =>
-      q = q.must(boolQuery()
+      q = q
         .should(matchQuery("owner.name", qs))
         .should(matchQuery("name", qs))
         .should(termQuery("pkg.workflow_id.value", qs))
         .should(qs.split(" ").map(s => termQuery("tags", s)))
-        .minimumShouldMatch(1))
+        .minimumShouldMatch(1)
     }
 
-    val s = search(runsIndex / runsType)
+    var s = search(runsIndex / runsType)
       .query(q)
       .sourceExclude("state.nodes.result")
-      .sortBy(fieldSort("created_at").order(SortOrder.DESC))
       .limit(query.limit.getOrElse(10000)) // Max limit defaults to 10000.
       .from(query.offset.getOrElse(0))
+    if (query.q.isEmpty) {
+      s = s.sortBy(fieldSort("created_at").order(SortOrder.DESC))
+    }
 
     val f = client.execute(s).map { resp =>
       val results = resp.hits.toSeq.map(hit => mapper.parse[Run](hit.sourceAsBytes))

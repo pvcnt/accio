@@ -16,62 +16,60 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React from "react";
-import {noop} from "lodash";
-import {LinkContainer} from "react-router-bootstrap";
-import RunTable from "./RunTable";
-import RunFilter from "./RunFilter";
-import {Grid, Row, Col, Nav, NavItem, Button, Pager, Glyphicon} from "react-bootstrap";
-import Spinner from "react-spinkit";
+import React from 'react'
+import {noop} from 'lodash'
+import autobind from 'autobind-decorator'
+import {Grid, Row, Col, Button, Pager, Glyphicon} from 'react-bootstrap';
+import Spinner from 'react-spinkit'
+import RunTable from './RunTable'
+import RunFilter from './RunFilter'
+import {RUNS_PER_PAGE} from '../../../constants'
 
-let RunList = React.createClass({
-  getDefaultProps: function () {
-    return {
-      onChange: noop,
-    };
-  },
+class RunList extends React.Component {
+  @autobind
+  _hasNextPage() {
+    const maxPages = Math.ceil(this.props.totalCount / RUNS_PER_PAGE)
+    return this.props.page < maxPages
+  }
 
-  _hasNextPage: function () {
-    const maxPages = Math.ceil(this.props.totalCount / 25);
-    return this.props.page < maxPages;
-  },
+  @autobind
+  _hasPreviousPage() {
+    return this.props.page > 1
+  }
 
-  _hasPreviousPage: function () {
-    return this.props.page > 1;
-  },
+  @autobind
+  _handleFilterChange(value) {
+    this.props.onChange({query: value, page: this.props.page})
+  }
 
-  _handleFilterChange: function (value) {
-    this.props.onChange({query: value, page: this.props.page});
-  },
-
-  _handlePageChange: function (eventKey, e) {
-    e.nativeEvent.preventDefault();
+  @autobind
+  _handlePageChange(eventKey, e) {
+    e.nativeEvent.preventDefault()
     if ('next' === eventKey && this._hasNextPage()) {
-      this.props.onChange({query: this.props.query, page: this.props.page + 1});
+      this.props.onChange({query: this.props.query, page: this.props.page + 1})
     } else if ('previous' === eventKey && this._hasPreviousPage()) {
-      this.props.onChange({query: this.props.query, page: this.props.page - 1});
+      this.props.onChange({query: this.props.query, page: this.props.page - 1})
     }
-  },
+  }
 
-  render: function () {
+  render() {
     return (
       <Grid className="accio-list">
         <Row>
           <Col sm={5}>
-            <h2 className="accio-title">
-              <img src="images/bars-32px.png"/>
-              Runs
-            </h2>
+            <h2 className="accio-title"><img src="images/bars-32px.png"/> Runs</h2>
           </Col>
           <Col sm={7}>
             <RunFilter onSubmit={this._handleFilterChange}/>
           </Col>
         </Row>
 
-        <div className="accio-actions">
-          <Button><Glyphicon glyph="th" /> Compare</Button>
-          <Button disabled bsStyle="primary"><Glyphicon glyph="plus" /> Create run</Button>
-        </div>
+        <Row className="accio-actions">
+          <Col sm={12}>
+            <Button><Glyphicon glyph="th" /> Compare</Button>
+            <Button disabled bsStyle="primary"><Glyphicon glyph="plus" /> Create run</Button>
+          </Col>
+        </Row>
 
         {(null !== this.props.runs) ? <RunTable runs={this.props.runs}/> : <Spinner spinnerName="three-bounce"/>}
 
@@ -84,16 +82,19 @@ let RunList = React.createClass({
           </Pager.Item>
         </Pager>
       </Grid>
-    );
+    )
   }
-});
+}
 
 RunList.propTypes = {
   onChange: React.PropTypes.func.isRequired,
   page: React.PropTypes.number.isRequired,
   query: React.PropTypes.object.isRequired,
   runs: React.PropTypes.array,
-  totalCount: React.PropTypes.number.isRequired
-};
+  totalCount: React.PropTypes.number.isRequired,
+}
+RunList.defaultProps = {
+  onChange: noop,
+}
 
-export default RunList;
+export default RunList

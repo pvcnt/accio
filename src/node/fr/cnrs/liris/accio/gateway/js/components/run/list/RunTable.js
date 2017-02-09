@@ -19,7 +19,7 @@
 import React from 'react'
 import moment from 'moment'
 import {Link} from 'react-router'
-import {ProgressBar, Table, Label, Glyphicon} from 'react-bootstrap'
+import {ProgressBar, Col, Row, Glyphicon, Grid} from 'react-bootstrap'
 import TagList from '../../TagList'
 
 class RunTable extends React.Component {
@@ -27,50 +27,62 @@ class RunTable extends React.Component {
     const rows = this.props.runs.map((run, idx) => {
       const style = (run.state.completed_at) ? (run.state.status == 'success') ? 'success' : 'danger' : 'warning'
       const progress = Math.round(run.state.progress * 100)
-      return <tr key={idx}>
-        {this.props.showWorkflow ? <td><input type="checkbox" /></td> : null}
-        <td>
-          <Link to={'/runs/view/' + run.id}>
-            {run.name ? run.name : 'Untitled run #' + run.id}
-          </Link>
-          {run.children.length ? <span style={{marginLeft: '10px'}}><Glyphicon glyph="tasks"/>&nbsp;{run.children.length}</span> : null}
-        </td>
-        {this.props.showWorkflow ? <td>{run.pkg.workflow_id}</td> : null}
-        {this.props.showOwner ? <td>{run.owner.name}</td> : null}
-        <td><ProgressBar now={progress} label={progress + '%'} bsStyle={style}/></td>
-        <td>{(run.state.started_at) ? moment(run.state.started_at).fromNow() : '–'}</td>
-        {this.props.showTags ? <td><TagList tags={run.tags}/></td> : null}
-      </tr>
-    });
-    return <Table striped hover responsive className="accio-list-table">
-      <thead>
-      <tr>
-        {this.props.showWorkflow ? <th>&nbsp;</th> : null}
-        <th>Run name</th>
-        {this.props.showWorkflow ? <th>Workflow</th> : null}
-        {this.props.showOwner ? <th>Owner</th> : null}
-        <th>Progress</th>
-        <th>Started</th>
-        {this.props.showTags ? <th>Tags</th> : null}
-      </tr>
-      </thead>
-      <tbody>
-      {rows}
-      </tbody>
-    </Table>
+      let label = null
+      if (run.state.status === 'running' && run.children.length > 0) {
+        const activeNodes = run.state.nodes.filter(node => node.status === 'running')
+        if (activeNodes.length > 0) {
+          label = 'Running ' + activeNodes.map(node => node.name).join(', ')
+        } else {
+          const waitingNode = find(run.state.nodes, node => node.status === 'scheduled')
+          if (waitingNode) {
+            label = 'Waiting for ' + waitingNode.name
+          }
+        }
+      } else if (run.state.status === 'killed') {
+        label = 'Cancelled'
+      } else if (run.state.status === 'failed' && run.children.length > 0) {
+        const failedNode = find(run.state.nodes, node => node.status === 'failed')
+        if (failedNode) {
+          label = 'Failed in ' + failedNode.name
+        } else {
+          const lostNode = find(run.state.nodes, node => node.status === 'lost')
+          if (lostNode) {
+            label = 'Lost ' + lostNode.name
+          }
+        }
+      }
+      const startedAt = run.state.started_at
+        ? <span><Glyphicon glyph="play"/>&nbsp;{moment(run.state.started_at).format('MMM D, HH:mm')}</span>
+        : <span><Glyphicon glyph="upload"/>&nbsp;{moment(run.created_at).format('MMM D, HH:mm')}</span>
+      const stoppedAt = run.state.completed_at
+        ? <span><Glyphicon glyph="stop"/>&nbsp;{moment(run.state.completed_at).format('MMM D, HH:mm')}</span>
+        : run.state.started_at
+          ? <span><Glyphicon
+            glyph="hourglass"/>&nbsp;{moment.duration(moment().valueOf() - run.state.started_at).humanize()}</span>
+          : null
+      return (
+        <Row key={idx} className="run-item">
+          <Col md={2}>{startedAt}<br/>{stoppedAt}</Col>
+          <Col md={5}>
+            {run.children.length
+              ? <span className="run-item-count"><Glyphicon glyph="tasks"/>&nbsp;{run.children.length}</span>
+              : null}
+            <Link to={'/runs/view/' + run.id}>{run.name ? run.name : 'Untitled run #' + run.id}</Link>
+            <br/>
+            <span className="run-item-status">{label}</span>
+          </Col>
+          <Col md={2}><ProgressBar now={progress} label={progress + '%'} bsStyle={style}/></Col>
+          <Col md={1}>{run.owner.name}</Col>
+          <Col md={2}><TagList tags={run.tags}/></Col>
+        </Row>
+      )
+    })
+    return <Grid className="run-list">{rows}</Grid>
   }
 }
 
 RunTable.propTypes = {
   runs: React.PropTypes.array.isRequired,
-  showWorkflow: React.PropTypes.bool.isRequired,
-  showOwner: React.PropTypes.bool.isRequired,
-  showTags: React.PropTypes.bool.isRequired,
-}
-RunTable.defaultProps = {
-  showWorkflow: true,
-  showOwner: true,
-  showTags: true,
 }
 
 export default RunTable;

@@ -16,48 +16,37 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React from "react";
-import {Grid, Button, Glyphicon} from "react-bootstrap";
-import GraphView from "../GraphView";
-import LazyPanel from "../../LazyPanel";
-import WorkflowDetailsPanel from "./WorkflowDetailsPanel";
-import WorkflowParamsPanel from "./WorkflowParamsPanel";
-import LastRunsPanel from "./LastRunsPanel";
+import React from 'react'
+import {Grid, Button, Glyphicon} from 'react-bootstrap'
+import GraphView from '../GraphView'
+import LazyPanel from '../../LazyPanel'
+import WorkflowDetailsPanel from './WorkflowDetailsPanel'
+import WorkflowParamsPanel from './WorkflowParamsPanel'
 
-let WorkflowView = React.createClass({
-  render: function () {
+class WorkflowView extends React.Component {
+  render() {
     return (
       <Grid>
         <h2 className="accio-title">
           <img src="images/stack-32px.png"/> {this.props.workflow.id}:{this.props.workflow.version}
         </h2>
 
-        <div className="accio-actions">
-          <Button href={'/api/v1/workflow/' + this.props.workflow.id + '?download=true'}>
-            <Glyphicon glyph="save"/> Download as JSON
-          </Button>
-        </div>
-
         <WorkflowDetailsPanel workflow={this.props.workflow}/>
-
         <WorkflowParamsPanel workflow={this.props.workflow}/>
-
         <LazyPanel header="Operators graph"
                    className="accio-view-panel accio-view-panel-graph"
                    collapsible={true}
                    defaultExpanded={false}>
           <GraphView graph={this.props.workflow.graph} height={500}/>
         </LazyPanel>
-
-        <LastRunsPanel runs={this.props.lastRuns}/>
       </Grid>
-    );
+    )
   }
-});
+}
 
 WorkflowView.propTypes = {
   workflow: React.PropTypes.object.isRequired,
   lastRuns: React.PropTypes.array,
-};
+}
 
-export default WorkflowView;
+export default WorkflowView

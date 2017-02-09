@@ -18,7 +18,7 @@
 
 import React from 'react'
 import {noop} from 'lodash'
-import {Row, Col, Button, FormControl, InputGroup, Glyphicon} from 'react-bootstrap'
+import {Button, FormControl, InputGroup, Glyphicon} from 'react-bootstrap'
 import autobind from 'autobind-decorator'
 
 class RunFilter extends React.Component {
@@ -28,9 +28,14 @@ class RunFilter extends React.Component {
   }
 
   @autobind
+  _handleClear() {
+    this.setState({value: ''}, () => this.props.onSubmit({q: this.state.value}))
+  }
+
+  @autobind
   _handleSubmit(e) {
-    e.nativeEvent.preventDefault();
-    this.props.onSubmit({name: this.state.value})
+    e.nativeEvent.preventDefault()
+    this.props.onSubmit({q: this.state.value})
   }
 
   @autobind
@@ -47,6 +52,7 @@ class RunFilter extends React.Component {
                       onChange={this._handleChange}
                       placeholder="Search by name, workflow, owner or tags..."/>
           <InputGroup.Button>
+            {this.state.value ? <Button onClick={this._handleClear}><Glyphicon glyph="remove" /></Button> : null}
             <Button type="submit"><Glyphicon glyph="search" /></Button>
           </InputGroup.Button>
         </InputGroup>
@@ -58,10 +64,10 @@ class RunFilter extends React.Component {
 RunFilter.propTypes = {
   defaultValue: React.PropTypes.string.isRequired,
   onSubmit: React.PropTypes.func.isRequired,
-};
+}
 RunFilter.defaultProps = {
   defaultValue: '',
-  onSubmit: noop
-};
+  onSubmit: noop,
+}
 
 export default RunFilter;
