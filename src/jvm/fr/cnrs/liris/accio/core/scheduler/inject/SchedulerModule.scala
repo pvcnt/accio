@@ -47,7 +47,7 @@ object SchedulerModule extends TwitterModule {
 
   protected override def configure(): Unit = {
     val executorArgs = UploaderModule.executorPassthroughFlags.flatMap { flag =>
-      flag.getWithDefault.map(v => Seq(s"-${flag.name}", v)).getOrElse(Seq.empty[String])
+      flag.getWithDefault.map(v => Seq(s"-${flag.name}", v.toString)).getOrElse(Seq.empty[String])
     }
     val module = schedulerFlag() match {
       case "local" =>
