@@ -23,22 +23,24 @@ import com.twitter.util.Future
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.agent.{HeartbeatRequest, HeartbeatResponse}
 import fr.cnrs.liris.accio.core.statemgr.StateManager
+import fr.cnrs.liris.accio.core.storage.MutableTaskRepository
 
 /**
  * Receive heartbeat for a task.
  *
- * @param stateManager State manager.
+ * @param stateManager   State manager.
+ * @param taskRepository Task repository.
  */
-class HeartbeatHandler @Inject()(stateManager: StateManager)
+class HeartbeatHandler @Inject()(stateManager: StateManager, taskRepository: MutableTaskRepository)
   extends Handler[HeartbeatRequest, HeartbeatResponse] with LazyLogging {
 
   override def handle(req: HeartbeatRequest): Future[HeartbeatResponse] = {
     val lock = stateManager.lock("write")
     lock.lock()
     try {
-      stateManager.get(req.taskId).foreach { task =>
+      taskRepository.get(req.taskId).foreach { task =>
         val newTask = task.copy(state = task.state.copy(heartbeatAt = Some(System.currentTimeMillis())))
-        stateManager.save(newTask)
+        taskRepository.save(newTask)
         logger.debug(s"[T${req.taskId.value}] Received heartbeat")
       }
       Future(HeartbeatResponse())

@@ -16,16 +16,14 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.statemgr.local
+package fr.cnrs.liris.accio.core.statemgr;
 
-import fr.cnrs.liris.accio.core.statemgr.StateMgrSpec
-import fr.cnrs.liris.testing.WithTmpDirectory
+import com.google.inject.BindingAnnotation;
 
-/**
- * Unit tests of [[LocalStateMgr]].
- */
-class LocalStateMgrSpec extends StateMgrSpec with WithTmpDirectory {
-  behavior of "LocalStateMgr"
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
-  protected def createStateMgr = new LocalStateMgr(LocalStateMgrConfig(tmpDir))
+@Retention(RetentionPolicy.RUNTIME)
+@BindingAnnotation
+public @interface ForStateMgr {
 }

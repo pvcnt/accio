@@ -25,17 +25,19 @@ import fr.cnrs.liris.accio.agent.{CompleteTaskRequest, CompleteTaskResponse, Inv
 import fr.cnrs.liris.accio.core.domain.{OpResult, Run, Task}
 import fr.cnrs.liris.accio.core.runtime.RunManager
 import fr.cnrs.liris.accio.core.statemgr.StateManager
-import fr.cnrs.liris.accio.core.storage.MutableRunRepository
+import fr.cnrs.liris.accio.core.storage.{MutableRunRepository, MutableTaskRepository}
 
 /**
  * Handle the completion of a task. It will store the result and update state of the appropriate run.
  *
- * @param runRepository Run repository.
- * @param stateManager  State manager.
- * @param runManager    Run lifecycle manager.
+ * @param runRepository  Run repository.
+ * @param taskRepository Task repository.
+ * @param stateManager   State manager.
+ * @param runManager     Run lifecycle manager.
  */
 final class CompleteTaskHandler @Inject()(
   runRepository: MutableRunRepository,
+  taskRepository: MutableTaskRepository,
   stateManager: StateManager,
   runManager: RunManager)
   extends Handler[CompleteTaskRequest, CompleteTaskResponse] with StrictLogging {
@@ -45,11 +47,11 @@ final class CompleteTaskHandler @Inject()(
     val lock = stateManager.lock("write")
     lock.lock()
     try {
-      stateManager.get(req.taskId) match {
+      taskRepository.get(req.taskId) match {
         case None => throw new InvalidTaskException
         case Some(task) =>
           // Remove task from the state manager.
-          stateManager.remove(task.id)
+          taskRepository.remove(task.id)
 
           // Update run (and maybe its parent).
           runRepository.get(task.runId) match {

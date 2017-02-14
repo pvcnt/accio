@@ -16,14 +16,9 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.statemgr.inject
+package fr.cnrs.liris.accio.core.statemgr.local
 
 import java.nio.file.Path
-
-import com.google.inject.{Provides, Singleton}
-import fr.cnrs.liris.accio.core.statemgr.StateManager
-import fr.cnrs.liris.accio.core.statemgr.local.LocalStateMgr
-import net.codingwell.scalaguice.ScalaModule
 
 /**
  * Local state manager configuration.
@@ -31,19 +26,3 @@ import net.codingwell.scalaguice.ScalaModule
  * @param path Root directory under which data will be written.
  */
 case class LocalStateMgrConfig(path: Path)
-
-/**
- * Guice module provisioning a local state manager.
- *
- * @param config Configuration.
- */
-final class LocalStateMgrModule(config: LocalStateMgrConfig) extends ScalaModule {
-  override def configure(): Unit = {}
-
-  @Singleton
-  @Provides
-  def providesStateManager(): StateManager = {
-    // Local state manager must be a singleton, otherwise the locking mechanism won't work.
-    new LocalStateMgr(config.path)
-  }
-}

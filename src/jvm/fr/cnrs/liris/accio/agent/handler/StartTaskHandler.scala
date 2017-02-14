@@ -24,18 +24,20 @@ import fr.cnrs.liris.accio.agent.{InvalidTaskException, StartTaskRequest, StartT
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.runtime.RunManager
 import fr.cnrs.liris.accio.core.statemgr.StateManager
-import fr.cnrs.liris.accio.core.storage.MutableRunRepository
+import fr.cnrs.liris.accio.core.storage.{MutableRunRepository, MutableTaskRepository}
 
 /**
  * When the executor starts its execution, it only has the identifier of a task to execute. Its first action should
  * be to register itself to the agent and ask for a payload to execute. This is what is done here.
  *
- * @param runRepository Run repository.
- * @param stateManager  State manager.
- * @param runManager    Run lifecycle manager.
+ * @param runRepository  Run repository.
+ * @param taskRepository Task repository.
+ * @param stateManager   State manager.
+ * @param runManager     Run lifecycle manager.
  */
 class StartTaskHandler @Inject()(
   runRepository: MutableRunRepository,
+  taskRepository: MutableTaskRepository,
   stateManager: StateManager,
   runManager: RunManager)
   extends Handler[StartTaskRequest, StartTaskResponse] {
@@ -45,19 +47,19 @@ class StartTaskHandler @Inject()(
     val lock = stateManager.lock("write")
     lock.lock()
     try {
-      stateManager.get(req.taskId) match {
+      taskRepository.get(req.taskId) match {
         case None => throw new InvalidTaskException
         case Some(task) =>
           runRepository.get(task.runId) match {
             case None =>
               // Illegal state: no run found for this task.
-              stateManager.remove(req.taskId)
+              taskRepository.remove(req.taskId)
               throw new InvalidTaskException
             case Some(run) =>
               // Update task. Mark a first heartbeat now to prevent the task to be marked as lost before starting.
               val now = System.currentTimeMillis()
               val newTask = task.copy(state = task.state.copy(startedAt = Some(now), heartbeatAt = Some(now), status = TaskStatus.Running))
-              stateManager.save(newTask)
+              taskRepository.save(newTask)
 
               // Update run.
               val newRun = runManager.onStart(run, task.nodeName)

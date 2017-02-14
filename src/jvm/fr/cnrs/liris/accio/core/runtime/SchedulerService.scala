@@ -26,22 +26,21 @@ import com.google.inject.Inject
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.scheduler.{Job, Scheduler}
-import fr.cnrs.liris.accio.core.statemgr.StateManager
-import fr.cnrs.liris.accio.core.storage.RunRepository
+import fr.cnrs.liris.accio.core.storage.{MutableTaskRepository, RunRepository}
 import fr.cnrs.liris.dal.core.api.Value
 
 /**
  * Wrapper around the actual scheduler, handling task creation.
  *
- * @param scheduler     Scheduler.
- * @param stateManager  State manager.
- * @param opRegistry    Operator registry.
- * @param runRepository Run repository (read-only).
+ * @param scheduler      Scheduler.
+ * @param opRegistry     Operator registry.
+ * @param taskRepository Task repository.
+ * @param runRepository  Run repository (read-only).
  */
 final class SchedulerService @Inject()(
   scheduler: Scheduler,
-  stateManager: StateManager,
   opRegistry: OpRegistry,
+  taskRepository: MutableTaskRepository,
   runRepository: RunRepository)
   extends StrictLogging {
 
@@ -72,20 +71,19 @@ final class SchedulerService @Inject()(
         val task = Task(
           id = taskId,
           runId = run.id,
-          key = key,
           payload = payload,
           nodeName = node.name,
           createdAt = now,
-          state = TaskState(TaskStatus.Scheduled))
-        stateManager.save(task)
+          state = TaskState(TaskStatus.Scheduled, key = Some(key)))
+        taskRepository.save(task)
         logger.debug(s"Scheduled task ${task.id.value}. Run: ${run.id.value}, node: ${node.name}, op: ${payload.op}")
         None
     }
   }
 
   def kill(task: Task): Unit = {
-    scheduler.kill(task.key)
-    stateManager.remove(task.id)
+    task.state.key.foreach(scheduler.kill)
+    taskRepository.remove(task.id)
   }
 
   /**

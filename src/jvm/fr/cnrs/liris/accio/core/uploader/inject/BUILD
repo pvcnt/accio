@@ -1,6 +1,5 @@
 scala_library(
   dependencies=[
-    'src/jvm/fr/cnrs/liris/accio/core/uploader',
     'src/jvm/fr/cnrs/liris/accio/core/uploader/local',
     'src/jvm/fr/cnrs/liris/accio/core/uploader/scp',
     'src/jvm/fr/cnrs/liris/accio/core/uploader/s3',

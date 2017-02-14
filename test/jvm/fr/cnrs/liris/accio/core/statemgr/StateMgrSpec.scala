@@ -21,7 +21,6 @@ package fr.cnrs.liris.accio.core.statemgr
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.{Callable, Executors}
 
-import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.testing.UnitSpec
 
 /**
@@ -30,7 +29,7 @@ import fr.cnrs.liris.testing.UnitSpec
 private[statemgr] abstract class StateMgrSpec extends UnitSpec {
   private[this] val pool = Executors.newCachedThreadPool
 
-  private[this] val ScheduledTask = Task(
+  /*private[this] val ScheduledTask = Task(
     id = TaskId("id2"),
     runId = RunId("foobar"),
     nodeName = "foonode",
@@ -45,11 +44,43 @@ private[statemgr] abstract class StateMgrSpec extends UnitSpec {
     payload = OpPayload("fooop", 1234, Map.empty, CacheKey("MyCacheKey")),
     key = "fookey",
     createdAt = System.currentTimeMillis(),
-    state = TaskState(TaskStatus.Running))
+    state = TaskState(TaskStatus.Running))*/
 
   protected def createStateMgr: StateManager
 
-  it should "save and retrieve a task" in {
+  it should "save and retrieve a key" in {
+    val stateMgr = createStateMgr
+    stateMgr.get("foo") shouldBe None
+    stateMgr.set("foo", "foo".getBytes)
+    stateMgr.get("foo").map(_.deep) shouldBe Some("foo".getBytes.deep)
+
+    stateMgr.get("bar") shouldBe None
+    stateMgr.set("bar", "bar".getBytes)
+    stateMgr.get("bar").map(_.deep) shouldBe Some("bar".getBytes.deep)
+
+    stateMgr.get("foo/bar") shouldBe None
+    stateMgr.set("foo/bar", "foobar".getBytes)
+    stateMgr.get("foo/bar").map(_.deep) shouldBe Some("foobar".getBytes.deep)
+  }
+
+  it should "list keys" in {
+    val stateMgr = createStateMgr
+    stateMgr.set("foo", "foo".getBytes)
+    stateMgr.set("bar", "bar".getBytes)
+    stateMgr.set("foo/foo", "foo".getBytes)
+    stateMgr.set("foo/bar", "foobar".getBytes)
+
+    stateMgr.list("foo") should contain theSameElementsAs Set("foo/foo", "foo/bar")
+  }
+
+  it should "delete a key" in {
+    val stateMgr = createStateMgr
+    stateMgr.set("foo", "foo".getBytes)
+    stateMgr.remove("foo")
+    stateMgr.get("foo") shouldBe None
+  }
+
+  /*it should "save and retrieve a task" in {
     val stateMgr = createStateMgr
     stateMgr.get(RunningTask.id) shouldBe None
     stateMgr.save(RunningTask)
@@ -72,7 +103,7 @@ private[statemgr] abstract class StateMgrSpec extends UnitSpec {
     stateMgr.save(RunningTask)
     stateMgr.remove(RunningTask.id)
     stateMgr.get(RunningTask.id) shouldBe None
-  }
+  }*/
 
   it should "block-lock" in {
     val stateMgr = createStateMgr

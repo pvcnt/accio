@@ -1,5 +1,6 @@
 scala_library(
   dependencies=[
+    ':annotations',
     'src/jvm/fr/cnrs/liris/accio/agent/handler',
     'src/jvm/fr/cnrs/liris/accio/core/downloader/inject',
     'src/jvm/fr/cnrs/liris/accio/core/statemgr/inject',
@@ -39,6 +40,14 @@ scala_library(
     exclude('com.twitter.finatra', 'finatra-scalap-compiler-deps_2.11'),
   ],
   sources=globs('*.scala')
+)
+
+java_library(
+  name='annotations',
+  dependencies=[
+    '3rdparty/jvm/com/google/guice',
+  ],
+  sources=globs('*.java')
 )
 
 jvm_binary(

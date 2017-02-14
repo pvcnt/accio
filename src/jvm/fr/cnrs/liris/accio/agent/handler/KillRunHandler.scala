@@ -24,18 +24,20 @@ import fr.cnrs.liris.accio.agent.{KillRunRequest, KillRunResponse, UnknownRunExc
 import fr.cnrs.liris.accio.core.domain.Run
 import fr.cnrs.liris.accio.core.runtime.{RunManager, SchedulerService}
 import fr.cnrs.liris.accio.core.statemgr.StateManager
-import fr.cnrs.liris.accio.core.storage.MutableRunRepository
+import fr.cnrs.liris.accio.core.storage.{MutableRunRepository, MutableTaskRepository, TaskQuery}
 
 /**
  * Kill a run and all running tasks.
  *
  * @param runRepository    Run repository.
+ * @param taskRepository   Task repository.
  * @param stateManager     State manager.
  * @param schedulerService Scheduler service.
  * @param runManager       Run manager.
  */
 final class KillRunHandler @Inject()(
   runRepository: MutableRunRepository,
+  taskRepository: MutableTaskRepository,
   stateManager: StateManager,
   schedulerService: SchedulerService,
   runManager: RunManager)
@@ -74,8 +76,8 @@ final class KillRunHandler @Inject()(
   }
 
   private def cancelRun(run: Run, parent: Option[Run]) = {
-    val tasks = stateManager.tasks.filter(_.runId == run.id)
+    val tasks = taskRepository.find(TaskQuery(runs = Set(run.id)))
     tasks.foreach(schedulerService.kill)
-    runManager.onKill(run, tasks.map(_.nodeName), None)
+    runManager.onKill(run, tasks.map(_.nodeName).toSet, None)
   }
 }

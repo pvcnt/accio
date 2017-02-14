@@ -16,16 +16,31 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.statemgr.local
+namespace java fr.cnrs.liris.accio.agent
 
-import fr.cnrs.liris.accio.core.statemgr.StateMgrSpec
-import fr.cnrs.liris.testing.WithTmpDirectory
+include "fr/cnrs/liris/accio/core/domain/accio.thrift"
 
 /**
- * Unit tests of [[LocalStateMgr]].
- */
-class LocalStateMgrSpec extends StateMgrSpec with WithTmpDirectory {
-  behavior of "LocalStateMgr"
+ * Communication protocol between servers and workers.
+ **/
+struct ScheduleTaskRequest {
+  1: required accio.Task task;
+}
 
-  protected def createStateMgr = new LocalStateMgr(LocalStateMgrConfig(tmpDir))
+struct ScheduleTaskResponse {
+  1: required bool accepted;
+}
+
+struct KillTaskRequest {
+  1: required string key;
+}
+
+struct KillTaskResponse {
+  1: required bool accepted;
+}
+
+service WorkerService {
+  ScheduleTaskResponse scheduleTask(1: ScheduleTaskRequest req);
+
+  KillTaskResponse killTask(1: KillTaskRequest req);
 }

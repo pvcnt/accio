@@ -18,20 +18,17 @@
 
 namespace java fr.cnrs.liris.accio.agent
 
-include "fr/cnrs/liris/accio/core/domain/common.thrift"
-include "fr/cnrs/liris/accio/core/domain/workflow.thrift"
-include "fr/cnrs/liris/accio/core/domain/run.thrift"
-include "fr/cnrs/liris/accio/core/domain/operator.thrift"
+include "fr/cnrs/liris/accio/core/domain/accio.thrift"
 
 /**
- * Communication protocol with clients.
+ * Communication protocol between clients and servers.
  */
 struct GetOperatorRequest {
   1: required string name;
 }
 
 struct GetOperatorResponse {
-  1: optional operator.OpDef result;
+  1: optional accio.OpDef result;
 }
 
 struct ListOperatorsRequest {
@@ -39,26 +36,26 @@ struct ListOperatorsRequest {
 }
 
 struct ListOperatorsResponse {
-  1: required list<operator.OpDef> results;
+  1: required list<accio.OpDef> results;
 }
 
 struct PushWorkflowRequest {
-  1: required workflow.WorkflowSpec spec;
-  2: required common.User user;
+  1: required accio.WorkflowSpec spec;
+  2: required accio.User user;
 }
 
 struct PushWorkflowResponse {
-  1: required workflow.Workflow workflow;
-  2: required list<common.InvalidSpecMessage> warnings;
+  1: required accio.Workflow workflow;
+  2: required list<accio.InvalidSpecMessage> warnings;
 }
 
 struct GetWorkflowRequest {
-  1: required common.WorkflowId id;
+  1: required accio.WorkflowId id;
   2: optional string version;
 }
 
 struct GetWorkflowResponse {
-  1: optional workflow.Workflow result;
+  1: optional accio.Workflow result;
 }
 
 struct ListWorkflowsRequest {
@@ -70,63 +67,63 @@ struct ListWorkflowsRequest {
 }
 
 struct ListWorkflowsResponse {
-  1: required list<workflow.Workflow> results;
+  1: required list<accio.Workflow> results;
   2: required i32 total_count;
 }
 
 struct CreateRunRequest {
-  1: required run.RunSpec spec;
-  2: required common.User user;
+  1: required accio.RunSpec spec;
+  2: required accio.User user;
 }
 
 struct CreateRunResponse {
-  1: required list<common.RunId> ids;
-  2: required list<common.InvalidSpecMessage> warnings;
+  1: required list<accio.RunId> ids;
+  2: required list<accio.InvalidSpecMessage> warnings;
 }
 
 struct GetRunRequest {
-  1: required common.RunId id;
+  1: required accio.RunId id;
 }
 
 struct GetRunResponse {
-  1: optional run.Run result;
+  1: optional accio.Run result;
 }
 
 struct ListRunsRequest {
   1: optional string owner;
   2: optional string name;
-  3: optional common.WorkflowId workflow_id;
-  5: optional set<run.RunStatus> status;
+  3: optional accio.WorkflowId workflow_id;
+  5: optional set<accio.RunStatus> status;
   6: optional set<string> tags;
-  7: optional common.RunId parent;
-  8: optional common.RunId cloned_from;
+  7: optional accio.RunId parent;
+  8: optional accio.RunId cloned_from;
   9: optional string q;
   10: optional i32 limit;
   11: optional i32 offset;
 }
 
 struct ListRunsResponse {
-  1: required list<run.Run> results;
+  1: required list<accio.Run> results;
   2: required i32 total_count;
 }
 
 struct DeleteRunRequest {
-  1: required common.RunId id;
+  1: required accio.RunId id;
 }
 
 struct DeleteRunResponse {
 }
 
 struct KillRunRequest {
-  1: required common.RunId id;
+  1: required accio.RunId id;
 }
 
 struct KillRunResponse {
-  1: required run.Run run;
+  1: required accio.Run run;
 }
 
 struct UpdateRunRequest {
-  1: required common.RunId id;
+  1: required accio.RunId id;
   2: optional string name;
   3: optional string notes;
   4: optional set<string> tags;
@@ -136,15 +133,15 @@ struct UpdateRunResponse {
 }
 
 struct ListLogsRequest {
-  1: required common.RunId run_id;
+  1: required accio.RunId run_id;
   2: required string node_name;
   3: optional string classifier;
   4: optional i32 limit;
-  5: optional common.Timestamp since;
+  5: optional accio.Timestamp since;
 }
 
 struct ListLogsResponse {
-  1: required list<run.RunLog> results;
+  1: required list<accio.RunLog> results;
 }
 
 struct ParseRunRequest {
@@ -154,9 +151,9 @@ struct ParseRunRequest {
 }
 
 struct ParseRunResponse {
-  1: optional run.RunSpec run;
-  2: required list<common.InvalidSpecMessage> warnings;
-  3: required list<common.InvalidSpecMessage> errors;
+  1: optional accio.RunSpec run;
+  2: required list<accio.InvalidSpecMessage> warnings;
+  3: required list<accio.InvalidSpecMessage> errors;
 }
 
 struct ParseWorkflowRequest {
@@ -165,9 +162,9 @@ struct ParseWorkflowRequest {
 }
 
 struct ParseWorkflowResponse {
-  1: optional workflow.WorkflowSpec workflow;
-  2: required list<common.InvalidSpecMessage> warnings;
-  3: required list<common.InvalidSpecMessage> errors;
+  1: optional accio.WorkflowSpec workflow;
+  2: required list<accio.InvalidSpecMessage> warnings;
+  3: required list<accio.InvalidSpecMessage> errors;
 }
 
 struct InfoRequest {
@@ -191,35 +188,54 @@ exception UnknownRunException {
 }
 
 /**
- * Communication protocol with executors.
+ * Communication protocol between servers and workers.
+ **/
+struct ScheduleTaskRequest {
+  1: required accio.Task task;
+}
+
+struct ScheduleTaskResponse {
+  1: required bool accepted;
+}
+
+struct KillTaskRequest {
+  1: required string key;
+}
+
+struct KillTaskResponse {
+  1: required bool accepted;
+}
+
+/**
+ * Communication protocol between servers and executors.
  */
 struct StartTaskRequest {
-  1: required common.TaskId task_id;
+  1: required accio.TaskId task_id;
 }
 
 struct StartTaskResponse {
-  1: required common.RunId run_id;
+  1: required accio.RunId run_id;
   2: required string node_name;
-  3: required operator.OpPayload payload;
+  3: required accio.OpPayload payload;
 }
 
 struct HeartbeatRequest {
-  1: required common.TaskId task_id;
+  1: required accio.TaskId task_id;
 }
 
 struct HeartbeatResponse {
 }
 
 struct StreamLogsRequest {
-  1: required list<run.RunLog> logs;
+  1: required list<accio.RunLog> logs;
 }
 
 struct StreamLogsResponse {
 }
 
 struct CompleteTaskRequest {
-  1: required common.TaskId task_id;
-  2: required operator.OpResult result;
+  1: required accio.TaskId task_id;
+  2: required accio.OpResult result;
 }
 
 struct CompleteTaskResponse {
@@ -235,11 +251,11 @@ service AgentService {
   // Retrieve all known operators.
   ListOperatorsResponse listOperators(1: ListOperatorsRequest req);
 
-  // Parse a string, written using the workflow DSL, into a valid workflow.
+  // Parse a string, written using the workflow DSL, into a valid accio.
   ParseWorkflowResponse parseWorkflow(1: ParseWorkflowRequest req);
 
-  // Push a new version of a workflow.
-  PushWorkflowResponse pushWorkflow(1: PushWorkflowRequest req) throws (1: common.InvalidSpecException parse);
+  // Push a new version of a accio.
+  PushWorkflowResponse pushWorkflow(1: PushWorkflowRequest req) throws (1: accio.InvalidSpecException parse);
 
   GetWorkflowResponse getWorkflow(1: GetWorkflowRequest req);
 
@@ -248,7 +264,7 @@ service AgentService {
   // Parse a string, written using the run DSL, into a valid run specification.
   ParseRunResponse parseRun(1: ParseRunRequest req);
 
-  CreateRunResponse createRun(1: CreateRunRequest req) throws (1: common.InvalidSpecException parse);
+  CreateRunResponse createRun(1: CreateRunRequest req) throws (1: accio.InvalidSpecException parse);
 
   GetRunResponse getRun(1: GetRunRequest req);
 
@@ -276,4 +292,8 @@ service AgentService {
   StreamLogsResponse streamLogs(1: StreamLogsRequest req) throws (1: InvalidTaskException invalid);
 
   CompleteTaskResponse completeTask(1: CompleteTaskRequest req) throws (1: InvalidTaskException invalid);
+}
+
+service WorkerService {
+
 }

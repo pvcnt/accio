@@ -18,8 +18,6 @@
 
 package fr.cnrs.liris.accio.core.statemgr
 
-import fr.cnrs.liris.accio.core.domain.{Task, TaskId}
-
 /**
  * State manager holds state about runs being executed and associated tasks. It provides fast and ephemeral (we can
  * afford data loss, even if it is not desired) storage, for small payloads. It also provides synchronization utils.
@@ -35,13 +33,23 @@ trait StateManager {
    */
   def lock(key: String): Lock
 
-  def tasks: Set[Task]
+  def close(): Unit = {}
 
-  def save(task: Task): Unit
+  def get(key: String): Option[Array[Byte]]
 
-  def remove(id: TaskId): Unit
+  def set(key: String, value: Array[Byte]): Unit
 
-  def get(id: TaskId): Option[Task]
+  def list(key: String): Set[String]
+
+  def remove(key: String): Unit
+
+  //def tasks: Set[Task]
+
+  //def save(task: Task): Unit
+
+  //def remove(id: TaskId): Unit
+
+  //def get(id: TaskId): Option[Task]
 }
 
 /**

@@ -24,17 +24,19 @@ import fr.cnrs.liris.accio.agent.{DeleteRunRequest, DeleteRunResponse, UnknownRu
 import fr.cnrs.liris.accio.core.domain.RunId
 import fr.cnrs.liris.accio.core.runtime.SchedulerService
 import fr.cnrs.liris.accio.core.statemgr.StateManager
-import fr.cnrs.liris.accio.core.storage.MutableRunRepository
+import fr.cnrs.liris.accio.core.storage.{MutableRunRepository, MutableTaskRepository, TaskQuery}
 
 /**
  * Delete a run, and all its children if it is a parent run.
  *
  * @param runRepository    Run repository.
+ * @param taskRepository   Task repository.
  * @param stateManager     State manager.
  * @param schedulerService Scheduler service.
  */
 final class DeleteRunHandler @Inject()(
   runRepository: MutableRunRepository,
+  taskRepository: MutableTaskRepository,
   stateManager: StateManager,
   schedulerService: SchedulerService)
   extends Handler[DeleteRunRequest, DeleteRunResponse] {
@@ -75,7 +77,8 @@ final class DeleteRunHandler @Inject()(
   }
 
   private def cancelRuns(ids: Seq[RunId]) = {
-    val tasks = stateManager.tasks.filter(task => ids.contains(task.runId))
-    tasks.foreach(schedulerService.kill)
+    taskRepository
+      .find(TaskQuery(runs = ids.toSet))
+      .foreach(schedulerService.kill)
   }
 }

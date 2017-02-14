@@ -28,6 +28,8 @@ import org.scalatest.BeforeAndAfterEach
  * Unit tests of [[ZookeeperStateMgr]].
  */
 class ZookeeperStateMgrSpec extends StateMgrSpec with BeforeAndAfterEach {
+  behavior of "ZookeeperStateMgr"
+
   private[this] var zkTestServer: TestingServer = null
   private[this] var client: CuratorFramework = null
 
@@ -42,7 +44,5 @@ class ZookeeperStateMgrSpec extends StateMgrSpec with BeforeAndAfterEach {
     zkTestServer.stop()
   }
 
-  protected def createStateMgr = new ZookeeperStateMgr(client, "/accio")
-
-  behavior of "ZookeeperStateMgr"
+  protected def createStateMgr = new ZookeeperStateMgr(client, ZookeeperStateMgrConfig(null, "/accio", null, null))
 }

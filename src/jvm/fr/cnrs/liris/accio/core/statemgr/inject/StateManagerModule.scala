@@ -20,11 +20,14 @@ package fr.cnrs.liris.accio.core.statemgr.inject
 
 import java.nio.file.Paths
 
-import com.twitter.inject.TwitterModule
+import com.twitter.inject.{Injector, TwitterModule}
 import com.twitter.util.Duration
+import fr.cnrs.liris.accio.core.statemgr.StateManager
+import fr.cnrs.liris.accio.core.statemgr.local.{LocalStateMgrConfig, LocalStateMgrModule}
+import fr.cnrs.liris.accio.core.statemgr.zookeeper.{ZookeeperStateMgrConfig, ZookeeperStateMgrModule}
 
 /**
- * Guice module provisioning the [[fr.cnrs.liris.accio.core.statemgr.StateManager]] service.
+ * Guice module provisioning the state manager service.
  */
 object StateManagerModule extends TwitterModule {
   private[this] val stateMgrFlag = flag("statemgr.type", "local", "State manager type")
@@ -48,5 +51,9 @@ object StateManagerModule extends TwitterModule {
       case unknown => throw new IllegalArgumentException(s"Unknown state manager type: $unknown")
     }
     install(module)
+  }
+
+  override def singletonShutdown(injector: Injector): Unit = {
+    injector.instance[StateManager].close()
   }
 }

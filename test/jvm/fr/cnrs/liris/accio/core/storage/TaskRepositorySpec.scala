@@ -34,41 +34,36 @@ private[storage] abstract class TaskRepositorySpec extends UnitSpec {
     runId = RunId("foobar"),
     nodeName = "foonode",
     payload = OpPayload("fooop", 1234, Map.empty, CacheKey("MyCacheKey")),
-    key = "fookey",
     createdAt = now,
-    state = TaskState(TaskStatus.Scheduled))
+    state = TaskState(TaskStatus.Scheduled, key = Some("fookey")))
   private[this] val RunningTask = Task(
     id = randomId,
     runId = RunId("foobar"),
     nodeName = "foonode",
     payload = OpPayload("fooop", 1234, Map.empty, CacheKey("MyCacheKey")),
-    key = "fookey",
     createdAt = now,
-    state = TaskState(TaskStatus.Running, heartbeatAt = Some(now)))
+    state = TaskState(TaskStatus.Running, heartbeatAt = Some(now), key = Some("fookey")))
   private[this] val OtherRunningTask = Task(
     id = randomId,
     runId = RunId("barfoo"),
     nodeName = "foonode",
     payload = OpPayload("fooop", 1234, Map.empty, CacheKey("MyCacheKey")),
-    key = "fookey",
     createdAt = now,
-    state = TaskState(TaskStatus.Running, heartbeatAt = Some(now)))
+    state = TaskState(TaskStatus.Running, heartbeatAt = Some(now), key = Some("fookey")))
   private[this] val ExpiredTask = Task(
     id = randomId,
     runId = RunId("bar"),
     nodeName = "foonode",
     payload = OpPayload("fooop", 1234, Map.empty, CacheKey("MyCacheKey")),
-    key = "fookey",
     createdAt = now,
-    state = TaskState(TaskStatus.Running, heartbeatAt = Some(now - 30 * 1000)))
+    state = TaskState(TaskStatus.Running, heartbeatAt = Some(now - 30 * 1000), key = Some("fookey")))
   private[this] val OtherExpiredTask = Task(
     id = randomId,
     runId = RunId("barfoo"),
     nodeName = "foonode",
     payload = OpPayload("fooop", 1234, Map.empty, CacheKey("MyCacheKey")),
-    key = "fookey",
     createdAt = now,
-    state = TaskState(TaskStatus.Running, heartbeatAt = None))
+    state = TaskState(TaskStatus.Running, heartbeatAt = None, key = Some("fookey")))
 
   protected def createRepository: MutableTaskRepository
 

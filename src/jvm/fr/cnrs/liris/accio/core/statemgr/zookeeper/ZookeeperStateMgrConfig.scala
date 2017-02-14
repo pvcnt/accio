@@ -16,16 +16,16 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.statemgr.local
+package fr.cnrs.liris.accio.core.statemgr.zookeeper
 
-import fr.cnrs.liris.accio.core.statemgr.StateMgrSpec
-import fr.cnrs.liris.testing.WithTmpDirectory
+import com.twitter.util.Duration
 
 /**
- * Unit tests of [[LocalStateMgr]].
+ * Zookeeper state manager configuration.
+ *
+ * @param addr              Address to Zookeeper cluster.
+ * @param prefix            Prefix under which to store data.
+ * @param sessionTimeout    Session timeout.
+ * @param connectionTimeout Connection timeout.
  */
-class LocalStateMgrSpec extends StateMgrSpec with WithTmpDirectory {
-  behavior of "LocalStateMgr"
-
-  protected def createStateMgr = new LocalStateMgr(LocalStateMgrConfig(tmpDir))
-}
+case class ZookeeperStateMgrConfig(addr: String, prefix: String, sessionTimeout: Duration, connectionTimeout: Duration)

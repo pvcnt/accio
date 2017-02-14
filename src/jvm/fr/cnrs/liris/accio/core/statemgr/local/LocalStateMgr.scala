@@ -18,31 +18,40 @@
 
 package fr.cnrs.liris.accio.core.statemgr.local
 
-import java.nio.file.Path
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantLock
 
-import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.core.domain.{Task, TaskId}
+import com.google.inject.{Inject, Singleton}
 import fr.cnrs.liris.accio.core.statemgr.{Lock, StateManager}
-import fr.cnrs.liris.accio.core.util.LocalStorage
-import fr.cnrs.liris.common.util.FileUtils
 
 import scala.collection.mutable
+import scala.collection.JavaConverters._
 
 /**
- * State manager storing data on the local filesystem. Intended for testing or use in single-node development
- * clusters.
+ * State manager designed for a single-node deployment.
  *
- * @param rootDir Root directory under which data will be written.
+ * @param config Configuration.
  */
-final class LocalStateMgr(rootDir: Path) extends LocalStorage with StateManager with StrictLogging {
+@Singleton
+final class LocalStateMgr @Inject()(config: LocalStateMgrConfig) extends StateManager {
   private[this] val locks = mutable.WeakHashMap.empty[String, LocalLock]
+  private[this] val store = new ConcurrentHashMap[String, Array[Byte]].asScala
 
   override def lock(key: String): Lock = synchronized {
     locks.getOrElseUpdate(key, new LocalLock(key))
   }
 
-  override def tasks: Set[Task] = {
+  override def get(key: String): Option[Array[Byte]] = store.get(key)
+
+  override def set(key: String, value: Array[Byte]): Unit = {
+    store(key) = value
+  }
+
+  override def list(key: String): Set[String] = store.keySet.filter(_.startsWith(key + '/')).toSet
+
+  override def remove(key: String): Unit = store.remove(key)
+
+  /*override def tasks: Set[Task] = {
     tasksPath.toFile.listFiles.filter(_.isFile).flatMap(file => get(TaskId(file.getName))).toSet
   }
 
@@ -58,7 +67,7 @@ final class LocalStateMgr(rootDir: Path) extends LocalStorage with StateManager 
 
   private def tasksPath = rootDir.resolve("tasks")
 
-  private def taskPath(id: TaskId) = tasksPath.resolve(id.value)
+  private def taskPath(id: TaskId) = tasksPath.resolve(id.value)*/
 
   /**
    * Lock implementation using local files to synchronize. It is *NOT* reentrant.
@@ -68,24 +77,10 @@ final class LocalStateMgr(rootDir: Path) extends LocalStorage with StateManager 
   private class LocalLock(key: String) extends Lock {
     private[this] val javaLock = new ReentrantLock
 
-    override def lock(): Unit = {
-      logger.trace(s"Acquiring lock on $key")
-      javaLock.lock()
-      logger.trace(s"Acquired lock on $key")
-    }
+    override def lock(): Unit = javaLock.lock()
 
-    override def tryLock(): Boolean = {
-      val res = javaLock.tryLock()
-      if (res) {
-        logger.trace(s"Acquired lock on $key")
-      }
-      res
-    }
+    override def tryLock(): Boolean = javaLock.tryLock()
 
-    override def unlock(): Unit = {
-      javaLock.unlock()
-      logger.trace(s"Released lock on $key")
-    }
+    override def unlock(): Unit = javaLock.unlock()
   }
-
 }

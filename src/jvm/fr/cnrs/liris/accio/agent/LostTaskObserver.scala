@@ -20,20 +20,23 @@ package fr.cnrs.liris.accio.agent
 
 import java.util.concurrent.atomic.AtomicBoolean
 
+import com.google.inject.{Inject, Singleton}
 import com.twitter.util.{Duration, Time}
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.core.domain.{Run, Task, TaskStatus}
+import fr.cnrs.liris.accio.core.domain.{Run, Task}
 import fr.cnrs.liris.accio.core.runtime.RunManager
 import fr.cnrs.liris.accio.core.statemgr.StateManager
-import fr.cnrs.liris.accio.core.storage.MutableRunRepository
+import fr.cnrs.liris.accio.core.storage.{MutableRunRepository, MutableTaskRepository, TaskQuery}
 
 /**
  * Observer tracking lost tasks.
  */
-final class LostTaskObserver(
-  taskTimeout: Duration,
+@Singleton
+final class LostTaskObserver @Inject()(
+  @TaskTimeout taskTimeout: Duration,
   stateManager: StateManager,
   runRepository: MutableRunRepository,
+  taskRepository: MutableTaskRepository,
   runManager: RunManager)
   extends Runnable with StrictLogging {
   // Flag to indicate when this has been killed.
@@ -71,11 +74,7 @@ final class LostTaskObserver(
 
   private def lostTasks = {
     val deadline = Time.now - taskTimeout
-    stateManager.tasks.filterNot(isActive(_, deadline))
-  }
-
-  private def isActive(task: Task, deadline: Time) = {
-    task.state.status == TaskStatus.Scheduled || task.state.heartbeatAt.exists(_ >= deadline.inMillis)
+    taskRepository.find(TaskQuery(lostAt = Some(deadline)))
   }
 
   private def handleLostTask(task: Task) = {
@@ -85,7 +84,7 @@ final class LostTaskObserver(
         case None => processRun(run, task, None)
       }
     }
-    stateManager.remove(task.id)
+    taskRepository.remove(task.id)
     logger.debug(s"[T${task.id.value}] Lost task")
   }
 

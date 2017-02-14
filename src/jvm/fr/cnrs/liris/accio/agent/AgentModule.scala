@@ -47,12 +47,7 @@ object AgentModule extends TwitterModule {
     bind[OpMetaReader].to[ReflectOpMetaReader]
     bind[OpRegistry].to[RuntimeOpRegistry]
     bind[String].annotatedWith[ClusterName].toInstance(clusterFlag())
-  }
-
-  @Singleton
-  @Provides
-  def providesLostTaskObserver(stateManager: StateManager, runRepository: MutableRunRepository, runManager: RunManager): LostTaskObserver = {
-    new LostTaskObserver(taskTimeout(), stateManager, runRepository, runManager)
+    bind[Duration].annotatedWith[TaskTimeout].toInstance(taskTimeout())
   }
 
   @Provides

@@ -20,13 +20,10 @@ package fr.cnrs.liris.accio.core.statemgr.zookeeper
 
 import java.util.concurrent.TimeUnit
 
-import com.twitter.scrooge.TArrayByteTransport
-import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.core.domain.{Task, TaskId}
-import fr.cnrs.liris.accio.core.statemgr.{Lock, StateManager}
+import com.google.inject.{Inject, Singleton}
+import fr.cnrs.liris.accio.core.statemgr.{ForStateMgr, Lock, StateManager}
 import org.apache.curator.framework.CuratorFramework
 import org.apache.curator.framework.recipes.locks.InterProcessMutex
-import org.apache.thrift.protocol.TBinaryProtocol
 import org.apache.zookeeper.KeeperException
 
 import scala.collection.JavaConverters._
@@ -34,15 +31,48 @@ import scala.collection.JavaConverters._
 /**
  * State manager storing data into a Zookeeper cluster.
  *
- * @param client   Curator framework.
- * @param rootPath Root path under which to store data.
+ * @param client Curator framework.
+ * @param config Configuration.
  */
-final class ZookeeperStateMgr(client: CuratorFramework, rootPath: String) extends StateManager with StrictLogging {
-  private[this] val protocolFactory = new TBinaryProtocol.Factory()
+@Singleton
+final class ZookeeperStateMgr @Inject()(@ForStateMgr client: CuratorFramework, config: ZookeeperStateMgrConfig)
+  extends StateManager {
+  //private[this] val protocolFactory = new TBinaryProtocol.Factory()
 
   override def lock(key: String): Lock = new ZookeeperLock(key)
 
-  override def tasks: Set[Task] = {
+  override def close(): Unit = {
+    client.close()
+  }
+
+  override def get(key: String): Option[Array[Byte]] = {
+    try {
+      Some(client.getData.forPath(dataPath(key)))
+    } catch {
+      case e: KeeperException =>
+        // A KeeperException is thrown if the node does not exist.
+        if (e.code != KeeperException.Code.NONODE) {
+          throw e
+        }
+        None
+    }
+  }
+
+  override def set(key: String, value: Array[Byte]): Unit = {
+    client.create().orSetData().creatingParentsIfNeeded().forPath(dataPath(key), value)
+  }
+
+  override def list(key: String): Set[String] =
+    client.getChildren.forPath(dataPath(key))
+      .asScala
+      .toSet
+      .map((subKey: String) => s"$key/$subKey")
+
+  override def remove(key: String): Unit = {
+    client.delete().forPath(dataPath(key))
+  }
+
+  /*override def tasks: Set[Task] = {
     client.getChildren.forPath(tasksPath).asScala.toSet.flatMap((nodeName: String) => get(TaskId(nodeName)))
   }
 
@@ -78,30 +108,20 @@ final class ZookeeperStateMgr(client: CuratorFramework, rootPath: String) extend
 
   private def tasksPath = s"$rootPath/tasks"
 
-  private def locksPath = s"$rootPath/locks"
+  private def taskPath(id: TaskId) = s"$tasksPath/${id.value}"*/
 
-  private def taskPath(id: TaskId) = s"$tasksPath/${id.value}"
+  private def locksPath = s"${config.prefix}/locks"
+
+  private def dataPath(key: String) = s"${config.prefix}/data/$key"
 
   private class ZookeeperLock(key: String) extends Lock {
     private[this] val zkLock = new InterProcessMutex(client, s"$locksPath/$key")
 
-    override def lock(): Unit = {
-      logger.trace(s"Acquiring lock on $key")
-      zkLock.acquire()
-    }
+    override def lock(): Unit = zkLock.acquire()
 
-    override def tryLock(): Boolean = {
-      val res = zkLock.acquire(10, TimeUnit.MILLISECONDS)
-      if (res) {
-        logger.trace(s"Acquired lock on $key")
-      }
-      res
-    }
+    override def tryLock(): Boolean = zkLock.acquire(10, TimeUnit.MILLISECONDS)
 
-    override def unlock(): Unit = {
-      zkLock.release()
-      logger.trace(s"Released lock on $key")
-    }
+    override def unlock(): Unit = zkLock.release()
   }
 
 }
