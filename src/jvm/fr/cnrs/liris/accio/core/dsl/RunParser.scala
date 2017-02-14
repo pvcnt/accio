@@ -122,7 +122,7 @@ class RunParser(mapper: FinatraObjectMapper, workflowRepository: WorkflowReposit
       owner = None,
       name = json.name,
       notes = json.notes,
-      tags = json.tags,
+      tags = json.tags.toSet,
       seed = json.seed,
       params = baseParams,
       repeat = json.repeat)
@@ -135,7 +135,7 @@ private case class JsonRunDef(
   workflow: String,
   name: Option[String],
   notes: Option[String],
-  tags: Set[String] = Set.empty,
+  tags: Seq[String] = Seq.empty,
   seed: Option[Long],
   params: Map[String, Exploration] = Map.empty,
   @Min(1) repeat: Option[Int])

@@ -18,10 +18,6 @@
 
 package fr.cnrs.liris.accio.core.dsl
 
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.databind.{DeserializationFeature, ObjectMapper, PropertyNamingStrategy}
-import com.fasterxml.jackson.module.scala.DefaultScalaModule
-import com.fasterxml.jackson.module.scala.experimental.ScalaObjectMapper
 import com.twitter.finatra.json.FinatraObjectMapper
 
 /**
@@ -29,16 +25,8 @@ import com.twitter.finatra.json.FinatraObjectMapper
  */
 class ObjectMapperFactory {
   def create(): FinatraObjectMapper = {
-    val mapper = new ObjectMapper with ScalaObjectMapper
-    mapper.setSerializationInclusion(JsonInclude.Include.NON_ABSENT)
-    mapper.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, true)
-    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-    mapper.configure(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY, true)
-    mapper.configure(DeserializationFeature.USE_JAVA_ARRAY_FOR_JSON_ARRAY, true)
-
-    mapper.setPropertyNamingStrategy(new PropertyNamingStrategy.SnakeCaseStrategy)
-    mapper.registerModules(DslJacksonModule, DefaultScalaModule)
-
-    new FinatraObjectMapper(mapper)
+   val mapper = FinatraObjectMapper.create()
+    mapper.registerModule(DslJacksonModule)
+    mapper
   }
 }
