@@ -18,18 +18,17 @@
 
 package fr.cnrs.liris.privamov.ops
 
-import fr.cnrs.liris.common.geo.{LatLng, Point}
+import fr.cnrs.liris.common.geo.Point
 import fr.cnrs.liris.privamov.core.model.{Event, Poi, PoiSet}
+import fr.cnrs.liris.privamov.testing.WithTraceGenerator
 import fr.cnrs.liris.testing.UnitSpec
-import org.joda.time.Instant
 
 /**
  * Unit tests for [[PoisReidentOp]].
  */
-class PoisReidentOpSpec extends UnitSpec with OperatorSpec {
-  private[this] val Here = LatLng.degrees(48.858222, 2.2945).toPoint
-  private[this] val Now = Instant.now
-  private[this] val Me = "me"
+class PoisReidentOpSpec extends UnitSpec with OperatorSpec with WithTraceGenerator {
+  behavior of "PoisReidentOp"
+
   private[this] lazy val trainDs = {
     val refPois1 = PoiSet("user1", Set(
       Poi(Set(Event("user1", Point(5, 5), Now))),
@@ -42,8 +41,6 @@ class PoisReidentOpSpec extends UnitSpec with OperatorSpec {
       Poi(Set(Event("user3", Point(-2, -9), Now)))))
     writePois(refPois1, refPois2, refPois3)
   }
-
-  behavior of "PoisReidentOp"
 
   it should "identify all users when ran on the same data" in {
     val res = new PoisReidentOp().execute(ReidentificationIn(trainDs, trainDs), ctx)

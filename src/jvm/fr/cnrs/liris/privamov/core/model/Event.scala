@@ -19,8 +19,8 @@
 package fr.cnrs.liris.privamov.core.model
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.common.geo.Point
-import org.joda.time.Instant
+import fr.cnrs.liris.common.geo.{Location, Point}
+import org.joda.time.{Instant, ReadableInstant}
 
 /**
  * The smallest piece of information of our model. It is a discrete event associated with a user,
@@ -29,17 +29,8 @@ import org.joda.time.Instant
  * @param user  User identifier.
  * @param point Location.
  * @param time  Timestamp.
- * @param props Additional numeric properties.
  */
-case class Event(user: String, point: Point, time: Instant, props: Map[String, Double]) extends Ordered[Event] {
-  /**
-   * Return a copy of this event with an additional numeric property set.
-   *
-   * @param key   Property key.
-   * @param value Property value.
-   */
-  def set(key: String, value: Double): Event = copy(props = props + (key -> value))
-
+case class Event private(user: String, point: Point, time: Instant) extends Ordered[Event] {
   /**
    * Events can be compared using their timestamp.
    *
@@ -54,11 +45,11 @@ case class Event(user: String, point: Point, time: Instant, props: Map[String, D
  */
 object Event {
   /**
-   * Create an event.
+   * Create an event from a user identifier, a location and an instant.
    *
-   * @param user  User identifier.
-   * @param point Location.
-   * @param time  Timestamp.
+   * @param user     User identifier.
+   * @param location Location.
+   * @param time     Instant.
    */
-  def apply(user: String, point: Point, time: Instant): Event = new Event(user, point, time, Map.empty)
+  def apply(user: String, location: Location, time: ReadableInstant): Event = Event(user, location.toPoint, time.toInstant)
 }

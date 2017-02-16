@@ -18,38 +18,35 @@
 
 package fr.cnrs.liris.accio.core.scheduler.local
 
+import java.io.ByteArrayOutputStream
 import java.nio.file.Files
 import java.util.concurrent.{ConcurrentHashMap, ConcurrentLinkedQueue, Executors}
 
 import com.google.common.io.ByteStreams
 import com.google.inject.{Inject, Singleton}
 import com.twitter.concurrent.NamedPoolThreadFactory
-import com.twitter.finagle.stats.StatsReceiver
+import com.twitter.finagle.stats.{Gauge, StatsReceiver}
 import com.twitter.util.{ExecutorServiceFuturePool, Return, StorageUnit, Throw}
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.core.domain.RunLog
+import fr.cnrs.liris.accio.core.domain.TaskId
 import fr.cnrs.liris.accio.core.downloader.Downloader
 import fr.cnrs.liris.accio.core.scheduler.{Job, Scheduler}
-import fr.cnrs.liris.accio.core.storage.MutableRunRepository
 import fr.cnrs.liris.accio.core.util.Configurable
 import fr.cnrs.liris.common.util.{FileUtils, Platform}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
+import scala.util.control.NonFatal
 
 /**
  * Scheduler executing tasks locally, in the same machine. Each task is started inside a new Java process. Intended
  * for testing or use in single-node development clusters.
  *
  * @param downloader    Downloader.
- * @param runRepository Run repository.
  * @param statsReceiver Stats receiver.
  */
 @Singleton
-class LocalScheduler @Inject()(
-  downloader: Downloader,
-  runRepository: MutableRunRepository,
-  statsReceiver: StatsReceiver)
+class LocalScheduler @Inject()(downloader: Downloader, statsReceiver: StatsReceiver)
   extends Scheduler
     with Configurable[LocalSchedulerConfig]
     with StrictLogging {
@@ -75,9 +72,7 @@ class LocalScheduler @Inject()(
     targetPath.toAbsolutePath
   }
   // Set used for keeping track of gauges (otherwise only weakly referenced).
-  private[this] val gauges = mutable.Set.empty[Any]
-  // Set up telemetry.
-  registerStats()
+  private[this] val gauges = createGauges()
   logger.debug(s"Detected resources: CPU $totalCpu, RAM ${totalRam.map(_.inMegabytes + "Mb").getOrElse("-")}, disk ${totalDisk.map(_.inMegabytes + "Mb").getOrElse("-")}")
 
   override def configClass: Class[LocalSchedulerConfig] = classOf[LocalSchedulerConfig]
@@ -85,7 +80,7 @@ class LocalScheduler @Inject()(
   override def submit(job: Job): String = {
     synchronized {
       if (isSchedulable(job)) {
-        startProcess(job)
+        start(job)
       } else {
         queue.add(job)
         if (monitors.isEmpty) {
@@ -131,7 +126,7 @@ class LocalScheduler @Inject()(
       while (it.hasNext) {
         val job = it.next()
         if (isSchedulable(job)) {
-          startProcess(job)
+          start(job)
           it.remove()
         }
       }
@@ -162,10 +157,10 @@ class LocalScheduler @Inject()(
    *
    * @param job Job to start.
    */
-  private def startProcess(job: Job): Unit = {
+  private def start(job: Job): Unit = {
     val monitor = new TaskMonitor(job)
     logger.debug(s"[T${job.taskId.value}] Starting task")
-    monitors(job.taskId.value) = monitor
+    monitors(monitor.key) = monitor
     pool(monitor.run())
       .respond {
         case Throw(e) =>
@@ -192,9 +187,9 @@ class LocalScheduler @Inject()(
   /**
    * Return the path to the sandbox for a given key.
    *
-   * @param key Task key.
+   * @param id Task identifier.
    */
-  private def getSandboxPath(key: String) = config.workDir.resolve(key)
+  private def getSandboxPath(id: TaskId) = config.workDir.resolve(id.value)
 
   private class TaskMonitor(val job: Job) extends Runnable with StrictLogging {
     private[this] var killed = false
@@ -212,20 +207,33 @@ class LocalScheduler @Inject()(
         case Some(p) =>
           logger.debug(s"[T${job.taskId.value}] Waiting for process completion")
           try {
-            ByteStreams.copy(p.getInputStream, ByteStreams.nullOutputStream)
+            //ByteStreams.copy(p.getInputStream, ByteStreams.nullOutputStream)
+            val baos = new ByteArrayOutputStream
+            ByteStreams.copy(p.getInputStream, baos)
+            println("--output: " + baos.toString)
             p.waitFor()
           } catch {
             case e: InterruptedException => logger.warn(s"[T${job.taskId.value}] Interrupted while waiting", e)
+            case NonFatal(e) =>
+              if (!killed) {
+                throw e
+              }
           } finally {
             cleanup()
           }
       }
     }
 
+    def key: String = job.taskId.value
+
     def kill(): Unit = synchronized {
       if (!killed) {
         killed = true
-        process.foreach(_.destroyForcibly())
+        process.foreach { p =>
+          p.destroyForcibly()
+          //ByteStreams.copy(p.getInputStream, ByteStreams.nullOutputStream)
+          p.waitFor()
+        }
         cleanup()
         logger.debug(s"[T${job.taskId.value}] Killed task")
       }
@@ -233,8 +241,8 @@ class LocalScheduler @Inject()(
 
     private def cleanup() = {
       process = None
-      monitors.remove(job.taskId.value)
-      FileUtils.safeDelete(getSandboxPath(job.taskId.value))
+      monitors.remove(key)
+      FileUtils.safeDelete(getSandboxPath(job.taskId))
     }
 
     private def startProcess(job: Job): Process = {
@@ -245,7 +253,7 @@ class LocalScheduler @Inject()(
         config.javaHome.orElse(sys.env.get("JAVA_HOME")))
       logger.debug(s"[T${job.taskId.value}] Command-line: ${cmd.mkString(" ")}")
 
-      val sandboxDir = getSandboxPath(job.taskId.value)
+      val sandboxDir = getSandboxPath(job.taskId)
       Files.createDirectories(sandboxDir)
 
       val pb = new ProcessBuilder()
@@ -257,16 +265,25 @@ class LocalScheduler @Inject()(
     }
   }
 
-  private def registerStats(): Unit = {
+  private def createGauges(): Set[Gauge] = {
     val stats = statsReceiver.scope("accio", "sched")
+    val gauges = mutable.Set.empty[Gauge]
 
     gauges += stats.addGauge("cpu", "max")(totalCpu)
-    gauges += totalRam.foreach(ram => stats.addGauge("ram", "max")(ram.inBytes))
-    gauges += totalDisk.foreach(disk => stats.addGauge("disk", "max")(disk.inBytes))
+    totalRam.foreach { ram =>
+      gauges += stats.addGauge("ram", "max")(ram.inBytes)
+    }
+    totalDisk.foreach { disk =>
+      gauges += stats.addGauge("disk", "max")(disk.inBytes)
+    }
 
     gauges += stats.addGauge("cpu", "available")(totalCpu - reservedCpu.toFloat)
-    gauges += totalRam.foreach(ram => stats.addGauge("ram", "available")((ram - reservedRam).inBytes))
-    gauges += totalDisk.foreach(disk => stats.addGauge("disk", "available")((disk - reservedDisk).inBytes))
+    totalRam.foreach { ram =>
+      gauges += stats.addGauge("ram", "available")((ram - reservedRam).inBytes)
+    }
+    totalDisk.foreach { disk =>
+      gauges += stats.addGauge("disk", "available")((disk - reservedDisk).inBytes)
+    }
 
     gauges += stats.addGauge("cpu", "reserved")(reservedCpu.toFloat)
     gauges += stats.addGauge("ram", "reserved")(reservedRam.inBytes)
@@ -274,6 +291,7 @@ class LocalScheduler @Inject()(
 
     gauges += stats.addGauge("waiting")(queue.size)
     gauges += stats.addGauge("running")(monitors.size)
-  }
 
+    gauges.toSet
+  }
 }

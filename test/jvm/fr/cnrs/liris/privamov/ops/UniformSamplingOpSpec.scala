@@ -32,9 +32,19 @@ class UniformSamplingOpSpec extends UnitSpec with WithTraceGenerator with Operat
   it should "downsample traces" in {
     val trace = randomTrace(Me, 100, 10.seconds)
     // Seed is fixed, no need for multiple runs.
-    transform(Seq(trace), 0.1).map(_.size).sum.toDouble shouldBe (10d +- 3)
-    transform(Seq(trace), 0.5).map(_.size).sum.toDouble shouldBe (50d +- 3)
-    transform(Seq(trace), 0.9).map(_.size).sum.toDouble shouldBe (90d +- 3)
+    val res1 = transform(Seq(trace), 0.1)
+    res1.flatMap(_.events).forall(trace.events.contains) shouldBe true
+    // Why isn't it equivalent?!?
+    //res1.flatMap(_.events) should contain only (trace.events: _*)
+    res1.map(_.size).sum.toDouble shouldBe (10d +- 3)
+
+    val res2 = transform(Seq(trace), 0.5)
+    res2.flatMap(_.events).forall(trace.events.contains) shouldBe true
+    res2.map(_.size).sum.toDouble shouldBe (50d +- 3)
+
+    val res3 = transform(Seq(trace), 0.9)
+    res3.flatMap(_.events).forall(trace.events.contains) shouldBe true
+    res3.map(_.size).sum.toDouble shouldBe (90d +- 3)
   }
 
   it should "handle null probability" in {
@@ -50,7 +60,7 @@ class UniformSamplingOpSpec extends UnitSpec with WithTraceGenerator with Operat
     val res = transform(Seq(trace), 1)
     res should have size 1
     res.head.user shouldBe trace.user
-    res.head.events shouldBe trace.events
+    res.head.events should contain theSameElementsInOrderAs trace.events
   }
 
   private def transform(data: Seq[Trace], probability: Double) = {

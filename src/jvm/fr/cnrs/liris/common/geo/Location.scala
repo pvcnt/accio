@@ -120,7 +120,7 @@ object LatLng {
   /**
    * Radius of the Earth.
    */
-  val EarthRadius = Distance.meters(S2LatLng.EARTH_RADIUS_METERS)
+  val EarthRadius: Distance = Distance.meters(S2LatLng.EARTH_RADIUS_METERS)
 
   /**
    * Parse a string into a latitude/longitude pair.
@@ -242,7 +242,7 @@ case class Point(x: Double, y: Double) extends Location {
   override def toSeq: Seq[Double] = Seq(x, y)
 
   override def equals(other: Any): Boolean = other match {
-    case pt: Point => pt.x == x && pt.y == y
+    case pt: Point => (pt.x - x).abs <= Point.eps && (pt.y - y).abs <= Point.eps
     case ll: LatLng => equals(ll.toPoint)
     case _ => false
   }
@@ -252,6 +252,9 @@ case class Point(x: Double, y: Double) extends Location {
  * Factory and helper methods for [[Point]].
  */
 object Point {
+  // The unit of points being meters, we still have millimeter precision, which is largely enough...
+  private val eps = 1e-3
+
   /**
    * Compute the nearest point in a collection from a reference point. If two points are at the same distance, the
    * first encountered point is kept.

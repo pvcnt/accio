@@ -36,7 +36,7 @@ class DurationSplittingOpSpec extends UnitSpec with WithTraceGenerator with Oper
     val res = transform(Seq(trace), Duration.standardSeconds(10))
     res.foreach { trace =>
       trace.user shouldBe Me
-      trace.duration.seconds should be <= (10L)
+      trace.duration.seconds should be <= 10L
     }
     res.flatMap(_.events) should contain theSameElementsInOrderAs trace.events
   }

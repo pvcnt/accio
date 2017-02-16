@@ -30,8 +30,8 @@ class EnforceSizeOpSpec extends UnitSpec with WithTraceGenerator with OperatorSp
 
   it should "keep traces with a size greater than min threshold" in {
     val trace = randomTrace(Me, 15)
-    transformMinSize(Seq(trace), 10) should contain theSameElementsAs Seq(trace)
-    transformMinSize(Seq(trace), 15) should contain theSameElementsAs Seq(trace)
+    transformMinSize(Seq(trace), 10) should contain theSameElementsInOrderAs Seq(trace)
+    transformMinSize(Seq(trace), 15) should contain theSameElementsInOrderAs Seq(trace)
   }
 
   it should "reject traces with a size lower than min threshold" in {
@@ -42,13 +42,13 @@ class EnforceSizeOpSpec extends UnitSpec with WithTraceGenerator with OperatorSp
 
   it should "shorten traces with a size greater than max threshold" in {
     val trace = randomTrace(Me, size = 15)
-    transformMaxSize(Seq(trace), 10) should contain theSameElementsAs Seq(trace.replace(_.take(10)))
+    transformMaxSize(Seq(trace), 10) should contain theSameElementsInOrderAs Seq(trace.replace(_.take(10)))
   }
 
   it should "keep traces with a size lower than max threshold" in {
     val trace = randomTrace(Me, size = 15)
-    transformMaxSize(Seq(trace), 15) should contain theSameElementsAs Seq(trace)
-    transformMaxSize(Seq(trace), 20) should contain theSameElementsAs Seq(trace)
+    transformMaxSize(Seq(trace), 15) should contain theSameElementsInOrderAs Seq(trace)
+    transformMaxSize(Seq(trace), 20) should contain theSameElementsInOrderAs Seq(trace)
   }
 
   private def transformMinSize(data: Seq[Trace], size: Int) = {

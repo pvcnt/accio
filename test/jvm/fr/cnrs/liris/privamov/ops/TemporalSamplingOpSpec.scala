@@ -60,7 +60,7 @@ class TemporalSamplingOpSpec extends UnitSpec with WithTraceGenerator with Opera
     val res = transform(Seq(trace), 10.seconds)
     res should have size 1
     res.head.user shouldBe trace.user
-    res.head.events shouldBe trace.events
+    res.head.events should contain theSameElementsInOrderAs trace.events
   }
 
   private def transform(data: Seq[Trace], duration: Duration) = {

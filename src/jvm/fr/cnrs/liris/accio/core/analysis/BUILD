@@ -3,7 +3,6 @@ scala_library(
     'src/jvm/fr/cnrs/liris/accio/core/domain',
     'src/jvm/fr/cnrs/liris/common/geo',
     'src/jvm/fr/cnrs/liris/common/util',
-    '3rdparty/jvm/org/scalanlp:breeze',
     '3rdparty/jvm/org/joda/time',
   ],
   sources=globs('*.scala')

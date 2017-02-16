@@ -45,7 +45,7 @@ class CollapseTemporalGapsOp extends Operator[CollapseTemporalGapsIn, CollapseTe
       events.map { event =>
         val time = event.time.toDateTime.withTimeAtStartOfDay
         if (prev.isEmpty) {
-          shift = (time to startAt).duration.days
+          shift = (if (time.isBefore(startAt)) time to startAt else startAt to time).duration.days
         } else if (time != prev.get) {
           val days = (prev.get to time).duration.days
           shift += days - 1

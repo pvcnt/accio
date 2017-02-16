@@ -30,11 +30,11 @@ import scala.collection.JavaConverters._
 object Values {
   private val AbbreviateThreshold = 3
 
-  val instantOrdering = new Ordering[Instant] {
+  implicit val instantOrdering = new Ordering[Instant] {
     override def compare(x: Instant, y: Instant): Int = x.compareTo(y)
   }
 
-  val durationOrdering = new Ordering[JodaDuration] {
+  implicit val durationOrdering = new Ordering[JodaDuration] {
     override def compare(x: JodaDuration, y: JodaDuration): Int = x.compareTo(y)
   }
 

@@ -32,12 +32,5 @@ import java.nio.file.Path
  * testing of objects that need a downloader.
  */
 trait Downloader {
-  /**
-   * Retrieve a file or directory from a remote location. Source URI is expected to exist. Destination path is
-   * guaranteed not to exist.
-   *
-   * @param src Source URI.
-   * @param dst Target path.
-   */
   def download(src: String, dst: Path): Unit
 }

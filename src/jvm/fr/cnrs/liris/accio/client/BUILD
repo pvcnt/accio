@@ -18,8 +18,8 @@ scala_library(
   dependencies=[
     'src/jvm/fr/cnrs/liris/common/cli',
     'src/jvm/fr/cnrs/liris/accio/client/command',
-    '3rdparty/jvm/com/typesafe/scala-logging',
     '3rdparty/jvm:scala-guice',
+    '3rdparty/jvm/com/typesafe/scala-logging',
     '3rdparty/jvm:logback',
     '3rdparty/jvm/org/slf4j:jul-to-slf4j',
   ],

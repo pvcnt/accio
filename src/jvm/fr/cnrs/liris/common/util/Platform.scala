@@ -88,7 +88,8 @@ object Platform {
   private def readMeminfo(key: String): Option[StorageUnit] = {
     if (OS.Current == OS.Linux || OS.Current == OS.FreeBsd) {
       try {
-        Process("cat /proc/meminfo").lineStream
+        Process("cat /proc/meminfo")
+          .lineStream
           .find(_.startsWith(s"$key:"))
           .map { line =>
             val kiloBytes = line.stripPrefix(s"$key:").trim.stripSuffix(" kB").toLong

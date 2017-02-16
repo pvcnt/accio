@@ -34,7 +34,7 @@ class SizeSplittingOpSpec extends UnitSpec with WithTraceGenerator with Operator
     res should have size 8
     res.foreach { trace =>
       trace.user shouldBe Me
-      trace.size should be <= (20)
+      trace.size should be <= 20
     }
     res.flatMap(_.events) should contain theSameElementsInOrderAs trace.events
   }

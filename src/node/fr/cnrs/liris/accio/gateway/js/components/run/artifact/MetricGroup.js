@@ -24,8 +24,8 @@ class MetricGroup extends React.Component {
     const rows = this.props.metrics.map((metric, idx) => {
       return <Row key={idx}>
         <Col sm={3} className="accio-view-label">
-          {metric.name}&nbsp;<Glyphicon glyph="dashboard"/>
-          </Col>
+          <Glyphicon glyph="dashboard"/>&nbsp;{metric.name}
+        </Col>
         <Col sm={9}>{metric.value}</Col>
       </Row>
     });

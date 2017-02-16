@@ -5,6 +5,7 @@ scala_library(
     'src/jvm/fr/cnrs/liris/accio/core/storage',
     'src/jvm/fr/cnrs/liris/accio/core/runtime',
     'src/jvm/fr/cnrs/liris/accio/core/dsl',
+    'src/jvm/fr/cnrs/liris/accio/core/version',
     'src/thrift/fr/cnrs/liris/accio/core/domain',
     'src/thrift/fr/cnrs/liris/accio/agent',
     '3rdparty/jvm/com/typesafe/scala-logging',

@@ -18,14 +18,54 @@
 
 package fr.cnrs.liris.accio.core.scheduler
 
+import java.io.FileOutputStream
+import java.nio.file.{Files, Path}
+
+import com.google.common.io.Resources
+import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.testing.UnitSpec
 
 /**
  * Common unit tests for all [[Scheduler]] implementations, ensuring they all have consistent behavior.
  */
 private[scheduler] abstract class SchedulerSpec extends UnitSpec {
+  protected val executorUri: String = unpackExecutor().toAbsolutePath.toString
+
   protected def createScheduler: Scheduler
 
-  it should "schedule a task" in {
+  protected def isRunning(key: String): Boolean
+
+  it should "schedule a job" in {
+    val scheduler = createScheduler
+    try {
+      val job = Job(TaskId("1234"), RunId("run_id"), "NodeName", OpPayload("MyOp", 1234L, Map.empty, CacheKey("cache_key")), Resource(1, 128, 0))
+      val key = scheduler.submit(job)
+      isRunning(key) shouldBe true
+    } finally {
+      scheduler.close()
+    }
+  }
+
+  it should "kill a running task" in {
+    val scheduler = createScheduler
+    try {
+      val job = Job(TaskId("1234"), RunId("run_id"), "NodeName", OpPayload("MyOp", 1234L, Map.empty, CacheKey("cache_key")), Resource(0, 0, 0))
+      val key = scheduler.submit(job)
+      scheduler.kill(key)
+      isRunning(key) shouldBe false
+    } finally {
+      scheduler.close()
+    }
+  }
+
+  private def unpackExecutor(): Path = {
+    val path = Files.createTempFile("SchedulerSpec-", ".jar")
+    val fos = new FileOutputStream(path.toFile)
+    try {
+      Resources.copy(Resources.getResource(s"fr/cnrs/liris/accio/core/scheduler/accio-dummy-executor.jar"), fos)
+    } finally {
+      fos.close()
+    }
+    path
   }
 }

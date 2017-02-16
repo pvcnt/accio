@@ -1,9 +1,7 @@
 scala_library(
-  name='local',
   dependencies=[
     'src/jvm/fr/cnrs/liris/accio/core/scheduler',
     'src/jvm/fr/cnrs/liris/accio/core/downloader',
-    'src/jvm/fr/cnrs/liris/accio/core/storage',
     'src/jvm/fr/cnrs/liris/accio/core/util',
     'src/jvm/fr/cnrs/liris/common/util',
     '3rdparty/jvm/com/typesafe/scala-logging',

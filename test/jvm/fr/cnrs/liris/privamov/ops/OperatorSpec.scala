@@ -21,32 +21,34 @@ package fr.cnrs.liris.privamov.ops
 import java.nio.file.Files
 
 import fr.cnrs.liris.accio.core.api.OpContext
-import fr.cnrs.liris.dal.core.io.{CsvSink, CsvSource}
 import fr.cnrs.liris.accio.testing.WithSparkleEnv
 import fr.cnrs.liris.dal.core.api.Dataset
+import fr.cnrs.liris.dal.core.io.{CsvSink, CsvSource}
 import fr.cnrs.liris.privamov.core.io.{CsvEventCodec, CsvPoiCodec, CsvPoiSetCodec, CsvTraceCodec}
 import fr.cnrs.liris.privamov.core.model.{PoiSet, Trace}
-import org.scalatest.FlatSpec
 
-private[ops] trait OperatorSpec extends FlatSpec with WithSparkleEnv {
+/**
+ * Trait facilitating testing operators.
+ */
+private[ops] trait OperatorSpec extends WithSparkleEnv { FlatSpec =>
   private[this] val traceCodec = new CsvTraceCodec(new CsvEventCodec)
   private[this] val poiSetCodec = new CsvPoiSetCodec(new CsvPoiCodec)
 
   protected def ctx: OpContext = {
-    val workDir = Files.createTempDirectory("accio-test-")
+    val workDir = Files.createTempDirectory(getClass.getSimpleName + "-")
     workDir.toFile.deleteOnExit()
-    // This seed make random operators tests to pass for now.
+    // This seed makes tests of unstable operators to pass for now. Be careful is you modify it!!
     new OpContext(Some(-7590331047132310476L), workDir, env, Set(traceCodec, poiSetCodec), Set(traceCodec, poiSetCodec))
   }
 
   protected def writeTraces(data: Trace*): Dataset = {
-    val uri = Files.createTempDirectory("accio-test-").toAbsolutePath.toString
+    val uri = Files.createTempDirectory(getClass.getSimpleName + "-").toAbsolutePath.toString
     env.parallelize(data: _*)(_.id).write(new CsvSink(uri, traceCodec))
     Dataset(uri)
   }
 
   protected def writePois(data: PoiSet*): Dataset = {
-    val uri = Files.createTempDirectory("accio-test-").toAbsolutePath.toString
+    val uri = Files.createTempDirectory(getClass.getSimpleName + "-").toAbsolutePath.toString
     env.parallelize(data: _*)(_.id).write(new CsvSink(uri, poiSetCodec))
     Dataset(uri)
   }

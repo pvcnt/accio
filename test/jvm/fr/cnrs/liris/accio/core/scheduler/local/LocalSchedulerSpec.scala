@@ -18,32 +18,28 @@
 
 package fr.cnrs.liris.accio.core.scheduler.local
 
-import java.nio.file.{Files, Path}
-
+import com.twitter.finagle.stats.NullStatsReceiver
+import fr.cnrs.liris.accio.core.downloader.NullDownloader
 import fr.cnrs.liris.accio.core.scheduler.{Scheduler, SchedulerSpec}
-import fr.cnrs.liris.common.util.FileUtils
+import fr.cnrs.liris.testing.WithTmpDirectory
 import org.scalatest.BeforeAndAfterEach
+
+import scala.sys.process._
 
 /**
  * Unit tests for [[LocalScheduler]].
  */
-class LocalSchedulerSpec extends SchedulerSpec with BeforeAndAfterEach {
-  private[this] var tmpDir: Path = null
-
-  override protected def beforeEach(): Unit = {
-    tmpDir = Files.createTempDirectory("accio-test-")
-  }
-
-  override protected def afterEach(): Unit = {
-    FileUtils.safeDelete(tmpDir)
-    tmpDir = null
-  }
-
-  protected def createScheduler: Scheduler = {
-    //val conf = LocalSchedulerConfig(tmpDir.resolve("work"), agentAddr, executorUri ,None)
-    //new LocalScheduler(opRegistry, downloader, config)
-    ???
-  }
-
+class LocalSchedulerSpec extends SchedulerSpec with BeforeAndAfterEach with WithTmpDirectory {
   behavior of "LocalScheduler"
+
+  override protected def createScheduler: Scheduler = {
+    val conf = LocalSchedulerConfig(tmpDir.resolve("workdir"), "0.0.0.0:12345", executorUri, None, Seq.empty)
+    new LocalScheduler(NullDownloader, NullStatsReceiver).initialize(conf)
+  }
+
+  override protected def isRunning(key: String): Boolean = {
+    Thread.sleep(1000)
+    ("ps -e -o args" #| s"grep java").lineStream.foreach(println)
+    ("ps -e -o args" #| s"grep $executorUri" #| s"grep $key" #| "grep -v grep").! == 0
+  }
 }

@@ -51,7 +51,7 @@ class AreaCoverageOpSpec extends UnitSpec with WithTraceGenerator with OperatorS
   it should "compute area coverage w.r.t. level" in {
     val now = Instant.now()
     for (level <- 0 until 30) {
-      val pt = LatLng.degrees(Random.nextDouble() * 180 - 90, Random.nextDouble() * 360 - 180)
+      val pt = randomLocation()
       val cell = S2CellId.fromLatLng(pt.toS2).parent(level)
       val pts = Seq(
         pt,

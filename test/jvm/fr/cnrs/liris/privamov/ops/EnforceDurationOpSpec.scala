@@ -60,7 +60,7 @@ class EnforceDurationOpSpec extends UnitSpec with WithTraceGenerator with Operat
 
   private def assertTraceIsShortened(t: Trace, t1: Trace, s1: Int) = {
     t1.user shouldBe t.user
-    t1.events shouldBe t.events.take(s1)
+    t1.events should contain theSameElementsInOrderAs t.events.take(s1)
   }
 
   private def transformMaxDuration(data: Seq[Trace], duration: Duration) = {

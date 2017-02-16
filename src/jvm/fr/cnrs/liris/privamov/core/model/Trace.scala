@@ -125,6 +125,16 @@ case class Trace private(id: String, user: String, events: Seq[Event]) extends I
    */
   def empty: Trace = new Trace(id, user, Seq.empty)
 
+  /**
+   * Return a new trace, which is the concatenation of this trace with another trace.
+   *
+   * @param other Another trace, that should belong to the same user.
+   */
+  def ++(other: Trace): Trace = {
+    require(other.user == user, "Cannot concatenate traces from different users")
+    Trace(user, events ++ other.events)
+  }
+
   override def toString: String =
     MoreObjects.toStringHelper(this)
       .add("id", id)

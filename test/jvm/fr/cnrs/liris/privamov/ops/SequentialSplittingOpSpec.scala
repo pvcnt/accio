@@ -94,7 +94,7 @@ class SequentialSplittingOpSpec extends UnitSpec with WithTraceGenerator with Op
   private def assertTraceIsSplit(t: Trace, t1: Trace, t2: Trace, s1: Int): Unit = {
     t1.user shouldBe t.user
     t2.user shouldBe t.user
-    t1.events shouldBe t.events.take(s1)
-    t2.events shouldBe t.events.drop(s1)
+    t1.events should contain theSameElementsInOrderAs t.events.take(s1)
+    t2.events should contain theSameElementsInOrderAs t.events.drop(s1)
   }
 }

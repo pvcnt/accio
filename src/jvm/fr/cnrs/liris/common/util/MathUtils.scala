@@ -75,4 +75,11 @@ object MathUtils {
     val factor = math.pow(10, places)
     (v * factor).round.toDouble / factor
   }
+
+  /**
+   * Return the average value of a list of doubles.
+   *
+   * @param values Doubles to aggregate.
+   */
+  def mean(values: Iterable[Double]): Double = if (values.isEmpty) 0d else values.sum / values.size
 }

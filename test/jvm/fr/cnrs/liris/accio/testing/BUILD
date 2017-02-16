@@ -2,6 +2,7 @@ junit_tests(
   name='testing',
   dependencies=[
     'src/jvm/fr/cnrs/liris/accio/core/domain',
+    'src/jvm/fr/cnrs/liris/dal/core/sparkle',
     'src/thrift/fr/cnrs/liris/accio/core/domain',
     'test/jvm/fr/cnrs/liris/testing',
   ],
