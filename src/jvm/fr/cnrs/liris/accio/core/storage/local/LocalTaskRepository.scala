@@ -18,6 +18,8 @@
 
 package fr.cnrs.liris.accio.core.storage.local
 
+import java.nio.file.Path
+
 import com.google.inject.{Inject, Singleton}
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.storage._
@@ -49,7 +51,7 @@ final class LocalTaskRepository @Inject()(config: LocalStorageConfig)
 
   override def get(id: TaskId): Option[Task] = read(taskPath(id), Task)
 
-  private def taskPath = config.path.resolve("tasks")
+  private def taskPath: Path = config.path.resolve("tasks")
 
-  private def taskPath(id: TaskId) = taskPath.resolve(id.value)
+  private def taskPath(id: TaskId): Path = taskPath.resolve(id.value)
 }

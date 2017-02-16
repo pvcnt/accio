@@ -30,7 +30,6 @@ import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.domain.TaskId
 import fr.cnrs.liris.accio.core.downloader.Downloader
 import fr.cnrs.liris.accio.core.scheduler.{Job, Scheduler}
-import fr.cnrs.liris.accio.core.util.Configurable
 import fr.cnrs.liris.common.util.{FileUtils, Platform}
 
 import scala.collection.JavaConverters._
@@ -42,12 +41,11 @@ import scala.collection.mutable
  *
  * @param downloader    Downloader.
  * @param statsReceiver Stats receiver.
+ * @param config        Scheduler configuration.
  */
 @Singleton
-class LocalScheduler @Inject()(downloader: Downloader, statsReceiver: StatsReceiver)
-  extends Scheduler
-    with Configurable[LocalSchedulerConfig]
-    with StrictLogging {
+class LocalScheduler @Inject()(downloader: Downloader, statsReceiver: StatsReceiver, config: LocalSchedulerConfig)
+  extends Scheduler with StrictLogging {
 
   // Monitors for currently running tasks.
   private[this] val monitors = new ConcurrentHashMap[String, TaskMonitor].asScala
@@ -75,8 +73,6 @@ class LocalScheduler @Inject()(downloader: Downloader, statsReceiver: StatsRecei
   private[this] val errorCounter = statsReceiver.counter("task", "error")
   private[this] val stuckCounter = statsReceiver.counter("task", "stuck")
   logger.debug(s"Detected resources: CPU $totalCpu, RAM ${totalRam.map(_.inMegabytes + "Mb").getOrElse("-")}, disk ${totalDisk.map(_.inMegabytes + "Mb").getOrElse("-")}")
-
-  override def configClass: Class[LocalSchedulerConfig] = classOf[LocalSchedulerConfig]
 
   override def submit(job: Job): String = {
     synchronized {

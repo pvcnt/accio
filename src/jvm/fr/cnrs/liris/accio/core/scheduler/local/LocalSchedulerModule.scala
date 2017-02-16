@@ -18,7 +18,6 @@
 
 package fr.cnrs.liris.accio.core.scheduler.local
 
-import com.google.inject.Provides
 import fr.cnrs.liris.accio.core.scheduler.Scheduler
 import net.codingwell.scalaguice.ScalaModule
 
@@ -28,10 +27,8 @@ import net.codingwell.scalaguice.ScalaModule
  * @param config Local scheduler configuration.
  */
 class LocalSchedulerModule(config: LocalSchedulerConfig) extends ScalaModule {
-  override protected def configure(): Unit = {}
-
-  @Provides
-  def providesScheduler(scheduler: LocalScheduler): Scheduler = {
-    scheduler.initialize(config)
+  override protected def configure(): Unit = {
+    bind[LocalSchedulerConfig].toInstance(config)
+    bind[Scheduler].to[LocalScheduler]
   }
 }

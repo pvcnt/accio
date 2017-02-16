@@ -36,7 +36,7 @@ class LocalSchedulerSpec extends SchedulerSpec with BeforeAndAfterEach with With
 
   override protected def createScheduler: Scheduler = {
     val conf = LocalSchedulerConfig(tmpDir.resolve("workdir"), "0.0.0.0:12345", executorUri, None, Seq.empty)
-    new LocalScheduler(FileDownloader, NullStatsReceiver).initialize(conf)
+    new LocalScheduler(FileDownloader, NullStatsReceiver, conf)
   }
 
   override protected def isRunning(key: String): Boolean = {

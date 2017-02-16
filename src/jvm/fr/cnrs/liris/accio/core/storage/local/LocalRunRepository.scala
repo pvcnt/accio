@@ -37,7 +37,7 @@ import scala.collection.JavaConverters._
 @Singleton
 final class LocalRunRepository @Inject()(config: LocalStorageConfig) extends LocalRepository with MutableRunRepository {
   override def find(query: RunQuery): RunList = {
-    var results = listIds(runsPath)
+    var results = listIds(runPath)
       .flatMap(id => get(RunId(id)))
       .filter(query.matches)
       .sortWith((a, b) => a.createdAt > b.createdAt)
@@ -99,13 +99,13 @@ final class LocalRunRepository @Inject()(config: LocalStorageConfig) extends Loc
 
   override def get(cacheKey: CacheKey): Option[OpResult] = None
 
-  private def runsPath = config.path.resolve("runs")
+  private def runPath: Path  = config.path.resolve("runs")
 
-  private def logsPath = config.path.resolve("logs")
+  private def logPath: Path  = config.path.resolve("logs")
 
-  private def runPath(id: RunId) = getSubdir(runsPath, id.value).resolve(s"${id.value}.json")
+  private def runPath(id: RunId): Path  = getSubdir(runPath, id.value).resolve(s"${id.value}.json")
 
-  private def logsPath(id: RunId): Path = getSubdir(logsPath, id.value.toString).resolve(id.value.toString)
+  private def logsPath(id: RunId): Path = getSubdir(logPath, id.value.toString).resolve(id.value.toString)
 
   private def logsPath(id: RunId, nodeName: String): Path = logsPath(id).resolve(nodeName)
 

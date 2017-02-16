@@ -6,7 +6,6 @@ scala_library(
     'src/jvm/fr/cnrs/liris/accio/core/storage',
     'src/jvm/fr/cnrs/liris/accio/core/uploader',
     'src/jvm/fr/cnrs/liris/accio/core/downloader',
-    'src/jvm/fr/cnrs/liris/accio/core/statemgr',
     'src/jvm/fr/cnrs/liris/accio/core/scheduler',
     'src/jvm/fr/cnrs/liris/common/util',
     'src/jvm/fr/cnrs/liris/common/cache',
