@@ -18,21 +18,20 @@
 
 package fr.cnrs.liris.accio.core.storage.elastic
 
-import com.google.inject.Singleton
-import com.sksamuel.elastic4s.ElasticDsl.{matchQuery, _}
+import com.google.inject.{Inject, Singleton}
+import com.sksamuel.elastic4s.ElasticDsl._
 import com.sksamuel.elastic4s.analyzers.KeywordAnalyzer
 import com.sksamuel.elastic4s.mappings.MappingDefinition
 import com.sksamuel.elastic4s.{ElasticClient, ElasticDsl}
 import com.twitter.finatra.json.FinatraObjectMapper
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.domain._
-import fr.cnrs.liris.accio.core.storage.{LogsQuery, MutableRunRepository, RunList, RunQuery}
+import fr.cnrs.liris.accio.core.storage._
 import org.apache.lucene.search.join.ScoreMode
 import org.elasticsearch.index.IndexNotFoundException
 import org.elasticsearch.search.sort.SortOrder
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 import scala.language.reflectiveCalls
 import scala.util.control.NonFatal
@@ -40,17 +39,15 @@ import scala.util.control.NonFatal
 /**
  * Run repository persisting data into an Elasticsearch cluster.
  *
- * @param mapper       Finatra object mapper.
- * @param client       Elasticsearch client.
- * @param prefix       Prefix of indices managed by Accio.
- * @param queryTimeout Timeout of queries sent to Elasticsearch.
+ * @param mapper Finatra object mapper.
+ * @param client Elasticsearch client.
+ * @param config Elastic repository configuration.
  */
 @Singleton
-final class ElasticRunRepository(
-  mapper: FinatraObjectMapper,
-  client: ElasticClient,
-  prefix: String,
-  queryTimeout: Duration)
+final class ElasticRunRepository @Inject()(
+  @ForStorage mapper: FinatraObjectMapper,
+  @ForStorage client: ElasticClient,
+  config: StorageConfig)
   extends MutableRunRepository with StrictLogging {
 
   initializeRunsIndex()
@@ -104,7 +101,7 @@ final class ElasticRunRepository(
         logger.error("Error while searching runs", e)
         RunList(Seq.empty, 0)
     }
-    Await.result(f, queryTimeout)
+    Await.result(f, config.queryTimeout)
   }
 
   override def find(query: LogsQuery): Seq[RunLog] = {
@@ -132,7 +129,7 @@ final class ElasticRunRepository(
         logger.error("Error while searching logs", e)
         Seq.empty
     }
-    Await.result(f, queryTimeout)
+    Await.result(f, config.queryTimeout)
   }
 
   override def save(run: Run): Unit = {
@@ -143,7 +140,7 @@ final class ElasticRunRepository(
     f.onFailure {
       case e: Throwable => logger.error(s"Error while saving run ${run.id.value}", e)
     }
-    Await.ready(f, queryTimeout)
+    Await.ready(f, config.queryTimeout)
   }
 
   override def save(logs: Seq[RunLog]): Unit = {
@@ -155,7 +152,7 @@ final class ElasticRunRepository(
     f.onFailure {
       case e: Throwable => logger.error(s"Error while saving ${logs.size} logs", e)
     }
-    Await.ready(f, queryTimeout)
+    Await.ready(f, config.queryTimeout)
   }
 
   override def get(id: RunId): Option[Run] = {
@@ -173,7 +170,7 @@ final class ElasticRunRepository(
           logger.error(s"Error while retrieving run ${id.value}", e)
           None
       }
-    Await.result(f, queryTimeout)
+    Await.result(f, config.queryTimeout)
   }
 
   override def remove(id: RunId): Unit = {
@@ -183,7 +180,7 @@ final class ElasticRunRepository(
     fs.onSuccess {
       case _ => logger.debug(s"Removed run ${id.value}")
     }
-    Await.ready(fs, queryTimeout)
+    Await.ready(fs, config.queryTimeout)
   }
 
   override def get(cacheKey: CacheKey): Option[OpResult] = {
@@ -204,12 +201,12 @@ final class ElasticRunRepository(
         logger.error(s"Error while retrieving cached result ${cacheKey.hash}", e)
         None
     }
-    Await.result(f, queryTimeout)
+    Await.result(f, config.queryTimeout)
   }
 
-  private def runsIndex = s"${prefix}runs"
+  private def runsIndex = s"${config.prefix}runs"
 
-  private def logsIndex = s"${prefix}logs"
+  private def logsIndex = s"${config.prefix}logs"
 
   private def runsType = "default"
 
@@ -244,7 +241,7 @@ final class ElasticRunRepository(
       }
     }
     f.onFailure { case NonFatal(e) => logger.error("Failed to initialize runs index", e) }
-    Await.ready(f, queryTimeout)
+    Await.ready(f, config.queryTimeout)
   }
 
   private def initializeLogsIndex() = {
@@ -264,6 +261,6 @@ final class ElasticRunRepository(
       }
     }
     f.onFailure { case NonFatal(e) => logger.error("Failed to initialize logs index", e) }
-    Await.ready(f, queryTimeout)
+    Await.ready(f, config.queryTimeout)
   }
 }

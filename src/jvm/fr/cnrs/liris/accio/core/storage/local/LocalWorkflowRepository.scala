@@ -20,10 +20,10 @@ package fr.cnrs.liris.accio.core.storage.local
 
 import java.nio.file.{Files, Path}
 
+import com.google.inject.{Inject, Singleton}
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.storage.{MutableWorkflowRepository, WorkflowList, WorkflowQuery}
-import fr.cnrs.liris.accio.core.util.LocalStorage
 import fr.cnrs.liris.common.util.FileUtils
 
 /**
@@ -31,11 +31,14 @@ import fr.cnrs.liris.common.util.FileUtils
  * development clusters. It might have very poor performance because data is not indexed, which results in a
  * sequential scan at each query.
  *
- * @param rootDir Root directory under which to store files.
+ * @param config Local repository configuration.
  */
-final class LocalWorkflowRepository(rootDir: Path) extends LocalStorage with MutableWorkflowRepository with LazyLogging {
+@Singleton
+final class LocalWorkflowRepository @Inject()(config: LocalStorageConfig)
+  extends LocalRepository with MutableWorkflowRepository with LazyLogging {
+
   override def find(query: WorkflowQuery): WorkflowList = {
-    var results = rootDir.toFile.listFiles.toSeq
+    var results = workflowPath.toFile.listFiles.toSeq
       .filter(_.isDirectory)
       .map(_.getName)
       .flatMap(dirname => get(WorkflowId(dirname)))
@@ -68,7 +71,9 @@ final class LocalWorkflowRepository(rootDir: Path) extends LocalStorage with Mut
 
   private def contains(id: WorkflowId, version: String): Boolean = workflowPath(id, version).toFile.exists
 
-  private def workflowPath(id: WorkflowId): Path = rootDir.resolve(id.value)
+  private def workflowPath: Path = config.path.resolve("workflows")
+
+  private def workflowPath(id: WorkflowId): Path = workflowPath.resolve(id.value)
 
   private def workflowPath(id: WorkflowId, version: String): Path = workflowPath(id).resolve(s"v$version.json")
 

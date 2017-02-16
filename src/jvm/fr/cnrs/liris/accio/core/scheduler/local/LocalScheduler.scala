@@ -18,7 +18,6 @@
 
 package fr.cnrs.liris.accio.core.scheduler.local
 
-import java.io.ByteArrayOutputStream
 import java.nio.file.Files
 import java.util.concurrent.{ConcurrentHashMap, ConcurrentLinkedQueue, Executors}
 
@@ -36,7 +35,6 @@ import fr.cnrs.liris.common.util.{FileUtils, Platform}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
-import scala.util.control.NonFatal
 
 /**
  * Scheduler executing tasks locally, in the same machine. Each task is started inside a new Java process. Intended
@@ -73,6 +71,9 @@ class LocalScheduler @Inject()(downloader: Downloader, statsReceiver: StatsRecei
   }
   // Set used for keeping track of gauges (otherwise only weakly referenced).
   private[this] val gauges = createGauges()
+  private[this] val completedCounter = statsReceiver.counter("task", "completed")
+  private[this] val errorCounter = statsReceiver.counter("task", "error")
+  private[this] val stuckCounter = statsReceiver.counter("task", "stuck")
   logger.debug(s"Detected resources: CPU $totalCpu, RAM ${totalRam.map(_.inMegabytes + "Mb").getOrElse("-")}, disk ${totalDisk.map(_.inMegabytes + "Mb").getOrElse("-")}")
 
   override def configClass: Class[LocalSchedulerConfig] = classOf[LocalSchedulerConfig]
@@ -84,7 +85,8 @@ class LocalScheduler @Inject()(downloader: Downloader, statsReceiver: StatsRecei
       } else {
         queue.add(job)
         if (monitors.isEmpty) {
-          // It is an error because the system is stuck and cannot recover.
+          // This job will never be scheduled...
+          stuckCounter.incr()
           logger.error(s"Not enough resource to schedule job")
         }
       }
@@ -132,7 +134,8 @@ class LocalScheduler @Inject()(downloader: Downloader, statsReceiver: StatsRecei
       }
     }
     if (monitors.isEmpty && !queue.isEmpty) {
-      // It is an error because the system is stuck and cannot recover.
+      // Some jobs will never be scheduled...
+      stuckCounter.incr(queue.size)
       logger.error(s"Not enough resources to schedule any job")
     }
   }
@@ -165,9 +168,12 @@ class LocalScheduler @Inject()(downloader: Downloader, statsReceiver: StatsRecei
       .respond {
         case Throw(e) =>
           logger.error(s"[T${job.taskId.value}] Error in monitoring thread", e)
+          completedCounter.incr()
+          errorCounter.incr()
           startNext()
         case Return(_) =>
           logger.debug(s"[T${job.taskId.value}] Monitoring thread completed")
+          completedCounter.incr()
           startNext()
       }
   }
@@ -207,17 +213,8 @@ class LocalScheduler @Inject()(downloader: Downloader, statsReceiver: StatsRecei
         case Some(p) =>
           logger.debug(s"[T${job.taskId.value}] Waiting for process completion")
           try {
-            //ByteStreams.copy(p.getInputStream, ByteStreams.nullOutputStream)
-            val baos = new ByteArrayOutputStream
-            ByteStreams.copy(p.getInputStream, baos)
-            println("--output: " + baos.toString)
+            ByteStreams.copy(p.getInputStream, ByteStreams.nullOutputStream)
             p.waitFor()
-          } catch {
-            case e: InterruptedException => logger.warn(s"[T${job.taskId.value}] Interrupted while waiting", e)
-            case NonFatal(e) =>
-              if (!killed) {
-                throw e
-              }
           } finally {
             cleanup()
           }
@@ -231,7 +228,6 @@ class LocalScheduler @Inject()(downloader: Downloader, statsReceiver: StatsRecei
         killed = true
         process.foreach { p =>
           p.destroyForcibly()
-          //ByteStreams.copy(p.getInputStream, ByteStreams.nullOutputStream)
           p.waitFor()
         }
         cleanup()
@@ -289,8 +285,8 @@ class LocalScheduler @Inject()(downloader: Downloader, statsReceiver: StatsRecei
     gauges += stats.addGauge("ram", "reserved")(reservedRam.inBytes)
     gauges += stats.addGauge("disk", "reserved")(reservedDisk.inBytes)
 
-    gauges += stats.addGauge("waiting")(queue.size)
-    gauges += stats.addGauge("running")(monitors.size)
+    gauges += stats.addGauge("task", "waiting")(queue.size)
+    gauges += stats.addGauge("task", "running")(monitors.size)
 
     gauges.toSet
   }

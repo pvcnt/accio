@@ -40,7 +40,6 @@ object SchedulerModule extends TwitterModule {
   private[this] val localPathFlag = flag[String]("scheduler.local.path", "Directory where to store sandboxes")
 
   // GridEngine scheduler configuration.
-  private[this] val geWorkdirFlag = flag[String]("scheduler.ge.workdir", "Local directory where to store temporary files")
   private[this] val geHostFlag = flag[String]("scheduler.ge.host", "Gateway hostname")
   private[this] val geUserFlag = flag[String]("scheduler.ge.user", "Gateway username (authentication is done by public key)")
   private[this] val gePrefixFlag = flag[String]("scheduler.ge.prefix", "", "Prefix on remote host where to store Accio files (under home directory)")
@@ -54,7 +53,7 @@ object SchedulerModule extends TwitterModule {
         val config = LocalSchedulerConfig(Paths.get(localPathFlag()), advertiseFlag(), executorUriFlag(), javaHomeFlag.get, executorArgs)
         new LocalSchedulerModule(config)
       case "ge" =>
-        val config = GridEngineSchedulerConfig(Paths.get(geWorkdirFlag()), advertiseFlag(), geHostFlag(), geUserFlag(), gePrefixFlag(), executorUriFlag(), javaHomeFlag.get, executorArgs)
+        val config = GridEngineSchedulerConfig(advertiseFlag(), geHostFlag(), geUserFlag(), gePrefixFlag(), executorUriFlag(), javaHomeFlag.get, executorArgs)
         new GridEngineSchedulerModule(config)
       case unknown => throw new IllegalArgumentException(s"Unknown scheduler type: $unknown")
     }

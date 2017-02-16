@@ -18,7 +18,8 @@
 
 package fr.cnrs.liris.accio.core.storage.elastic
 
-import com.sksamuel.elastic4s.ElasticDsl.{search, _}
+import com.google.inject.Inject
+import com.sksamuel.elastic4s.ElasticDsl._
 import com.sksamuel.elastic4s.analyzers.KeywordAnalyzer
 import com.sksamuel.elastic4s.mappings.MappingDefinition
 import com.sksamuel.elastic4s.script.ScriptDefinition
@@ -26,29 +27,26 @@ import com.sksamuel.elastic4s.{ElasticClient, ElasticDsl}
 import com.twitter.finatra.json.FinatraObjectMapper
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.domain._
-import fr.cnrs.liris.accio.core.storage.{MutableWorkflowRepository, WorkflowList, WorkflowQuery}
+import fr.cnrs.liris.accio.core.storage.{ForStorage, MutableWorkflowRepository, WorkflowList, WorkflowQuery}
 import org.elasticsearch.action.support.WriteRequest.RefreshPolicy
 import org.elasticsearch.index.IndexNotFoundException
 import org.elasticsearch.search.sort.SortOrder
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 import scala.util.control.NonFatal
 
 /**
  * Workflow repository persisting data into an Elasticsearch cluster.
  *
- * @param mapper       Finatra object mapper.
- * @param client       Elasticsearch client.
- * @param prefix       Prefix of indices managed by Accio.
- * @param queryTimeout Timeout of queries sent to Elasticsearch.
+ * @param mapper Finatra object mapper.
+ * @param client Elasticsearch client.
+ * @param config Elastic repository configuration.
  */
-class ElasticWorkflowRepository(
-  mapper: FinatraObjectMapper,
-  client: ElasticClient,
-  prefix: String,
-  queryTimeout: Duration)
+class ElasticWorkflowRepository @Inject()(
+  @ForStorage mapper: FinatraObjectMapper,
+  @ForStorage client: ElasticClient,
+  config: StorageConfig)
   extends MutableWorkflowRepository with StrictLogging {
 
   initializeWorkflowsIndex()
@@ -86,7 +84,7 @@ class ElasticWorkflowRepository(
         logger.error("Error while searching workflows", e)
         WorkflowList(Seq.empty, 0)
     }
-    Await.result(f, queryTimeout)
+    Await.result(f, config.queryTimeout)
   }
 
   override def save(workflow: Workflow): Unit = {
@@ -128,7 +126,7 @@ class ElasticWorkflowRepository(
     f.onFailure {
       case e: Throwable => logger.error(s"Error while saving workflow ${workflow.id.value}", e)
     }
-    Await.ready(f, queryTimeout)
+    Await.ready(f, config.queryTimeout)
   }
 
   override def get(id: WorkflowId): Option[Workflow] = {
@@ -149,7 +147,7 @@ class ElasticWorkflowRepository(
         logger.error(s"Error while retrieving workflow ${id.value}", e)
         None
     }
-    Await.result(f, queryTimeout)
+    Await.result(f, config.queryTimeout)
   }
 
   override def get(id: WorkflowId, version: String): Option[Workflow] = {
@@ -167,12 +165,12 @@ class ElasticWorkflowRepository(
         logger.error(s"Error while retrieving workflow ${id.value}", e)
         None
     }
-    Await.result(f, queryTimeout)
+    Await.result(f, config.queryTimeout)
   }
 
   private def internalId(id: WorkflowId, version: String) = s"${id.value}:$version"
 
-  private def workflowsIndex = s"${prefix}workflows"
+  private def workflowsIndex = s"${config.prefix}workflows"
 
   private def workflowsType = s"default"
 
@@ -199,6 +197,6 @@ class ElasticWorkflowRepository(
       }
     }
     f.onFailure { case NonFatal(e) => logger.error("Failed to initialize logs index", e) }
-    Await.ready(f, queryTimeout)
+    Await.ready(f, config.queryTimeout)
   }
 }

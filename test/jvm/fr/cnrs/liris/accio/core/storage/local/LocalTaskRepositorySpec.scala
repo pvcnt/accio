@@ -25,7 +25,7 @@ import fr.cnrs.liris.testing.WithTmpDirectory
  * Unit tests of [[LocalTaskRepository]].
  */
 class LocalTaskRepositorySpec extends TaskRepositorySpec with WithTmpDirectory {
-  override protected def createRepository: MutableTaskRepository = new LocalTaskRepository(tmpDir)
-
   behavior of "LocalTaskRepository"
+
+  override protected def createRepository: MutableTaskRepository = new LocalTaskRepository(LocalStorageConfig(tmpDir))
 }

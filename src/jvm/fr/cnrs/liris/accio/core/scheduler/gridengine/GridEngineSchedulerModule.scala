@@ -18,9 +18,10 @@
 
 package fr.cnrs.liris.accio.core.scheduler.gridengine
 
-import com.google.inject.Provides
-import fr.cnrs.liris.accio.core.scheduler.Scheduler
+import com.google.inject.{Provides, Singleton}
+import fr.cnrs.liris.accio.core.scheduler.{ForScheduler, Scheduler}
 import net.codingwell.scalaguice.ScalaModule
+import net.schmizz.sshj.SSHClient
 
 /**
  * Guice module provisioning a GridEngine scheduler.
@@ -28,10 +29,19 @@ import net.codingwell.scalaguice.ScalaModule
  * @param config GridEngine scheduler configuration.
  */
 class GridEngineSchedulerModule(config: GridEngineSchedulerConfig) extends ScalaModule {
-  override protected def configure(): Unit = {}
+  override protected def configure(): Unit = {
+    bind[SchedulerConfig].toInstance(config.toConfig)
+    bind[Scheduler].to[GridEngineScheduler]
+  }
 
+  @ForScheduler
+  @Singleton
   @Provides
-  def providesScheduler(scheduler: GridEngineScheduler): Scheduler = {
-    scheduler.initialize(config)
+  def providesSshClient: SSHClient = {
+    val client = new SSHClient
+    client.connect(config.host)
+    client.authPublickey(config.user)
+    client.useCompression()
+    client
   }
 }

@@ -40,6 +40,7 @@ private[scheduler] abstract class SchedulerSpec extends UnitSpec {
     try {
       val job = Job(TaskId("1234"), RunId("run_id"), "NodeName", OpPayload("MyOp", 1234L, Map.empty, CacheKey("cache_key")), Resource(1, 128, 0))
       val key = scheduler.submit(job)
+      Thread.sleep(1000)
       isRunning(key) shouldBe true
     } finally {
       scheduler.close()
@@ -49,8 +50,9 @@ private[scheduler] abstract class SchedulerSpec extends UnitSpec {
   it should "kill a running task" in {
     val scheduler = createScheduler
     try {
-      val job = Job(TaskId("1234"), RunId("run_id"), "NodeName", OpPayload("MyOp", 1234L, Map.empty, CacheKey("cache_key")), Resource(0, 0, 0))
+      val job = Job(TaskId("1234"), RunId("run_id"), "NodeName", OpPayload("MyOp", 1234L, Map.empty, CacheKey("cache_key")), Resource(1, 128, 0))
       val key = scheduler.submit(job)
+      Thread.sleep(1000)
       scheduler.kill(key)
       isRunning(key) shouldBe false
     } finally {

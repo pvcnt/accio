@@ -1,11 +1,13 @@
 scala_library(
   dependencies=[
     'src/jvm/fr/cnrs/liris/accio/core/storage',
+    'src/jvm/fr/cnrs/liris/accio/core/storage:annotations',
     'src/thrift/fr/cnrs/liris/accio/core/domain',
     '3rdparty/jvm/com/sksamuel/elastic4s:core',
     '3rdparty/jvm/com/sksamuel/elastic4s:jackson',
     '3rdparty/jvm/com/typesafe/scala-logging',
     '3rdparty/jvm:scrooge-core',
+    '3rdparty/jvm:scala-guice',
     '3rdparty/jvm/com/twitter/finatra:jackson',
   ],
   sources=globs('*.scala')

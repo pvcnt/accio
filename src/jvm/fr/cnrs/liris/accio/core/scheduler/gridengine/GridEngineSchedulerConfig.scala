@@ -18,12 +18,9 @@
 
 package fr.cnrs.liris.accio.core.scheduler.gridengine
 
-import java.nio.file.Path
-
 /**
- * Grid Engine scheduler configuration.
+ * Grid Engine scheduler module configuration, made available to Guice module.
  *
- * @param workDir      Local working directory.
  * @param agentAddr    Agent address.
  * @param host         Host where to uploader files.
  * @param user         Username. Authentication is done by public key.
@@ -33,10 +30,27 @@ import java.nio.file.Path
  * @param executorArgs Arguments to pass to the executors.
  */
 case class GridEngineSchedulerConfig(
-  workDir: Path,
   agentAddr: String,
   host: String,
   user: String,
+  prefix: String,
+  executorUri: String,
+  javaHome: Option[String],
+  executorArgs: Seq[String]) {
+  def toConfig: SchedulerConfig = SchedulerConfig(agentAddr, prefix, executorUri, javaHome, executorArgs)
+}
+
+/**
+ * Grid Engine scheduler configuration, made available to scheduler.
+ *
+ * @param agentAddr    Agent address.
+ * @param prefix       Prefix on remote host where to store files (under home directory).
+ * @param executorUri  URI where to fetch the executor.
+ * @param javaHome     Java home to be used remotely.
+ * @param executorArgs Arguments to pass to the executors.
+ */
+private[gridengine] case class SchedulerConfig(
+  agentAddr: String,
   prefix: String,
   executorUri: String,
   javaHome: Option[String],

@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.core.storage.elastic
 
-import com.google.inject.Singleton
+import com.google.inject.{Inject, Singleton}
 import com.sksamuel.elastic4s.ElasticDsl._
 import com.sksamuel.elastic4s.analyzers.KeywordAnalyzer
 import com.sksamuel.elastic4s.mappings.MappingDefinition
@@ -30,7 +30,6 @@ import fr.cnrs.liris.accio.core.storage._
 import org.elasticsearch.index.IndexNotFoundException
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 import scala.language.reflectiveCalls
 import scala.util.control.NonFatal
@@ -38,17 +37,15 @@ import scala.util.control.NonFatal
 /**
  * Run repository persisting data into an Elasticsearch cluster.
  *
- * @param mapper       Finatra object mapper.
- * @param client       Elasticsearch client.
- * @param prefix       Prefix of indices managed by Accio.
- * @param queryTimeout Timeout of queries sent to Elasticsearch.
+ * @param mapper Finatra object mapper.
+ * @param client Elasticsearch client.
+ * @param config Elastic repository configuration.
  */
 @Singleton
-final class ElasticTaskRepository(
-  mapper: FinatraObjectMapper,
-  client: ElasticClient,
-  prefix: String,
-  queryTimeout: Duration)
+final class ElasticTaskRepository @Inject()(
+  @ForStorage mapper: FinatraObjectMapper,
+  @ForStorage client: ElasticClient,
+  config: StorageConfig)
   extends MutableTaskRepository with StrictLogging {
 
   initializeTasksIndex()
@@ -79,7 +76,7 @@ final class ElasticTaskRepository(
         logger.error("Error while searching tasks", e)
         Seq.empty[Task]
     }
-    Await.result(f, queryTimeout)
+    Await.result(f, config.queryTimeout)
   }
 
   override def save(task: Task): Unit = {
@@ -88,7 +85,7 @@ final class ElasticTaskRepository(
     f.onFailure {
       case e: Throwable => logger.error(s"Error while saving task ${task.id.value}", e)
     }
-    Await.ready(f, queryTimeout)
+    Await.ready(f, config.queryTimeout)
   }
 
   override def get(id: TaskId): Option[Task] = {
@@ -106,7 +103,7 @@ final class ElasticTaskRepository(
           logger.error(s"Error while retrieving task ${id.value}", e)
           None
       }
-    Await.result(f, queryTimeout)
+    Await.result(f, config.queryTimeout)
   }
 
   override def remove(id: TaskId): Unit = {
@@ -114,10 +111,10 @@ final class ElasticTaskRepository(
     f.onSuccess {
       case _ => logger.debug(s"Removed run ${id.value}")
     }
-    Await.ready(f, queryTimeout)
+    Await.ready(f, config.queryTimeout)
   }
 
-  private def taskIndex = s"${prefix}task"
+  private def taskIndex = s"${config.prefix}task"
 
   private def taskType = "default"
 
@@ -140,6 +137,6 @@ final class ElasticTaskRepository(
       }
     }
     f.onFailure { case NonFatal(e) => logger.error("Failed to initialize tasks index", e) }
-    Await.ready(f, queryTimeout)
+    Await.ready(f, config.queryTimeout)
   }
 }

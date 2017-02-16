@@ -19,12 +19,12 @@
 package fr.cnrs.liris.accio.core.scheduler.gridengine
 
 import java.io.{ByteArrayInputStream, InputStream}
+import java.nio.file.Files
 
 import com.google.inject.{Inject, Singleton}
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.downloader.Downloader
 import fr.cnrs.liris.accio.core.scheduler.{Job, Scheduler}
-import fr.cnrs.liris.accio.core.util.Configurable
 import net.schmizz.sshj.SSHClient
 import net.schmizz.sshj.common.IOUtils
 import net.schmizz.sshj.connection.channel.direct.Session
@@ -33,31 +33,19 @@ import net.schmizz.sshj.xfer.{FileSystemFile, InMemorySourceFile}
 import scala.collection.mutable
 
 @Singleton
-class GridEngineScheduler @Inject()(client: SSHClient, downloader: Downloader)
-  extends Scheduler
-    with StrictLogging
-    with Configurable[GridEngineSchedulerConfig] {
+class GridEngineScheduler @Inject()(client: SSHClient, downloader: Downloader, config: SchedulerConfig)
+  extends Scheduler with StrictLogging {
 
   private[this] lazy val localExecutorPath = {
-    val targetPath = config.workDir.resolve("executor.jar")
-    if (targetPath.toFile.exists()) {
-      targetPath.toFile.delete()
-    }
-    logger.info(s"Downloading executor JAR to ${targetPath.toAbsolutePath}")
-    downloader.download(config.executorUri, targetPath)
-    targetPath.toAbsolutePath
+    val executorPath = Files.createTempFile("executor-", ".jar").toAbsolutePath
+    logger.info(s"Downloading executor JAR to $executorPath")
+    downloader.download(config.executorUri, executorPath)
+    executorPath
   }
   private[this] val executorUploadLock = new Object
   private[this] var executorUploaded = false
 
-  override def configClass: Class[GridEngineSchedulerConfig] = classOf[GridEngineSchedulerConfig]
-
   override def submit(job: Job): String = {
-    if (!client.isConnected) {
-      client.connect(config.host)
-      client.authPublickey(config.user)
-      client.useCompression()
-    }
     val session = client.startSession()
     try {
       val remoteWorkDir = remoteHomePath(session)
@@ -84,9 +72,7 @@ class GridEngineScheduler @Inject()(client: SSHClient, downloader: Downloader)
   }
 
   override def close(): Unit = {
-    if (client.isConnected) {
-      client.disconnect()
-    }
+    client.close()
   }
 
   private def remoteHomePath(session: Session): String = {

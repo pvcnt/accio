@@ -20,9 +20,9 @@ package fr.cnrs.liris.accio.core.storage.local
 
 import java.nio.file.{Files, Path, StandardOpenOption}
 
+import com.google.inject.{Inject, Singleton}
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.storage.{LogsQuery, MutableRunRepository, RunList, RunQuery}
-import fr.cnrs.liris.accio.core.util.LocalStorage
 import fr.cnrs.liris.common.util.FileUtils
 
 import scala.collection.JavaConverters._
@@ -32,9 +32,10 @@ import scala.collection.JavaConverters._
  * clusters. It might have very poor performance because data is not indexed, which results in a sequential scan at
  * each query. Moreover, this implementation does no result memoization.
  *
- * @param rootDir Root directory under which to store files.
+ * @param config Local repository configuration.
  */
-final class LocalRunRepository(rootDir: Path) extends LocalStorage with MutableRunRepository {
+@Singleton
+final class LocalRunRepository @Inject()(config: LocalStorageConfig) extends LocalRepository with MutableRunRepository {
   override def find(query: RunQuery): RunList = {
     var results = listIds(runsPath)
       .flatMap(id => get(RunId(id)))
@@ -98,9 +99,9 @@ final class LocalRunRepository(rootDir: Path) extends LocalStorage with MutableR
 
   override def get(cacheKey: CacheKey): Option[OpResult] = None
 
-  private def runsPath = rootDir.resolve("runs")
+  private def runsPath = config.path.resolve("runs")
 
-  private def logsPath = rootDir.resolve("logs")
+  private def logsPath = config.path.resolve("logs")
 
   private def runPath(id: RunId) = getSubdir(runsPath, id.value).resolve(s"${id.value}.json")
 

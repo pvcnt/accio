@@ -23,6 +23,9 @@ import java.nio.file.Paths
 import com.twitter.inject.TwitterModule
 import com.twitter.util.Duration
 import fr.cnrs.liris.accio.core.storage._
+import fr.cnrs.liris.accio.core.storage.elastic.{ElasticStorageConfig, ElasticStorageModule}
+import fr.cnrs.liris.accio.core.storage.local.{LocalStorageConfig, LocalStorageModule}
+import fr.cnrs.liris.accio.core.storage.memory.MemoryStorageModule
 
 /**
  * Guice module provisioning storage-related services.

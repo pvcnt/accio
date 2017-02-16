@@ -18,17 +18,18 @@
 
 package fr.cnrs.liris.accio.core.storage.local
 
-import java.nio.file.Path
-
+import com.google.inject.{Inject, Singleton}
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.storage._
-import fr.cnrs.liris.accio.core.util.LocalStorage
 import fr.cnrs.liris.common.util.FileUtils
 
 /**
- * @param rootDir Root directory under which to store files.
+ * @param config Local repository configuration.
  */
-final class LocalTaskRepository(rootDir: Path) extends LocalStorage with MutableTaskRepository {
+@Singleton
+final class LocalTaskRepository @Inject()(config: LocalStorageConfig)
+  extends LocalRepository with MutableTaskRepository {
+
   override def save(task: Task): Unit = {
     write(task, taskPath(task.id))
   }
@@ -38,7 +39,7 @@ final class LocalTaskRepository(rootDir: Path) extends LocalStorage with Mutable
   }
 
   override def find(query: TaskQuery): Seq[Task] = {
-    rootDir.toFile
+    taskPath.toFile
       .listFiles
       .toSeq
       .filter(_.isFile)
@@ -48,5 +49,7 @@ final class LocalTaskRepository(rootDir: Path) extends LocalStorage with Mutable
 
   override def get(id: TaskId): Option[Task] = read(taskPath(id), Task)
 
-  private def taskPath(id: TaskId) = rootDir.resolve(id.value)
+  private def taskPath = config.path.resolve("tasks")
+
+  private def taskPath(id: TaskId) = taskPath.resolve(id.value)
 }
