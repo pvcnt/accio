@@ -19,6 +19,7 @@
 import React from 'react'
 import moment from 'moment'
 import {Link} from 'react-router'
+import {find} from 'lodash'
 import {ProgressBar, Col, Row, Glyphicon, Grid} from 'react-bootstrap'
 import TagList from '../../TagList'
 
@@ -69,6 +70,7 @@ class RunTable extends React.Component {
               : null}
             <Link to={'/runs/view/' + run.id}>{run.name ? run.name : 'Untitled run #' + run.id}</Link>
             <br/>
+            <span className="run-item-workflow">{run.pkg.workflow_id}</span>
             <span className="run-item-status">{label}</span>
           </Col>
           <Col md={2}><ProgressBar now={progress} label={progress + '%'} bsStyle={style}/></Col>

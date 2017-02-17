@@ -18,7 +18,7 @@
     "bootstrap": "^3.3.6",
     "classnames": "^2.2.4",
     "d3plus": "^1.9.5",
-    "lodash": "^4.6.1",
+    "lodash": "^4.7.14",
     "moment": "^2.11.2",
     "plotly": "^1.0.6",
     "r-dom": "^2.2.0",
