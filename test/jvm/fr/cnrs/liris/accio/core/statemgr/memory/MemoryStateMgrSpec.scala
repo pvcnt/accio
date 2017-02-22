@@ -16,14 +16,15 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.storage;
+package fr.cnrs.liris.accio.core.statemgr.memory
 
-import com.google.inject.BindingAnnotation;
+import fr.cnrs.liris.accio.core.statemgr.StateMgrSpec
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
+/**
+ * Unit tests of [[MemoryStateMgr]].
+ */
+class MemoryStateMgrSpec extends StateMgrSpec {
+  behavior of "MemoryStateMgr"
 
-@Retention(RetentionPolicy.RUNTIME)
-@BindingAnnotation
-public @interface ForStorage {
+  protected def createStateMgr = new MemoryStateMgr
 }

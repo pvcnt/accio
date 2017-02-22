@@ -18,22 +18,17 @@
 
 package fr.cnrs.liris.accio.core.statemgr.inject
 
-import java.nio.file.Paths
-
 import com.twitter.inject.{Injector, TwitterModule}
 import com.twitter.util.Duration
 import fr.cnrs.liris.accio.core.statemgr.StateManager
-import fr.cnrs.liris.accio.core.statemgr.local.{LocalStateMgrConfig, LocalStateMgrModule}
+import fr.cnrs.liris.accio.core.statemgr.memory.MemoryStateMgrModule
 import fr.cnrs.liris.accio.core.statemgr.zookeeper.{ZookeeperStateMgrConfig, ZookeeperStateMgrModule}
 
 /**
  * Guice module provisioning the state manager service.
  */
 object StateManagerModule extends TwitterModule {
-  private[this] val stateMgrFlag = flag("statemgr.type", "local", "State manager type")
-
-  // Local state manager configuration.
-  private[this] val localPathFlag = flag[String]("statemgr.local.path", "Path where to store state")
+  private[this] val stateMgrFlag = flag("statemgr.type", "memory", "State manager type")
 
   // Zookeeper state manager configuration.
   private[this] val zkAddrFlag = flag("statemgr.zk.addr", "127.0.0.1:2181", "Address to Zookeeper cluster")
@@ -43,8 +38,8 @@ object StateManagerModule extends TwitterModule {
 
   protected override def configure(): Unit = {
     val module = stateMgrFlag() match {
-      case "local" =>
-        new LocalStateMgrModule(LocalStateMgrConfig(Paths.get(localPathFlag())))
+      case "memory" =>
+        new MemoryStateMgrModule
       case "zk" =>
         val config = ZookeeperStateMgrConfig(zkAddrFlag(), zkPathFlag(), zkSessionTimeoutFlag(), zkConnTimeoutFlag())
         new ZookeeperStateMgrModule(config)

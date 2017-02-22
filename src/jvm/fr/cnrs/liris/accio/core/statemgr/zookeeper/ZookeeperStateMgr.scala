@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.core.statemgr.zookeeper
 import java.util.concurrent.TimeUnit
 
 import com.google.inject.{Inject, Singleton}
-import fr.cnrs.liris.accio.core.statemgr.{ForStateMgr, Lock, StateManager}
+import fr.cnrs.liris.accio.core.statemgr.{InjectStateMgr, Lock, StateManager}
 import org.apache.curator.framework.CuratorFramework
 import org.apache.curator.framework.recipes.locks.InterProcessMutex
 import org.apache.zookeeper.KeeperException
@@ -35,7 +35,7 @@ import scala.collection.JavaConverters._
  * @param config Configuration.
  */
 @Singleton
-final class ZookeeperStateMgr @Inject()(@ForStateMgr client: CuratorFramework, config: ZookeeperStateMgrConfig)
+final class ZookeeperStateMgr @Inject()(@InjectStateMgr client: CuratorFramework, config: ZookeeperStateMgrConfig)
   extends StateManager {
   //private[this] val protocolFactory = new TBinaryProtocol.Factory()
 

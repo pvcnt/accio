@@ -2,7 +2,7 @@ scala_library(
   dependencies=[
     'src/jvm/fr/cnrs/liris/accio/core/statemgr',
     'src/jvm/fr/cnrs/liris/accio/core/statemgr/zookeeper',
-    'src/jvm/fr/cnrs/liris/accio/core/statemgr/local',
+    'src/jvm/fr/cnrs/liris/accio/core/statemgr/memory',
     '3rdparty/jvm/com/twitter/inject:app',
   ],
   sources=globs('*.scala')

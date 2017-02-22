@@ -16,27 +16,27 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.statemgr.local
+package fr.cnrs.liris.accio.core.statemgr.memory
 
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantLock
 
-import com.google.inject.{Inject, Singleton}
+import com.google.inject.Singleton
 import fr.cnrs.liris.accio.core.statemgr.{Lock, StateManager}
 
-import scala.collection.mutable
 import scala.collection.JavaConverters._
+import scala.collection.mutable
 
 /**
  * State manager designed for a single-node deployment.
  */
 @Singleton
-final class LocalStateMgr @Inject()(config: LocalStateMgrConfig) extends StateManager {
-  private[this] val locks = mutable.WeakHashMap.empty[String, LocalLock]
+final class MemoryStateMgr extends StateManager {
+  private[this] val locks = mutable.WeakHashMap.empty[String, JavaLock]
   private[this] val store = new ConcurrentHashMap[String, Array[Byte]].asScala
 
   override def lock(key: String): Lock = synchronized {
-    locks.getOrElseUpdate(key, new LocalLock(key))
+    locks.getOrElseUpdate(key, new JavaLock(key))
   }
 
   override def get(key: String): Option[Array[Byte]] = store.get(key)
@@ -54,7 +54,7 @@ final class LocalStateMgr @Inject()(config: LocalStateMgrConfig) extends StateMa
    *
    * @param key Lock key.
    */
-  private class LocalLock(key: String) extends Lock {
+  private class JavaLock(key: String) extends Lock {
     private[this] val javaLock = new ReentrantLock
 
     override def lock(): Unit = javaLock.lock()
@@ -63,4 +63,5 @@ final class LocalStateMgr @Inject()(config: LocalStateMgrConfig) extends StateMa
 
     override def unlock(): Unit = javaLock.unlock()
   }
+
 }

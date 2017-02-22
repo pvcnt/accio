@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.core.storage.elastic
 import com.google.inject.{Provides, Singleton}
 import com.sksamuel.elastic4s.{ElasticClient, ElasticsearchClientUri}
 import com.twitter.finatra.json.FinatraObjectMapper
-import fr.cnrs.liris.accio.core.storage.{ForStorage, MutableRunRepository, MutableTaskRepository, MutableWorkflowRepository}
+import fr.cnrs.liris.accio.core.storage.{InjectStorage, MutableRunRepository, MutableTaskRepository, MutableWorkflowRepository}
 import net.codingwell.scalaguice.ScalaModule
 import org.elasticsearch.common.settings.Settings
 
@@ -40,12 +40,12 @@ final class ElasticStorageModule(config: ElasticStorageConfig) extends ScalaModu
 
   @Provides
   @Singleton
-  @ForStorage
+  @InjectStorage
   def providesObjectMapper(mapperFactory: ObjectMapperFactory): FinatraObjectMapper = mapperFactory.create()
 
   @Provides
   @Singleton
-  @ForStorage
+  @InjectStorage
   def providesElasticClient: ElasticClient = {
     val settings = Settings.builder()
       //.put("client.transport.sniff", true)

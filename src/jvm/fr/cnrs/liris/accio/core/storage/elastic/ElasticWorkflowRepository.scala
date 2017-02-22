@@ -27,7 +27,7 @@ import com.sksamuel.elastic4s.{ElasticClient, ElasticDsl}
 import com.twitter.finatra.json.FinatraObjectMapper
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.domain._
-import fr.cnrs.liris.accio.core.storage.{ForStorage, MutableWorkflowRepository, WorkflowList, WorkflowQuery}
+import fr.cnrs.liris.accio.core.storage.{InjectStorage, MutableWorkflowRepository, WorkflowList, WorkflowQuery}
 import org.elasticsearch.action.support.WriteRequest.RefreshPolicy
 import org.elasticsearch.index.IndexNotFoundException
 import org.elasticsearch.search.sort.SortOrder
@@ -44,8 +44,8 @@ import scala.util.control.NonFatal
  * @param config Elastic repository configuration.
  */
 class ElasticWorkflowRepository @Inject()(
-  @ForStorage mapper: FinatraObjectMapper,
-  @ForStorage client: ElasticClient,
+  @InjectStorage mapper: FinatraObjectMapper,
+  @InjectStorage client: ElasticClient,
   config: StorageConfig)
   extends MutableWorkflowRepository with StrictLogging {
 

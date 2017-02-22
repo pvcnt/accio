@@ -42,14 +42,6 @@ trait StateManager {
   def list(key: String): Set[String]
 
   def remove(key: String): Unit
-
-  //def tasks: Set[Task]
-
-  //def save(task: Task): Unit
-
-  //def remove(id: TaskId): Unit
-
-  //def get(id: TaskId): Option[Task]
 }
 
 /**

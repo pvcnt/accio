@@ -19,7 +19,7 @@
 package fr.cnrs.liris.accio.core.statemgr.zookeeper
 
 import com.google.inject.{Provides, Singleton}
-import fr.cnrs.liris.accio.core.statemgr.{ForStateMgr, StateManager}
+import fr.cnrs.liris.accio.core.statemgr.{InjectStateMgr, StateManager}
 import net.codingwell.scalaguice.ScalaModule
 import org.apache.curator.framework.{CuratorFramework, CuratorFrameworkFactory}
 import org.apache.curator.retry.ExponentialBackoffRetry
@@ -35,7 +35,7 @@ final class ZookeeperStateMgrModule(config: ZookeeperStateMgrConfig) extends Sca
     bind[StateManager].to[ZookeeperStateMgr]
   }
 
-  @ForStateMgr
+  @InjectStateMgr
   @Singleton
   @Provides
   def providesCurator(): CuratorFramework = {

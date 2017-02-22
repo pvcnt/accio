@@ -16,13 +16,14 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.statemgr.local
+package fr.cnrs.liris.accio.core.storage;
 
-import java.nio.file.Path
+import com.google.inject.BindingAnnotation;
 
-/**
- * Local state manager configuration.
- *
- * @param path Root directory under which data will be written.
- */
-case class LocalStateMgrConfig(path: Path)
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+
+@Retention(RetentionPolicy.RUNTIME)
+@BindingAnnotation
+public @interface InjectStorage {
+}

@@ -43,8 +43,8 @@ import scala.util.control.NonFatal
  */
 @Singleton
 final class ElasticTaskRepository @Inject()(
-  @ForStorage mapper: FinatraObjectMapper,
-  @ForStorage client: ElasticClient,
+  @InjectStorage mapper: FinatraObjectMapper,
+  @InjectStorage client: ElasticClient,
   config: StorageConfig)
   extends MutableTaskRepository with StrictLogging {
 

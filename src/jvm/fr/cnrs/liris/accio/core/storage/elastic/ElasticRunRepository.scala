@@ -45,8 +45,8 @@ import scala.util.control.NonFatal
  */
 @Singleton
 final class ElasticRunRepository @Inject()(
-  @ForStorage mapper: FinatraObjectMapper,
-  @ForStorage client: ElasticClient,
+  @InjectStorage mapper: FinatraObjectMapper,
+  @InjectStorage client: ElasticClient,
   config: StorageConfig)
   extends MutableRunRepository with StrictLogging {
 

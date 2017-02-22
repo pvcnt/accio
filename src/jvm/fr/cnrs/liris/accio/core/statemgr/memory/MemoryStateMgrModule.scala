@@ -16,14 +16,16 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.statemgr;
+package fr.cnrs.liris.accio.core.statemgr.memory
 
-import com.google.inject.BindingAnnotation;
+import fr.cnrs.liris.accio.core.statemgr.StateManager
+import net.codingwell.scalaguice.ScalaModule
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-
-@Retention(RetentionPolicy.RUNTIME)
-@BindingAnnotation
-public @interface ForStateMgr {
+/**
+ * Guice module provisioning an in-memory state manager.
+ */
+final class MemoryStateMgrModule extends ScalaModule {
+  override def configure(): Unit = {
+    bind[StateManager].to[MemoryStateMgr]
+  }
 }
