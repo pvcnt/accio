@@ -22,14 +22,13 @@ import java.nio.file.{Files, Path, Paths}
 import java.util.UUID
 
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.dal.core.io.{Decoder, Encoder}
-import fr.cnrs.liris.dal.core.sparkle.SparkleEnv
 import fr.cnrs.liris.accio.core.api.{OpContext, Operator}
 import fr.cnrs.liris.accio.core.domain._
-import fr.cnrs.liris.accio.core.downloader.Downloader
-import fr.cnrs.liris.accio.core.uploader.Uploader
+import fr.cnrs.liris.accio.core.filesystem.FileSystem
 import fr.cnrs.liris.common.util.FileUtils
 import fr.cnrs.liris.dal.core.api.{AtomicType, Value, Values}
+import fr.cnrs.liris.dal.core.io.{Decoder, Encoder}
+import fr.cnrs.liris.dal.core.sparkle.SparkleEnv
 
 import scala.util.control.NonFatal
 
@@ -67,8 +66,7 @@ class UnknownOperatorException(val op: String) extends RuntimeException(s"Unknow
  *
  * @param opRegistry   Operator registry.
  * @param opFactory    Operator factory.
- * @param uploader     Uploader, used to send outputs.
- * @param downloader   Download client, used to fetch inputs.
+ * @param filesystem   Distributed filesystem, to read inputs and store outputs.
  * @param workDir      Working directory where per-operator sandboxes will be created.
  * @param env          Sparkle environment.
  * @param encoders     Encoders available to write data to CSV files.
@@ -78,8 +76,7 @@ class UnknownOperatorException(val op: String) extends RuntimeException(s"Unknow
 final class OpExecutor(
   opRegistry: RuntimeOpRegistry,
   opFactory: OpFactory,
-  uploader: Uploader,
-  downloader: Downloader,
+  filesystem: FileSystem,
   workDir: Path,
   env: SparkleEnv,
   encoders: Set[Encoder[_]],
@@ -231,7 +228,7 @@ final class OpExecutor(
           val dataset = Values.decodeDataset(value)
           val dst = sandboxDir.resolve("inputs").resolve(name)
           logger.debug(s"Downloading inputs/$name...")
-          downloader.download(dataset.uri, dst)
+          filesystem.read(dataset.uri, dst)
           Values.encodeDataset(dataset.copy(uri = dst.toAbsolutePath.toString))
         case _ => value
       }
@@ -253,7 +250,7 @@ final class OpExecutor(
           val key = s"${cacheKey.hash}/${UUID.randomUUID}"
           val dataset = Values.decodeDataset(artifact.value)
           logger.debug(s"Uploading outputs/${artifact.name} under $key...")
-          val newUri = uploader.upload(Paths.get(dataset.uri), key)
+          val newUri = filesystem.write(Paths.get(dataset.uri), key)
           artifact.copy(value = Values.encodeDataset(dataset.copy(uri = newUri)))
         case _ => artifact
       }

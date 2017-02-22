@@ -25,11 +25,10 @@ import com.twitter.finagle.Thrift
 import com.twitter.inject.{Injector, TwitterModule}
 import fr.cnrs.liris.accio.agent.AgentService
 import fr.cnrs.liris.accio.core.api.Operator
+import fr.cnrs.liris.accio.core.filesystem.FileSystem
+import fr.cnrs.liris.accio.core.runtime._
 import fr.cnrs.liris.dal.core.io.{Decoder, Encoder, StringCodec}
 import fr.cnrs.liris.dal.core.sparkle.SparkleEnv
-import fr.cnrs.liris.accio.core.downloader.Downloader
-import fr.cnrs.liris.accio.core.runtime._
-import fr.cnrs.liris.accio.core.uploader.Uploader
 import net.codingwell.scalaguice.ScalaMultibinder
 
 object ExecutorModule extends TwitterModule {
@@ -60,13 +59,13 @@ object ExecutorModule extends TwitterModule {
   }
 
   @Provides
-  def providesOpExecutor(opRegistry: RuntimeOpRegistry, opFactory: OpFactory, uploader: Uploader,
-    downloader: Downloader, env: SparkleEnv, encoders: Set[Encoder[_]], decoders: Set[Decoder[_]]): OpExecutor = {
+  def providesOpExecutor(opRegistry: RuntimeOpRegistry, opFactory: OpFactory, filesystem: FileSystem,
+    env: SparkleEnv, encoders: Set[Encoder[_]], decoders: Set[Decoder[_]]): OpExecutor = {
     // Because the executor is designed to run inside a sandbox, we simply use current directory as temporary path
     // for the operator executor.
     //TODO: fixme, make this more configurable. TMPDIR is used by gridengine.
     val workDir = Paths.get(sys.env.get("TMPDIR").getOrElse("."))
-    new OpExecutor(opRegistry, opFactory, uploader, downloader, workDir, env, encoders, decoders)
+    new OpExecutor(opRegistry, opFactory, filesystem, workDir, env, encoders, decoders)
   }
 
   override def singletonShutdown(injector: Injector): Unit = {

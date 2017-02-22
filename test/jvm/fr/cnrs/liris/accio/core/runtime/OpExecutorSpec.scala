@@ -23,8 +23,7 @@ import java.nio.file.{Files, Path, Paths}
 import com.google.inject.{Guice, TypeLiteral}
 import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.accio.core.domain._
-import fr.cnrs.liris.accio.core.downloader.Downloader
-import fr.cnrs.liris.accio.core.uploader.Uploader
+import fr.cnrs.liris.accio.core.filesystem.FileSystem
 import fr.cnrs.liris.accio.testing.WithSparkleEnv
 import fr.cnrs.liris.common.util.FileUtils
 import fr.cnrs.liris.dal.core.api.{Dataset, Values}
@@ -38,8 +37,7 @@ import scala.collection.mutable
  * Unit tests for [[OpExecutor]].
  */
 class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfterEach with WithSparkleEnv {
-  private[this] val uploader = new MockUploader
-  private[this] val downloader = new MockDownloader
+  private[this] val filesystem = new MockFileSystem
   private[this] var tmpDir: Path = null
   private[this] var executor: OpExecutor = null
 
@@ -48,7 +46,7 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
     val injector = Guice.createInjector(MyOperatorsModule)
     val opRegistry = injector.getInstance(classOf[RuntimeOpRegistry])
     val opFactory = new OpFactory(opRegistry, injector)
-    executor = new OpExecutor(opRegistry, opFactory, uploader, downloader, tmpDir.resolve("sandbox"), env, Set.empty, Set.empty, cleanSandbox = true)
+    executor = new OpExecutor(opRegistry, opFactory, filesystem, tmpDir.resolve("sandbox"), env, Set.empty, Set.empty, cleanSandbox = true)
   }
 
   override protected def afterAll(): Unit = {
@@ -58,8 +56,7 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
   }
 
   override protected def beforeEach(): Unit = {
-    uploader.clear()
-    downloader.clear()
+    filesystem.clear()
   }
 
   behavior of "OpExecutor"
@@ -154,13 +151,13 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
     res.artifacts should have size 1
     res.artifacts.head.name shouldBe "data"
     val dataset = Values.decodeDataset(res.artifacts.head.value)
-    dataset.uri should startWith("file:///mock")
-    uploader.keys should contain(dataset.uri)
+    dataset.uri should startWith("/mock")
+    filesystem.keys should contain(dataset.uri)
   }
 
   it should "download inputs" in {
-    val payload = OpPayload("DatasetConsumer", 123, Map("data" -> Values.encodeDataset(Dataset(s"file://data"))), CacheKey("MyCacheKey"))
-    downloader.add("file://data")
+    val payload = OpPayload("DatasetConsumer", 123, Map("data" -> Values.encodeDataset(Dataset(s"/mock/data"))), CacheKey("MyCacheKey"))
+    filesystem.write(Paths.get("/dev/null"), "data")
     val res = executor.execute(payload, OpExecutorOpts(false))
     res.artifacts should have size 1
     res.exitCode shouldBe 0
@@ -243,11 +240,17 @@ class DatasetConsumerOp extends Operator[DatasetConsumerIn, DatasetConsumerOut] 
   }
 }
 
-private class MockUploader extends Uploader {
+private class MockFileSystem extends FileSystem {
   private[this] val _keys = mutable.Set.empty[String]
 
-  override def upload(src: Path, key: String): String = {
-    val uri = s"file:///mock/$key"
+  override def read(src: String, dst: Path): Unit = {
+    if (_keys.contains(src)) {
+      Files.createFile(dst)
+    }
+  }
+
+  override def write(src: Path, key: String): String = {
+    val uri = s"/mock/$key"
     _keys += uri
     uri
   }
@@ -255,18 +258,6 @@ private class MockUploader extends Uploader {
   def keys: Set[String] = _keys.toSet
 
   def clear(): Unit = _keys.clear()
-}
 
-private class MockDownloader extends Downloader {
-  private[this] val _keys = mutable.Set.empty[String]
-
-  override def download(src: String, dst: Path): Unit = {
-    if (_keys.contains(src)) {
-      Files.createFile(dst)
-    }
-  }
-
-  def add(key: String): Unit = _keys += key
-
-  def clear(): Unit = _keys.clear()
+  override def delete(filename: String): Unit = throw new NotImplementedError
 }

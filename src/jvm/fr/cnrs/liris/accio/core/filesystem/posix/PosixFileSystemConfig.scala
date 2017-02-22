@@ -16,19 +16,14 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.statemgr.local
+package fr.cnrs.liris.accio.core.filesystem.posix
 
-import fr.cnrs.liris.accio.core.statemgr.StateManager
-import net.codingwell.scalaguice.ScalaModule
+import java.nio.file.Path
 
 /**
- * Guice module provisioning a local state manager.
+ * POSIX filesystem configuration.
  *
- * @param config Configuration.
+ * @param path    Root directory under which files are stored.
+ * @param symlink Whether to create symlinks when reading files (only), instead of copying them.
  */
-final class LocalStateMgrModule(config: LocalStateMgrConfig) extends ScalaModule {
-  override def configure(): Unit = {
-    bind[LocalStateMgrConfig].toInstance(config)
-    bind[StateManager].to[LocalStateMgr]
-  }
-}
+case class PosixFileSystemConfig(path: Path, symlink: Boolean)

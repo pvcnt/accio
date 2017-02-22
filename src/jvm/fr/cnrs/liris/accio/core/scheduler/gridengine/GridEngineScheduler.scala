@@ -23,7 +23,7 @@ import java.nio.file.Files
 
 import com.google.inject.{Inject, Singleton}
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.core.downloader.Downloader
+import fr.cnrs.liris.accio.core.filesystem.FileSystem
 import fr.cnrs.liris.accio.core.scheduler.{Job, Scheduler}
 import net.schmizz.sshj.SSHClient
 import net.schmizz.sshj.common.IOUtils
@@ -33,13 +33,13 @@ import net.schmizz.sshj.xfer.{FileSystemFile, InMemorySourceFile}
 import scala.collection.mutable
 
 @Singleton
-class GridEngineScheduler @Inject()(client: SSHClient, downloader: Downloader, config: SchedulerConfig)
+class GridEngineScheduler @Inject()(client: SSHClient, filesystem: FileSystem, config: SchedulerConfig)
   extends Scheduler with StrictLogging {
 
   private[this] lazy val localExecutorPath = {
     val executorPath = Files.createTempFile("executor-", ".jar").toAbsolutePath
     logger.info(s"Downloading executor JAR to $executorPath")
-    downloader.download(config.executorUri, executorPath)
+    filesystem.read(config.executorUri, executorPath)
     executorPath
   }
   private[this] val executorUploadLock = new Object

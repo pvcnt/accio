@@ -27,12 +27,11 @@ import com.twitter.finatra.thrift.ThriftServer
 import com.twitter.finatra.thrift.filters._
 import com.twitter.finatra.thrift.routing.ThriftRouter
 import com.twitter.util.FuturePool
-import fr.cnrs.liris.accio.core.downloader.inject.DownloaderModule
 import fr.cnrs.liris.accio.core.dsl.inject.DslModule
+import fr.cnrs.liris.accio.core.filesystem.inject.FileSystemModule
 import fr.cnrs.liris.accio.core.scheduler.inject.SchedulerModule
 import fr.cnrs.liris.accio.core.statemgr.inject.StateManagerModule
 import fr.cnrs.liris.accio.core.storage.inject.StorageModule
-import fr.cnrs.liris.accio.core.uploader.inject.UploaderModule
 import fr.cnrs.liris.privamov.ops.OpsModule
 import org.slf4j.LoggerFactory
 
@@ -42,11 +41,10 @@ class AgentServer extends ThriftServer {
   loadLogbackConfig()
 
   override protected def modules: Seq[Module] = Seq(
-    DownloaderModule,
+    FileSystemModule,
     StateManagerModule,
     SchedulerModule,
     StorageModule,
-    UploaderModule,
     DslModule,
     AgentModule,
     OpsModule)

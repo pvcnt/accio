@@ -16,19 +16,24 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.statemgr.local
+package fr.cnrs.liris.accio.core.filesystem.archive
 
-import fr.cnrs.liris.accio.core.statemgr.StateManager
-import net.codingwell.scalaguice.ScalaModule
+import java.nio.file.Path
 
-/**
- * Guice module provisioning a local state manager.
- *
- * @param config Configuration.
- */
-final class LocalStateMgrModule(config: LocalStateMgrConfig) extends ScalaModule {
-  override def configure(): Unit = {
-    bind[LocalStateMgrConfig].toInstance(config)
-    bind[StateManager].to[LocalStateMgr]
+object TarBzip2ArchiveFormat extends ArchiveFormat {
+  override def extensions: Set[String] = Set("tar.bz2", "tar.bz")
+
+  override def decompress(src: Path, dst: Path): Unit = {
+    val bzFile = dst.resolveSibling(dst.getFileName.toString + ".bz")
+    Bzip2ArchiveFormat.decompress(src, bzFile)
+    TarArchiveFormat.decompress(bzFile, dst)
+    bzFile.toFile.delete()
+  }
+
+  override def compress(src: Path, dst: Path): Unit = {
+    val tarFile = dst.resolveSibling(src.getFileName.toString + ".tar")
+    TarArchiveFormat.compress(src, tarFile)
+    Bzip2ArchiveFormat.compress(tarFile, dst)
+    tarFile.toFile.delete()
   }
 }

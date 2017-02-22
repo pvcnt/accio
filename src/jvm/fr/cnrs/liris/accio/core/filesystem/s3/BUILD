@@ -1,0 +1,10 @@
+scala_library(
+  dependencies=[
+    'src/jvm/fr/cnrs/liris/accio/core/filesystem',
+    'src/jvm/fr/cnrs/liris/accio/core/filesystem:annotations',
+    'src/jvm/fr/cnrs/liris/accio/core/filesystem/archive',
+    '3rdparty/jvm/io/minio',
+    '3rdparty/jvm:scala-guice',
+  ],
+  sources=globs('*.scala')
+)

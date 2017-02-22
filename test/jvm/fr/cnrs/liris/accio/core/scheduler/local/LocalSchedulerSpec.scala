@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.core.scheduler.local
 import java.nio.file.{Files, Path, Paths}
 
 import com.twitter.finagle.stats.NullStatsReceiver
-import fr.cnrs.liris.accio.core.downloader.Downloader
+import fr.cnrs.liris.accio.core.filesystem.FileSystem
 import fr.cnrs.liris.accio.core.scheduler.{Scheduler, SchedulerSpec}
 import fr.cnrs.liris.testing.WithTmpDirectory
 import org.scalatest.BeforeAndAfterEach
@@ -44,9 +44,13 @@ class LocalSchedulerSpec extends SchedulerSpec with BeforeAndAfterEach with With
   }
 }
 
-private object FileDownloader extends Downloader {
-  override def download(src: String, dst: Path): Unit = {
+private object FileDownloader extends FileSystem {
+  override def read(src: String, dst: Path): Unit = {
     Files.createDirectories(dst.getParent)
     Files.createSymbolicLink(dst, Paths.get(src))
   }
+
+  override def write(src: Path, filename: String): String = throw new NotImplementedError
+
+  override def delete(filename: String): Unit = throw new NotImplementedError
 }

@@ -16,19 +16,14 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.statemgr.local
-
-import fr.cnrs.liris.accio.core.statemgr.StateManager
-import net.codingwell.scalaguice.ScalaModule
+package fr.cnrs.liris.accio.core.filesystem.s3
 
 /**
- * Guice module provisioning a local state manager.
+ * S3 filesystem configuration.
  *
- * @param config Configuration.
+ * @param uri       URI to the S3/Minio service.
+ * @param accessKey Access key.
+ * @param secretKey Secret key.
+ * @param bucket    Bucket name.
  */
-final class LocalStateMgrModule(config: LocalStateMgrConfig) extends ScalaModule {
-  override def configure(): Unit = {
-    bind[LocalStateMgrConfig].toInstance(config)
-    bind[StateManager].to[LocalStateMgr]
-  }
-}
+case class S3FileSystemConfig(uri: String, accessKey: String, secretKey: String, bucket: String)

@@ -16,19 +16,16 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.statemgr.local
+package fr.cnrs.liris.accio.core.filesystem
 
-import fr.cnrs.liris.accio.core.statemgr.StateManager
-import net.codingwell.scalaguice.ScalaModule
+import java.nio.file.Path
 
-/**
- * Guice module provisioning a local state manager.
- *
- * @param config Configuration.
- */
-final class LocalStateMgrModule(config: LocalStateMgrConfig) extends ScalaModule {
-  override def configure(): Unit = {
-    bind[LocalStateMgrConfig].toInstance(config)
-    bind[StateManager].to[LocalStateMgr]
-  }
+trait FileSystem {
+  def write(src: Path, filename: String): String
+
+  def read(filename: String, dst: Path): Unit
+
+  def delete(filename: String): Unit
+
+  def close(): Unit = {}
 }

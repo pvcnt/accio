@@ -28,7 +28,7 @@ import com.twitter.finagle.stats.{Gauge, StatsReceiver}
 import com.twitter.util.{ExecutorServiceFuturePool, Return, StorageUnit, Throw}
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.domain.TaskId
-import fr.cnrs.liris.accio.core.downloader.Downloader
+import fr.cnrs.liris.accio.core.filesystem.FileSystem
 import fr.cnrs.liris.accio.core.scheduler.{Job, Scheduler}
 import fr.cnrs.liris.common.util.{FileUtils, Platform}
 
@@ -39,12 +39,12 @@ import scala.collection.mutable
  * Scheduler executing tasks locally, in the same machine. Each task is started inside a new Java process. Intended
  * for testing or use in single-node development clusters.
  *
- * @param downloader    Downloader.
+ * @param filesystem    Distributed filesystem.
  * @param statsReceiver Stats receiver.
  * @param config        Scheduler configuration.
  */
 @Singleton
-class LocalScheduler @Inject()(downloader: Downloader, statsReceiver: StatsReceiver, config: LocalSchedulerConfig)
+class LocalScheduler @Inject()(filesystem: FileSystem, statsReceiver: StatsReceiver, config: LocalSchedulerConfig)
   extends Scheduler with StrictLogging {
 
   // Monitors for currently running tasks.
@@ -64,7 +64,7 @@ class LocalScheduler @Inject()(downloader: Downloader, statsReceiver: StatsRecei
       targetPath.toFile.delete()
     }
     logger.info(s"Downloading executor JAR to ${targetPath.toAbsolutePath}")
-    downloader.download(config.executorUri, targetPath)
+    filesystem.read(config.executorUri, targetPath)
     targetPath.toAbsolutePath
   }
   // Set used for keeping track of gauges (otherwise only weakly referenced).

@@ -16,19 +16,15 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.statemgr.local
-
-import fr.cnrs.liris.accio.core.statemgr.StateManager
-import net.codingwell.scalaguice.ScalaModule
+package fr.cnrs.liris.accio.core.filesystem.archive
 
 /**
- * Guice module provisioning a local state manager.
- *
- * @param config Configuration.
+ * Unit tests for [[Bzip2ArchiveFormat]].
  */
-final class LocalStateMgrModule(config: LocalStateMgrConfig) extends ScalaModule {
-  override def configure(): Unit = {
-    bind[LocalStateMgrConfig].toInstance(config)
-    bind[StateManager].to[LocalStateMgr]
-  }
+class Bzip2ArchiveFormatSpec extends FileArchiveFormatSpec {
+  behavior of "Bzip2ArchiveFormat"
+
+  override protected def singleFileArchivePath = "fr/cnrs/liris/accio/core/filesystem/archive/foobar.txt.bz2"
+
+  override protected def createFormat = Bzip2ArchiveFormat
 }

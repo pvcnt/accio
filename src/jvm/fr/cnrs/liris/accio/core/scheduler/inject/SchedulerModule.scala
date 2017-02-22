@@ -21,10 +21,10 @@ package fr.cnrs.liris.accio.core.scheduler.inject
 import java.nio.file.Paths
 
 import com.twitter.inject.{Injector, TwitterModule}
+import fr.cnrs.liris.accio.core.filesystem.inject.FileSystemModule
 import fr.cnrs.liris.accio.core.scheduler.Scheduler
 import fr.cnrs.liris.accio.core.scheduler.gridengine.{GridEngineSchedulerConfig, GridEngineSchedulerModule}
 import fr.cnrs.liris.accio.core.scheduler.local.{LocalSchedulerConfig, LocalSchedulerModule}
-import fr.cnrs.liris.accio.core.uploader.inject.UploaderModule
 
 /**
  * Guice module provisioning the [[Scheduler]] service.
@@ -45,8 +45,8 @@ object SchedulerModule extends TwitterModule {
   private[this] val gePrefixFlag = flag[String]("scheduler.ge.prefix", "", "Prefix on remote host where to store Accio files (under home directory)")
 
   protected override def configure(): Unit = {
-    val executorArgs = UploaderModule.executorPassthroughFlags.flatMap { flag =>
-      flag.getWithDefault.map(v => Seq(s"-${flag.name}", v.toString)).getOrElse(Seq.empty[String])
+    val executorArgs = FileSystemModule.executorPassthroughFlags.flatMap { flag =>
+      flag.getWithDefault.map(v => s"-${flag.name}=$v").toSeq
     }
     val module = schedulerFlag() match {
       case "local" =>

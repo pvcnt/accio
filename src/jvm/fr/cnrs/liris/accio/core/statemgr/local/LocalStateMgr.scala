@@ -29,8 +29,6 @@ import scala.collection.JavaConverters._
 
 /**
  * State manager designed for a single-node deployment.
- *
- * @param config Configuration.
  */
 @Singleton
 final class LocalStateMgr @Inject()(config: LocalStateMgrConfig) extends StateManager {
@@ -50,24 +48,6 @@ final class LocalStateMgr @Inject()(config: LocalStateMgrConfig) extends StateMa
   override def list(key: String): Set[String] = store.keySet.filter(_.startsWith(key + '/')).toSet
 
   override def remove(key: String): Unit = store.remove(key)
-
-  /*override def tasks: Set[Task] = {
-    tasksPath.toFile.listFiles.filter(_.isFile).flatMap(file => get(TaskId(file.getName))).toSet
-  }
-
-  override def save(task: Task): Unit = {
-    write(task, taskPath(task.id))
-  }
-
-  override def remove(id: TaskId): Unit = {
-    FileUtils.safeDelete(taskPath(id))
-  }
-
-  override def get(id: TaskId): Option[Task] = read(taskPath(id), Task)
-
-  private def tasksPath = rootDir.resolve("tasks")
-
-  private def taskPath(id: TaskId) = tasksPath.resolve(id.value)*/
 
   /**
    * Lock implementation using local files to synchronize. It is *NOT* reentrant.

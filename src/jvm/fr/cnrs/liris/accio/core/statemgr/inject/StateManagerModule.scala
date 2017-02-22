@@ -33,20 +33,20 @@ object StateManagerModule extends TwitterModule {
   private[this] val stateMgrFlag = flag("statemgr.type", "local", "State manager type")
 
   // Local state manager configuration.
-  private[this] val localStateMgrPathFlag = flag[String]("statemgr.local.path", "Path where to store state")
+  private[this] val localPathFlag = flag[String]("statemgr.local.path", "Path where to store state")
 
   // Zookeeper state manager configuration.
-  private[this] val zkStateMgrAddrFlag = flag("statemgr.zk.addr", "127.0.0.1:2181", "Address to Zookeeper cluster")
-  private[this] val zkStateMgrPathFlag = flag("statemgr.zk.path", "/accio", "Root path in Zookeeper")
-  private[this] val zkStateMgrSessionTimeoutFlag = flag("statemgr.zk.session_timeout", Duration.fromSeconds(60), "Zookeeper session timeout")
-  private[this] val zkStateMgrConnTimeoutFlag = flag("statemgr.zk.conn_timeout", Duration.fromSeconds(15), "Zookeeper connection timeout")
+  private[this] val zkAddrFlag = flag("statemgr.zk.addr", "127.0.0.1:2181", "Address to Zookeeper cluster")
+  private[this] val zkPathFlag = flag("statemgr.zk.path", "/accio", "Root path in Zookeeper")
+  private[this] val zkSessionTimeoutFlag = flag("statemgr.zk.session_timeout", Duration.fromSeconds(60), "Zookeeper session timeout")
+  private[this] val zkConnTimeoutFlag = flag("statemgr.zk.conn_timeout", Duration.fromSeconds(15), "Zookeeper connection timeout")
 
   protected override def configure(): Unit = {
     val module = stateMgrFlag() match {
       case "local" =>
-        new LocalStateMgrModule(LocalStateMgrConfig(Paths.get(localStateMgrPathFlag())))
+        new LocalStateMgrModule(LocalStateMgrConfig(Paths.get(localPathFlag())))
       case "zk" =>
-        val config = ZookeeperStateMgrConfig(zkStateMgrAddrFlag(), zkStateMgrPathFlag(), zkStateMgrSessionTimeoutFlag(), zkStateMgrConnTimeoutFlag())
+        val config = ZookeeperStateMgrConfig(zkAddrFlag(), zkPathFlag(), zkSessionTimeoutFlag(), zkConnTimeoutFlag())
         new ZookeeperStateMgrModule(config)
       case unknown => throw new IllegalArgumentException(s"Unknown state manager type: $unknown")
     }

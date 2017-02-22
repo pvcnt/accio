@@ -2,10 +2,8 @@ scala_library(
   dependencies=[
     'src/jvm/fr/cnrs/liris/accio/core/domain',
     'src/jvm/fr/cnrs/liris/accio/core/runtime',
-    'src/jvm/fr/cnrs/liris/accio/core/downloader',
-    'src/jvm/fr/cnrs/liris/accio/core/downloader/inject',
-    'src/jvm/fr/cnrs/liris/accio/core/uploader',
-    'src/jvm/fr/cnrs/liris/accio/core/uploader/inject',
+    'src/jvm/fr/cnrs/liris/accio/core/filesystem',
+    'src/jvm/fr/cnrs/liris/accio/core/filesystem/inject',
     'src/thrift/fr/cnrs/liris/accio/core/domain',
     'src/thrift/fr/cnrs/liris/accio/agent',
     'src/jvm/fr/cnrs/liris/privamov/ops',

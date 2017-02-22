@@ -16,19 +16,26 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.statemgr.local
+package fr.cnrs.liris.accio.core.filesystem.s3
 
-import fr.cnrs.liris.accio.core.statemgr.StateManager
-import net.codingwell.scalaguice.ScalaModule
+import com.google.inject.Provides
+import fr.cnrs.liris.accio.core.filesystem.{FileSystem, InjectFileSystem}
+import io.minio.MinioClient
+import net.codingwell.scalaguice.{ScalaMapBinder, ScalaModule}
 
 /**
- * Guice module provisioning a local state manager.
+ * Guice module provisioning an S3 filesystem.
  *
  * @param config Configuration.
  */
-final class LocalStateMgrModule(config: LocalStateMgrConfig) extends ScalaModule {
-  override def configure(): Unit = {
-    bind[LocalStateMgrConfig].toInstance(config)
-    bind[StateManager].to[LocalStateMgr]
+final class S3FileSystemModule(config: S3FileSystemConfig) extends ScalaModule {
+  override protected def configure(): Unit = {
+    val fileSystems = ScalaMapBinder.newMapBinder[String, FileSystem](binder)
+    fileSystems.addBinding("s3").to[S3FileSystem]
+    bind[S3FileSystemConfig].toInstance(config)
   }
+
+  @Provides
+  @InjectFileSystem
+  def providesS3Client: MinioClient = new MinioClient(config.uri, config.accessKey, config.secretKey)
 }

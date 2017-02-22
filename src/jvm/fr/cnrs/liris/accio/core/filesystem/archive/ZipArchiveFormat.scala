@@ -16,19 +16,18 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.statemgr.local
+package fr.cnrs.liris.accio.core.filesystem.archive
 
-import fr.cnrs.liris.accio.core.statemgr.StateManager
-import net.codingwell.scalaguice.ScalaModule
+import java.io.{InputStream, OutputStream}
 
-/**
- * Guice module provisioning a local state manager.
- *
- * @param config Configuration.
- */
-final class LocalStateMgrModule(config: LocalStateMgrConfig) extends ScalaModule {
-  override def configure(): Unit = {
-    bind[LocalStateMgrConfig].toInstance(config)
-    bind[StateManager].to[LocalStateMgr]
-  }
+import org.apache.commons.compress.archivers.{ArchiveInputStream, ArchiveOutputStream, ArchiveStreamFactory}
+
+object ZipArchiveFormat extends AbstractArchiveFormat {
+  override def extensions: Set[String] = Set("zip")
+
+  override protected def createInputStream(in: InputStream): ArchiveInputStream =
+    streamFactory.createArchiveInputStream(ArchiveStreamFactory.ZIP, in)
+
+  override protected def createOutputStream(out: OutputStream): ArchiveOutputStream =
+    streamFactory.createArchiveOutputStream(ArchiveStreamFactory.ZIP, out)
 }

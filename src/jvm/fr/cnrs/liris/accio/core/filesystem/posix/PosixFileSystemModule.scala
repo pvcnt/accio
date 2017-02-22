@@ -16,19 +16,20 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.statemgr.local
+package fr.cnrs.liris.accio.core.filesystem.posix
 
-import fr.cnrs.liris.accio.core.statemgr.StateManager
-import net.codingwell.scalaguice.ScalaModule
+import fr.cnrs.liris.accio.core.filesystem.FileSystem
+import net.codingwell.scalaguice.{ScalaMapBinder, ScalaModule}
 
 /**
- * Guice module provisioning a local state manager.
+ * Guice module provisioning a POSIX filesystem.
  *
  * @param config Configuration.
  */
-final class LocalStateMgrModule(config: LocalStateMgrConfig) extends ScalaModule {
-  override def configure(): Unit = {
-    bind[LocalStateMgrConfig].toInstance(config)
-    bind[StateManager].to[LocalStateMgr]
+final class PosixFileSystemModule(config: PosixFileSystemConfig) extends ScalaModule {
+  override protected def configure(): Unit = {
+    val fileSystems = ScalaMapBinder.newMapBinder[String, FileSystem](binder)
+    fileSystems.addBinding("posix").to[PosixFileSystem]
+    bind[PosixFileSystemConfig].toInstance(config)
   }
 }
