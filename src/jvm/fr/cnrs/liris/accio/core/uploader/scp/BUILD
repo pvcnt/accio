@@ -1,7 +1,8 @@
 scala_library(
   dependencies=[
     'src/jvm/fr/cnrs/liris/accio/core/uploader',
-    'src/jvm/fr/cnrs/liris/accio/core/util',
+    'src/jvm/fr/cnrs/liris/accio/core/uploader/util:annotations',
+    'src/jvm/fr/cnrs/liris/accio/core/uploader/util:archiver',
     '3rdparty/jvm/com/hierynomus/sshj',
     '3rdparty/jvm:scala-guice',
   ],

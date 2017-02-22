@@ -20,18 +20,19 @@ package fr.cnrs.liris.accio.core.uploader.s3
 
 import java.nio.file.Path
 
-import fr.cnrs.liris.accio.core.uploader.{Archiver, Uploader}
-import fr.cnrs.liris.accio.core.util.Configurable
+import com.google.inject.{Inject, Singleton}
+import fr.cnrs.liris.accio.core.uploader.util.{Archiver, ForUploader}
+import fr.cnrs.liris.accio.core.uploader.Uploader
 import io.minio.MinioClient
 
 /**
  * Uploader copying files on S3/Minio.
+ *
+ * @param client S3 client.
+ * @param config Uploader configuration.
  */
-class S3Uploader extends Uploader with Archiver with Configurable[S3UploaderConfig] {
-  private[this] lazy val client = new MinioClient(config.uri, config.accessKey, config.secretKey)
-
-  override def configClass: Class[S3UploaderConfig] = classOf[S3UploaderConfig]
-
+@Singleton
+class S3Uploader @Inject()(@ForUploader client: MinioClient, config: S3UploaderConfig) extends Uploader with Archiver {
   override def upload(src: Path, key: String): String = {
     if (!client.bucketExists(config.bucket)) {
       client.makeBucket(config.bucket)

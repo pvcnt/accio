@@ -19,7 +19,7 @@
 package fr.cnrs.liris.accio.core.uploader.s3
 
 /**
- * S3 uploader configuration.
+ * S3 uploader module configuration.
  *
  * @param uri       URI to the S3/Minio service.
  * @param accessKey Access key.

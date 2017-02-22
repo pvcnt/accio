@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.uploader;
+package fr.cnrs.liris.accio.core.uploader.util;
 
 import com.google.inject.BindingAnnotation;
 

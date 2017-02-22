@@ -18,12 +18,7 @@
 
 package fr.cnrs.liris.accio.core.uploader
 
-import java.io.{FileInputStream, FileOutputStream}
-import java.nio.file.{Files, Path}
-
-import com.google.common.io.ByteStreams
-import org.apache.commons.compress.archivers.{ArchiveOutputStream, ArchiveStreamFactory}
-import org.apache.commons.compress.compressors.CompressorStreamFactory
+import java.nio.file.Path
 
 /**
  * Uploaders move files or directories to a remote location.
@@ -49,47 +44,4 @@ trait Uploader {
    * Close this uploader. It can be used, for example, to terminate remote connections.
    */
   def close(): Unit = {}
-}
-
-private[uploader] trait Archiver {
-  private[this] val archiveStreamFactory = new ArchiveStreamFactory
-  private[this] val compressorStreamFactory = new CompressorStreamFactory
-
-  protected def archiveAndCompress(src: Path): Path = {
-    val tarFile = Files.createTempFile("uploader-", ".tar")
-    val archive = archiveStreamFactory.createArchiveOutputStream(ArchiveStreamFactory.TAR, new FileOutputStream(tarFile.toFile))
-    try {
-      addToArchive(src, src, archive)
-    } finally {
-      archive.close()
-    }
-
-    val tarGzFile = Files.createTempFile("uploader-", ".tar.gz")
-    val compressed = compressorStreamFactory.createCompressorOutputStream(CompressorStreamFactory.GZIP, new FileOutputStream(tarGzFile.toFile))
-    val fis = new FileInputStream(tarFile.toFile)
-    try {
-      ByteStreams.copy(fis, compressed)
-      tarGzFile
-    } finally {
-      compressed.close()
-      fis.close()
-    }
-  }
-
-  private def addToArchive(root: Path, src: Path, archive: ArchiveOutputStream): Unit = {
-    val entryName = src.relativize(root).toString
-    val entry = archive.createArchiveEntry(src.toFile, entryName)
-    archive.putArchiveEntry(entry)
-
-    if (src.toFile.isDirectory) {
-      src.toFile.listFiles.foreach(file => addToArchive(root, file.toPath, archive))
-    } else {
-      val fis = new FileInputStream(src.toFile)
-      try {
-        ByteStreams.copy(fis, archive)
-      } finally {
-        fis.close()
-      }
-    }
-  }
 }

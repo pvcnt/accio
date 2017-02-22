@@ -28,8 +28,8 @@ import net.codingwell.scalaguice.ScalaModule
  * @param config Configuration.
  */
 final class LocalUploaderModule(config: LocalUploaderConfig) extends ScalaModule {
-  override protected def configure(): Unit = {}
-
-  @Provides
-  def providesUploader(uploader: LocalUploader): Uploader = uploader.initialize(config)
+  override protected def configure(): Unit = {
+    bind[Uploader].to[LocalUploader]
+    bind[LocalUploaderConfig].toInstance(config)
+  }
 }

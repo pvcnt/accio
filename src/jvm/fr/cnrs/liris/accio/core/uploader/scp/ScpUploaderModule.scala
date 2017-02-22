@@ -20,7 +20,9 @@ package fr.cnrs.liris.accio.core.uploader.scp
 
 import com.google.inject.Provides
 import fr.cnrs.liris.accio.core.uploader.Uploader
+import fr.cnrs.liris.accio.core.uploader.util.ForUploader
 import net.codingwell.scalaguice.ScalaModule
+import net.schmizz.sshj.SSHClient
 
 /**
  * Guice module provisioning an SCP uploader.
@@ -28,8 +30,16 @@ import net.codingwell.scalaguice.ScalaModule
  * @param config Configuration.
  */
 class ScpUploaderModule(config: ScpUploaderConfig) extends ScalaModule {
-  override protected def configure(): Unit = {}
+  override protected def configure(): Unit = {
+    bind[Uploader].to[ScpUploader]
+    bind[ScpUploaderConfig].toInstance(config)
+  }
 
   @Provides
-  def providesUploader(uploader: ScpUploader): Uploader = uploader.initialize(config)
+  @ForUploader
+  def providesSSHClient: SSHClient = {
+    val client = new SSHClient
+    client.useCompression()
+    client
+  }
 }

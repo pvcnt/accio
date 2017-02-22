@@ -20,16 +20,14 @@ package fr.cnrs.liris.accio.core.uploader.local
 
 import java.nio.file.{Files, Path}
 
+import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.uploader.Uploader
-import fr.cnrs.liris.accio.core.util.Configurable
 import fr.cnrs.liris.common.util.FileUtils
 
 /**
  * Uploader copying files locally.
  */
-class LocalUploader extends Uploader with Configurable[LocalUploaderConfig] {
-  override def configClass: Class[LocalUploaderConfig] = classOf[LocalUploaderConfig]
-
+class LocalUploader @Inject()(config: LocalUploaderConfig) extends Uploader {
   override def upload(src: Path, dst: String): String = {
     // We copy files to target path. We do *not* want to symlink them, as original files can disappear at any time.
     val target = config.path.resolve(dst)

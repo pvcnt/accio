@@ -18,8 +18,10 @@
 
 package fr.cnrs.liris.accio.core.uploader.s3
 
-import com.google.inject.Provides
+import com.google.inject.{Provides, Singleton}
 import fr.cnrs.liris.accio.core.uploader.Uploader
+import fr.cnrs.liris.accio.core.uploader.util.ForUploader
+import io.minio.MinioClient
 import net.codingwell.scalaguice.ScalaModule
 
 /**
@@ -28,8 +30,12 @@ import net.codingwell.scalaguice.ScalaModule
  * @param config Configuration.
  */
 final class S3UploaderModule(config: S3UploaderConfig) extends ScalaModule {
-  override protected def configure(): Unit = {}
+  override protected def configure(): Unit = {
+    bind[Uploader].to[S3Uploader]
+    bind[S3UploaderConfig].toInstance(config)
+  }
 
   @Provides
-  def providesUploader(uploader: S3Uploader): Uploader = uploader.initialize(config)
+  @ForUploader
+  def providesS3Client: MinioClient = new MinioClient(config.uri, config.accessKey, config.secretKey)
 }

@@ -20,19 +20,17 @@ package fr.cnrs.liris.accio.core.uploader.scp
 
 import java.nio.file.Path
 
-import fr.cnrs.liris.accio.core.uploader.{Archiver, Uploader}
-import fr.cnrs.liris.accio.core.util.Configurable
+import com.google.inject.{Inject, Singleton}
+import fr.cnrs.liris.accio.core.uploader.util.{Archiver, ForUploader}
+import fr.cnrs.liris.accio.core.uploader.Uploader
 import net.schmizz.sshj.SSHClient
 import net.schmizz.sshj.xfer.FileSystemFile
 
 /**
  * Uploader using an SCP client to uploader files. Authentication is done by public key.
  */
-class ScpUploader extends Uploader with Archiver with Configurable[ScpUploaderConfig] {
-  private[this] val client = new SSHClient
-
-  override def configClass: Class[ScpUploaderConfig] = classOf[ScpUploaderConfig]
-
+@Singleton
+final class ScpUploader @Inject()(@ForUploader client: SSHClient, config: ScpUploaderConfig) extends Uploader with Archiver {
   override def upload(src: Path, key: String): String = {
     connect()
     val tarGzFile = archiveAndCompress(src)
@@ -51,7 +49,6 @@ class ScpUploader extends Uploader with Archiver with Configurable[ScpUploaderCo
     if (!client.isConnected) {
       client.connect(config.host, config.port)
       client.authPublickey(config.user)
-      client.useCompression()
     }
   }
 }
