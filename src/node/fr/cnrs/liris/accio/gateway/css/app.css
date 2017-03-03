@@ -218,3 +218,42 @@ footer a {
     border: 1px solid #ddd;
     border-radius: 3px;
 }
+
+/**
+ * Workflow editor.
+ */
+.workflow-editor {
+}
+
+.workflow-editor dl {
+    margin-bottom: 5px;
+}
+
+.workflow-editor g.leaf > rect {
+    stroke: #fff;
+    stroke-width: 1px;
+    opacity: .5;
+}
+
+.workflow-editor g.leaf > text {
+    fill: #ffffff;
+}
+
+.workflow-editor g.compound > rect {
+    opacity: 0.1;
+}
+
+.workflow-editor .node {
+}
+
+.workflow-editor .link {
+    stroke: #999;
+    stroke-opacity: .6;
+    fill: none;
+}
+
+.workflow-editor .port {
+    stroke: #000;
+    width: 1px;
+    opacity: .6;
+}
