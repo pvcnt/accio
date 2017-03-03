@@ -16,22 +16,20 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.scheduler.local
+package fr.cnrs.liris.accio.core.util;
 
-import java.nio.file.Path
+import com.google.inject.BindingAnnotation;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * Local scheduler configuration.
- *
- * @param workDir      Working directory where sandboxes will be stored.
- * @param agentAddr    Agent address.
- * @param executorUri  URI where to fetch the executor.
- * @param javaHome     Java home to be used when running nodes.
- * @param executorArgs Arguments to pass to the executors.
+ * Annotation requesting injection of a generic worker pool.
  */
-case class LocalSchedulerConfig(
-  workDir: Path,
-  agentAddr: String,
-  executorUri: String,
-  javaHome: Option[String],
-  executorArgs: Seq[String])
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+@BindingAnnotation
+public @interface WorkerPool {
+}

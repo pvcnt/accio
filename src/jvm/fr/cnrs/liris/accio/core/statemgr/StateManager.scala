@@ -34,14 +34,6 @@ trait StateManager {
   def lock(key: String): Lock
 
   def close(): Unit = {}
-
-  def get(key: String): Option[Array[Byte]]
-
-  def set(key: String, value: Array[Byte]): Unit
-
-  def list(key: String): Set[String]
-
-  def remove(key: String): Unit
 }
 
 /**

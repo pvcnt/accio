@@ -4,7 +4,7 @@ scala_library(
     'src/jvm/fr/cnrs/liris/common/cli',
     'src/jvm/fr/cnrs/liris/accio/core/domain',
     'src/jvm/fr/cnrs/liris/accio/core/analysis',
-    'src/jvm/fr/cnrs/liris/accio/core/version',
+    'src/jvm/fr/cnrs/liris/accio/core/util',
     'src/thrift/fr/cnrs/liris/accio/agent',
 
     'src/jvm/fr/cnrs/liris/common/util',

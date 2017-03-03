@@ -24,9 +24,6 @@ import com.google.inject.{Inject, Singleton}
 import fr.cnrs.liris.accio.core.statemgr.{InjectStateMgr, Lock, StateManager}
 import org.apache.curator.framework.CuratorFramework
 import org.apache.curator.framework.recipes.locks.InterProcessMutex
-import org.apache.zookeeper.KeeperException
-
-import scala.collection.JavaConverters._
 
 /**
  * State manager storing data into a Zookeeper cluster.
@@ -45,7 +42,7 @@ final class ZookeeperStateMgr @Inject()(@InjectStateMgr client: CuratorFramework
     client.close()
   }
 
-  override def get(key: String): Option[Array[Byte]] = {
+  /*override def get(key: String): Option[Array[Byte]] = {
     try {
       Some(client.getData.forPath(dataPath(key)))
     } catch {
@@ -66,53 +63,11 @@ final class ZookeeperStateMgr @Inject()(@InjectStateMgr client: CuratorFramework
     client.getChildren.forPath(dataPath(key))
       .asScala
       .toSet
-      .map((subKey: String) => s"$key/$subKey")
-
-  override def remove(key: String): Unit = {
-    client.delete().forPath(dataPath(key))
-  }
-
-  /*override def tasks: Set[Task] = {
-    client.getChildren.forPath(tasksPath).asScala.toSet.flatMap((nodeName: String) => get(TaskId(nodeName)))
-  }
-
-  override def save(task: Task): Unit = {
-    val transport = new TArrayByteTransport
-    val protocol = protocolFactory.getProtocol(transport)
-    task.write(protocol)
-    val bytes = transport.toByteArray
-    client.create().orSetData().creatingParentsIfNeeded().forPath(taskPath(task.id), bytes)
-    logger.debug(s"Saved task ${task.id.value}")
-  }
-
-  override def remove(id: TaskId): Unit = {
-    client.delete().forPath(taskPath(id))
-    logger.debug(s"Removed task ${id.value}")
-  }
-
-  override def get(id: TaskId): Option[Task] = {
-    try {
-      val bytes = client.getData.forPath(taskPath(id))
-      val transport = TArrayByteTransport(bytes)
-      val protocol = protocolFactory.getProtocol(transport)
-      Some(Task.decode(protocol))
-    } catch {
-      case e: KeeperException =>
-        // A KeeperException is thrown if the node does not exist.
-        if (e.code != KeeperException.Code.NONODE) {
-          throw e
-        }
-        None
-    }
-  }
-
-  private def tasksPath = s"$rootPath/tasks"
-
-  private def taskPath(id: TaskId) = s"$tasksPath/${id.value}"*/
+      .map((subKey: String) => s"$key/$subKey")*/
 
   private def locksPath = s"${config.prefix}/locks"
 
-  private def dataPath(key: String) = s"${config.prefix}/data/$key"
+  //private def dataPath(key: String) = s"${config.prefix}/data/$key"
 
   private class ZookeeperLock(key: String) extends Lock {
     private[this] val zkLock = new InterProcessMutex(client, s"$locksPath/$key")

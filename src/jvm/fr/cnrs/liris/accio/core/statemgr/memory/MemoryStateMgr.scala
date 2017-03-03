@@ -33,21 +33,19 @@ import scala.collection.mutable
 @Singleton
 final class MemoryStateMgr extends StateManager {
   private[this] val locks = mutable.WeakHashMap.empty[String, JavaLock]
-  private[this] val store = new ConcurrentHashMap[String, Array[Byte]].asScala
+  //private[this] val store = new ConcurrentHashMap[String, Array[Byte]].asScala
 
   override def lock(key: String): Lock = synchronized {
     locks.getOrElseUpdate(key, new JavaLock(key))
   }
 
-  override def get(key: String): Option[Array[Byte]] = store.get(key)
+  /*override def get(key: String): Option[Array[Byte]] = store.get(key)
 
   override def set(key: String, value: Array[Byte]): Unit = {
     store(key) = value
   }
 
-  override def list(key: String): Set[String] = store.keySet.filter(_.startsWith(key + '/')).toSet
-
-  override def remove(key: String): Unit = store.remove(key)
+  override def list(key: String): Set[String] = store.keySet.filter(_.startsWith(key + '/')).toSet*/
 
   /**
    * Lock implementation using local files to synchronize. It is *NOT* reentrant.

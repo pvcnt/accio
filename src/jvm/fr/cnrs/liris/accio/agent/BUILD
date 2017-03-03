@@ -8,6 +8,7 @@ scala_library(
     'src/jvm/fr/cnrs/liris/accio/core/scheduler/inject',
     'src/jvm/fr/cnrs/liris/accio/core/dsl/inject',
     'src/jvm/fr/cnrs/liris/accio/core/runtime',
+    'src/jvm/fr/cnrs/liris/accio/core/util:annotations',
     'src/jvm/fr/cnrs/liris/privamov/ops',
     'src/thrift/fr/cnrs/liris/accio/agent',
     '3rdparty/jvm/com/twitter/finatra:thrift',

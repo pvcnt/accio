@@ -19,26 +19,42 @@
 package fr.cnrs.liris.accio.core.scheduler
 
 import java.io.FileOutputStream
-import java.nio.file.{Files, Path}
+import java.nio.file.{Files, Path, Paths}
 
 import com.google.common.io.Resources
+import com.twitter.finagle.stats.NullStatsReceiver
 import fr.cnrs.liris.accio.core.domain._
-import fr.cnrs.liris.testing.UnitSpec
+import fr.cnrs.liris.accio.core.filesystem.FileSystem
+import fr.cnrs.liris.testing.{UnitSpec, WithTmpDirectory}
+
+import scala.sys.process._
 
 /**
  * Common unit tests for all [[Scheduler]] implementations, ensuring they all have consistent behavior.
  */
-private[scheduler] abstract class SchedulerSpec extends UnitSpec {
+class SchedulerSpec extends UnitSpec with WithTmpDirectory {
   protected val executorUri: String = unpackExecutor().toAbsolutePath.toString
 
-  protected def createScheduler: Scheduler
+  protected def createScheduler: Scheduler = {
+    val conf = LocalSchedulerConfig(tmpDir.resolve("workdir"), "0.0.0.0:12345", executorUri, None, Seq.empty)
+    new LocalScheduler(MockFileSystem, NullStatsReceiver, conf)
+  }
 
-  protected def isRunning(key: String): Boolean
+  protected def isRunning(key: String): Boolean = {
+    ("ps -e -o args" #| "grep fr.cnrs.liris.accio.executor.AccioExecutorMain" #| s"grep $key" #| "grep -v grep").!  == 0
+  }
 
   it should "schedule a job" in {
     val scheduler = createScheduler
     try {
-      val job = Job(TaskId("1234"), RunId("run_id"), "NodeName", OpPayload("MyOp", 1234L, Map.empty, CacheKey("cache_key")), Resource(1, 128, 0))
+      val job = Task(
+        TaskId("1234"),
+        RunId("run_id"),
+        "NodeName",
+        OpPayload("MyOp", 1234L, Map.empty, CacheKey("cache_key")),
+        System.currentTimeMillis(),
+        TaskState(TaskStatus.Waiting),
+        Resource(1, 128, 0))
       val key = scheduler.submit(job)
       Thread.sleep(1000)
       isRunning(key) shouldBe true
@@ -50,7 +66,14 @@ private[scheduler] abstract class SchedulerSpec extends UnitSpec {
   it should "kill a running task" in {
     val scheduler = createScheduler
     try {
-      val job = Job(TaskId("1234"), RunId("run_id"), "NodeName", OpPayload("MyOp", 1234L, Map.empty, CacheKey("cache_key")), Resource(1, 128, 0))
+      val job = Task(
+        TaskId("1234"),
+        RunId("run_id"),
+        "NodeName",
+        OpPayload("MyOp", 1234L, Map.empty, CacheKey("cache_key")),
+        System.currentTimeMillis(),
+        TaskState(TaskStatus.Running, startedAt = Some(System.currentTimeMillis()), heartbeatAt = Some(System.currentTimeMillis())),
+        Resource(1, 128, 0))
       val key = scheduler.submit(job)
       Thread.sleep(1000)
       scheduler.kill(key)
@@ -70,4 +93,15 @@ private[scheduler] abstract class SchedulerSpec extends UnitSpec {
     }
     path
   }
+}
+
+private object MockFileSystem extends FileSystem {
+  override def read(src: String, dst: Path): Unit = {
+    Files.createDirectories(dst.getParent)
+    Files.createSymbolicLink(dst, Paths.get(src))
+  }
+
+  override def write(src: Path, filename: String): String = throw new NotImplementedError
+
+  override def delete(filename: String): Unit = throw new NotImplementedError
 }

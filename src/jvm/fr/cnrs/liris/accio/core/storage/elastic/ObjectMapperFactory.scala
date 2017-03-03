@@ -90,6 +90,7 @@ private object ElasticJacksonModule extends SimpleModule {
   addDeserializer(classOf[Task], new ScroogeStructDeserializer[Task](Task))
   addDeserializer(classOf[OpPayload], new ScroogeStructDeserializer[OpPayload](OpPayload))
   addDeserializer(classOf[TaskState], new ScroogeStructDeserializer[TaskState](TaskState))
+  addDeserializer(classOf[Resource], new ScroogeStructDeserializer[Resource](Resource))
   addDeserializer(classOf[TaskStatus], new ScroogeEnumDeserializer[TaskStatus](TaskStatus))
 
   // Misc deserializers.

@@ -26,6 +26,7 @@ import fr.cnrs.liris.accio.core.domain.{InvalidSpecException, InvalidSpecMessage
 import fr.cnrs.liris.accio.core.runtime.{RunFactory, RunManager}
 import fr.cnrs.liris.accio.core.statemgr.StateManager
 import fr.cnrs.liris.accio.core.storage.MutableRunRepository
+import fr.cnrs.liris.accio.core.util.WorkerPool
 
 import scala.collection.mutable
 

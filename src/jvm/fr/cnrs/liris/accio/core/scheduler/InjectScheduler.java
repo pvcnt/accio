@@ -25,5 +25,5 @@ import java.lang.annotation.RetentionPolicy;
 
 @Retention(RetentionPolicy.RUNTIME)
 @BindingAnnotation
-public @interface ForScheduler {
+public @interface InjectScheduler {
 }

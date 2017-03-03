@@ -18,28 +18,12 @@
 
 package fr.cnrs.liris.accio.core.scheduler
 
-import fr.cnrs.liris.accio.core.domain._
-
-import scala.collection.mutable
-
-case class Job(taskId: TaskId, runId: RunId, nodeName: String, payload: OpPayload, resource: Resource)
+import fr.cnrs.liris.accio.core.domain.Task
 
 trait Scheduler {
-  def submit(job: Job): String
+  def submit(task: Task): String
 
   def kill(key: String): Unit
 
-  def close(): Unit
-
-  protected def createCommandLine(job: Job, executorPath: String, args: Seq[String], javaHome: Option[String] = None): Seq[String] = {
-    val javaBinary = javaHome.map(home => s"$home/bin/java").getOrElse("/usr/bin/java")
-    val cmd = mutable.ListBuffer.empty[String]
-    cmd += javaBinary
-    cmd ++= Seq("-cp", executorPath)
-    cmd += s"-Xmx${job.resource.ramMb}M"
-    cmd += "fr.cnrs.liris.accio.executor.AccioExecutorMain"
-    cmd ++= args
-    cmd ++= Seq("-com.twitter.jvm.numProcs", job.resource.cpu.toString)
-    cmd += job.taskId.value
-  }
+  def close(): Unit = {}
 }

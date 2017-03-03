@@ -22,42 +22,24 @@ import java.nio.file.Paths
 
 import com.twitter.inject.{Injector, TwitterModule}
 import fr.cnrs.liris.accio.core.filesystem.inject.FileSystemModule
-import fr.cnrs.liris.accio.core.scheduler.Scheduler
-import fr.cnrs.liris.accio.core.scheduler.gridengine.{GridEngineSchedulerConfig, GridEngineSchedulerModule}
-import fr.cnrs.liris.accio.core.scheduler.local.{LocalSchedulerConfig, LocalSchedulerModule}
+import fr.cnrs.liris.accio.core.scheduler.{LocalScheduler, LocalSchedulerConfig, Scheduler}
 
 /**
- * Guice module provisioning the [[Scheduler]] service.
+ * Guice module provisioning the scheduler service.
  */
 object SchedulerModule extends TwitterModule {
   private[this] val advertiseFlag = flag("advertise", "127.0.0.1:9999", "Address to advertise to executors")
-
-  private[this] val schedulerFlag = flag("scheduler.type", "local", "Scheduler type")
   private[this] val executorUriFlag = flag[String]("scheduler.executor_uri", "URI to the executor JAR")
   private[this] val javaHomeFlag = flag[String]("scheduler.java_home", "Path to JRE when launching the executor")
-
-  // Local scheduler configuration.
   private[this] val localPathFlag = flag[String]("scheduler.local.path", "Directory where to store sandboxes")
-
-  // GridEngine scheduler configuration.
-  private[this] val geHostFlag = flag[String]("scheduler.ge.host", "Gateway hostname")
-  private[this] val geUserFlag = flag[String]("scheduler.ge.user", "Gateway username (authentication is done by public key)")
-  private[this] val gePrefixFlag = flag[String]("scheduler.ge.prefix", "", "Prefix on remote host where to store Accio files (under home directory)")
 
   protected override def configure(): Unit = {
     val executorArgs = FileSystemModule.executorPassthroughFlags.flatMap { flag =>
       flag.getWithDefault.map(v => s"-${flag.name}=$v").toSeq
     }
-    val module = schedulerFlag() match {
-      case "local" =>
-        val config = LocalSchedulerConfig(Paths.get(localPathFlag()), advertiseFlag(), executorUriFlag(), javaHomeFlag.get, executorArgs)
-        new LocalSchedulerModule(config)
-      case "ge" =>
-        val config = GridEngineSchedulerConfig(advertiseFlag(), geHostFlag(), geUserFlag(), gePrefixFlag(), executorUriFlag(), javaHomeFlag.get, executorArgs)
-        new GridEngineSchedulerModule(config)
-      case unknown => throw new IllegalArgumentException(s"Unknown scheduler type: $unknown")
-    }
-    install(module)
+    bind[Scheduler].to[LocalScheduler]
+    val config = LocalSchedulerConfig(Paths.get(localPathFlag()), advertiseFlag(), executorUriFlag(), javaHomeFlag.get, executorArgs)
+    bind[LocalSchedulerConfig].toInstance(config)
   }
 
   override def singletonShutdown(injector: Injector): Unit = {

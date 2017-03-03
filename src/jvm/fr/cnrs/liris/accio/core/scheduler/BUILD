@@ -1,6 +1,12 @@
 scala_library(
   dependencies=[
-    'src/thrift/fr/cnrs/liris/accio/core/domain',
+    ':annotations',
+    'src/jvm/fr/cnrs/liris/accio/core/filesystem',
+    'src/jvm/fr/cnrs/liris/accio/core/statemgr',
+    'src/jvm/fr/cnrs/liris/accio/core/util',
+    'src/jvm/fr/cnrs/liris/common/util',
+    '3rdparty/jvm/com/typesafe/scala-logging',
+    '3rdparty/jvm/com/google/guice',
   ],
   sources=globs('*.scala')
 )

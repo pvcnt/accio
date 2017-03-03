@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.scheduler.local
+package fr.cnrs.liris.accio.core.scheduler
 
 import java.nio.file.Files
 import java.util.concurrent.{ConcurrentHashMap, ConcurrentLinkedQueue, Executors}
@@ -27,9 +27,8 @@ import com.twitter.concurrent.NamedPoolThreadFactory
 import com.twitter.finagle.stats.{Gauge, StatsReceiver}
 import com.twitter.util.{ExecutorServiceFuturePool, Return, StorageUnit, Throw}
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.core.domain.TaskId
+import fr.cnrs.liris.accio.core.domain.{Task, TaskId}
 import fr.cnrs.liris.accio.core.filesystem.FileSystem
-import fr.cnrs.liris.accio.core.scheduler.{Job, Scheduler}
 import fr.cnrs.liris.common.util.{FileUtils, Platform}
 
 import scala.collection.JavaConverters._
@@ -44,13 +43,15 @@ import scala.collection.mutable
  * @param config        Scheduler configuration.
  */
 @Singleton
-class LocalScheduler @Inject()(filesystem: FileSystem, statsReceiver: StatsReceiver, config: LocalSchedulerConfig)
-  extends Scheduler with StrictLogging {
+final class LocalScheduler @Inject()(
+  filesystem: FileSystem,
+  statsReceiver: StatsReceiver,
+  config: LocalSchedulerConfig) extends Scheduler with StrictLogging {
 
   // Monitors for currently running tasks.
   private[this] val monitors = new ConcurrentHashMap[String, TaskMonitor].asScala
   // Queue of waiting tasks.
-  private[this] val queue = new ConcurrentLinkedQueue[Job]
+  private[this] val queue = new ConcurrentLinkedQueue[Task]
   // Total amount of system resources.
   private[this] val totalCpu = sys.runtime.availableProcessors
   private[this] val totalRam = Platform.totalMemory
@@ -74,12 +75,12 @@ class LocalScheduler @Inject()(filesystem: FileSystem, statsReceiver: StatsRecei
   private[this] val stuckCounter = statsReceiver.counter("task", "stuck")
   logger.debug(s"Detected resources: CPU $totalCpu, RAM ${totalRam.map(_.inMegabytes + "Mb").getOrElse("-")}, disk ${totalDisk.map(_.inMegabytes + "Mb").getOrElse("-")}")
 
-  override def submit(job: Job): String = {
+  override def submit(task: Task): String = {
     synchronized {
-      if (isSchedulable(job)) {
-        start(job)
+      if (isSchedulable(task)) {
+        start(task)
       } else {
-        queue.add(job)
+        queue.add(task)
         if (monitors.isEmpty) {
           // This job will never be scheduled...
           stuckCounter.incr()
@@ -87,7 +88,7 @@ class LocalScheduler @Inject()(filesystem: FileSystem, statsReceiver: StatsRecei
         }
       }
     }
-    job.taskId.value
+    task.id.value
   }
 
   override def kill(key: String): Unit = synchronized {
@@ -98,7 +99,7 @@ class LocalScheduler @Inject()(filesystem: FileSystem, statsReceiver: StatsRecei
       case None =>
         val it = queue.iterator
         while (it.hasNext) {
-          if (it.next.taskId.value == key) {
+          if (it.next.id.value == key) {
             it.remove()
           }
         }
@@ -139,51 +140,51 @@ class LocalScheduler @Inject()(filesystem: FileSystem, statsReceiver: StatsRecei
   /**
    * Return total number of CPUs reserved by running tasks.
    */
-  private def reservedCpu = monitors.values.map(_.job.resource.cpu).sum
+  private def reservedCpu = monitors.values.map(_.task.resource.cpu).sum
 
   /**
    * Return total RAM reserved by running tasks.
    */
-  private def reservedRam = StorageUnit.fromMegabytes(monitors.values.map(_.job.resource.ramMb).sum)
+  private def reservedRam = StorageUnit.fromMegabytes(monitors.values.map(_.task.resource.ramMb).sum)
 
   /**
    * Return total disk space reserved by running tasks.
    */
-  private def reservedDisk = StorageUnit.fromMegabytes(monitors.values.map(_.job.resource.diskMb).sum)
+  private def reservedDisk = StorageUnit.fromMegabytes(monitors.values.map(_.task.resource.diskMb).sum)
 
   /**
-   * Start a job as an external process. This method should be called from a synchronized section.
+   * Start a task as an external process. This method should be called from a synchronized section.
    *
-   * @param job Job to start.
+   * @param task Task to start.
    */
-  private def start(job: Job): Unit = {
-    val monitor = new TaskMonitor(job)
-    logger.debug(s"[T${job.taskId.value}] Starting task")
+  private def start(task: Task): Unit = {
+    val monitor = new TaskMonitor(task)
+    logger.debug(s"[T${task.id.value}] Starting task")
     monitors(monitor.key) = monitor
     pool(monitor.run())
       .respond {
         case Throw(e) =>
-          logger.error(s"[T${job.taskId.value}] Error in monitoring thread", e)
+          logger.error(s"[T${task.id.value}] Error in monitoring thread", e)
           completedCounter.incr()
           errorCounter.incr()
           startNext()
         case Return(_) =>
-          logger.debug(s"[T${job.taskId.value}] Monitoring thread completed")
+          logger.debug(s"[T${task.id.value}] Monitoring thread completed")
           completedCounter.incr()
           startNext()
       }
   }
 
   /**
-   * Check if there is enough resources left to launch a job.
+   * Check if there is enough resources left to launch a task.
    *
-   * @param job Candidate job.
+   * @param task Candidate task.
    * @return True if there is enough resources, false otherwise.
    */
-  private def isSchedulable(job: Job): Boolean = {
-    job.resource.cpu <= (totalCpu - reservedCpu) &&
-      totalRam.forall(ram => job.resource.ramMb <= (ram - reservedRam).inMegabytes) &&
-      totalDisk.forall(disk => job.resource.diskMb <= (disk - reservedDisk).inMegabytes)
+  private def isSchedulable(task: Task): Boolean = {
+    task.resource.cpu <= (totalCpu - reservedCpu) &&
+      totalRam.forall(ram => task.resource.ramMb <= (ram - reservedRam).inMegabytes) &&
+      totalDisk.forall(disk => task.resource.diskMb <= (disk - reservedDisk).inMegabytes)
   }
 
   /**
@@ -193,21 +194,21 @@ class LocalScheduler @Inject()(filesystem: FileSystem, statsReceiver: StatsRecei
    */
   private def getSandboxPath(id: TaskId) = config.workDir.resolve(id.value)
 
-  private class TaskMonitor(val job: Job) extends Runnable with StrictLogging {
+  private class TaskMonitor(val task: Task) extends Runnable with StrictLogging {
     private[this] var killed = false
     private[this] var process: Option[Process] = None
 
     override def run(): Unit = {
       val maybeProcess = synchronized {
-        process = if (killed) None else Some(startProcess(job))
+        process = if (killed) None else Some(startProcess(task))
         process
       }
       maybeProcess match {
         case None =>
-          logger.debug(s"[T${job.taskId.value}] Skipped task (killed)")
+          logger.debug(s"[T${task.id.value}] Skipped task (killed)")
           cleanup()
         case Some(p) =>
-          logger.debug(s"[T${job.taskId.value}] Waiting for process completion")
+          logger.debug(s"[T${task.id.value}] Waiting for process completion")
           try {
             ByteStreams.copy(p.getInputStream, ByteStreams.nullOutputStream)
             p.waitFor()
@@ -217,7 +218,7 @@ class LocalScheduler @Inject()(filesystem: FileSystem, statsReceiver: StatsRecei
       }
     }
 
-    def key: String = job.taskId.value
+    def key: String = task.id.value
 
     def kill(): Unit = synchronized {
       if (!killed) {
@@ -227,25 +228,21 @@ class LocalScheduler @Inject()(filesystem: FileSystem, statsReceiver: StatsRecei
           p.waitFor()
         }
         cleanup()
-        logger.debug(s"[T${job.taskId.value}] Killed task")
+        logger.debug(s"[T${task.id.value}] Killed task")
       }
     }
 
     private def cleanup() = {
       process = None
       monitors.remove(key)
-      FileUtils.safeDelete(getSandboxPath(job.taskId))
+      FileUtils.safeDelete(getSandboxPath(task.id))
     }
 
-    private def startProcess(job: Job): Process = {
-      val cmd = createCommandLine(
-        job,
-        localExecutorPath.toString,
-        config.executorArgs ++ Seq("-addr", config.agentAddr),
-        config.javaHome.orElse(sys.env.get("JAVA_HOME")))
-      logger.debug(s"[T${job.taskId.value}] Command-line: ${cmd.mkString(" ")}")
+    private def startProcess(task: Task): Process = {
+      val cmd = createCommandLine(task)
+      logger.debug(s"[T${task.id.value}] Command-line: ${cmd.mkString(" ")}")
 
-      val sandboxDir = getSandboxPath(job.taskId)
+      val sandboxDir = getSandboxPath(task.id)
       Files.createDirectories(sandboxDir)
 
       val pb = new ProcessBuilder()
@@ -285,5 +282,18 @@ class LocalScheduler @Inject()(filesystem: FileSystem, statsReceiver: StatsRecei
     gauges += stats.addGauge("task", "running")(monitors.size)
 
     gauges.toSet
+  }
+
+  private def createCommandLine(task: Task): Seq[String] = {
+    val args = config.executorArgs ++ Seq("-addr", config.agentAddr)
+    val javaBinary = config.javaHome.orElse(sys.env.get("JAVA_HOME")).map(home => s"$home/bin/java").getOrElse("/usr/bin/java")
+    val cmd = mutable.ListBuffer.empty[String]
+    cmd += javaBinary
+    cmd ++= Seq("-cp", localExecutorPath.toString)
+    cmd += s"-Xmx${task.resource.ramMb}M"
+    cmd += "fr.cnrs.liris.accio.executor.AccioExecutorMain"
+    cmd ++= args
+    cmd ++= Seq("-com.twitter.jvm.numProcs", task.resource.cpu.toString)
+    cmd += task.id.value
   }
 }

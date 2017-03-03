@@ -476,4 +476,5 @@ struct Task {
   4: required OpPayload payload;
   6: required Timestamp created_at;
   7: required TaskState state;
+  8: required Resource resource;
 }

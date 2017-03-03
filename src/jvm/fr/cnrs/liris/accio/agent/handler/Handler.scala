@@ -27,11 +27,5 @@ import com.twitter.util.Future
  * @tparam Res Response type.
  */
 trait Handler[Req, Res] {
-  /**
-   * Convert a request into a response.
-   *
-   * @param req Request.
-   * @return A response for this request.
-   */
   def handle(req: Req): Future[Res]
 }

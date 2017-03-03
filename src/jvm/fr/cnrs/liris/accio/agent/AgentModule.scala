@@ -24,11 +24,11 @@ import com.google.inject.{Provides, Singleton, TypeLiteral}
 import com.twitter.concurrent.NamedPoolThreadFactory
 import com.twitter.inject.TwitterModule
 import com.twitter.util.{Duration, ExecutorServiceFuturePool, FuturePool}
-import fr.cnrs.liris.accio.agent.handler.{ClusterName, WorkerPool}
 import fr.cnrs.liris.accio.core.api.Operator
 import fr.cnrs.liris.accio.core.runtime._
 import fr.cnrs.liris.accio.core.statemgr.StateManager
 import fr.cnrs.liris.accio.core.storage.MutableRunRepository
+import fr.cnrs.liris.accio.core.util.{ClusterName, WorkerPool}
 import net.codingwell.scalaguice.ScalaMultibinder
 
 /**

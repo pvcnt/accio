@@ -29,26 +29,9 @@ import fr.cnrs.liris.testing.UnitSpec
 private[statemgr] abstract class StateMgrSpec extends UnitSpec {
   private[this] val pool = Executors.newCachedThreadPool
 
-  /*private[this] val ScheduledTask = Task(
-    id = TaskId("id2"),
-    runId = RunId("foobar"),
-    nodeName = "foonode",
-    payload = OpPayload("fooop", 1234, Map.empty, CacheKey("MyCacheKey")),
-    key = "fookey",
-    createdAt = System.currentTimeMillis(),
-    state = TaskState(TaskStatus.Scheduled))
-  private[this] val RunningTask = Task(
-    id = TaskId("id1"),
-    runId = RunId("foobar"),
-    nodeName = "foonode",
-    payload = OpPayload("fooop", 1234, Map.empty, CacheKey("MyCacheKey")),
-    key = "fookey",
-    createdAt = System.currentTimeMillis(),
-    state = TaskState(TaskStatus.Running))*/
-
   protected def createStateMgr: StateManager
 
-  it should "save and retrieve a key" in {
+  /*it should "save and retrieve a key" in {
     val stateMgr = createStateMgr
     stateMgr.get("foo") shouldBe None
     stateMgr.set("foo", "foo".getBytes)
@@ -78,31 +61,6 @@ private[statemgr] abstract class StateMgrSpec extends UnitSpec {
     stateMgr.set("foo", "foo".getBytes)
     stateMgr.remove("foo")
     stateMgr.get("foo") shouldBe None
-  }
-
-  /*it should "save and retrieve a task" in {
-    val stateMgr = createStateMgr
-    stateMgr.get(RunningTask.id) shouldBe None
-    stateMgr.save(RunningTask)
-    stateMgr.get(RunningTask.id) shouldBe Some(RunningTask)
-
-    val newTask = RunningTask.copy(nodeName = "barnode")
-    stateMgr.save(newTask)
-    stateMgr.get(RunningTask.id) shouldBe Some(newTask)
-  }
-
-  it should "list all tasks" in {
-    val stateMgr = createStateMgr
-    stateMgr.save(ScheduledTask)
-    stateMgr.save(RunningTask)
-    stateMgr.tasks should contain theSameElementsAs Set(ScheduledTask, RunningTask)
-  }
-
-  it should "delete a task" in {
-    val stateMgr = createStateMgr
-    stateMgr.save(RunningTask)
-    stateMgr.remove(RunningTask.id)
-    stateMgr.get(RunningTask.id) shouldBe None
   }*/
 
   it should "block-lock" in {

@@ -35,6 +35,7 @@ private[storage] abstract class TaskRepositorySpec extends UnitSpec {
     nodeName = "foonode",
     payload = OpPayload("fooop", 1234, Map.empty, CacheKey("MyCacheKey")),
     createdAt = now,
+    resource = Resource(0, 0, 0),
     state = TaskState(TaskStatus.Scheduled, key = Some("fookey")))
   private[this] val RunningTask = Task(
     id = randomId,
@@ -42,6 +43,7 @@ private[storage] abstract class TaskRepositorySpec extends UnitSpec {
     nodeName = "foonode",
     payload = OpPayload("fooop", 1234, Map.empty, CacheKey("MyCacheKey")),
     createdAt = now,
+    resource = Resource(0, 0, 0),
     state = TaskState(TaskStatus.Running, heartbeatAt = Some(now), key = Some("fookey")))
   private[this] val OtherRunningTask = Task(
     id = randomId,
@@ -49,6 +51,7 @@ private[storage] abstract class TaskRepositorySpec extends UnitSpec {
     nodeName = "foonode",
     payload = OpPayload("fooop", 1234, Map.empty, CacheKey("MyCacheKey")),
     createdAt = now,
+    resource = Resource(0, 0, 0),
     state = TaskState(TaskStatus.Running, heartbeatAt = Some(now), key = Some("fookey")))
   private[this] val ExpiredTask = Task(
     id = randomId,
@@ -56,6 +59,7 @@ private[storage] abstract class TaskRepositorySpec extends UnitSpec {
     nodeName = "foonode",
     payload = OpPayload("fooop", 1234, Map.empty, CacheKey("MyCacheKey")),
     createdAt = now,
+    resource = Resource(0, 0, 0),
     state = TaskState(TaskStatus.Running, heartbeatAt = Some(now - 30 * 1000), key = Some("fookey")))
   private[this] val OtherExpiredTask = Task(
     id = randomId,
@@ -63,6 +67,7 @@ private[storage] abstract class TaskRepositorySpec extends UnitSpec {
     nodeName = "foonode",
     payload = OpPayload("fooop", 1234, Map.empty, CacheKey("MyCacheKey")),
     createdAt = now,
+    resource = Resource(0, 0, 0),
     state = TaskState(TaskStatus.Running, heartbeatAt = None, key = Some("fookey")))
 
   protected def createRepository: MutableTaskRepository

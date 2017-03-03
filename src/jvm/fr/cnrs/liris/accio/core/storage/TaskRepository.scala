@@ -47,7 +47,7 @@ case class TaskQuery(runs: Set[RunId] = Set.empty, lostAt: Option[Time] = None) 
   def matches(task: Task): Boolean = {
     if (runs.nonEmpty && !runs.contains(task.runId)) {
       false
-    } else if (lostAt.isDefined && (task.state.status == TaskStatus.Scheduled || task.state.heartbeatAt.exists(_ >= lostAt.get.inMillis))) {
+    } else if (lostAt.isDefined && (task.state.status != TaskStatus.Running || task.state.heartbeatAt.exists(_ >= lostAt.get.inMillis))) {
       false
     } else {
       true

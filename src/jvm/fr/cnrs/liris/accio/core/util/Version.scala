@@ -16,20 +16,26 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.agent.handler;
-
-import com.google.inject.BindingAnnotation;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+package fr.cnrs.liris.accio.core.util
 
 /**
- * Annotation requesting injection of a generic worker pool.
+ * Describes a version using semantic versioning.
+ *
+ * @param major Major component.
+ * @param minor Minor component.
+ * @param patch Patch component.
+ * @param label Additional label.
  */
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-@BindingAnnotation
-public @interface WorkerPool {
+case class Version private(major: Int, minor: Int, patch: Int, label: Option[String]) {
+  override def toString: String = s"$major.$minor.$patch${label.map(str => s"-$str").getOrElse("")}"
+}
+
+/**
+ * Factory for [[Version]].
+ */
+object Version {
+  /**
+   * Return the current version of Accio.
+   */
+  val Current = Version(2, 0, 0, Some("dev"))
 }

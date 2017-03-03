@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.agent.handler
 import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.agent.{InfoRequest, InfoResponse}
-import fr.cnrs.liris.accio.core.version.Version
+import fr.cnrs.liris.accio.core.util.{ClusterName, Version}
 
 /**
  * Return metadata about the agent.

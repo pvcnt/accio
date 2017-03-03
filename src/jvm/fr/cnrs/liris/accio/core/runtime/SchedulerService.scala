@@ -25,7 +25,7 @@ import com.google.common.hash.Hashing
 import com.google.inject.Inject
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.domain._
-import fr.cnrs.liris.accio.core.scheduler.{Job, Scheduler}
+import fr.cnrs.liris.accio.core.scheduler.Scheduler
 import fr.cnrs.liris.accio.core.storage.{MutableTaskRepository, RunRepository}
 import fr.cnrs.liris.dal.core.api.Value
 
@@ -66,15 +66,9 @@ final class SchedulerService @Inject()(
         Some(payload.cacheKey -> result)
       case None =>
         val taskId = TaskId(UUID.randomUUID().toString)
-        val job = Job(taskId, run.id, node.name, payload, opDef.resource)
-        val key = scheduler.submit(job)
-        val task = Task(
-          id = taskId,
-          runId = run.id,
-          payload = payload,
-          nodeName = node.name,
-          createdAt = now,
-          state = TaskState(TaskStatus.Scheduled, key = Some(key)))
+        var task = Task(taskId, run.id, node.name, payload, System.currentTimeMillis(), TaskState(TaskStatus.Waiting), opDef.resource)
+        val key = scheduler.submit(task)
+        task = task.copy(state = task.state.copy(key = Some(key), status = TaskStatus.Scheduled))
         taskRepository.save(task)
         logger.debug(s"Scheduled task ${task.id.value}. Run: ${run.id.value}, node: ${node.name}, op: ${payload.op}")
         None
