@@ -16,18 +16,18 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package fr.cnrs.liris.accio.executor
 
 import java.io.{ByteArrayOutputStream, IOException, OutputStream, PrintStream}
 
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Charsets
+import fr.cnrs.liris.accio.core.framework.OutErr
 
 /**
  * Helper allowing to record stdout and stderr.
  */
-object StdOutErr {
+object StdOutErr extends OutErr {
   private[this] val stdoutBytes = new ByteArrayOutputStream
   private[this] val stderrBytes = new ByteArrayOutputStream
 
@@ -39,21 +39,13 @@ object StdOutErr {
     System.setErr(new PrintStream(new ComposedOutputStream(Seq(System.err, stderrBytes))))
   }
 
-  /**
-   * Return stdout since last call to this method. This method is not strictly thread-safe, i.e., if something is
-   * written to stdout between the time the stdout record is read and flushed, it will be lost.
-   */
-  def stdoutAsString: String = synchronized {
+  override def stdoutAsString: String = synchronized {
     val content = new String(stdoutBytes.toByteArray, Charsets.UTF_8)
     stdoutBytes.reset()
     content
   }
 
-  /**
-   * Return stderr since last call to this method. This method is not strictly thread-safe, i.e., if something is
-   * written to stderr between the time the stderr record is read and flushed, it will be lost.
-   */
-  def stderrAsString: String = synchronized {
+  override def stderrAsString: String = synchronized {
     val content = new String(stderrBytes.toByteArray, Charsets.UTF_8)
     stderrBytes.reset()
     content

@@ -37,6 +37,8 @@ import fr.cnrs.liris.common.util.FileUtils
 final class LocalWorkflowRepository @Inject()(config: LocalStorageConfig)
   extends LocalRepository with MutableWorkflowRepository with LazyLogging {
 
+  Files.createDirectories(workflowPath)
+
   override def find(query: WorkflowQuery): WorkflowList = {
     var results = workflowPath.toFile.listFiles.toSeq
       .filter(_.isDirectory)

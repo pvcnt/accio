@@ -21,20 +21,35 @@ package fr.cnrs.liris.accio.gateway
 import com.google.inject.{Inject, Singleton}
 import com.twitter.finagle.http.Request
 import com.twitter.finatra.http.Controller
-import com.twitter.finatra.request.{QueryParam, RouteParam}
+import com.twitter.finatra.request.{JsonIgnoreBody, QueryParam, RouteParam}
 import com.twitter.finatra.validation.{Max, Min}
-import com.twitter.util.{Return, Throw}
-import fr.cnrs.liris.accio.agent._
+import com.twitter.io.Reader
+import com.twitter.util.{Future, Return, Throw}
+import fr.cnrs.liris.accio.agent.{ListOperatorsRequest, _}
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.common.util.StringUtils.explode
 import org.joda.time.DateTime
 
 @Singleton
-class ApiController @Inject()(client: AgentService.FinagledClient) extends Controller {
-  get("/api/v1") { httpReq: Request =>
-    client.info(InfoRequest()).map { resp =>
-      Map("cluster_name" -> resp.clusterName, "version" -> resp.version)
+class ApiController @Inject()(client: AgentService$FinagleClient) extends Controller {
+  private[this] val user = User("vprimault")
+
+  get("/api/v1") { _: Request =>
+    client.getCluster(GetClusterRequest()).map { resp =>
+      IndexResponse(resp.clusterName, resp.version)
     }
+  }
+
+  get("/api/v1/operator") { httpReq: ListOperatorsHttpRequest =>
+    val req = ListOperatorsRequest(httpReq.includeDeprecated)
+    client.listOperators(req).map { resp =>
+      ResultListResponse(resp.results, resp.results.size)
+    }
+  }
+
+  get("/api/v1/operator/:name") { httpReq: GetOperatorHttpRequest =>
+    val req = GetOperatorRequest(httpReq.name)
+    client.getOperator(req).map(_.result)
   }
 
   get("/api/v1/workflow") { httpReq: ListWorkflowsHttpRequest =>
@@ -50,8 +65,22 @@ class ApiController @Inject()(client: AgentService.FinagledClient) extends Contr
     }
   }
 
-  post("/api/v1/workflow") { req: Request =>
-    response.badRequest
+  post("/api/v1/workflow/:id") { httpReq: UpdateWorkflowHttpRequest =>
+    readBody(httpReq.request).flatMap { content =>
+      val req = ParseWorkflowRequest(new String(content), None)
+      client.parseWorkflow(req)
+    }.flatMap { resp =>
+      resp.workflow match {
+        case None =>
+          val res = ParseErrorResponse(resp.warnings.map(_.message), resp.errors.map(_.message))
+          Future.value(response.badRequest(res))
+        case Some(workflow) =>
+          val req = PushWorkflowRequest(workflow, user)
+          client.pushWorkflow(req).map { resp =>
+            UpdateWorkflowResponse(resp.workflow.version)
+          }
+      }
+    }
   }
 
   get("/api/v1/workflow/:id") { httpReq: GetWorkflowHttpRequest =>
@@ -85,8 +114,20 @@ class ApiController @Inject()(client: AgentService.FinagledClient) extends Contr
     }
   }
 
-  post("/api/v1/run") { req: Request =>
-    response.badRequest
+  post("/api/v1/run") { httpReq: CreateRunHttpRequest =>
+    readBody(httpReq.request).flatMap { content =>
+      val req = ParseRunRequest(content, httpReq.request.params, None)
+      client.parseRun(req)
+    }.flatMap { resp =>
+      resp.run match {
+        case None =>
+          val res = ParseErrorResponse(resp.warnings.map(_.message), resp.errors.map(_.message))
+          Future.value(response.badRequest(res))
+        case Some(run) =>
+          val req = CreateRunRequest(run, user)
+          client.createRun(req).map(_.ids)
+      }
+    }
   }
 
   get("/api/v1/run/:id") { httpReq: GetRunHttpRequest =>
@@ -163,7 +204,24 @@ class ApiController @Inject()(client: AgentService.FinagledClient) extends Contr
       }
     }
   }
+
+  private def readBody(httpReq: Request): Future[String] = {
+    Reader.readAll(httpReq.reader).map { buf =>
+      val bytes = Array.ofDim[Byte](buf.length)
+      buf.write(bytes, 0)
+      new String(bytes)
+    }
+  }
 }
+
+case class IndexResponse(clusterName: String, version: String)
+
+case class ListOperatorsHttpRequest(@QueryParam includeDeprecated: Boolean = false)
+
+case class GetOperatorHttpRequest(@RouteParam name: String)
+
+@JsonIgnoreBody
+case class CreateRunHttpRequest(request: Request)
 
 case class ListRunsHttpRequest(
   @QueryParam owner: Option[String],
@@ -193,6 +251,11 @@ case class DeleteRunHttpRequest(@RouteParam id: String)
 
 case class KillRunHttpRequest(@RouteParam id: String)
 
+@JsonIgnoreBody
+case class UpdateWorkflowHttpRequest(@RouteParam id: String, request: Request)
+
+case class UpdateWorkflowResponse(version: String)
+
 case class ListWorkflowsHttpRequest(
   @QueryParam owner: Option[String],
   @QueryParam name: Option[String],
@@ -216,3 +279,5 @@ case class ListLogsHttpRequest(
   @QueryParam download: Boolean = false)
 
 case class ResultListResponse[T](results: Seq[T], totalCount: Int)
+
+case class ParseErrorResponse(warnings: Seq[String], errors: Seq[String])

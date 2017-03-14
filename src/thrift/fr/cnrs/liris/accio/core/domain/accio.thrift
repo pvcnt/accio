@@ -34,8 +34,22 @@ struct TaskId {
   1: string value;
 }
 
+struct WorkerId {
+  1: string value;
+}
+
+struct ExecutorId {
+  1: string value;
+}
+
 struct CacheKey {
   1: string hash;
+}
+
+exception InvalidTaskException {
+}
+
+exception UnknownRunException {
 }
 
 struct Artifact {
@@ -455,26 +469,12 @@ struct WorkflowSpec {
   6: required set<ArgDef> params;
 }
 
-enum TaskStatus {
-  WAITING,
-  SCHEDULED,
-  RUNNING,
-}
-
-struct TaskState {
-  1: required TaskStatus status;
-  2: optional Timestamp started_at;
-  3: optional Timestamp heartbeat_at;
-  4: optional string key;
-  5: optional string machine;
-}
-
 struct Task {
   1: required TaskId id;
   2: required RunId run_id;
   3: required string node_name;
   4: required OpPayload payload;
   6: required Timestamp created_at;
-  7: required TaskState state;
+  7: required NodeStatus status;
   8: required Resource resource;
 }

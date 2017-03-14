@@ -18,31 +18,37 @@
 
 package fr.cnrs.liris.accio.core.scheduler.inject
 
-import java.nio.file.Paths
-
+import com.google.inject.{Provides, Singleton}
 import com.twitter.inject.{Injector, TwitterModule}
-import fr.cnrs.liris.accio.core.filesystem.inject.FileSystemModule
-import fr.cnrs.liris.accio.core.scheduler.{LocalScheduler, LocalSchedulerConfig, Scheduler}
+import fr.cnrs.liris.accio.core.scheduler.standalone._
+import fr.cnrs.liris.accio.core.scheduler.{Scheduler, WorkerClientFactory}
 
 /**
  * Guice module provisioning the scheduler service.
  */
 object SchedulerModule extends TwitterModule {
-  private[this] val advertiseFlag = flag("advertise", "127.0.0.1:9999", "Address to advertise to executors")
-  private[this] val executorUriFlag = flag[String]("scheduler.executor_uri", "URI to the executor JAR")
-  private[this] val javaHomeFlag = flag[String]("scheduler.java_home", "Path to JRE when launching the executor")
-  private[this] val localPathFlag = flag[String]("scheduler.local.path", "Directory where to store sandboxes")
+  private[this] val fitnessCalculatorFlag = flag("scheduler.bin_packer", "cpu,ram", "Bin packing algorithms to use")
 
   protected override def configure(): Unit = {
-    val executorArgs = FileSystemModule.executorPassthroughFlags.flatMap { flag =>
-      flag.getWithDefault.map(v => s"-${flag.name}=$v").toSeq
+    bind[Scheduler].to[StandaloneScheduler]
+  }
+
+  @Provides
+  @Singleton
+  def providesFitnessCalculator: FitnessCalculator = {
+    val types = fitnessCalculatorFlag().split(",")
+    val packers = types.map {
+      case "cpu" => new CpuBinPacker
+      case "ram" => new RamBinPacker
+      case "disk" => new DiskBinPacker
+      case invalid => throw new IllegalArgumentException(s"Invalid bin packer: $invalid")
     }
-    bind[Scheduler].to[LocalScheduler]
-    val config = LocalSchedulerConfig(Paths.get(localPathFlag()), advertiseFlag(), executorUriFlag(), javaHomeFlag.get, executorArgs)
-    bind[LocalSchedulerConfig].toInstance(config)
+    require(packers.nonEmpty, "You must specify at least one bin packing algorithm to use")
+    new ComposedFitnessCalculator(packers)
   }
 
   override def singletonShutdown(injector: Injector): Unit = {
     injector.instance[Scheduler].close()
+    injector.instance[WorkerClientFactory].close()
   }
 }

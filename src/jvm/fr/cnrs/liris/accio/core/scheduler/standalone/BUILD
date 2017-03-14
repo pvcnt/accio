@@ -1,0 +1,9 @@
+scala_library(
+  dependencies=[
+    'src/jvm/fr/cnrs/liris/accio/core/scheduler',
+    'src/thrift/fr/cnrs/liris/accio/agent',
+    '3rdparty/jvm/com/typesafe/scala-logging',
+    '3rdparty/jvm/com/google/guice',
+  ],
+  sources=globs('*.scala')
+)

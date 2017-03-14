@@ -18,12 +18,31 @@
 
 package fr.cnrs.liris.accio.core.scheduler
 
-import fr.cnrs.liris.accio.core.domain.Task
+import fr.cnrs.liris.accio.core.domain._
 
 trait Scheduler {
-  def submit(task: Task): String
+  def submit(task: Task): Unit
 
-  def kill(key: String): Unit
+  @throws[InvalidTaskException]
+  def kill(id: TaskId): Unit
+
+  def kill(id: RunId): Set[Task]
+
+  /**
+   * Perform housekeeping operation. It is called after each operation that leads to a cluster state change.
+   * For instance, it is the place where to check for new available resources.
+   *
+   * @param kind
+   */
+  def houseKeeping(kind: EventType): Unit = {}
 
   def close(): Unit = {}
+}
+
+sealed trait EventType
+
+object EventType {
+  case object MoreResource extends EventType
+
+  case object LessResource extends EventType
 }

@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.core.storage.elastic
 import com.google.inject.{Provides, Singleton}
 import com.sksamuel.elastic4s.{ElasticClient, ElasticsearchClientUri}
 import com.twitter.finatra.json.FinatraObjectMapper
-import fr.cnrs.liris.accio.core.storage.{InjectStorage, MutableRunRepository, MutableTaskRepository, MutableWorkflowRepository}
+import fr.cnrs.liris.accio.core.storage.{InjectStorage, MutableRunRepository, MutableWorkflowRepository}
 import net.codingwell.scalaguice.ScalaModule
 import org.elasticsearch.common.settings.Settings
 
@@ -34,7 +34,6 @@ final class ElasticStorageModule(config: ElasticStorageConfig) extends ScalaModu
   override def configure(): Unit = {
     bind[StorageConfig].toInstance(config.toConfig)
     bind[MutableRunRepository].to[ElasticRunRepository]
-    bind[MutableTaskRepository].to[ElasticTaskRepository]
     bind[MutableWorkflowRepository].to[ElasticWorkflowRepository]
   }
 

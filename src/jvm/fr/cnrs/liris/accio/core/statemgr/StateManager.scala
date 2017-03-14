@@ -19,41 +19,7 @@
 package fr.cnrs.liris.accio.core.statemgr
 
 /**
- * State manager holds state about runs being executed and associated tasks. It provides fast and ephemeral (we can
- * afford data loss, even if it is not desired) storage, for small payloads. It also provides synchronization utils.
- *
- * State manager is a service which is highly solicited during run execution and highly concurrent.
  */
 trait StateManager {
-  /**
-   * Return a distributed lock using this state manager. The lock is not yet acquired. Note that many [[Lock]]
-   * instances sharing the same key are actually referring to the same lock object.
-   *
-   * @param key Locking key.
-   */
-  def lock(key: String): Lock
-
   def close(): Unit = {}
-}
-
-/**
- * Lock trait, provided by [[StateManager]]s. They are re-entrant, and implementations should stick to this.
- */
-trait Lock {
-  /**
-   * Acquire this lock. This is a blocking operation.
-   */
-  def lock(): Unit
-
-  /**
-   * Try to acquire this lock. This is a non-blocking operation.
-   *
-   * @return True if the lock was acquired, false otherwise.
-   */
-  def tryLock(): Boolean
-
-  /**
-   * Release this lock.
-   */
-  def unlock(): Unit
 }

@@ -1,14 +1,11 @@
 scala_library(
   dependencies=[
     'src/jvm/fr/cnrs/liris/accio/core/domain',
-    'src/jvm/fr/cnrs/liris/accio/core/runtime',
-    'src/jvm/fr/cnrs/liris/accio/core/filesystem',
+    'src/jvm/fr/cnrs/liris/accio/core/framework',
     'src/jvm/fr/cnrs/liris/accio/core/filesystem/inject',
-    'src/thrift/fr/cnrs/liris/accio/core/domain',
+    'src/jvm/fr/cnrs/liris/accio/core/util:annotations',
     'src/thrift/fr/cnrs/liris/accio/agent',
     'src/jvm/fr/cnrs/liris/privamov/ops',
-
-    '3rdparty/jvm/com/typesafe/scala-logging',
     '3rdparty/jvm/com/twitter/inject:app',
   ],
   excludes = [

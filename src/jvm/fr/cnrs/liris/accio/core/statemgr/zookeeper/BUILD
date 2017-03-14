@@ -5,6 +5,7 @@ scala_library(
     '3rdparty/jvm/org/apache/curator:framework',
     '3rdparty/jvm/org/apache/curator:recipes',
     '3rdparty/jvm:scala-guice',
+    '3rdparty/jvm/com/twitter/util:core',
   ],
   sources=globs('*.scala')
 )

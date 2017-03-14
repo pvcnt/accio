@@ -18,15 +18,15 @@
 
 package fr.cnrs.liris.accio.executor
 
-import java.util.concurrent.Executors
+import java.util.UUID
 
-import com.google.inject.Inject
-import com.twitter.concurrent.NamedPoolThreadFactory
+import com.google.inject.{Inject, Singleton}
 import com.twitter.util._
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.agent._
 import fr.cnrs.liris.accio.core.domain._
-import fr.cnrs.liris.accio.core.runtime.{OpExecutor, OpExecutorOpts}
+import fr.cnrs.liris.accio.core.framework.{OpExecutor, OpExecutorOpts, OutErr}
+import fr.cnrs.liris.accio.core.util.WorkerPool
 
 import scala.collection.mutable
 import scala.util.control.NonFatal
@@ -37,10 +37,16 @@ import scala.util.control.NonFatal
  * reporting the result to the agent. It also regularly send heartbeat and logs to the aforementioned agent.
  *
  * @param opExecutor Operator executor.
- * @param client     Agent client.
+ * @param client     Worker service client.
+ * @param pool       Interruptible worker pool.
  */
-final class TaskExecutor @Inject()(opExecutor: OpExecutor, client: AgentService.FinagledClient) extends StrictLogging {
-  private[this] val pool = FuturePool.interruptible(Executors.newCachedThreadPool(new NamedPoolThreadFactory("exec/worker")))
+@Singleton
+final class TaskExecutor @Inject()(
+  opExecutor: OpExecutor,
+  client: AgentService$FinagleClient,
+  @WorkerPool pool: FuturePool) extends StrictLogging {
+
+  private[this] val executorId = ExecutorId(UUID.randomUUID().toString)
   private[this] val futures = mutable.Set.empty[Future[_]]
 
   /**
@@ -49,16 +55,16 @@ final class TaskExecutor @Inject()(opExecutor: OpExecutor, client: AgentService.
    * @param taskId Task identifier.
    * @return A future that will be completed once the task is completed. It never returns as an error.
    */
-  def execute(taskId: TaskId): Future[Unit] = synchronized {
+  def execute(taskId: TaskId, outErr: OutErr): Future[Unit] = synchronized {
     logger.info(s"Starting execution of task ${taskId.value}")
-    client.startTask(StartTaskRequest(taskId)).transform {
+    client.startExecutor(StartExecutorRequest(executorId, taskId)).transform {
       case Throw(InvalidTaskException()) =>
         logger.error(s"Invalid task")
         Future.Done
       case Throw(e) =>
         logger.error(s"Error while starting task", e)
         Future.Done
-      case Return(resp) => start(taskId, resp.runId, resp.nodeName, resp.payload)
+      case Return(resp) => start(taskId, resp.runId, resp.nodeName, resp.payload, outErr)
     }
   }
 
@@ -67,42 +73,41 @@ final class TaskExecutor @Inject()(opExecutor: OpExecutor, client: AgentService.
    */
   def close(): Unit = synchronized {
     futures.foreach(_.raise(new FutureCancelledException))
-    pool.executor.shutdownNow()
   }
 
-  private def start(taskId: TaskId, runId: RunId, nodeName: String, payload: OpPayload): Future[Unit] = {
-    futures += pool(new Heartbeat(taskId).run())
-    futures += pool(new StreamLogs(taskId, runId, nodeName).run())
-    val mainFuture = pool(new Main(taskId, payload).run())
+  private def start(taskId: TaskId, runId: RunId, nodeName: String, payload: OpPayload, outErr: OutErr): Future[Unit] = {
+    futures += pool(new HeartbeatThread(taskId).run())
+    futures += pool(new StreamLogsThread(taskId, runId, nodeName, outErr).run())
+    val mainFuture = pool(new MainThread(taskId, payload).run())
       .handle {
         case NonFatal(e) =>
           logger.error(s"Operator raised an unexpected error", e)
           OpResult(-999, Some(Errors.create(e)))
       }.flatMap { result =>
-      client.completeTask(CompleteTaskRequest(taskId, result))
+      client.stopExecutor(StopExecutorRequest(executorId, taskId, result))
         .onFailure(e => logger.error(s"Error while marking task as completed", e))
     }.unit
     futures += mainFuture
     mainFuture
   }
 
-  private class Main(taskId: TaskId, payload: OpPayload) {
+  private class MainThread(taskId: TaskId, payload: OpPayload) {
     def run(): OpResult = {
       val opts = OpExecutorOpts(useProfiler = true)
       opExecutor.execute(payload, opts)
     }
   }
 
-  private class StreamLogs(taskId: TaskId, runId: RunId, nodeName: String) {
+  private class StreamLogsThread(taskId: TaskId, runId: RunId, nodeName: String, outErr: OutErr) {
     def run(): Unit = {
       logger.debug(s"Logs thread started")
       sleep(Duration.fromSeconds(2))
       while (true) {
         // Do not log anything here, otherwise it will create a logging loop, even if nothing else is printed.
         // We want to send only meaningful logs.
-        val logs = extractLogs(StdOutErr.stdoutAsString, "stdout") ++ extractLogs(StdOutErr.stderrAsString, "stderr")
+        val logs = extractLogs(outErr.stdoutAsString, "stdout") ++ extractLogs(outErr.stderrAsString, "stderr")
         if (logs.nonEmpty) {
-          val f = Await.result(client.streamLogs(StreamLogsRequest(logs)).liftToTry)
+          val f = Await.result(client.streamExecutorLogs(StreamExecutorLogsRequest(executorId, taskId, logs)).liftToTry)
           f match {
             case Return(_) => sleep(Duration.fromSeconds(5))
             case Throw(InvalidTaskException()) =>
@@ -127,14 +132,14 @@ final class TaskExecutor @Inject()(opExecutor: OpExecutor, client: AgentService.
     }
   }
 
-  private class Heartbeat(taskId: TaskId) {
+  private class HeartbeatThread(taskId: TaskId) {
     def run(): Unit = {
       logger.debug(s"Heartbeat thread started")
       sleep(Duration.fromSeconds(5))
       while (true) {
         // Do not log anything here, if communication with agent is broken it will be eventually detected on the
         // agent side. We want to send only meaningful logs.
-        val f = Await.result(client.heartbeat(HeartbeatRequest(taskId)).liftToTry)
+        val f = Await.result(client.heartbeatExecutor(HeartbeatExecutorRequest(executorId)).liftToTry)
         f match {
           case Return(_) => sleep(Duration.fromSeconds(15))
           case Throw(InvalidTaskException()) =>

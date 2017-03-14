@@ -18,21 +18,23 @@
 
 package fr.cnrs.liris.accio.executor
 
-import java.nio.file.Paths
+import java.util.concurrent.Executors
 
 import com.google.inject._
+import com.twitter.concurrent.NamedPoolThreadFactory
 import com.twitter.finagle.Thrift
 import com.twitter.inject.{Injector, TwitterModule}
-import fr.cnrs.liris.accio.agent.AgentService
+import com.twitter.util.{ExecutorServiceFuturePool, FuturePool}
+import fr.cnrs.liris.accio.agent.{AgentService, AgentService$FinagleClient}
 import fr.cnrs.liris.accio.core.api.Operator
-import fr.cnrs.liris.accio.core.filesystem.FileSystem
-import fr.cnrs.liris.accio.core.runtime._
+import fr.cnrs.liris.accio.core.framework._
+import fr.cnrs.liris.accio.core.util.WorkerPool
 import fr.cnrs.liris.dal.core.io.{Decoder, Encoder, StringCodec}
 import fr.cnrs.liris.dal.core.sparkle.SparkleEnv
 import net.codingwell.scalaguice.ScalaMultibinder
 
 object ExecutorModule extends TwitterModule {
-  private[this] val addrFlag = flag[String]("addr", "Address of the Accio agent")
+  private[this] val addrFlag = flag[String]("addr", "Address of the Accio worker")
 
   override protected def configure(): Unit = {
     // Create an empty set of operators, in case nothing else is bound.
@@ -53,28 +55,31 @@ object ExecutorModule extends TwitterModule {
 
   @Singleton
   @Provides
-  def providesClient: AgentService.FinagledClient = {
+  @WorkerPool
+  def providesWorkerPool: FuturePool = {
+    val executorService = Executors.newCachedThreadPool(new NamedPoolThreadFactory("executor"))
+    FuturePool.interruptible(executorService)
+  }
+
+  @Singleton
+  @Provides
+  def providesWorkerClient: AgentService$FinagleClient = {
     val service = Thrift.newService(addrFlag())
     new AgentService.FinagledClient(service)
   }
 
-  @Provides
-  def providesOpExecutor(opRegistry: RuntimeOpRegistry, opFactory: OpFactory, filesystem: FileSystem,
-    env: SparkleEnv, encoders: Set[Encoder[_]], decoders: Set[Decoder[_]]): OpExecutor = {
-    // Because the executor is designed to run inside a sandbox, we simply use current directory as temporary path
-    // for the operator executor.
-    //TODO: fixme, make this more configurable. TMPDIR is used by gridengine.
-    val workDir = Paths.get(sys.env.get("TMPDIR").getOrElse("."))
-    new OpExecutor(opRegistry, opFactory, filesystem, workDir, env, encoders, decoders)
-  }
-
   override def singletonShutdown(injector: Injector): Unit = {
-    injector.instance[AgentService.FinagledClient].service.close()
+    injector.instance[TaskExecutor].close()
+    injector.instance[AgentService$FinagleClient].service.close()
+    injector.instance[FuturePool, WorkerPool] match {
+      case p: ExecutorServiceFuturePool => p.executor.shutdownNow()
+    }
   }
 
   @Provides
   @Singleton
   def providesSparkleEnv: SparkleEnv = {
+    // Create a Sparkle environment using the numProcs' flag to limit parallelism.
     new SparkleEnv(math.max(1, com.twitter.jvm.numProcs().round.toInt))
   }
 }

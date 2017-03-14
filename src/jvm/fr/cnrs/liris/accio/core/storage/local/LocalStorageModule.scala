@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.core.storage.local
 
-import fr.cnrs.liris.accio.core.storage.{MutableRunRepository, MutableTaskRepository, MutableWorkflowRepository}
+import fr.cnrs.liris.accio.core.storage.{MutableRunRepository, MutableWorkflowRepository}
 import net.codingwell.scalaguice.ScalaModule
 
 /**
@@ -30,7 +30,6 @@ final class LocalStorageModule(config: LocalStorageConfig) extends ScalaModule {
   override def configure(): Unit = {
     bind[LocalStorageConfig].toInstance(config)
     bind[MutableRunRepository].to[LocalRunRepository]
-    bind[MutableTaskRepository].to[LocalTaskRepository]
     bind[MutableWorkflowRepository].to[LocalWorkflowRepository]
   }
 }

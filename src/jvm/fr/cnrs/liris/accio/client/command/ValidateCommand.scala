@@ -22,7 +22,7 @@ import java.nio.file.{Files, Path}
 
 import com.google.inject.Inject
 import com.twitter.util.{Await, Return, Stopwatch, Throw}
-import fr.cnrs.liris.accio.agent.{AgentService, ParseRunRequest, ParseWorkflowRequest}
+import fr.cnrs.liris.accio.agent.{AgentService$FinagleClient, ParseRunRequest, ParseWorkflowRequest}
 import fr.cnrs.liris.common.cli.{Cmd, Command, ExitCode, Reporter}
 import fr.cnrs.liris.common.flags.FlagsProvider
 import fr.cnrs.liris.common.util.{FileUtils, TimeUtils}
@@ -48,7 +48,7 @@ class ValidateCommand @Inject()(clientFactory: AgentClientFactory) extends Comma
     }
   }
 
-  private def validate(uri: String, client: AgentService.FinagledClient, out: Reporter): ExitCode = {
+  private def validate(uri: String, client: AgentService$FinagleClient, out: Reporter): ExitCode = {
     val path = FileUtils.expandPath(uri)
     if (!path.toFile.exists || !path.toFile.canRead) {
       out.writeln(s"<error>[ERROR]</error> Cannot read file: ${path.toAbsolutePath}")
@@ -63,7 +63,7 @@ class ValidateCommand @Inject()(clientFactory: AgentClientFactory) extends Comma
     }
   }
 
-  private def validateRun(content: String, path: Path, client: AgentService.FinagledClient, out: Reporter): ExitCode = {
+  private def validateRun(content: String, path: Path, client: AgentService$FinagleClient, out: Reporter): ExitCode = {
     val req = ParseRunRequest(content, Map.empty, Some(path.getFileName.toString))
     Await.result(client.parseRun(req).liftToTry) match {
       case Return(resp) =>
@@ -81,7 +81,7 @@ class ValidateCommand @Inject()(clientFactory: AgentClientFactory) extends Comma
     }
   }
 
-  private def validateWorkflow(content: String, path: Path, client: AgentService.FinagledClient, out: Reporter): ExitCode = {
+  private def validateWorkflow(content: String, path: Path, client: AgentService$FinagleClient, out: Reporter): ExitCode = {
     val req = ParseWorkflowRequest(content, Some(path.getFileName.toString))
     Await.result(client.parseWorkflow(req).liftToTry) match {
       case Return(resp) =>

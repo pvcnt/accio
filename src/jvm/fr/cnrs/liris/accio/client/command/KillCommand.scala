@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.client.command
 
 import com.google.inject.Inject
 import com.twitter.util.{Await, Return, Stopwatch, Throw}
-import fr.cnrs.liris.accio.agent.{KillRunRequest, UnknownRunException}
+import fr.cnrs.liris.accio.agent.KillRunRequest
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.common.cli.{Cmd, Command, ExitCode, Reporter}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}

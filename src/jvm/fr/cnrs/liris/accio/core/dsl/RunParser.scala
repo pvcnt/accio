@@ -24,7 +24,8 @@ import com.twitter.finatra.json.FinatraObjectMapper
 import com.twitter.finatra.validation.Min
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.core.domain._
-import fr.cnrs.liris.accio.core.runtime.{BaseFactory, RunFactory}
+import fr.cnrs.liris.accio.core.framework.{BaseFactory, RunFactory}
+import fr.cnrs.liris.accio.core.framework.BaseFactory
 import fr.cnrs.liris.accio.core.storage.WorkflowRepository
 import fr.cnrs.liris.dal.core.api.{DataTypes, Values}
 

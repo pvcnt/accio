@@ -19,7 +19,7 @@
 package fr.cnrs.liris.accio.core.dsl
 
 import fr.cnrs.liris.accio.core.domain._
-import fr.cnrs.liris.accio.core.runtime.RunFactory
+import fr.cnrs.liris.accio.core.framework.RunFactory
 import fr.cnrs.liris.accio.core.storage.memory.MemoryWorkflowRepository
 import fr.cnrs.liris.dal.core.api.Values
 import fr.cnrs.liris.testing.UnitSpec

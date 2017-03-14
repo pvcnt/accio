@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.core.storage.memory
 
-import fr.cnrs.liris.accio.core.storage.{MutableRunRepository, MutableTaskRepository, MutableWorkflowRepository}
+import fr.cnrs.liris.accio.core.storage.{MutableRunRepository, MutableWorkflowRepository}
 import net.codingwell.scalaguice.ScalaModule
 
 /**
@@ -28,6 +28,5 @@ final class MemoryStorageModule extends ScalaModule {
   override def configure(): Unit = {
     bind[MutableRunRepository].to[MemoryRunRepository]
     bind[MutableWorkflowRepository].to[MemoryWorkflowRepository]
-    bind[MutableTaskRepository].to[MemoryTaskRepository]
   }
 }

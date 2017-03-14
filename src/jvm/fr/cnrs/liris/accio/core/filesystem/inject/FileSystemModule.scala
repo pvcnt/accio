@@ -33,16 +33,16 @@ import scala.collection.mutable
  */
 object FileSystemModule extends TwitterModule {
   // POSIX filesystem configuration.
-  private val posixEnabledFlag = flag[Boolean]("fs.posix.enabled", false, "Enable POSIX filesystem")
-  private val posixPathFlag = flag[String]("fs.posix.path", "Path where to store files")
-  private val posixSymlinkFlag = flag("fs.posix.symlink", true, "Path where to symlink files")
+  private val posixEnabledFlag = flag[Boolean]("filesystem.posix.enabled", false, "Enable POSIX filesystem")
+  private val posixPathFlag = flag[String]("filesystem.posix.path", "Path where to store files")
+  private val posixSymlinkFlag = flag("filesystem.posix.symlink", true, "Path where to symlink files")
 
   // S3 filesystem configuration.
-  private val s3EnabledFlag = flag("fs.s3.enabled", false, "Enable S3 filesystem")
-  private val s3UriFlag = flag("fs.s3.uri", "https://s3.amazonaws.com", "URI to S3 server")
-  private val s3BucketFlag = flag("fs.s3.bucket", "accio", "Bucket name")
-  private val s3AccessKeyFlag = flag[String]("fs.s3.access_key", "Access key with write access")
-  private val s3PrivateKeyFlag = flag[String]("fs.s3.private_key", "Private key with write access")
+  private val s3EnabledFlag = flag("filesystem.s3.enabled", false, "Enable S3 filesystem")
+  private val s3UriFlag = flag("filesystem.s3.uri", "https://s3.amazonaws.com", "URI to S3 server")
+  private val s3BucketFlag = flag("filesystem.s3.bucket", "accio", "Bucket name")
+  private val s3AccessKeyFlag = flag[String]("filesystem.s3.access_key", "Access key with write access")
+  private val s3PrivateKeyFlag = flag[String]("filesystem.s3.private_key", "Private key with write access")
 
   // Flags that will be forwarded "as-is" when invoking the executor.
   val executorPassthroughFlags = Seq(

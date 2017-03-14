@@ -18,48 +18,12 @@
 
 package fr.cnrs.liris.accio.core.statemgr.memory
 
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.locks.ReentrantLock
-
 import com.google.inject.Singleton
-import fr.cnrs.liris.accio.core.statemgr.{Lock, StateManager}
-
-import scala.collection.JavaConverters._
-import scala.collection.mutable
+import fr.cnrs.liris.accio.core.statemgr.StateManager
 
 /**
  * State manager designed for a single-node deployment.
  */
 @Singleton
 final class MemoryStateMgr extends StateManager {
-  private[this] val locks = mutable.WeakHashMap.empty[String, JavaLock]
-  //private[this] val store = new ConcurrentHashMap[String, Array[Byte]].asScala
-
-  override def lock(key: String): Lock = synchronized {
-    locks.getOrElseUpdate(key, new JavaLock(key))
-  }
-
-  /*override def get(key: String): Option[Array[Byte]] = store.get(key)
-
-  override def set(key: String, value: Array[Byte]): Unit = {
-    store(key) = value
-  }
-
-  override def list(key: String): Set[String] = store.keySet.filter(_.startsWith(key + '/')).toSet*/
-
-  /**
-   * Lock implementation using local files to synchronize. It is *NOT* reentrant.
-   *
-   * @param key Lock key.
-   */
-  private class JavaLock(key: String) extends Lock {
-    private[this] val javaLock = new ReentrantLock
-
-    override def lock(): Unit = javaLock.lock()
-
-    override def tryLock(): Boolean = javaLock.tryLock()
-
-    override def unlock(): Unit = javaLock.unlock()
-  }
-
 }

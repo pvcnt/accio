@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.docgen
 
 import com.google.inject.{AbstractModule, TypeLiteral}
 import fr.cnrs.liris.accio.core.api.Operator
-import fr.cnrs.liris.accio.core.runtime.{OpMetaReader, OpRegistry, ReflectOpMetaReader, RuntimeOpRegistry}
+import fr.cnrs.liris.accio.core.framework.{OpMetaReader, OpRegistry, ReflectOpMetaReader, RuntimeOpRegistry}
 import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
 
 /**
@@ -28,7 +28,10 @@ import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
  */
 object DocgenModule extends AbstractModule with ScalaModule {
   override def configure(): Unit = {
+    // Create an empty set of operators, in case nothing else is bound.
     ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Class[_ <: Operator[_, _]]] {})
+
+    // Bind remaining implementations.
     bind[OpMetaReader].to[ReflectOpMetaReader]
     bind[OpRegistry].to[RuntimeOpRegistry]
   }

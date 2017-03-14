@@ -21,7 +21,8 @@ package fr.cnrs.liris.accio.core.dsl.inject
 import com.google.inject.{Provides, Singleton}
 import com.twitter.finatra.json.FinatraObjectMapper
 import fr.cnrs.liris.accio.core.dsl.{ObjectMapperFactory, RunParser, WorkflowParser}
-import fr.cnrs.liris.accio.core.runtime.{OpRegistry, RunFactory, WorkflowFactory}
+import fr.cnrs.liris.accio.core.framework.{RunFactory, WorkflowFactory}
+import fr.cnrs.liris.accio.core.framework.{OpRegistry, RunFactory}
 import fr.cnrs.liris.accio.core.storage.WorkflowRepository
 import net.codingwell.scalaguice.ScalaModule
 

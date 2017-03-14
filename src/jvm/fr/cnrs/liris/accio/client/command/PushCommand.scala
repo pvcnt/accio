@@ -23,7 +23,7 @@ import java.nio.file.Files
 import com.google.inject.Inject
 import com.twitter.util.{Await, Return, Stopwatch, Throw}
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.agent.{AgentService, ParseWorkflowRequest, PushWorkflowRequest}
+import fr.cnrs.liris.accio.agent.{AgentService$FinagleClient, ParseWorkflowRequest, PushWorkflowRequest}
 import fr.cnrs.liris.accio.core.domain.{InvalidSpecException, Utils, WorkflowSpec}
 import fr.cnrs.liris.common.cli.{Cmd, Command, ExitCode, Reporter}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
@@ -59,7 +59,7 @@ class PushCommand @Inject()(clientFactory: AgentClientFactory)
     }
   }
 
-  private def parseAndPush(uri: String, opts: PushCommandFlags, client: AgentService.FinagledClient, out: Reporter): ExitCode = {
+  private def parseAndPush(uri: String, opts: PushCommandFlags, client: AgentService$FinagleClient, out: Reporter): ExitCode = {
     val path = FileUtils.expandPath(uri)
     val file = path.toFile
     if (!file.exists || !file.canRead) {
@@ -91,7 +91,7 @@ class PushCommand @Inject()(clientFactory: AgentClientFactory)
     }
   }
 
-  private def push(spec: WorkflowSpec, opts: PushCommandFlags, client: AgentService.FinagledClient, out: Reporter): ExitCode = {
+  private def push(spec: WorkflowSpec, opts: PushCommandFlags, client: AgentService$FinagleClient, out: Reporter): ExitCode = {
     val req = PushWorkflowRequest(spec, Utils.DefaultUser)
     Await.result(client.pushWorkflow(req).liftToTry) match {
       case Return(_) =>

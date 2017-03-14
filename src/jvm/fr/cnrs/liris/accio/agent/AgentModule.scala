@@ -18,26 +18,38 @@
 
 package fr.cnrs.liris.accio.agent
 
+import java.net.InetAddress
+import java.nio.file.Paths
+import java.util.UUID
 import java.util.concurrent.Executors
 
 import com.google.inject.{Provides, Singleton, TypeLiteral}
 import com.twitter.concurrent.NamedPoolThreadFactory
-import com.twitter.inject.TwitterModule
-import com.twitter.util.{Duration, ExecutorServiceFuturePool, FuturePool}
+import com.twitter.finagle.Thrift
+import com.twitter.inject.{Injector, TwitterModule}
+import com.twitter.util.FuturePool
+import fr.cnrs.liris.accio.agent.config.{AgentConfig, ClientConfig, MasterConfig, WorkerConfig}
 import fr.cnrs.liris.accio.core.api.Operator
-import fr.cnrs.liris.accio.core.runtime._
-import fr.cnrs.liris.accio.core.statemgr.StateManager
-import fr.cnrs.liris.accio.core.storage.MutableRunRepository
+import fr.cnrs.liris.accio.core.domain.Resource
+import fr.cnrs.liris.accio.core.filesystem.inject.FileSystemModule
+import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.util.{ClusterName, WorkerPool}
 import net.codingwell.scalaguice.ScalaMultibinder
+
+import scala.util.Try
 
 /**
  * Guice module provisioning services for the Accio agent.
  */
 object AgentModule extends TwitterModule {
-  private[this] val clusterFlag = flag("cluster", "default", "Cluster name")
-  // Not used yet.
-  private[this] val taskTimeout = flag("task_timeout", Duration.fromSeconds(30), "Time after which a task is considered lost")
+  private[this] val bindFlag = flag("bind", "0.0.0.0", "Address on which to bound network interfaces")
+  private[this] val masterAddrFlag = flag[String]("master_addr", "Address of the Accio master")
+  private[this] val executorUriFlag = flag[String]("executor_uri", "URI to the executor JAR")
+  private[this] val javaHomeFlag = flag[String]("java_home", "Path to JRE when launching the executor")
+  private[this] val workdirFlag = flag[String]("workdir", "Directory where to store local files")
+  private[this] val clusterNameFlag = flag("master.cluster_name", "default", "Cluster name")
+  private[agent] val masterFlag = flag("master", false, "Whether this agent is a master")
+  private[agent] val workerFlag = flag("worker", false, "Whether this agent is a worker")
 
   protected override def configure(): Unit = {
     // Create an empty set of operators, in case nothing else is bound.
@@ -46,8 +58,7 @@ object AgentModule extends TwitterModule {
     // Bind remaining implementations.
     bind[OpMetaReader].to[ReflectOpMetaReader]
     bind[OpRegistry].to[RuntimeOpRegistry]
-    bind[String].annotatedWith[ClusterName].toInstance(clusterFlag())
-    bind[Duration].annotatedWith[TaskTimeout].toInstance(taskTimeout())
+    bind[String].annotatedWith[ClusterName].toInstance(clusterNameFlag())
   }
 
   @Provides
@@ -55,6 +66,38 @@ object AgentModule extends TwitterModule {
   @WorkerPool
   def providesWorkerPool: FuturePool = {
     val executorService = Executors.newCachedThreadPool(new NamedPoolThreadFactory("agent/worker"))
-    new ExecutorServiceFuturePool(executorService)
+    FuturePool.interruptible(executorService)
+  }
+
+  @Provides
+  @Singleton
+  def providesAgentConfig: AgentConfig = {
+    val masterConfig = if (masterFlag()) {
+      Some(MasterConfig(None, 9999, clusterNameFlag()))
+    } else None
+    val workerConfig = if (workerFlag()) {
+      val executorArgs = FileSystemModule.executorPassthroughFlags.flatMap { flag =>
+        flag.getWithDefault.map(v => s"-${flag.name}=$v").toSeq
+      }
+      Some(WorkerConfig(9999, Resource(0, 0, 0), executorUriFlag(), javaHomeFlag.get, executorArgs))
+    } else None
+    val clientConfig = if (workerFlag()) {
+      val masterAddr = if (masterFlag()) masterAddrFlag.getWithDefault.getOrElse(bindFlag() + ":9999") else masterAddrFlag()
+      Some(ClientConfig(masterAddr))
+    } else None
+    val name = Try(InetAddress.getLocalHost.getHostName).getOrElse(UUID.randomUUID().toString)
+    AgentConfig(name, bindFlag(), Paths.get(workdirFlag()), clientConfig, masterConfig, workerConfig)
+  }
+
+  @Provides
+  @Singleton
+  def providesWorkerClient(config: AgentConfig): AgentService$FinagleClient = {
+    //TODO: provide an alternative for same process communication.
+    val service = Thrift.newService(config.client.get.masterAddr)
+    new AgentService.FinagledClient(service)
+  }
+
+  override def singletonShutdown(injector: Injector): Unit = {
+    injector.instance[AgentService$FinagleClient].service.close()
   }
 }

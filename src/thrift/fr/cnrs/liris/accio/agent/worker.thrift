@@ -20,27 +20,55 @@ namespace java fr.cnrs.liris.accio.agent
 
 include "fr/cnrs/liris/accio/core/domain/accio.thrift"
 
-/**
- * Communication protocol between servers and workers.
- **/
-struct ScheduleTaskRequest {
+exception InvalidExecutorException {
+}
+
+struct AssignTaskRequest {
   1: required accio.Task task;
 }
 
-struct ScheduleTaskResponse {
-  1: required bool accepted;
+struct AssignTaskResponse {
 }
 
 struct KillTaskRequest {
-  1: required string key;
+  1: required accio.TaskId id;
 }
 
 struct KillTaskResponse {
-  1: required bool accepted;
 }
 
-service WorkerService {
-  ScheduleTaskResponse scheduleTask(1: ScheduleTaskRequest req);
+struct StartExecutorRequest {
+  1: required accio.ExecutorId executor_id;
+  2: required accio.TaskId task_id;
+}
 
-  KillTaskResponse killTask(1: KillTaskRequest req);
+struct StartExecutorResponse {
+  1: required accio.RunId run_id;
+  2: required string node_name;
+  3: required accio.OpPayload payload;
+}
+
+struct HeartbeatExecutorRequest {
+  1: required accio.ExecutorId executor_id;
+}
+
+struct HeartbeatExecutorResponse {
+}
+
+struct StreamExecutorLogsRequest {
+  1: required accio.ExecutorId executor_id;
+  2: required accio.TaskId task_id;
+  3: required list<accio.RunLog> logs;
+}
+
+struct StreamExecutorLogsResponse {
+}
+
+struct StopExecutorRequest {
+  1: required accio.ExecutorId executor_id;
+  2: required accio.TaskId task_id;
+  3: required accio.OpResult result;
+}
+
+struct StopExecutorResponse {
 }

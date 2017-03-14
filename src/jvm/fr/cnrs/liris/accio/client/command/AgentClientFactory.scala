@@ -20,15 +20,15 @@ package fr.cnrs.liris.accio.client.command
 
 import com.google.inject.Singleton
 import com.twitter.finagle.Thrift
-import fr.cnrs.liris.accio.agent.AgentService
+import fr.cnrs.liris.accio.agent.{AgentService, AgentService$FinagleClient}
 
 import scala.collection.mutable
 
 @Singleton
 class AgentClientFactory {
-  private[this] val clients = mutable.Map.empty[String, AgentService.FinagledClient]
+  private[this] val clients = mutable.Map.empty[String, AgentService$FinagleClient]
 
-  def create(addr: String): AgentService.FinagledClient = {
+  def create(addr: String): AgentService$FinagleClient = {
     clients.getOrElseUpdate(addr, {
       val service = Thrift.newService(addr)
       sys.addShutdownHook(service.close())

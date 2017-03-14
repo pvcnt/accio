@@ -24,7 +24,8 @@ import com.fasterxml.jackson.databind.JsonMappingException
 import com.twitter.finatra.json.FinatraObjectMapper
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.core.domain.{InvalidSpecException, _}
-import fr.cnrs.liris.accio.core.runtime.{BaseFactory, OpRegistry, WorkflowFactory}
+import fr.cnrs.liris.accio.core.framework.{BaseFactory, WorkflowFactory}
+import fr.cnrs.liris.accio.core.framework.{BaseFactory, OpRegistry}
 import fr.cnrs.liris.dal.core.api.{DataTypes, Values}
 
 import scala.collection.mutable
@@ -78,7 +79,7 @@ class WorkflowParser(mapper: FinatraObjectMapper, opRegistry: OpRegistry, factor
         throw newError(s"Unexpected error: ${e.getMessage}", warnings)
     }
 
-  private def defaultId(filename: String) = filename.substring(0, filename.indexOf("."))
+  private def defaultId(filename: String) = filename.substring(0, filename.lastIndexOf("."))
 
   private def getNode(node: JsonNodeDef, opRegistry: OpRegistry, warnings: mutable.Set[InvalidSpecMessage]) = {
     val inputs = node.inputs.flatMap {

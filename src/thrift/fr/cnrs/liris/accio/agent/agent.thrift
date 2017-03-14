@@ -19,281 +19,113 @@
 namespace java fr.cnrs.liris.accio.agent
 
 include "fr/cnrs/liris/accio/core/domain/accio.thrift"
-
-/**
- * Communication protocol between clients and servers.
- */
-struct GetOperatorRequest {
-  1: required string name;
-}
-
-struct GetOperatorResponse {
-  1: optional accio.OpDef result;
-}
-
-struct ListOperatorsRequest {
-  1: required bool include_deprecated = false;
-}
-
-struct ListOperatorsResponse {
-  1: required list<accio.OpDef> results;
-}
-
-struct PushWorkflowRequest {
-  1: required accio.WorkflowSpec spec;
-  2: required accio.User user;
-}
-
-struct PushWorkflowResponse {
-  1: required accio.Workflow workflow;
-  2: required list<accio.InvalidSpecMessage> warnings;
-}
-
-struct GetWorkflowRequest {
-  1: required accio.WorkflowId id;
-  2: optional string version;
-}
-
-struct GetWorkflowResponse {
-  1: optional accio.Workflow result;
-}
-
-struct ListWorkflowsRequest {
-  1: optional string owner;
-  2: optional string name;
-  3: optional string q;
-  4: optional i32 limit;
-  5: optional i32 offset;
-}
-
-struct ListWorkflowsResponse {
-  1: required list<accio.Workflow> results;
-  2: required i32 total_count;
-}
-
-struct CreateRunRequest {
-  1: required accio.RunSpec spec;
-  2: required accio.User user;
-}
-
-struct CreateRunResponse {
-  1: required list<accio.RunId> ids;
-  2: required list<accio.InvalidSpecMessage> warnings;
-}
-
-struct GetRunRequest {
-  1: required accio.RunId id;
-}
-
-struct GetRunResponse {
-  1: optional accio.Run result;
-}
-
-struct ListRunsRequest {
-  1: optional string owner;
-  2: optional string name;
-  3: optional accio.WorkflowId workflow_id;
-  5: optional set<accio.RunStatus> status;
-  6: optional set<string> tags;
-  7: optional accio.RunId parent;
-  8: optional accio.RunId cloned_from;
-  9: optional string q;
-  10: optional i32 limit;
-  11: optional i32 offset;
-}
-
-struct ListRunsResponse {
-  1: required list<accio.Run> results;
-  2: required i32 total_count;
-}
-
-struct DeleteRunRequest {
-  1: required accio.RunId id;
-}
-
-struct DeleteRunResponse {
-}
-
-struct KillRunRequest {
-  1: required accio.RunId id;
-}
-
-struct KillRunResponse {
-  1: required accio.Run run;
-}
-
-struct UpdateRunRequest {
-  1: required accio.RunId id;
-  2: optional string name;
-  3: optional string notes;
-  4: optional set<string> tags;
-}
-
-struct UpdateRunResponse {
-}
-
-struct ListLogsRequest {
-  1: required accio.RunId run_id;
-  2: required string node_name;
-  3: optional string classifier;
-  4: optional i32 limit;
-  5: optional accio.Timestamp since;
-}
-
-struct ListLogsResponse {
-  1: required list<accio.RunLog> results;
-}
-
-struct ParseRunRequest {
-  1: required string content;
-  2: required map<string, string> params;
-  3: optional string filename;
-}
-
-struct ParseRunResponse {
-  1: optional accio.RunSpec run;
-  2: required list<accio.InvalidSpecMessage> warnings;
-  3: required list<accio.InvalidSpecMessage> errors;
-}
-
-struct ParseWorkflowRequest {
-  1: required string content;
-  2: optional string filename;
-}
-
-struct ParseWorkflowResponse {
-  1: optional accio.WorkflowSpec workflow;
-  2: required list<accio.InvalidSpecMessage> warnings;
-  3: required list<accio.InvalidSpecMessage> errors;
-}
-
-struct InfoRequest {
-}
-
-struct InfoResponse {
-  1: required string cluster_name;
-  2: required string version;
-}
-
-struct UpdateRequest {
-}
-
-struct UpdateResponse {
-}
-
-exception InvalidTaskException {
-}
-
-exception UnknownRunException {
-}
-
-/**
- * Communication protocol between servers and workers.
- **/
-struct ScheduleTaskRequest {
-  1: required accio.Task task;
-}
-
-struct ScheduleTaskResponse {
-  1: required bool accepted;
-}
-
-struct KillTaskRequest {
-  1: required string key;
-}
-
-struct KillTaskResponse {
-  1: required bool accepted;
-}
-
-/**
- * Communication protocol between servers and executors.
- */
-struct StartTaskRequest {
-  1: required accio.TaskId task_id;
-}
-
-struct StartTaskResponse {
-  1: required accio.RunId run_id;
-  2: required string node_name;
-  3: required accio.OpPayload payload;
-}
-
-struct HeartbeatRequest {
-  1: required accio.TaskId task_id;
-}
-
-struct HeartbeatResponse {
-}
-
-struct StreamLogsRequest {
-  1: required list<accio.RunLog> logs;
-}
-
-struct StreamLogsResponse {
-}
-
-struct CompleteTaskRequest {
-  1: required accio.TaskId task_id;
-  2: required accio.OpResult result;
-}
-
-struct CompleteTaskResponse {
-}
+include "fr/cnrs/liris/accio/agent/api.thrift"
+include "fr/cnrs/liris/accio/agent/worker.thrift"
+include "fr/cnrs/liris/accio/agent/master.thrift"
 
 service AgentService {
   /**
-   * Communication protocol with clients.
+   * RPC endpoints used by clients to communicate with agents. It contains the public interface of Accio, exposed
+   * to the outside world and available to be consumed by users.
    */
-  // Retrieve a specific operator, if it exists.
-  GetOperatorResponse getOperator(1: GetOperatorRequest req);
+  // Provide information about this cluster.
+  api.GetClusterResponse getCluster(1: api.GetClusterRequest req);
 
-  // Retrieve all known operators.
-  ListOperatorsResponse listOperators(1: ListOperatorsRequest req);
+  // Get a specific operator, if it exists.
+  api.GetOperatorResponse getOperator(1: api.GetOperatorRequest req);
 
-  // Parse a string, written using the workflow DSL, into a valid accio.
-  ParseWorkflowResponse parseWorkflow(1: ParseWorkflowRequest req);
+  // List all known operators.
+  api.ListOperatorsResponse listOperators(1: api.ListOperatorsRequest req);
 
-  // Push a new version of a accio.
-  PushWorkflowResponse pushWorkflow(1: PushWorkflowRequest req) throws (1: accio.InvalidSpecException parse);
+  // Parse a string, written using the workflow DSL, into a (hopefully) valid workflow specification.
+  api.ParseWorkflowResponse parseWorkflow(1: api.ParseWorkflowRequest req);
 
-  GetWorkflowResponse getWorkflow(1: GetWorkflowRequest req);
+  // Push a new version of a workflow.
+  api.PushWorkflowResponse pushWorkflow(1: api.PushWorkflowRequest req)
+    throws (1: accio.InvalidSpecException parse);
 
-  ListWorkflowsResponse listWorkflows(1: ListWorkflowsRequest req);
+  // Get a specific workflow, if it exists.
+  api.GetWorkflowResponse getWorkflow(1: api.GetWorkflowRequest req);
 
-  // Parse a string, written using the run DSL, into a valid run specification.
-  ParseRunResponse parseRun(1: ParseRunRequest req);
+  // List all workflows matching some criteria.
+  api.ListWorkflowsResponse listWorkflows(1: api.ListWorkflowsRequest req);
 
-  CreateRunResponse createRun(1: CreateRunRequest req) throws (1: accio.InvalidSpecException parse);
+  // Parse a string, written using the run DSL, into a (hopefully) valid run specification.
+  api.ParseRunResponse parseRun(1: api.ParseRunRequest req);
 
-  GetRunResponse getRun(1: GetRunRequest req);
+  // Create a new run (and schedule them).
+  api.CreateRunResponse createRun(1: api.CreateRunRequest req)
+    throws (1: accio.InvalidSpecException parse);
 
-  ListRunsResponse listRuns(1: ListRunsRequest req);
+  // Get a specific run.
+  api.GetRunResponse getRun(1: api.GetRunRequest req);
 
-  DeleteRunResponse deleteRun(1: DeleteRunRequest req) throws (1: UnknownRunException unknown);
+  // Retrieve all runs matching some criteria.
+  api.ListRunsResponse listRuns(1: api.ListRunsRequest req);
 
-  KillRunResponse killRun(1: KillRunRequest req) throws (1: UnknownRunException unknown);
+  // Delete a specific run.
+  api.DeleteRunResponse deleteRun(1: api.DeleteRunRequest req)
+    throws (1: accio.UnknownRunException unknown);
 
-  UpdateRunResponse updateRun(1: UpdateRunRequest req) throws (1: UnknownRunException unknown);
+  // Kill a specific run.
+  api.KillRunResponse killRun(1: api.KillRunRequest req)
+    throws (1: accio.UnknownRunException unknown);
 
-  ListLogsResponse listLogs(1: ListLogsRequest req);
+  // Update some information of a specific run.
+  api.UpdateRunResponse updateRun(1: api.UpdateRunRequest req)
+    throws (1: accio.UnknownRunException unknown);
 
-  UpdateResponse update(1: UpdateRequest req);
-
-  InfoResponse info(1: InfoRequest req);
+  // List log lines.
+  api.ListLogsResponse listLogs(1: api.ListLogsRequest req);
 
   /**
-   * Communication protocol with executors.
+   * RPC endpoints used by workers to communicate with their master.
    */
-  HeartbeatResponse heartbeat(1: HeartbeatRequest req) throws (1: InvalidTaskException invalid);
+  // Register a new worker. This is mandatory to allow a worker to use any other endpoint.
+  master.RegisterWorkerResponse registerWorker(1: master.RegisterWorkerRequest req);
 
-  StartTaskResponse startTask(1: StartTaskRequest req) throws (1: InvalidTaskException invalid);
+  // Unregister a worker. It will then not be able to use any other endpoint.
+  master.UnregisterWorkerResponse unregisterWorker(1: master.UnregisterWorkerRequest req)
+    throws (1: master.InvalidWorkerException invalidWorker);
 
-  StreamLogsResponse streamLogs(1: StreamLogsRequest req) throws (1: InvalidTaskException invalid);
+  // Heartbeat coming from a worker, signaling it is alive.
+  master.HeartbeatWorkerResponse heartbeatWorker(1: master.HeartbeatWorkerRequest req)
+    throws (1: master.InvalidWorkerException invalidWorker);
 
-  CompleteTaskResponse completeTask(1: CompleteTaskRequest req) throws (1: InvalidTaskException invalid);
-}
+  // Indicates that an executor is ready to start processing a task, through its worker.
+  master.StartTaskResponse startTask(1: master.StartTaskRequest req)
+    throws (1: master.InvalidWorkerException invalidWorker, 2: accio.InvalidTaskException invalidTask);
 
-service WorkerService {
+  // Stream log lines from an executor, through its worker.
+  master.StreamTaskLogsResponse streamTaskLogs(1: master.StreamTaskLogsRequest req)
+    throws (1: master.InvalidWorkerException invalidWorker, 2: accio.InvalidTaskException invalidTask);
 
+  // Indicates that an executor completed processing a task, through its worker.
+  master.CompleteTaskResponse completeTask(1: master.CompleteTaskRequest req)
+    throws (1: master.InvalidWorkerException invalidWorker, 2: accio.InvalidTaskException invalidTask);
+
+  // Indicates that a worker lost contact with an executor.
+  master.LostTaskResponse lostTask(1: master.LostTaskRequest req)
+    throws (1: master.InvalidWorkerException invalidWorker, 2: accio.InvalidTaskException invalidTask);
+
+  /**
+   * RPC endpoints used by master to communicate with their workers, and executors to communicate with their workers.
+   */
+  worker.AssignTaskResponse assignTask(1: worker.AssignTaskRequest req)
+    throws (1: accio.InvalidTaskException invalidTask);
+
+  worker.KillTaskResponse killTask(1: worker.KillTaskRequest req)
+    throws (1: accio.InvalidTaskException invalidTask);
+
+  worker.HeartbeatExecutorResponse heartbeatExecutor(1: worker.HeartbeatExecutorRequest req)
+    throws (1: worker.InvalidExecutorException invalidExecutor);
+
+  worker.StartExecutorResponse startExecutor(1: worker.StartExecutorRequest req)
+    throws (1: worker.InvalidExecutorException invalidExecutor, 2: accio.InvalidTaskException invalidTask);
+
+  worker.StreamExecutorLogsResponse streamExecutorLogs(1: worker.StreamExecutorLogsRequest req)
+    throws (1: worker.InvalidExecutorException invalidExecutor, 2: accio.InvalidTaskException invalidTask);
+
+  worker.StopExecutorResponse stopExecutor(1: worker.StopExecutorRequest req)
+    throws (1: worker.InvalidExecutorException invalidExecutor, 2: accio.InvalidTaskException invalidTask);
 }

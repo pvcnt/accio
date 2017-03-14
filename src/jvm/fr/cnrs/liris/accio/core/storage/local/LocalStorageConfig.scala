@@ -20,10 +20,6 @@ package fr.cnrs.liris.accio.core.storage.local
 
 import java.nio.file.Path
 
-import com.google.inject.{AbstractModule, Provides, Singleton}
-import fr.cnrs.liris.accio.core.storage.{MutableRunRepository, MutableTaskRepository, MutableWorkflowRepository}
-import net.codingwell.scalaguice.ScalaModule
-
 /**
  * Local storage configuration.
  *

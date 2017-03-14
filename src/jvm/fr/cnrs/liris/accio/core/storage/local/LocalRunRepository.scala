@@ -36,6 +36,9 @@ import scala.collection.JavaConverters._
  */
 @Singleton
 final class LocalRunRepository @Inject()(config: LocalStorageConfig) extends LocalRepository with MutableRunRepository {
+  Files.createDirectories(runPath)
+  Files.createDirectories(logPath)
+
   override def find(query: RunQuery): RunList = {
     var results = listIds(runPath)
       .flatMap(id => get(RunId(id)))
@@ -54,8 +57,8 @@ final class LocalRunRepository @Inject()(config: LocalStorageConfig) extends Loc
 
   override def find(query: LogsQuery): Seq[RunLog] = {
     val files = query.classifier match {
-      case Some(classifier) => Seq(logsPath(query.runId, query.nodeName, classifier).toFile)
-      case None => logsPath(query.runId, query.nodeName).toFile.listFiles.toSeq.filter(_.getName.endsWith(".txt"))
+      case Some(classifier) => Seq(logPath(query.runId, query.nodeName, classifier).toFile)
+      case None => logPath(query.runId, query.nodeName).toFile.listFiles.toSeq.filter(_.getName.endsWith(".txt"))
     }
     var results = files.flatMap { file =>
       val classifier = file.getName.stripSuffix(".txt")
@@ -80,7 +83,7 @@ final class LocalRunRepository @Inject()(config: LocalStorageConfig) extends Loc
     logs.groupBy(_.runId).foreach { case (runId, logs) =>
       logs.groupBy(_.nodeName).foreach { case (nodeName, logs) =>
         logs.groupBy(_.classifier).foreach { case (classifier, logs) =>
-          val path = logsPath(runId, nodeName, classifier)
+          val path = logPath(runId, nodeName, classifier)
           Files.createDirectories(path.getParent)
           val content = logs.map(log => s"${log.createdAt} ${log.message.replace("\n", "\\\\n")}\n").mkString
           //TODO: lock file? Or not ?
@@ -94,22 +97,22 @@ final class LocalRunRepository @Inject()(config: LocalStorageConfig) extends Loc
 
   override def remove(id: RunId): Unit = {
     FileUtils.safeDelete(runPath(id))
-    FileUtils.safeDelete(logsPath(id))
+    FileUtils.safeDelete(logPath(id))
   }
 
   override def get(cacheKey: CacheKey): Option[OpResult] = None
 
-  private def runPath: Path  = config.path.resolve("runs")
+  private def runPath: Path = config.path.resolve("runs")
 
-  private def logPath: Path  = config.path.resolve("logs")
+  private def logPath: Path = config.path.resolve("logs")
 
-  private def runPath(id: RunId): Path  = getSubdir(runPath, id.value).resolve(s"${id.value}.json")
+  private def runPath(id: RunId): Path = getSubdir(runPath, id.value).resolve(s"${id.value}.json")
 
-  private def logsPath(id: RunId): Path = getSubdir(logPath, id.value.toString).resolve(id.value.toString)
+  private def logPath(id: RunId): Path = getSubdir(logPath, id.value.toString).resolve(id.value.toString)
 
-  private def logsPath(id: RunId, nodeName: String): Path = logsPath(id).resolve(nodeName)
+  private def logPath(id: RunId, nodeName: String): Path = logPath(id).resolve(nodeName)
 
-  private def logsPath(id: RunId, nodeName: String, classifier: String): Path = logsPath(id, nodeName).resolve(s"$classifier.txt")
+  private def logPath(id: RunId, nodeName: String, classifier: String): Path = logPath(id, nodeName).resolve(s"$classifier.txt")
 
   private def getSubdir(dir: Path, id: String) = {
     // We create two levels of subdirectories based on run identifier to avoid putting to many files in a single

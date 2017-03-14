@@ -55,6 +55,5 @@ object StorageModule extends TwitterModule {
     // Bind read-only repositories to mutable repositories.
     bind[RunRepository].to[MutableRunRepository]
     bind[WorkflowRepository].to[MutableWorkflowRepository]
-    bind[TaskRepository].to[MutableTaskRepository]
   }
 }

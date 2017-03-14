@@ -23,7 +23,7 @@ import java.nio.file.Files
 import com.google.inject.Inject
 import com.twitter.util.{Await, Return, Stopwatch, Throw}
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.agent.{AgentService, CreateRunRequest, ParseRunRequest}
+import fr.cnrs.liris.accio.agent.{AgentService$FinagleClient, CreateRunRequest, ParseRunRequest}
 import fr.cnrs.liris.accio.core.domain.{InvalidSpecException, RunSpec, Utils}
 import fr.cnrs.liris.common.cli.{Cmd, Command, ExitCode, Reporter}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
@@ -80,7 +80,7 @@ class SubmitCommand @Inject()(clientFactory: AgentClientFactory)
     }
   }
 
-  private def parseAndSubmit(uri: String, params: Map[String, String], opts: SubmitCommandFlags, client: AgentService.FinagledClient, out: Reporter): ExitCode = {
+  private def parseAndSubmit(uri: String, params: Map[String, String], opts: SubmitCommandFlags, client: AgentService$FinagleClient, out: Reporter): ExitCode = {
     val path = FileUtils.expandPath(uri)
     val file = path.toFile
     val content = if (file.exists) {
@@ -120,7 +120,7 @@ class SubmitCommand @Inject()(clientFactory: AgentClientFactory)
     }
   }
 
-  private def submit(spec: RunSpec, opts: SubmitCommandFlags, client: AgentService.FinagledClient, out: Reporter) = {
+  private def submit(spec: RunSpec, opts: SubmitCommandFlags, client: AgentService$FinagleClient, out: Reporter) = {
     val req = CreateRunRequest(spec, Utils.DefaultUser)
     Await.result(client.createRun(req).liftToTry) match {
       case Return(resp) =>

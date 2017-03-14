@@ -23,8 +23,10 @@ import com.twitter.finagle.Service
 import com.twitter.finatra.thrift.Controller
 import com.twitter.inject.Injector
 import com.twitter.scrooge.ThriftException
-import fr.cnrs.liris.accio.agent.AgentService.{Update, _}
-import fr.cnrs.liris.accio.agent.handler._
+import fr.cnrs.liris.accio.agent.AgentService.{CompleteTask, RegisterWorker, _}
+import fr.cnrs.liris.accio.agent.api._
+import fr.cnrs.liris.accio.agent.master._
+import fr.cnrs.liris.accio.agent.worker._
 
 import scala.util.control.NonFatal
 
@@ -35,10 +37,9 @@ class AgentController @Inject()(injector: Injector) extends Controller with Agen
       injector.instance[GetOperatorHandler].handle(args.req)
     }
 
-  override val listOperators: Service[ListOperators.Args, ListOperators.Result] =
-    handle(ListOperators) { args: ListOperators.Args =>
-      reportException(injector.instance[ListOperatorsHandler].handle(args.req))
-    }
+  override val listOperators = handle(ListOperators) { args: ListOperators.Args =>
+    reportException(injector.instance[ListOperatorsHandler].handle(args.req))
+  }
 
   override val pushWorkflow = handle(PushWorkflow) { args: PushWorkflow.Args =>
     reportException(injector.instance[PushWorkflowHandler].handle(args.req))
@@ -88,35 +89,60 @@ class AgentController @Inject()(injector: Injector) extends Controller with Agen
     reportException(injector.instance[ListLogsHandler].handle(args.req))
   }
 
-  override val update = handle(Update) { args: Update.Args =>
-    reportException(injector.instance[UpdateHandler].handle(args.req))
+  override val getCluster = handle(GetCluster) { args: GetCluster.Args =>
+    injector.instance[GetClusterHandler].handle(args.req)
   }
 
-  override val info = handle(Info) { args: Info.Args =>
-    injector.instance[InfoHandler].handle(args.req)
+  override val heartbeatWorker = handle(HeartbeatWorker) { args: HeartbeatWorker.Args =>
+    reportException(injector.instance[HeartbeatWorkerHandler].handle(args.req))
   }
 
-  override val heartbeat: Service[Heartbeat.Args, Heartbeat.Result] =
-    handle(Heartbeat) { args: Heartbeat.Args =>
-      reportException(injector.instance[HeartbeatHandler].handle(args.req))
-    }
-
-  override val startTask: Service[StartTask.Args, StartTask.Result] = {
-    handle(StartTask) { args: StartTask.Args =>
-      reportException(injector.instance[StartTaskHandler].handle(args.req))
-    }
+  override val startTask = handle(StartTask) { args: StartTask.Args =>
+    reportException(injector.instance[StartTaskHandler].handle(args.req))
   }
 
-  override val streamLogs: Service[StreamLogs.Args, StreamLogs.Result] = {
-    handle(StreamLogs) { args: StreamLogs.Args =>
-      reportException(injector.instance[StreamLogsHandler].handle(args.req))
-    }
+  override val streamTaskLogs = handle(StreamTaskLogs) { args: StreamTaskLogs.Args =>
+    reportException(injector.instance[StreamTaskLogsHandler].handle(args.req))
   }
 
-  override val completeTask: Service[CompleteTask.Args, CompleteTask.Result] = {
-    handle(CompleteTask) { args: CompleteTask.Args =>
-      reportException(injector.instance[CompleteTaskHandler].handle(args.req))
-    }
+  override val completeTask = handle(CompleteTask) { args: CompleteTask.Args =>
+    reportException(injector.instance[CompleteTaskHandler].handle(args.req))
+  }
+
+  override val registerWorker =handle(RegisterWorker) { args: RegisterWorker.Args =>
+    reportException(injector.instance[RegisterWorkerHandler].handle(args.req))
+  }
+
+  override val unregisterWorker = handle(UnregisterWorker) { args: UnregisterWorker.Args =>
+    reportException(injector.instance[UnregisterWorkerHandler].handle(args.req))
+  }
+
+  override val lostTask = handle(LostTask) { args: LostTask.Args =>
+    reportException(injector.instance[LostTaskHandler].handle(args.req))
+  }
+
+  override val assignTask = handle(AssignTask) { args: AssignTask.Args =>
+    reportException(injector.instance[AssignTaskHandler].handle(args.req))
+  }
+
+  override val killTask = handle(KillTask) { args: KillTask.Args =>
+    reportException(injector.instance[KillTaskHandler].handle(args.req))
+  }
+
+  override val heartbeatExecutor = handle(HeartbeatExecutor) { args: HeartbeatExecutor.Args =>
+    reportException(injector.instance[HeartbeatExecutorHandler].handle(args.req))
+  }
+
+  override val startExecutor = handle(StartExecutor) { args: StartExecutor.Args =>
+    reportException(injector.instance[StartExecutorHandler].handle(args.req))
+  }
+
+  override val streamExecutorLogs = handle(StreamExecutorLogs) { args: StreamExecutorLogs.Args =>
+    reportException(injector.instance[StreamExecutorLogsHandler].handle(args.req))
+  }
+
+  override val stopExecutor = handle(StopExecutor) { args: StopExecutor.Args =>
+    reportException(injector.instance[StopExecutorHandler].handle(args.req))
   }
 
   private def reportException[T](f: => T): T = try {

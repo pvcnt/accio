@@ -50,9 +50,6 @@ class AccioExecutor extends App {
   override protected def run(): Unit = {
     require(args.length == 1, "You must provide a single task identifier as argument")
     val executor = injector.instance[TaskExecutor]
-    onExit {
-      executor.close()
-    }
-    Await.ready(executor.execute(TaskId(args.head)))
+    Await.ready(executor.execute(TaskId(args.head), StdOutErr))
   }
 }
