@@ -520,6 +520,7 @@ Compute POIs retrieval difference between two datasets of traces
 |:-----------|:-----|:------------|
 | `diameter` | distance; required | Clustering maximum diameter |
 | `duration` | duration; required | Clustering minimum duration |
+| `minPoints` | integer; optional; default: 0 | Minimum number of times a cluster should appear to consider it |
 | `data` | dataset; required | Input traces dataset |
 {: class="table table-striped"}
 

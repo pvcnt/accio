@@ -21,7 +21,7 @@ package fr.cnrs.liris.privamov.ops
 import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.dal.core.api.Dataset
 import fr.cnrs.liris.common.geo.Distance
-import fr.cnrs.liris.privamov.core.clustering.DTClusterer
+import fr.cnrs.liris.privamov.core.clustering.{DTClusterer, PoisClusterer}
 import fr.cnrs.liris.privamov.core.model.{Poi, PoiSet, Trace}
 
 @Op(
@@ -33,10 +33,18 @@ class PoisExtractionOp extends Operator[PoisExtractionIn, PoisExtractionOut] {
 
   override def execute(in: PoisExtractionIn, ctx: OpContext): PoisExtractionOut = {
     val input = ctx.read[Trace](in.data)
-    val clusterer = new DTClusterer(in.duration, in.diameter)
-    val output = input.map { trace =>
-      val pois = clusterer.cluster(trace).map(cluster => Poi(cluster.events))
-      PoiSet(trace.id, pois)
+    val output =  if (in.minPoints == 0) {
+      val clusterer = new DTClusterer(in.duration, in.diameter)
+      input.map { trace =>
+        val pois = clusterer.cluster(trace).map(cluster => Poi(cluster.events))
+        PoiSet(trace.id, pois)
+      }
+    } else {
+      val clusterer = new PoisClusterer(in.duration, in.diameter, in.minPoints)
+      input.map { trace =>
+        val pois = clusterer.cluster(trace.events)
+        PoiSet(trace.id, pois)
+      }
     }
     PoisExtractionOut(ctx.write(output))
   }
@@ -45,6 +53,7 @@ class PoisExtractionOp extends Operator[PoisExtractionIn, PoisExtractionOut] {
 case class PoisExtractionIn(
   @Arg(help = "Clustering maximum diameter") diameter: Distance,
   @Arg(help = "Clustering minimum duration") duration: org.joda.time.Duration,
+  @Arg(help = "Minimum number of times a cluster should appear to consider it") minPoints: Int = 0,
   @Arg(help = "Input traces dataset") data: Dataset)
 
 case class PoisExtractionOut(
