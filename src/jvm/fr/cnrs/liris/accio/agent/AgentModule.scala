@@ -28,7 +28,9 @@ import com.twitter.concurrent.NamedPoolThreadFactory
 import com.twitter.finagle.Thrift
 import com.twitter.inject.{Injector, TwitterModule}
 import com.twitter.util.FuturePool
+import fr.cnrs.liris.accio.agent.commandbus.Handler
 import fr.cnrs.liris.accio.agent.config.{AgentConfig, ClientConfig, MasterConfig, WorkerConfig}
+import fr.cnrs.liris.accio.agent.handler.inject.{MasterHandlerModule, WorkerHandlerModule}
 import fr.cnrs.liris.accio.core.api.Operator
 import fr.cnrs.liris.accio.core.domain.Resource
 import fr.cnrs.liris.accio.core.filesystem.inject.FileSystemModule
@@ -54,6 +56,15 @@ object AgentModule extends TwitterModule {
   protected override def configure(): Unit = {
     // Create an empty set of operators, in case nothing else is bound.
     ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Class[_ <: Operator[_, _]]] {})
+
+    // Bind command handlers.
+    ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Handler[_, _]] {})
+    if (masterFlag()) {
+      install(MasterHandlerModule)
+    }
+    if (workerFlag()) {
+      install(WorkerHandlerModule)
+    }
 
     // Bind remaining implementations.
     bind[OpMetaReader].to[ReflectOpMetaReader]

@@ -1,0 +1,9 @@
+scala_library(
+  dependencies=[
+    'src/jvm/fr/cnrs/liris/accio/agent/handler/api',
+    'src/jvm/fr/cnrs/liris/accio/agent/handler/master',
+    'src/jvm/fr/cnrs/liris/accio/agent/handler/worker',
+    '3rdparty/jvm:scala-guice',
+  ],
+  sources=globs('*.scala')
+)

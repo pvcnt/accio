@@ -27,8 +27,8 @@ import com.twitter.finatra.thrift.ThriftServer
 import com.twitter.finatra.thrift.filters._
 import com.twitter.finatra.thrift.routing.ThriftRouter
 import com.twitter.util.FuturePool
-import fr.cnrs.liris.accio.agent.master.LostWorkerObserver
-import fr.cnrs.liris.accio.agent.worker.{LostExecutorsObserver, WorkerLifecycle}
+import fr.cnrs.liris.accio.agent.handler.master.LostWorkerObserver
+import fr.cnrs.liris.accio.agent.handler.worker.{LostExecutorsObserver, WorkerLifecycle}
 import fr.cnrs.liris.accio.core.dsl.inject.DslModule
 import fr.cnrs.liris.accio.core.filesystem.inject.FileSystemModule
 import fr.cnrs.liris.accio.core.scheduler.inject.SchedulerModule

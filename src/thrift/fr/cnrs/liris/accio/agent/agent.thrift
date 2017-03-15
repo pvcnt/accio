@@ -25,7 +25,7 @@ include "fr/cnrs/liris/accio/agent/master.thrift"
 
 service AgentService {
   /**
-   * RPC endpoints used by clients to communicate with agents. It contains the public interface of Accio, exposed
+   * RPC endpoints used by clients to communicate with masters. It contains the public interface of Accio, exposed
    * to the outside world and available to be consumed by users.
    */
   // Provide information about this cluster.
@@ -109,7 +109,7 @@ service AgentService {
     throws (1: master.InvalidWorkerException invalidWorker, 2: accio.InvalidTaskException invalidTask);
 
   /**
-   * RPC endpoints used by master to communicate with their workers, and executors to communicate with their workers.
+   * RPC endpoints used by master to communicate with their workers.
    */
   worker.AssignTaskResponse assignTask(1: worker.AssignTaskRequest req)
     throws (1: accio.InvalidTaskException invalidTask);
@@ -117,6 +117,9 @@ service AgentService {
   worker.KillTaskResponse killTask(1: worker.KillTaskRequest req)
     throws (1: accio.InvalidTaskException invalidTask);
 
+  /**
+   * RPC endpoints used by executors to communicate with their worker.
+   */
   worker.HeartbeatExecutorResponse heartbeatExecutor(1: worker.HeartbeatExecutorRequest req)
     throws (1: worker.InvalidExecutorException invalidExecutor);
 
