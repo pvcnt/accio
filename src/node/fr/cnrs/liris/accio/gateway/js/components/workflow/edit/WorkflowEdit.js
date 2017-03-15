@@ -18,6 +18,8 @@
 
 import React from 'react';
 import {Grid} from 'react-bootstrap';
+import {noop} from 'lodash';
+
 import WorkflowEditor from '../editor/WorkflowEditor';
 
 class WorkflowEdit extends React.Component {
@@ -25,10 +27,12 @@ class WorkflowEdit extends React.Component {
     return (
       <Grid>
         <h2 className="accio-title">
-          <img src="images/stack-32px.png" /> {this.props.workflow.id}:{this.props.workflow.version}
+          <img src="images/stack-32px.png"/> {this.props.workflow.id}:{this.props.workflow.version}
         </h2>
 
-        <WorkflowEditor workflow={this.props.workflow} />
+        <WorkflowEditor operators={this.props.operators}
+                        workflow={this.props.workflow}
+                        onChange={this.props.onChange}/>
       </Grid>
     );
   }
@@ -36,6 +40,11 @@ class WorkflowEdit extends React.Component {
 
 WorkflowEdit.propTypes = {
   workflow: React.PropTypes.object.isRequired,
+  operators: React.PropTypes.array.isRequired,
+  onChange: React.PropTypes.func.isRequired,
+};
+WorkflowEdit.defaultProps = {
+  onChange: noop,
 };
 
 export default WorkflowEdit;

@@ -15,15 +15,20 @@
  * You should have received a copy of the GNU General Public License
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-import React from 'react';
-import NodePanel from './NodePanel';
+import React from "react";
+import {noop} from "lodash";
+import NodePanel from "./NodePanel";
 
 class Sidebar extends React.Component {
   render() {
     return (
       <div className="workflow-editor-sidebar">
-        {this.props.node ? <NodePanel node={this.props.node}/> : null}
+        {this.props.node
+          ? <NodePanel workflow={this.props.workflow}
+                       node={this.props.node}
+                       operators={this.props.operators}
+                       onChange={this.props.onChange}/>
+          : null}
       </div>
     );
   }
@@ -31,7 +36,12 @@ class Sidebar extends React.Component {
 
 Sidebar.propTypes = {
   workflow: React.PropTypes.object.isRequired,
+  operators: React.PropTypes.array.isRequired,
   node: React.PropTypes.object,
+  onChange: React.PropTypes.func.isRequired,
+};
+Sidebar.defaultProps = {
+  onChange: noop,
 };
 
 export default Sidebar;

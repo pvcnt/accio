@@ -222,38 +222,22 @@ footer a {
 /**
  * Workflow editor.
  */
-.workflow-editor {
+.workflow-graph {
+    border: 1px solid #e7e7e7;
 }
 
-.workflow-editor dl {
-    margin-bottom: 5px;
+.workflow-editor .node rect {
+    stroke: #333;
+    stroke-width: 1.5px;
+    fill: #fff;
 }
 
-.workflow-editor g.leaf > rect {
-    stroke: #fff;
-    stroke-width: 1px;
-    opacity: .5;
+.workflow-editor .edgeLabel rect {
+    fill: #F8F9FA;
 }
 
-.workflow-editor g.leaf > text {
-    fill: #ffffff;
-}
-
-.workflow-editor g.compound > rect {
-    opacity: 0.1;
-}
-
-.workflow-editor .node {
-}
-
-.workflow-editor .link {
-    stroke: #999;
-    stroke-opacity: .6;
+.workflow-editor .edgePath {
+    stroke: #333;
+    stroke-width: 1.5px;
     fill: none;
-}
-
-.workflow-editor .port {
-    stroke: #000;
-    width: 1px;
-    opacity: .6;
 }

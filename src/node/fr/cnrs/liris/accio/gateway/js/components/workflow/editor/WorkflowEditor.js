@@ -16,9 +16,11 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React from "react";
-import {Grid, Col} from "react-bootstrap";
+import React from 'react';
+import {Grid, Col} from 'react-bootstrap';
 import autobind from 'autobind-decorator';
+import {noop} from 'lodash';
+
 import InteractiveGraph from './InteractiveGraph';
 import Sidebar from './Sidebar';
 
@@ -31,19 +33,23 @@ class WorkflowEditor extends React.Component {
   }
 
   @autobind
-  onChange(node) {
+  onClick(node) {
     this.setState({selected: node});
   }
 
-   render() {
+  render() {
     return (
       <div className="workflow-editor">
         <Grid>
           <Col sm={9}>
-            <InteractiveGraph workflow={this.props.workflow} onChange={this.onChange}/>
+            <InteractiveGraph workflow={this.props.workflow}
+                              onClick={this.onClick}/>
           </Col>
           <Col sm={3}>
-            <Sidebar workflow={this.props.workflow} node={this.state.selected}/>
+            <Sidebar workflow={this.props.workflow}
+                     operators={this.props.operators}
+                     node={this.state.selected}
+                     onChange={this.props.onChange}/>
           </Col>
         </Grid>
       </div>
@@ -53,6 +59,11 @@ class WorkflowEditor extends React.Component {
 
 WorkflowEditor.propTypes = {
   workflow: React.PropTypes.object.isRequired,
+  operators: React.PropTypes.array.isRequired,
+  onChange: React.PropTypes.func.isRequired,
+};
+WorkflowEditor.defaultProps = {
+  onChange: noop,
 };
 
 export default WorkflowEditor;
