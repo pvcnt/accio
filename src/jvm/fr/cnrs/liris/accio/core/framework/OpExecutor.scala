@@ -21,6 +21,7 @@ package fr.cnrs.liris.accio.core.framework
 import java.nio.file.{Files, Path, Paths}
 import java.util.UUID
 
+import com.google.common.annotations.VisibleForTesting
 import com.google.inject.Inject
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.api.{OpContext, Operator}
@@ -85,7 +86,12 @@ final class OpExecutor @Inject()(
 
   // Because the executor is designed to run inside a sandbox, we simply use current directory as temporary path
   // for the operator executor.
-  private[this] val workDir = Files.createTempDirectory("OpExecutor-")//Paths.get(".")
+  private[this] var workDir = Paths.get(".")
+
+  @VisibleForTesting
+  private[framework] def setWorkDir(path: Path): Unit = {
+    workDir = path
+  }
 
   /**
    * Execute an operator. A challenge is to avoid throwing unchecked exceptions. The only exceptions that can be

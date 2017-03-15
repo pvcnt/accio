@@ -47,6 +47,7 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
     val opRegistry = injector.getInstance(classOf[RuntimeOpRegistry])
     val opFactory = new OpFactory(opRegistry, injector)
     executor = new OpExecutor(opRegistry, opFactory, filesystem, env, Set.empty, Set.empty)
+    executor.setWorkDir(tmpDir)
   }
 
   override protected def afterAll(): Unit = {
