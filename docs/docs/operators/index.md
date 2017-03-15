@@ -384,6 +384,26 @@ Compute data completeness difference between two datasets of traces.
 | `value` | map(string, double) | Data completeness |
 {: class="table table-striped"}
 
+### HeatMapDistortion
+
+Computes the HeatMaps' distortions between two datasets
+
+| Input name | Type | Description |
+|:-----------|:-----|:------------|
+| `train` | dataset; required | Input train dataset |
+| `test` | dataset; required | Input test dataset |
+| `distanceType` | string; optional; default: topsoe | Type of distance metrics between matrices |
+| `cellSize` | distance; required | Cell Size in meters |
+| `lower` | location; optional; default: -61.0,-131.0 | Lower point |
+| `upper` | location; optional; default: 80.0,171.0 | Upper point |
+{: class="table table-striped"}
+
+| Output name | Type | Description |
+|:------------|:-----|:------------|
+| `distortions` | map(string, double) | Distortions ("-" = missing user in train or test)  |
+| `avgDist` | double | Average distortion |
+{: class="table table-striped"}
+
 ### PoisAnalyzer
 
 Compute statistics about points of interest

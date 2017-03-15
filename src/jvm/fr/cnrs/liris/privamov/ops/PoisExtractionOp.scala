@@ -27,7 +27,7 @@ import fr.cnrs.liris.privamov.core.model.{Poi, PoiSet, Trace}
 @Op(
   category = "transform",
   help = "Compute POIs retrieval difference between two datasets of traces",
-  cpu = 6,
+  cpu = 4,
   ram = "3G")
 class PoisExtractionOp extends Operator[PoisExtractionIn, PoisExtractionOut] {
 

@@ -54,6 +54,7 @@ object OpsModule extends ScalaModule {
     ops.addBinding.toInstance(classOf[EnforceDurationOp])
     ops.addBinding.toInstance(classOf[EnforceSizeOp])
     ops.addBinding.toInstance(classOf[EventSourceOp])
+    ops.addBinding.toInstance(classOf[HeatMapDistortionOp])
     ops.addBinding.toInstance(classOf[GaussianKernelSmoothingOp])
     ops.addBinding.toInstance(classOf[GeoIndistinguishabilityOp])
     ops.addBinding.toInstance(classOf[ModuloSamplingOp])
