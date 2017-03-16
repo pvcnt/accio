@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.client.client
+package fr.cnrs.liris.accio.client.config
 
 import com.twitter.finatra.domain.WrappedValue
 
@@ -55,6 +55,12 @@ case class ClusterConfig(clusters: Seq[Cluster]) extends WrappedValue[Seq[Cluste
    */
   def defaultCluster: Cluster = clusters.head
 
+  /**
+   * Merge two cluster configurations into a new one. Entries in the other configuration for a cluster that already
+   * exists will overwrite existing configuration, other will be added. Order remains unchanged.
+   *
+   * @param other Other clusters configuration.
+   */
   def merge(other: ClusterConfig): ClusterConfig = {
     var mergedClusters = clusters
     other.clusters.foreach { otherCluster =>

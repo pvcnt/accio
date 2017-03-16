@@ -16,14 +16,16 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.client.client;
+package fr.cnrs.liris.accio.client.config
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import com.twitter.finatra.json.FinatraObjectMapper
 
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface ConfigMapper {
+/**
+ * Factory for an object mapper suitable to parse client configuration.
+ */
+private[config] object ObjectMapperFactory {
+  /**
+   * Create a new Finatra object mapper.
+   */
+  def create(): FinatraObjectMapper = FinatraObjectMapper.create()
 }

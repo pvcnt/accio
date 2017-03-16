@@ -16,27 +16,37 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.client.client
+package fr.cnrs.liris.accio.client.config
 
 import java.io.{FileInputStream, IOException}
 import java.nio.file.Path
 
 import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.JsonMappingException
-import com.google.inject.Inject
 import com.twitter.finatra.json.FinatraObjectMapper
 
-class InvalidClusterConfigException(message: String, cause: Throwable = null) extends RuntimeException(message, cause)
+/**
+ * Exception thrown when a configuration is invalid, either syntaxically or semantically.
+ *
+ * @param uri     Configuration file this exception is about.
+ * @param message Error message.
+ * @param cause   Possible root cause.
+ */
+class InvalidConfigException(uri: String, message: String, cause: Throwable = null) extends RuntimeException(message, cause)
 
-class ClusterConfigParser @Inject()(@ConfigMapper mapper: FinatraObjectMapper) {
+/**
+ * Parser for client configuration.
+ *
+ * @param mapper Finatra object mapper.
+ */
+class ConfigParser(mapper: FinatraObjectMapper) {
   /**
-   * Parse a file into a clusters configuration.
+   * Parse a file into a client configuration.
    *
    * @param path Path to a configuration file.
-   * @throws
-   * @return
+   * @throws InvalidConfigException If configuration is invalid
    */
-  @throws[InvalidClusterConfigException]
+  @throws[InvalidConfigException]
   def parse(path: Path): ClusterConfig = {
     val fis = new FileInputStream(path.toFile)
     val config = try {
@@ -45,9 +55,9 @@ class ClusterConfigParser @Inject()(@ConfigMapper mapper: FinatraObjectMapper) {
       ClusterConfig(mapper.parse[Seq[Cluster]](fis))
     } catch {
       case e@(_: IOException | _: JsonParseException | _: JsonMappingException) =>
-        throw new InvalidClusterConfigException(s"Error while parsing cluster configuration", e)
+        throw new InvalidConfigException(path.toAbsolutePath.toString, s"Error while parsing cluster configuration", e)
       case e: IllegalArgumentException =>
-        throw new InvalidClusterConfigException(e.getMessage.stripPrefix("requirement failed: "))
+        throw new InvalidConfigException(path.toAbsolutePath.toString, e.getMessage.stripPrefix("requirement failed: "))
     } finally {
       fis.close()
     }

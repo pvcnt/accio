@@ -18,9 +18,7 @@
 
 package fr.cnrs.liris.accio.client
 
-import com.google.inject.{AbstractModule, Provides, Singleton, TypeLiteral}
-import com.twitter.finatra.json.FinatraObjectMapper
-import fr.cnrs.liris.accio.client.client.{ConfigMapper, ObjectMapperFactory}
+import com.google.inject.{AbstractModule, TypeLiteral}
 import fr.cnrs.liris.accio.client.command._
 import fr.cnrs.liris.common.cli.{Command, HelpCommand}
 import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
@@ -42,12 +40,5 @@ object ClientModule extends AbstractModule with ScalaModule {
     commands.addBinding.toInstance(classOf[SubmitCommand])
     commands.addBinding.toInstance(classOf[ValidateCommand])
     commands.addBinding.toInstance(classOf[VersionCommand])
-  }
-
-  @Provides
-  @ConfigMapper
-  @Singleton
-  def providesConfigMapper: FinatraObjectMapper = {
-    new ObjectMapperFactory().create()
   }
 }

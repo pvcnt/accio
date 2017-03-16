@@ -24,7 +24,6 @@ import java.util.UUID
 import com.google.inject.Inject
 import com.twitter.util.{Await, Stopwatch}
 import fr.cnrs.liris.accio.agent.{AgentService$FinagleClient, GetRunRequest}
-import fr.cnrs.liris.accio.client.client.ClusterClientProvider
 import fr.cnrs.liris.accio.core.analysis._
 import fr.cnrs.liris.accio.core.domain.RunId
 import fr.cnrs.liris.common.cli.{Cmd, Command, ExitCode, Reporter}

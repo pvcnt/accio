@@ -23,7 +23,6 @@ import java.nio.file.{Files, Path}
 import com.google.inject.Inject
 import com.twitter.util.{Await, Return, Stopwatch, Throw}
 import fr.cnrs.liris.accio.agent.{AgentService$FinagleClient, ParseRunRequest, ParseWorkflowRequest}
-import fr.cnrs.liris.accio.client.client.ClusterClientProvider
 import fr.cnrs.liris.common.cli.{Cmd, Command, ExitCode, Reporter}
 import fr.cnrs.liris.common.flags.FlagsProvider
 import fr.cnrs.liris.common.util.{FileUtils, TimeUtils}

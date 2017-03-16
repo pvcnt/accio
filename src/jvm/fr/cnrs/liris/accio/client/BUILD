@@ -16,8 +16,7 @@
 
 scala_library(
   dependencies=[
-    'src/jvm/fr/cnrs/liris/accio/client/client',
-    'src/jvm/fr/cnrs/liris/accio/client/client:annotations',
+    'src/jvm/fr/cnrs/liris/accio/client/config/inject',
     'src/jvm/fr/cnrs/liris/common/cli',
     'src/jvm/fr/cnrs/liris/accio/client/command',
     '3rdparty/jvm:scala-guice',

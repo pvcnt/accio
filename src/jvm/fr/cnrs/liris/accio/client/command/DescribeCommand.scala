@@ -23,7 +23,6 @@ import java.util.{Date, Locale}
 import com.google.inject.Inject
 import com.twitter.util._
 import fr.cnrs.liris.accio.agent.{AgentService$FinagleClient, GetOperatorRequest, GetRunRequest, ListRunsRequest}
-import fr.cnrs.liris.accio.client.client.ClusterClientProvider
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.common.cli.{Cmd, Command, ExitCode, Reporter}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}

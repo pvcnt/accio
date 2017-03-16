@@ -24,7 +24,6 @@ import com.google.inject.Inject
 import com.twitter.util.{Await, Return, Stopwatch, Throw}
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.agent.{AgentService$FinagleClient, ParseWorkflowRequest, PushWorkflowRequest}
-import fr.cnrs.liris.accio.client.client.ClusterClientProvider
 import fr.cnrs.liris.accio.core.domain.{InvalidSpecException, Utils, WorkflowSpec}
 import fr.cnrs.liris.common.cli.{Cmd, Command, ExitCode, Reporter}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
