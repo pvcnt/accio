@@ -23,6 +23,7 @@ import java.nio.file.{Files, Path, StandardOpenOption}
 import com.google.inject.{Inject, Singleton}
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.storage.{LogsQuery, MutableRunRepository, RunList, RunQuery}
+import fr.cnrs.liris.accio.core.util.WorkDir
 import fr.cnrs.liris.common.util.FileUtils
 
 import scala.collection.JavaConverters._
@@ -32,10 +33,10 @@ import scala.collection.JavaConverters._
  * clusters. It might have very poor performance because data is not indexed, which results in a sequential scan at
  * each query. Moreover, this implementation does no result memoization.
  *
- * @param config Local repository configuration.
+ * @param workDir Working directory.
  */
 @Singleton
-final class LocalRunRepository @Inject()(config: LocalStorageConfig) extends LocalRepository with MutableRunRepository {
+final class LocalRunRepository @Inject()(@WorkDir workDir: Path) extends LocalRepository with MutableRunRepository {
   Files.createDirectories(runPath)
   Files.createDirectories(logPath)
 
@@ -102,9 +103,11 @@ final class LocalRunRepository @Inject()(config: LocalStorageConfig) extends Loc
 
   override def get(cacheKey: CacheKey): Option[OpResult] = None
 
-  private def runPath: Path = config.path.resolve("runs")
+  private def dataDir = workDir.resolve("storage")
 
-  private def logPath: Path = config.path.resolve("logs")
+  private def runPath: Path = dataDir.resolve("runs")
+
+  private def logPath: Path = dataDir.resolve("logs")
 
   private def runPath(id: RunId): Path = getSubdir(runPath, id.value).resolve(s"${id.value}.json")
 
@@ -112,7 +115,8 @@ final class LocalRunRepository @Inject()(config: LocalStorageConfig) extends Loc
 
   private def logPath(id: RunId, nodeName: String): Path = logPath(id).resolve(nodeName)
 
-  private def logPath(id: RunId, nodeName: String, classifier: String): Path = logPath(id, nodeName).resolve(s"$classifier.txt")
+  private def logPath(id: RunId, nodeName: String, classifier: String): Path =
+    logPath(id, nodeName).resolve(s"$classifier.txt")
 
   private def getSubdir(dir: Path, id: String) = {
     // We create two levels of subdirectories based on run identifier to avoid putting to many files in a single

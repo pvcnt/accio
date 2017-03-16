@@ -27,5 +27,5 @@ import fr.cnrs.liris.testing.WithTmpDirectory
 class LocalWorkflowRepositorySpec extends WorkflowRepositorySpec with WithTmpDirectory {
   behavior of "LocalWorkflowRepository"
 
-  override protected def createRepository: MutableWorkflowRepository = new LocalWorkflowRepository(LocalStorageConfig(tmpDir))
+  override protected def createRepository: MutableWorkflowRepository = new LocalWorkflowRepository(tmpDir)
 }

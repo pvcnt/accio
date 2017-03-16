@@ -16,25 +16,23 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.agent.handler.master
+package fr.cnrs.liris.accio.agent.handler
 
 import com.google.inject.Inject
 import com.twitter.util.Future
-import fr.cnrs.liris.accio.agent._
 import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
-import fr.cnrs.liris.accio.core.scheduler.{ClusterState, EventType, Scheduler}
+import fr.cnrs.liris.accio.agent.config.AgentConfig
+import fr.cnrs.liris.accio.agent.{ListAgentsRequest, ListAgentsResponse}
+import fr.cnrs.liris.accio.core.domain.{Agent, Resource, WorkerId}
+import fr.cnrs.liris.accio.core.scheduler.ClusterState
 
-/**
- * @param state     Cluster state.
- * @param scheduler Scheduler.
- */
-class RegisterWorkerHandler @Inject()(state: ClusterState, scheduler: Scheduler)
-  extends AbstractHandler[RegisterWorkerRequest, RegisterWorkerResponse] {
+class ListAgentsHandler @Inject()(state: ClusterState, config: AgentConfig)
+  extends AbstractHandler[ListAgentsRequest, ListAgentsResponse] {
 
-  @throws[InvalidWorkerException]
-  override def handle(req: RegisterWorkerRequest): Future[RegisterWorkerResponse] = {
-    state.register(req.workerId, req.dest, req.maxResources)
-    scheduler.houseKeeping(EventType.MoreResource)
-    Future(RegisterWorkerResponse())
+  override def handle(req: ListAgentsRequest): Future[ListAgentsResponse] = {
+    val workers = state.read(identity).map(worker => Agent(worker.id, Some(worker.dest), isMaster = false, isWorker = true, worker.registeredAt.inMillis, worker.maxResources))
+    val master = Agent(WorkerId(config.name), None, isMaster = true, isWorker = false, 0, Resource(0, 0, 0))
+
+    Future(ListAgentsResponse(Seq(master) ++ workers))
   }
 }

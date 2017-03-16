@@ -16,16 +16,25 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.agent.handler.master
+package fr.cnrs.liris.accio.agent.handler
 
+import com.google.inject.Inject
 import com.twitter.util.Future
+import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
+import fr.cnrs.liris.accio.agent.{HeartbeatWorkerRequest, HeartbeatWorkerResponse, InvalidWorkerException}
+import fr.cnrs.liris.accio.core.scheduler.ClusterState
 
 /**
- * Interface for handlers, converting a request into a response.
+ * Handle a request from a worker sending a heartbeat indicating it is still alive.
  *
- * @tparam Req Request type.
- * @tparam Res Response type.
+ * @param state Cluster state.
  */
-trait Handler[Req, Res] {
-  def handle(req: Req): Future[Res]
+class HeartbeatWorkerHandler @Inject()(state: ClusterState)
+  extends AbstractHandler[HeartbeatWorkerRequest, HeartbeatWorkerResponse] {
+
+  @throws[InvalidWorkerException]
+  override def handle(req: HeartbeatWorkerRequest): Future[HeartbeatWorkerResponse] = {
+    state.recordHeartbeat(req.workerId)
+    Future(HeartbeatWorkerResponse())
+  }
 }

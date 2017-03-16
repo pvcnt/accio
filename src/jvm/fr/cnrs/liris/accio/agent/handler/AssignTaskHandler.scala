@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.agent.handler.worker
+package fr.cnrs.liris.accio.agent.handler
 
 import com.google.inject.Inject
 import com.twitter.util.Future
@@ -25,24 +25,19 @@ import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.core.domain.InvalidTaskException
 
 /**
- * Handle a request from the master asking to kill a task, whose executor is managed by this worker.
+ * Handle a request from the master, asking to execute a task on this worker node. It will launch an executor and
+ * start monitoring it. It returns immediately, as soon as the request has been accepts.
  *
- * @param state        Worker state.
  * @param taskExecutor Task executor.
+ * @param state        Worker state.
  */
-final class KillTaskHandler @Inject()(state: WorkerState, taskExecutor: ExecutorTaskExecutor)
-  extends AbstractHandler[KillTaskRequest, KillTaskResponse] {
+final class AssignTaskHandler @Inject()(taskExecutor: ExecutorTaskExecutor, state: WorkerState)
+  extends AbstractHandler[AssignTaskRequest, AssignTaskResponse] {
 
   @throws[InvalidTaskException]
-  override def handle(req: KillTaskRequest): Future[KillTaskResponse] = {
-    // We want to unregister the task from the worker state AND send the request to the task executor, even in case
-    // of an error. If we received the request it is supposed to be legitimate. If not, we do not want ot presume
-    // if the request is really illegal or if the state/executor is in an invalid state.
-    try {
-      state.unregister(req.id)
-    } finally {
-      taskExecutor.kill(req.id)
-    }
-    Future.value(KillTaskResponse())
+  override def handle(req: AssignTaskRequest): Future[AssignTaskResponse] = {
+    state.register(req.task.id)
+    taskExecutor.submit(req.task)
+    Future.value(AssignTaskResponse())
   }
 }

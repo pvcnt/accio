@@ -16,13 +16,25 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.storage.local
+package fr.cnrs.liris.accio.agent.handler
 
-import java.nio.file.Path
+import com.google.inject.Inject
+import com.twitter.util.Future
+import fr.cnrs.liris.accio.agent._
+import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
+import fr.cnrs.liris.accio.core.scheduler.{ClusterState, EventType, Scheduler}
 
 /**
- * Local storage configuration.
- *
- * @param path Root directory under which to store files.
+ * @param state     Cluster state.
+ * @param scheduler Scheduler.
  */
-case class LocalStorageConfig(path: Path)
+class RegisterWorkerHandler @Inject()(state: ClusterState, scheduler: Scheduler)
+  extends AbstractHandler[RegisterWorkerRequest, RegisterWorkerResponse] {
+
+  @throws[InvalidWorkerException]
+  override def handle(req: RegisterWorkerRequest): Future[RegisterWorkerResponse] = {
+    state.register(req.workerId, req.dest, req.maxResources)
+    scheduler.houseKeeping(EventType.MoreResource)
+    Future(RegisterWorkerResponse())
+  }
+}

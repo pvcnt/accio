@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.agent.handler.worker
+package fr.cnrs.liris.accio.agent.handler
 
 import java.nio.file.{Files, Path}
 
@@ -28,24 +28,27 @@ import fr.cnrs.liris.accio.agent._
 import fr.cnrs.liris.accio.agent.config.AgentConfig
 import fr.cnrs.liris.accio.core.domain.{InvalidTaskException, Task, TaskId}
 import fr.cnrs.liris.accio.core.filesystem.FileSystem
-import fr.cnrs.liris.accio.core.util.{ThreadLike, ThreadManager, WorkerPool}
+import fr.cnrs.liris.accio.core.util.{ThreadLike, ThreadManager, WorkDir, WorkerPool}
 import fr.cnrs.liris.common.util.FileUtils
 
 import scala.collection.mutable
 
 /**
- * @param filesystem   Distributed filesystem.
- * @param config       Agent configuration.
- * @param masterClient Master server client.
- * @param pool         Pool of threads.
+ * @param filesystem Distributed filesystem.
+ * @param config     Agent configuration.
+ * @param client     Master server client.
+ * @param workDir    Working directory.
+ * @param pool       Pool of threads.
  */
 @Singleton
 final class ExecutorTaskExecutor @Inject()(
   filesystem: FileSystem,
   config: AgentConfig,
-  masterClient: AgentService$FinagleClient,
+  client: AgentService$FinagleClient,
+  @WorkDir workDir: Path,
   @WorkerPool pool: FuturePool) extends StrictLogging {
 
+  Files.createDirectories(dataDir)
   private[this] var status: TaskExecutor.Status = TaskExecutor.Status.Ready
   private[this] val threads = new ThreadManager(pool)
   private[this] lazy val localExecutorPath = downloadExecutor()
@@ -100,7 +103,7 @@ final class ExecutorTaskExecutor @Inject()(
    *
    * @param id Task identifier.
    */
-  private def getSandboxPath(id: TaskId) = config.workDir.resolve(id.value)
+  private def getSandboxPath(id: TaskId) = dataDir.resolve(id.value)
 
   private class MonitorThread(val task: Task) extends ThreadLike with StrictLogging {
     private[this] var killed = false
@@ -177,7 +180,7 @@ final class ExecutorTaskExecutor @Inject()(
    * @return Local path to the executor
    */
   private def downloadExecutor(): Path = {
-    val targetPath = config.workDir.resolve("executor.jar")
+    val targetPath = dataDir.resolve("executor.jar")
     if (targetPath.toFile.exists()) {
       targetPath.toFile.delete()
     }
@@ -185,6 +188,8 @@ final class ExecutorTaskExecutor @Inject()(
     filesystem.read(config.worker.get.executorUri, targetPath)
     targetPath.toAbsolutePath
   }
+
+  private def dataDir = config.workDir.resolve("executor")
 }
 
 private object TaskExecutor {

@@ -26,15 +26,13 @@ ExecStart=/usr/bin/java \
   -server \
   -agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=n \
   -jar /home/ubuntu/accio/dist/accio-agent.jar \
-    -cluster=devcluster \
+    -cluster_name=devcluster \
+    -master \
+    -worker \
     -admin.port=":9990" \
     -thrift.port=":9999" \
-    -scheduler.type=local \
-    -scheduler.executor_uri=/home/ubuntu/accio/dist/accio-executor.jar \
-    -scheduler.local.path=/var/lib/accio-agent/scheduler \
+    -executor_uri=/home/ubuntu/accio/dist/accio-executor.jar \
+    -workdir=/var/lib/accio-agent \
     -storage.type=local \
-    -storage.local.path=/var/lib/accio-agent/storage \
-    -statemgr.type=local \
-    -statemgr.local.path=/var/lib/accio-agent/state \
-    -uploader.type=local \
-    -uploader.local.path=/var/lib/accio-agent/uploads
+    -filesystem.posix.enabled \
+    -filesystem.posix.root=/var/lib/accio-agent/fs

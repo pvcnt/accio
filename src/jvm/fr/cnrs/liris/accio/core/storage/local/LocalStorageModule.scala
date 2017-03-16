@@ -23,12 +23,9 @@ import net.codingwell.scalaguice.ScalaModule
 
 /**
  * Guice module provisioning local storage.
- *
- * @param config Configuration.
  */
-final class LocalStorageModule(config: LocalStorageConfig) extends ScalaModule {
+object LocalStorageModule extends ScalaModule {
   override def configure(): Unit = {
-    bind[LocalStorageConfig].toInstance(config)
     bind[MutableRunRepository].to[LocalRunRepository]
     bind[MutableWorkflowRepository].to[LocalWorkflowRepository]
   }

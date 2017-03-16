@@ -16,30 +16,30 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.agent.handler.worker
+package fr.cnrs.liris.accio.agent.handler
 
 import com.google.inject.Inject
 import com.twitter.util.Future
 import com.typesafe.scalalogging.LazyLogging
-import fr.cnrs.liris.accio.agent._
 import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
+import fr.cnrs.liris.accio.agent.{StreamTaskLogsRequest, StreamTaskLogsResponse}
 import fr.cnrs.liris.accio.core.domain.InvalidTaskException
+import fr.cnrs.liris.accio.core.scheduler.ClusterState
+import fr.cnrs.liris.accio.core.storage.MutableRunRepository
 
 /**
- * Handle a request from an executor containing execution logs, which will be forwarded to the master.
+ * Receive run logs from a task.
  *
- * @param client Client for the master server.
- * @param state  Worker state.
+ * @param runRepository Run repository.
+ * @param state         Cluster state.
  */
-final class StreamExecutorLogsHandler @Inject()(client: AgentService$FinagleClient, state: WorkerState)
-  extends AbstractHandler[StreamExecutorLogsRequest, StreamExecutorLogsResponse] with LazyLogging {
+class StreamTaskLogsHandler @Inject()(runRepository: MutableRunRepository, state: ClusterState)
+  extends AbstractHandler[StreamTaskLogsRequest, StreamTaskLogsResponse] with LazyLogging {
 
   @throws[InvalidTaskException]
-  @throws[InvalidExecutorException]
-  override def handle(req: StreamExecutorLogsRequest): Future[StreamExecutorLogsResponse] = {
-    state.ensure(req.taskId, req.executorId)
-    client
-      .streamTaskLogs(StreamTaskLogsRequest(state.workerId, req.taskId, req.logs))
-      .map(_ => StreamExecutorLogsResponse())
+  override def handle(req: StreamTaskLogsRequest): Future[StreamTaskLogsResponse] = {
+    state.ensure(req.workerId, req.taskId)
+    runRepository.save(req.logs)
+    Future(StreamTaskLogsResponse())
   }
 }

@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.agent.handler.master
+package fr.cnrs.liris.accio.agent.handler
 
 import com.google.inject.{Inject, Singleton}
 import com.twitter.util.Time

@@ -478,3 +478,12 @@ struct Task {
   7: required NodeStatus status;
   8: required Resource resource;
 }
+
+struct Agent {
+  1: required WorkerId id;
+  2: optional string dest;
+  3: required bool is_master;
+  4: required bool is_worker;
+  5: required Timestamp registered_at;
+  6: required Resource max_resources;
+}

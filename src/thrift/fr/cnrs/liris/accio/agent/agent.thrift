@@ -31,6 +31,9 @@ service AgentService {
   // Provide information about this cluster.
   api.GetClusterResponse getCluster(1: api.GetClusterRequest req);
 
+  // List all agents inside this cluster.
+  api.ListAgentsResponse listAgents(1: api.ListAgentsRequest req);
+
   // Get a specific operator, if it exists.
   api.GetOperatorResponse getOperator(1: api.GetOperatorRequest req);
 

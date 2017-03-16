@@ -16,16 +16,20 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.agent.handler.worker
+package fr.cnrs.liris.accio.core.util;
 
-import com.twitter.util.Future
+import com.google.inject.BindingAnnotation;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * Interface for handlers, converting a request into a response.
- *
- * @tparam Req Request type.
- * @tparam Res Response type.
+ * Annotation requesting injection of a working directory.
  */
-trait Handler[Req, Res] {
-  def handle(req: Req): Future[Res]
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+@BindingAnnotation
+public @interface WorkDir {
 }

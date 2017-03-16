@@ -19,7 +19,7 @@
 package fr.cnrs.liris.accio.agent
 
 import java.net.InetAddress
-import java.nio.file.Paths
+import java.nio.file.{Path, Paths}
 import java.util.UUID
 import java.util.concurrent.Executors
 
@@ -35,7 +35,7 @@ import fr.cnrs.liris.accio.core.api.Operator
 import fr.cnrs.liris.accio.core.domain.Resource
 import fr.cnrs.liris.accio.core.filesystem.inject.FileSystemModule
 import fr.cnrs.liris.accio.core.framework._
-import fr.cnrs.liris.accio.core.util.{ClusterName, WorkerPool}
+import fr.cnrs.liris.accio.core.util.{ClusterName, WorkDir, WorkerPool}
 import net.codingwell.scalaguice.ScalaMultibinder
 
 import scala.util.Try
@@ -45,11 +45,11 @@ import scala.util.Try
  */
 object AgentModule extends TwitterModule {
   private[this] val bindFlag = flag("bind", "0.0.0.0", "Address on which to bound network interfaces")
-  private[this] val masterAddrFlag = flag[String]("master_addr", "Address of the Accio master")
+  private[this] val masterAddrFlag = flag[String]("addr", "Address of the Accio master")
   private[this] val executorUriFlag = flag[String]("executor_uri", "URI to the executor JAR")
   private[this] val javaHomeFlag = flag[String]("java_home", "Path to JRE when launching the executor")
-  private[this] val workdirFlag = flag[String]("workdir", "Directory where to store local files")
-  private[this] val clusterNameFlag = flag("master.cluster_name", "default", "Cluster name")
+  private[this] val workdirFlag = flag("workdir", "/var/lib/accio-agent", "Directory where to store local files")
+  private[this] val clusterNameFlag = flag("cluster_name", "default", "Cluster name")
   private[agent] val masterFlag = flag("master", false, "Whether this agent is a master")
   private[agent] val workerFlag = flag("worker", false, "Whether this agent is a worker")
 
@@ -67,9 +67,12 @@ object AgentModule extends TwitterModule {
     }
 
     // Bind remaining implementations.
+    val config = createConfig
     bind[OpMetaReader].to[ReflectOpMetaReader]
     bind[OpRegistry].to[RuntimeOpRegistry]
     bind[String].annotatedWith[ClusterName].toInstance(clusterNameFlag())
+    bind[Path].annotatedWith[WorkDir].toInstance(config.workDir)
+    bind[AgentConfig].toInstance(config)
   }
 
   @Provides
@@ -80,9 +83,7 @@ object AgentModule extends TwitterModule {
     FuturePool.interruptible(executorService)
   }
 
-  @Provides
-  @Singleton
-  def providesAgentConfig: AgentConfig = {
+  private def createConfig: AgentConfig = {
     val masterConfig = if (masterFlag()) {
       Some(MasterConfig(None, 9999, clusterNameFlag()))
     } else None

@@ -34,7 +34,7 @@ import scala.collection.mutable
 object FileSystemModule extends TwitterModule {
   // POSIX filesystem configuration.
   private val posixEnabledFlag = flag[Boolean]("filesystem.posix.enabled", false, "Enable POSIX filesystem")
-  private val posixPathFlag = flag[String]("filesystem.posix.path", "Path where to store files")
+  private val posixPathFlag = flag[String]("filesystem.posix.root", "Path where to store files")
   private val posixSymlinkFlag = flag("filesystem.posix.symlink", true, "Path where to symlink files")
 
   // S3 filesystem configuration.

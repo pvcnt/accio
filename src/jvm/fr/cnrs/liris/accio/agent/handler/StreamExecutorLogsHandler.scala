@@ -16,30 +16,30 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.agent.handler.worker
+package fr.cnrs.liris.accio.agent.handler
 
 import com.google.inject.Inject
 import com.twitter.util.Future
+import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.agent._
 import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.core.domain.InvalidTaskException
 
 /**
- * Handle a request from an executor that is now ready to handle a task. It sends back to the executor the actual
- * task payload. From that moment, we expect the executor to send a heartbeat.
+ * Handle a request from an executor containing execution logs, which will be forwarded to the master.
  *
  * @param client Client for the master server.
  * @param state  Worker state.
  */
-final class StartExecutorHandler @Inject()(client: AgentService$FinagleClient, state: WorkerState)
-  extends AbstractHandler[StartExecutorRequest, StartExecutorResponse] {
+final class StreamExecutorLogsHandler @Inject()(client: AgentService$FinagleClient, state: WorkerState)
+  extends AbstractHandler[StreamExecutorLogsRequest, StreamExecutorLogsResponse] with LazyLogging {
 
   @throws[InvalidTaskException]
   @throws[InvalidExecutorException]
-  override def handle(req: StartExecutorRequest): Future[StartExecutorResponse] = {
-    state.assign(req.taskId, req.executorId)
+  override def handle(req: StreamExecutorLogsRequest): Future[StreamExecutorLogsResponse] = {
+    state.ensure(req.taskId, req.executorId)
     client
-      .startTask(StartTaskRequest(state.workerId, req.taskId))
-      .map(resp => StartExecutorResponse(resp.runId, resp.nodeName, resp.payload))
+      .streamTaskLogs(StreamTaskLogsRequest(state.workerId, req.taskId, req.logs))
+      .map(_ => StreamExecutorLogsResponse())
   }
 }

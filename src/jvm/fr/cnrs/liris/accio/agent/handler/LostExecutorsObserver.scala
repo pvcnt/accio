@@ -16,13 +16,13 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.agent.handler.worker
+package fr.cnrs.liris.accio.agent.handler
 
 import com.google.inject.{Inject, Singleton}
 import com.twitter.util.{Await, Future, Time}
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.agent.config.AgentConfig
-import fr.cnrs.liris.accio.agent.{LostTaskRequest, AgentService$FinagleClient}
+import fr.cnrs.liris.accio.agent.{AgentService$FinagleClient, LostTaskRequest}
 import fr.cnrs.liris.accio.core.domain.{ExecutorId, TaskId}
 import fr.cnrs.liris.accio.core.util.InfiniteLoopThreadLike
 

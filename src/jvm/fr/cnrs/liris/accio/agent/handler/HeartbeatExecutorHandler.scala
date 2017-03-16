@@ -16,25 +16,23 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.agent.handler.master
+package fr.cnrs.liris.accio.agent.handler
 
 import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
-import fr.cnrs.liris.accio.agent.{HeartbeatWorkerRequest, HeartbeatWorkerResponse, InvalidWorkerException}
-import fr.cnrs.liris.accio.core.scheduler.ClusterState
+import fr.cnrs.liris.accio.agent.{HeartbeatExecutorRequest, HeartbeatExecutorResponse}
 
 /**
- * Handle a request from a worker sending a heartbeat indicating it is still alive.
+ * Handle a request from an executor sending a heartbeat indicating it is still alive.
  *
- * @param state Cluster state.
+ * @param state Worker state.
  */
-class HeartbeatWorkerHandler @Inject()(state: ClusterState)
-  extends AbstractHandler[HeartbeatWorkerRequest, HeartbeatWorkerResponse] {
+class HeartbeatExecutorHandler @Inject()(state: WorkerState)
+  extends AbstractHandler[HeartbeatExecutorRequest, HeartbeatExecutorResponse] {
 
-  @throws[InvalidWorkerException]
-  override def handle(req: HeartbeatWorkerRequest): Future[HeartbeatWorkerResponse] = {
-    state.recordHeartbeat(req.workerId)
-    Future(HeartbeatWorkerResponse())
+  override def handle(req: HeartbeatExecutorRequest): Future[HeartbeatExecutorResponse] = {
+    state.recordHeartbeat(req.executorId)
+    Future.value(HeartbeatExecutorResponse())
   }
 }

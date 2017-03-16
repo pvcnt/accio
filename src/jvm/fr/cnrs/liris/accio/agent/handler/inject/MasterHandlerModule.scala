@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.agent.handler.inject
 import com.google.inject.TypeLiteral
 import fr.cnrs.liris.accio.agent.commandbus.Handler
 import fr.cnrs.liris.accio.agent.handler.api._
-import fr.cnrs.liris.accio.agent.handler.master._
+import fr.cnrs.liris.accio.agent.handler._
 import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
 
 object MasterHandlerModule extends ScalaModule {
@@ -31,6 +31,7 @@ object MasterHandlerModule extends ScalaModule {
     handlers.addBinding.to[CreateRunHandler]
     handlers.addBinding.to[DeleteRunHandler]
     handlers.addBinding.to[GetClusterHandler]
+    handlers.addBinding.to[ListAgentsHandler]
     handlers.addBinding.to[GetOperatorHandler]
     handlers.addBinding.to[GetRunHandler]
     handlers.addBinding.to[GetWorkflowHandler]

@@ -27,5 +27,5 @@ import fr.cnrs.liris.testing.WithTmpDirectory
 class LocalRunRepositorySpec extends RunRepositorySpec with WithTmpDirectory {
   behavior of "LocalRunRepository"
 
-  override protected def createRepository: MutableRunRepository = new LocalRunRepository(LocalStorageConfig(tmpDir))
+  override protected def createRepository: MutableRunRepository = new LocalRunRepository(tmpDir)
 }

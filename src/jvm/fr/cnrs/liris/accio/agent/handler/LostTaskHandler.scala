@@ -16,58 +16,46 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.agent.handler.master
+package fr.cnrs.liris.accio.agent.handler
 
 import com.google.inject.Inject
 import com.twitter.util.Future
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
-import fr.cnrs.liris.accio.agent.{CompleteTaskRequest, CompleteTaskResponse, InvalidWorkerException}
-import fr.cnrs.liris.accio.core.domain._
+import fr.cnrs.liris.accio.agent.{InvalidWorkerException, LostTaskRequest, LostTaskResponse}
+import fr.cnrs.liris.accio.core.domain.{InvalidTaskException, NodeStatus, Run, Task}
 import fr.cnrs.liris.accio.core.framework.RunManager
-import fr.cnrs.liris.accio.core.scheduler.{ClusterState, EventType, Scheduler}
+import fr.cnrs.liris.accio.core.scheduler.ClusterState
 import fr.cnrs.liris.accio.core.storage.MutableRunRepository
 
 /**
- * Handle the completion of a task. It will store the result and update state of the appropriate run.
- *
  * @param runRepository Run repository.
  * @param runManager    Run lifecycle manager.
- * @param scheduler     Scheduler.
  * @param state         Cluster state.
  */
-final class CompleteTaskHandler @Inject()(
+final class LostTaskHandler @Inject()(
   runRepository: MutableRunRepository,
   runManager: RunManager,
-  scheduler: Scheduler,
   state: ClusterState)
-  extends AbstractHandler[CompleteTaskRequest, CompleteTaskResponse] with StrictLogging {
+  extends AbstractHandler[LostTaskRequest, LostTaskResponse] with StrictLogging {
 
   @throws[InvalidTaskException]
   @throws[InvalidWorkerException]
-  override def handle(req: CompleteTaskRequest): Future[CompleteTaskResponse] = {
+  override def handle(req: LostTaskRequest): Future[LostTaskResponse] = {
     val worker = state.ensure(req.workerId, req.taskId)
+    state.update(req.workerId, req.taskId, NodeStatus.Lost)
     val task = worker.runningTasks.find(_.id == req.taskId).get
-    state.update(req.workerId, req.taskId, if (req.result.exitCode == 0) NodeStatus.Success else NodeStatus.Failed)
-    runRepository.get(task.runId) match {
-      case None => throw new InvalidTaskException
-      case Some(run) =>
-        run.parent match {
-          case Some(parentId) => processRun(run, task, req.result, runRepository.get(parentId))
-          case None => processRun(run, task, req.result, None)
-        }
-
+    runRepository.get(task.runId).foreach { run =>
+      run.parent match {
+        case Some(parentId) => processRun(run, task, runRepository.get(parentId))
+        case None => processRun(run, task, None)
+      }
     }
-    scheduler.houseKeeping(EventType.MoreResource)
-    Future(CompleteTaskResponse())
+    Future(LostTaskResponse())
   }
 
-  private def processRun(run: Run, task: Task, result: OpResult, parent: Option[Run]) = {
-    val (newRun, newParent) = if (result.exitCode == 0) {
-      runManager.onSuccess(run, task.nodeName, result, Some(task.payload.cacheKey), parent)
-    } else {
-      runManager.onFailed(run, task.nodeName, result, parent)
-    }
+  private def processRun(run: Run, task: Task, parent: Option[Run]) = {
+    val (newRun, newParent) = runManager.onLost(run, task.nodeName, parent)
     runRepository.save(newRun)
     newParent.foreach(runRepository.save)
   }

@@ -18,13 +18,11 @@
 
 package fr.cnrs.liris.accio.core.storage.inject
 
-import java.nio.file.Paths
-
 import com.twitter.inject.TwitterModule
 import com.twitter.util.Duration
 import fr.cnrs.liris.accio.core.storage._
 import fr.cnrs.liris.accio.core.storage.elastic.{ElasticStorageConfig, ElasticStorageModule}
-import fr.cnrs.liris.accio.core.storage.local.{LocalStorageConfig, LocalStorageModule}
+import fr.cnrs.liris.accio.core.storage.local.LocalStorageModule
 import fr.cnrs.liris.accio.core.storage.memory.MemoryStorageModule
 
 /**
@@ -32,9 +30,6 @@ import fr.cnrs.liris.accio.core.storage.memory.MemoryStorageModule
  */
 object StorageModule extends TwitterModule {
   private[this] val storageFlag = flag("storage.type", "memory", "Storage type")
-
-  // Local storage configuration.
-  private[this] val localStoragePathFlag = flag[String]("storage.local.path", "Path where to store data")
 
   // Elasticsearch storage configuration.
   private[this] val esStorageAddrFlag = flag("storage.es.addr", "127.0.0.1:9300", "Address to Elasticsearch cluster")
@@ -44,7 +39,7 @@ object StorageModule extends TwitterModule {
   protected override def configure(): Unit = {
     val module = storageFlag() match {
       case "memory" => new MemoryStorageModule
-      case "local" => new LocalStorageModule(LocalStorageConfig(Paths.get(localStoragePathFlag())))
+      case "local" => LocalStorageModule
       case "es" =>
         val config = ElasticStorageConfig(esStorageAddrFlag(), esStoragePrefixFlag(), esStorageQueryTimeoutFlag())
         new ElasticStorageModule(config)

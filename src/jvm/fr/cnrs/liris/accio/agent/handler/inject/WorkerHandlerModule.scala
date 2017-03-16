@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.agent.handler.inject
 
 import com.google.inject.TypeLiteral
 import fr.cnrs.liris.accio.agent.commandbus.Handler
-import fr.cnrs.liris.accio.agent.handler.worker._
+import fr.cnrs.liris.accio.agent.handler._
 import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
 
 object WorkerHandlerModule extends ScalaModule {

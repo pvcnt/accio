@@ -16,23 +16,26 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.agent.handler.worker
+package fr.cnrs.liris.accio.agent.handler
 
 import com.google.inject.Inject
 import com.twitter.util.Future
+import fr.cnrs.liris.accio.agent._
 import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
-import fr.cnrs.liris.accio.agent.{HeartbeatExecutorRequest, HeartbeatExecutorResponse}
+import fr.cnrs.liris.accio.core.scheduler.{ClusterState, EventType, Scheduler}
 
 /**
- * Handle a request from an executor sending a heartbeat indicating it is still alive.
- *
- * @param state Worker state.
+ * @param state Cluster state.
  */
-class HeartbeatExecutorHandler @Inject()(state: WorkerState)
-  extends AbstractHandler[HeartbeatExecutorRequest, HeartbeatExecutorResponse] {
+class UnregisterWorkerHandler @Inject()(state: ClusterState, lostTaskHandler: LostTaskHandler, scheduler: Scheduler)
+  extends AbstractHandler[UnregisterWorkerRequest, UnregisterWorkerResponse] {
 
-  override def handle(req: HeartbeatExecutorRequest): Future[HeartbeatExecutorResponse] = {
-    state.recordHeartbeat(req.executorId)
-    Future.value(HeartbeatExecutorResponse())
+  @throws[InvalidWorkerException]
+  override def handle(req: UnregisterWorkerRequest): Future[UnregisterWorkerResponse] = {
+    val worker = state(req.workerId)
+    worker.runningTasks.foreach(task => lostTaskHandler.handle(LostTaskRequest(worker.id, task.id)))
+    state.unregister(worker.id)
+    scheduler.houseKeeping(EventType.LessResource)
+    Future(UnregisterWorkerResponse())
   }
 }

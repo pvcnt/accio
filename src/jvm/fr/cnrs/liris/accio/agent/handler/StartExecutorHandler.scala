@@ -16,30 +16,30 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.agent.handler.master
+package fr.cnrs.liris.accio.agent.handler
 
 import com.google.inject.Inject
 import com.twitter.util.Future
-import com.typesafe.scalalogging.LazyLogging
+import fr.cnrs.liris.accio.agent._
 import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
-import fr.cnrs.liris.accio.agent.{StreamTaskLogsRequest, StreamTaskLogsResponse}
 import fr.cnrs.liris.accio.core.domain.InvalidTaskException
-import fr.cnrs.liris.accio.core.scheduler.ClusterState
-import fr.cnrs.liris.accio.core.storage.MutableRunRepository
 
 /**
- * Receive run logs from a task.
+ * Handle a request from an executor that is now ready to handle a task. It sends back to the executor the actual
+ * task payload. From that moment, we expect the executor to send a heartbeat.
  *
- * @param runRepository Run repository.
- * @param state         Cluster state.
+ * @param client Client for the master server.
+ * @param state  Worker state.
  */
-class StreamTaskLogsHandler @Inject()(runRepository: MutableRunRepository, state: ClusterState)
-  extends AbstractHandler[StreamTaskLogsRequest, StreamTaskLogsResponse] with LazyLogging {
+final class StartExecutorHandler @Inject()(client: AgentService$FinagleClient, state: WorkerState)
+  extends AbstractHandler[StartExecutorRequest, StartExecutorResponse] {
 
   @throws[InvalidTaskException]
-  override def handle(req: StreamTaskLogsRequest): Future[StreamTaskLogsResponse] = {
-    state.ensure(req.workerId, req.taskId)
-    runRepository.save(req.logs)
-    Future(StreamTaskLogsResponse())
+  @throws[InvalidExecutorException]
+  override def handle(req: StartExecutorRequest): Future[StartExecutorResponse] = {
+    state.assign(req.taskId, req.executorId)
+    client
+      .startTask(StartTaskRequest(state.workerId, req.taskId))
+      .map(resp => StartExecutorResponse(resp.runId, resp.nodeName, resp.payload))
   }
 }

@@ -24,6 +24,7 @@ import com.google.inject.{Inject, Singleton}
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.storage.{MutableWorkflowRepository, WorkflowList, WorkflowQuery}
+import fr.cnrs.liris.accio.core.util.WorkDir
 import fr.cnrs.liris.common.util.FileUtils
 
 /**
@@ -31,10 +32,10 @@ import fr.cnrs.liris.common.util.FileUtils
  * development clusters. It might have very poor performance because data is not indexed, which results in a
  * sequential scan at each query.
  *
- * @param config Local repository configuration.
+ * @param workDir Working directory.
  */
 @Singleton
-final class LocalWorkflowRepository @Inject()(config: LocalStorageConfig)
+final class LocalWorkflowRepository @Inject()(@WorkDir workDir: Path)
   extends LocalRepository with MutableWorkflowRepository with LazyLogging {
 
   Files.createDirectories(workflowPath)
@@ -73,7 +74,9 @@ final class LocalWorkflowRepository @Inject()(config: LocalStorageConfig)
 
   private def contains(id: WorkflowId, version: String): Boolean = workflowPath(id, version).toFile.exists
 
-  private def workflowPath: Path = config.path.resolve("workflows")
+  private def dataDir = workDir.resolve("storage")
+
+  private def workflowPath: Path = dataDir.resolve("workflows")
 
   private def workflowPath(id: WorkflowId): Path = workflowPath.resolve(id.value)
 

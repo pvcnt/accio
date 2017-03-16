@@ -171,3 +171,10 @@ struct GetClusterResponse {
   1: required string cluster_name;
   2: required string version;
 }
+
+struct ListAgentsRequest {
+}
+
+struct ListAgentsResponse {
+  1: required list<accio.Agent> results;
+}
