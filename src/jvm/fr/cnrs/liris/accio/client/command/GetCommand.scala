@@ -29,6 +29,8 @@ import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.util.StringUtils.{explode, padTo}
 import org.ocpsoft.prettytime.PrettyTime
 
+import scala.collection.mutable
+
 case class GetCommandFlags(
   @Flag(name = "output", help = "Output format")
   output: Option[String],
@@ -155,9 +157,26 @@ class GetAgentController extends GetController[ListAgentsResponse] {
   }
 
   override def print(out: Reporter, resp: ListAgentsResponse): Unit = {
-    out.writeln(s"${padTo("NAME", 20)}  TYPE  ${padTo("CPU", 3)}  ${padTo("RAM", 5)}  ${padTo("DISK", 5)}")
+    out.writeln(s"${padTo("NAME", 20)}  ${padTo("CPU", 4)}  ${padTo("RAM", 8)}  ${padTo("DISK", 8)}  TYPE")
     resp.results.foreach { agent =>
-      out.writeln(s"${padTo(agent.id.value, 20)}  ${if (agent.isMaster) "M" else " "}${if (agent.isWorker) "A" else " "}  ${padTo(agent.maxResources.cpu.toString, 3)}  ${padTo(agent.maxResources.ramMb + "M", 5)}  ${padTo(agent.maxResources.diskMb.toString + "M", 5)}")
+      val types = mutable.Set.empty[String]
+      if (agent.isMaster) {
+        types += "Master"
+      }
+      if (agent.isWorker) {
+        types += "Worker"
+      }
+      out.write(s"${padTo(agent.id.value, 20)}  ")
+      if (agent.isWorker) {
+        out.write(s"${padTo(agent.maxResources.cpu.toString, 4)}  ${padTo(formatStorage(agent.maxResources.ramMb), 8)}  ${padTo(formatStorage(agent.maxResources.diskMb), 8)}")
+      } else {
+        out.write(s"${padTo("-", 4)}  ${padTo("-", 8)}  ${padTo("-", 8)}")
+      }
+      out.writeln(s"  ${types.mkString(",")}")
     }
+  }
+
+  private def formatStorage(valueMb: Long) = {
+    StorageUnit.fromMegabytes(valueMb).toHuman.replace(" ", "")
   }
 }

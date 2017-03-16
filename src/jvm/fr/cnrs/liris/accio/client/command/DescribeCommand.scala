@@ -111,6 +111,9 @@ class DescribeRunController extends DescribeController[(Run, Seq[Run])] {
   override def print(out: Reporter, resp: (Run, Seq[Run])): Unit = {
     val (run, children) = resp
     out.writeln(s"${padTo("Id", colWidth)} ${run.id.value}")
+    run.parent.foreach { parentId =>
+      out.writeln(s"${padTo("Parent Id", colWidth)} ${parentId.value}")
+    }
     out.writeln(s"${padTo("Workflow", colWidth)} ${run.pkg.workflowId.value}:${run.pkg.workflowVersion}")
     out.writeln(s"${padTo("Created", colWidth)} ${prettyTime.format(new Date(run.createdAt))}")
     out.writeln(s"${padTo("Owner", colWidth)} ${Utils.toString(run.owner)}")
