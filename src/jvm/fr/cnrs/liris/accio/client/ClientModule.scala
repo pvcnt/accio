@@ -18,7 +18,9 @@
 
 package fr.cnrs.liris.accio.client
 
-import com.google.inject.{AbstractModule, TypeLiteral}
+import com.google.inject.{AbstractModule, Provides, Singleton, TypeLiteral}
+import com.twitter.finatra.json.FinatraObjectMapper
+import fr.cnrs.liris.accio.client.client.{ConfigMapper, ObjectMapperFactory}
 import fr.cnrs.liris.accio.client.command._
 import fr.cnrs.liris.common.cli.{Command, HelpCommand}
 import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
@@ -30,17 +32,22 @@ object ClientModule extends AbstractModule with ScalaModule {
   override def configure(): Unit = {
     val commands = ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Class[_ <: Command]] {})
     commands.addBinding.toInstance(classOf[ExportCommand])
+    commands.addBinding.toInstance(classOf[GetCommand])
     commands.addBinding.toInstance(classOf[HelpCommand])
-    commands.addBinding.toInstance(classOf[InspectCommand])
-    commands.addBinding.toInstance(classOf[WorkflowsCommand])
+    commands.addBinding.toInstance(classOf[DescribeCommand])
     commands.addBinding.toInstance(classOf[KillCommand])
     commands.addBinding.toInstance(classOf[LogsCommand])
-    commands.addBinding.toInstance(classOf[OpsCommand])
-    commands.addBinding.toInstance(classOf[PsCommand])
     commands.addBinding.toInstance(classOf[PushCommand])
     commands.addBinding.toInstance(classOf[RmCommand])
     commands.addBinding.toInstance(classOf[SubmitCommand])
     commands.addBinding.toInstance(classOf[ValidateCommand])
     commands.addBinding.toInstance(classOf[VersionCommand])
+  }
+
+  @Provides
+  @ConfigMapper
+  @Singleton
+  def providesConfigMapper: FinatraObjectMapper = {
+    new ObjectMapperFactory().create()
   }
 }

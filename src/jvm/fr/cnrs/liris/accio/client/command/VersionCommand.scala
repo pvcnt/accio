@@ -18,16 +18,39 @@
 
 package fr.cnrs.liris.accio.client.command
 
+import com.google.inject.Inject
+import com.twitter.util.{Await, Return, Throw}
+import fr.cnrs.liris.accio.agent.GetClusterRequest
+import fr.cnrs.liris.accio.client.client.ClusterClientProvider
 import fr.cnrs.liris.accio.core.util.Version
 import fr.cnrs.liris.common.cli.{Cmd, Command, ExitCode, Reporter}
-import fr.cnrs.liris.common.flags.FlagsProvider
+import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
+
+case class VersionCommandFlags(
+  @Flag(name = "client", help = "Show only version of the client")
+  client: Boolean = false)
 
 @Cmd(
   name = "version",
-  help = "Display client build information.")
-class VersionCommand extends Command {
+  help = "Display client build information.",
+  flags = Array(classOf[CommonCommandFlags], classOf[VersionCommandFlags]))
+class VersionCommand @Inject()(clientProvider: ClusterClientProvider) extends Command {
   override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
-    out.writeln(s"Build version: ${Version.Current.toString}")
-    ExitCode.Success
+    if (!flags.as[VersionCommandFlags].client) {
+      val client = clientProvider(flags.as[CommonCommandFlags].cluster)
+      val f = client.getCluster(GetClusterRequest())
+      Await.result(f.liftToTry) match {
+        case Return(resp) =>
+          out.writeln(s"Server version: ${resp.version}")
+          out.writeln(s"Client version: ${Version.Current.toString}")
+          ExitCode.Success
+        case Throw(e) =>
+          out.writeln(s"<error>[ERROR]</error> Server error: ${e.getMessage}")
+          ExitCode.InternalError
+      }
+    } else {
+      out.writeln(s"Client version: ${Version.Current.toString}")
+      ExitCode.Success
+    }
   }
 }

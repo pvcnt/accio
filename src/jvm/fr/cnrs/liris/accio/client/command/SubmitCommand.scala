@@ -24,6 +24,7 @@ import com.google.inject.Inject
 import com.twitter.util.{Await, Return, Stopwatch, Throw}
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.agent.{AgentService$FinagleClient, CreateRunRequest, ParseRunRequest}
+import fr.cnrs.liris.accio.client.client.ClusterClientProvider
 import fr.cnrs.liris.accio.core.domain.{InvalidSpecException, RunSpec, Utils}
 import fr.cnrs.liris.common.cli.{Cmd, Command, ExitCode, Reporter}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
@@ -47,10 +48,10 @@ case class SubmitCommandFlags(
 
 @Cmd(
   name = "submit",
-  flags = Array(classOf[SubmitCommandFlags], classOf[AccioAgentFlags]),
+  flags = Array(classOf[SubmitCommandFlags], classOf[CommonCommandFlags]),
   help = "Launch an Accio workflow.",
   allowResidue = true)
-class SubmitCommand @Inject()(clientFactory: AgentClientFactory)
+class SubmitCommand @Inject()(clientProvider: ClusterClientProvider)
   extends Command with DefinitionFileCommand with StrictLogging {
 
   def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
@@ -71,7 +72,7 @@ class SubmitCommand @Inject()(clientFactory: AgentClientFactory)
           return ExitCode.CommandLineError
       }
 
-      val client = clientFactory.create(flags.as[AccioAgentFlags].addr)
+      val client = clientProvider(flags.as[CommonCommandFlags].cluster)
       val exitCode = parseAndSubmit(flags.residue.head, params, opts, client, out)
       if (!opts.quiet) {
         out.writeln(s"<info>[OK]</info> Done in ${TimeUtils.prettyTime(elapsed())}.")

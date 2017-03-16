@@ -21,6 +21,7 @@ package fr.cnrs.liris.accio.client.command
 import com.google.inject.Inject
 import com.twitter.util.{Await, Return, Stopwatch, Throw}
 import fr.cnrs.liris.accio.agent.KillRunRequest
+import fr.cnrs.liris.accio.client.client.ClusterClientProvider
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.common.cli.{Cmd, Command, ExitCode, Reporter}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
@@ -32,10 +33,10 @@ case class KillCommandFlags(
 
 @Cmd(
   name = "kill",
-  flags = Array(classOf[AccioAgentFlags], classOf[KillCommandFlags]),
+  flags = Array(classOf[CommonCommandFlags], classOf[KillCommandFlags]),
   help = "Stop an active run.",
   allowResidue = true)
-class KillCommand @Inject()(clientFactory: AgentClientFactory) extends Command {
+class KillCommand @Inject()(clientProvider: ClusterClientProvider) extends Command {
   override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     if (flags.residue.size != 1) {
       out.writeln("<error>[ERROR]</error> You must provide a single run identifier.")
@@ -43,7 +44,7 @@ class KillCommand @Inject()(clientFactory: AgentClientFactory) extends Command {
     } else {
       val opts = flags.as[KillCommandFlags]
       val elapsed = Stopwatch.start()
-      val client = clientFactory.create(flags.as[AccioAgentFlags].addr)
+      val client = clientProvider(flags.as[CommonCommandFlags].cluster)
       val req = KillRunRequest(RunId(flags.residue.head))
       val exitCode = Await.result(client.killRun(req).liftToTry) match {
         case Return(_) =>

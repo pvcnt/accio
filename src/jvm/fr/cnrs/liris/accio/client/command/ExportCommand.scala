@@ -23,7 +23,8 @@ import java.util.UUID
 
 import com.google.inject.Inject
 import com.twitter.util.{Await, Stopwatch}
-import fr.cnrs.liris.accio.agent.{GetRunRequest, ListRunsRequest}
+import fr.cnrs.liris.accio.agent.{AgentService$FinagleClient, GetRunRequest}
+import fr.cnrs.liris.accio.client.client.ClusterClientProvider
 import fr.cnrs.liris.accio.core.analysis._
 import fr.cnrs.liris.accio.core.domain.RunId
 import fr.cnrs.liris.common.cli.{Cmd, Command, ExitCode, Reporter}
@@ -48,11 +49,11 @@ case class ExportCommandFlags(
 
 @Cmd(
   name = "export",
-  flags = Array(classOf[ExportCommandFlags], classOf[AccioAgentFlags]),
+  flags = Array(classOf[ExportCommandFlags], classOf[CommonCommandFlags]),
   help = "Generate text reports from run results.",
   description = "This command is intended to create summarized and readable CSV reports from run results.",
   allowResidue = true)
-class ExportCommand @Inject()(clientFactory: AgentClientFactory) extends Command {
+class ExportCommand @Inject()(clientProvider: ClusterClientProvider) extends Command {
   override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     if (flags.residue.isEmpty) {
       out.writeln("<error>[ERROR]</error> You must specify at least one run as argument.")
@@ -64,7 +65,8 @@ class ExportCommand @Inject()(clientFactory: AgentClientFactory) extends Command
       val workDir = getWorkDir(opts)
       out.writeln(s"<info>[OK]</info> Writing export to <comment>${workDir.toAbsolutePath}</comment>")
 
-      val runs = getRuns(flags.residue, flags.as[AccioAgentFlags].addr, out)
+      val client = clientProvider(flags.as[CommonCommandFlags].cluster)
+      val runs = getRuns(flags.residue, client, out)
       out.writeln(s"<info>[OK]</info> Found ${runs.size} matching runs</comment>")
 
       val artifacts = getArtifacts(runs, opts)
@@ -86,8 +88,7 @@ class ExportCommand @Inject()(clientFactory: AgentClientFactory) extends Command
       Paths.get(s"accio-export-$uid")
   }
 
-  private def getRuns(residue: Seq[String], addr: String, out: Reporter): AggregatedRuns = {
-    val client = clientFactory.create(addr)
+  private def getRuns(residue: Seq[String], client: AgentService$FinagleClient, out: Reporter): AggregatedRuns = {
     val runs = residue.flatMap { id =>
       val maybeRun = Await.result(client.getRun(GetRunRequest(RunId(id)))).result
       maybeRun match {

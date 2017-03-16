@@ -24,6 +24,7 @@ import com.google.inject.Inject
 import com.twitter.util.{Await, Return, Stopwatch, Throw}
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.agent.{AgentService$FinagleClient, ParseWorkflowRequest, PushWorkflowRequest}
+import fr.cnrs.liris.accio.client.client.ClusterClientProvider
 import fr.cnrs.liris.accio.core.domain.{InvalidSpecException, Utils, WorkflowSpec}
 import fr.cnrs.liris.common.cli.{Cmd, Command, ExitCode, Reporter}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
@@ -37,10 +38,10 @@ case class PushCommandFlags(
 
 @Cmd(
   name = "push",
-  flags = Array(classOf[PushCommandFlags], classOf[AccioAgentFlags]),
+  flags = Array(classOf[PushCommandFlags], classOf[CommonCommandFlags]),
   help = "Push a workflow.",
   allowResidue = true)
-class PushCommand @Inject()(clientFactory: AgentClientFactory)
+class PushCommand @Inject()(clientProvider: ClusterClientProvider)
   extends Command with DefinitionFileCommand with StrictLogging {
 
   def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
@@ -50,7 +51,7 @@ class PushCommand @Inject()(clientFactory: AgentClientFactory)
     } else {
       val opts = flags.as[PushCommandFlags]
       val elapsed = Stopwatch.start()
-      val client = clientFactory.create(flags.as[AccioAgentFlags].addr)
+      val client = clientProvider(flags.as[CommonCommandFlags].cluster)
       val outcomes = flags.residue.map(uri => parseAndPush(uri, opts, client, out))
       if (!opts.quiet) {
         out.writeln(s"<info>[OK]</info> Done in ${TimeUtils.prettyTime(elapsed())}.")

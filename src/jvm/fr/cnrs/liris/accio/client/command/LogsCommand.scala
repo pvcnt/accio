@@ -21,6 +21,7 @@ package fr.cnrs.liris.accio.client.command
 import com.google.inject.Inject
 import com.twitter.util.{Await, Return, Throw}
 import fr.cnrs.liris.accio.agent.ListLogsRequest
+import fr.cnrs.liris.accio.client.client.ClusterClientProvider
 import fr.cnrs.liris.accio.core.domain.RunId
 import fr.cnrs.liris.common.cli.{Cmd, Command, ExitCode, Reporter}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
@@ -35,10 +36,10 @@ case class LogsCommandFlags(
 
 @Cmd(
   name = "logs",
-  flags = Array(classOf[LogsCommandFlags], classOf[AccioAgentFlags]),
+  flags = Array(classOf[LogsCommandFlags], classOf[CommonCommandFlags]),
   help = "Retrieve logs of a run.",
   allowResidue = true)
-class LogsCommand @Inject()(clientFactory: AgentClientFactory) extends Command {
+class LogsCommand @Inject()(clientProvider: ClusterClientProvider) extends Command {
   override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     if (flags.residue.size != 2) {
       out.writeln("<error>[ERROR]</error> You must provide a run identifier and a node name as arguments.")
@@ -46,7 +47,7 @@ class LogsCommand @Inject()(clientFactory: AgentClientFactory) extends Command {
     } else {
       val opts = flags.as[LogsCommandFlags]
       val req = createRequest(flags.residue, opts)
-      val client = clientFactory.create(flags.as[AccioAgentFlags].addr)
+      val client = clientProvider(flags.as[CommonCommandFlags].cluster)
       Await.result(client.listLogs(req).liftToTry) match {
         case Return(resp) =>
           resp.results.foreach { log =>

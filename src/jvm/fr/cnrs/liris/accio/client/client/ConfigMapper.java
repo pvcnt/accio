@@ -16,10 +16,14 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.client.command
+package fr.cnrs.liris.accio.client.client;
 
-import fr.cnrs.liris.common.flags.Flag
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-case class AccioAgentFlags(
-  @Flag(name = "addr", help = "Address of the Accio agent")
-  addr: String = sys.env.getOrElse("ACCIO_ADDR", "127.0.0.1:9999"))
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface ConfigMapper {
+}

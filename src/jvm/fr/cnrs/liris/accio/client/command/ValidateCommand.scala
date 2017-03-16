@@ -23,6 +23,7 @@ import java.nio.file.{Files, Path}
 import com.google.inject.Inject
 import com.twitter.util.{Await, Return, Stopwatch, Throw}
 import fr.cnrs.liris.accio.agent.{AgentService$FinagleClient, ParseRunRequest, ParseWorkflowRequest}
+import fr.cnrs.liris.accio.client.client.ClusterClientProvider
 import fr.cnrs.liris.common.cli.{Cmd, Command, ExitCode, Reporter}
 import fr.cnrs.liris.common.flags.FlagsProvider
 import fr.cnrs.liris.common.util.{FileUtils, TimeUtils}
@@ -32,16 +33,16 @@ import scala.collection.JavaConverters._
 @Cmd(
   name = "validate",
   help = "Validate the syntax of Accio definition files.",
-  flags = Array(classOf[AccioAgentFlags]),
+  flags = Array(classOf[CommonCommandFlags]),
   allowResidue = true)
-class ValidateCommand @Inject()(clientFactory: AgentClientFactory) extends Command with DefinitionFileCommand {
+class ValidateCommand @Inject()(clientProvider: ClusterClientProvider) extends Command with DefinitionFileCommand {
   def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     if (flags.residue.isEmpty) {
       out.writeln("<error>[ERROR]</error> You must specify some files to validate as argument.")
       ExitCode.CommandLineError
     } else {
       val elapsed = Stopwatch.start()
-      val client = clientFactory.create(flags.as[AccioAgentFlags].addr)
+      val client = clientProvider(flags.as[CommonCommandFlags].cluster)
       val outcomes = flags.residue.map(uri => validate(uri, client, out))
       out.writeln(s"<info>[OK]</info> Done in ${TimeUtils.prettyTime(elapsed())}.")
       ExitCode.select(outcomes)
