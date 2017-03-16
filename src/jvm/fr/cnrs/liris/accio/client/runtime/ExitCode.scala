@@ -16,20 +16,34 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.client.config.inject
-
-import com.google.inject.Provides
-import fr.cnrs.liris.accio.client.config.{ConfigParser, ObjectMapperFactory}
-import net.codingwell.scalaguice.ScalaModule
+package fr.cnrs.liris.accio.client.runtime
 
 /**
- * Guice module providing
+ * A command line exit code.
+ *
+ * @param code Numerical code.
+ * @param name Machine name.
  */
-object ConfigModule extends ScalaModule {
-  private[this] lazy val configMapper = ObjectMapperFactory.create()
+case class ExitCode(code: Int, name: String)
 
-  override def configure(): Unit = {}
+/**
+ * Factory for [[ExitCode]].
+ */
+object ExitCode {
+  val Success = ExitCode(0, "SUCCESS")
+  val CommandLineError = ExitCode(1, "COMMAND_LINE_ERROR")
+  val DefinitionError = ExitCode(2, "DEFINITION_ERROR")
+  val RuntimeError = ExitCode(4, "RUNTIME_ERROR")
+  val InternalError = ExitCode(5, "INTERNAL_ERROR")
 
-  @Provides
-  def providesConfigParser: ConfigParser = new ConfigParser(configMapper)
+  def values: Seq[ExitCode] = Seq(CommandLineError, DefinitionError, RuntimeError, InternalError, Success)
+
+  def select(codes: Seq[ExitCode]): ExitCode = {
+    values.foreach { code =>
+      if (codes.contains(code)) {
+        return code
+      }
+    }
+    ExitCode.Success
+  }
 }

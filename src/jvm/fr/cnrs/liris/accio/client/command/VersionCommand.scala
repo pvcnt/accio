@@ -32,11 +32,11 @@ case class VersionCommandFlags(
 @Cmd(
   name = "version",
   help = "Display client build information.",
-  flags = Array(classOf[CommonCommandFlags], classOf[VersionCommandFlags]))
+  flags = Array(classOf[ClusterFlags], classOf[VersionCommandFlags]))
 class VersionCommand @Inject()(clientProvider: ClusterClientProvider) extends Command {
   override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     if (!flags.as[VersionCommandFlags].client) {
-      val client = clientProvider(flags.as[CommonCommandFlags].cluster)
+      val client = clientProvider(flags.as[ClusterFlags].cluster)
       val f = client.getCluster(GetClusterRequest())
       Await.result(f.liftToTry) match {
         case Return(resp) =>

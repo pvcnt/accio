@@ -32,7 +32,7 @@ import scala.collection.JavaConverters._
 @Cmd(
   name = "validate",
   help = "Validate the syntax of Accio definition files.",
-  flags = Array(classOf[CommonCommandFlags]),
+  flags = Array(classOf[ClusterFlags]),
   allowResidue = true)
 class ValidateCommand @Inject()(clientProvider: ClusterClientProvider) extends Command with DefinitionFileCommand {
   def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
@@ -41,7 +41,7 @@ class ValidateCommand @Inject()(clientProvider: ClusterClientProvider) extends C
       ExitCode.CommandLineError
     } else {
       val elapsed = Stopwatch.start()
-      val client = clientProvider(flags.as[CommonCommandFlags].cluster)
+      val client = clientProvider(flags.as[ClusterFlags].cluster)
       val outcomes = flags.residue.map(uri => validate(uri, client, out))
       out.writeln(s"<info>[OK]</info> Done in ${TimeUtils.prettyTime(elapsed())}.")
       ExitCode.select(outcomes)

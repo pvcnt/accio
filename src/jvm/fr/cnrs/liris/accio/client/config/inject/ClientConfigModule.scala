@@ -16,18 +16,20 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.common.cli
+package fr.cnrs.liris.accio.client.config.inject
 
-import java.nio.file.Path
+import com.google.inject.Provides
+import fr.cnrs.liris.accio.client.config.{ConfigParser, ObjectMapperFactory}
+import net.codingwell.scalaguice.ScalaModule
 
-import fr.cnrs.liris.common.flags.Flag
+/**
+ * Guice module provisioning bindings to handle client configuration.
+ */
+object ClientConfigModule extends ScalaModule {
+  private[this] lazy val configMapper = ObjectMapperFactory.create()
 
-case class CliFlags(
-  @Flag(name = "logging", help = "Logging level")
-  logLevel: String = "warn",
-  @Flag(name = "color", help = "Enable or disable colored output")
-  color: Boolean = true,
-  @Flag(name = "rc", help = "Path to the .acciorc configuration file")
-  rcPath: Option[Path],
-  @Flag(name = "config", help = "Name of the configuration to use, conjointly with the .acciorc configuration file")
-  rcConfig: Option[String])
+  override def configure(): Unit = {}
+
+  @Provides
+  def providesConfigParser: ConfigParser = new ConfigParser(configMapper)
+}

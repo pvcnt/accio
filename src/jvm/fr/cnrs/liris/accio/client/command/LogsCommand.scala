@@ -35,7 +35,7 @@ case class LogsCommandFlags(
 
 @Cmd(
   name = "logs",
-  flags = Array(classOf[LogsCommandFlags], classOf[CommonCommandFlags]),
+  flags = Array(classOf[LogsCommandFlags], classOf[ClusterFlags]),
   help = "Retrieve logs of a run.",
   allowResidue = true)
 class LogsCommand @Inject()(clientProvider: ClusterClientProvider) extends Command {
@@ -46,7 +46,7 @@ class LogsCommand @Inject()(clientProvider: ClusterClientProvider) extends Comma
     } else {
       val opts = flags.as[LogsCommandFlags]
       val req = createRequest(flags.residue, opts)
-      val client = clientProvider(flags.as[CommonCommandFlags].cluster)
+      val client = clientProvider(flags.as[ClusterFlags].cluster)
       Await.result(client.listLogs(req).liftToTry) match {
         case Return(resp) =>
           resp.results.foreach { log =>

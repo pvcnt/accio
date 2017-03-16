@@ -25,14 +25,14 @@ trait DefinitionFileCommand {
   protected def printErrors(errors: Seq[InvalidSpecMessage], out: Reporter): Unit = {
     errors.foreach { error =>
       val explanation = error.message + error.path.map(path => s" (at $path)").getOrElse("")
-      out.writeln(s"<error>[ERROR]</error> $explanation")
+      out.error(explanation)
     }
   }
 
   protected def printWarnings(warnings: Seq[InvalidSpecMessage], out: Reporter): Unit = {
     warnings.foreach { warning =>
       val explanation = warning.message + warning.path.map(path => s" (at $path)").getOrElse("")
-      out.writeln(s"<comment>[WARN]</comment> $explanation")
+      out.warn(explanation)
     }
   }
 }

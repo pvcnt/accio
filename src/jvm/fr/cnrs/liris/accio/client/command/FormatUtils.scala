@@ -16,24 +16,29 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.common.cli
+package fr.cnrs.liris.accio.client.command
 
-import com.google.inject.{Inject, Injector, ProvisionException}
+import java.util.{Date, Locale}
 
-/**
- * Factory for [[Command]].
- *
- * @param injector Guice injector.
- */
-final class CmdFactory @Inject()(injector: Injector) {
-  /**
-   * Create a new command.
-   *
-   * @param cmdMeta Command metadata.
-   * @throws ProvisionException If an error happens during operator instantiation.
-   */
-  @throws[ProvisionException]
-  def create(cmdMeta: CmdMeta): Command = {
-    injector.getInstance(cmdMeta.cmdClass)
+import com.twitter.util.{Duration, Time}
+import org.ocpsoft.prettytime.PrettyTime
+
+object FormatUtils {
+  private[this] val prettyTime = new PrettyTime().setLocale(Locale.ENGLISH)
+
+  def format(time: Time): String = {
+    prettyTime.format(new Date(time.inMillis))
+  }
+
+  def format(duration: Duration): String = {
+    if (duration.inHours > 5) {
+      s"${duration.inHours} hours"
+    } else if (duration.inMinutes > 30) {
+      s"${duration.inMinutes} minutes"
+    } else if (duration.inSeconds > 10) {
+      s"${duration.inSeconds} seconds"
+    } else {
+      s"${duration.inMillis} milliseconds"
+    }
   }
 }

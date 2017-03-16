@@ -16,9 +16,10 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.common.cli
+package fr.cnrs.liris.accio.client.runtime
 
 import com.google.inject.Inject
+import fr.cnrs.liris.accio.client.event.{Event, Reporter}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.reflect.CaseClass
 import fr.cnrs.liris.common.util.StringUtils
@@ -28,71 +29,71 @@ import fr.cnrs.liris.common.util.StringUtils
   help = "Display built-in Accio help.",
   description = "Prints a help page for the given command or help topic, or, if nothing is specified, prints the index of available commands.",
   allowResidue = true)
-class HelpCommand @Inject()(cmdRegistry: CmdRegistry) extends Command {
-  override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
+class HelpCommand @Inject()(cmdRegistry: CommandRegistry) extends Command {
+  override def execute(flags: FlagsProvider, reporter: Reporter): ExitCode = {
     flags.residue match {
       case Seq() =>
-        printHelpSummary(out)
+        printHelpSummary(reporter)
         ExitCode.Success
       case Seq(helpTopic) =>
         // Help topic.
         cmdRegistry.get(helpTopic) match {
           case Some(meta) =>
-            printCommand(out, meta)
+            printCommand(reporter, meta)
             ExitCode.Success
           case None =>
             // Unknown help topic.
-            out.writeln(s"<error>[ERROR]</error> Unknown command: $helpTopic")
+            reporter.handle(Event.error(s"Unknown command: $helpTopic"))
             ExitCode.CommandLineError
         }
       case _ =>
         // Too much arguments.
-        out.writeln("<error>[ERROR]</error> You must specify only one help topic.")
+        reporter.handle(Event.error("You must specify only one help topic"))
         ExitCode.CommandLineError
     }
   }
 
-  private def printHelpSummary(out: Reporter) = {
-    out.writeln("Usage: accio <command> <options>...")
-    out.writeln()
-    out.writeln("<info>Available commands:</info>")
+  private def printHelpSummary(reporter: Reporter) = {
+    reporter.outErr.printOutLn("Usage: accio <command> <options>...")
+    reporter.outErr.printOutLn()
+    reporter.outErr.printOutLn("<info>Available commands:</info>")
     val maxLength = cmdRegistry.commands.filterNot(_.defn.hidden).map(_.defn.name.length).max
     cmdRegistry.commands.toSeq.sortBy(_.defn.name).foreach { command =>
       val padding = " " * (maxLength - command.defn.name.length)
-      out.writeln(s"  <comment>${command.defn.name}</comment>$padding ${command.defn.help}")
+      reporter.outErr.printOutLn(s"  <comment>${command.defn.name}</comment>$padding ${command.defn.help}")
     }
-    out.writeln()
-    out.writeln("Getting more help:")
-    out.writeln("  <comment>accio help <command></comment> Print help and options for <command>.")
+    reporter.outErr.printOutLn()
+    reporter.outErr.printOutLn("Getting more help:")
+    reporter.outErr.printOutLn("  <comment>accio help <command></comment> Print help and options for <command>.")
   }
 
   private def printCommand(out: Reporter, meta: CmdMeta) = {
-    out.writeln(s"Usage: accio ${meta.defn.name} <options> ${if (meta.defn.allowResidue) "<arguments>" else ""}")
-    out.writeln()
+    out.outErr.printOutLn(s"Usage: accio ${meta.defn.name} <options> ${if (meta.defn.allowResidue) "<arguments>" else ""}")
+    out.outErr.printOutLn()
     if (meta.defn.help.nonEmpty) {
-      out.writeln(meta.defn.help)
-      out.writeln()
+      out.outErr.printOutLn(meta.defn.help)
+      out.outErr.printOutLn()
     }
     if (meta.defn.description.nonEmpty) {
-      out.writeln(meta.defn.description)
-      out.writeln()
+      out.outErr.printOutLn(meta.defn.description)
+      out.outErr.printOutLn()
     }
     val flags = meta.defn.flags.map(CaseClass.apply(_)).flatMap(_.fields)
     if (flags.nonEmpty) {
-      out.writeln(s"<info>Available options:</info>")
+      out.outErr.printOutLn(s"<info>Available options:</info>")
       flags.foreach { field =>
         val flag = field.annotation[Flag]
-        out.write(s"  - ${flag.name} (type: ${field.scalaType.runtimeClass.getSimpleName.toLowerCase}")
+        out.outErr.printOut(s"  - ${flag.name} (type: ${field.scalaType.runtimeClass.getSimpleName.toLowerCase}")
         if (field.defaultValue.isDefined && field.defaultValue.get != None) {
-          out.write(s"; default: ${field.defaultValue.get}")
+          out.outErr.printOut(s"; default: ${field.defaultValue.get}")
         }
         if (field.isOption) {
-          out.write("; optional")
+          out.outErr.printOut("; optional")
         }
-        out.write(")")
-        out.writeln()
+        out.outErr.printOut(")")
+        out.outErr.printOutLn()
         if (flag.help.nonEmpty) {
-          out.writeln(StringUtils.paragraphFill(flag.help, 80, 4))
+          out.outErr.printOutLn(StringUtils.paragraphFill(flag.help, 80, 4))
         }
       }
     }

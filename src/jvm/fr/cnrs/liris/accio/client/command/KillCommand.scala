@@ -19,53 +19,36 @@
 package fr.cnrs.liris.accio.client.command
 
 import com.google.inject.Inject
-import com.twitter.util.{Await, Return, Stopwatch, Throw}
+import com.twitter.util.{Await, Return, Throw}
 import fr.cnrs.liris.accio.agent.KillRunRequest
+import fr.cnrs.liris.accio.client.event.{Event, Reporter}
+import fr.cnrs.liris.accio.client.runtime.{Cmd, ExitCode}
 import fr.cnrs.liris.accio.core.domain._
-import fr.cnrs.liris.common.cli.{Cmd, Command, ExitCode, Reporter}
-import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
-import fr.cnrs.liris.common.util.TimeUtils
-
-case class KillCommandFlags(
-  @Flag(name = "quiet", help = "Quiet output")
-  quiet: Boolean = false)
+import fr.cnrs.liris.common.flags.FlagsProvider
 
 @Cmd(
   name = "kill",
-  flags = Array(classOf[CommonCommandFlags], classOf[KillCommandFlags]),
+  flags = Array(classOf[ClusterFlags]),
   help = "Stop an active run.",
   allowResidue = true)
-class KillCommand @Inject()(clientProvider: ClusterClientProvider) extends Command {
+class KillCommand @Inject()(clientProvider: ClusterClientProvider) extends AbstractCommand(clientProvider) {
   override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     if (flags.residue.size != 1) {
-      out.writeln("<error>[ERROR]</error> You must provide a single run identifier.")
-      ExitCode.CommandLineError
-    } else {
-      val opts = flags.as[KillCommandFlags]
-      val elapsed = Stopwatch.start()
-      val client = clientProvider(flags.as[CommonCommandFlags].cluster)
-      val req = KillRunRequest(RunId(flags.residue.head))
-      val exitCode = Await.result(client.killRun(req).liftToTry) match {
-        case Return(_) =>
-          if (!opts.quiet) {
-            out.writeln(s"<info>[INFO]</info> Killed run ${flags.residue.head}")
-          }
-          ExitCode.Success
-        case Throw(UnknownRunException()) =>
-          if (!opts.quiet) {
-            out.writeln(s"<error>[ERROR]</error> Unknown run ${flags.residue.head}")
-          }
-          ExitCode.CommandLineError
-        case Throw(e) =>
-          if (!opts.quiet) {
-            out.writeln(s"<error>[ERROR]</error> Server error: ${e.getMessage}")
-          }
-          ExitCode.InternalError
-      }
-      if (!opts.quiet) {
-        out.writeln(s"<info>[OK]</info> Done in ${TimeUtils.prettyTime(elapsed())}.")
-      }
-      exitCode
+      out.handle(Event.error("<error>[ERROR]</error> You must provide a single run identifier."))
+      return ExitCode.CommandLineError
+    }
+    val client = createClient(flags)
+    val req = KillRunRequest(RunId(flags.residue.head))
+    Await.result(client.killRun(req).liftToTry) match {
+      case Return(_) =>
+        out.handle(Event.info(s"Killed run ${flags.residue.head}"))
+        ExitCode.Success
+      case Throw(UnknownRunException()) =>
+        out.handle(Event.error(s"Unknown run: ${flags.residue.head}"))
+        ExitCode.CommandLineError
+      case Throw(e) =>
+        out.error("Server error", e)
+        ExitCode.InternalError
     }
   }
 }

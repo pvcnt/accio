@@ -32,8 +32,8 @@ import org.ocpsoft.prettytime.PrettyTime
 import scala.collection.mutable
 
 case class GetCommandFlags(
-  @Flag(name = "output", help = "Output format")
-  output: Option[String],
+  //@Flag(name = "output", help = "Output format")
+  //output: Option[String],
   @Flag(name = "all", help = "Show all resources, including those disabled")
   all: Boolean = false,
   @Flag(name = "tags", help = "Show only resources including one of given tags (comma-separated)")
@@ -45,7 +45,7 @@ case class GetCommandFlags(
 
 @Cmd(
   name = "get",
-  flags = Array(classOf[GetCommandFlags], classOf[CommonCommandFlags]),
+  flags = Array(classOf[GetCommandFlags], classOf[ClusterFlags]),
   help = "List runs.",
   allowResidue = true)
 class GetCommand @Inject()(clientProvider: ClusterClientProvider) extends Command {
@@ -66,7 +66,7 @@ class GetCommand @Inject()(clientProvider: ClusterClientProvider) extends Comman
         out.writeln(s"<error>[ERROR]</error> Invalid resource type: ${flags.residue.head}")
         ExitCode.CommandLineError
       case Some(controller) =>
-        val client = clientProvider(flags.as[CommonCommandFlags].cluster)
+        val client = clientProvider(flags.as[ClusterFlags].cluster)
         val opts = flags.as[GetCommandFlags]
         execute(controller, out, opts, client)
     }

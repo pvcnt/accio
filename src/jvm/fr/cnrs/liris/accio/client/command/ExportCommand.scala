@@ -22,51 +22,64 @@ import java.nio.file.{Path, Paths}
 import java.util.UUID
 
 import com.google.inject.Inject
-import com.twitter.util.{Await, Stopwatch}
+import com.twitter.util.Await
 import fr.cnrs.liris.accio.agent.{AgentService$FinagleClient, GetRunRequest}
+import fr.cnrs.liris.accio.client.event.{Event, Reporter}
+import fr.cnrs.liris.accio.client.runtime.{Cmd, ExitCode}
 import fr.cnrs.liris.accio.core.analysis._
 import fr.cnrs.liris.accio.core.domain.RunId
-import fr.cnrs.liris.common.cli.{Cmd, Command, ExitCode, Reporter}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
-import fr.cnrs.liris.common.util.{FileUtils, HashUtils, StringUtils, TimeUtils}
+import fr.cnrs.liris.common.util.{FileUtils, HashUtils, StringUtils}
 
 case class ExportCommandFlags(
-  @Flag(name = "out", help = "Directory where to write the export")
+  @Flag(
+    name = "out",
+    help = "Directory where to write the export")
   out: Option[String],
-  @Flag(name = "separator", help = "Separator to use in generated files")
+  @Flag(
+    name = "separator",
+    help = "Separator to use in generated files")
   separator: String = " ",
-  @Flag(name = "artifacts", help = "Comma-separated list of artifacts to take into account. Special values: ALL, NUMERIC (for only those of a numeric type), NONE.")
+  @Flag(
+    name = "artifacts",
+    help = "Comma-separated list of artifacts to take into account. Special values: ALL, NUMERIC (for only those of a numeric type), NONE.")
   artifacts: String = "NUMERIC",
-  @Flag(name = "metrics", help = "Comma-separated list of metrics to export. Special values: ALL, NONE.")
+  @Flag(
+    name = "metrics",
+    help = "Comma-separated list of metrics to export. Special values: ALL, NONE.")
   metrics: String = "NONE",
-  @Flag(name = "split", help = "Whether to split the export by workflow parameters")
+  @Flag(
+    name = "split",
+    help = "Whether to split the export by workflow parameters")
   split: Boolean = false,
-  @Flag(name = "aggregate", help = "Whether to aggregate artifact values across multiple runs into a single value")
+  @Flag(
+    name = "aggregate",
+    help = "Whether to aggregate artifact values across multiple runs into a single value")
   aggregate: Boolean = false,
-  @Flag(name = "append", help = "Whether to allow appending data to existing files if they already exists")
+  @Flag(
+    name = "append",
+    help = "Whether to allow appending data to existing files if they already exists")
   append: Boolean = false)
 
 @Cmd(
   name = "export",
-  flags = Array(classOf[ExportCommandFlags], classOf[CommonCommandFlags]),
+  flags = Array(classOf[ExportCommandFlags], classOf[ClusterFlags]),
   help = "Generate text reports from run results.",
   description = "This command is intended to create summarized and readable CSV reports from run results.",
   allowResidue = true)
-class ExportCommand @Inject()(clientProvider: ClusterClientProvider) extends Command {
+class ExportCommand @Inject()(clientProvider: ClusterClientProvider) extends AbstractCommand(clientProvider) {
   override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     if (flags.residue.isEmpty) {
-      out.writeln("<error>[ERROR]</error> You must specify at least one run as argument.")
+      out.outErr.printOutLn("<error>[ERROR]</error> You must specify at least one run as argument.")
       ExitCode.CommandLineError
     } else {
       val opts = flags.as[ExportCommandFlags]
-      val elapsed = Stopwatch.start()
-
       val workDir = getWorkDir(opts)
-      out.writeln(s"<info>[OK]</info> Writing export to <comment>${workDir.toAbsolutePath}</comment>")
+      out.handle(Event.info(s"Writing export to ${workDir.toAbsolutePath}"))
 
-      val client = clientProvider(flags.as[CommonCommandFlags].cluster)
+      val client = createClient(flags)
       val runs = getRuns(flags.residue, client, out)
-      out.writeln(s"<info>[OK]</info> Found ${runs.size} matching runs</comment>")
+      out.handle(Event.info(s"Found ${runs.size} matching runs"))
 
       val artifacts = getArtifacts(runs, opts)
       val metrics = getMetrics(runs, opts)
@@ -74,8 +87,6 @@ class ExportCommand @Inject()(clientProvider: ClusterClientProvider) extends Com
       val reportCreatorOpts = CsvReportOpts(separator = opts.separator, split = opts.split, aggregate = opts.aggregate, append = opts.append)
       reportCreator.write(artifacts, workDir, reportCreatorOpts)
       reportCreator.write(metrics, workDir, reportCreatorOpts)
-
-      out.writeln(s"<info>[OK]</info> Done in ${TimeUtils.prettyTime(elapsed())}.")
       ExitCode.Success
     }
   }
@@ -92,7 +103,7 @@ class ExportCommand @Inject()(clientProvider: ClusterClientProvider) extends Com
       val maybeRun = Await.result(client.getRun(GetRunRequest(RunId(id)))).result
       maybeRun match {
         case None =>
-          out.writeln(s"<comment>[WARN]</comment> Unknown run $id")
+          out.outErr.printOutLn(s"<comment>[WARN]</comment> Unknown run $id")
           Seq.empty
         case Some(run) =>
           if (run.children.nonEmpty) {

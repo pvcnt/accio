@@ -16,8 +16,9 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.common.cli
+package fr.cnrs.liris.accio.client.runtime
 
+import fr.cnrs.liris.accio.client.event.Reporter
 import fr.cnrs.liris.common.flags.FlagsProvider
 
 /**
@@ -26,5 +27,5 @@ import fr.cnrs.liris.common.flags.FlagsProvider
  * [[Cmd]] annotation.
  */
 trait Command {
-  def execute(flags: FlagsProvider, out: Reporter): ExitCode
+  def execute(flags: FlagsProvider, reporter: Reporter): ExitCode
 }

@@ -218,9 +218,8 @@ object FlagsParser {
    * @param allowResidue Whether residual arguments are allowed.
    * @param classes      Flags-declaring classes.
    */
-  def apply(allowResidue: Boolean, classes: Class[_]*): FlagsParser = {
+  def apply(allowResidue: Boolean, classes: Class[_]*): FlagsParser =
     new FlagsParser(FlagsData(classes: _*), allowResidue)
-  }
 
   /**
    * Check whether a case class field corresponds to a boolean field.

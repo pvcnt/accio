@@ -32,7 +32,7 @@ case class RmCommandFlags(
 
 @Cmd(
   name = "rm",
-  flags = Array(classOf[CommonCommandFlags], classOf[RmCommandFlags]),
+  flags = Array(classOf[ClusterFlags], classOf[RmCommandFlags]),
   help = "Delete a run.",
   allowResidue = true)
 class RmCommand @Inject()(clientProvider: ClusterClientProvider) extends Command {
@@ -43,7 +43,7 @@ class RmCommand @Inject()(clientProvider: ClusterClientProvider) extends Command
     } else {
       val opts = flags.as[RmCommandFlags]
       val elapsed = Stopwatch.start()
-      val client = clientProvider(flags.as[CommonCommandFlags].cluster)
+      val client = clientProvider(flags.as[ClusterFlags].cluster)
       val req = DeleteRunRequest(RunId(flags.residue.head))
       val exitCode = Await.result(client.deleteRun(req).liftToTry) match {
         case Return(_) =>

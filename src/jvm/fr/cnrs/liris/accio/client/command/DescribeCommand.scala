@@ -23,27 +23,30 @@ import java.util.{Date, Locale}
 import com.google.inject.Inject
 import com.twitter.util._
 import fr.cnrs.liris.accio.agent.{AgentService$FinagleClient, GetOperatorRequest, GetRunRequest, ListRunsRequest}
+import fr.cnrs.liris.accio.client.command.FormatUtils.format
+import fr.cnrs.liris.accio.client.event.{Reporter, Event}
+import fr.cnrs.liris.accio.client.runtime.{Cmd, ExitCode}
 import fr.cnrs.liris.accio.core.domain._
-import fr.cnrs.liris.common.cli.{Cmd, Command, ExitCode, Reporter}
-import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
+import fr.cnrs.liris.common.flags.FlagsProvider
 import fr.cnrs.liris.common.util.StringUtils
 import fr.cnrs.liris.common.util.StringUtils.padTo
 import fr.cnrs.liris.dal.core.api.{DataTypes, Values}
 import org.ocpsoft.prettytime.PrettyTime
 
-case class DescribeCommandFlags(
-  @Flag(name = "output", help = "Output format")
-  output: Option[String])
+case class DescribeCommandFlags()
+
+//@Flag(name = "output", help = "Output format")
+//output: Option[String]
 
 @Cmd(
   name = "describe",
-  flags = Array(classOf[DescribeCommandFlags], classOf[CommonCommandFlags]),
+  flags = Array(classOf[DescribeCommandFlags], classOf[ClusterFlags]),
   help = "Retrieve execution status of a run.",
   allowResidue = true)
-class DescribeCommand @Inject()(clientProvider: ClusterClientProvider) extends Command {
-  override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
+class DescribeCommand @Inject()(clientProvider: ClusterClientProvider) extends AbstractCommand(clientProvider) {
+  override def execute(flags: FlagsProvider, reporter: Reporter): ExitCode = {
     if (flags.residue.size < 2) {
-      out.writeln(s"<error>[ERROR]</error> You must specify a resource type and identifier")
+      reporter.handle(Event.error("You must specify a resource type and identifier"))
       return ExitCode.CommandLineError
     }
     val maybeController: Option[DescribeController[_]] = flags.residue.head match {
@@ -54,26 +57,31 @@ class DescribeCommand @Inject()(clientProvider: ClusterClientProvider) extends C
     }
     maybeController match {
       case None =>
-        out.writeln(s"<error>[ERROR]</error> Invalid resource type: ${flags.residue.head}")
+        reporter.handle(Event.error(s"Invalid resource type: ${flags.residue.head}"))
         ExitCode.CommandLineError
       case Some(controller) =>
-        val client = clientProvider(flags.as[CommonCommandFlags].cluster)
         val opts = flags.as[DescribeCommandFlags]
-        execute(controller, out, flags.residue.last, opts, client)
+        execute(controller, reporter, flags.residue.last, opts, createClient(flags))
     }
   }
 
-  private def execute[Res](controller: DescribeController[Res], out: Reporter, id: String, opts: DescribeCommandFlags, client: AgentService$FinagleClient) = {
-    val f = controller.retrieve(out, id, client).liftToTry
+  private def execute[Res](
+    controller: DescribeController[Res],
+    reporter: Reporter,
+    id: String,
+    opts: DescribeCommandFlags,
+    client: AgentService$FinagleClient) = {
+
+    val f = controller.retrieve(reporter, id, client).liftToTry
     Await.result(f) match {
       case Return(resp) =>
-        controller.print(out, resp)
+        controller.print(reporter, resp)
         ExitCode.Success
       case Throw(NoResultException()) =>
-        out.writeln(s"<error>[ERROR]</error> No such resource: $id")
+        reporter.handle(Event.error(s"No such resource: $id"))
         ExitCode.CommandLineError
       case Throw(e) =>
-        out.writeln(s"<error>[ERROR]</error> Server error: ${e.getMessage}")
+        reporter.error(s"Server error", e)
         ExitCode.InternalError
     }
   }
@@ -88,7 +96,6 @@ trait DescribeController[Res] {
 }
 
 class DescribeRunController extends DescribeController[(Run, Seq[Run])] {
-  private[this] val prettyTime = new PrettyTime().setLocale(Locale.ENGLISH)
   private[this] val colWidth = 15
 
   override def retrieve(out: Reporter, id: String, client: AgentService$FinagleClient): Future[(Run, Seq[Run])] = {
@@ -110,80 +117,67 @@ class DescribeRunController extends DescribeController[(Run, Seq[Run])] {
 
   override def print(out: Reporter, resp: (Run, Seq[Run])): Unit = {
     val (run, children) = resp
-    out.writeln(s"${padTo("Id", colWidth)} ${run.id.value}")
+    out.outErr.printOutLn(s"${padTo("Id", colWidth)} ${run.id.value}")
     run.parent.foreach { parentId =>
-      out.writeln(s"${padTo("Parent Id", colWidth)} ${parentId.value}")
+      out.outErr.printOutLn(s"${padTo("Parent Id", colWidth)} ${parentId.value}")
     }
-    out.writeln(s"${padTo("Workflow", colWidth)} ${run.pkg.workflowId.value}:${run.pkg.workflowVersion}")
-    out.writeln(s"${padTo("Created", colWidth)} ${prettyTime.format(new Date(run.createdAt))}")
-    out.writeln(s"${padTo("Owner", colWidth)} ${Utils.toString(run.owner)}")
-    out.writeln(s"${padTo("Name", colWidth)} ${run.name.getOrElse("<no name>")}")
-    out.writeln(s"${padTo("Tags", colWidth)} ${if (run.tags.nonEmpty) run.tags.mkString(", ") else "<none>"}")
-    out.writeln(s"${padTo("Seed", colWidth)} ${run.seed}")
-    out.writeln(s"${padTo("Status", colWidth)} ${run.state.status.name}")
+    out.outErr.printOutLn(s"${padTo("Workflow", colWidth)} ${run.pkg.workflowId.value}:${run.pkg.workflowVersion}")
+    out.outErr.printOutLn(s"${padTo("Created", colWidth)} ${format(Time.fromMilliseconds(run.createdAt))}")
+    out.outErr.printOutLn(s"${padTo("Owner", colWidth)} ${Utils.toString(run.owner)}")
+    out.outErr.printOutLn(s"${padTo("Name", colWidth)} ${run.name.getOrElse("<no name>")}")
+    out.outErr.printOutLn(s"${padTo("Tags", colWidth)} ${if (run.tags.nonEmpty) run.tags.mkString(", ") else "<none>"}")
+    out.outErr.printOutLn(s"${padTo("Seed", colWidth)} ${run.seed}")
+    out.outErr.printOutLn(s"${padTo("Status", colWidth)} ${run.state.status.name}")
     if (!Utils.isCompleted(run.state.status)) {
-      out.writeln(s"${padTo("Progress", colWidth)} ${(run.state.progress * 100).round} %")
+      out.outErr.printOutLn(s"${padTo("Progress", colWidth)} ${(run.state.progress * 100).round} %")
     }
     run.state.startedAt.foreach { startedAt =>
-      out.writeln(s"${padTo("Started", colWidth)} ${prettyTime.format(new Date(startedAt))}")
+      out.outErr.printOutLn(s"${padTo("Started", colWidth)} ${format(Time.fromMilliseconds(startedAt))}")
     }
     run.state.completedAt.foreach { completedAt =>
-      out.writeln(s"${padTo("Completed", colWidth)} ${prettyTime.format(new Date(completedAt))}")
+      out.outErr.printOutLn(s"${padTo("Completed", colWidth)} ${format(Time.fromMilliseconds(completedAt))}")
       if (run.state.startedAt.isDefined) {
-        out.writeln(s"${padTo("Duration", colWidth)} " +
-          formatDuration(Duration.fromMilliseconds(completedAt - run.state.startedAt.get)))
+        out.outErr.printOutLn(s"${padTo("Duration", colWidth)} " +
+          format(Duration.fromMilliseconds(completedAt - run.state.startedAt.get)))
       }
     }
 
     if (run.params.nonEmpty) {
-      out.writeln()
-      out.writeln("Parameters")
+      out.outErr.printOutLn()
+      out.outErr.printOutLn("Parameters")
       val maxLength = run.params.keySet.map(_.length).max
       run.params.foreach { case (name, value) =>
-        out.writeln(s"  ${padTo(name, maxLength)} ${Values.toString(value)}")
+        out.outErr.printOutLn(s"  ${padTo(name, maxLength)} ${Values.toString(value)}")
       }
     }
 
-    out.writeln()
+    out.outErr.printOutLn()
     if (run.children.isEmpty) {
-      out.writeln("Nodes")
-      out.writeln(s"  ${padTo("Node name", 30)}  ${padTo("Status", 9)}  Duration")
+      out.outErr.printOutLn("Nodes")
+      out.outErr.printOutLn(s"  ${padTo("Node name", 30)}  ${padTo("Status", 9)}  Duration")
       run.state.nodes.toSeq.sortBy(_.startedAt.getOrElse(Long.MaxValue)).foreach { node =>
         val duration = if (node.cacheHit) {
           "<cache hit>"
         } else if (node.startedAt.isDefined && node.completedAt.isDefined) {
-          formatDuration(Duration.fromMilliseconds(node.completedAt.get - node.startedAt.get))
+          format(Duration.fromMilliseconds(node.completedAt.get - node.startedAt.get))
         } else {
           "-"
         }
-        out.writeln(s"  ${padTo(node.name, 30)}  ${padTo(node.status.name, 9)}  $duration")
+        out.outErr.printOutLn(s"  ${padTo(node.name, 30)}  ${padTo(node.status.name, 9)}  $duration")
       }
     } else {
-      out.writeln("Child Runs")
+      out.outErr.printOutLn("Child Runs")
       val prettyTime = new PrettyTime().setLocale(Locale.ENGLISH)
-      out.writeln(s"  ${padTo("ID", 32)}  ${padTo("CREATED", 15)}  ${padTo("NAME", 15)}  STATUS")
+      out.outErr.printOutLn(s"  ${padTo("ID", 32)}  ${padTo("CREATED", 15)}  ${padTo("NAME", 15)}  STATUS")
       children.foreach { run =>
         val name = run.name.getOrElse("<no name>")
-        out.writeln(s"  ${run.id.value}  ${padTo(prettyTime.format(new Date(run.createdAt)), 15)}  ${padTo(name, 15)}  ${run.state.status.name}")
+        out.outErr.printOutLn(s"  ${run.id.value}  ${padTo(prettyTime.format(new Date(run.createdAt)), 15)}  ${padTo(name, 15)}  ${run.state.status.name}")
       }
-    }
-  }
-
-  private def formatDuration(duration: Duration) = {
-    if (duration.inHours > 5) {
-      s"${duration.inHours} hours"
-    } else if (duration.inMinutes > 30) {
-      s"${duration.inMinutes} minutes"
-    } else if (duration.inSeconds > 10) {
-      s"${duration.inSeconds} seconds"
-    } else {
-      s"${duration.inMillis} milliseconds"
     }
   }
 }
 
 class DescribeNodeController extends DescribeController[NodeState] {
-  private[this] val prettyTime = new PrettyTime().setLocale(Locale.ENGLISH)
   private[this] val colWidth = 15
 
   override def retrieve(out: Reporter, id: String, client: AgentService$FinagleClient): Future[NodeState] = {
@@ -202,61 +196,49 @@ class DescribeNodeController extends DescribeController[NodeState] {
   }
 
   override def print(out: Reporter, node: NodeState): Unit = {
-    out.writeln(s"${padTo("Node name", colWidth)} ${node.name}")
-    out.writeln(s"${padTo("Status", colWidth)} ${node.status.name}")
+    out.outErr.printOutLn(s"${padTo("Node name", colWidth)} ${node.name}")
+    out.outErr.printOutLn(s"${padTo("Status", colWidth)} ${node.status.name}")
     node.startedAt.foreach { startedAt =>
-      out.writeln(s"${padTo("Started", colWidth)} ${prettyTime.format(new Date(startedAt))}")
+      out.outErr.printOutLn(s"${padTo("Started", colWidth)} ${format(Time.fromMilliseconds(startedAt))}")
     }
     node.completedAt.foreach { completedAt =>
-      out.writeln(s"${padTo("Completed", colWidth)} ${prettyTime.format(new Date(completedAt))}")
+      out.outErr.printOutLn(s"${padTo("Completed", colWidth)} ${format(Time.fromMilliseconds(completedAt))}")
       if (node.startedAt.isDefined) {
-        out.write(s"${padTo("Duration", colWidth)} ")
+        out.outErr.printOut(s"${padTo("Duration", colWidth)} ")
         if (node.cacheHit) {
-          out.writeln("<cache hit>")
+          out.outErr.printOutLn("<cache hit>")
         } else {
-          out.writeln(formatDuration(Duration.fromMilliseconds(completedAt - node.startedAt.get)))
+          out.outErr.printOutLn(format(Duration.fromMilliseconds(completedAt - node.startedAt.get)))
         }
       }
     }
 
     node.result.foreach { result =>
-      out.writeln(s"${padTo("Exit code", colWidth)} ${result.exitCode}")
+      out.outErr.printOutLn(s"${padTo("Exit code", colWidth)} ${result.exitCode}")
       result.error.foreach { error =>
-        out.writeln()
-        out.writeln(s"${padTo("Error class", colWidth)} <error>${error.root.classifier}</error>")
-        out.writeln(s"<error>${padTo("Error message", colWidth)} <error>${error.root.message}</error>")
-        out.writeln(s"${padTo("Error stack", colWidth)} " +
+        out.outErr.printOutLn()
+        out.outErr.printOutLn(s"${padTo("Error class", colWidth)} <error>${error.root.classifier}</error>")
+        out.outErr.printOutLn(s"<error>${padTo("Error message", colWidth)} <error>${error.root.message}</error>")
+        out.outErr.printOutLn(s"${padTo("Error stack", colWidth)} " +
           error.root.stacktrace.headOption.getOrElse("") + "\n" +
           error.root.stacktrace.tail.map(s => (" " * (colWidth + 1)) + s).mkString("\n"))
       }
       if (result.artifacts.nonEmpty) {
-        out.writeln()
-        out.writeln("Artifacts")
-        out.writeln(s"  ${padTo("Name", 25)}  Value (preview)")
+        out.outErr.printOutLn()
+        out.outErr.printOutLn("Artifacts")
+        out.outErr.printOutLn(s"  ${padTo("Name", 25)}  Value (preview)")
         result.artifacts.foreach { artifact =>
-          out.writeln(s"  ${padTo(artifact.name, 25)}  ${Values.toString(artifact.value)}")
+          out.outErr.printOutLn(s"  ${padTo(artifact.name, 25)}  ${Values.toString(artifact.value)}")
         }
       }
       if (result.metrics.nonEmpty) {
-        out.writeln()
-        out.writeln("Metrics")
-        out.writeln(s"  ${padTo("Name", 25)}  Value")
+        out.outErr.printOutLn()
+        out.outErr.printOutLn("Metrics")
+        out.outErr.printOutLn(s"  ${padTo("Name", 25)}  Value")
         result.metrics.foreach { metric =>
-          out.writeln(s"  ${padTo(metric.name, 25)}  ${metric.value}")
+          out.outErr.printOutLn(s"  ${padTo(metric.name, 25)}  ${metric.value}")
         }
       }
-    }
-  }
-
-  private def formatDuration(duration: Duration) = {
-    if (duration.inHours > 5) {
-      s"${duration.inHours} hours"
-    } else if (duration.inMinutes > 30) {
-      s"${duration.inMinutes} minutes"
-    } else if (duration.inSeconds > 10) {
-      s"${duration.inSeconds} seconds"
-    } else {
-      s"${duration.inMillis} milliseconds"
     }
   }
 }
@@ -272,44 +254,44 @@ class DescribeOperatorController extends DescribeController[OpDef] {
   }
 
   override def print(out: Reporter, opDef: OpDef): Unit = {
-    out.writeln(s"Operator: ${opDef.name} (${opDef.category})")
+    out.outErr.printOutLn(s"Operator: ${opDef.name} (${opDef.category})")
     opDef.deprecation.foreach { deprecation =>
-      out.writeln()
-      out.writeln(s"<error>Deprecated: $deprecation</error>")
+      out.outErr.printOutLn()
+      out.outErr.printOutLn(s"<error>Deprecated: $deprecation</error>")
     }
     opDef.description.foreach { description =>
-      out.writeln()
-      out.writeln(StringUtils.paragraphFill(description, 80))
+      out.outErr.printOutLn()
+      out.outErr.printOutLn(StringUtils.paragraphFill(description, 80))
     }
     printInputs(out, opDef)
     printOutputs(out, opDef)
   }
 
   private def printInputs(out: Reporter, opDef: OpDef) = {
-    out.writeln()
-    out.writeln(s"Available inputs")
+    out.outErr.printOutLn()
+    out.outErr.printOutLn(s"Available inputs")
     opDef.inputs.foreach { argDef =>
-      out.write(s"  ${argDef.name} (${DataTypes.toString(argDef.kind)}")
+      out.outErr.printOut(s"  ${argDef.name} (${DataTypes.toString(argDef.kind)}")
       if (argDef.defaultValue.isDefined) {
-        out.write(s"; default: ${Values.toString(argDef.defaultValue.get)}")
+        out.outErr.printOut(s"; default: ${Values.toString(argDef.defaultValue.get)}")
       }
       if (argDef.isOptional) {
-        out.write("; optional")
+        out.outErr.printOut("; optional")
       }
-      out.write(")")
-      argDef.help.foreach(help => out.write(": " + help))
-      out.writeln()
+      out.outErr.printOut(")")
+      argDef.help.foreach(help => out.outErr.printOut(": " + help))
+      out.outErr.printOutLn()
     }
   }
 
   private def printOutputs(out: Reporter, opDef: OpDef) = {
-    out.writeln()
+    out.outErr.printOutLn()
     if (opDef.outputs.nonEmpty) {
-      out.writeln("Available outputs")
+      out.outErr.printOutLn("Available outputs")
       opDef.outputs.foreach { outputDef =>
-        out.write(s"  - ${outputDef.name} (${DataTypes.toString(outputDef.kind)})")
-        out.writeln()
-        outputDef.help.foreach(help => out.writeln(StringUtils.paragraphFill(help, 80, 4)))
+        out.outErr.printOut(s"  - ${outputDef.name} (${DataTypes.toString(outputDef.kind)})")
+        out.outErr.printOutLn()
+        outputDef.help.foreach(help => out.outErr.printOutLn(StringUtils.paragraphFill(help, 80, 4)))
       }
     }
   }

@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.common.cli
+package fr.cnrs.liris.accio.client.runtime
 
 import java.util.NoSuchElementException
 
@@ -38,7 +38,7 @@ case class CmdMeta(defn: Cmd, cmdClass: Class[_ <: Command])
  * @param classes Classes containing command implementations.
  */
 @Singleton
-class CmdRegistry @Inject()(classes: Set[Class[_ <: Command]]) {
+class CommandRegistry @Inject()(classes: Set[Class[_ <: Command]]) {
   private[this] val index = classes.map { clazz =>
     val annotations = clazz.getAnnotations
     require(Annotations.exists[Cmd](annotations), "Commands must be annotated with @Cmd")

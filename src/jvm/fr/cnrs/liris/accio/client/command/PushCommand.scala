@@ -37,7 +37,7 @@ case class PushCommandFlags(
 
 @Cmd(
   name = "push",
-  flags = Array(classOf[PushCommandFlags], classOf[CommonCommandFlags]),
+  flags = Array(classOf[PushCommandFlags], classOf[ClusterFlags]),
   help = "Push a workflow.",
   allowResidue = true)
 class PushCommand @Inject()(clientProvider: ClusterClientProvider)
@@ -50,7 +50,7 @@ class PushCommand @Inject()(clientProvider: ClusterClientProvider)
     } else {
       val opts = flags.as[PushCommandFlags]
       val elapsed = Stopwatch.start()
-      val client = clientProvider(flags.as[CommonCommandFlags].cluster)
+      val client = clientProvider(flags.as[ClusterFlags].cluster)
       val outcomes = flags.residue.map(uri => parseAndPush(uri, opts, client, out))
       if (!opts.quiet) {
         out.writeln(s"<info>[OK]</info> Done in ${TimeUtils.prettyTime(elapsed())}.")

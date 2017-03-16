@@ -47,7 +47,7 @@ case class SubmitCommandFlags(
 
 @Cmd(
   name = "submit",
-  flags = Array(classOf[SubmitCommandFlags], classOf[CommonCommandFlags]),
+  flags = Array(classOf[SubmitCommandFlags], classOf[ClusterFlags]),
   help = "Launch an Accio workflow.",
   allowResidue = true)
 class SubmitCommand @Inject()(clientProvider: ClusterClientProvider)
@@ -71,7 +71,7 @@ class SubmitCommand @Inject()(clientProvider: ClusterClientProvider)
           return ExitCode.CommandLineError
       }
 
-      val client = clientProvider(flags.as[CommonCommandFlags].cluster)
+      val client = clientProvider(flags.as[ClusterFlags].cluster)
       val exitCode = parseAndSubmit(flags.residue.head, params, opts, client, out)
       if (!opts.quiet) {
         out.writeln(s"<info>[OK]</info> Done in ${TimeUtils.prettyTime(elapsed())}.")
