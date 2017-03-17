@@ -16,7 +16,6 @@
 
 scala_library(
   dependencies=[
-    '3rdparty/jvm/com/typesafe/scala-logging',
     '3rdparty/jvm:logback',
     '3rdparty/jvm/org/slf4j:jul-to-slf4j',
   ],

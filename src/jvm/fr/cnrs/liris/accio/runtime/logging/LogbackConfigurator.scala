@@ -22,7 +22,6 @@ import ch.qos.logback.classic.LoggerContext
 import ch.qos.logback.classic.joran.JoranConfigurator
 import ch.qos.logback.core.joran.spi.JoranException
 import ch.qos.logback.core.util.StatusPrinter
-import com.typesafe.scalalogging.StrictLogging
 import org.slf4j.LoggerFactory
 
 /**
@@ -33,7 +32,7 @@ import org.slf4j.LoggerFactory
  * resources in namespaces. This trait loads a logback.xml file located under the same package than this class
  * (i.e., the concrete class implementing this trait).
  */
-trait LogbackConfigurator extends StrictLogging {
+trait LogbackConfigurator {
   {
     val logbackPath = getClass.getPackage.getName.replace(".", "/") + "/logback.xml"
     val is = getClass.getClassLoader.getResourceAsStream(logbackPath)
@@ -51,7 +50,8 @@ trait LogbackConfigurator extends StrictLogging {
         case _: JoranException => // StatusPrinter will handle this.
       }
       StatusPrinter.printInCaseOfErrorsOrWarnings(ctx)
-      logger.debug(s"Loaded logback configuration from resource $logbackPath")
+      LoggerFactory.getLogger(classOf[LogbackConfigurator])
+        .debug(s"Loaded logback configuration from resource $logbackPath")
     }
   }
 }

@@ -18,18 +18,18 @@
 
 package fr.cnrs.liris.accio.runtime.logging
 
-import com.typesafe.scalalogging.StrictLogging
+import org.slf4j.LoggerFactory
 import org.slf4j.bridge.SLF4JBridgeHandler
 
 /**
  * Install the slf4j bridge, enabling to redirect calls to the [[java.util.logging]] classes to slf4j. It should be
  * included only once per application, typically in the class implementing the `main()` method.
  */
-trait Slf4jBridgeInstaller extends StrictLogging {
+trait Slf4jBridgeInstaller {
   if (!SLF4JBridgeHandler.isInstalled && canInstallBridgeHandler) {
     SLF4JBridgeHandler.removeHandlersForRootLogger()
     SLF4JBridgeHandler.install()
-    logger.info("org.slf4j.bridge.SLF4JBridgeHandler installed")
+    LoggerFactory.getLogger(classOf[Slf4jBridgeInstaller]).info("org.slf4j.bridge.SLF4JBridgeHandler installed")
   }
 
   private def canInstallBridgeHandler: Boolean = {
@@ -37,7 +37,8 @@ trait Slf4jBridgeInstaller extends StrictLogging {
     // exists on the classpath. See: http://www.slf4j.org/legacy.html#jul-to-slf4j
     try {
       Class.forName("org.slf4j.impl.JDK14LoggerFactory", false, this.getClass.getClassLoader)
-      logger.warn("Detected [org.slf4j.impl.JDK14LoggerFactory] on classpath. SLF4JBridgeHandler cannot be installed, see: http://www.slf4j.org/legacy.html#jul-to-slf4j")
+      LoggerFactory.getLogger(classOf[Slf4jBridgeInstaller])
+        .warn("Detected [org.slf4j.impl.JDK14LoggerFactory] on classpath. SLF4JBridgeHandler cannot be installed, see: http://www.slf4j.org/legacy.html#jul-to-slf4j")
       false
     } catch {
       case _: ClassNotFoundException => true

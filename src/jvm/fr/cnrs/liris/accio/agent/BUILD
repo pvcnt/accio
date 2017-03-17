@@ -14,7 +14,6 @@ scala_library(
     'src/thrift/fr/cnrs/liris/accio/agent',
     '3rdparty/jvm/com/twitter/finatra:thrift',
     '3rdparty/jvm/com/twitter/finagle:serversets',
-    '3rdparty/jvm:logback',
   ],
   resources = [
     'src/resources/fr/cnrs/liris/accio/agent',
