@@ -24,13 +24,17 @@ import ch.qos.logback.core.joran.spi.JoranException
 import ch.qos.logback.core.util.StatusPrinter
 import com.typesafe.scalalogging.StrictLogging
 import org.slf4j.LoggerFactory
-import org.slf4j.bridge.SLF4JBridgeHandler
 
-trait LogbackLogging extends StrictLogging {
-  loadLogbackConfig()
-  attemptSlf4jBridgeHandlerInstallation()
-
-  private def loadLogbackConfig() = {
+/**
+ * Traits to force the initialisation of Logback's configuration, following Pants conventions. It should be included
+ * only once per application, typically in the class implementing the `main()` method.
+ *
+ * By default, logback.xml is only loaded if present at the root of resources path. However, because Pants puts
+ * resources in namespaces. This trait loads a logback.xml file located under the same package than this class
+ * (i.e., the concrete class implementing this trait).
+ */
+trait LogbackConfigurator extends StrictLogging {
+  {
     val logbackPath = getClass.getPackage.getName.replace(".", "/") + "/logback.xml"
     val is = getClass.getClassLoader.getResourceAsStream(logbackPath)
     if (null != is) {
@@ -48,26 +52,6 @@ trait LogbackLogging extends StrictLogging {
       }
       StatusPrinter.printInCaseOfErrorsOrWarnings(ctx)
       logger.debug(s"Loaded logback configuration from resource $logbackPath")
-    }
-  }
-
-  private def attemptSlf4jBridgeHandlerInstallation(): Unit = {
-    if (!SLF4JBridgeHandler.isInstalled && canInstallBridgeHandler) {
-      SLF4JBridgeHandler.removeHandlersForRootLogger()
-      SLF4JBridgeHandler.install()
-      logger.info("org.slf4j.bridge.SLF4JBridgeHandler installed")
-    }
-  }
-
-  private def canInstallBridgeHandler: Boolean = {
-    // We do not want to attempt to install the bridge handler if the JDK14LoggerFactory
-    // exists on the classpath. See: http://www.slf4j.org/legacy.html#jul-to-slf4j
-    try {
-      Class.forName("org.slf4j.impl.JDK14LoggerFactory", false, this.getClass.getClassLoader)
-      logger.warn("Detected [org.slf4j.impl.JDK14LoggerFactory] on classpath. SLF4JBridgeHandler cannot be installed, see: http://www.slf4j.org/legacy.html#jul-to-slf4j")
-      false
-    } catch {
-      case _: ClassNotFoundException => true
     }
   }
 }

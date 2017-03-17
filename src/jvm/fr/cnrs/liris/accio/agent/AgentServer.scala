@@ -18,10 +18,6 @@
 
 package fr.cnrs.liris.accio.agent
 
-import ch.qos.logback.classic.LoggerContext
-import ch.qos.logback.classic.joran.JoranConfigurator
-import ch.qos.logback.core.joran.spi.JoranException
-import ch.qos.logback.core.util.StatusPrinter
 import com.google.inject.Module
 import com.twitter.finatra.thrift.ThriftServer
 import com.twitter.finatra.thrift.filters._
@@ -32,14 +28,12 @@ import fr.cnrs.liris.accio.core.dsl.inject.DslModule
 import fr.cnrs.liris.accio.core.filesystem.inject.FileSystemModule
 import fr.cnrs.liris.accio.core.scheduler.inject.SchedulerModule
 import fr.cnrs.liris.accio.core.storage.inject.StorageModule
+import fr.cnrs.liris.accio.runtime.logging.LogbackConfigurator
 import fr.cnrs.liris.privamov.ops.OpsModule
-import org.slf4j.LoggerFactory
 
 object AgentServerMain extends AgentServer
 
-class AgentServer extends ThriftServer {
-  loadLogbackConfig()
-
+class AgentServer extends ThriftServer with LogbackConfigurator {
   override protected def modules: Seq[Module] = Seq(
     FileSystemModule,
     SchedulerModule,
@@ -69,31 +63,12 @@ class AgentServer extends ThriftServer {
     if (AgentModule.workerFlag()) {
       val lifecycle = injector.instance[WorkerLifecycle]
       lifecycle.register()
-      val observer  = injector.instance[LostExecutorsObserver]
+      val observer = injector.instance[LostExecutorsObserver]
       FuturePool.unboundedPool(observer.run())
       onExit {
         lifecycle.unregister()
         observer.kill()
       }
-    }
-  }
-
-  private def loadLogbackConfig() = {
-    val is = getClass.getClassLoader.getResourceAsStream(s"fr/cnrs/liris/accio/agent/logback.xml")
-    if (null != is) {
-      // We assume SLF4J is bound to logback in the current environment.
-      val ctx = LoggerFactory.getILoggerFactory.asInstanceOf[LoggerContext]
-      try {
-        val configurator = new JoranConfigurator
-        configurator.setContext(ctx)
-        // Call context.reset() to clear any previous configuration, e.g. default
-        // configuration. For multi-step configuration, omit calling context.reset().
-        ctx.reset()
-        configurator.doConfigure(is)
-      } catch {
-        case _: JoranException => // StatusPrinter will handle this.
-      }
-      StatusPrinter.printInCaseOfErrorsOrWarnings(ctx)
     }
   }
 }

@@ -23,7 +23,7 @@ import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.accioctl.command.inject.BuiltinCommandsModule
 import fr.cnrs.liris.accio.accioctl.config.inject.ConfigModule
 import fr.cnrs.liris.accio.runtime.cli.CommandDispatcher
-import fr.cnrs.liris.accio.runtime.logging.LogbackLogging
+import fr.cnrs.liris.accio.runtime.logging.{LogbackConfigurator, Slf4jBridgeInstaller}
 import fr.cnrs.liris.common.io.OutErr
 
 object AccioClientMain extends AccioClient
@@ -31,7 +31,7 @@ object AccioClientMain extends AccioClient
 /**
  * Entry point of the Accio command line application.
  */
-class AccioClient extends LogbackLogging with StrictLogging {
+class AccioClient extends LogbackConfigurator with Slf4jBridgeInstaller with StrictLogging {
   def main(args: Array[String]): Unit = {
     val injector = Guice.createInjector(BuiltinCommandsModule, ConfigModule)
     val dispatcher = injector.getInstance(classOf[CommandDispatcher])

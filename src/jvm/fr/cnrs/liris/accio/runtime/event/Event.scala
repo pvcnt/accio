@@ -74,11 +74,10 @@ object EventKind {
 
   case object Stderr extends EventKind
 
-  val ErrorsWarningsInfosOutput = Set(
-    EventKind.Error,
-    EventKind.Warning,
-    EventKind.Info,
-    EventKind.Stdout,
-    EventKind.Stderr)
+  val Errors: Set[EventKind] = Set(EventKind.Error)
+  val ErrorsWarnings: Set[EventKind] = Errors ++ Set(EventKind.Warning)
+  val ErrorsWarningsInfos: Set[EventKind] = ErrorsWarnings ++ Set(EventKind.Info)
+  val ErrorsWarningsInfosOutput: Set[EventKind] = ErrorsWarningsInfos ++ Set(EventKind.Stdout, EventKind.Stderr)
 
+  def values: Set[EventKind] = Set(Error, Warning, Info, Progress, Start, Finish, Stdout, Stderr)
 }

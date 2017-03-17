@@ -26,20 +26,23 @@ trait EventHandler {
   def handle(event: Event): Unit
 }
 
-final class CollectorEventHandler(handler: EventHandler) extends EventHandler {
-  private[this] val _events = mutable.ListBuffer.empty[Event]
+final class CollectorEventHandler(eventMask: Set[EventKind] = EventKind.values)
+  extends EventHandler with Iterable[Event] {
+
+  private[this] val events = mutable.ListBuffer.empty[Event]
 
   override def handle(event: Event): Unit = synchronized {
-    _events ++ Seq(event)
-    handler.handle(event)
+    if (eventMask.contains(event.kind)) {
+      events ++= Seq(event)
+    }
   }
 
-  def events: Iterable[Event] = _events.toList
+  override def iterator: Iterator[Event] = events.iterator
 }
 
-final class FilterEventHandler(mask: Set[EventKind], handler: EventHandler) extends EventHandler {
+final class FilterEventHandler(eventMask: Set[EventKind], handler: EventHandler) extends EventHandler {
   override def handle(event: Event): Unit = {
-    if (mask.contains(event.kind)) {
+    if (eventMask.contains(event.kind)) {
       handler.handle(event)
     }
   }

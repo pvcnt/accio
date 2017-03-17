@@ -23,7 +23,7 @@ import java.util.{Date, Locale}
 import com.twitter.util.{Duration, StorageUnit, Time}
 import org.ocpsoft.prettytime.PrettyTime
 
-object FormatUtils {
+private[command] object FormatUtils {
   private[this] val prettyTime = new PrettyTime().setLocale(Locale.ENGLISH)
 
   def format(time: Time): String = {

@@ -1,27 +1,13 @@
-/*
- * Accio is a program whose purpose is to study location privacy.
- * Copyright (C) 2016-2017 Vincent Primault <vincent.primault@liris.cnrs.fr>
- *
- * Accio is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * Accio is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
- */
+
 
 package fr.cnrs.liris.accio.runtime.event
 
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.common.io.OutErr
 
-final class Reporter(handlers: Seq[EventHandler]) extends EventHandler with ExceptionListener with LazyLogging {
+final class Reporter(handlers: Seq[EventHandler], outputFilter: OutputFilter = OutputFilter.Everything)
+  extends EventHandler with ExceptionListener with LazyLogging {
+
   /**
    * An OutErr that sends all of its output to this Reporter.
    * Each write will (when flushed) get mapped to an EventKind.STDOUT or EventKind.STDERR event.
@@ -31,6 +17,9 @@ final class Reporter(handlers: Seq[EventHandler]) extends EventHandler with Exce
     new ReporterStream(this, EventKind.Stderr))
 
   override def handle(event: Event): Unit = {
+    if (event.kind != EventKind.Error && event.tag.isDefined && !outputFilter.showOutput(event.tag.get)) {
+      return
+    }
     handlers.foreach(_.handle(event))
   }
 
