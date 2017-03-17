@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.agent.handler.api
+package fr.cnrs.liris.accio.agent.handler
 
 import com.google.inject.Inject
 import com.twitter.util.Future
@@ -33,9 +33,10 @@ import fr.cnrs.liris.accio.core.storage.MutableRunRepository
 final class UpdateRunHandler @Inject()(runRepository: MutableRunRepository)
   extends AbstractHandler[UpdateRunRequest, UpdateRunResponse] {
 
+  @throws[UnknownRunException]
   override def handle(req: UpdateRunRequest): Future[UpdateRunResponse] = {
     runRepository.get(req.id) match {
-      case None => throw new UnknownRunException
+      case None => throw UnknownRunException(req.id)
       case Some(run) =>
         run.parent match {
           case None => process(run, req)

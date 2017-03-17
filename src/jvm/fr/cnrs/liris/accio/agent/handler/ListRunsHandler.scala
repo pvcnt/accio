@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.agent.handler.api
+package fr.cnrs.liris.accio.agent.handler
 
 import com.google.inject.Inject
 import com.twitter.util.Future

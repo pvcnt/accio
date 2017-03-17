@@ -50,6 +50,7 @@ exception InvalidTaskException {
 }
 
 exception UnknownRunException {
+  1: required RunId id;
 }
 
 struct Artifact {

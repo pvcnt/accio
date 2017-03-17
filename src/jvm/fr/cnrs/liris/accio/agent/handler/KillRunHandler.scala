@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.agent.handler.api
+package fr.cnrs.liris.accio.agent.handler
 
 import com.google.inject.Inject
 import com.twitter.util.Future
@@ -42,9 +42,10 @@ final class KillRunHandler @Inject()(
   runManager: RunManager)
   extends AbstractHandler[KillRunRequest, KillRunResponse] {
 
+  @throws[UnknownRunException]
   override def handle(req: KillRunRequest): Future[KillRunResponse] = {
     val newRun = runRepository.get(req.id) match {
-      case None => throw new UnknownRunException
+      case None => throw UnknownRunException(req.id)
       case Some(run) =>
         if (run.children.nonEmpty) {
           var newParent = run

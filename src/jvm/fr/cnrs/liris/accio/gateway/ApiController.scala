@@ -159,7 +159,7 @@ class ApiController @Inject()(client: AgentService$FinagleClient) extends Contro
     val req = KillRunRequest(RunId(httpReq.id))
     client.killRun(req).liftToTry.map {
       case Return(_) => response.ok
-      case Throw(UnknownRunException()) => response.notFound
+      case Throw(e: UnknownRunException) => response.notFound
     }
   }
 
@@ -167,7 +167,7 @@ class ApiController @Inject()(client: AgentService$FinagleClient) extends Contro
     val req = UpdateRunRequest(RunId(httpReq.id), httpReq.name, httpReq.notes, httpReq.tags)
     client.updateRun(req).liftToTry.map {
       case Return(_) => response.ok
-      case Throw(UnknownRunException()) => response.notFound
+      case Throw(e: UnknownRunException) => response.notFound
     }
   }
 
@@ -175,7 +175,7 @@ class ApiController @Inject()(client: AgentService$FinagleClient) extends Contro
     val req = DeleteRunRequest(RunId(httpReq.id))
     client.deleteRun(req).liftToTry.map {
       case Return(_) => response.ok
-      case Throw(UnknownRunException()) => response.notFound
+      case Throw(e: UnknownRunException) => response.notFound
     }
   }
 

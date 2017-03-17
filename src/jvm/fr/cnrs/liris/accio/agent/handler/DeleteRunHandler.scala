@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.agent.handler.api
+package fr.cnrs.liris.accio.agent.handler
 
 import com.google.inject.Inject
 import com.twitter.util.Future
@@ -39,9 +39,10 @@ final class DeleteRunHandler @Inject()(
   state: ClusterState)
   extends AbstractHandler[DeleteRunRequest, DeleteRunResponse] {
 
+  @throws[UnknownRunException]
   override def handle(req: DeleteRunRequest): Future[DeleteRunResponse] = {
     runRepository.get(req.id) match {
-      case None => throw new UnknownRunException
+      case None => throw UnknownRunException(req.id)
       case Some(run) =>
         if (run.children.nonEmpty) {
           // It is a parent run, cancel and delete child all runs.
