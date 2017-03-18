@@ -23,7 +23,7 @@ import fr.cnrs.liris.dal.core.api.Dataset
 import fr.cnrs.liris.privamov.core.model.Trace
 
 @Op(
-  category = "prepare",
+  category = "transform",
   help = "Enforce a given size on each trace.",
   description = "Larger traces will be truncated, smaller traces will be discarded.",
   cpu = 4,

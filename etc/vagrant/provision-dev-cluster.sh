@@ -38,6 +38,9 @@ function prepare_extras() {
   ln -sf /home/ubuntu/accio/etc/vagrant/acciobuild.sh /usr/local/bin/acciobuild
   chown ubuntu: /usr/local/bin/acciobuild && chmod +x /usr/local/bin/acciobuild
 
+  # Copy default clusters definition file. We do not link it, in case the user want to add other clusters in it.
+  mkdir -p /etc/accio && cp /home/ubuntu/accio/etc/vagrant/clusters.json /etc/accio
+
   # Install Pants bash completion. It will trigger Pants initialization (including download).
   su ubuntu -c "./pants bash-completion" > /etc/bash_completion.d/pants-completion.bash
 }

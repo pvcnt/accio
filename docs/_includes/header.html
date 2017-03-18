@@ -3,22 +3,24 @@
         <div class="navbar-header">
             <a href="{{ "/" | prepend: site.baseurl }}" class="navbar-brand">{{ site.title }}</a>
         </div>
+        <ul class="nav navbar-nav">
+            <li{% if page.url contains "/user-guide/" %} class="active"{% endif %}>
+                <a href="{{ "/user-guide/introduction/" | prepend: site.baseurl }}">User guide</a>
+            </li>
+            <li{% if page.url contains "/reference/" %} class="active"{% endif %}>
+                <a href="{{ "/reference/overview/" | prepend: site.baseurl }}">Reference</a>
+            </li>
+            <li{% if page.url contains "/deploy/" %} class="active"{% endif %}>
+              <a href="{{ "/deploy/architecture/" | prepend: site.baseurl }}">Deploy</a>
+            </li>
+            <li{% if page.url contains "/extend/" %} class="active"{% endif %}>
+              <a href="{{ "/extend/compiling/" | prepend: site.baseurl }}">Extend</a>
+            </li>
+            <li{% if page.url contains "/resources/" %} class="active"{% endif %}>
+              <a href="{{ "/resources/" | prepend: site.baseurl }}">Resources</a>
+            </li>
+        </ul>
         <ul class="nav navbar-nav pull-right">
-            <li{% if page.nav == "docs" %} class="active"{% endif %}>
-                <a href="{{ "/docs/index.html" | prepend: site.baseurl }}">Docs</a>
-            </li>
-            <li{% if page.nav == "community" %} class="active"{% endif %}>
-              <a href="{{ "/community.html" | prepend: site.baseurl }}">Community</a>
-            </li>
-            <li{% if page.nav == "research" %} class="active"{% endif %}>
-                <a href="{{ "/research.html" | prepend: site.baseurl }}">Research</a>
-            </li>
-            <li{% if page.nav == "downloads" %} class="active"{% endif %}>
-                <a href="{{ "/downloads.html" | prepend: site.baseurl }}">
-                    <i class="fa fa-download" aria-hidden="true"></i>
-                    Downloads
-                </a>
-            </li>
             <li>
                 <a href="https://github.com/privamov/accio">
                     <i class="fa fa-github" aria-hidden="true"></i>

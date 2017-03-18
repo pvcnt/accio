@@ -25,7 +25,7 @@ import fr.cnrs.liris.privamov.core.model.Trace
 import org.joda.time.Instant
 
 @Op(
-  category = "prepare",
+  category = "transform",
   help = "Collapse temporal gaps between days.",
   description = "Removes empty days by shifting data to fill those empty days.",
   cpu = 4,

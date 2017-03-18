@@ -23,7 +23,7 @@ import fr.cnrs.liris.dal.core.api.Dataset
 import fr.cnrs.liris.privamov.core.model.Trace
 
 @Op(
-  category = "prepare",
+  category = "transform",
   help = "Regularly sample events inside traces using the modulo operator.",
   description = "It will ensure that the final number of events is exactly (+/- 1) the one required, and that events are regularly sampled (i.e., one out of x).",
   cpu = 4,

@@ -23,7 +23,7 @@ import fr.cnrs.liris.dal.core.api.Dataset
 import fr.cnrs.liris.privamov.core.model.{Event, Trace}
 
 @Op(
-  category = "prepare",
+  category = "transform",
   help = "Split traces, ensuring a maximum size for each one.",
   cpu = 4,
   ram = "2G")

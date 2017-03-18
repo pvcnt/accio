@@ -24,7 +24,7 @@ import fr.cnrs.liris.dal.core.api.Dataset
 import fr.cnrs.liris.privamov.core.model.Trace
 
 @Op(
-  category = "prepare",
+  category = "transform",
   help = "Enforce a given duration on each trace.",
   description = "Longer traces will be truncated, shorter traces will be discarded.",
   cpu = 4,

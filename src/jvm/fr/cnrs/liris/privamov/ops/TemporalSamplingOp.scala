@@ -24,7 +24,7 @@ import fr.cnrs.liris.dal.core.api.Dataset
 import fr.cnrs.liris.privamov.core.model.{Event, Trace}
 
 @Op(
-  category = "prepare",
+  category = "transform",
   help = "Enforce a minimum duration between two consecutive events in traces.",
   description = "If the duration is less than a given threshold, events will be discarded until the next point " +
     "that fulfills the minimum duration requirement.",

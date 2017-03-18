@@ -24,7 +24,7 @@ import fr.cnrs.liris.common.geo.Distance
 import fr.cnrs.liris.privamov.core.model.{Event, Trace}
 
 @Op(
-  category = "prepare",
+  category = "transform",
   help = "Enforce a minimum distance between two consecutive events in traces.",
   description = "If the distance is less than a given threshold, records will be discarded until the next point " +
     "that fulfills the minimum distance requirement.",

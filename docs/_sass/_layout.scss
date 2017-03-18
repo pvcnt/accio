@@ -2,6 +2,10 @@ html {
   height: 100%;
 }
 
+.center {
+  text-align: center;
+}
+
 body {
   padding-top: 75px;
   min-height: 100%;
@@ -36,11 +40,12 @@ footer .license {
  * Home page.
  */
 .jumbotron {
-  text-align: center;
+  padding: 30px;
 }
 
 .jumbotron p {
   margin-top: 40px;
+  margin-bottom: 0 !important;
 }
 
 .jumbotron h1 {
@@ -48,7 +53,7 @@ footer .license {
 }
 
 .jumbotron .btn {
-   font-size: 16px;
+   font-size: 18px;
 }
 
 .features-summary {
@@ -83,13 +88,13 @@ footer .license {
 
  /* Space between list items for better readability... */
  #page li {
-   margin-top: 10px;
+   margin-top: 5px;
  }
  /* ... but not for the table of contents */
  #page #markdown-toc li {
    margin-top: 0;
  }
-
+ 
 /**
  * Docs section.
  */
@@ -125,11 +130,4 @@ footer .license {
   margin-top: 5px;
   margin-bottom: 5px;
   padding-left: 20px;
-}
-
-/**
- * Community section.
- */
-#page .community-page h2:first-child {
-  margin-top: 0px;
 }

@@ -23,7 +23,7 @@ import fr.cnrs.liris.dal.core.api.Dataset
 import fr.cnrs.liris.privamov.core.model.Trace
 
 @Op(
-  category = "prepare",
+  category = "transform",
   help = "Split traces sequentially, according to chronological order.",
   cpu = 4,
   ram = "2G")

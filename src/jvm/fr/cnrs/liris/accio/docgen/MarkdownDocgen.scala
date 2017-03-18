@@ -18,7 +18,8 @@
 
 package fr.cnrs.liris.accio.docgen
 
-import java.io.{BufferedOutputStream, FileOutputStream, OutputStream}
+import java.io.{BufferedOutputStream, FileOutputStream, OutputStream, PrintStream}
+import java.nio.file.Files
 
 import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.domain.OpDef
@@ -37,64 +38,74 @@ class MarkdownDocgen @Inject()(opRegistry: OpRegistry) {
    * @param flags Generator options.
    */
   def generate(flags: AccioDocgenFlags): Unit = {
-    val out = new BufferedOutputStream(new FileOutputStream(flags.out.toFile))
-    writeIntro(out, flags)
-    opRegistry.ops.groupBy(_.category).foreach { case (category, ops) =>
-      out.write(s"## ${category.capitalize} operators\n\n".getBytes)
-      ops.toSeq.sortBy(_.name).foreach { opMeta =>
-        writeOp(out, opMeta)
+    Files.createDirectories(flags.out)
+    opRegistry
+      .ops
+      .groupBy(_.category)
+      .toSeq
+      .sortBy(_._1)
+      .zipWithIndex
+      .foreach { case ((category, ops), idx) =>
+        val out = new PrintStream(new BufferedOutputStream(new FileOutputStream(flags.out.resolve(s"ops-$category.md").toFile)))
+        try {
+          writeIntro(out, flags, category, 50 + idx)
+          ops.toSeq.sortBy(_.name).foreach { opMeta =>
+            writeOp(out, opMeta)
+          }
+        } finally {
+          out.close()
+        }
       }
-    }
-
-    out.close()
   }
 
-  private def writeIntro(out: OutputStream, flags: AccioDocgenFlags) = {
-    out.write("---\n".getBytes)
-    out.write(s"layout: ${flags.layout}\n".getBytes)
-    out.write(s"nav: ${flags.nav}\n".getBytes)
-    out.write(s"title: ${flags.title}\n".getBytes)
-    out.write("---\n\n".getBytes)
+  private def writeIntro(out: PrintStream, flags: AccioDocgenFlags, category: String, weight: Int) = {
+    out.println("---")
+    out.println(s"layout: ${flags.layout}")
+    out.println(s"""title: "Operators: ${category.capitalize}"""")
+    out.println(s"weight: $weight")
+    out.println("---\n")
 
     if (flags.toc) {
-      out.write("* TOC\n{:toc}\n\n".getBytes)
+      out.println("* TOC")
+      out.println("{:toc}\n")
     }
   }
 
-  private def writeOp(out: OutputStream, opDef: OpDef) = {
-    out.write(s"### ${opDef.name}\n\n".getBytes)
+  private def writeOp(out: PrintStream, opDef: OpDef) = {
+    out.println(s"## ${opDef.name}")
+    out.println()
     opDef.deprecation.foreach { deprecation =>
-      out.write(s":broken_heart: **Deprecated:** $deprecation\n\n".getBytes)
-    }
-    opDef.help.foreach { help =>
-      out.write(s"$help\n\n".getBytes)
+      out.println(s"""<div class="alert alert-warning" markdown="1"> :broken_heart: **Deprecated:** $deprecation</div>""")
+      out.println()
     }
     opDef.description.foreach { description =>
-      out.write(s"$description\n\n".getBytes)
+      out.println(description)
+      out.println()
     }
     if (opDef.inputs.nonEmpty) {
-      out.write("| Input name | Type | Description |\n".getBytes)
-      out.write("|:-----------|:-----|:------------|\n".getBytes)
+      out.println("| Input name | Type | Description |")
+      out.println("|:-----------|:-----|:------------|")
       opDef.inputs.foreach { argDef =>
-        out.write(s"| `${argDef.name}` | ${DataTypes.toString(argDef.kind)}".getBytes)
+        out.print(s"| `${argDef.name}` | ${DataTypes.toString(argDef.kind)}")
         if (argDef.defaultValue.isDefined) {
-          out.write(s"; optional; default: ${Values.toString(argDef.defaultValue.get)}".getBytes)
+          out.print(s"; optional; default: ${Values.toString(argDef.defaultValue.get)}")
         } else if (argDef.isOptional) {
-          out.write("; optional".getBytes)
+          out.print("; optional")
         } else {
-          out.write("; required".getBytes)
+          out.print("; required")
         }
-        out.write(s" | ${argDef.help.getOrElse("-")} |\n".getBytes)
+        out.println(s" | ${argDef.help.getOrElse("-")} |")
       }
-      out.write("{: class=\"table table-striped\"}\n\n".getBytes)
+      out.println("""{: class="table table-striped"}""")
+      out.println()
     }
     if (opDef.outputs.nonEmpty) {
-      out.write("| Output name | Type | Description |\n".getBytes)
-      out.write("|:------------|:-----|:------------|\n".getBytes)
+      out.println("| Output name | Type | Description |")
+      out.println("|:------------|:-----|:------------|")
       opDef.outputs.foreach { argDef =>
-        out.write(s"| `${argDef.name}` | ${DataTypes.toString(argDef.kind)} | ${argDef.help.getOrElse("-")} |\n".getBytes)
+        out.println(s"| `${argDef.name}` | ${DataTypes.toString(argDef.kind)} | ${argDef.help.getOrElse("-")} |")
       }
-      out.write("{: class=\"table table-striped\"}\n\n".getBytes)
+      out.println("{: class=\"table table-striped\"}\n")
     }
   }
 }

@@ -25,7 +25,7 @@ import fr.cnrs.liris.common.geo.Point
 import fr.cnrs.liris.privamov.core.model.{Event, Trace}
 
 @Op(
-  category = "prepare",
+  category = "transform",
   help = "Apply gaussian kernel smoothing on traces.",
   description = "Apply gaussian kernel smoothing on a trace, attenuating the impact of noisy observations.",
   cpu = 4,

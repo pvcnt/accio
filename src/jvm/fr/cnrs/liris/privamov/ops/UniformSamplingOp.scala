@@ -26,7 +26,7 @@ import fr.cnrs.liris.privamov.core.model.Trace
 import scala.util.Random
 
 @Op(
-  category = "prepare",
+  category = "transform",
   help = "Uniformly sample events inside traces.",
   description = "Perform a uniform sampling on traces, keeping each event with a given probability.",
   unstable = true,

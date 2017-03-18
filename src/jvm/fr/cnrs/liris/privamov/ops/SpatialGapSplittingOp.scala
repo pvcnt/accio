@@ -24,7 +24,7 @@ import fr.cnrs.liris.common.geo.Distance
 import fr.cnrs.liris.privamov.core.model.{Event, Trace}
 
 @Op(
-  category = "prepare",
+  category = "transform",
   help = "Split traces, when there is a too huge distance between consecutive events.",
   cpu = 4,
   ram = "2G")
