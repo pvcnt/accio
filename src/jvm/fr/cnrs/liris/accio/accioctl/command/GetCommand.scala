@@ -19,20 +19,14 @@
 package fr.cnrs.liris.accio.accioctl.command
 
 import com.google.inject.Inject
-import com.twitter.util._
+import fr.cnrs.liris.accio.accioctl.controller._
 import fr.cnrs.liris.accio.agent._
-import fr.cnrs.liris.accio.accioctl.command.FormatUtils.format
-import fr.cnrs.liris.accio.runtime.event.{Event, Reporter}
 import fr.cnrs.liris.accio.runtime.cli.{Cmd, ExitCode}
-import fr.cnrs.liris.accio.core.domain.RunStatus
+import fr.cnrs.liris.accio.runtime.event.{Event, Reporter}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
-import fr.cnrs.liris.common.util.StringUtils.{explode, padTo}
-
-import scala.collection.mutable
+import fr.cnrs.liris.common.util.StringUtils.explode
 
 case class GetCommandFlags(
-  //@Flag(name = "output", help = "Output format")
-  //output: Option[String],
   @Flag(name = "all", help = "Show all resources, including those disabled")
   all: Boolean = false,
   @Flag(name = "tags", help = "Show only resources including one of given tags (comma-separated)")
@@ -45,12 +39,13 @@ case class GetCommandFlags(
 @Cmd(
   name = "get",
   flags = Array(classOf[GetCommandFlags], classOf[ClusterFlags]),
-  help = "List runs.",
+  help = "Display a list of resources.",
   allowResidue = true)
 class GetCommand @Inject()(clientProvider: ClusterClientProvider) extends ClientCommand(clientProvider) {
-  override def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
+  override def execute(flags: FlagsProvider, reporter: Reporter): ExitCode = {
     if (flags.residue.isEmpty) {
-      out.handle(Event.error("You must specify a resource type"))
+      reporter.handle(Event.error("You must specify a resource type.\n" +
+        "Valid resource types are: workflow, run, operator, agent"))
       return ExitCode.CommandLineError
     }
     val maybeController: Option[GetController[_]] = flags.residue.head match {
@@ -62,105 +57,20 @@ class GetCommand @Inject()(clientProvider: ClusterClientProvider) extends Client
     }
     maybeController match {
       case None =>
-        out.handle(Event.error(s"Invalid resource type: ${flags.residue.head}"))
+        reporter.handle(Event.error(s"Invalid resource type: ${flags.residue.head}.\n" +
+          s"Valid resource types are: workflow, run, operator, agent"))
         ExitCode.CommandLineError
       case Some(controller) =>
         val client = createClient(flags)
-        execute(controller, out, flags.as[GetCommandFlags], client)
+        execute(controller, reporter, flags.as[GetCommandFlags], client)
     }
   }
 
-  private def execute[Res](controller: GetController[Res], out: Reporter, opts: GetCommandFlags, client: AgentService$FinagleClient) = {
-    handleResponse(controller.retrieve(out, opts, client), out) { resp =>
-      controller.print(out, resp)
+  private def execute[Res](controller: GetController[Res], reporter: Reporter, opts: GetCommandFlags, client: AgentService$FinagleClient) = {
+    val query = GetQuery(all = opts.all, owner = opts.owner, tags = explode(opts.tags, ","), limit = opts.n)
+    handleResponse(controller.retrieve(query, client), reporter) { resp =>
+      controller.print(reporter, resp)
       ExitCode.Success
-    }
-  }
-}
-
-trait GetController[Res] {
-  def retrieve(out: Reporter, opts: GetCommandFlags, client: AgentService$FinagleClient): Future[Res]
-
-  def print(out: Reporter, resp: Res): Unit
-}
-
-class GetRunController extends GetController[ListRunsResponse] {
-  override def retrieve(out: Reporter, opts: GetCommandFlags, client: AgentService$FinagleClient): Future[ListRunsResponse] = {
-    val status = Set[RunStatus](RunStatus.Scheduled, RunStatus.Running) ++
-      (if (opts.all) Set(RunStatus.Failed, RunStatus.Success, RunStatus.Killed) else Set.empty)
-    val tags = opts.tags.map(explode(",", _))
-    val req = ListRunsRequest(owner = opts.owner, tags = tags, status = Some(status), limit = opts.n)
-    client.listRuns(req)
-  }
-
-  override def print(out: Reporter, resp: ListRunsResponse): Unit = {
-    out.outErr.printOutLn(s"${padTo("ID", 32)}  ${padTo("WORKFLOW", 15)}  ${padTo("CREATED", 15)}  ${padTo("NAME", 30)}  STATUS")
-    resp.results.foreach { run =>
-      val name = (if (run.children.nonEmpty) s"(${run.children.size}) " else "") + run.name.getOrElse("<no name>")
-      out.outErr.printOutLn(s"${padTo(run.id.value, 32)}  ${padTo(run.pkg.workflowId.value, 15)}  ${padTo(format(Time.fromMilliseconds(run.createdAt)), 15)}  ${padTo(name, 30)}  ${run.state.status.name}")
-    }
-    if (resp.totalCount > resp.results.size) {
-      out.outErr.printOutLn(s"${resp.totalCount - resp.results.size} more...")
-    }
-  }
-}
-
-class GetOperatorController extends GetController[ListOperatorsResponse] {
-  override def retrieve(out: Reporter, opts: GetCommandFlags, client: AgentService$FinagleClient): Future[ListOperatorsResponse] = {
-    client.listOperators(ListOperatorsRequest(includeDeprecated = opts.all))
-  }
-
-  override def print(out: Reporter, resp: ListOperatorsResponse): Unit = {
-    val maxLength = resp.results.map(_.name.length).max
-    resp.results.sortBy(_.name).groupBy(_.category).foreach { case (category, categoryOps) =>
-      out.outErr.printOutLn(s"Operators in $category category")
-      categoryOps.foreach { op =>
-        val padding = " " * (maxLength - op.name.length)
-        out.outErr.printOutLn(s"  ${op.name}$padding ${op.help.getOrElse("")}")
-      }
-      out.outErr.printOutLn()
-    }
-  }
-}
-
-class GetWorkflowController extends GetController[ListWorkflowsResponse] {
-  override def retrieve(out: Reporter, opts: GetCommandFlags, client: AgentService$FinagleClient): Future[ListWorkflowsResponse] = {
-    client.listWorkflows(ListWorkflowsRequest(owner = opts.owner, limit = opts.n))
-  }
-
-  override def print(out: Reporter, resp: ListWorkflowsResponse): Unit = {
-    out.outErr.printOutLn(s"${padTo("ID", 30)}  ${padTo("OWNER", 15)}  ${padTo("CREATED", 15)}  NAME")
-    resp.results.foreach { workflow =>
-      out.outErr.printOutLn(s"${padTo(workflow.id.value, 30)}  ${padTo(workflow.owner.name, 15)}  ${padTo(format(Time.fromMilliseconds(workflow.createdAt)), 15)}  ${workflow.name.getOrElse("<no name>")}")
-    }
-    if (resp.totalCount > resp.results.size) {
-      out.outErr.printOutLn(s"${resp.totalCount - resp.results.size} more...")
-    }
-  }
-}
-
-class GetAgentController extends GetController[ListAgentsResponse] {
-  override def retrieve(out: Reporter, opts: GetCommandFlags, client: AgentService$FinagleClient): Future[ListAgentsResponse] = {
-    client.listAgents(ListAgentsRequest())
-  }
-
-  override def print(out: Reporter, resp: ListAgentsResponse): Unit = {
-    out.outErr.printOutLn(s"${padTo("NAME", 20)}  ${padTo("CPU", 4)}  ${padTo("RAM", 8)}  ${padTo("DISK", 8)}  TYPE")
-    resp.results.foreach { agent =>
-      val types = mutable.Set.empty[String]
-      if (agent.isMaster) {
-        types += "Master"
-      }
-      if (agent.isWorker) {
-        types += "Worker"
-      }
-      out.outErr.printOut(s"${padTo(agent.id.value, 20)}  ")
-      if (agent.isWorker) {
-        out.outErr.printOut(s"${padTo(agent.maxResources.cpu.toString, 4)}  ${padTo(format(StorageUnit.fromMegabytes(agent.maxResources.ramMb)), 8)}  ${padTo(format(StorageUnit.fromMegabytes(agent.maxResources.diskMb)), 8)}")
-      } else {
-        out.outErr.printOut(s"${padTo("-", 4)}  ${padTo("-", 8)}  ${padTo("-", 8)}")
-      }
-      out.outErr.printOutLn(s"  ${types.mkString(",")}")
     }
   }
 }

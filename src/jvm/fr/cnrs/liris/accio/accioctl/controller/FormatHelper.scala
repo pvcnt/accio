@@ -16,21 +16,21 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.accioctl.command
+package fr.cnrs.liris.accio.accioctl.controller
 
 import java.util.{Date, Locale}
 
 import com.twitter.util.{Duration, StorageUnit, Time}
 import org.ocpsoft.prettytime.PrettyTime
 
-private[command] object FormatUtils {
+private[controller] trait FormatHelper {
   private[this] val prettyTime = new PrettyTime().setLocale(Locale.ENGLISH)
 
-  def format(time: Time): String = {
+  protected final def format(time: Time): String = {
     prettyTime.format(new Date(time.inMillis))
   }
 
-  def format(duration: Duration): String = {
+  protected final def format(duration: Duration): String = {
     if (duration.inHours > 5) {
       s"${duration.inHours} hours"
     } else if (duration.inMinutes > 30) {
@@ -42,7 +42,7 @@ private[command] object FormatUtils {
     }
   }
 
-  def format(storage: StorageUnit): String = {
+  protected final def format(storage: StorageUnit): String = {
     storage.toHuman.replace(" ", "")
   }
 }

@@ -1,6 +1,7 @@
 scala_library(
   dependencies=[
     'src/jvm/fr/cnrs/liris/accio/accioctl/config',
+    'src/jvm/fr/cnrs/liris/accio/accioctl/controller',
     'src/jvm/fr/cnrs/liris/accio/core/domain',
     'src/jvm/fr/cnrs/liris/accio/core/analysis',
     'src/jvm/fr/cnrs/liris/accio/core/util',
@@ -8,10 +9,8 @@ scala_library(
     'src/jvm/fr/cnrs/liris/accio/runtime/cli',
     'src/jvm/fr/cnrs/liris/accio/runtime/event',
     'src/thrift/fr/cnrs/liris/accio/agent',
-
     'src/jvm/fr/cnrs/liris/common/util',
     '3rdparty/jvm/com/typesafe/scala-logging',
-    '3rdparty/jvm/org/ocpsoft/prettytime',
     '3rdparty/jvm:scala-guice',
   ],
   sources=globs('*.scala')

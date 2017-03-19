@@ -38,7 +38,7 @@ class ValidateCommand @Inject()(clientProvider: ClusterClientProvider) extends C
 
   def execute(flags: FlagsProvider, reporter: Reporter): ExitCode = {
     if (flags.residue.isEmpty) {
-      reporter.handle(Event.error("You must specify at least one files to validate as argument"))
+      reporter.handle(Event.error("You must specify at least one file to validate as argument"))
       return ExitCode.CommandLineError
     }
     val client = createClient(flags)
