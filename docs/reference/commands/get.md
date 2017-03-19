@@ -4,56 +4,49 @@ weight: 60
 title: "Command: get"
 ---
 
-The `ps` command is used to search for runs.
+The `get` command displays a list of resources.
 
 ## Usage
 ```
-accio ps [<options>]
+accio get [<options>] type
 ```
 
-This command accepts no argument.
-By default it returns only scheduled or running runs (up to 100), but options can be specified to alter this behavior.
-Runs are returned in reverse chronological order, the most recently created one being the first result.
+This command accepts a single argument, the type of resource to display.
+Valid resource types are:
+
+  * workflow
+  * run
+  * operator
+  * agent
+
+Resource types can be used either singular or plural.
+By default it displays only active resources (e.g., runs being executed), but the `-all` option can override this behavior.
+Resources are returned in reverse chronological order (when applicable), the most recently created one being the first result.
 
 ## Options
-* `-addr=<string>`: Address of the Accio cluster. It can be any name following [Finagle's naming syntax](https://twitter.github.io/finagle/guide/Names.html).
-Overrides the ACCIO_ADDR environment variable. Defaults to *127.0.0.1:9999*.
-* `-[no]active`: Hide active (i.e., scheduled or running) runs.
-Defaults to true.
-* `-[no]completed`: Include completed (i.e., successful or failed) runs.
-Implies `-success` and `-failed`.
-Defaults to false.
-* `-[no]success`: Include successful runs.
-Defaults to false.
-* `-[no]failed`: Include failed runs.
-Defaults to false.
-* `-[no]all`: Include all runs, whatever their state. Implies `-completed`.
-Defaults to false.
-* `-owner=<string>`: Include only runs belonging to a given owner.
-* `-name=<string>`: Include only runs whose name matches a given string.
-* `-n=<integer>`: Limit the number of results.
-* `-quiet`: Print only run identifiers, if the command was successful.
-Otherwise, you can still use the exit code to determine the outcome of the command.
-* `-json`: Print JSON output.
+* `-all`: Display all resources, including inactive ones.
+* `-owner=<string>`: Display only resources belonging to a given owner (specified by his exact username).
+* `-tags=<string>[,<string>...]`: Display only resources having all of the given tags.
+* `-n=<integer>`: Limit the number of displayed results.
+By default all resources are displayed.
 
 ## Exit codes
 * `0`: Success.
+* `1`: Bad command-line, there was an error with the arguments/options/environment variables combination.
+Notably happens if resource type is invalid.
 * `5`: Internal error.
 
 ## Examples
-List all active runs:
-
 ```
-$ accio ps
-Run id                            Workflow id      Created          Run name         Status
-b69c1e3358f147deb0da8ec9497340aa  workflow_Promes  21 minutes ago   (15) Promesse e  Running
-14fa9822df5b4446873cfbcceb69039f  workflow_Geo-I   26 minutes ago   <no name>        Running
-```
+# List all active runs.
+$ accio get runs
 
-List my own failed runs:
+# List 5 last runs of John Doe.
+$ accio get runs -all -n=5 -owner=jdoe
 
-```
-$ accio ps -failed -owner=jdoe
-Run id                            Workflow id      Created          Run name         Status
-6c4a54d5922545e5990fc1f6bd8194c4  workflow_Geo-I   2 days ago       <no name>        Failed
+# List available operators in this cluster.
+$ accio get operators
+
+# List active agents in this cluster.
+$ accio get agents
 ```

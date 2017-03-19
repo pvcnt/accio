@@ -60,6 +60,8 @@ Whereas runs are immutable after being created, their metadata can be freely upd
 Please note that child runs do not have their own metadata (i.e., name, notes and tags).
 Instead they inherit metadata of their parent.
 It means that even if you update metadata of a child run, it will actually update metadata of the parent run.
+Moreover, child runs have a name that is automatically generated after the combination of parameters that produced them;
+that name cannot be modified.
 
 There are cases where we need to test many different parametrizations of a workflow.
 Fortunately, this is very easily doable with Accio, thanks to a flexible definition of parameters.
@@ -148,7 +150,14 @@ In this invocation, the first argument is a path to a run definition file, and f
 With this particular form, the workflow that is launched cannot be overriden.
 Command-line flags take precedence over the run definition file.
 
-## More about runs execution
+## Editing run metadata
+Currently, the only way to edit run metadata after its creation is through the Web interface.
+When viewing details of a run, the *Edit* button opens a dialog box allowing to modify these values.
+Remind that only single and parent runs have metadata; child runs re-use metadata of their parents.
+
+![Run metadata](../../images/ui/run_metadata.png)
+
+## Internals
 This part contains additional information to better understand Accio internals.
 
 ### Outputs memoization

@@ -8,20 +8,22 @@ The `delete` command is used to delete specific resources.
 
 ## Usage
 ```
-accio rm [<options>] <run id> [...]
+accio delete [<options>] <type> <identifier> [<identifier>...]
 ```
 
-This command requires a single argument, which is the identifier of the run to kill.
-If a parent run is specified, all its children will be stopped.
+This command requires as arguments the type of resource to delete, followed by one or several identifiers.
+Valid resource types are:
 
-## Options
-* `-addr=<string>`: Address of the Accio cluster. It can be any name following [Finagle's naming syntax](https://twitter.github.io/finagle/guide/Names.html).
-Overrides the ACCIO_ADDR environment variable. Defaults to *127.0.0.1:9999*.
-* `-quiet`: Suppress output.
-You can still use the exit code to determine the outcome of the command.
+  * run
+
+Resource types can be used either singular or plural.
+
+For runs, if a parent run is specified, all of its children will be deleted too.
+For workflows, only those having no run associated with can be deleted.
+All versions of this workflow will be deleted.
 
 ## Exit codes
 * `0`: Success.
 * `1`: Bad command-line, there was an error with the arguments/options/environment variables combination.
-Notably happens when the run does not exist.
+Notably happens when the resource type is invalid or at least one of the resources does not exist.
 * `5`: Internal error.

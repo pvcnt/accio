@@ -5,7 +5,7 @@ title: Accio commands (CLI)
 ---
 
 Accio comes with a command-line interface that can be used to perform most of the tasks.
-There is a single binary, that can be invoked by calling `accio` in your favorite shell, which comes with several commands, e.g., `ops`  or `submit`.
+There is a single binary, that can be invoked by calling `accio` in your favorite shell, which comes with several commands, e.g., `get`  or `submit`.
 The exhaustive list of commands is in the navigation menu on the left.
 
 The command to invoke is specified first, and is generally followed by options and arguments.
@@ -27,5 +27,8 @@ They will not be repeated when listing options of each command in this section.
 Defaults to *warn*.
 * `-[no]color`: Enable or disable colored output.
 Defaults to true.
+* `-[no]quiet`: Suppress all output.
+You can still use the exit code to determine the outcome of the command.
+Defaults to false.
 
 The `ACCIO_USER` environment variable can be used to specify the actual user's name, which defaults to the current user's shell login.

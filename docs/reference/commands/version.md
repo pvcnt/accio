@@ -4,23 +4,27 @@ weight: 95
 title: "Command: version"
 ---
 
-The `version` command is used to get client build information.
+The `version` command is used to get client and server build information.
 
 ## Usage
 ```
-accio version
+accio version [<options>]
 ```
 
 This command requires no argument.
-It prints the current version of the Accio client binary.
+It prints the current version of the Accio client binary and of the Accio cluster.
+As they are installed and upgraded independently, these two versions can possibly be different.
+
+## Options
+* `-client`: Display only the version of the client (no server required).
 
 ## Exit codes
 * `0`: Success.
+* `5`: Internal error.
 
 ## Examples
-Get client build information:
-
 ```
 $ accio version
-Build version: 2.0.0-dev
+Server version: 0.5.0
+Client version: 0.5.0
 ```

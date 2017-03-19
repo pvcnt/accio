@@ -12,5 +12,5 @@ The standard set of operators encompasses many state-of-the-art algorithms about
 Accio has been used and is being used by privacy researchers to help them launch experiments and analyze their results.
 
 <div class="alert alert-success" markdown="1">
-  :thumbsup: You can browse all available operators by using the left menu.
+  :thumbsup: You can browse all available operators organized by category by using the left menu.
 </div>
