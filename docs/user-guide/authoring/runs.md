@@ -84,8 +84,10 @@ Fortunately, this is very easily doable with Accio, thanks to a flexible definit
 ```
 
 In this above example, the `epsilon` parameter will take values for 0.00001 to 1 following a logarithmic progression, while the `uri` parameter will take two different values corresponding to two different datasets.
-It means that a parent run will be created with a child run for each combination of parameters.
-Moreover, each combination of parameters will be repeated three times, thus creating three different runs, because of the `repeat` field.
+A parent run will be created, associated with a child run for each combination of parameters.
+More precisely, `epsilon` will successively take values 0.0001, 0.001, 0.01, 0.1 and 1, and `uri` the two values provided in the definition, for a total of 10 different combinations of values. 
+Moreover, each combination of parameters will be repeated three times, because of the `repeat` field.
+At the end, this run definition ends up giving birth to 30 different runs, all belonging to a parent run.
 Repeating a workflow several times is especially useful in the presence of unstable operators.
 In this particular workflow, the `GeoIndistinguishability` operator is unstable, and will hence produce different outputs each time it is executed.
 

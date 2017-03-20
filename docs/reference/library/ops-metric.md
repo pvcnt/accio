@@ -24,20 +24,6 @@ weight: 51
 | `fscore` | map(string, double) | Area coverage F-score |
 {: class="table table-striped"}
 
-## BasicAnalyzer
-
-| Input name | Type | Description |
-|:-----------|:-----|:------------|
-| `data` | dataset; required | Input dataset |
-{: class="table table-striped"}
-
-| Output name | Type | Description |
-|:------------|:-----|:------------|
-| `size` | map(string, long) | Trace size |
-| `length` | map(string, double) | Trace length |
-| `duration` | map(string, long) | Trace duration |
-{: class="table table-striped"}
-
 ## CountQueriesDistortion
 
 | Input name | Type | Description |
@@ -85,20 +71,6 @@ weight: 51
 |:------------|:-----|:------------|
 | `distortions` | map(string, double) | Distortions ("-" = missing user in train or test)  |
 | `avgDist` | double | Average distortion |
-{: class="table table-striped"}
-
-## PoisAnalyzer
-
-| Input name | Type | Description |
-|:-----------|:-----|:------------|
-| `threshold` | distance; required | Matching threshold |
-| `train` | dataset; required | Train POIs dataset |
-| `test` | dataset; optional | Test POIs dataset, to be compared with train dataset |
-{: class="table table-striped"}
-
-| Output name | Type | Description |
-|:------------|:-----|:------------|
-| `data` | dataset | POIs analysis dataset |
 {: class="table table-striped"}
 
 ## PoisReident

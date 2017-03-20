@@ -46,7 +46,6 @@ object OpsModule extends ScalaModule {
     // List of available operators.
     val ops = ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Class[_ <: Operator[_, _]]] {})
     ops.addBinding.toInstance(classOf[AreaCoverageOp])
-    ops.addBinding.toInstance(classOf[BasicAnalyzerOp])
     ops.addBinding.toInstance(classOf[CollapseTemporalGapsOp])
     ops.addBinding.toInstance(classOf[CountQueriesDistortionOp])
     ops.addBinding.toInstance(classOf[DataCompletenessOp])
@@ -58,7 +57,6 @@ object OpsModule extends ScalaModule {
     ops.addBinding.toInstance(classOf[GaussianKernelSmoothingOp])
     ops.addBinding.toInstance(classOf[GeoIndistinguishabilityOp])
     ops.addBinding.toInstance(classOf[ModuloSamplingOp])
-    ops.addBinding.toInstance(classOf[PoisAnalyzerOp])
     ops.addBinding.toInstance(classOf[PoisExtractionOp])
     ops.addBinding.toInstance(classOf[PoisRetrievalOp])
     ops.addBinding.toInstance(classOf[PromesseOp])
