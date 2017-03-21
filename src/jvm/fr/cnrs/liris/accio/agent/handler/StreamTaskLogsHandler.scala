@@ -23,7 +23,7 @@ import com.twitter.util.Future
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{StreamTaskLogsRequest, StreamTaskLogsResponse}
-import fr.cnrs.liris.accio.core.domain.InvalidTaskException
+import fr.cnrs.liris.accio.core.domain.{InvalidTaskException, InvalidWorkerException}
 import fr.cnrs.liris.accio.core.scheduler.ClusterState
 import fr.cnrs.liris.accio.core.storage.MutableRunRepository
 
@@ -37,6 +37,7 @@ class StreamTaskLogsHandler @Inject()(runRepository: MutableRunRepository, state
   extends AbstractHandler[StreamTaskLogsRequest, StreamTaskLogsResponse] with LazyLogging {
 
   @throws[InvalidTaskException]
+  @throws[InvalidWorkerException]
   override def handle(req: StreamTaskLogsRequest): Future[StreamTaskLogsResponse] = {
     state.ensure(req.workerId, req.taskId)
     runRepository.save(req.logs)

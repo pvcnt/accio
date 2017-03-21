@@ -22,7 +22,7 @@ import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.agent._
 import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
-import fr.cnrs.liris.accio.core.domain.InvalidTaskException
+import fr.cnrs.liris.accio.core.domain.{InvalidExecutorException, InvalidTaskException}
 
 /**
  * Handle a request from an executor who completed the task that was assigned to it (either successfully or not).

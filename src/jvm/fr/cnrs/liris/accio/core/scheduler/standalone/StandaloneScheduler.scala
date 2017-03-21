@@ -60,19 +60,19 @@ class StandaloneScheduler @Inject()(
   }
 
   override def kill(taskId: TaskId): Unit = {
-    val maybeWorker = clusterState.read(_.find(_.runningTasks.exists(_.id == taskId)))
+    val maybeWorker = clusterState.read(_.find(_.activeTasks.exists(_.id == taskId)))
     maybeWorker match {
       case None =>
         logger.warn(s"No worker is currently executing ${taskId.value}")
-        throw new InvalidTaskException
+        throw InvalidTaskException(taskId, Some("No worker is currently executing this task"))
       case Some(worker) => kill(worker, taskId)
     }
   }
 
   override def kill(runId: RunId): Set[Task] = {
-    val activeWorkers = clusterState.read(_.filter(_.runningTasks.exists(task => task.runId == runId)))
+    val activeWorkers = clusterState.read(_.filter(_.activeTasks.exists(task => task.runId == runId)))
     activeWorkers.flatMap { worker =>
-      val tasks = worker.runningTasks.filter(task => task.runId == runId)
+      val tasks = worker.activeTasks.filter(task => task.runId == runId)
       tasks.foreach(task => kill(worker, task.id))
       tasks
     }
@@ -92,7 +92,7 @@ class StandaloneScheduler @Inject()(
         val f = clientFactory.create(worker.dest).assignTask(AssignTaskRequest(task)).liftToTry
         Await.result(f) match {
           case Return(_) => true
-          case Throw(InvalidTaskException()) =>
+          case Throw(_: InvalidTaskException) =>
             // This error case should not happen, as it corresponds to the worker already handling the task under
             // scrutiny. If it happens, we log it but can let the execution continue safely.
             logger.error(s"Task ${task.id.value} is already assigned to worker ${worker.id.value}")

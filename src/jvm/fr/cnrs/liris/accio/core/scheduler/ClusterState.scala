@@ -24,7 +24,6 @@ import javax.annotation.concurrent.ThreadSafe
 import com.google.inject.Singleton
 import com.twitter.util.Time
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.agent.InvalidWorkerException
 import fr.cnrs.liris.accio.core.domain.NodeStatus.EnumUnknownNodeStatus
 import fr.cnrs.liris.accio.core.domain.{InvalidTaskException, _}
 
@@ -54,7 +53,7 @@ class ClusterState extends StrictLogging {
   def register(workerId: WorkerId, dest: String, resources: Resource): Unit = write {
     if (index.contains(workerId)) {
       logger.debug(s"Worker ${workerId.value} is already registered")
-      throw new InvalidWorkerException
+      throw InvalidWorkerException(workerId, Some("Worker is already registered"))
     }
     index(workerId) = WorkerInfo(workerId, dest, resources)
   }
@@ -69,7 +68,7 @@ class ClusterState extends StrictLogging {
   def unregister(workerId: WorkerId): Unit = write {
     if (index.remove(workerId).isEmpty) {
       logger.debug(s"Worker ${workerId.value} is not registered")
-      throw new InvalidWorkerException
+      throw InvalidWorkerException(workerId, Some("Worker is not registered"))
     }
   }
 
@@ -77,12 +76,13 @@ class ClusterState extends StrictLogging {
    * Record a heartbeat from a worker.
    *
    * @param workerId Worker identifier.
+   * @param at       Time at which the heartbeat is recorded.
    * @throws InvalidWorkerException If the worker is not registered.
    */
   @throws[InvalidWorkerException]
-  def recordHeartbeat(workerId: WorkerId): Unit = write {
+  def recordHeartbeat(workerId: WorkerId, at: Time = Time.now): Unit = write {
     val worker = apply(workerId)
-    index(workerId) = worker.copy(heartbeatAt = Time.now)
+    index(workerId) = worker.copy(heartbeatAt = at)
   }
 
   /**
@@ -96,16 +96,16 @@ class ClusterState extends StrictLogging {
   @throws[InvalidWorkerException]
   @throws[InvalidTaskException]
   def assign(workerId: WorkerId, task: Task): Unit = write {
-    index.values.find(_.runningTasks.exists(_.id == task.id)) match {
+    index.values.find(_.activeTasks.exists(_.id == task.id)) match {
       case Some(w) =>
         logger.debug(s"Task ${task.id.value} is already assigned to worker ${w.id.value}")
         if (w.id != workerId) {
-          throw new InvalidTaskException
+          throw InvalidTaskException(task.id, Some(s"Task is already assigned to worker ${w.id.value}"))
         }
       case None =>
         var worker = apply(workerId)
         // Add starting task to running tasks and update resources of the worker accordingly.
-        val runningTasks = worker.runningTasks + task.copy(status = NodeStatus.Scheduled)
+        val runningTasks = worker.activeTasks + task.copy(status = NodeStatus.Scheduled)
         val availableResources = Resource(
           worker.availableResources.cpu - task.resource.cpu,
           worker.availableResources.ramMb - task.resource.ramMb,
@@ -115,7 +115,7 @@ class ClusterState extends StrictLogging {
           worker.reservedResources.ramMb + task.resource.ramMb,
           worker.reservedResources.diskMb + task.resource.diskMb)
         worker = worker.copy(
-          runningTasks = runningTasks,
+          activeTasks = runningTasks,
           availableResources = availableResources,
           reservedResources = reservedResources)
 
@@ -132,16 +132,15 @@ class ClusterState extends StrictLogging {
    *
    * @param workerId Worker identifier.
    * @param taskId   Task identifier.
-   * @throws InvalidWorkerException If the worker is not registered.
-   * @throws InvalidTaskException   If the task is not assigned to the previously specified worker.
+   * @throws InvalidWorkerException If the task is not assigned to the previously specified worker.
    * @return Worker identity.
    */
-  @throws[InvalidTaskException]
   @throws[InvalidWorkerException]
   def ensure(workerId: WorkerId, taskId: TaskId): WorkerInfo = {
     val worker = apply(workerId)
-    if (!worker.runningTasks.exists(_.id == taskId)) {
-      throw new InvalidTaskException
+    if (!worker.activeTasks.exists(_.id == taskId)) {
+      logger.warn(s"Task ${taskId.value} is not registered with worker ${workerId.value}")
+      throw new InvalidWorkerException(workerId, Some(s"Task ${taskId.value} is not registered with this worker"))
     }
     worker
   }
@@ -160,13 +159,19 @@ class ClusterState extends StrictLogging {
   def update(workerId: WorkerId, taskId: TaskId, status: NodeStatus): Unit = write {
     // Remove completed task from running tasks and update resources of the worker accordingly.
     var worker = ensure(workerId, taskId)
-    val task = worker.runningTasks.find(_.id == taskId).get.copy(status = status)
+    val task = worker.activeTasks.find(_.id == taskId).get
     status match {
-      case NodeStatus.Waiting | NodeStatus.Scheduled | NodeStatus.Running =>
-        worker = worker.copy(runningTasks = worker.runningTasks.filterNot(_.id != taskId) ++ Seq(task))
-        logger.debug(s"$status task ${task.id.value} of worker ${workerId.value}")
+      case NodeStatus.Waiting | NodeStatus.Scheduled =>
+        throw new IllegalArgumentException(s"Cannot update task ${taskId.value}: ${task.status} => $status")
+      case NodeStatus.Running =>
+        worker = worker.copy(activeTasks = worker.activeTasks.filter(_.id != taskId) ++ Seq(task.copy(status = status)))
+        logger.debug(s"Updated ${task.id.value}: ${task.status} => $status")
       case NodeStatus.Success | NodeStatus.Failed | NodeStatus.Killed | NodeStatus.Cancelled | NodeStatus.Lost =>
-        val runningTasks = worker.runningTasks.filterNot(_.id == taskId)
+        //TODO: check transition is correct. But how to mark resources as freed in case of an incorrect transition??
+        if (task.status != NodeStatus.Running && status != NodeStatus.Lost) {
+          logger.warn(s"Suspicious transition of task ${taskId.value}: ${task.status} => $status")
+        }
+        val runningTasks = worker.activeTasks.filterNot(_.id == taskId)
         val availableResources = Resource(
           worker.availableResources.cpu + task.resource.cpu,
           worker.availableResources.ramMb + task.resource.ramMb,
@@ -176,7 +181,7 @@ class ClusterState extends StrictLogging {
           worker.reservedResources.ramMb - task.resource.ramMb,
           worker.reservedResources.diskMb - task.resource.diskMb)
         worker = worker.copy(
-          runningTasks = runningTasks,
+          activeTasks = runningTasks,
           availableResources = availableResources,
           reservedResources = reservedResources)
 
@@ -188,10 +193,9 @@ class ClusterState extends StrictLogging {
             worker = worker.copy(lostTasks = worker.lostTasks + 1)
           case _ => // Do nothing.
         }
-        logger.debug(s"Un-assigned completed task ${task.id.value} from worker ${workerId.value}")
+        logger.debug(s"Un-assigned ${status.name} task ${task.id.value} from worker ${workerId.value}")
       case EnumUnknownNodeStatus(_) => throw new IllegalArgumentException
     }
-
     index(workerId) = worker
   }
 
@@ -229,11 +233,12 @@ class ClusterState extends StrictLogging {
     }
   }
 
+  @throws[InvalidWorkerException]
   def apply(workerId: WorkerId): WorkerInfo = read { _ =>
     index.get(workerId) match {
       case None =>
         logger.debug(s"Worker ${workerId.value} is not registered")
-        throw new InvalidWorkerException
+        throw InvalidWorkerException(workerId, Some("Worker is not registered"))
       case Some(worker) => worker
     }
   }
@@ -249,7 +254,7 @@ class ClusterState extends StrictLogging {
  * @param maxResources       Total resources available to be scheduled.
  * @param availableResources Current resources available to be scheduled.
  * @param reservedResources  Current resources reserved by running tasks.
- * @param runningTasks       List of running tasks.
+ * @param activeTasks        List of active tasks (scheduled or running).
  * @param completedTasks     Number of completed tasks (either successfully or not, but that went to completion).
  * @param lostTasks          Number of lost tasks.
  */
@@ -261,7 +266,7 @@ case class WorkerInfo private(
   maxResources: Resource,
   availableResources: Resource,
   reservedResources: Resource,
-  runningTasks: Set[Task],
+  activeTasks: Set[Task],
   completedTasks: Int,
   lostTasks: Int)
 

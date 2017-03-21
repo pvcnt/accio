@@ -46,13 +46,6 @@ struct CacheKey {
   1: string hash;
 }
 
-exception InvalidTaskException {
-}
-
-exception UnknownRunException {
-  1: required RunId id;
-}
-
 struct Artifact {
   // Artifact name.
   1: required string name;
@@ -96,11 +89,6 @@ struct Reference {
 struct InvalidSpecMessage {
   1: required string message;
   2: optional string path;
-}
-
-exception InvalidSpecException {
-  1: required list<InvalidSpecMessage> errors;
-  2: required list<InvalidSpecMessage> warnings;
 }
 
 /**
@@ -487,4 +475,32 @@ struct Agent {
   4: required bool is_worker;
   5: required Timestamp registered_at;
   6: required Resource max_resources;
+}
+
+/**
+ * Exceptions.
+ */
+exception UnknownRunException {
+  1: required RunId id;
+  2: optional string message;
+}
+
+exception InvalidTaskException {
+  1: required TaskId id;
+  2: optional string message;
+}
+
+exception InvalidSpecException {
+  1: required list<InvalidSpecMessage> errors;
+  2: required list<InvalidSpecMessage> warnings;
+}
+
+exception InvalidExecutorException {
+  1: required ExecutorId id;
+  2: optional string message;
+}
+
+exception InvalidWorkerException {
+  1: required WorkerId id;
+  2: optional string message;
 }

@@ -22,6 +22,7 @@ import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.agent._
 import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
+import fr.cnrs.liris.accio.core.domain.InvalidWorkerException
 import fr.cnrs.liris.accio.core.scheduler.{ClusterState, EventType, Scheduler}
 
 /**
@@ -33,7 +34,7 @@ class UnregisterWorkerHandler @Inject()(state: ClusterState, lostTaskHandler: Lo
   @throws[InvalidWorkerException]
   override def handle(req: UnregisterWorkerRequest): Future[UnregisterWorkerResponse] = {
     val worker = state(req.workerId)
-    worker.runningTasks.foreach(task => lostTaskHandler.handle(LostTaskRequest(worker.id, task.id)))
+    worker.activeTasks.foreach(task => lostTaskHandler.handle(LostTaskRequest(worker.id, task.id)))
     state.unregister(worker.id)
     scheduler.houseKeeping(EventType.LessResource)
     Future(UnregisterWorkerResponse())

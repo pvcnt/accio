@@ -22,6 +22,7 @@ import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{HeartbeatExecutorRequest, HeartbeatExecutorResponse}
+import fr.cnrs.liris.accio.core.domain.InvalidExecutorException
 
 /**
  * Handle a request from an executor sending a heartbeat indicating it is still alive.
@@ -31,6 +32,7 @@ import fr.cnrs.liris.accio.agent.{HeartbeatExecutorRequest, HeartbeatExecutorRes
 class HeartbeatExecutorHandler @Inject()(state: WorkerState)
   extends AbstractHandler[HeartbeatExecutorRequest, HeartbeatExecutorResponse] {
 
+  @throws[InvalidExecutorException]
   override def handle(req: HeartbeatExecutorRequest): Future[HeartbeatExecutorResponse] = {
     state.recordHeartbeat(req.executorId)
     Future.value(HeartbeatExecutorResponse())

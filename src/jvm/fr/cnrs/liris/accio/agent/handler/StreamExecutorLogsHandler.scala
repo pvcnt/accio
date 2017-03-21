@@ -23,7 +23,7 @@ import com.twitter.util.Future
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.agent._
 import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
-import fr.cnrs.liris.accio.core.domain.InvalidTaskException
+import fr.cnrs.liris.accio.core.domain.{InvalidExecutorException, InvalidTaskException}
 
 /**
  * Handle a request from an executor containing execution logs, which will be forwarded to the master.

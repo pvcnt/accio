@@ -263,7 +263,7 @@ object FancyTerminalEventHandler {
   // Match strings that look like they start with progress info:
   //   [42%] Compiling base/base.cc
   //   [1,442 / 23,476] Compiling base/base.cc
-  private val ProgressPattern = "^\\([(?:(?:\\d\\d?\\d?%)|(?:[\\d+,]+ / [\\d,]+))\\] )(.*)".r
+  private val ProgressPattern = "^(\\[(?:(?:\\d\\d?\\d?%)|(?:[\\d+,]+ / [\\d,]+))\\] )(.*)".r
   private val LineBreakSplitter = Splitter.on('\n')
   private val Punctuation = Set(',', '.', ':', '?', '!', ';')
 }

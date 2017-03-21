@@ -69,7 +69,6 @@ object ExecutorModule extends TwitterModule {
   }
 
   override def singletonShutdown(injector: Injector): Unit = {
-    injector.instance[TaskExecutor].close()
     injector.instance[AgentService$FinagleClient].service.close()
     injector.instance[FuturePool, WorkerPool] match {
       case p: ExecutorServiceFuturePool => p.executor.shutdownNow()

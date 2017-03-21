@@ -20,9 +20,6 @@ namespace java fr.cnrs.liris.accio.agent
 
 include "fr/cnrs/liris/accio/core/domain/accio.thrift"
 
-exception InvalidExecutorException {
-}
-
 struct AssignTaskRequest {
   1: required accio.Task task;
 }

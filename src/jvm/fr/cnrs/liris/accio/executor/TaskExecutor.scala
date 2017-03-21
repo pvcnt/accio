@@ -26,9 +26,8 @@ import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.agent._
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.framework.{OpExecutor, OpExecutorOpts, OutErr}
-import fr.cnrs.liris.accio.core.util.WorkerPool
+import fr.cnrs.liris.accio.core.util.{InfiniteLoopThreadLike, ThreadManager, WorkerPool}
 
-import scala.collection.mutable
 import scala.util.control.NonFatal
 
 /**
@@ -47,7 +46,7 @@ final class TaskExecutor @Inject()(
   @WorkerPool pool: FuturePool) extends StrictLogging {
 
   private[this] val executorId = ExecutorId(UUID.randomUUID().toString)
-  private[this] val futures = mutable.Set.empty[Future[_]]
+  private[this] val threads = new ThreadManager(pool)
 
   /**
    * Trigger the execution of a task.
@@ -58,7 +57,7 @@ final class TaskExecutor @Inject()(
   def execute(taskId: TaskId, outErr: OutErr): Future[Unit] = synchronized {
     logger.info(s"Starting execution of task ${taskId.value}")
     client.startExecutor(StartExecutorRequest(executorId, taskId)).transform {
-      case Throw(InvalidTaskException()) =>
+      case Throw(_: InvalidTaskException) =>
         logger.error(s"Invalid task")
         Future.Done
       case Throw(e) =>
@@ -68,27 +67,21 @@ final class TaskExecutor @Inject()(
     }
   }
 
-  /**
-   * Close the task executor.
-   */
-  def close(): Unit = synchronized {
-    futures.foreach(_.raise(new FutureCancelledException))
-  }
-
   private def start(taskId: TaskId, runId: RunId, nodeName: String, payload: OpPayload, outErr: OutErr): Future[Unit] = {
-    futures += pool(new HeartbeatThread(taskId).run())
-    futures += pool(new StreamLogsThread(taskId, runId, nodeName, outErr).run())
+    threads.submit(new HeartbeatThread(taskId))
+    threads.submit(new StreamLogsThread(taskId, runId, nodeName, outErr))
     val mainFuture = pool(new MainThread(taskId, payload).run())
-      .handle {
-        case NonFatal(e) =>
-          logger.error(s"Operator raised an unexpected error", e)
-          OpResult(-999, Some(Errors.create(e)))
-      }.flatMap { result =>
+    mainFuture.respond { _ =>
+      threads.killAll()
+    }.handle {
+      case NonFatal(e) =>
+        logger.error(s"Operator raised an unexpected error", e)
+        OpResult(-999, Some(Errors.create(e)))
+    }.flatMap { result =>
       client.stopExecutor(StopExecutorRequest(executorId, taskId, result))
         .onFailure(e => logger.error(s"Error while marking task as completed", e))
-    }.unit
-    futures += mainFuture
-    mainFuture
+    }
+    mainFuture.unit
   }
 
   private class MainThread(taskId: TaskId, payload: OpPayload) {
@@ -98,26 +91,24 @@ final class TaskExecutor @Inject()(
     }
   }
 
-  private class StreamLogsThread(taskId: TaskId, runId: RunId, nodeName: String, outErr: OutErr) {
-    def run(): Unit = {
-      logger.debug(s"Logs thread started")
-      sleep(Duration.fromSeconds(2))
-      while (true) {
-        // Do not log anything here, otherwise it will create a logging loop, even if nothing else is printed.
-        // We want to send only meaningful logs.
-        val logs = extractLogs(outErr.stdoutAsString, "stdout") ++ extractLogs(outErr.stderrAsString, "stderr")
-        if (logs.nonEmpty) {
-          val f = Await.result(client.streamExecutorLogs(StreamExecutorLogsRequest(executorId, taskId, logs)).liftToTry)
-          f match {
-            case Return(_) => sleep(Duration.fromSeconds(5))
-            case Throw(InvalidTaskException()) =>
-              // Stop the executor, task is now invalid.
-              close()
-            case Throw(e) => logger.error(s"Error while sending logs", e)
-          }
-        } else {
-          sleep(Duration.fromSeconds(2))
+  private class StreamLogsThread(taskId: TaskId, runId: RunId, nodeName: String, outErr: OutErr)
+    extends InfiniteLoopThreadLike {
+
+    override protected def singleOperation(): Unit = {
+      // Do not log anything here, otherwise it will create a logging loop, even if nothing else is printed.
+      // We want to send only meaningful logs.
+      val logs = extractLogs(outErr.stdoutAsString, "stdout") ++ extractLogs(outErr.stderrAsString, "stderr")
+      if (logs.nonEmpty) {
+        val f = Await.result(client.streamExecutorLogs(StreamExecutorLogsRequest(executorId, taskId, logs)).liftToTry)
+        f match {
+          case Return(_) => sleep(Duration.fromSeconds(5))
+          case Throw(_: InvalidTaskException) =>
+            logger.warn(s"Task ${taskId.value} is now invalid, stopping StreamLogsThread")
+            kill()
+          case Throw(e) => logger.error(s"Error while sending logs", e)
         }
+      } else {
+        sleep(Duration.fromSeconds(2))
       }
     }
 
@@ -132,30 +123,18 @@ final class TaskExecutor @Inject()(
     }
   }
 
-  private class HeartbeatThread(taskId: TaskId) {
-    def run(): Unit = {
-      logger.debug(s"Heartbeat thread started")
-      sleep(Duration.fromSeconds(5))
-      while (true) {
-        // Do not log anything here, if communication with agent is broken it will be eventually detected on the
-        // agent side. We want to send only meaningful logs.
-        val f = Await.result(client.heartbeatExecutor(HeartbeatExecutorRequest(executorId)).liftToTry)
-        f match {
-          case Return(_) => sleep(Duration.fromSeconds(15))
-          case Throw(InvalidTaskException()) =>
-            // Stop the executor, task is now invalid.
-            close()
-          case Throw(e) => logger.error(s"Error while sending heartbeat", e)
-        }
+  private class HeartbeatThread(taskId: TaskId) extends InfiniteLoopThreadLike {
+    override protected def singleOperation(): Unit = {
+      // Do not log anything here, if communication with agent is broken it will be eventually detected on the
+      // agent side. We want to send only meaningful logs.
+      val f = Await.result(client.heartbeatExecutor(HeartbeatExecutorRequest(executorId)).liftToTry)
+      f match {
+        case Return(_) => sleep(Duration.fromSeconds(15))
+          logger.warn(s"Task ${taskId.value} is now invalid, stopping HeartbeatThread")
+        case Throw(_: InvalidTaskException) =>
+          kill()
+        case Throw(e) => logger.error(s"Error while sending heartbeat", e)
       }
-    }
-  }
-
-  private def sleep(duration: Duration) = {
-    try {
-      Thread.sleep(duration.inMillis)
-    } catch {
-      case _: InterruptedException => // Do nothing.
     }
   }
 

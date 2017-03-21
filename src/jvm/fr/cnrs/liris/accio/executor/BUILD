@@ -3,6 +3,7 @@ scala_library(
     'src/jvm/fr/cnrs/liris/accio/core/domain',
     'src/jvm/fr/cnrs/liris/accio/core/framework',
     'src/jvm/fr/cnrs/liris/accio/core/filesystem/inject',
+    'src/jvm/fr/cnrs/liris/accio/core/util',
     'src/jvm/fr/cnrs/liris/accio/core/util:annotations',
     'src/thrift/fr/cnrs/liris/accio/agent',
     'src/jvm/fr/cnrs/liris/privamov/ops',

@@ -1,5 +1,6 @@
 scala_library(
   dependencies=[
+    'src/jvm/fr/cnrs/liris/accio/core/finagle',
     'src/thrift/fr/cnrs/liris/accio/core/domain',
     'src/thrift/fr/cnrs/liris/accio/agent',
     '3rdparty/jvm/com/typesafe/scala-logging',

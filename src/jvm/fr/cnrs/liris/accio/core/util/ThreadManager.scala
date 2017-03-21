@@ -27,11 +27,11 @@ import scala.collection.JavaConverters._
 
 final class ThreadManager(pool: FuturePool) {
   private[this] val counter = new AtomicInteger
-  private[this] val threads = new ConcurrentHashMap[String, ThreadLike].asScala
+  private[this] val threads = new ConcurrentHashMap[String, ThreadLike[_]].asScala
 
-  def submit(thread: ThreadLike): Future[Unit] = submit(thread, counter.incrementAndGet().toString)
+  def submit[T](thread: ThreadLike[T]): Future[T] = submit(thread, counter.incrementAndGet().toString)
 
-  def submit(thread: ThreadLike, key: String): Future[Unit] = {
+  def submit[T](thread: ThreadLike[T], key: String): Future[T] = {
     threads(key) = thread
     pool(thread.run())
   }

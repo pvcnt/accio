@@ -89,27 +89,27 @@ service AgentService {
 
   // Unregister a worker. It will then not be able to use any other endpoint.
   master.UnregisterWorkerResponse unregisterWorker(1: master.UnregisterWorkerRequest req)
-    throws (1: master.InvalidWorkerException invalidWorker);
+    throws (1: accio.InvalidWorkerException invalidWorker);
 
   // Heartbeat coming from a worker, signaling it is alive.
   master.HeartbeatWorkerResponse heartbeatWorker(1: master.HeartbeatWorkerRequest req)
-    throws (1: master.InvalidWorkerException invalidWorker);
+    throws (1: accio.InvalidWorkerException invalidWorker);
 
   // Indicates that an executor is ready to start processing a task, through its worker.
   master.StartTaskResponse startTask(1: master.StartTaskRequest req)
-    throws (1: master.InvalidWorkerException invalidWorker, 2: accio.InvalidTaskException invalidTask);
+    throws (1: accio.InvalidWorkerException invalidWorker, 2: accio.InvalidTaskException invalidTask);
 
   // Stream log lines from an executor, through its worker.
   master.StreamTaskLogsResponse streamTaskLogs(1: master.StreamTaskLogsRequest req)
-    throws (1: master.InvalidWorkerException invalidWorker, 2: accio.InvalidTaskException invalidTask);
+    throws (1: accio.InvalidWorkerException invalidWorker, 2: accio.InvalidTaskException invalidTask);
 
   // Indicates that an executor completed processing a task, through its worker.
   master.CompleteTaskResponse completeTask(1: master.CompleteTaskRequest req)
-    throws (1: master.InvalidWorkerException invalidWorker, 2: accio.InvalidTaskException invalidTask);
+    throws (1: accio.InvalidWorkerException invalidWorker, 2: accio.InvalidTaskException invalidTask);
 
   // Indicates that a worker lost contact with an executor.
   master.LostTaskResponse lostTask(1: master.LostTaskRequest req)
-    throws (1: master.InvalidWorkerException invalidWorker, 2: accio.InvalidTaskException invalidTask);
+    throws (1: accio.InvalidWorkerException invalidWorker, 2: accio.InvalidTaskException invalidTask);
 
   /**
    * RPC endpoints used by master to communicate with their workers.
@@ -124,14 +124,14 @@ service AgentService {
    * RPC endpoints used by executors to communicate with their worker.
    */
   worker.HeartbeatExecutorResponse heartbeatExecutor(1: worker.HeartbeatExecutorRequest req)
-    throws (1: worker.InvalidExecutorException invalidExecutor);
+    throws (1: accio.InvalidExecutorException invalidExecutor);
 
   worker.StartExecutorResponse startExecutor(1: worker.StartExecutorRequest req)
-    throws (1: worker.InvalidExecutorException invalidExecutor, 2: accio.InvalidTaskException invalidTask);
+    throws (1: accio.InvalidExecutorException invalidExecutor, 2: accio.InvalidTaskException invalidTask);
 
   worker.StreamExecutorLogsResponse streamExecutorLogs(1: worker.StreamExecutorLogsRequest req)
-    throws (1: worker.InvalidExecutorException invalidExecutor, 2: accio.InvalidTaskException invalidTask);
+    throws (1: accio.InvalidExecutorException invalidExecutor, 2: accio.InvalidTaskException invalidTask);
 
   worker.StopExecutorResponse stopExecutor(1: worker.StopExecutorRequest req)
-    throws (1: worker.InvalidExecutorException invalidExecutor, 2: accio.InvalidTaskException invalidTask);
+    throws (1: accio.InvalidExecutorException invalidExecutor, 2: accio.InvalidTaskException invalidTask);
 }

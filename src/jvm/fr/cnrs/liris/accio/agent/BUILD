@@ -8,6 +8,7 @@ scala_library(
     'src/jvm/fr/cnrs/liris/accio/core/scheduler/inject',
     'src/jvm/fr/cnrs/liris/accio/core/dsl/inject',
     'src/jvm/fr/cnrs/liris/accio/core/framework',
+    'src/jvm/fr/cnrs/liris/accio/core/finagle',
     'src/jvm/fr/cnrs/liris/accio/core/util:annotations',
     'src/jvm/fr/cnrs/liris/accio/runtime/logging',
     'src/jvm/fr/cnrs/liris/privamov/ops',

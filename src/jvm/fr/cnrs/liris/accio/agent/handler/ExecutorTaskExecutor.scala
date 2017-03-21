@@ -81,8 +81,8 @@ final class ExecutorTaskExecutor @Inject()(
       throw new IllegalStateException(s"Status: $status")
     }
     if (!threads.kill(id.value)) {
-      logger.debug(s"No running task ${id.value}")
-      throw new InvalidTaskException
+      logger.warn(s"No running task ${id.value}")
+      throw InvalidTaskException(id, Some("No such running task"))
     }
   }
 
@@ -105,7 +105,7 @@ final class ExecutorTaskExecutor @Inject()(
    */
   private def getSandboxPath(id: TaskId) = dataDir.resolve(id.value)
 
-  private class MonitorThread(val task: Task) extends ThreadLike with StrictLogging {
+  private class MonitorThread(val task: Task) extends ThreadLike[Unit] with StrictLogging {
     private[this] var killed = false
     private[this] var process: Option[Process] = None
 

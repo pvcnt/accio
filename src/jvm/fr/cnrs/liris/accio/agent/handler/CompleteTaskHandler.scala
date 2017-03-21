@@ -22,7 +22,7 @@ import com.google.inject.Inject
 import com.twitter.util.Future
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
-import fr.cnrs.liris.accio.agent.{CompleteTaskRequest, CompleteTaskResponse, InvalidWorkerException}
+import fr.cnrs.liris.accio.agent.{CompleteTaskRequest, CompleteTaskResponse}
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.framework.RunManager
 import fr.cnrs.liris.accio.core.scheduler.{ClusterState, EventType, Scheduler}
@@ -47,10 +47,10 @@ final class CompleteTaskHandler @Inject()(
   @throws[InvalidWorkerException]
   override def handle(req: CompleteTaskRequest): Future[CompleteTaskResponse] = {
     val worker = state.ensure(req.workerId, req.taskId)
-    val task = worker.runningTasks.find(_.id == req.taskId).get
+    val task = worker.activeTasks.find(_.id == req.taskId).get
     state.update(req.workerId, req.taskId, if (req.result.exitCode == 0) NodeStatus.Success else NodeStatus.Failed)
     runRepository.get(task.runId) match {
-      case None => throw new InvalidTaskException
+      case None => throw InvalidTaskException(task.id, Some(s"Task is associated with invalid run ${task.runId.value}"))
       case Some(run) =>
         run.parent match {
           case Some(parentId) => processRun(run, task, req.result, runRepository.get(parentId))

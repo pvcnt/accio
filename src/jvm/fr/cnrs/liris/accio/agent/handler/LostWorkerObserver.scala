@@ -42,8 +42,8 @@ final class LostWorkerObserver @Inject()(state: ClusterState, lostTaskHandler: L
 
 
   private def handleLostWorker(worker: WorkerInfo) = {
-    logger.warn(s"Lost worker ${worker.id.value} (with ${worker.runningTasks.size} active tasks)")
-    worker.runningTasks.foreach(task => lostTaskHandler.handle(LostTaskRequest(worker.id, task.id)))
+    logger.warn(s"Lost worker ${worker.id.value} (with ${worker.activeTasks.size} active tasks)")
+    worker.activeTasks.foreach(task => lostTaskHandler.handle(LostTaskRequest(worker.id, task.id)))
     state.unregister(worker.id)
   }
 }

@@ -25,7 +25,7 @@ import com.twitter.util._
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.agent._
 import fr.cnrs.liris.accio.agent.config.AgentConfig
-import fr.cnrs.liris.accio.core.domain.Resource
+import fr.cnrs.liris.accio.core.domain.{InvalidWorkerException, Resource}
 import fr.cnrs.liris.accio.core.util.{InfiniteLoopThreadLike, ThreadManager, WorkerPool}
 
 /**
@@ -65,7 +65,7 @@ final class WorkerLifecycle @Inject()(
       client.registerWorker(req)
         .handle {
           // It was already registered, ignore this error (though it should not happen).
-          case InvalidWorkerException() => RegisterWorkerResponse()
+          case _: InvalidWorkerException => RegisterWorkerResponse()
         }
         .onFailure { e =>
           // Other error, report it and let the future fail.
@@ -93,7 +93,7 @@ final class WorkerLifecycle @Inject()(
       client
         .unregisterWorker(UnregisterWorkerRequest(state.workerId))
         .handle {
-          case InvalidWorkerException() =>
+          case _: InvalidWorkerException =>
             // It was already un-registered, ignore this error (though it should not happen).
             UnregisterWorkerResponse()
           case e: Throwable =>
@@ -112,7 +112,7 @@ final class WorkerLifecycle @Inject()(
       val f = client.heartbeatWorker(HeartbeatWorkerRequest(state.workerId)).liftToTry
       Await.result(f) match {
         case Return(_) => sleep(AgentConfig.WorkerTimeout / 2)
-        case Throw(InvalidWorkerException()) => kill()
+        case Throw(_: InvalidWorkerException) => kill()
         case Throw(e) =>
           logger.error(s"Error while sending heartbeat", e)
           sleep(AgentConfig.WorkerTimeout / 4)

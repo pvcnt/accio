@@ -20,9 +20,6 @@ namespace java fr.cnrs.liris.accio.agent
 
 include "fr/cnrs/liris/accio/core/domain/accio.thrift"
 
-exception InvalidWorkerException {
-}
-
 struct RegisterWorkerRequest {
   // Identifier of this worker, which should be unique across all workers.
   1: required accio.WorkerId worker_id;

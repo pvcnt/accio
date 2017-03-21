@@ -22,8 +22,8 @@ import com.google.inject.Inject
 import com.twitter.util.Future
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
-import fr.cnrs.liris.accio.agent.{InvalidWorkerException, LostTaskRequest, LostTaskResponse}
-import fr.cnrs.liris.accio.core.domain.{InvalidTaskException, NodeStatus, Run, Task}
+import fr.cnrs.liris.accio.agent.{LostTaskRequest, LostTaskResponse}
+import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.framework.RunManager
 import fr.cnrs.liris.accio.core.scheduler.ClusterState
 import fr.cnrs.liris.accio.core.storage.MutableRunRepository
@@ -44,7 +44,7 @@ final class LostTaskHandler @Inject()(
   override def handle(req: LostTaskRequest): Future[LostTaskResponse] = {
     val worker = state.ensure(req.workerId, req.taskId)
     state.update(req.workerId, req.taskId, NodeStatus.Lost)
-    val task = worker.runningTasks.find(_.id == req.taskId).get
+    val task = worker.activeTasks.find(_.id == req.taskId).get
     runRepository.get(task.runId).foreach { run =>
       run.parent match {
         case Some(parentId) => processRun(run, task, runRepository.get(parentId))

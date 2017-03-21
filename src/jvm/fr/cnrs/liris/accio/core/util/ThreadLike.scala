@@ -23,7 +23,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 import com.twitter.util.Duration
 import com.typesafe.scalalogging.StrictLogging
 
-trait ThreadLike extends Runnable with StrictLogging {
+trait ThreadLike[T] {
+  def run(): T
+
   def kill(): Unit
 
   protected final def sleep(duration: Duration): Unit = {
@@ -35,7 +37,7 @@ trait ThreadLike extends Runnable with StrictLogging {
   }
 }
 
-trait InfiniteLoopThreadLike extends ThreadLike {
+trait InfiniteLoopThreadLike extends ThreadLike[Unit] with StrictLogging {
   private[this] val running = new AtomicBoolean(false)
 
   override final def run(): Unit = {

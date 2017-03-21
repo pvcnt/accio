@@ -22,9 +22,8 @@ import com.google.inject.{Inject, Singleton}
 import com.twitter.finagle.stats.{Gauge, StatsReceiver}
 import com.twitter.util.{StorageUnit, Time}
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.agent.InvalidExecutorException
 import fr.cnrs.liris.accio.agent.config.AgentConfig
-import fr.cnrs.liris.accio.core.domain.{ExecutorId, InvalidTaskException, TaskId, WorkerId}
+import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.common.util.Platform
 
 import scala.collection.mutable
@@ -56,15 +55,13 @@ class WorkerState @Inject()(config: AgentConfig, statsReceiver: StatsReceiver) e
   def register(taskId: TaskId): Unit = synchronized {
     if (pendingTasks.contains(taskId)) {
       logger.debug(s"Task ${taskId.value} is already registered")
-      throw new InvalidTaskException
+      throw InvalidTaskException(taskId, Some("Task is already registered"))
     } else {
       runningTasks.find(_._2 == taskId) match {
         case Some((existingExecutorId, _)) =>
           logger.debug(s"Task ${taskId.value} is already registered to executor ${existingExecutorId.value}")
-          throw new InvalidTaskException
-        case None =>
-          pendingTasks += taskId
-          logger.debug(s"Registered task ${taskId.value}")
+          throw InvalidTaskException(taskId, Some(s"Task is already assigned to executor ${existingExecutorId.value}"))
+        case None => pendingTasks += taskId
       }
     }
   }
@@ -76,48 +73,47 @@ class WorkerState @Inject()(config: AgentConfig, statsReceiver: StatsReceiver) e
       case Some(existingExecutorId) =>
         logger.debug(s"Task ${taskId.value} is already registered to executor ${existingExecutorId.value}")
         if (existingExecutorId != executorId) {
-          throw new InvalidTaskException
+          throw InvalidTaskException(taskId, Some(s"Task is already registered to executor ${existingExecutorId.value}"))
         }
       case None =>
         runningTasks.get(executorId) match {
           case Some(existingTaskId) =>
             // Case of existingTaskId == taskId has already been handled above.
             logger.debug(s"Executor ${executorId.value} is already registered with task ${existingTaskId.value}")
-            throw new InvalidExecutorException
+            throw InvalidExecutorException(executorId, Some(s"Executor is already assigned to task ${existingTaskId.value}"))
           case None =>
             if (!pendingTasks.contains(taskId)) {
               logger.debug(s"Task ${taskId.value} is not registered")
-              throw new InvalidTaskException
+              throw InvalidTaskException(taskId, Some("Task is not registered"))
             }
             pendingTasks -= taskId
             runningTasks(executorId) = taskId
             heartbeats(executorId) = Time.now
-            logger.debug(s"Registered executor ${executorId.value} with task ${taskId.value}")
         }
     }
   }
 
-  @throws[InvalidTaskException]
   @throws[InvalidExecutorException]
   def ensure(taskId: TaskId, executorId: ExecutorId): Unit = synchronized {
     runningTasks.get(executorId) match {
       case None =>
         logger.debug(s"Executor ${executorId.value} is not registered")
-        throw new InvalidExecutorException
+        throw InvalidExecutorException(executorId, Some("Executor is not registered"))
       case Some(existingTaskId) =>
         if (existingTaskId != taskId) {
-          throw new InvalidTaskException
+          logger.warn(s"Task ${taskId.value} is not registered with executor ${executorId.value}")
+          throw InvalidExecutorException(executorId, Some(s"Executor is not assigned to task ${taskId.value}"))
         }
     }
   }
 
   @throws[InvalidExecutorException]
-  def recordHeartbeat(executorId: ExecutorId): Unit = synchronized {
+  def recordHeartbeat(executorId: ExecutorId, at: Time = Time.now): Unit = synchronized {
     heartbeats.get(executorId) match {
       case None =>
         logger.debug(s"Executor ${executorId.value} is not registered")
-        throw new InvalidExecutorException
-      case Some(_) => heartbeats(executorId) = Time.now
+        throw InvalidExecutorException(executorId, Some("Executor is not registered"))
+      case Some(_) => heartbeats(executorId) = at
     }
   }
 
@@ -148,7 +144,7 @@ class WorkerState @Inject()(config: AgentConfig, statsReceiver: StatsReceiver) e
       case None =>
         if (!pendingTasks.contains(taskId)) {
           logger.debug(s"Task ${taskId.value} is not registered")
-          throw new InvalidTaskException
+          throw InvalidTaskException(taskId, Some("Task is not registered"))
         }
         pendingTasks -= taskId
         logger.debug(s"Un-registered task ${taskId.value}")

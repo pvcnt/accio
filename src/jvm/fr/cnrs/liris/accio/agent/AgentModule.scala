@@ -26,14 +26,16 @@ import java.util.concurrent.Executors
 import com.google.inject.{Provides, Singleton, TypeLiteral}
 import com.twitter.concurrent.NamedPoolThreadFactory
 import com.twitter.finagle.Thrift
+import com.twitter.finagle.service._
 import com.twitter.inject.{Injector, TwitterModule}
-import com.twitter.util.FuturePool
+import com.twitter.util.{Duration, FuturePool, Return, Throw}
 import fr.cnrs.liris.accio.agent.commandbus.Handler
 import fr.cnrs.liris.accio.agent.config.{AgentConfig, ClientConfig, MasterConfig, WorkerConfig}
 import fr.cnrs.liris.accio.agent.handler.inject.{MasterHandlerModule, WorkerHandlerModule}
 import fr.cnrs.liris.accio.core.api.Operator
-import fr.cnrs.liris.accio.core.domain.Resource
+import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.filesystem.inject.FileSystemModule
+import fr.cnrs.liris.accio.core.finagle.AccioResponseClassifier
 import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.util.{ClusterName, WorkDir, WorkerPool}
 import net.codingwell.scalaguice.ScalaMultibinder
@@ -105,7 +107,12 @@ object AgentModule extends TwitterModule {
   @Singleton
   def providesWorkerClient(config: AgentConfig): AgentService$FinagleClient = {
     //TODO: provide an alternative for same process communication.
-    val service = Thrift.newService(config.client.get.masterAddr)
+    val service = Thrift.client
+      .withRetryBudget(RetryBudget.Infinite)
+      .withRetryBackoff(Backoff.const(Duration.fromSeconds(15)))
+      .withSessionQualifier.noFailFast // Because there is likely to be only one master.
+      .withResponseClassifier(AccioResponseClassifier.Default)
+      .newService(config.client.get.masterAddr)
     new AgentService.FinagledClient(service)
   }
 

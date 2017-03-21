@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.scheduler
+package fr.cnrs.liris.accio.agent.handler
 
 import java.io.FileOutputStream
 import java.nio.file.{Files, Path, Paths}
@@ -26,13 +26,13 @@ import fr.cnrs.liris.accio.core.filesystem.FileSystem
 import fr.cnrs.liris.testing.{UnitSpec, WithTmpDirectory}
 
 /**
- * Common unit tests for all [[Scheduler]] implementations, ensuring they all have consistent behavior.
+ * Unit tests for [[ExecutorTaskExecutor]].
  */
-class SchedulerSpec extends UnitSpec with WithTmpDirectory {
+class ExecutorTaskExecutorSpec extends UnitSpec with WithTmpDirectory {
   protected val executorUri: String = unpackExecutor().toAbsolutePath.toString
 
-  /*protected def createScheduler: Scheduler = {
-    val conf = LocalSchedulerConfig(tmpDir.resolve("workdir"), "0.0.0.0:12345", executorUri, None, Seq.empty)
+  /*protected def createExecutor: Scheduler = {
+    val conf = new ExecutorTaskExecutor(tmpDir.resolve("workdir"), "0.0.0.0:12345", executorUri, None, Seq.empty)
     new LocalScheduler(MockFileSystem, NullStatsReceiver, conf)
   }
 
@@ -83,7 +83,7 @@ class SchedulerSpec extends UnitSpec with WithTmpDirectory {
     val path = Files.createTempFile("SchedulerSpec-", ".jar")
     val fos = new FileOutputStream(path.toFile)
     try {
-      Resources.copy(Resources.getResource(s"fr/cnrs/liris/accio/core/scheduler/accio-dummy-executor.jar"), fos)
+      Resources.copy(Resources.getResource(s"fr/cnrs/liris/accio/agent/handler/accio-dummy-executor.jar"), fos)
     } finally {
       fos.close()
     }

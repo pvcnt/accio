@@ -21,6 +21,7 @@ package fr.cnrs.liris.accio.core.scheduler
 import com.google.inject.Singleton
 import com.twitter.finagle.Thrift
 import fr.cnrs.liris.accio.agent.{AgentService, AgentService$FinagleClient}
+import fr.cnrs.liris.accio.core.finagle.AccioResponseClassifier
 
 import scala.collection.mutable
 
@@ -30,7 +31,10 @@ class WorkerClientFactory {
 
   def create(dest: String): AgentService$FinagleClient = {
     clients.getOrElseUpdate(dest, {
-      val service = Thrift.newService(dest)
+      val service = Thrift.client
+        .withSessionQualifier.noFailFast // Because there will be only one host.
+        .withResponseClassifier(AccioResponseClassifier.Default)
+        .newService(dest)
       new AgentService.FinagledClient(service)
     })
   }

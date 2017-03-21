@@ -20,6 +20,7 @@ package fr.cnrs.liris.accio.agent.handler
 
 import com.google.inject.Inject
 import com.twitter.util.Future
+import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{StartTaskRequest, StartTaskResponse}
 import fr.cnrs.liris.accio.core.domain._
@@ -39,17 +40,18 @@ class StartTaskHandler @Inject()(
   runRepository: MutableRunRepository,
   runManager: RunManager,
   state: ClusterState)
-  extends AbstractHandler[StartTaskRequest, StartTaskResponse] {
+  extends AbstractHandler[StartTaskRequest, StartTaskResponse] with LazyLogging {
 
   @throws[InvalidTaskException]
+  @throws[InvalidWorkerException]
   override def handle(req: StartTaskRequest): Future[StartTaskResponse] = {
     val worker = state.ensure(req.workerId, req.taskId)
-    val task = worker.runningTasks.find(_.id == req.taskId).get
+    val task = worker.activeTasks.find(_.id == req.taskId).get
     runRepository.get(task.runId) match {
       case None =>
         // Illegal state: no run found for this task.
-        //TODO: what?
-        throw new InvalidTaskException
+        logger.warn(s"Task ${task.id.value} is associated with unknown run ${task.runId.value}")
+        throw InvalidTaskException(task.id, Some(s"Task is associated with invalid run ${task.runId.value}"))
       case Some(run) =>
         state.update(worker.id, task.id, NodeStatus.Running)
         val newRun = runManager.onStart(run, task.nodeName)
