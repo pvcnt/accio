@@ -16,16 +16,17 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.storage.local
+package fr.cnrs.liris.accio.core.storage.elastic;
 
-import fr.cnrs.liris.accio.core.storage.{MutableRunRepository, RunRepositorySpec}
-import fr.cnrs.liris.testing.WithTmpDirectory
+import com.google.inject.BindingAnnotation;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 /**
- * Unit tests of [[LocalRunRepository]].
+ * Annotation requesting the injection of the prefix to use on Elasticsearh index names.
  */
-class LocalRunRepositorySpec extends RunRepositorySpec with WithTmpDirectory {
-  behavior of "LocalRunRepository"
-
-  override protected def createRepository: MutableRunRepository = new LocalRunRepository(tmpDir)
+@Retention(RetentionPolicy.RUNTIME)
+@BindingAnnotation
+@interface ElasticPrefix {
 }

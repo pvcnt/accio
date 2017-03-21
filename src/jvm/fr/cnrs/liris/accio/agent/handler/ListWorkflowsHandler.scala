@@ -16,30 +16,30 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.agent.handler.api
+package fr.cnrs.liris.accio.agent.handler
 
 import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{ListWorkflowsRequest, ListWorkflowsResponse}
-import fr.cnrs.liris.accio.core.storage.{WorkflowQuery, WorkflowRepository}
+import fr.cnrs.liris.accio.core.storage.{Storage, WorkflowQuery}
 
 /**
  * Retrieve workflows matching some search criteria.
  *
- * @param repository Workflow repository (read-only).
+ * @param storage Storage.
  */
-class ListWorkflowsHandler @Inject()(repository: WorkflowRepository)
+class ListWorkflowsHandler @Inject()(storage: Storage)
   extends AbstractHandler[ListWorkflowsRequest, ListWorkflowsResponse] {
 
-    override def handle(req: ListWorkflowsRequest): Future[ListWorkflowsResponse] = {
-      val query = WorkflowQuery(
-        name = req.name,
-        owner = req.owner,
-        q = req.q,
-        limit = req.limit.getOrElse(25),
-        offset = req.offset)
-      val res = repository.find(query)
-      Future(ListWorkflowsResponse(res.results, res.totalCount))
-    }
+  override def handle(req: ListWorkflowsRequest): Future[ListWorkflowsResponse] = {
+    val query = WorkflowQuery(
+      name = req.name,
+      owner = req.owner,
+      q = req.q,
+      limit = req.limit.getOrElse(25),
+      offset = req.offset)
+    val res = storage.read(_.workflows.find(query))
+    Future(ListWorkflowsResponse(res.results, res.totalCount))
   }
+}

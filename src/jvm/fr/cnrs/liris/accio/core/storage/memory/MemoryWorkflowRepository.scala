@@ -20,6 +20,8 @@ package fr.cnrs.liris.accio.core.storage.memory
 
 import java.util.concurrent.ConcurrentHashMap
 
+import com.google.common.annotations.VisibleForTesting
+import com.google.common.util.concurrent.AbstractIdleService
 import com.google.inject.Singleton
 import fr.cnrs.liris.accio.core.domain.{Workflow, WorkflowId}
 import fr.cnrs.liris.accio.core.storage.{MutableWorkflowRepository, WorkflowList, WorkflowQuery}
@@ -31,11 +33,12 @@ import scala.collection.mutable
  * Run repository storing data in memory. It has no persistence mechanism. Intended for testing only.
  */
 @Singleton
-final class MemoryWorkflowRepository extends MutableWorkflowRepository {
-  private[this] val workflowIndex = new ConcurrentHashMap[WorkflowId, mutable.Map[String, Workflow]]().asScala
+@VisibleForTesting
+final class MemoryWorkflowRepository extends AbstractIdleService with MutableWorkflowRepository {
+  private[this] val index = new ConcurrentHashMap[WorkflowId, mutable.Map[String, Workflow]]().asScala
 
   override def save(workflow: Workflow): Unit = {
-    val workflows = workflowIndex.getOrElseUpdate(workflow.id, new ConcurrentHashMap[String, Workflow]().asScala)
+    val workflows = index.getOrElseUpdate(workflow.id, new ConcurrentHashMap[String, Workflow]().asScala)
     if (workflow.isActive) {
       workflows.foreach { case (version, oldWorkflow) =>
         workflows(version) = oldWorkflow.copy(isActive = false)
@@ -45,7 +48,7 @@ final class MemoryWorkflowRepository extends MutableWorkflowRepository {
   }
 
   override def find(query: WorkflowQuery): WorkflowList = {
-    var results = workflowIndex.values
+    var results = index.values
       .flatMap(_.values.find(_.isActive))
       .filter(query.matches)
       .toSeq
@@ -62,10 +65,14 @@ final class MemoryWorkflowRepository extends MutableWorkflowRepository {
   }
 
   override def get(id: WorkflowId): Option[Workflow] = {
-    workflowIndex.get(id).flatMap(_.values.find(_.isActive))
+    index.get(id).flatMap(_.values.find(_.isActive))
   }
 
   override def get(id: WorkflowId, version: String): Option[Workflow] = {
-    workflowIndex.get(id).flatMap(_.get(version))
+    index.get(id).flatMap(_.get(version))
   }
+
+  override protected def shutDown(): Unit = {}
+
+  override protected def startUp(): Unit = {}
 }

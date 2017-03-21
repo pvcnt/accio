@@ -18,13 +18,14 @@
 
 package fr.cnrs.liris.accio.core.storage.memory
 
-import java.util.concurrent.ConcurrentHashMap
+import java.util
+import java.util.concurrent.{ConcurrentHashMap, ConcurrentLinkedQueue}
 
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.util.concurrent.AbstractIdleService
 import com.google.inject.Singleton
 import fr.cnrs.liris.accio.core.domain._
-import fr.cnrs.liris.accio.core.storage.{MutableRunRepository, RunList, RunQuery}
+import fr.cnrs.liris.accio.core.storage._
 
 import scala.collection.JavaConverters._
 
@@ -33,36 +34,31 @@ import scala.collection.JavaConverters._
  */
 @Singleton
 @VisibleForTesting
-final class MemoryRunRepository extends AbstractIdleService with MutableRunRepository {
-  private[this] val index = new ConcurrentHashMap[RunId, Run]().asScala
+final class MemoryLogRepository extends AbstractIdleService with MutableLogRepository {
+  private[this] val index = new ConcurrentHashMap[RunId, util.Queue[RunLog]]().asScala
 
-  override def save(run: Run): Unit = {
-    index(run.id) = run
+  override def save(logs: Seq[RunLog]): Unit = {
+    logs.groupBy(_.runId).foreach { case (runId, logs) =>
+      index
+        .getOrElseUpdate(runId, new ConcurrentLinkedQueue[RunLog])
+        .addAll(logs.asJava)
+    }
   }
 
   override def remove(id: RunId): Unit = {
     index.remove(id)
   }
 
-  override def find(query: RunQuery): RunList = {
-    var results = index.values
+  override def find(query: LogsQuery): Seq[RunLog] = {
+    var results = index(query.runId).asScala
       .filter(query.matches)
       .toSeq
-      .sortWith((a, b) => a.createdAt > b.createdAt)
-
-    val totalCount = results.size
-    query.offset.foreach { offset => results = results.drop(offset) }
-    query.limit.foreach { limit => results = results.take(limit) }
-
-    // Remove the result of each node, that we do not want to return.
-    results = results.map(run => run.copy(state = run.state.copy(nodes = run.state.nodes.map(_.unsetResult))))
-
-    RunList(results, totalCount)
+      .sortWith((a, b) => a.createdAt < b.createdAt)
+    query.limit.foreach { limit =>
+      results = results.take(limit)
+    }
+    results
   }
-
-  override def get(id: RunId): Option[Run] = index.get(id)
-
-  override def get(cacheKey: CacheKey): Option[OpResult] = None
 
   override protected def shutDown(): Unit = {}
 

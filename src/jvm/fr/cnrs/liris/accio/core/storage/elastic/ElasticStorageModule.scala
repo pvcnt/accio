@@ -21,36 +21,40 @@ package fr.cnrs.liris.accio.core.storage.elastic
 import com.google.inject.{Provides, Singleton}
 import com.sksamuel.elastic4s.{ElasticClient, ElasticsearchClientUri}
 import com.twitter.finatra.json.FinatraObjectMapper
-import fr.cnrs.liris.accio.core.storage.{InjectStorage, MutableRunRepository, MutableWorkflowRepository}
-import net.codingwell.scalaguice.ScalaModule
+import com.twitter.inject.{Injector, TwitterPrivateModule}
+import com.twitter.util.Duration
+import fr.cnrs.liris.accio.core.storage.Storage
 import org.elasticsearch.common.settings.Settings
 
 /**
  * Guice module provisioning Elasticsearch storage.
- *
- * @param config Configuration.
  */
-final class ElasticStorageModule(config: ElasticStorageConfig) extends ScalaModule {
+object ElasticStorageModule extends TwitterPrivateModule {
+  private[this] val addrFlag = flag("storage.es.addr", "127.0.0.1:9300", "Address to Elasticsearch cluster")
+  private[this] val prefixFlag = flag("storage.es.prefix", "accio_", "Prefix of Elasticsearch indices")
+  private[this] val timeoutFlag = flag("storage.es.timeout", Duration.Top, "Timeout when querying Elasticsearch")
+
   override def configure(): Unit = {
-    bind[StorageConfig].toInstance(config.toConfig)
-    bind[MutableRunRepository].to[ElasticRunRepository]
-    bind[MutableWorkflowRepository].to[ElasticWorkflowRepository]
+    bind[String].annotatedWith[ElasticPrefix].toInstance(prefixFlag())
+    bind[Duration].annotatedWith[ElasticTimeout].toInstance(timeoutFlag())
+    bind[Storage].to[ElasticStorage]
+    expose[Storage]
   }
 
-  @Provides
-  @Singleton
-  @InjectStorage
+  @Provides @Singleton
   def providesObjectMapper(mapperFactory: ObjectMapperFactory): FinatraObjectMapper = mapperFactory.create()
 
-  @Provides
-  @Singleton
-  @InjectStorage
+  @Provides @Singleton
   def providesElasticClient: ElasticClient = {
     val settings = Settings.builder()
       //.put("client.transport.sniff", true)
       .put("cluster.name", "elasticsearch")
       .build()
-    val uri = ElasticsearchClientUri(s"elasticsearch://${config.addr}")
+    val uri = ElasticsearchClientUri(s"elasticsearch://${addrFlag()}")
     ElasticClient.transport(settings, uri)
+  }
+
+  override def singletonShutdown(injector: Injector): Unit = {
+    injector.instance[ElasticClient].close()
   }
 }

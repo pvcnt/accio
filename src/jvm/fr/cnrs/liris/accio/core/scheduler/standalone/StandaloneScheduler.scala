@@ -33,7 +33,7 @@ import scala.collection.JavaConverters._
 class StandaloneScheduler @Inject()(
   taskAssigner: TaskAssigner,
   clusterState: ClusterState,
-  clientFactory: WorkerClientFactory)
+  clientProvider: WorkerClientProvider)
   extends Scheduler with StrictLogging {
 
   private[this] val waitingTasks = new ConcurrentLinkedQueue[Task]
@@ -79,7 +79,7 @@ class StandaloneScheduler @Inject()(
   }
 
   private def kill(worker: WorkerInfo, taskId: TaskId): Unit = {
-    Await.result(clientFactory.create(worker.dest).killTask(KillTaskRequest(taskId)))
+    Await.result(clientProvider.apply(worker.dest).killTask(KillTaskRequest(taskId)))
     clusterState.update(worker.id, taskId, NodeStatus.Killed)
   }
 
@@ -89,7 +89,7 @@ class StandaloneScheduler @Inject()(
       case None => false
       case Some(worker) =>
         clusterState.assign(worker.id, task)
-        val f = clientFactory.create(worker.dest).assignTask(AssignTaskRequest(task)).liftToTry
+        val f = clientProvider.apply(worker.dest).assignTask(AssignTaskRequest(task)).liftToTry
         Await.result(f) match {
           case Return(_) => true
           case Throw(_: InvalidTaskException) =>

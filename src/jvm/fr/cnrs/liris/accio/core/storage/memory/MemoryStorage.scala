@@ -16,23 +16,15 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.storage.inject
+package fr.cnrs.liris.accio.core.storage.memory
 
-import com.twitter.inject.TwitterModule
-import fr.cnrs.liris.accio.core.storage.elastic.ElasticStorageModule
-import fr.cnrs.liris.accio.core.storage.memory.MemoryStorageModule
+import com.google.common.annotations.VisibleForTesting
+import com.google.inject.{Inject, Singleton}
+import fr.cnrs.liris.accio.core.storage.AbstractStorage
 
-/**
- * Guice module provisioning storage-related services.
- */
-object StorageModule extends TwitterModule {
-  private[this] val storageFlag = flag("storage.type", "memory", "Storage type")
-
-  protected override def configure(): Unit = {
-    storageFlag() match {
-      case "memory" => install(MemoryStorageModule)
-      case "es" => install(ElasticStorageModule)
-      case unknown => throw new IllegalArgumentException(s"Unknown storage type: $unknown")
-    }
-  }
-}
+@Singleton @VisibleForTesting
+final class MemoryStorage @Inject() (
+  override protected val runRepository: MemoryRunRepository,
+  override protected val logRepository: MemoryLogRepository,
+  override protected val workflowRepository: MemoryWorkflowRepository)
+  extends AbstractStorage

@@ -16,22 +16,22 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.agent.handler.api
+package fr.cnrs.liris.accio.agent.handler
 
 import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{GetRunRequest, GetRunResponse}
-import fr.cnrs.liris.accio.core.storage.RunRepository
+import fr.cnrs.liris.accio.core.storage.Storage
 
 /**
  * Retrieve a single run, if it exists.
  *
- * @param repository Run repository (read-only).
+ * @param storage Storage.
  */
-class GetRunHandler @Inject()(repository: RunRepository) extends AbstractHandler[GetRunRequest, GetRunResponse] {
+class GetRunHandler @Inject()(storage: Storage) extends AbstractHandler[GetRunRequest, GetRunResponse] {
   override def handle(req: GetRunRequest): Future[GetRunResponse] = {
-    val maybeRun = repository.get(req.id)
+    val maybeRun = storage.read(_.runs.get(req.id))
     Future(GetRunResponse(maybeRun))
   }
 }

@@ -24,7 +24,7 @@ import org.scalatest.BeforeAndAfterEach
 /**
  * Unit tests for [[Reporter]].
  */
-class ReporterSpec extends UnitSpec with BeforeAndAfterEach {
+class ReporterSpec extends UnitSpec {
   behavior of "Reporter"
 
   it should "show output" in {

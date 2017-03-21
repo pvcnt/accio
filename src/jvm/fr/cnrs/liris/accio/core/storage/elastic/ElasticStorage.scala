@@ -16,17 +16,14 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.dsl.inject;
+package fr.cnrs.liris.accio.core.storage.elastic
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import com.google.inject.{Inject, Singleton}
+import fr.cnrs.liris.accio.core.storage._
 
-/**
- * Annotation requesting injection of a generic worker pool.
- */
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface DslMapper {
-}
+@Singleton
+private[elastic] final class ElasticStorage @Inject()(
+  protected override val runRepository: ElasticRunRepository,
+  protected override val workflowRepository: ElasticWorkflowRepository,
+  protected override val logRepository: ElasticLogRepository)
+  extends AbstractStorage

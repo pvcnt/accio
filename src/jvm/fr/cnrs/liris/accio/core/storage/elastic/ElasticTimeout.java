@@ -16,16 +16,17 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.storage.local
+package fr.cnrs.liris.accio.core.storage.elastic;
 
-import fr.cnrs.liris.accio.core.storage.{MutableWorkflowRepository, WorkflowRepositorySpec}
-import fr.cnrs.liris.testing.WithTmpDirectory
+import com.google.inject.BindingAnnotation;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 /**
- * Unit tests of [[LocalWorkflowRepository]].
+ * Annotation requesting the injection of the timeout to use when querying Elasticsearh.
  */
-class LocalWorkflowRepositorySpec extends WorkflowRepositorySpec with WithTmpDirectory {
-  behavior of "LocalWorkflowRepository"
-
-  override protected def createRepository: MutableWorkflowRepository = new LocalWorkflowRepository(tmpDir)
+@Retention(RetentionPolicy.RUNTIME)
+@BindingAnnotation
+@interface ElasticTimeout {
 }

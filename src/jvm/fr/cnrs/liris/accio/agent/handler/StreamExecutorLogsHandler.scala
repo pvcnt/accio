@@ -19,11 +19,11 @@
 package fr.cnrs.liris.accio.agent.handler
 
 import com.google.inject.Inject
-import com.twitter.util.Future
+import com.twitter.util.{Future, Throw}
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.agent._
 import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
-import fr.cnrs.liris.accio.core.domain.{InvalidExecutorException, InvalidTaskException}
+import fr.cnrs.liris.accio.core.domain.{InvalidExecutorException, InvalidTaskException, InvalidWorkerException}
 
 /**
  * Handle a request from an executor containing execution logs, which will be forwarded to the master.
@@ -40,6 +40,11 @@ final class StreamExecutorLogsHandler @Inject()(client: AgentService$FinagleClie
     state.ensure(req.taskId, req.executorId)
     client
       .streamTaskLogs(StreamTaskLogsRequest(state.workerId, req.taskId, req.logs))
+      .rescue {
+        case e: InvalidWorkerException =>
+          logger.error("Invalid worker state", e)
+          Future.const(Throw(InvalidExecutorException(req.executorId)))
+      }
       .map(_ => StreamExecutorLogsResponse())
   }
 }

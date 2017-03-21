@@ -18,13 +18,14 @@
 
 package fr.cnrs.liris.accio.core.storage
 
-import com.twitter.util.Time
+import com.google.common.util.concurrent.Service
+import com.twitter.util.Future
 import fr.cnrs.liris.accio.core.domain._
 
 /**
  * Repository persisting runtime data collected as runs are executed.
  */
-trait RunRepository {
+trait RunRepository extends Service {
   /**
    * Search for runs matching a given query. Runs are returned ordered in inverse chronological order, the most
    * recent matching run being the first result. It does *not* include the result of each node.
@@ -33,15 +34,6 @@ trait RunRepository {
    * @return List of runs and total number of results.
    */
   def find(query: RunQuery): RunList
-
-  /**
-   * Search for logs matching a given query. Logs are returned ordered in chronological order, the oldest matching
-   * log being the first result (yes, this in *not* the same order than previous method).
-   *
-   * @param query Query.
-   * @return List of logs.
-   */
-  def find(query: LogsQuery): Seq[RunLog]
 
   /**
    * Retrieve a specific run, if it exists.
@@ -73,14 +65,6 @@ trait MutableRunRepository extends RunRepository {
    * @param run Run to save.
    */
   def save(run: Run): Unit
-
-  /**
-   * Save some logs. Since they are small objects, they can be saved in a batch (details are implementation-dependant).
-   * Logs are append-only.
-   *
-   * @param logs Logs to save.
-   */
-  def save(logs: Seq[RunLog]): Unit
 
   /**
    * Delete a run, if it exists. It will also delete all associated logs. It does *not* remove child runs, it is up
@@ -142,33 +126,3 @@ case class RunQuery(
  * @param totalCount Total number of results.
  */
 case class RunList(results: Seq[Run], totalCount: Int)
-
-/**
- * Query to search for logs. It is only possible to search for logs issued by a specific task (i.e., a run/node
- * combination).
- *
- * @param runId      Run for which to retrieve the logs.
- * @param nodeName   Node for which to retrieve the logs.
- * @param classifier Only include logs with this classifier.
- * @param limit      Maximum number of matching logs to return.
- * @param since      Only include logs older than a given instant.
- */
-case class LogsQuery(
-  runId: RunId,
-  nodeName: String,
-  classifier: Option[String] = None,
-  limit: Option[Int] = None,
-  since: Option[Time] = None) {
-
-  def matches(log: RunLog): Boolean = {
-    if (log.runId != runId || log.nodeName != nodeName) {
-      false
-    } else if (classifier.isDefined && log.classifier != classifier.get) {
-      false
-    } else if (since.isDefined && log.createdAt <= since.get.inMillis) {
-      false
-    } else {
-      true
-    }
-  }
-}

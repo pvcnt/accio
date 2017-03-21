@@ -23,16 +23,21 @@ import java.util.concurrent.Executors
 import com.google.inject._
 import com.twitter.concurrent.NamedPoolThreadFactory
 import com.twitter.finagle.Thrift
+import com.twitter.finagle.service.{Backoff, RetryBudget}
 import com.twitter.inject.{Injector, TwitterModule}
-import com.twitter.util.{ExecutorServiceFuturePool, FuturePool}
+import com.twitter.util.{Duration, ExecutorServiceFuturePool, FuturePool}
 import fr.cnrs.liris.accio.agent.{AgentService, AgentService$FinagleClient}
 import fr.cnrs.liris.accio.core.api.Operator
+import fr.cnrs.liris.accio.core.finagle.AccioResponseClassifier
 import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.util.WorkerPool
 import fr.cnrs.liris.dal.core.io.{Decoder, Encoder, StringCodec}
 import fr.cnrs.liris.dal.core.sparkle.SparkleEnv
 import net.codingwell.scalaguice.ScalaMultibinder
 
+/**
+ * Guice module providing executor-specific bindings.
+ */
 object ExecutorModule extends TwitterModule {
   private[this] val addrFlag = flag[String]("addr", "Address of the Accio worker")
 
@@ -63,8 +68,18 @@ object ExecutorModule extends TwitterModule {
 
   @Singleton
   @Provides
-  def providesWorkerClient: AgentService$FinagleClient = {
-    val service = Thrift.newService(addrFlag())
+  def providesClient: AgentService$FinagleClient = {
+    // - We communicate directly with our local worker (and *not* with the master).
+    // - If the executor is still alive, then the worker is still alive (because the executor is a subprocess of
+    //   the worker's process). So we retry indefinitely, w.r.t. our domain-aware response classifier (e.g.,
+    //   avoiding to retry on InvalidTaskException's).
+    // - We do not want to fail-fast, because there will always be only one reachable host.
+    val service = Thrift.client
+      .withRetryBudget(RetryBudget.Infinite)
+      .withRetryBackoff(Backoff.const(Duration.fromSeconds(5)))
+      .withSessionQualifier.noFailFast
+      .withResponseClassifier(AccioResponseClassifier.Default)
+      .newService(addrFlag())
     new AgentService.FinagledClient(service)
   }
 
@@ -79,6 +94,7 @@ object ExecutorModule extends TwitterModule {
   @Singleton
   def providesSparkleEnv: SparkleEnv = {
     // Create a Sparkle environment using the numProcs' flag to limit parallelism.
+    // It is a poor-man's way to isolate an executor in terms of CPU usage.
     new SparkleEnv(math.max(1, com.twitter.jvm.numProcs().round.toInt))
   }
 }

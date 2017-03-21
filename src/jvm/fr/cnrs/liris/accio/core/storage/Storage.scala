@@ -16,14 +16,28 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.storage;
+package fr.cnrs.liris.accio.core.storage
 
-import com.google.inject.BindingAnnotation;
+import com.google.common.util.concurrent.Service
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
+trait Storage extends Service {
+  def read[T](fn: RepositoryProvider => T): T
 
-@Retention(RetentionPolicy.RUNTIME)
-@BindingAnnotation
-public @interface InjectStorage {
+  def write[T](fn: MutableRepositoryProvider => T): T
+}
+
+trait RepositoryProvider {
+  def runs: RunRepository
+
+  def workflows: WorkflowRepository
+
+  def logs: LogRepository
+}
+
+trait MutableRepositoryProvider {
+  def runs: MutableRunRepository
+
+  def workflows: MutableWorkflowRepository
+
+  def logs: MutableLogRepository
 }

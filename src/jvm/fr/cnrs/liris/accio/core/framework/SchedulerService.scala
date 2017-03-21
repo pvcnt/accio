@@ -26,17 +26,17 @@ import com.google.inject.Inject
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.scheduler.{EventType, Scheduler}
-import fr.cnrs.liris.accio.core.storage.RunRepository
+import fr.cnrs.liris.accio.core.storage.Storage
 import fr.cnrs.liris.dal.core.api.Value
 
 /**
  * Wrapper around the actual scheduler, handling task creation.
  *
- * @param scheduler     Scheduler.
- * @param opRegistry    Operator registry.
- * @param runRepository Run repository (read-only).
+ * @param scheduler  Scheduler.
+ * @param opRegistry Operator registry.
+ * @param storage    Storage.
  */
-final class SchedulerService @Inject()(scheduler: Scheduler, opRegistry: OpRegistry, runRepository: RunRepository)
+final class SchedulerService @Inject()(scheduler: Scheduler, opRegistry: OpRegistry, storage: Storage)
   extends StrictLogging {
 
   /**
@@ -52,7 +52,7 @@ final class SchedulerService @Inject()(scheduler: Scheduler, opRegistry: OpRegis
   def submit(run: Run, node: Node, readCache: Boolean = true): Option[(CacheKey, OpResult)] = {
     val opDef = opRegistry(node.op)
     val payload = createPayload(run, node, opDef)
-    val maybeResult = if (readCache) runRepository.get(payload.cacheKey) else None
+    val maybeResult = if (readCache) storage.read(_.runs.get(payload.cacheKey)) else None
     maybeResult match {
       case Some(result) =>
         logger.debug(s"Cache hit. Run: ${run.id.value}, node: ${node.name}.")

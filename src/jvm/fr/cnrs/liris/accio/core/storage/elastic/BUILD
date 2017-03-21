@@ -1,7 +1,7 @@
 scala_library(
   dependencies=[
+    ':annotations',
     'src/jvm/fr/cnrs/liris/accio/core/storage',
-    'src/jvm/fr/cnrs/liris/accio/core/storage:annotations',
     'src/thrift/fr/cnrs/liris/accio/core/domain',
     '3rdparty/jvm/com/sksamuel/elastic4s:core',
     '3rdparty/jvm/com/sksamuel/elastic4s:jackson',
@@ -9,6 +9,15 @@ scala_library(
     '3rdparty/jvm:scrooge-core',
     '3rdparty/jvm:scala-guice',
     '3rdparty/jvm/com/twitter/finatra:jackson',
+    '3rdparty/jvm/com/twitter/bijection:util',
   ],
   sources=globs('*.scala')
+)
+
+java_library(
+  name='annotations',
+  dependencies=[
+    '3rdparty/jvm/com/google/guice',
+  ],
+  sources=globs('*.java')
 )

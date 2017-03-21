@@ -18,40 +18,46 @@
 
 package fr.cnrs.liris.accio.core.storage.elastic
 
-import com.google.inject.{Inject, Singleton}
+import com.google.inject.Singleton
 import com.sksamuel.elastic4s.ElasticDsl._
 import com.sksamuel.elastic4s.analyzers.KeywordAnalyzer
+import com.sksamuel.elastic4s.get.RichGetResponse
+import com.sksamuel.elastic4s.indexes.RichIndexResponse
 import com.sksamuel.elastic4s.mappings.MappingDefinition
+import com.sksamuel.elastic4s.searches.RichSearchResponse
 import com.sksamuel.elastic4s.{ElasticClient, ElasticDsl}
+import com.twitter.bijection.Conversion.asMethod
+import com.twitter.bijection.twitter_util.UtilBijections._
 import com.twitter.finatra.json.FinatraObjectMapper
+import com.twitter.util.{Await, Duration, Future}
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.storage._
 import org.apache.lucene.search.join.ScoreMode
+import org.elasticsearch.action.admin.indices.create.CreateIndexResponse
+import org.elasticsearch.action.delete.DeleteResponse
 import org.elasticsearch.index.IndexNotFoundException
 import org.elasticsearch.search.sort.SortOrder
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{Await, Future}
 import scala.language.reflectiveCalls
 import scala.util.control.NonFatal
 
 /**
- * Run repository persisting data into an Elasticsearch cluster.
+ * Run repository persisting data into Elasticsearch.
  *
- * @param mapper Finatra object mapper.
- * @param client Elasticsearch client.
- * @param config Elastic repository configuration.
+ * @param mapper  Finatra object mapper.
+ * @param client  Elasticsearch client.
+ * @param prefix  Prefix of indexes.
+ * @param timeout Query timeout.
  */
 @Singleton
-final class ElasticRunRepository @Inject()(
-  @InjectStorage mapper: FinatraObjectMapper,
-  @InjectStorage client: ElasticClient,
-  config: StorageConfig)
-  extends MutableRunRepository with StrictLogging {
-
-  initializeRunsIndex()
-  initializeLogsIndex()
+private[elastic] final class ElasticRunRepository(
+  mapper: FinatraObjectMapper,
+  client: ElasticClient,
+  @ElasticPrefix prefix: String,
+  @ElasticTimeout timeout: Duration)
+  extends ElasticRepository(client) with MutableRunRepository with StrictLogging {
 
   override def find(query: RunQuery): RunList = {
     var q = boolQuery()
@@ -83,7 +89,7 @@ final class ElasticRunRepository @Inject()(
         .minimumShouldMatch(1)
     }
 
-    var s = search(runsIndex / runsType)
+    var s = search(indexName / typeName)
       .query(q)
       .sourceExclude("state.nodes.result")
       .limit(query.limit.getOrElse(10000)) // Max limit defaults to 10000.
@@ -92,71 +98,36 @@ final class ElasticRunRepository @Inject()(
       s = s.sortBy(fieldSort("created_at").order(SortOrder.DESC))
     }
 
-    val f = client.execute(s).map { resp =>
-      val results = resp.hits.toSeq.map(hit => mapper.parse[Run](hit.sourceAsBytes))
-      RunList(results, resp.totalHits.toInt)
-    }.recover {
-      case _: IndexNotFoundException => RunList(Seq.empty, 0)
-      case NonFatal(e) =>
-        logger.error("Error while searching runs", e)
-        RunList(Seq.empty, 0)
-    }
-    Await.result(f, config.queryTimeout)
-  }
-
-  override def find(query: LogsQuery): Seq[RunLog] = {
-    var q = boolQuery()
-      .filter(termQuery("run_id.value", query.runId.value))
-      .filter(termQuery("node_name", query.nodeName))
-    query.classifier.foreach { classifier =>
-      q = q.filter(termQuery("classifier", classifier))
-    }
-    query.since.foreach { since =>
-      q = q.filter(rangeQuery("created_at").from(since.inMillis).includeLower(false))
-    }
-
-    val s = search(logsIndex / logsType)
-      .query(q)
-      .sortBy(fieldSort("created_at"))
-      // https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-from-size.html
-      .limit(query.limit.getOrElse(10000))
-
-    val f = client.execute(s).map { resp =>
-      resp.hits.toSeq.map(hit => mapper.parse[RunLog](hit.sourceAsBytes))
-    }.recover {
-      case _: IndexNotFoundException => Seq.empty
-      case NonFatal(e) =>
-        logger.error("Error while searching logs", e)
-        Seq.empty
-    }
-    Await.result(f, config.queryTimeout)
+    val f = client
+      .execute(s)
+      .as[Future[RichSearchResponse]]
+      .map { resp =>
+        val results = resp.hits.toSeq.map(hit => mapper.parse[Run](hit.sourceAsBytes))
+        RunList(results, resp.totalHits.toInt)
+      }
+      .rescue {
+        case _: IndexNotFoundException => Future.value(RunList(Seq.empty, 0))
+        case NonFatal(e) =>
+          logger.error("Error while searching runs", e)
+          Future.value(RunList(Seq.empty, 0))
+      }
+    Await.result(f, timeout)
   }
 
   override def save(run: Run): Unit = {
     val json = mapper.writeValueAsString(run)
-    val f = client.execute {
-      indexInto(runsIndex / runsType).id(run.id.value).source(json)
-    }
-    f.onFailure {
-      case e: Throwable => logger.error(s"Error while saving run ${run.id.value}", e)
-    }
-    Await.ready(f, config.queryTimeout)
-  }
-
-  override def save(logs: Seq[RunLog]): Unit = {
-    val actions = logs.map { log =>
-      val json = mapper.writeValueAsString(log)
-      indexInto(logsIndex / logsType).source(json)
-    }
-    val f = client.execute(bulk(actions))
-    f.onFailure {
-      case e: Throwable => logger.error(s"Error while saving ${logs.size} logs", e)
-    }
-    Await.ready(f, config.queryTimeout)
+    val f = client
+      .execute(indexInto(indexName / typeName).id(run.id.value).source(json))
+      .as[Future[RichIndexResponse]]
+      .onFailure(e => logger.error(s"Error while saving run ${run.id.value}", e))
+      .unit
+    Await.result(f, timeout)
   }
 
   override def get(id: RunId): Option[Run] = {
-    val f = client.execute(ElasticDsl.get(id.value).from(runsIndex / runsType))
+    val f = client
+      .execute(ElasticDsl.get(id.value).from(indexName / typeName))
+      .as[Future[RichGetResponse]]
       .map { resp =>
         if (resp.isSourceEmpty) {
           None
@@ -164,103 +135,74 @@ final class ElasticRunRepository @Inject()(
           Some(mapper.parse[Run](resp.sourceAsString))
         }
       }
-      .recover {
-        case _: IndexNotFoundException => None
-        case e: Throwable =>
+      .rescue {
+        case _: IndexNotFoundException => Future.value(None)
+        case NonFatal(e) =>
           logger.error(s"Error while retrieving run ${id.value}", e)
-          None
+          Future.value(None)
       }
-    Await.result(f, config.queryTimeout)
+    Await.result(f, timeout)
   }
 
   override def remove(id: RunId): Unit = {
-    val fs = Future.sequence(Seq(
-      client.execute(delete(id.value).from(runsIndex / runsType)),
-      client.execute(deleteIn(logsIndex).by(termQuery("id.value", id.value)))))
-    fs.onSuccess {
-      case _ => logger.debug(s"Removed run ${id.value}")
-    }
-    Await.ready(fs, config.queryTimeout)
+    val f = client
+      .execute(delete(id.value).from(indexName / typeName))
+      .as[Future[DeleteResponse]]
+      .unit
+    Await.result(f, timeout)
   }
 
   override def get(cacheKey: CacheKey): Option[OpResult] = {
     val q = nestedQuery("state.nodes")
       .query(termQuery("state.nodes.cache_key.hash", cacheKey.hash))
       .scoreMode(ScoreMode.None)
-    val s = search(runsIndex / runsType).query(q).size(1)
-    val f = client.execute(s).map { resp =>
-      if (resp.totalHits > 0) {
-        val run = mapper.parse[Run](resp.hits.head.sourceAsString)
-        run.state.nodes.find(_.cacheKey.contains(cacheKey)).get.result
-      } else {
-        None
+    val s = search(indexName / typeName).query(q).size(1)
+    val f = client
+      .execute(s)
+      .as[Future[RichSearchResponse]]
+      .map { resp =>
+        if (resp.totalHits > 0) {
+          val run = mapper.parse[Run](resp.hits.head.sourceAsString)
+          run.state.nodes.find(_.cacheKey.contains(cacheKey)).get.result
+        } else {
+          None
+        }
       }
-    }.recover {
-      case _: IndexNotFoundException => None
-      case e: Throwable =>
-        logger.error(s"Error while retrieving cached result ${cacheKey.hash}", e)
-        None
-    }
-    Await.result(f, config.queryTimeout)
+      .rescue {
+        case _: IndexNotFoundException => Future.value(None)
+        case NonFatal(e) =>
+          logger.error(s"Error while retrieving cached result ${cacheKey.hash}", e)
+          Future.value(None)
+      }
+    Await.result(f, timeout)
   }
 
-  private def runsIndex = s"${config.prefix}runs"
+  override protected def indexName = s"${prefix}runs"
 
-  private def logsIndex = s"${config.prefix}logs"
+  override protected def typeName = "default"
 
-  private def runsType = "default"
-
-  private def logsType = "default"
-
-  private def initializeRunsIndex() = {
-    val f = client.execute(indexExists(runsIndex)).flatMap { resp =>
-      if (!resp.isExists) {
-        // Some fields must absolutely be indexed with the keyword analyzer, which performs no tokenization at all,
-        // otherwise they won't be searchable by their exact value (which can be annoying, e.g., for ids).
-        val fields = Seq(
-          objectField("id").as(textField("value").analyzer(KeywordAnalyzer)),
-          objectField("pkg").as(
-            objectField("workflow_id").as(textField("value").analyzer(KeywordAnalyzer)),
-            textField("version").analyzer(KeywordAnalyzer)
-          ),
-          objectField("parent").as(textField("value").analyzer(KeywordAnalyzer)),
-          objectField("cloned_from").as(textField("value").analyzer(KeywordAnalyzer)),
-          longField("created_at"),
-          objectField("params").enabled(false),
-          objectField("state").as(
-            nestedField("nodes").as(
-              textField("name").analyzer(KeywordAnalyzer),
-              objectField("cache_key").as(textField("hash").analyzer(KeywordAnalyzer)),
-              objectField("result").enabled(false)
-            )
-          ))
-        logger.info(s"Creating $runsIndex/$runsType index")
-        client.execute(createIndex(runsIndex).mappings(new MappingDefinition(runsType) as (fields: _*)))
-      } else {
-        Future.successful(true)
-      }
-    }
-    f.onFailure { case NonFatal(e) => logger.error("Failed to initialize runs index", e) }
-    Await.ready(f, config.queryTimeout)
-  }
-
-  private def initializeLogsIndex() = {
-    val f = client.execute(indexExists(logsIndex)).flatMap { resp =>
-      if (!resp.isExists) {
-        // Some fields must absolutely be indexed with the keyword analyzer, which performs no tokenization at all,
-        // otherwise they won't be searchable by their exact value (which can be annoying, e.g., for ids).
-        val fields = Seq(
-          objectField("run_id").as(textField("value").analyzer(KeywordAnalyzer)),
-          textField("node_name").analyzer(KeywordAnalyzer),
-          longField("created_at"),
-          textField("classifier").analyzer(KeywordAnalyzer))
-        logger.info(s"Creating $logsIndex/$logsType index")
-        client.execute(createIndex(logsIndex).mappings(new MappingDefinition(logsType) as (fields: _*)))
-      } else {
-        Future.successful(true)
-      }
-    }
-    f.onFailure { case NonFatal(e) => logger.error("Failed to initialize logs index", e) }
-    Await.ready(f, config.queryTimeout)
+  override protected def createMappings(): Future[CreateIndexResponse] = {
+    // Some fields must absolutely be indexed with the keyword analyzer, which performs no tokenization at all,
+    // otherwise they won't be searchable by their exact value (which can be annoying, e.g., for ids).
+    val fields = Seq(
+      objectField("id").as(textField("value").analyzer(KeywordAnalyzer)),
+      objectField("pkg").as(
+        objectField("workflow_id").as(textField("value").analyzer(KeywordAnalyzer)),
+        textField("version").analyzer(KeywordAnalyzer)
+      ),
+      objectField("parent").as(textField("value").analyzer(KeywordAnalyzer)),
+      objectField("cloned_from").as(textField("value").analyzer(KeywordAnalyzer)),
+      longField("created_at"),
+      objectField("params").enabled(false),
+      objectField("state").as(
+        nestedField("nodes").as(
+          textField("name").analyzer(KeywordAnalyzer),
+          objectField("cache_key").as(textField("hash").analyzer(KeywordAnalyzer)),
+          objectField("result").enabled(false)
+        )
+      ))
+    client
+      .execute(createIndex(indexName).mappings(new MappingDefinition(typeName) as (fields: _*)))
+      .as[Future[CreateIndexResponse]]
   }
 }

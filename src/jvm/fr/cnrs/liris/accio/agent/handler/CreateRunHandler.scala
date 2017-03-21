@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.agent.handler.api
+package fr.cnrs.liris.accio.agent.handler
 
 import com.google.inject.Inject
 import com.twitter.util.{Future, FuturePool}
@@ -25,7 +25,7 @@ import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{CreateRunRequest, CreateRunResponse}
 import fr.cnrs.liris.accio.core.domain.{InvalidSpecException, InvalidSpecMessage, RunId}
 import fr.cnrs.liris.accio.core.framework.{RunFactory, RunManager}
-import fr.cnrs.liris.accio.core.storage.MutableRunRepository
+import fr.cnrs.liris.accio.core.storage.Storage
 import fr.cnrs.liris.accio.core.util.WorkerPool
 
 import scala.collection.mutable
@@ -33,14 +33,14 @@ import scala.collection.mutable
 /**
  * Launch a workflow, through one or several runs. It saves them and asynchronously schedules them.
  *
- * @param runFactory    Run factory.
- * @param runRepository Run repository.
- * @param runManager    Run lifecycle manager.
- * @param pool          Worker pool.
+ * @param runFactory Run factory.
+ * @param storage    Storage.
+ * @param runManager Run lifecycle manager.
+ * @param pool       Worker pool.
  */
 final class CreateRunHandler @Inject()(
   runFactory: RunFactory,
-  runRepository: MutableRunRepository,
+  storage: Storage,
   runManager: RunManager,
   @WorkerPool pool: FuturePool)
   extends AbstractHandler[CreateRunRequest, CreateRunResponse] with StrictLogging {
@@ -49,7 +49,9 @@ final class CreateRunHandler @Inject()(
   def handle(req: CreateRunRequest): Future[CreateRunResponse] = {
     val warnings = mutable.Set.empty[InvalidSpecMessage]
     val runs = runFactory.create(req.spec, req.user, warnings)
-    runs.foreach(runRepository.save)
+    storage.write { provider =>
+      runs.foreach(provider.runs.save)
+    }
 
     // We save the runs before launching them asynchronously. It allows to return more quickly to the client, as
     // launching runs can take some times.
@@ -68,26 +70,28 @@ final class CreateRunHandler @Inject()(
    *            parent and the other its children.
    */
   private def launch(ids: Seq[RunId]) = {
-    // We do not reuse runs from the `handle` method, as they could have been modified in-between by other calls.
-    // This is why we fetch them back from the repository.
-    runRepository.get(ids.head).foreach { parent =>
-      // We are guaranteed there will be at least one run. It is either a single run or the parent run, we may
-      // launch it safely.
-      var (newParent, _) = runManager.launch(parent, None)
+    storage.write { provider =>
+      // We do not reuse runs from the `handle` method, as they could have been modified in-between by other calls.
+      // This is why we fetch them back from the repository.
+      provider.runs.get(ids.head).foreach { parent =>
+        // We are guaranteed there will be at least one run. It is either a single run or the parent run, we may
+        // launch it safely.
+        var (newParent, _) = runManager.launch(parent, None)
 
-      // Sequentially launch other runs, which are children of the first run.
-      ids.tail.foreach { childId =>
-        runRepository.get(childId).foreach { run =>
-          val res = runManager.launch(run, Some(newParent))
-          runRepository.save(res._1)
-          res._2.foreach { nextParent =>
-            newParent = nextParent
+        // Sequentially launch other runs, which are children of the first run.
+        ids.tail.foreach { childId =>
+          provider.runs.get(childId).foreach { run =>
+            val res = runManager.launch(run, Some(newParent))
+            provider.runs.save(res._1)
+            res._2.foreach { nextParent =>
+              newParent = nextParent
+            }
           }
         }
+        // We finally save the parent run.
+        // TODO: maybe we should save it after each child run started.
+        provider.runs.save(newParent)
       }
-      // We finally save the parent run.
-      // TODO: maybe we should save it after each child run started.
-      runRepository.save(newParent)
     }
   }
 }

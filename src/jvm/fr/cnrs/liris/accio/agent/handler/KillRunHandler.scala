@@ -25,18 +25,18 @@ import fr.cnrs.liris.accio.agent.{KillRunRequest, KillRunResponse}
 import fr.cnrs.liris.accio.core.domain.{Run, UnknownRunException}
 import fr.cnrs.liris.accio.core.framework.RunManager
 import fr.cnrs.liris.accio.core.scheduler.{ClusterState, EventType, Scheduler}
-import fr.cnrs.liris.accio.core.storage.MutableRunRepository
+import fr.cnrs.liris.accio.core.storage.Storage
 
 /**
  * Kill a run and all running tasks.
  *
- * @param runRepository Run repository.
- * @param state         Cluster state.
- * @param scheduler     Scheduler.
- * @param runManager    Run manager.
+ * @param storage    Storage.
+ * @param state      Cluster state.
+ * @param scheduler  Scheduler.
+ * @param runManager Run manager.
  */
 final class KillRunHandler @Inject()(
-  runRepository: MutableRunRepository,
+  storage: Storage,
   state: ClusterState,
   scheduler: Scheduler,
   runManager: RunManager)
@@ -44,29 +44,31 @@ final class KillRunHandler @Inject()(
 
   @throws[UnknownRunException]
   override def handle(req: KillRunRequest): Future[KillRunResponse] = {
-    val newRun = runRepository.get(req.id) match {
-      case None => throw UnknownRunException(req.id)
-      case Some(run) =>
-        if (run.children.nonEmpty) {
-          var newParent = run
-          // If is a parent run, kill child all runs.
-          run.children.foreach { childId =>
-            runRepository.get(childId).foreach { child =>
-              val res = cancelRun(child, Some(run))
-              runRepository.save(res._1)
-              res._2.foreach(p => newParent = p)
+    storage.write { provider =>
+      val newRun = provider.runs.get(req.id) match {
+        case None => throw UnknownRunException(req.id)
+        case Some(run) =>
+          if (run.children.nonEmpty) {
+            var newParent = run
+            // If is a parent run, kill child all runs.
+            run.children.foreach { childId =>
+              provider.runs.get(childId).foreach { child =>
+                val res = cancelRun(child, Some(run))
+                provider.runs.save(res._1)
+                res._2.foreach(p => newParent = p)
+              }
             }
+            provider.runs.save(newParent)
+            newParent
+          } else {
+            val (newRun, newParent) = cancelRun(run, run.parent.flatMap(provider.runs.get))
+            provider.runs.save(newRun)
+            newParent.foreach(provider.runs.save)
+            newRun
           }
-          runRepository.save(newParent)
-          newParent
-        } else {
-          val (newRun, newParent) = cancelRun(run, run.parent.flatMap(runRepository.get))
-          runRepository.save(newRun)
-          newParent.foreach(runRepository.save)
-          newRun
-        }
+      }
+      Future(KillRunResponse(newRun))
     }
-    Future(KillRunResponse(newRun))
   }
 
   private def cancelRun(run: Run, parent: Option[Run]) = {

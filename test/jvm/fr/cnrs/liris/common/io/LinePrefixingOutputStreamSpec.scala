@@ -37,11 +37,13 @@ class LinePrefixingOutputStreamSpec extends UnitSpec with BeforeAndAfterEach {
   private var prefixOut: OutputStream = null
 
   override protected def beforeEach() = {
+    super.beforeEach()
     out = new ByteArrayOutputStream
     prefixOut = new LinePrefixingOutputStream("Prefix: ", out)
   }
 
   override protected def afterEach() = {
+    super.afterEach()
     out = null
     prefixOut = null
   }

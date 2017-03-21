@@ -22,7 +22,7 @@ import java.util.UUID
 
 import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.domain._
-import fr.cnrs.liris.accio.core.storage.WorkflowRepository
+import fr.cnrs.liris.accio.core.storage.Storage
 import fr.cnrs.liris.common.util.Seqs
 import fr.cnrs.liris.dal.core.api.Value
 
@@ -32,9 +32,9 @@ import scala.util.Random
 /**
  * Factory for [[Run]].
  *
- * @param workflowRepository Workflow repository (read-only).
+ * @param storage Storage.
  */
-final class RunFactory @Inject()(workflowRepository: WorkflowRepository) extends BaseFactory {
+final class RunFactory @Inject()(storage: Storage) extends BaseFactory {
   /**
    * Create one or several runs from a run specification.
    *
@@ -238,7 +238,7 @@ final class RunFactory @Inject()(workflowRepository: WorkflowRepository) extends
    * @param warnings Mutable list collecting warnings.
    */
   private def getWorkflow(pkg: Package, warnings: mutable.Set[InvalidSpecMessage]) = {
-    val maybeWorkflow = workflowRepository.get(pkg.workflowId, pkg.workflowVersion)
+    val maybeWorkflow = storage.read(_.workflows.get(pkg.workflowId, pkg.workflowVersion))
     maybeWorkflow match {
       case None => throw newError(s"Workflow not found: ${pkg.workflowId.value}@${pkg.workflowVersion}", "pkg", warnings)
       case Some(workflow) => workflow

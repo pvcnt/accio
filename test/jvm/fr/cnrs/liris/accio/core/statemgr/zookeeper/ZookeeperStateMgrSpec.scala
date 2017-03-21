@@ -34,12 +34,14 @@ class ZookeeperStateMgrSpec extends StateMgrSpec with BeforeAndAfterEach {
   private[this] var client: CuratorFramework = null
 
   override protected def beforeEach(): Unit = {
+    super.beforeEach()
     zkTestServer = new TestingServer(2181)
     client = CuratorFrameworkFactory.newClient(zkTestServer.getConnectString, new RetryOneTime(2000))
     client.start()
   }
 
   override protected def afterEach(): Unit = {
+    super.afterEach()
     client.close()
     zkTestServer.stop()
   }

@@ -26,17 +26,14 @@ import fr.cnrs.liris.accio.agent.{LostTaskRequest, LostTaskResponse}
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.framework.RunManager
 import fr.cnrs.liris.accio.core.scheduler.ClusterState
-import fr.cnrs.liris.accio.core.storage.MutableRunRepository
+import fr.cnrs.liris.accio.core.storage.Storage
 
 /**
- * @param runRepository Run repository.
- * @param runManager    Run lifecycle manager.
- * @param state         Cluster state.
+ * @param storage    Storage.
+ * @param runManager Run lifecycle manager.
+ * @param state      Cluster state.
  */
-final class LostTaskHandler @Inject()(
-  runRepository: MutableRunRepository,
-  runManager: RunManager,
-  state: ClusterState)
+final class LostTaskHandler @Inject()(storage: Storage, runManager: RunManager, state: ClusterState)
   extends AbstractHandler[LostTaskRequest, LostTaskResponse] with StrictLogging {
 
   @throws[InvalidTaskException]
@@ -45,18 +42,22 @@ final class LostTaskHandler @Inject()(
     val worker = state.ensure(req.workerId, req.taskId)
     state.update(req.workerId, req.taskId, NodeStatus.Lost)
     val task = worker.activeTasks.find(_.id == req.taskId).get
-    runRepository.get(task.runId).foreach { run =>
-      run.parent match {
-        case Some(parentId) => processRun(run, task, runRepository.get(parentId))
-        case None => processRun(run, task, None)
+    storage.write { provider =>
+      provider.runs.get(task.runId).foreach { run =>
+        run.parent match {
+          case Some(parentId) => processRun(run, task, provider.runs.get(parentId))
+          case None => processRun(run, task, None)
+        }
       }
     }
     Future(LostTaskResponse())
   }
 
   private def processRun(run: Run, task: Task, parent: Option[Run]) = {
-    val (newRun, newParent) = runManager.onLost(run, task.nodeName, parent)
-    runRepository.save(newRun)
-    newParent.foreach(runRepository.save)
+    storage.write { provider =>
+      val (newRun, newParent) = runManager.onLost(run, task.nodeName, parent)
+      provider.runs.save(newRun)
+      newParent.foreach(provider.runs.save)
+    }
   }
 }

@@ -33,12 +33,14 @@ class OutErrSpec extends UnitSpec with BeforeAndAfterEach {
   private var outErr: OutErr = null
 
   override protected def beforeEach() = {
+    super.beforeEach()
     out = new ByteArrayOutputStream
     err = new ByteArrayOutputStream
     outErr = new OutErr(out, err)
   }
 
   override protected def afterEach() = {
+    super.afterEach()
     out = null
     err = null
     outErr = null

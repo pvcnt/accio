@@ -24,47 +24,53 @@ import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{DeleteRunRequest, DeleteRunResponse}
 import fr.cnrs.liris.accio.core.domain.{RunId, UnknownRunException}
 import fr.cnrs.liris.accio.core.scheduler.{ClusterState, EventType, Scheduler}
-import fr.cnrs.liris.accio.core.storage.MutableRunRepository
+import fr.cnrs.liris.accio.core.storage.Storage
 
 /**
  * Delete a run, and all its children if it is a parent run.
  *
- * @param runRepository Run repository.
- * @param scheduler     Scheduler.
- * @param state         Cluster state.
+ * @param storage   Storage.
+ * @param scheduler Scheduler.
+ * @param state     Cluster state.
  */
 final class DeleteRunHandler @Inject()(
-  runRepository: MutableRunRepository,
+  storage: Storage,
   scheduler: Scheduler,
   state: ClusterState)
   extends AbstractHandler[DeleteRunRequest, DeleteRunResponse] {
 
   @throws[UnknownRunException]
   override def handle(req: DeleteRunRequest): Future[DeleteRunResponse] = {
-    runRepository.get(req.id) match {
-      case None => throw UnknownRunException(req.id)
-      case Some(run) =>
-        if (run.children.nonEmpty) {
-          // It is a parent run, cancel and delete child all runs.
-          cancelRuns(run.children)
-          run.children.foreach(runRepository.remove)
-        } else if (run.parent.isDefined) {
-          // It is a child run, update or delete parent run.
-          runRepository.get(run.parent.get).foreach { parent =>
-            if (parent.children.size > 1) {
-              // There are several child runs left, remove current one from the list.
-              runRepository.save(parent.copy(children = parent.children.filterNot(_ == run.id)))
-            } else {
-              // It was the last child of this run, delete it as it is now useless.
-              runRepository.remove(parent.id)
+    storage.write { provider =>
+      provider.runs.get(req.id) match {
+        case None => throw UnknownRunException(req.id)
+        case Some(run) =>
+          if (run.children.nonEmpty) {
+            // It is a parent run, cancel and delete child all runs.
+            cancelRuns(run.children)
+            run.children.foreach { runId =>
+              provider.runs.remove(runId)
+              provider.logs.remove(runId)
             }
+          } else if (run.parent.isDefined) {
+            // It is a child run, update or delete parent run.
+            provider.runs.get(run.parent.get).foreach { parent =>
+              if (parent.children.size > 1) {
+                // There are several child runs left, remove current one from the list.
+                provider.runs.save(parent.copy(children = parent.children.filterNot(_ == run.id)))
+              } else {
+                // It was the last child of this run, delete it as it is now useless.
+                provider.runs.remove(parent.id)
+              }
+            }
+          } else {
+            // It is a single run, cancel it.
+            cancelRuns(Seq(run.id))
           }
-        } else {
-          // It is a single run, cancel it.
-          cancelRuns(Seq(run.id))
-        }
-        // Finally, delete the run.
-        runRepository.remove(run.id)
+          // Finally, delete the run.
+          provider.runs.remove(run.id)
+          provider.logs.remove(run.id)
+      }
     }
     Future(DeleteRunResponse())
   }

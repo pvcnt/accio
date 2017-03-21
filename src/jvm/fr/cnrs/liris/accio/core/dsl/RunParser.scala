@@ -25,14 +25,13 @@ import com.twitter.finatra.validation.Min
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.framework.{BaseFactory, RunFactory}
-import fr.cnrs.liris.accio.core.framework.BaseFactory
-import fr.cnrs.liris.accio.core.storage.WorkflowRepository
+import fr.cnrs.liris.accio.core.storage.Storage
 import fr.cnrs.liris.dal.core.api.{DataTypes, Values}
 
 import scala.collection.mutable
 import scala.util.control.NonFatal
 
-class RunParser(mapper: FinatraObjectMapper, workflowRepository: WorkflowRepository, factory: RunFactory)
+class RunParser(mapper: FinatraObjectMapper, storage: Storage, factory: RunFactory)
   extends BaseFactory with LazyLogging {
 
   @throws[InvalidSpecException]
@@ -82,8 +81,8 @@ class RunParser(mapper: FinatraObjectMapper, workflowRepository: WorkflowReposit
 
   private def findWorkflow(str: String, warnings: mutable.Set[InvalidSpecMessage]): Workflow = {
     val maybeWorkflow = str.split(":") match {
-      case Array(id) => workflowRepository.get(WorkflowId(id))
-      case Array(id, version) => workflowRepository.get(WorkflowId(id), version)
+      case Array(id) => storage.read(_.workflows.get(WorkflowId(id)))
+      case Array(id, version) => storage.read(_.workflows.get(WorkflowId(id), version))
       case _ => throw newError(s"Invalid workflow specification: $str", warnings)
     }
     maybeWorkflow match {

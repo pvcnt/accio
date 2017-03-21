@@ -33,6 +33,7 @@ class ReporterStreamSpec extends UnitSpec with BeforeAndAfterEach {
   private var outAppender: EventHandler = null
 
   override protected def beforeEach() = {
+    super.beforeEach()
     out = new StringBuilder
     outAppender = new EventHandler {
       override def handle(event: Event): Unit = {
@@ -42,6 +43,7 @@ class ReporterStreamSpec extends UnitSpec with BeforeAndAfterEach {
   }
 
   override protected def afterEach() = {
+    super.afterEach()
     outAppender = null
     out = null
   }

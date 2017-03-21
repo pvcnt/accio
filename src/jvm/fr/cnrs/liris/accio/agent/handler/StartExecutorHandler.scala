@@ -19,10 +19,11 @@
 package fr.cnrs.liris.accio.agent.handler
 
 import com.google.inject.Inject
-import com.twitter.util.Future
+import com.twitter.util.{Future, Throw}
+import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.agent._
 import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
-import fr.cnrs.liris.accio.core.domain.{InvalidExecutorException, InvalidTaskException}
+import fr.cnrs.liris.accio.core.domain.{InvalidExecutorException, InvalidTaskException, InvalidWorkerException}
 
 /**
  * Handle a request from an executor that is now ready to handle a task. It sends back to the executor the actual
@@ -32,7 +33,7 @@ import fr.cnrs.liris.accio.core.domain.{InvalidExecutorException, InvalidTaskExc
  * @param state  Worker state.
  */
 final class StartExecutorHandler @Inject()(client: AgentService$FinagleClient, state: WorkerState)
-  extends AbstractHandler[StartExecutorRequest, StartExecutorResponse] {
+  extends AbstractHandler[StartExecutorRequest, StartExecutorResponse] with LazyLogging {
 
   @throws[InvalidTaskException]
   @throws[InvalidExecutorException]
@@ -40,6 +41,11 @@ final class StartExecutorHandler @Inject()(client: AgentService$FinagleClient, s
     state.assign(req.taskId, req.executorId)
     client
       .startTask(StartTaskRequest(state.workerId, req.taskId))
+      .rescue {
+        case e: InvalidWorkerException =>
+          logger.error("Invalid worker state", e)
+          Future.const(Throw(InvalidExecutorException(req.executorId)))
+      }
       .map(resp => StartExecutorResponse(resp.runId, resp.nodeName, resp.payload))
   }
 }

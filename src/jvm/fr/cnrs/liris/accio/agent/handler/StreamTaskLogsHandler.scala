@@ -25,22 +25,25 @@ import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{StreamTaskLogsRequest, StreamTaskLogsResponse}
 import fr.cnrs.liris.accio.core.domain.{InvalidTaskException, InvalidWorkerException}
 import fr.cnrs.liris.accio.core.scheduler.ClusterState
-import fr.cnrs.liris.accio.core.storage.MutableRunRepository
+import fr.cnrs.liris.accio.core.storage.Storage
 
 /**
  * Receive run logs from a task.
  *
- * @param runRepository Run repository.
- * @param state         Cluster state.
+ * @param storage Storage.
+ * @param state   Cluster state.
  */
-class StreamTaskLogsHandler @Inject()(runRepository: MutableRunRepository, state: ClusterState)
+class StreamTaskLogsHandler @Inject()(storage: Storage, state: ClusterState)
   extends AbstractHandler[StreamTaskLogsRequest, StreamTaskLogsResponse] with LazyLogging {
 
   @throws[InvalidTaskException]
   @throws[InvalidWorkerException]
   override def handle(req: StreamTaskLogsRequest): Future[StreamTaskLogsResponse] = {
     state.ensure(req.workerId, req.taskId)
-    runRepository.save(req.logs)
+    // TODO: It could be done in an unsafe manner, because logs are append-only.
+    storage.write { provider =>
+      provider.logs.save(req.logs)
+    }
     Future(StreamTaskLogsResponse())
   }
 }

@@ -130,7 +130,7 @@ service AgentService {
     throws (1: accio.InvalidExecutorException invalidExecutor, 2: accio.InvalidTaskException invalidTask);
 
   worker.StreamExecutorLogsResponse streamExecutorLogs(1: worker.StreamExecutorLogsRequest req)
-    throws (1: accio.InvalidExecutorException invalidExecutor, 2: accio.InvalidTaskException invalidTask);
+    throws (1: accio.InvalidExecutorException invalidExecutor, 2: accio.InvalidTaskException invalidTask, 3: accio.InvalidWorkerException invalidWorker);
 
   worker.StopExecutorResponse stopExecutor(1: worker.StopExecutorRequest req)
     throws (1: accio.InvalidExecutorException invalidExecutor, 2: accio.InvalidTaskException invalidTask);

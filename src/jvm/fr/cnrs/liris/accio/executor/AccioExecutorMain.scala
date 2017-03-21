@@ -24,6 +24,9 @@ import fr.cnrs.liris.accio.core.domain.TaskId
 import fr.cnrs.liris.accio.core.filesystem.inject.FileSystemModule
 import fr.cnrs.liris.privamov.ops.OpsModule
 
+/**
+ * Accio executor main method.
+ */
 object AccioExecutorMain {
   def main(args: Array[String]): Unit = {
     StdOutErr.record()
@@ -40,7 +43,8 @@ object AccioExecutorMain {
 }
 
 /**
- * Accio executor canonical implementation.
+ * Implementation of the Accio executor, as a standard [[App]]. Nonetheless, it is not supposed to be launched
+ * manually, but instead by an Accio agent.
  */
 class AccioExecutor extends App {
   override protected def failfastOnFlagsNotParsed = true
@@ -50,6 +54,6 @@ class AccioExecutor extends App {
   override protected def run(): Unit = {
     require(args.length == 1, "You must provide a single task identifier as argument")
     val executor = injector.instance[TaskExecutor]
-    Await.ready(executor.execute(TaskId(args.head), StdOutErr))
+    Await.ready(executor.submit(TaskId(args.head), StdOutErr))
   }
 }

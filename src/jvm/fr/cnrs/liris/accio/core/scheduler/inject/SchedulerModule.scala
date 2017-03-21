@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.core.scheduler.inject
 import com.google.inject.{Provides, Singleton}
 import com.twitter.inject.{Injector, TwitterModule}
 import fr.cnrs.liris.accio.core.scheduler.standalone._
-import fr.cnrs.liris.accio.core.scheduler.{Scheduler, WorkerClientFactory}
+import fr.cnrs.liris.accio.core.scheduler.{Scheduler, WorkerClientProvider}
 
 /**
  * Guice module provisioning the scheduler service.
@@ -49,6 +49,6 @@ object SchedulerModule extends TwitterModule {
 
   override def singletonShutdown(injector: Injector): Unit = {
     injector.instance[Scheduler].close()
-    injector.instance[WorkerClientFactory].close()
+    injector.instance[WorkerClientProvider].close()
   }
 }

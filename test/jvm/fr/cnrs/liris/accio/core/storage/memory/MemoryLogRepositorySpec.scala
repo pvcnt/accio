@@ -16,17 +16,15 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.storage.local
+package fr.cnrs.liris.accio.core.storage.memory
 
-import fr.cnrs.liris.accio.core.storage.{MutableRunRepository, MutableWorkflowRepository}
-import net.codingwell.scalaguice.ScalaModule
+import fr.cnrs.liris.accio.core.storage.{LogRepositorySpec, MutableLogRepository}
 
 /**
- * Guice module provisioning local storage.
+ * Unit tests of [[MemoryLogRepository]].
  */
-object LocalStorageModule extends ScalaModule {
-  override def configure(): Unit = {
-    bind[MutableRunRepository].to[LocalRunRepository]
-    bind[MutableWorkflowRepository].to[LocalWorkflowRepository]
-  }
+class MemoryLogRepositorySpec extends LogRepositorySpec {
+  behavior of "MemoryLogRepository"
+
+  override protected def createRepository: MutableLogRepository = new MemoryLogRepository
 }

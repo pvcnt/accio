@@ -18,31 +18,28 @@
 
 package fr.cnrs.liris.accio.core.dsl.inject
 
-import com.google.inject.{Provides, Singleton}
+import com.google.inject.{Exposed, Provides, Singleton}
 import com.twitter.finatra.json.FinatraObjectMapper
 import fr.cnrs.liris.accio.core.dsl.{ObjectMapperFactory, RunParser, WorkflowParser}
-import fr.cnrs.liris.accio.core.framework.{RunFactory, WorkflowFactory}
-import fr.cnrs.liris.accio.core.framework.{OpRegistry, RunFactory}
-import fr.cnrs.liris.accio.core.storage.WorkflowRepository
-import net.codingwell.scalaguice.ScalaModule
+import fr.cnrs.liris.accio.core.framework.{OpRegistry, RunFactory, WorkflowFactory}
+import fr.cnrs.liris.accio.core.storage.Storage
+import net.codingwell.scalaguice.ScalaPrivateModule
 
-object DslModule extends ScalaModule {
+object DslModule extends ScalaPrivateModule {
   override def configure(): Unit = {}
 
-  @Provides
-  @DslMapper
-  @Singleton
+  @Provides @Singleton
   def providesObjectMapper: FinatraObjectMapper = {
     new ObjectMapperFactory().create()
   }
 
-  @Provides
-  def providesRunParser(@DslMapper mapper: FinatraObjectMapper, workflowRepository: WorkflowRepository, factory: RunFactory): RunParser = {
-    new RunParser(mapper, workflowRepository, factory)
+  @Provides @Exposed
+  def providesRunParser(mapper: FinatraObjectMapper, storage: Storage, factory: RunFactory): RunParser = {
+    new RunParser(mapper, storage, factory)
   }
 
-  @Provides
-  def providesWorkflowParser(@DslMapper mapper: FinatraObjectMapper, opRegistry: OpRegistry, factory: WorkflowFactory): WorkflowParser = {
+  @Provides @Exposed
+  def providesWorkflowParser(mapper: FinatraObjectMapper, opRegistry: OpRegistry, factory: WorkflowFactory): WorkflowParser = {
     new WorkflowParser(mapper, opRegistry, factory)
   }
 }

@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.agent.handler.api
+package fr.cnrs.liris.accio.agent.handler
 
 import com.google.inject.Inject
 import com.twitter.util.Future
@@ -24,24 +24,24 @@ import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{PushWorkflowRequest, PushWorkflowResponse}
 import fr.cnrs.liris.accio.core.domain.{InvalidSpecException, InvalidSpecMessage}
 import fr.cnrs.liris.accio.core.framework.WorkflowFactory
-import fr.cnrs.liris.accio.core.storage.MutableWorkflowRepository
+import fr.cnrs.liris.accio.core.storage.Storage
 
 import scala.collection.mutable
 
 /**
  * Handle the creation of update of a workflow.
  *
- * @param workflowFactory    Workflow factory.
- * @param workflowRepository Workflow repository.
+ * @param workflowFactory Workflow factory.
+ * @param storage         Storage.
  */
-class PushWorkflowHandler @Inject()(workflowFactory: WorkflowFactory, workflowRepository: MutableWorkflowRepository)
+class PushWorkflowHandler @Inject()(workflowFactory: WorkflowFactory, storage: Storage)
   extends AbstractHandler[PushWorkflowRequest, PushWorkflowResponse] {
 
   @throws[InvalidSpecException]
   override def handle(req: PushWorkflowRequest): Future[PushWorkflowResponse] = {
     val warnings = mutable.Set.empty[InvalidSpecMessage]
     val workflow = workflowFactory.create(req.spec, req.user, warnings)
-    workflowRepository.save(workflow)
+    storage.write(_.workflows.save(workflow))
     Future(PushWorkflowResponse(workflow, warnings.toSeq))
   }
 }

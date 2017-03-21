@@ -18,38 +18,47 @@
 
 package fr.cnrs.liris.accio.core.storage.elastic
 
-import com.google.inject.Inject
+import com.google.inject.{Inject, Singleton}
 import com.sksamuel.elastic4s.ElasticDsl._
 import com.sksamuel.elastic4s.analyzers.KeywordAnalyzer
+import com.sksamuel.elastic4s.get.RichGetResponse
+import com.sksamuel.elastic4s.indexes.RichIndexResponse
 import com.sksamuel.elastic4s.mappings.MappingDefinition
 import com.sksamuel.elastic4s.script.ScriptDefinition
+import com.sksamuel.elastic4s.searches.RichSearchResponse
 import com.sksamuel.elastic4s.{ElasticClient, ElasticDsl}
+import com.twitter.bijection.Conversion.asMethod
+import com.twitter.bijection.twitter_util.UtilBijections._
 import com.twitter.finatra.json.FinatraObjectMapper
+import com.twitter.util.{Await, Duration, Future}
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.domain._
-import fr.cnrs.liris.accio.core.storage.{InjectStorage, MutableWorkflowRepository, WorkflowList, WorkflowQuery}
+import fr.cnrs.liris.accio.core.storage.{MutableWorkflowRepository, WorkflowList, WorkflowQuery}
+import org.elasticsearch.action.admin.indices.create.CreateIndexResponse
+import org.elasticsearch.action.admin.indices.refresh.RefreshResponse
 import org.elasticsearch.action.support.WriteRequest.RefreshPolicy
 import org.elasticsearch.index.IndexNotFoundException
+import org.elasticsearch.index.reindex.BulkIndexByScrollResponse
 import org.elasticsearch.search.sort.SortOrder
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{Await, Future}
 import scala.util.control.NonFatal
 
 /**
- * Workflow repository persisting data into an Elasticsearch cluster.
+ * Run repository persisting data into Elasticsearch.
  *
- * @param mapper Finatra object mapper.
- * @param client Elasticsearch client.
- * @param config Elastic repository configuration.
+ * @param mapper  Finatra object mapper.
+ * @param client  Elasticsearch client.
+ * @param prefix  Prefix of indexes.
+ * @param timeout Query timeout.
  */
-class ElasticWorkflowRepository @Inject()(
-  @InjectStorage mapper: FinatraObjectMapper,
-  @InjectStorage client: ElasticClient,
-  config: StorageConfig)
-  extends MutableWorkflowRepository with StrictLogging {
-
-  initializeWorkflowsIndex()
+@Singleton
+private[elastic] final class ElasticWorkflowRepository @Inject()(
+  mapper: FinatraObjectMapper,
+  client: ElasticClient,
+  @ElasticPrefix prefix: String,
+  @ElasticTimeout timeout: Duration)
+  extends ElasticRepository(client) with MutableWorkflowRepository with StrictLogging {
 
   override def find(query: WorkflowQuery): WorkflowList = {
     var q = boolQuery().filter(termQuery("is_active", 1))
@@ -65,8 +74,7 @@ class ElasticWorkflowRepository @Inject()(
         .should(matchQuery("owner.name", qs))
         .minimumShouldMatch(1)
     }
-
-    var s = search(workflowsIndex / workflowsType)
+    var s = search(indexName / typeName)
       .query(q)
       .sourceExclude("graph.nodes")
       .limit(query.limit)
@@ -75,128 +83,134 @@ class ElasticWorkflowRepository @Inject()(
       s = s.sortBy(fieldSort("created_at").order(SortOrder.DESC))
     }
 
-    val f = client.execute(s).map { resp =>
-      val results = resp.hits.toSeq.map(hit => mapper.parse[Workflow](hit.sourceAsBytes))
-      WorkflowList(results, resp.totalHits.toInt)
-    }.recover {
-      case _: IndexNotFoundException => WorkflowList(Seq.empty, 0)
-      case NonFatal(e) =>
-        logger.error("Error while searching workflows", e)
-        WorkflowList(Seq.empty, 0)
-    }
-    Await.result(f, config.queryTimeout)
+    val f = client
+      .execute(s)
+      .as[Future[RichSearchResponse]]
+      .map { resp =>
+        val results = resp.hits.toSeq.map(hit => mapper.parse[Workflow](hit.sourceAsBytes))
+        WorkflowList(results, resp.totalHits.toInt)
+      }
+      .rescue {
+        case _: IndexNotFoundException => Future.value(WorkflowList(Seq.empty, 0))
+        case NonFatal(e) =>
+          logger.error("Error while searching workflows", e)
+          Future.value(WorkflowList(Seq.empty, 0))
+      }
+    Await.result(f, timeout)
   }
 
   override def save(workflow: Workflow): Unit = {
     val json = mapper.writeValueAsString(workflow)
-    val f = client.execute {
-      // We insert the new version.
-      indexInto(workflowsIndex / workflowsType)
-        .id(internalId(workflow.id, workflow.version))
-        .source(json)
-        .refresh(RefreshPolicy.WAIT_UNTIL)
-    }.flatMap { _ =>
-      if (workflow.isActive) {
-        // We update the previous version to mark it as inactive. In a normal use case, the workflow to save is
-        // supposed to be active, but we never know...
-        val q = boolQuery()
-          .filter(termQuery("id.value", workflow.id.value))
-          .filter(termQuery("is_active", 1))
-          .filter(not(termQuery("version", workflow.version)))
-        client.execute {
-          updateIn(workflowsIndex)
-            .query(q)
-            .script(ScriptDefinition("ctx._source.is_active = 0;", Some("painless")))
-            .refresh(true)
-        }
-      } else {
-        Future.successful(true)
+    val f = client
+      .execute {
+        // We insert the new version.
+        indexInto(indexName / typeName)
+          .id(internalId(workflow.id, workflow.version))
+          .source(json)
+          .refresh(RefreshPolicy.WAIT_UNTIL)
       }
-    }.flatMap { _ =>
-      // We need to refresh the indices because of a lot of edge cases that can happen if not. We could ultimately
-      // end up with two active versions of a workflow, which is not exactly good and would mess up things when
-      // looking for workflows.
-      // It is not ideal, but I expect this not to be too grave, as workflows are not expected to be updated several
-      // times per second.
-      client.execute(refreshIndex(workflowsIndex))
-    }
-    f.onSuccess {
-      case _ => logger.debug(s"Saved workflow ${workflow.id.value}:${workflow.version}")
-    }
-    f.onFailure {
-      case e: Throwable => logger.error(s"Error while saving workflow ${workflow.id.value}", e)
-    }
-    Await.ready(f, config.queryTimeout)
+      .as[Future[RichIndexResponse]]
+      .flatMap { _ =>
+        if (workflow.isActive) {
+          // We update the previous version to mark it as inactive. In a normal use case, the workflow to save is
+          // supposed to be active, but we never know...
+          val q = boolQuery()
+            .filter(termQuery("id.value", workflow.id.value))
+            .filter(termQuery("is_active", 1))
+            .filter(not(termQuery("version", workflow.version)))
+          client
+            .execute {
+              updateIn(indexName)
+                .query(q)
+                .script(ScriptDefinition("ctx._source.is_active = 0;", Some("painless")))
+                .refresh(true)
+            }
+            .as[Future[BulkIndexByScrollResponse]]
+        } else {
+          Future.value(true)
+        }
+      }
+      .flatMap { _ =>
+        // We need to refresh the indices because of a lot of edge cases that can happen if not. We could ultimately
+        // end up with two active versions of a workflow, which is not exactly good and would mess up things when
+        // looking for workflows.
+        // It is not ideal, but I expect this not to be too grave, as workflows are not expected to be updated several
+        // times per second.
+        client
+          .execute(refreshIndex(indexName))
+          .as[Future[RefreshResponse]]
+      }
+      .onFailure(e => logger.error(s"Error while saving workflow ${workflow.id.value}", e))
+      .unit
+    Await.result(f, timeout)
   }
 
   override def get(id: WorkflowId): Option[Workflow] = {
     val q = boolQuery()
       .filter(termQuery("id.value", id.value))
       .filter(termQuery("is_active", 1))
-    val f = client.execute {
-      search(workflowsIndex / workflowsType).query(q).limit(1)
-    }.map { resp =>
-      if (resp.totalHits > 0) {
-        Some(mapper.parse[Workflow](resp.hits.head.sourceAsString))
-      } else {
-        None
+
+    val f = client
+      .execute(search(indexName / typeName).query(q).limit(1))
+      .as[Future[RichSearchResponse]]
+      .map { resp =>
+        if (resp.totalHits > 0) {
+          Some(mapper.parse[Workflow](resp.hits.head.sourceAsString))
+        } else {
+          None
+        }
       }
-    }.recover {
-      case _: IndexNotFoundException => None
-      case e: Throwable =>
-        logger.error(s"Error while retrieving workflow ${id.value}", e)
-        None
-    }
-    Await.result(f, config.queryTimeout)
+      .rescue {
+        case _: IndexNotFoundException => Future.value(None)
+        case NonFatal(e) =>
+          logger.error(s"Error while retrieving workflow ${id.value}", e)
+          Future.value(None)
+      }
+    Await.result(f, timeout)
   }
 
   override def get(id: WorkflowId, version: String): Option[Workflow] = {
-    val f = client.execute {
-      ElasticDsl.get(internalId(id, version)).from(workflowsIndex / workflowsType)
-    }.map { resp =>
-      if (resp.isSourceEmpty) {
-        None
-      } else {
-        Some(mapper.parse[Workflow](resp.sourceAsString))
+    val f = client
+      .execute(ElasticDsl.get(internalId(id, version)).from(indexName / typeName))
+      .as[Future[RichGetResponse]]
+      .map { resp =>
+        if (resp.isSourceEmpty) {
+          None
+        } else {
+          Some(mapper.parse[Workflow](resp.sourceAsString))
+        }
       }
-    }.recover {
-      case _: IndexNotFoundException => None
-      case e: Throwable =>
-        logger.error(s"Error while retrieving workflow ${id.value}", e)
-        None
-    }
-    Await.result(f, config.queryTimeout)
+      .rescue {
+        case _: IndexNotFoundException => Future.value(None)
+        case NonFatal(e) =>
+          logger.error(s"Error while retrieving workflow ${id.value}", e)
+          Future.value(None)
+      }
+    Await.result(f, timeout)
   }
 
   private def internalId(id: WorkflowId, version: String) = s"${id.value}:$version"
 
-  private def workflowsIndex = s"${config.prefix}workflows"
+  override protected def indexName = s"${prefix}workflows"
 
-  private def workflowsType = s"default"
+  override protected def typeName = s"default"
 
-  private def initializeWorkflowsIndex() = {
-    val f = client.execute(indexExists(workflowsIndex)).flatMap { resp =>
-      if (!resp.isExists) {
-        // Some fields must absolutely be indexed with the keyword analyzer, which performs no tokenization at all,
-        // otherwise they won't be searchable by their exact value (which can be annoying, e.g., for ids). Graph is
-        // not indexed.
-        val fields = Seq(
-          objectField("id").as(textField("value").analyzer(KeywordAnalyzer)),
-          textField("version").analyzer(KeywordAnalyzer),
-          longField("created_at"),
-          booleanField("is_active"),
-          objectField("graph").enabled(false),
-          nestedField("params").as(
-            textField("name").analyzer(KeywordAnalyzer),
-            objectField("value").enabled(false)
-          ))
-        logger.info(s"Creating $workflowsIndex/$workflowsType index")
-        client.execute(createIndex(workflowsIndex).mappings(new MappingDefinition(workflowsType) as (fields: _*)))
-      } else {
-        Future.successful(true)
-      }
-    }
-    f.onFailure { case NonFatal(e) => logger.error("Failed to initialize logs index", e) }
-    Await.ready(f, config.queryTimeout)
+  override protected def createMappings(): Future[CreateIndexResponse] = {
+    // Some fields must absolutely be indexed with the keyword analyzer, which performs no tokenization at all,
+    // otherwise they won't be searchable by their exact value (which can be annoying, e.g., for ids). Graph is
+    // not indexed.
+    val fields = Seq(
+      objectField("id").as(textField("value").analyzer(KeywordAnalyzer)),
+      textField("version").analyzer(KeywordAnalyzer),
+      longField("created_at"),
+      booleanField("is_active"),
+      objectField("graph").enabled(false),
+      nestedField("params").as(
+        textField("name").analyzer(KeywordAnalyzer),
+        objectField("value").enabled(false)
+      ))
+    client
+      .execute(createIndex(indexName).mappings(new MappingDefinition(typeName) as (fields: _*)))
+      .as[Future[CreateIndexResponse]]
   }
 }

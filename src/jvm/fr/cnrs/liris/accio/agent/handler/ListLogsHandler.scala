@@ -16,20 +16,20 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.agent.handler.api
+package fr.cnrs.liris.accio.agent.handler
 
 import com.google.inject.Inject
 import com.twitter.util.{Future, Time}
 import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{ListLogsRequest, ListLogsResponse}
-import fr.cnrs.liris.accio.core.storage.{LogsQuery, RunRepository}
+import fr.cnrs.liris.accio.core.storage.{LogsQuery, Storage}
 
 /**
  * Retrieve run logs matching some search criteria.
  *
- * @param repository Run repository (read-only).
+ * @param storage Storage.
  */
-class ListLogsHandler @Inject()(repository: RunRepository) extends AbstractHandler[ListLogsRequest, ListLogsResponse] {
+class ListLogsHandler @Inject()(storage: Storage) extends AbstractHandler[ListLogsRequest, ListLogsResponse] {
   override def handle(req: ListLogsRequest): Future[ListLogsResponse] = {
     val query = LogsQuery(
       runId = req.runId,
@@ -37,7 +37,7 @@ class ListLogsHandler @Inject()(repository: RunRepository) extends AbstractHandl
       classifier = req.classifier,
       limit = req.limit,
       since = req.since.map(Time.fromMilliseconds))
-    val results = repository.find(query)
+    val results = storage.read(_.logs.find(query))
     Future(ListLogsResponse(results))
   }
 }

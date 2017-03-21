@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.executor
 
 import java.util.UUID
 
-import com.google.inject.{Inject, Singleton}
+import com.google.inject.Inject
 import com.twitter.util._
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.agent._
@@ -28,18 +28,18 @@ import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.framework.{OpExecutor, OpExecutorOpts, OutErr}
 import fr.cnrs.liris.accio.core.util.{InfiniteLoopThreadLike, ThreadManager, WorkerPool}
 
-import scala.util.control.NonFatal
-
 /**
- * Execute tasks. Triggering the execution of a task only requires a task identifier. The task executor is then in
- * charge of getting the payload from the agent, executing the operator, thanks to an [[OpExecutor]] and finally
- * reporting the result to the agent. It also regularly send heartbeat and logs to the aforementioned agent.
+ * Execute tasks. Starting the execution of a task only requires a task identifier. The task executor will then
+ * get the payload from the worker, execute the operator (through an [[OpExecutor]]) and finally report
+ * the result to the worker. It also regularly send heartbeat and logs to the aforementioned worker. Communication
+ * only happen between the executor and its local worker (on the same host).
+ *
+ * Contract: This class is designed for a single usage, i.e., a single call to [[execute]].
  *
  * @param opExecutor Operator executor.
  * @param client     Worker service client.
  * @param pool       Interruptible worker pool.
  */
-@Singleton
 final class TaskExecutor @Inject()(
   opExecutor: OpExecutor,
   client: AgentService$FinagleClient,
@@ -49,68 +49,104 @@ final class TaskExecutor @Inject()(
   private[this] val threads = new ThreadManager(pool)
 
   /**
-   * Trigger the execution of a task.
+   * Start the execution of a task, from its identifier. Payload will be downloaded, before the task
+   * is actually started.
+   *
+   * Contract: This method should only be called once per instance.
    *
    * @param taskId Task identifier.
-   * @return A future that will be completed once the task is completed. It never returns as an error.
+   * @param outErr Handle to stdout/stderr.
+   * @return A future that will be completed once the task is completed. It always resolves as successful.
    */
-  def execute(taskId: TaskId, outErr: OutErr): Future[Unit] = synchronized {
+  def submit(taskId: TaskId, outErr: OutErr): Future[Unit] = {
     logger.info(s"Starting execution of task ${taskId.value}")
-    client.startExecutor(StartExecutorRequest(executorId, taskId)).transform {
-      case Throw(_: InvalidTaskException) =>
-        logger.error(s"Invalid task")
-        Future.Done
-      case Throw(e) =>
-        logger.error(s"Error while starting task", e)
-        Future.Done
-      case Return(resp) => start(taskId, resp.runId, resp.nodeName, resp.payload, outErr)
-    }
+    client
+      .startExecutor(StartExecutorRequest(executorId, taskId))
+      .transform {
+        case Throw(e) =>
+          logger.error(s"Error while starting task ${taskId.value}", e)
+          Future.Done
+        case Return(resp) => submit(taskId, resp.runId, resp.nodeName, resp.payload, outErr)
+      }
   }
 
-  private def start(taskId: TaskId, runId: RunId, nodeName: String, payload: OpPayload, outErr: OutErr): Future[Unit] = {
+  /**
+   * Start the execution of a task with its payload.
+   *
+   * @param taskId   Task identifier.
+   * @param runId    Run identifier this task is part of.
+   * @param nodeName Name of the node to execute.
+   * @param payload  Payload to execute.
+   * @param outErr   Handle to stdout/stderr.
+   * @return A future that will be completed once the task is completed. It always resolves as successful.
+   */
+  private def submit(taskId: TaskId, runId: RunId, nodeName: String, payload: OpPayload, outErr: OutErr): Future[Unit] = {
     threads.submit(new HeartbeatThread(taskId))
     threads.submit(new StreamLogsThread(taskId, runId, nodeName, outErr))
-    val mainFuture = pool(new MainThread(taskId, payload).run())
-    mainFuture.respond { _ =>
-      threads.killAll()
-    }.handle {
-      case NonFatal(e) =>
-        logger.error(s"Operator raised an unexpected error", e)
-        OpResult(-999, Some(Errors.create(e)))
-    }.flatMap { result =>
-      client.stopExecutor(StopExecutorRequest(executorId, taskId, result))
-        .onFailure(e => logger.error(s"Error while marking task as completed", e))
-    }
-    mainFuture.unit
+    pool(execute(taskId, payload))
+      .transform {
+        case Throw(e) =>
+          // Normally, operator executor is supposed to be robust enough to catch all errors. But we still handle
+          // and uncaught error here, just in case...
+          threads.killAll()
+          logger.error(s"Operator raised an unexpected error", e)
+          Future.value(OpResult(-999, Some(Errors.create(e))))
+        case Return(result) =>
+          //TODO: we should drain logs before killing the thread.
+          threads.killAll()
+          client
+            .stopExecutor(StopExecutorRequest(executorId, taskId, result))
+            .rescue { case e: Throwable =>
+              logger.error(s"Error while marking task ${taskId.value} as completed", e)
+              Future.Done
+            }
+      }
+      .unit
   }
 
-  private class MainThread(taskId: TaskId, payload: OpPayload) {
-    def run(): OpResult = {
-      val opts = OpExecutorOpts(useProfiler = true)
-      opExecutor.execute(payload, opts)
-    }
+  /**
+   * Execute a payload.
+   *
+   * @param taskId  Task identifier.
+   * @param payload Payload to execute.
+   * @return Result of the operator execution.
+   */
+  private def execute(taskId: TaskId, payload: OpPayload): OpResult = {
+    val opts = OpExecutorOpts(useProfiler = true)
+    opExecutor.execute(payload, opts)
   }
 
+  /**
+   * Thread sending collected stdout/stderr logs regularly.
+   *
+   * @param taskId   Task identifier.
+   * @param runId    Run identifier this task is part of.
+   * @param nodeName Name of the node being executed.
+   * @param outErr   Handle to stdout/stderr.
+   */
   private class StreamLogsThread(taskId: TaskId, runId: RunId, nodeName: String, outErr: OutErr)
     extends InfiniteLoopThreadLike {
 
     override protected def singleOperation(): Unit = {
-      // Do not log anything here, otherwise it will create a logging loop, even if nothing else is printed.
-      // We want to send only meaningful logs.
-      val logs = extractLogs(outErr.stdoutAsString, "stdout") ++ extractLogs(outErr.stderrAsString, "stderr")
+      // Do not log anything in this method, to avoid creating an infinite logging loop if the communication with
+      // the agent is broken.
+      val logs = extractLogs(outErr)
       if (logs.nonEmpty) {
-        val f = Await.result(client.streamExecutorLogs(StreamExecutorLogsRequest(executorId, taskId, logs)).liftToTry)
-        f match {
+        // Only send logs if there is actually something to send...
+        val f = client.streamExecutorLogs(StreamExecutorLogsRequest(executorId, taskId, logs))
+        Await.result(f.liftToTry) match {
           case Return(_) => sleep(Duration.fromSeconds(5))
-          case Throw(_: InvalidTaskException) =>
-            logger.warn(s"Task ${taskId.value} is now invalid, stopping StreamLogsThread")
-            kill()
-          case Throw(e) => logger.error(s"Error while sending logs", e)
+          case Throw(_: InvalidTaskException) => kill()
+          case Throw(_: InvalidExecutorException) => kill()
+          case Throw(_) => // Do nothing, hope it will go better on next try.
         }
       } else {
         sleep(Duration.fromSeconds(2))
       }
     }
+
+    private def extractLogs(outErr: OutErr): Seq[RunLog] =
+      extractLogs(outErr.stdoutAsString, "stdout") ++ extractLogs(outErr.stderrAsString, "stderr")
 
     private def extractLogs(content: String, classifier: String) = {
       val at = System.currentTimeMillis
@@ -123,17 +159,21 @@ final class TaskExecutor @Inject()(
     }
   }
 
+  /**
+   * Thread sending a heartbeat regularly.
+   *
+   * @param taskId Task identifier.
+   */
   private class HeartbeatThread(taskId: TaskId) extends InfiniteLoopThreadLike {
     override protected def singleOperation(): Unit = {
-      // Do not log anything here, if communication with agent is broken it will be eventually detected on the
-      // agent side. We want to send only meaningful logs.
-      val f = Await.result(client.heartbeatExecutor(HeartbeatExecutorRequest(executorId)).liftToTry)
-      f match {
+      // Do not log anything in this method, to avoid creating an infinite logging loop if the communication with
+      // the agent is broken.
+      val f = client.heartbeatExecutor(HeartbeatExecutorRequest(executorId))
+      Await.result(f.liftToTry) match {
         case Return(_) => sleep(Duration.fromSeconds(15))
-          logger.warn(s"Task ${taskId.value} is now invalid, stopping HeartbeatThread")
-        case Throw(_: InvalidTaskException) =>
-          kill()
-        case Throw(e) => logger.error(s"Error while sending heartbeat", e)
+        case Throw(_: InvalidTaskException) => kill()
+        case Throw(_: InvalidExecutorException) => kill()
+        case Throw(_) => // Do nothing, hope it will go better on next try.
       }
     }
   }

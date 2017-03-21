@@ -23,40 +23,44 @@ import com.twitter.util.Future
 import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{UpdateRunRequest, UpdateRunResponse}
 import fr.cnrs.liris.accio.core.domain.{Run, UnknownRunException}
-import fr.cnrs.liris.accio.core.storage.MutableRunRepository
+import fr.cnrs.liris.accio.core.storage.Storage
 
 /**
  * Update metadata of a run.
  *
- * @param runRepository Run repository.
+ * @param storage Storage.
  */
-final class UpdateRunHandler @Inject()(runRepository: MutableRunRepository)
+final class UpdateRunHandler @Inject()(storage: Storage)
   extends AbstractHandler[UpdateRunRequest, UpdateRunResponse] {
 
   @throws[UnknownRunException]
   override def handle(req: UpdateRunRequest): Future[UpdateRunResponse] = {
-    runRepository.get(req.id) match {
-      case None => throw UnknownRunException(req.id)
-      case Some(run) =>
-        run.parent match {
-          case None => process(run, req)
-          case Some(parentId) => runRepository.get(parentId).foreach(process(_, req))
-        }
+    storage.write { provider =>
+      provider.runs.get(req.id) match {
+        case None => throw UnknownRunException(req.id)
+        case Some(run) =>
+          run.parent match {
+            case None => process(run, req)
+            case Some(parentId) => provider.runs.get(parentId).foreach(process(_, req))
+          }
+      }
     }
     Future(UpdateRunResponse())
   }
 
   private def process(run: Run, req: UpdateRunRequest) = {
-    var newRun = run
-    req.name.foreach { name =>
-      newRun = newRun.copy(name = Some(name))
+    storage.write { provider =>
+      var newRun = run
+      req.name.foreach { name =>
+        newRun = newRun.copy(name = Some(name))
+      }
+      req.notes.foreach { notes =>
+        newRun = newRun.copy(notes = Some(notes))
+      }
+      req.tags.foreach { tags =>
+        newRun = newRun.copy(tags = tags)
+      }
+      provider.runs.save(newRun)
     }
-    req.notes.foreach { notes =>
-      newRun = newRun.copy(notes = Some(notes))
-    }
-    req.tags.foreach { tags =>
-      newRun = newRun.copy(tags = tags)
-    }
-    runRepository.save(newRun)
   }
 }

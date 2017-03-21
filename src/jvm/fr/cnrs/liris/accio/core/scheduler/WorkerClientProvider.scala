@@ -18,6 +18,8 @@
 
 package fr.cnrs.liris.accio.core.scheduler
 
+import javax.annotation.concurrent.NotThreadSafe
+
 import com.google.inject.Singleton
 import com.twitter.finagle.Thrift
 import fr.cnrs.liris.accio.agent.{AgentService, AgentService$FinagleClient}
@@ -25,14 +27,24 @@ import fr.cnrs.liris.accio.core.finagle.AccioResponseClassifier
 
 import scala.collection.mutable
 
+/**
+ * Create clients to communicate with workers. Clients are memoized, avoiding to re-create one each time.
+ */
 @Singleton
-class WorkerClientFactory {
+@NotThreadSafe
+final class WorkerClientProvider {
   private[this] val clients = mutable.Map.empty[String, AgentService$FinagleClient]
 
-  def create(dest: String): AgentService$FinagleClient = {
+  /**
+   *
+   * @param dest
+   * @return
+   */
+  def apply(dest: String): AgentService$FinagleClient = {
+    // - We do not want to fail-fast, because there will always be only one reachable host.
     clients.getOrElseUpdate(dest, {
       val service = Thrift.client
-        .withSessionQualifier.noFailFast // Because there will be only one host.
+        .withSessionQualifier.noFailFast
         .withResponseClassifier(AccioResponseClassifier.Default)
         .newService(dest)
       new AgentService.FinagledClient(service)

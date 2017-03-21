@@ -26,18 +26,18 @@ import fr.cnrs.liris.accio.agent.{StartTaskRequest, StartTaskResponse}
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.framework.RunManager
 import fr.cnrs.liris.accio.core.scheduler.ClusterState
-import fr.cnrs.liris.accio.core.storage.MutableRunRepository
+import fr.cnrs.liris.accio.core.storage.Storage
 
 /**
  * When the executor starts its execution, it only has the identifier of a task to execute. Its first action should
  * be to register itself to the agent and ask for a payload to execute. This is what is done here.
  *
- * @param runRepository Run repository.
- * @param runManager    Run lifecycle manager.
- * @param state         Cluster state.
+ * @param storage    Storage.
+ * @param runManager Run lifecycle manager.
+ * @param state      Cluster state.
  */
 class StartTaskHandler @Inject()(
-  runRepository: MutableRunRepository,
+  storage: Storage,
   runManager: RunManager,
   state: ClusterState)
   extends AbstractHandler[StartTaskRequest, StartTaskResponse] with LazyLogging {
@@ -47,16 +47,18 @@ class StartTaskHandler @Inject()(
   override def handle(req: StartTaskRequest): Future[StartTaskResponse] = {
     val worker = state.ensure(req.workerId, req.taskId)
     val task = worker.activeTasks.find(_.id == req.taskId).get
-    runRepository.get(task.runId) match {
-      case None =>
-        // Illegal state: no run found for this task.
-        logger.warn(s"Task ${task.id.value} is associated with unknown run ${task.runId.value}")
-        throw InvalidTaskException(task.id, Some(s"Task is associated with invalid run ${task.runId.value}"))
-      case Some(run) =>
-        state.update(worker.id, task.id, NodeStatus.Running)
-        val newRun = runManager.onStart(run, task.nodeName)
-        runRepository.save(newRun)
-        Future(StartTaskResponse(task.runId, task.nodeName, task.payload))
+    storage.write { provider =>
+      provider.runs.get(task.runId) match {
+        case None =>
+          // Illegal state: no run found for this task.
+          logger.warn(s"Task ${task.id.value} is associated with unknown run ${task.runId.value}")
+          throw InvalidTaskException(task.id, Some(s"Task is associated with invalid run ${task.runId.value}"))
+        case Some(run) =>
+          state.update(worker.id, task.id, NodeStatus.Running)
+          val newRun = runManager.onStart(run, task.nodeName)
+          provider.runs.save(newRun)
+          Future(StartTaskResponse(task.runId, task.nodeName, task.payload))
+      }
     }
   }
 }

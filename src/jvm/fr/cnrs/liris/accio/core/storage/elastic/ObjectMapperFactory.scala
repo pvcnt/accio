@@ -37,9 +37,13 @@ import scala.collection.JavaConverters._
 import scala.reflect._
 
 /**
- * Factory to create a Finatra object mapper suitable to be used in Elasticsearch repositories.
+ * Factory to create a Finatra object mapper suitable to be used in Elasticsearch repositories. The goal of those
+ * serializers is to dump entirely domain objects in JSON and make them easily deserializable, *not* to produce
+ * human-readable JSON.
+ *
+ * Be careful when modifying anything here, as it can break reading already serialized objects.
  */
-final class ObjectMapperFactory {
+private[elastic] final class ObjectMapperFactory {
   def create(): FinatraObjectMapper = {
     val mapper = new ObjectMapper with ScalaObjectMapper
     mapper.setSerializationInclusion(JsonInclude.Include.NON_ABSENT)
@@ -57,7 +61,10 @@ final class ObjectMapperFactory {
 
 /**
  * Jackson module providing serializers and deserializers for Accio Thrift structures. This is an internal format
- * that is nicer than Thrift's JSON protocol but still not ready to be consumed by end users.
+ * that is nicer than Thrift's JSON protocol, but still not providing a human-readable JSON.
+ *
+ * The main disadvantage of our approach is that we have to register manually a deserializer for each domain class,
+ * as there seem to be no way to retrieve the Thrift codec from its class.
  */
 private object ElasticJacksonModule extends SimpleModule {
   // Run-related deserializers.

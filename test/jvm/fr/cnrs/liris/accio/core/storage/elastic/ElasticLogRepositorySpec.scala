@@ -18,17 +18,25 @@
 
 package fr.cnrs.liris.accio.core.storage.elastic
 
-import com.google.inject.Guice
+import java.util.concurrent.atomic.AtomicInteger
+
 import com.twitter.util.Duration
-import fr.cnrs.liris.accio.core.storage.MutableRunRepository
-import fr.cnrs.liris.testing.UnitSpec
+import fr.cnrs.liris.accio.core.storage.{LogRepositorySpec, MutableLogRepository}
 
-class ElasticStorageModuleSpec extends UnitSpec {
-  behavior of "ElasticStorageModule"
+/**
+ * Unit tests of [[ElasticLogRepository]].
+ */
+class ElasticLogRepositorySpec extends LogRepositorySpec with ElasticStorageSpec {
+  behavior of "ElasticLogRepository"
 
-  it should "provide a run repository" in {
-    val module = new ElasticStorageModule(ElasticStorageConfig("foo:123", "accio", Duration.fromSeconds(5)))
-    val injector = Guice.createInjector(module)
-    //injector.getInstance(classOf[MutableRunRepository]) shouldBe a[MutableRunRepository]
+  private[this] val i = new AtomicInteger
+
+  override protected def createRepository: MutableLogRepository = {
+    // The node is node teared down at each test, which means data persists. We use a different indice each time to
+    // start from a clean slate at each test.
+    val mapper = new ObjectMapperFactory().create()
+    new ElasticLogRepository(mapper, client, s"accio${i.incrementAndGet}", Duration.Top)
   }
+
+  override protected def refreshBeforeSearch(): Unit = refreshAll()
 }

@@ -20,12 +20,11 @@ package fr.cnrs.liris.accio.core.storage
 
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.dal.core.api.{AtomicType, DataType, Values}
-import fr.cnrs.liris.testing.UnitSpec
 
 /**
  * Common unit tests for all [[MutableWorkflowRepository]] implementations, ensuring they all have consistent behavior.
  */
-private[storage] abstract class WorkflowRepositorySpec extends UnitSpec {
+private[storage] abstract class WorkflowRepositorySpec extends RepositorySpec[MutableWorkflowRepository] {
   private[this] val workflow1 = Workflow(
     id = WorkflowId("workflow1"),
     version = "v1",
@@ -64,12 +63,9 @@ private[storage] abstract class WorkflowRepositorySpec extends UnitSpec {
           "dbl" -> InputDef.Param("bar"),
           "data" -> InputDef.Reference(Reference("FirstSimple", "data")))))))
 
-  protected def createRepository: MutableWorkflowRepository
-
   protected def refreshBeforeSearch(): Unit = {}
 
   it should "save and retrieve workflows" in {
-    val repo = createRepository
     repo.get(workflow1.id) shouldBe None
     repo.get(workflow2.id) shouldBe None
 
@@ -83,7 +79,6 @@ private[storage] abstract class WorkflowRepositorySpec extends UnitSpec {
   }
 
   it should "search for workflows" in {
-    val repo = createRepository
     val workflows = Seq(
       workflow1,
       workflow1.copy(version = "v2"),
@@ -108,7 +103,6 @@ private[storage] abstract class WorkflowRepositorySpec extends UnitSpec {
   }
 
   it should "retrieve a workflow at a specific version" in {
-    val repo = createRepository
     val workflows = Seq(
       workflow1,
       workflow1.copy(version = "v2"),

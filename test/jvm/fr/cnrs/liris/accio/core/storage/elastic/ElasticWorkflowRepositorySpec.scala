@@ -18,12 +18,10 @@
 
 package fr.cnrs.liris.accio.core.storage.elastic
 
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
+import com.twitter.util.Duration
 import fr.cnrs.liris.accio.core.storage.{MutableWorkflowRepository, WorkflowRepositorySpec}
-
-import scala.concurrent.duration.Duration
 
 /**
  * Unit tests of [[ElasticWorkflowRepository]].
@@ -37,7 +35,7 @@ class ElasticWorkflowRepositorySpec extends WorkflowRepositorySpec with ElasticS
     // The node is node teared down at each test, which means data persists. We use a different indice each time to
     // start from a clean slate at each test.
     val mapper = new ObjectMapperFactory().create()
-    new ElasticWorkflowRepository(mapper, client, StorageConfig(s"accio${i.incrementAndGet}", Duration.create(15, TimeUnit.SECONDS)))
+    new ElasticWorkflowRepository(mapper, client, s"accio${i.incrementAndGet}", Duration.Top)
   }
 
   override protected def refreshBeforeSearch(): Unit = refreshAll()

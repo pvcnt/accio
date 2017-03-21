@@ -20,17 +20,15 @@ package fr.cnrs.liris.accio.core.storage
 
 import java.util.UUID
 
-import com.twitter.util.Time
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.dal.core.api.Values
-import fr.cnrs.liris.testing.UnitSpec
 
 import scala.collection.Map
 
 /**
  * Common unit tests for all [[MutableRunRepository]] implementations, ensuring they all have consistent behavior.
  */
-private[storage] abstract class RunRepositorySpec extends UnitSpec {
+private[storage] abstract class RunRepositorySpec extends RepositorySpec[MutableRunRepository] {
   protected val foobarRun = Run(
     id = RunId("foobar"),
     pkg = Package(WorkflowId("my_workflow"), "v1"),
@@ -67,24 +65,16 @@ private[storage] abstract class RunRepositorySpec extends UnitSpec {
       None,
       Set(Artifact("dbl", Values.encodeDouble(3.14))),
       Set(Metric("a", 12))))
-  protected val foobarRunWithNodes = foobarRun.copy(state = foobarRun.state.copy(nodes = Set(
-    NodeState(name = "FooNode", status = NodeStatus.Success, cacheKey = Some(CacheKey("MyFooCacheKey")), result = Some(foobarResults("FooNode"))),
-    NodeState(name = "BarNode", status = NodeStatus.Success, cacheKey = Some(CacheKey("MyBarCacheKey")), result = Some(foobarResults("BarNode")))
-  )))
+
   protected val fooResults = Map("FooNode" -> OpResult(
     0,
     None,
     Set(Artifact("myint", Values.encodeInteger(44)), Artifact("mystr", Values.encodeString("str"))),
     Set(Metric("a", 3), Metric("b", 4))))
-  protected val fooRunWithNodes = fooRun.copy(state = fooRun.state.copy(nodes = Set(
-    NodeState(name = "FooNode", status = NodeStatus.Success, cacheKey = Some(CacheKey("YourFooCacheKey")), result = Some(fooResults("FooNode"))))))
-
-  protected def createRepository: MutableRunRepository
 
   protected def refreshBeforeSearch(): Unit = {}
 
   it should "save and retrieve runs" in {
-    val repo = createRepository
     repo.get(foobarRun.id) shouldBe None
     repo.get(fooRun.id) shouldBe None
 
@@ -98,7 +88,6 @@ private[storage] abstract class RunRepositorySpec extends UnitSpec {
   }
 
   it should "delete runs" in {
-    val repo = createRepository
     repo.save(foobarRun)
     repo.save(fooRun)
     refreshBeforeSearch()
@@ -110,7 +99,6 @@ private[storage] abstract class RunRepositorySpec extends UnitSpec {
   }
 
   it should "search for runs" in {
-    val repo = createRepository
     val runs = Seq(
       foobarRun,
       foobarRun.copy(id = randomId, createdAt = System.currentTimeMillis() + 10, state = foobarRun.state.copy(status = RunStatus.Running)),
@@ -145,43 +133,21 @@ private[storage] abstract class RunRepositorySpec extends UnitSpec {
     res.results should contain theSameElementsInOrderAs Seq(runs(2), runs(1)).map(unsetResult)
   }
 
-  it should "save logs" in {
-    val repo = createRepository
-    val runIds = Seq.fill(5)(randomId)
-    val now = System.currentTimeMillis()
-    val logs = runIds.map { runId =>
-      runId -> Seq.tabulate(3) { i =>
-        s"Node$i" -> (Seq.tabulate(10) { j =>
-          RunLog(runId, s"Node$i", now + i * 25 + j, "stdout", s"line $i $j")
-        } ++ Seq.tabulate(15) { j =>
-          RunLog(runId, s"Node$i", now + i * 25 + 10 + j, "stderr", s"line $i $j")
-        })
-      }.toMap
-    }.toMap
-    repo.save(logs.values.flatMap(_.values).flatten.toSeq)
-    refreshBeforeSearch()
-
-    var res = repo.find(LogsQuery(runIds.head, "Node2"))
-    res should contain theSameElementsAs logs(runIds.head)("Node2")
-
-    res = repo.find(LogsQuery(runIds.head, "Node2", classifier = Some("stdout")))
-    res should contain theSameElementsAs logs(runIds.head)("Node2").take(10)
-
-    res = repo.find(LogsQuery(runIds.head, "Node2", limit = Some(10)))
-    res should have size 10
-
-    res = repo.find(LogsQuery(runIds.last, "Node0", since = Some(Time.fromMilliseconds(now + 15))))
-    res should contain theSameElementsAs logs(runIds.last)("Node0").drop(16)
-  }
-
   private def unsetResult(run: Run) = run.copy(state = run.state.copy(nodes = run.state.nodes.map(_.unsetResult)))
 
   private def randomId: RunId = RunId(UUID.randomUUID().toString)
 }
 
 private[storage] trait RunRepositorySpecWithMemoization extends RunRepositorySpec {
+  private val foobarRunWithNodes = foobarRun.copy(state = foobarRun.state.copy(nodes = Set(
+    NodeState(name = "FooNode", status = NodeStatus.Success, cacheKey = Some(CacheKey("MyFooCacheKey")), result = Some(foobarResults("FooNode"))),
+    NodeState(name = "BarNode", status = NodeStatus.Success, cacheKey = Some(CacheKey("MyBarCacheKey")), result = Some(foobarResults("BarNode")))
+  )))
+
+  private val fooRunWithNodes = fooRun.copy(state = fooRun.state.copy(nodes = Set(
+    NodeState(name = "FooNode", status = NodeStatus.Success, cacheKey = Some(CacheKey("YourFooCacheKey")), result = Some(fooResults("FooNode"))))))
+
   it should "memoize artifacts" in {
-    val repo = createRepository
     repo.save(foobarRunWithNodes)
     repo.save(fooRunWithNodes)
     refreshBeforeSearch()

@@ -18,12 +18,14 @@
 
 package fr.cnrs.liris.accio.core.storage
 
+import com.google.common.util.concurrent.Service
+import com.twitter.util.Future
 import fr.cnrs.liris.accio.core.domain.{Workflow, WorkflowId}
 
 /**
  * Repository persisting workflows.
  */
-trait WorkflowRepository {
+trait WorkflowRepository extends Service{
   /**
    * Search for workflows matching a given query. Runs are returned ordered in inverse chronological order, the most
    * recent matching workflow being the first result. It will only consider the latest version of each workflow, and

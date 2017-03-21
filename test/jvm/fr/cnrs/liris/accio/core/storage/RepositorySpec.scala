@@ -16,23 +16,26 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.storage.inject
+package fr.cnrs.liris.accio.core.storage
 
-import com.twitter.inject.TwitterModule
-import fr.cnrs.liris.accio.core.storage.elastic.ElasticStorageModule
-import fr.cnrs.liris.accio.core.storage.memory.MemoryStorageModule
+import com.google.common.util.concurrent.Service
+import fr.cnrs.liris.testing.UnitSpec
+import org.scalatest.BeforeAndAfterEach
 
-/**
- * Guice module provisioning storage-related services.
- */
-object StorageModule extends TwitterModule {
-  private[this] val storageFlag = flag("storage.type", "memory", "Storage type")
+private[storage] abstract class RepositorySpec[T <: Service] extends UnitSpec with BeforeAndAfterEach {
+  protected def createRepository: T
 
-  protected override def configure(): Unit = {
-    storageFlag() match {
-      case "memory" => install(MemoryStorageModule)
-      case "es" => install(ElasticStorageModule)
-      case unknown => throw new IllegalArgumentException(s"Unknown storage type: $unknown")
-    }
+  protected[this] var repo: T = null.asInstanceOf[T]
+
+  override protected def beforeEach(): Unit = {
+    super.beforeEach()
+    repo = createRepository
+    repo.startAsync().awaitRunning()
+  }
+
+  override protected def afterEach(): Unit = {
+    super.afterEach()
+    repo.stopAsync().awaitTerminated()
+    repo = null.asInstanceOf[T]
   }
 }

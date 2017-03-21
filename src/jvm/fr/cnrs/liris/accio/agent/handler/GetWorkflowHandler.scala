@@ -16,26 +16,26 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.agent.handler.api
+package fr.cnrs.liris.accio.agent.handler
 
 import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{GetWorkflowRequest, GetWorkflowResponse}
-import fr.cnrs.liris.accio.core.storage.WorkflowRepository
+import fr.cnrs.liris.accio.core.storage.Storage
 
 /**
  * Retrieve a single workflow, if it exists.
  *
- * @param repository Workflow repository (read-only).
+ * @param storage Storage.
  */
-final class GetWorkflowHandler @Inject()(repository: WorkflowRepository)
+final class GetWorkflowHandler @Inject()(storage: Storage)
   extends AbstractHandler[GetWorkflowRequest, GetWorkflowResponse] {
 
     override def handle(req: GetWorkflowRequest): Future[GetWorkflowResponse] = {
       val maybeWorkflow = req.version match {
-        case Some(version) => repository.get(req.id, version)
-        case None => repository.get(req.id)
+        case Some(version) => storage.read(_.workflows.get(req.id, version))
+        case None => storage.read(_.workflows.get(req.id))
       }
       Future(GetWorkflowResponse(maybeWorkflow))
     }

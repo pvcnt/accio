@@ -21,28 +21,23 @@ package fr.cnrs.liris.accio.core.framework
 import com.google.inject.{Inject, Singleton}
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.core.domain._
-import fr.cnrs.liris.accio.core.storage.{RunQuery, RunRepository, WorkflowRepository}
+import fr.cnrs.liris.accio.core.storage.{RunQuery, Storage}
 import fr.cnrs.liris.common.util.cache.CacheBuilder
 
 /**
  * Provider a high-level service to manage runs.
  *
- * @param schedulerService   Scheduler service.
- * @param graphFactory       Graph factory.
- * @param runRepository      Run repository (read-only).
- * @param workflowRepository Workflow repository (read-only).
+ * @param schedulerService Scheduler service.
+ * @param graphFactory     Graph factory.
+ * @param storage          Storage.
  */
 @Singleton
-final class RunManager @Inject()(
-  schedulerService: SchedulerService,
-  graphFactory: GraphFactory,
-  runRepository: RunRepository,
-  workflowRepository: WorkflowRepository)
+final class RunManager @Inject()(schedulerService: SchedulerService, graphFactory: GraphFactory, storage: Storage)
   extends StrictLogging {
 
   private[this] val graphs = CacheBuilder().maximumSize(25).build((pkg: Package) => {
     // Workflow does exist, because it has been validate when creating the runs.
-    val workflow = workflowRepository.get(pkg.workflowId, pkg.workflowVersion).get
+    val workflow = storage.read(_.workflows.get(pkg.workflowId, pkg.workflowVersion).get)
     graphFactory.create(workflow.graph)
   })
 
@@ -263,7 +258,7 @@ final class RunManager @Inject()(
   private def updateParentProgress(run: Run, parent: Option[Run]): Option[Run] = {
     parent.map { parent =>
       if (parent.state.completedAt.isEmpty) {
-        val siblings = runRepository.find(RunQuery(parent = Some(parent.id))).results.filter(_.id != run.id) ++ Seq(run)
+        val siblings = storage.read(_.runs.find(RunQuery(parent = Some(parent.id))).results.filter(_.id != run.id)) ++ Seq(run)
         if (siblings.forall(s => Utils.isCompleted(s.state.status))) {
           // Mark parent run as completed if all children are completed. It is successful if all runs were successful.
           val newRunState = if (siblings.forall(_.state.status == RunStatus.Success)) {

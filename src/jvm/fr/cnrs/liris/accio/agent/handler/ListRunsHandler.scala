@@ -22,14 +22,14 @@ import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{ListRunsRequest, ListRunsResponse}
-import fr.cnrs.liris.accio.core.storage.{RunQuery, RunRepository}
+import fr.cnrs.liris.accio.core.storage.{RunQuery, Storage}
 
 /**
  * Handler retrieving runs matching some search criteria.
  *
- * @param repository Run repository (read-only).
+ * @param storage Storage.
  */
-class ListRunsHandler @Inject()(repository: RunRepository) extends AbstractHandler[ListRunsRequest, ListRunsResponse] {
+class ListRunsHandler @Inject()(storage: Storage) extends AbstractHandler[ListRunsRequest, ListRunsResponse] {
   override def handle(req: ListRunsRequest): Future[ListRunsResponse] = {
     val query = RunQuery(
       name = req.name,
@@ -41,7 +41,7 @@ class ListRunsHandler @Inject()(repository: RunRepository) extends AbstractHandl
       q = req.q,
       limit = req.limit,
       offset = req.offset)
-    val res = repository.find(query)
+    val res = storage.read(_.runs.find(query))
     Future(ListRunsResponse(res.results, res.totalCount))
   }
 }
