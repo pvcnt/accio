@@ -20,15 +20,14 @@ package fr.cnrs.liris.accio.core.dsl.inject
 
 import com.google.inject.{Exposed, Provides, Singleton}
 import com.twitter.finatra.json.FinatraObjectMapper
-import com.twitter.inject.TwitterPrivateModule
 import fr.cnrs.liris.accio.core.dsl.{ObjectMapperFactory, RunParser, WorkflowParser}
 import fr.cnrs.liris.accio.core.framework.{OpRegistry, RunFactory, WorkflowFactory}
 import fr.cnrs.liris.accio.core.storage.Storage
+import net.codingwell.scalaguice.ScalaPrivateModule
 
-/**
- * Guice module provisioning DSL parsers.
- */
-object DslModule extends TwitterPrivateModule {
+object DslModule extends ScalaPrivateModule {
+  override def configure(): Unit = {}
+
   @Provides @Singleton
   def providesObjectMapper: FinatraObjectMapper = {
     new ObjectMapperFactory().create()

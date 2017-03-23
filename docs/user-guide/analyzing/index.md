@@ -36,4 +36,4 @@ These CSV files can then be easily digested by desktop applications such as Micr
 ## Programatically access results with the REST API
 Finally, for more advanced use cases, the [REST API](../../reference/rest-api/) can be used to retrieve run results as JSON.
 JSON files obtained in such a way may be more fragmented than what you can get with the `accio export` command, as you will need several API calls to retrieve all the data you expect.
-However, being a REST API means that it can be programatically queried with simple HTTP tools (such as curl), which can be very useful.
+However, being a REST API means that it can be programatically queried, which can be very precious for some cases.

@@ -23,7 +23,7 @@ import com.twitter.util.Future
 import fr.cnrs.liris.accio.core.domain._
 
 /**
- * Repository giving access to runs.
+ * Repository persisting runtime data collected as runs are executed.
  */
 trait RunRepository extends Service {
   /**
@@ -54,8 +54,8 @@ trait RunRepository extends Service {
 /**
  * Mutable run repository.
  *
- * Mutating methods are *not* required to be thread-safe in the sense they will be wrapped inside transactions
- * at the application-level. However, they should still take care not to leave data in a corrupted state,
+ * Repositories are *not* required to be thread-safe. Mutating methods might need to be wrapped inside transactions
+ * on the application-level. However, repositories should still take care not to leave data in a corrupted state,
  * which can be hard to recover from.
  */
 trait MutableRunRepository extends RunRepository {
@@ -84,8 +84,7 @@ trait MutableRunRepository extends RunRepository {
  * @param status     Only include runs whose status belong to those specified.
  * @param parent     Only include runs being a child of a given run.
  * @param clonedFrom Only include runs being cloned from of a given run.
- * @param tags       Only include runs having all of specified tags.
- * @param q          Multi-criteria search across workflow, owner, name and tags.
+ * @param q          Multi-criteria search among workflow, owner, name and tags.
  * @param limit      Maximum number of matching runs to return.
  * @param offset     Number of matching runs to skip.
  */
@@ -96,17 +95,10 @@ case class RunQuery(
   status: Set[RunStatus] = Set.empty,
   parent: Option[RunId] = None,
   clonedFrom: Option[RunId] = None,
-  tags: Set[String] = Set.empty,
   q: Option[String] = None,
   limit: Option[Int] = None,
   offset: Option[Int] = None) {
 
-  /**
-   * Check whether a given run matches this query.
-   *
-   * @param run Run.
-   * @return True if the run would be included in this query, false otherwise.
-   */
   def matches(run: Run): Boolean = {
     if (workflow.isDefined && workflow.get != run.pkg.workflowId) {
       false
@@ -117,8 +109,6 @@ case class RunQuery(
     } else if (status.nonEmpty && !status.contains(run.state.status)) {
       false
     } else if (clonedFrom.isDefined && !run.clonedFrom.contains(clonedFrom.get)) {
-      false
-    } else if (tags.nonEmpty && run.tags.intersect(tags).size < tags.size) {
       false
     } else {
       parent match {

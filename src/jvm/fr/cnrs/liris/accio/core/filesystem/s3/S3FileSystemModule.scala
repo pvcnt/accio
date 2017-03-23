@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.core.filesystem.s3
 
-import com.google.inject.Provides
+import com.google.inject.{Provides, Singleton}
 import com.twitter.app.Flag
 import com.twitter.inject.TwitterModule
 import fr.cnrs.liris.accio.core.filesystem.FileSystem
@@ -29,16 +29,25 @@ import net.codingwell.scalaguice.ScalaMapBinder
  * Guice module provisioning an S3 filesystem.
  */
 object S3FileSystemModule extends TwitterModule {
+  private val enabledFlag = flag("filesystem.s3.enabled", false, "Enable S3 filesystem")
   private val uriFlag = flag("filesystem.s3.uri", "https://s3.amazonaws.com", "URI to S3 server")
   private val bucketFlag = flag("filesystem.s3.bucket", "accio", "Bucket name")
   private val accessKeyFlag = flag[String]("filesystem.s3.access_key", "Access key with write access")
   private val privateKeyFlag = flag[String]("filesystem.s3.private_key", "Private key with write access")
 
-  def executorPassthroughFlags: Seq[Flag[_]] = Seq(uriFlag, bucketFlag, accessKeyFlag, privateKeyFlag)
+  def executorPassthroughFlags: Seq[Flag[_]] = {
+    if (enabledFlag()) {
+      Seq(enabledFlag, uriFlag, bucketFlag, accessKeyFlag, privateKeyFlag)
+    } else {
+      Seq.empty
+    }
+  }
 
   override protected def configure(): Unit = {
-    val fileSystems = ScalaMapBinder.newMapBinder[String, FileSystem](binder)
-    fileSystems.addBinding("s3").to[S3FileSystem]
+    if (enabledFlag()) {
+      val fileSystems = ScalaMapBinder.newMapBinder[String, FileSystem](binder)
+      fileSystems.addBinding("s3").to[S3FileSystem]
+    }
   }
 
   @Provides

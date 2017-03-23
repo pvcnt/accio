@@ -19,18 +19,16 @@
 package fr.cnrs.liris.accio.testing
 
 import fr.cnrs.liris.dal.core.sparkle.SparkleEnv
-import org.scalatest.{BeforeAndAfter, BeforeAndAfterEach, FlatSpec}
+import org.scalatest.{BeforeAndAfter, FlatSpec}
 
-trait WithSparkleEnv extends FlatSpec with BeforeAndAfterEach {
+trait WithSparkleEnv extends FlatSpec with BeforeAndAfter {
   protected var env: SparkleEnv = null
 
-  override protected def beforeEach() = {
-    super.beforeEach()
+  before {
     env = new SparkleEnv(1)
   }
 
-  override protected def afterEach() ={
-    super.afterEach()
+  after {
     env.stop()
     env = null
   }

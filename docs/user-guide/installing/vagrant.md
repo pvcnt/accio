@@ -17,12 +17,12 @@ Both are available on Linux, Mac OS and Windows.
 Then, you need to download source code of [the latest Accio release](https://github.com/privamov/accio/releases/latest).
 Decompress the archive file, move to the newly created directory and run a `vagrant up` to start the virtual machine.
 
-Alternatively, if you like to live on the edge, you can [install Git](https://git-scm.com/downloads) and use it to download the source code of the development version.
+Alternatively, if you like to live on the edge, you can install [Git](https://git-scm.com/) and use it to download the source code of the development version.
 
 ```bash
-git clone git@github.com:privamov/accio.git
-cd accio/
-vagrant up
+$ git clone git@github.com:privamov/accio.git
+$ cd accio/
+$ vagrant up
 ```
 
 The first launch may take some time, as Vagrant has to download a base OS image and provision it.
@@ -37,7 +37,7 @@ When using Vagrant, you may notice a warning about guest additions not being ins
 This is not critical, but if you want to get a rid of this error, you can install a plugin that will take care of this:
 
 ```bash
-vagrant plugin install vagrant-vbguest
+$ vagrant plugin install vagrant-vbguest
 ```
 
 ## 2. Login to your cluster

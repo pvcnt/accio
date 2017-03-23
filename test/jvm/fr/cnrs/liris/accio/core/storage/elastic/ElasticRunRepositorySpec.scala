@@ -26,7 +26,7 @@ import fr.cnrs.liris.accio.core.storage.{MutableRunRepository, RunRepositorySpec
 /**
  * Unit tests of [[ElasticRunRepository]].
  */
-class ElasticRunRepositorySpec extends RunRepositorySpecWithMemoization with ElasticRepositorySpec {
+class ElasticRunRepositorySpec extends RunRepositorySpecWithMemoization with ElasticStorageSpec {
   behavior of "ElasticRunRepository"
 
   private[this] val i = new AtomicInteger

@@ -30,15 +30,18 @@ import org.elasticsearch.common.settings.Settings
  * Guice module provisioning Elasticsearch storage.
  */
 object ElasticStorageModule extends TwitterPrivateModule {
+  private[this] val enabledFlag = flag("storage.es.enabled", false, "Enable Elasticsearch storage")
   private[this] val addrFlag = flag("storage.es.addr", "127.0.0.1:9300", "Address to Elasticsearch cluster")
   private[this] val prefixFlag = flag("storage.es.prefix", "accio_", "Prefix of Elasticsearch indices")
   private[this] val timeoutFlag = flag("storage.es.timeout", Duration.Top, "Timeout when querying Elasticsearch")
 
   override def configure(): Unit = {
-    bind[String].annotatedWith[ElasticPrefix].toInstance(prefixFlag())
-    bind[Duration].annotatedWith[ElasticTimeout].toInstance(timeoutFlag())
-    bind[Storage].to[ElasticStorage].asEagerSingleton()
-    expose[Storage]
+    if (enabledFlag()) {
+      bind[String].annotatedWith[ElasticPrefix].toInstance(prefixFlag())
+      bind[Duration].annotatedWith[ElasticTimeout].toInstance(timeoutFlag())
+      bind[Storage].to[ElasticStorage].asEagerSingleton()
+      expose[Storage]
+    }
   }
 
   @Provides @Singleton
@@ -55,6 +58,8 @@ object ElasticStorageModule extends TwitterPrivateModule {
   }
 
   override def singletonShutdown(injector: Injector): Unit = {
-    injector.instance[ElasticClient].close()
+    if (enabledFlag()) {
+      injector.instance[ElasticClient].close()
+    }
   }
 }

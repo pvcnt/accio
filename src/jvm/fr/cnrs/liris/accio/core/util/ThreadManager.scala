@@ -27,8 +27,6 @@ import scala.collection.JavaConverters._
 
 final class ThreadManager(pool: FuturePool) {
   private[this] val counter = new AtomicInteger
-  //TODO: should clean this when a thread was killed by a direct call to its kill() method.
-  //Now, we are keeping a reference to every ever created thread.
   private[this] val threads = new ConcurrentHashMap[String, ThreadLike[_]].asScala
 
   def submit[T](thread: ThreadLike[T]): Future[T] = submit(thread, counter.incrementAndGet().toString)

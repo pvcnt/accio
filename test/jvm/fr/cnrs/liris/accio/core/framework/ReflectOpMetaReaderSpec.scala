@@ -29,7 +29,7 @@ import org.joda.time.{Duration, Instant}
  * Unit tests for [[ReflectOpMetaReader]].
  */
 class ReflectOperatorMetaReaderSpec extends UnitSpec {
-  private val reader = new ReflectOpMetaReader(new ValueValidator)
+  private val reader = new ReflectOpMetaReader
 
   behavior of "ReflectOpMetaReader"
 
@@ -210,50 +210,6 @@ class ReflectOperatorMetaReaderSpec extends UnitSpec {
     expected.getMessage should endWith(": Input i cannot be optional with a default value")
   }
 
-  it should "detect an input with invalid default value" in {
-    // We only check a specific case here, to verify this is actually validated.
-    // We otherwise rely on ValueValidatorSpec to test all edge cases.
-    val expected = intercept[InvalidOpException] {
-      reader.read(classOf[InvalidDefaultValueOp])
-    }
-    expected.getMessage should endWith(": Invalid default value: Value must be >= 5.0")
-  }
-
-  it should "detect an input with invalid @Min/@Max constraints" in {
-    val expected = intercept[InvalidOpException] {
-      reader.read(classOf[InvalidMinMaxConstraintOp])
-    }
-    expected.getMessage should endWith(": Input i @Max is less than @Min")
-  }
-
-  it should "detect an input with @Min constraint on unsupported type" in {
-    val expected = intercept[InvalidOpException] {
-      reader.read(classOf[InvalidMinConstraintDataTypeOp])
-    }
-    expected.getMessage should endWith(": Input str of type string cannot have a @Min constraint")
-  }
-
-  it should "detect an input with @Max constraint on unsupported type" in {
-    val expected = intercept[InvalidOpException] {
-      reader.read(classOf[InvalidMaxConstraintDataTypeOp])
-    }
-    expected.getMessage should endWith(": Input str of type string cannot have a @Max constraint")
-  }
-
-  it should "detect an input with @OneOf constraint on unsupported type" in {
-    val expected = intercept[InvalidOpException] {
-      reader.read(classOf[InvalidOneOfConstraintDataTypeOp])
-    }
-    expected.getMessage should endWith(": Input i of type integer cannot have a @OneOf constraint")
-  }
-
-  it should "detect an input with invalid @OneOf constraints" in {
-    val expected = intercept[InvalidOpException] {
-      reader.read(classOf[InvalidOneOfConstraintOp])
-    }
-    expected.getMessage should endWith(": Input str @OneOf does not specify any value")
-  }
-
   private def assertMandatoryInput(defn: OpDef, name: String, kind: DataType): Unit =
     doAssertInput(defn, name, kind, optional = false, None)
 
@@ -384,48 +340,6 @@ private class NonAnnotatedOutOp extends Operator[Unit, NonAnnotatedOut] {
 private case class OptionalWithDefaultValueIn(@Arg i: Option[Int] = Some(2))
 
 @Op
-private class InvalidDefaultValueOp extends Operator[InvalidDefaultValueValueIn, Unit] {
-  override def execute(in: InvalidDefaultValueValueIn, ctx: OpContext): Unit = {}
-}
-
-case class InvalidDefaultValueValueIn(@Arg @Min(5) i: Int = 2)
-
-@Op
 private class OptionalWithDefaultValueOp extends Operator[OptionalWithDefaultValueIn, Unit] {
   override def execute(in: OptionalWithDefaultValueIn, ctx: OpContext): Unit = {}
 }
-
-@Op
-private class InvalidMinMaxConstraintOp extends Operator[InvalidMinMaxConstraintIn, Unit] {
-  override def execute(in: InvalidMinMaxConstraintIn, ctx: OpContext): Unit = {}
-}
-
-private case class InvalidMinMaxConstraintIn(@Arg @Min(2) @Max(1) i: Int)
-
-@Op
-private class InvalidMinConstraintDataTypeOp extends Operator[InvalidMinConstraintDataTypeIn, Unit] {
-  override def execute(in: InvalidMinConstraintDataTypeIn, ctx: OpContext): Unit = {}
-}
-
-private case class InvalidMinConstraintDataTypeIn(@Arg @Min(2) str: String)
-
-@Op
-private class InvalidMaxConstraintDataTypeOp extends Operator[InvalidMaxConstraintDataTypeIn, Unit] {
-  override def execute(in: InvalidMaxConstraintDataTypeIn, ctx: OpContext): Unit = {}
-}
-
-private case class InvalidMaxConstraintDataTypeIn(@Arg @Max(2) str: String)
-
-@Op
-private class InvalidOneOfConstraintDataTypeOp extends Operator[InvalidOneOfConstraintDataTypeIn, Unit] {
-  override def execute(in: InvalidOneOfConstraintDataTypeIn, ctx: OpContext): Unit = {}
-}
-
-private case class InvalidOneOfConstraintDataTypeIn(@Arg @OneOf(Array("foo", "bar")) i: Int)
-
-@Op
-private class InvalidOneOfConstraintOp extends Operator[InvalidOneOfConstraintIn, Unit] {
-  override def execute(in: InvalidOneOfConstraintIn, ctx: OpContext): Unit = {}
-}
-
-case class InvalidOneOfConstraintIn(@Arg @OneOf(Array()) str: String)

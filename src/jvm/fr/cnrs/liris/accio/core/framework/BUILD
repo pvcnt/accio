@@ -9,7 +9,6 @@ scala_library(
     'src/jvm/fr/cnrs/liris/common/cache',
     'src/jvm/fr/cnrs/liris/common/util',
     'src/jvm/fr/cnrs/liris/common/reflect',
-    'src/jvm/fr/cnrs/liris/dal/core/api',
     '3rdparty/jvm/com/typesafe/scala-logging',
     '3rdparty/jvm/com/google/guice',
   ],

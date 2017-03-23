@@ -60,15 +60,13 @@ final class WorkerLifecycle @Inject()(
         state.totalDisk.map(_.inMegabytes).getOrElse(0))
       val req = RegisterWorkerRequest(state.workerId, workerAddr, maxResources)
 
-      client
-        .registerWorker(req)
+      client.registerWorker(req)
         .handle {
           // It was already registered, ignore this error (though it should not happen).
           case _: InvalidWorkerException => RegisterWorkerResponse()
         }
         .onFailure { e =>
           // Other error, report it and let the future fail.
-          println("error: " + e.getClass)
           logger.error("Error while registering worker", e)
         }
         .onSuccess { _ =>
@@ -112,12 +110,7 @@ final class WorkerLifecycle @Inject()(
       val f = client.heartbeatWorker(HeartbeatWorkerRequest(state.workerId)).liftToTry
       Await.result(f) match {
         case Return(_) => sleep(timeout / 2)
-        case Throw(_: InvalidWorkerException) =>
-          // Worker is not registered. It may be because it was marked as lost, or because the master has been
-          // unreachable for some time (e.g. rebooting or recovering). We kill current thread and try again
-          // registration process.
-          kill()
-          register()
+        case Throw(_: InvalidWorkerException) => kill()
         case Throw(e) =>
           logger.error(s"Error while sending heartbeat", e)
           sleep(timeout  / 4)

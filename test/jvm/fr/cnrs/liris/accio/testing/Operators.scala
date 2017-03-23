@@ -27,7 +27,7 @@ import fr.cnrs.liris.dal.core.api.{AtomicType, DataType, Values}
 private[accio] object Operators {
   val FirstSimple: OpDef = createOpDef(
     "FirstSimple",
-    Seq(ArgDef("foo", DataType(AtomicType.Integer), constraint = Some(ArgConstraint(maxValue = Some(2000), maxInclusive = Some(true))))),
+    Seq(ArgDef("foo", DataType(AtomicType.Integer))),
     Seq(ArgDef("data", DataType(AtomicType.Dataset))))
   val SecondSimple: OpDef = createOpDef(
     "SecondSimple",

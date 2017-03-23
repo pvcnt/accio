@@ -18,19 +18,31 @@
 
 package fr.cnrs.liris.accio.agent
 
+import com.google.inject.Module
 import com.twitter.finatra.thrift.ThriftServer
 import com.twitter.finatra.thrift.filters._
 import com.twitter.finatra.thrift.routing.ThriftRouter
+import com.twitter.util.FuturePool
+import fr.cnrs.liris.accio.agent.handler.{LostExecutorsObserver, LostWorkerObserver, WorkerLifecycle}
+import fr.cnrs.liris.accio.core.dsl.inject.DslModule
+import fr.cnrs.liris.accio.core.filesystem.inject.FileSystemModule
+import fr.cnrs.liris.accio.core.scheduler.inject.SchedulerModule
+import fr.cnrs.liris.accio.core.storage.inject.StorageModule
 import fr.cnrs.liris.accio.runtime.logging.LogbackConfigurator
+import fr.cnrs.liris.privamov.ops.OpsModule
 
 object AgentServerMain extends AgentServer
 
 class AgentServer extends ThriftServer with LogbackConfigurator {
-  override def failfastOnFlagsNotParsed = true
+  override protected def modules: Seq[Module] = Seq(
+    FileSystemModule,
+    SchedulerModule,
+    StorageModule,
+    DslModule,
+    AgentModule,
+    OpsModule)
 
-  override def modules = Seq(AgentModule)
-
-  override def configureThrift(router: ThriftRouter): Unit = {
+  override protected def configureThrift(router: ThriftRouter): Unit = {
     router
       .filter[LoggingMDCFilter]
       .filter[TraceIdMDCFilter]
@@ -38,5 +50,25 @@ class AgentServer extends ThriftServer with LogbackConfigurator {
       .filter[AccessLoggingFilter]
       .filter[StatsFilter]
       .add[AgentController]
+  }
+
+  override protected def start(): Unit = {
+    if (AgentModule.masterFlag()) {
+      val observer = injector.instance[LostWorkerObserver]
+      FuturePool.unboundedPool(observer.run())
+      onExit {
+        observer.kill()
+      }
+    }
+    if (AgentModule.workerFlag()) {
+      val lifecycle = injector.instance[WorkerLifecycle]
+      lifecycle.register()
+      val observer = injector.instance[LostExecutorsObserver]
+      FuturePool.unboundedPool(observer.run())
+      onExit {
+        lifecycle.unregister()
+        observer.kill()
+      }
+    }
   }
 }

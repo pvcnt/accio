@@ -6,7 +6,7 @@ title: Installing on Windows
 
 This page explains how to install the Accio client on Windows.
 
-## 1. Install requirements
+## 1. Install Java
 The only requirement to run Accio is to have a JRE for Java 8.
 Before running Accio, you need to install the Java runtime on your machine.
 Please that though you only need a JRE (Java Runtime Environment) to execute Accio, you may want to install a JDK (Java Development Kit) instead;
@@ -16,13 +16,14 @@ Java 8 JRE can be downloaded from [Oracle's JRE Page](http://www.oracle.com/tech
 Look for "Windows x64 Offline" under "Java SE Runtime Environment".
 This will download an executable file with an install wizard.
 
-## 2. Download JAR
+## 2. Download
 Download the `accio.jar` file from [the latest release](https://github.com/privamov/accio/releases/latest).
 This file can be executed through the JRE previously installed.
-Because this is a command-line application, you need to use a shell to execute it.
+Because this is a command-line application, you need to use a shell.
 
-```bash
-java -jar accio.jar version -client
+```
+$ java -jar accio.jar version -client
+Client version: 2.0.0
 ```
 
 ## 3. Configuration
@@ -40,4 +41,4 @@ An simple configuration file looks like this:
 }]
 ```
 
-Make sure the specified address matches the one of your actual cluster.
+Make sure the specified address matches the one of your actual cluster (it should be the address of a master server).

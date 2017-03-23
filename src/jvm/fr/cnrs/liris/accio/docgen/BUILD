@@ -20,7 +20,7 @@ jvm_binary(
     '3rdparty/jvm:logback',
   ],
   resources=[
-    'src/resources/fr/cnrs/liris/accio/client',
+    'src/resources/fr/cnrs/liris/accio/accioctl',
   ],
   main='fr.cnrs.liris.accio.docgen.AccioDocgenMain',
   basename='accio-docgen',

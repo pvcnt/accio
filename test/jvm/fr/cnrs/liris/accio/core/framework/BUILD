@@ -2,7 +2,6 @@ junit_tests(
   dependencies=[
     'src/jvm/fr/cnrs/liris/accio/core/framework',
     'src/jvm/fr/cnrs/liris/common/geo',
-    'src/jvm/fr/cnrs/liris/dal/core/api',
     'test/jvm/fr/cnrs/liris/testing',
     'test/jvm/fr/cnrs/liris/accio/testing',
     '3rdparty/jvm:scala-guice',

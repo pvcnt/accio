@@ -46,23 +46,6 @@ struct CacheKey {
   1: string hash;
 }
 
-/*struct Metadata {
-  // Human-readable name.
-  1: optional string name;
-
-  // User initiating the run.
-  2: required User owner;
-
-  // Time at which this run has been created.
-  3: required Timestamp created_at;
-
-  // Notes describing the purpose of the workflow.
-  4: optional string notes;
-
-  // Arbitrary tags used when looking for workflows.
-  5: required set<string> tags;
-}*/
-
 struct Artifact {
   // Artifact name.
   1: required string name;
@@ -122,14 +105,6 @@ struct Resource {
   3: required i64 disk_mb;
 }
 
-struct ArgConstraint {
-  1: optional double min_value;
-  2: optional bool min_inclusive;
-  3: optional double max_value;
-  4: optional bool max_inclusive;
-  5: optional set<string> allowed_values;
-}
-
 /**
  * Definition of an operator port (either input or output).
  */
@@ -148,8 +123,6 @@ struct ArgDef {
 
   // Default value taken by this input if none is specified. It should be empty for output ports.
   5: optional dal.Value default_value;
-
-  6: optional ArgConstraint constraint;
 }
 
 /**

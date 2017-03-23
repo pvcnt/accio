@@ -20,22 +20,19 @@ package fr.cnrs.liris.accio.core.framework
 
 import java.io.IOException
 
-import com.google.inject.Inject
 import com.twitter.util.StorageUnit
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.accio.core.domain._
-import fr.cnrs.liris.common.reflect.{CaseClass, CaseClassField, PlainClass, ScalaType}
+import fr.cnrs.liris.common.reflect.{CaseClass, PlainClass, ScalaType}
 import fr.cnrs.liris.common.util.ResourceFileLoader
 import fr.cnrs.liris.common.util.StringUtils.maybe
-import fr.cnrs.liris.dal.core.api.{AtomicType, DataType, DataTypes, Values}
+import fr.cnrs.liris.dal.core.api.{AtomicType, DataType, Values}
 
 /**
  * Read operator metadata from information gathered by Scala reflection and annotations.
- *
- * @param valueValidator Value validator.
  */
-final class ReflectOpMetaReader @Inject()(valueValidator: ValueValidator) extends OpMetaReader with LazyLogging {
+class ReflectOpMetaReader extends OpMetaReader with LazyLogging {
   def read[T <: Operator[_, _]](clazz: Class[T]): OpMeta =
     try {
       val opRefl = PlainClass(clazz)
@@ -107,24 +104,12 @@ final class ReflectOpMetaReader @Inject()(valueValidator: ValueValidator) extend
 
           val kind = getDataType(if (field.isOption) field.scalaType.typeArguments.head else field.scalaType)
           val defaultValue = if (field.isOption) None else field.defaultValue.map(Values.encode(_, kind))
-          val argDef = ArgDef(
+          ArgDef(
             name = field.name,
             kind = kind,
             help = maybe(in.help),
             isOptional = field.isOption,
-            defaultValue = defaultValue,
-            constraint = getConstraint(field, kind))
-
-          // Check the default value is valid w.r.t. argument definition.
-          argDef.defaultValue.foreach { defaultValue =>
-            val errors = valueValidator.validate(defaultValue, argDef)
-            if (errors.size == 1) {
-              throw new IllegalArgumentException(s"Invalid default value: ${errors.head.message}")
-            } else if (errors.size > 1) {
-              throw new IllegalArgumentException(s"Invalid default value:\n - ${errors.map(_.message).mkString("\n - ")}")
-            }
-          }
-          argDef
+            defaultValue = defaultValue)
       }
     }
 
@@ -136,44 +121,6 @@ final class ReflectOpMetaReader @Inject()(valueValidator: ValueValidator) extend
           help = maybe(out.help),
           kind = getDataType(field.scalaType))
       }.toSeq
-    }
-  }
-
-  private def getConstraint(field: CaseClassField, kind: DataType) = {
-    val (minValue, minInclusive) = field.getAnnotation[Min] match {
-      case Some(min) =>
-        kind.base match {
-          case AtomicType.Byte | AtomicType.Integer | AtomicType.Long | AtomicType.Double =>
-            (Some(min.value), Some(min.inclusive))
-          case AtomicType.Set | AtomicType.List | AtomicType.Map =>
-            (Some(min.value), Some(min.inclusive))
-          case _ => throw new IllegalArgumentException(s"Input ${field.name} of type ${DataTypes.toString(kind)} cannot have a @Min constraint")
-        }
-      case None => (None, None)
-    }
-    val (maxValue, maxInclusive) = field.getAnnotation[Max] match {
-      case Some(max) =>
-        require(minValue.isEmpty || max.value > minValue.get, s"Input ${field.name} @Max is less than @Min")
-        kind.base match {
-          case AtomicType.Byte | AtomicType.Integer | AtomicType.Long | AtomicType.Double => (Some(max.value), Some(max.inclusive))
-          case AtomicType.Set | AtomicType.List | AtomicType.Map => (Some(max.value), Some(max.inclusive))
-          case _ => throw new IllegalArgumentException(s"Input ${field.name} of type ${DataTypes.toString(kind)} cannot have a @Max constraint")
-        }
-      case None => (None, None)
-    }
-    val allowedValues = field.getAnnotation[OneOf].map { oneOf =>
-      require(oneOf.value.nonEmpty, s"Input ${field.name} @OneOf does not specify any value")
-      kind match {
-        case DataType(AtomicType.String, _) => oneOf.value.toSet
-        case DataType(AtomicType.Set, Seq(AtomicType.String)) => oneOf.value.toSet
-        case DataType(AtomicType.List, Seq(AtomicType.String)) => oneOf.value.toSet
-        case _ => throw new IllegalArgumentException(s"Input ${field.name} of type ${DataTypes.toString(kind)} cannot have a @OneOf constraint")
-      }
-    }
-    if (minValue.isDefined || maxValue.isDefined || allowedValues.isDefined) {
-      Some(ArgConstraint(minValue, minInclusive, maxValue, maxInclusive, allowedValues))
-    } else {
-      None
     }
   }
 

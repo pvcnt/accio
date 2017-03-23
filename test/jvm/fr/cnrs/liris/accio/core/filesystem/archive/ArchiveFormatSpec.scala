@@ -24,8 +24,9 @@ import java.nio.file.{Files, Path}
 import com.google.common.io.Resources
 import fr.cnrs.liris.testing.{UnitSpec, WithTmpDirectory}
 import org.apache.commons.compress.utils.IOUtils
+import org.scalatest.BeforeAndAfterEach
 
-abstract class ArchiveFormatSpec extends UnitSpec with WithTmpDirectory {
+abstract class ArchiveFormatSpec extends UnitSpec with BeforeAndAfterEach with WithTmpDirectory {
   protected def createFormat: ArchiveFormat
 
   protected def copyResource(resourceName: String): Path = {

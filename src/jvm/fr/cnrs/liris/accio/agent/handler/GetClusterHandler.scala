@@ -16,13 +16,14 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.agent.handler.api
+package fr.cnrs.liris.accio.agent.handler
 
 import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
+import fr.cnrs.liris.accio.agent.config.ClusterName
 import fr.cnrs.liris.accio.agent.{GetClusterRequest, GetClusterResponse}
-import fr.cnrs.liris.accio.core.util.{ClusterName, Version}
+import fr.cnrs.liris.accio.core.util.Version
 
 /**
  * Return information about the cluster.

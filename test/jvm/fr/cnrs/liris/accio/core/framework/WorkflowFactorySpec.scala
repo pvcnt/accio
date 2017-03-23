@@ -30,7 +30,7 @@ class WorkflowFactorySpec extends UnitSpec {
   private[this] val factory = {
     val opRegistry = new StaticOpRegistry(Operators.ops)
     val graphFactory = new GraphFactory(opRegistry)
-    new WorkflowFactory(graphFactory, opRegistry, new ValueValidator)
+    new WorkflowFactory(graphFactory, opRegistry)
   }
 
   behavior of "WorkflowFactory"
@@ -92,14 +92,6 @@ class WorkflowFactorySpec extends UnitSpec {
     assertErrors(
       Workflows.undeclaredParamWorkflow,
       InvalidSpecMessage("Param is not declared", Some("params.foo")))
-  }
-
-  it should "detect a param with invalid default value" in {
-    // We only check a specific case here, to verify this is actually validated.
-    // We otherwise rely on ValueValidatorSpec to test all edge cases.
-    assertErrors(
-      Workflows.invalidDefaultValueWorkflow,
-      InvalidSpecMessage("Value must be <= 2000.0", Some("params.foo.default_value")))
   }
 
   private def assertErrors(spec: WorkflowSpec, errors: InvalidSpecMessage*) = {
@@ -182,15 +174,6 @@ object Workflows {
    val invalidParamTypeWorkflow = WorkflowSpec(
     id = WorkflowId("invalid_workflow"),
     params = Set(ArgDef("foo", DataType(AtomicType.String))),
-    graph = GraphDef(Set(
-      NodeDef(
-        op = "FirstSimple",
-        name = "FirstSimple",
-        inputs = Map("foo" -> InputDef.Param("foo"))))))
-
-  val invalidDefaultValueWorkflow = WorkflowSpec(
-    id = WorkflowId("invalid_workflow"),
-    params = Set(ArgDef("foo", DataType(AtomicType.Integer), defaultValue = Some(Values.encodeInteger(15008)))),
     graph = GraphDef(Set(
       NodeDef(
         op = "FirstSimple",

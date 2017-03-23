@@ -22,13 +22,6 @@ import com.google.common.annotations.VisibleForTesting
 import com.google.inject.{Inject, Singleton}
 import fr.cnrs.liris.accio.core.storage.AbstractStorage
 
-/**
- * Storage giving access in-memory repositories.
- *
- * @param runRepository In-memory run repository.
- * @param workflowRepository In-memory workflow repository.
- * @param logRepository In-memory log repository.
- */
 @Singleton @VisibleForTesting
 final class MemoryStorage @Inject() (
   override protected val runRepository: MemoryRunRepository,

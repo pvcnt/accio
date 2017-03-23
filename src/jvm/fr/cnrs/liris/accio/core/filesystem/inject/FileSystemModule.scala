@@ -18,7 +18,6 @@
 
 package fr.cnrs.liris.accio.core.filesystem.inject
 
-import com.google.inject.Module
 import com.twitter.app.Flag
 import com.twitter.inject.{Injector, TwitterModule}
 import fr.cnrs.liris.accio.core.filesystem.FileSystem
@@ -29,25 +28,12 @@ import fr.cnrs.liris.accio.core.filesystem.s3.S3FileSystemModule
  * Guice module provisioning the filesystem service.
  */
 object FileSystemModule extends TwitterModule {
-  private[this] val typeFlag = flag[String]("filesystem.type", "Filesystem type(s)")
-
   // Flags that will be forwarded "as-is" when invoking the executor.
-  def executorPassthroughFlags: Seq[Flag[_]] =
-    Seq(typeFlag) ++ PosixFileSystemModule.executorPassthroughFlags ++ S3FileSystemModule.executorPassthroughFlags
+  def executorPassthroughFlags: Seq[Flag[_]] = {
+    PosixFileSystemModule.executorPassthroughFlags ++ S3FileSystemModule.executorPassthroughFlags
+  }
 
-  override def modules: Seq[Module] =
-    typeFlag.get match {
-      case Some(types) =>
-        types.split(",").toSeq.map(_.trim.toLowerCase).map {
-          case "posix" => PosixFileSystemModule
-          case "s3" => S3FileSystemModule
-          case invalid => throw new IllegalArgumentException(s"Invalid filesystem type: $invalid")
-        }
-      case None =>
-        // This only happen when this method is called the first time, during App's initialization.
-        // We provide the entire list of all modules, making all flags available.
-        Seq(PosixFileSystemModule, S3FileSystemModule)
-    }
+  override def modules = Seq(PosixFileSystemModule, S3FileSystemModule)
 
   protected override def configure(): Unit = {
     bind[FileSystem].to[PluginFileSystem]

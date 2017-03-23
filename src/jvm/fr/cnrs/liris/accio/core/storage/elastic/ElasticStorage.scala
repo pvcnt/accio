@@ -21,13 +21,6 @@ package fr.cnrs.liris.accio.core.storage.elastic
 import com.google.inject.{Inject, Singleton}
 import fr.cnrs.liris.accio.core.storage._
 
-/**
- * Storage giving access Elasticsearch-based repositories.
- *
- * @param runRepository Elasticsearch-based run repository.
- * @param workflowRepository Elasticsearch-based workflow repository.
- * @param logRepository Elasticsearch-based log repository.
- */
 @Singleton
 private[elastic] final class ElasticStorage @Inject()(
   protected override val runRepository: ElasticRunRepository,

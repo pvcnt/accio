@@ -18,7 +18,6 @@
 
 package fr.cnrs.liris.accio.core.storage.inject
 
-import com.google.inject.Module
 import com.twitter.inject.{Injector, TwitterModule}
 import fr.cnrs.liris.accio.core.storage.Storage
 import fr.cnrs.liris.accio.core.storage.elastic.ElasticStorageModule
@@ -30,20 +29,7 @@ import scala.util.control.NonFatal
  * Guice module provisioning storage-related services.
  */
 object StorageModule extends TwitterModule {
-  private[this] val typeFlag = flag("storage.type", "memory", "Storage type")
-
-  override def modules: Seq[Module] =
-    typeFlag.get match {
-      case Some("memory") => Seq(MemoryStorageModule)
-      case Some("es") => Seq(ElasticStorageModule)
-      case Some(invalid) => throw new IllegalArgumentException(s"Invalid storage type: $invalid")
-      case None =>
-        // This only happen when this method is called the first time, during App's initialization.
-        // We provide the entire list of all modules, making all flags available.
-        Seq(MemoryStorageModule, ElasticStorageModule)
-    }
-
-  override protected def configure() = println("using storage module")
+  override val modules = Seq(MemoryStorageModule, ElasticStorageModule)
 
   override def singletonStartup(injector: Injector): Unit = {
     injector.instance[Storage].startAsync()
