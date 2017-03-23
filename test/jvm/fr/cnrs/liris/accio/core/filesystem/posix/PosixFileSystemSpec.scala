@@ -90,7 +90,7 @@ class PosixFileSystemSpec extends UnitSpec with WithTmpDirectory {
   }
 
   private def createFileSystem(symlink: Boolean) = {
-    val fs = new PosixFileSystem(PosixFileSystemConfig(tmpDir.resolve("data"), symlink))
+    val fs = new PosixFileSystem(tmpDir.resolve("data"), symlink)
     Files.createDirectory(tmpDir.resolve("data"))
     Files.write(tmpDir.resolve("data/foobar.txt"), "foobar file".getBytes)
     fs

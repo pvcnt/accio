@@ -16,14 +16,14 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.filesystem.s3
+package fr.cnrs.liris.accio.core.filesystem.posix;
 
-/**
- * S3 filesystem configuration.
- *
- * @param uri       URI to the S3/Minio service.
- * @param accessKey Access key.
- * @param secretKey Secret key.
- * @param bucket    Bucket name.
- */
-case class S3FileSystemConfig(uri: String, accessKey: String, secretKey: String, bucket: String)
+import com.google.inject.BindingAnnotation;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+
+@Retention(RetentionPolicy.RUNTIME)
+@BindingAnnotation
+public @interface PosixPath {
+}

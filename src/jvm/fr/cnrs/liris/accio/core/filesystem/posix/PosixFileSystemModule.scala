@@ -18,18 +18,36 @@
 
 package fr.cnrs.liris.accio.core.filesystem.posix
 
+import java.nio.file.{Path, Paths}
+
+import com.twitter.app.Flag
+import com.twitter.inject.TwitterModule
 import fr.cnrs.liris.accio.core.filesystem.FileSystem
-import net.codingwell.scalaguice.{ScalaMapBinder, ScalaModule}
+import net.codingwell.scalaguice.ScalaMapBinder
 
 /**
  * Guice module provisioning a POSIX filesystem.
- *
- * @param config Configuration.
  */
-final class PosixFileSystemModule(config: PosixFileSystemConfig) extends ScalaModule {
+object PosixFileSystemModule extends TwitterModule {
+  private[this] val enabled = flag[Boolean]("filesystem.posix.enabled", false, "Enable POSIX filesystem")
+  private[this] val pathFlag = flag[String]("filesystem.posix.root", "Path where to store files")
+  private[this] val symlinkFlag = flag("filesystem.posix.symlink", true, "Whether to symlink files")
+
+  def executorPassthroughFlags: Seq[Flag[_]] = {
+    if (enabled()) {
+      Seq(enabled, pathFlag, symlinkFlag)
+    } else {
+      Seq.empty
+    }
+  }
+
   override protected def configure(): Unit = {
-    val fileSystems = ScalaMapBinder.newMapBinder[String, FileSystem](binder)
-    fileSystems.addBinding("posix").to[PosixFileSystem]
-    bind[PosixFileSystemConfig].toInstance(config)
+    if (enabled()) {
+      val fileSystems = ScalaMapBinder.newMapBinder[String, FileSystem](binder)
+      fileSystems.addBinding("posix").to[PosixFileSystem]
+
+      bind[Path].annotatedWith[PosixPath].toInstance(Paths.get(pathFlag()))
+      bind[Boolean].annotatedWith[PosixSymlink].toInstance(symlinkFlag())
+    }
   }
 }

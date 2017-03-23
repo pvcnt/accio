@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.filesystem;
+package fr.cnrs.liris.accio.core.filesystem.posix;
 
 import com.google.inject.BindingAnnotation;
 
@@ -25,5 +25,5 @@ import java.lang.annotation.RetentionPolicy;
 
 @Retention(RetentionPolicy.RUNTIME)
 @BindingAnnotation
-public @interface InjectFileSystem {
+public @interface PosixSymlink {
 }

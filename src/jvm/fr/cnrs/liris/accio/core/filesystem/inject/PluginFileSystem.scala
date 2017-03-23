@@ -27,6 +27,8 @@ import scala.collection.immutable
 
 @Singleton
 final class PluginFileSystem @Inject()(plugins: immutable.Map[String, FileSystem]) extends FileSystem {
+  require(plugins.nonEmpty, "No filesystem is provisioned")
+
   override def write(src: Path, uri: String): String = {
     val (prefix, filename) = split(uri)
     plugins.get(prefix) match {
@@ -50,6 +52,8 @@ final class PluginFileSystem @Inject()(plugins: immutable.Map[String, FileSystem
       case Some(fs) => fs.delete(filename)
     }
   }
+
+  override def close(): Unit = plugins.values.foreach(_.close())
 
   private def split(uri: String): (String, String) = {
     uri.split("::") match {

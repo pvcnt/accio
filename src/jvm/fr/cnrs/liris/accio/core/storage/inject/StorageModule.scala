@@ -18,9 +18,12 @@
 
 package fr.cnrs.liris.accio.core.storage.inject
 
-import com.twitter.inject.TwitterModule
+import com.twitter.inject.{Injector, TwitterModule}
+import fr.cnrs.liris.accio.core.storage.Storage
 import fr.cnrs.liris.accio.core.storage.elastic.ElasticStorageModule
 import fr.cnrs.liris.accio.core.storage.memory.MemoryStorageModule
+
+import scala.util.control.NonFatal
 
 /**
  * Guice module provisioning storage-related services.
@@ -33,6 +36,18 @@ object StorageModule extends TwitterModule {
       case "memory" => install(MemoryStorageModule)
       case "es" => install(ElasticStorageModule)
       case unknown => throw new IllegalArgumentException(s"Unknown storage type: $unknown")
+    }
+  }
+
+  override def singletonStartup(injector: Injector): Unit = {
+    injector.instance[Storage].startAsync()
+  }
+
+  override def singletonShutdown(injector: Injector): Unit = {
+    try {
+      injector.instance[Storage].stopAsync().awaitTerminated()
+    } catch {
+      case NonFatal(e) => logger.warn("Error while shutting down storage", e)
     }
   }
 }

@@ -18,57 +18,24 @@
 
 package fr.cnrs.liris.accio.core.filesystem.inject
 
-import java.nio.file.Paths
-
-import com.google.inject.Module
+import com.twitter.app.Flag
 import com.twitter.inject.{Injector, TwitterModule}
 import fr.cnrs.liris.accio.core.filesystem.FileSystem
-import fr.cnrs.liris.accio.core.filesystem.posix.{PosixFileSystemConfig, PosixFileSystemModule}
-import fr.cnrs.liris.accio.core.filesystem.s3.{S3FileSystemConfig, S3FileSystemModule}
-
-import scala.collection.mutable
+import fr.cnrs.liris.accio.core.filesystem.posix.PosixFileSystemModule
+import fr.cnrs.liris.accio.core.filesystem.s3.S3FileSystemModule
 
 /**
  * Guice module provisioning the filesystem service.
  */
 object FileSystemModule extends TwitterModule {
-  // POSIX filesystem configuration.
-  private val posixEnabledFlag = flag[Boolean]("filesystem.posix.enabled", false, "Enable POSIX filesystem")
-  private val posixPathFlag = flag[String]("filesystem.posix.root", "Path where to store files")
-  private val posixSymlinkFlag = flag("filesystem.posix.symlink", true, "Path where to symlink files")
-
-  // S3 filesystem configuration.
-  private val s3EnabledFlag = flag("filesystem.s3.enabled", false, "Enable S3 filesystem")
-  private val s3UriFlag = flag("filesystem.s3.uri", "https://s3.amazonaws.com", "URI to S3 server")
-  private val s3BucketFlag = flag("filesystem.s3.bucket", "accio", "Bucket name")
-  private val s3AccessKeyFlag = flag[String]("filesystem.s3.access_key", "Access key with write access")
-  private val s3PrivateKeyFlag = flag[String]("filesystem.s3.private_key", "Private key with write access")
-
   // Flags that will be forwarded "as-is" when invoking the executor.
-  val executorPassthroughFlags = Seq(
-    posixEnabledFlag,
-    posixPathFlag,
-    posixSymlinkFlag,
-    s3EnabledFlag,
-    s3UriFlag,
-    s3BucketFlag,
-    s3AccessKeyFlag,
-    s3PrivateKeyFlag)
+  def executorPassthroughFlags: Seq[Flag[_]] = {
+    PosixFileSystemModule.executorPassthroughFlags ++ S3FileSystemModule.executorPassthroughFlags
+  }
+
+  override def modules = Seq(PosixFileSystemModule, S3FileSystemModule)
 
   protected override def configure(): Unit = {
-    val modules = mutable.Set.empty[Module]
-    if (posixEnabledFlag()) {
-      val config = PosixFileSystemConfig(Paths.get(posixPathFlag()), posixSymlinkFlag())
-      modules += new PosixFileSystemModule(config)
-    }
-    if (s3EnabledFlag()) {
-      val config = S3FileSystemConfig(s3UriFlag(), s3BucketFlag(), s3AccessKeyFlag(), s3PrivateKeyFlag())
-      modules += new S3FileSystemModule(config)
-    }
-    if (modules.isEmpty) {
-      logger.warn("No filesystem is provisioned")
-    }
-    modules.foreach(install)
     bind[FileSystem].to[PluginFileSystem]
   }
 

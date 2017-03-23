@@ -20,34 +20,32 @@ package fr.cnrs.liris.accio.core.filesystem.s3
 
 import java.nio.file.Path
 
-import com.google.inject.{Inject, Singleton}
-import fr.cnrs.liris.accio.core.filesystem.InjectFileSystem
 import fr.cnrs.liris.accio.core.filesystem.archive.{ArchivedFileSystem, TarGzipArchiveFormat}
 import io.minio.MinioClient
 
 /**
  * Uploader copying files on S3/Minio.
  *
- * @param client S3 client.
- * @param config Uploader configuration.
+ * @param client     S3 client.
+ * @param uri        S3 endpoint URI.
+ * @param bucketName Bucket name.
  */
-@Singleton
-final class S3FileSystem @Inject()(@InjectFileSystem client: MinioClient, config: S3FileSystemConfig)
+private[s3] final class S3FileSystem(client: MinioClient, uri: String, bucketName: String)
   extends ArchivedFileSystem(TarGzipArchiveFormat) {
 
   override protected def doWrite(src: Path, key: String): String = {
-    if (!client.bucketExists(config.bucket)) {
-      client.makeBucket(config.bucket)
+    if (!client.bucketExists(bucketName)) {
+      client.makeBucket(bucketName)
     }
-    client.putObject(config.bucket, s"$key.tar.gz", src.toAbsolutePath.toString)
-    s"${config.uri.stripSuffix("/")}/${config.bucket}/$key.tar.gz"
+    client.putObject(bucketName, s"$key.tar.gz", src.toAbsolutePath.toString)
+    s"${uri.stripSuffix("/")}/$bucketName/$key.tar.gz"
   }
 
   override protected def doRead(filename: String, dst: Path): Unit = {
-    client.getObject(config.bucket, filename, dst.toAbsolutePath.toString)
+    client.getObject(bucketName, filename, dst.toAbsolutePath.toString)
   }
 
   override def delete(filename: String): Unit = {
-    client.removeObject(config.bucket, filename)
+    client.removeObject(bucketName, filename)
   }
 }

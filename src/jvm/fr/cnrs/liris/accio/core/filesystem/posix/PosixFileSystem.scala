@@ -25,19 +25,25 @@ import com.google.inject.{Inject, Singleton}
 import fr.cnrs.liris.accio.core.filesystem.FileSystem
 import fr.cnrs.liris.common.util.FileUtils
 
+/**
+ * POSIX filesystem.
+ *
+ * @param path    Root directory under which files are stored.
+ * @param symlink Whether to create symlinks when reading files (only), instead of copying them.
+ */
 @Singleton
-final class PosixFileSystem @Inject()(config: PosixFileSystemConfig) extends FileSystem {
+private[posix] final class PosixFileSystem @Inject()(@PosixPath path: Path, @PosixSymlink symlink: Boolean) extends FileSystem {
   override def write(src: Path, filename: String): String = {
     // We copy files to target path. We do *not* want to symlink them, as original files can disappear at any time.
     //TODO: prevent from going up in the hierarchy.
-    val dst = config.path.resolve(filename)
+    val dst = path.resolve(filename)
     Files.createDirectories(dst.getParent)
     FileUtils.recursiveCopy(src, dst)
     dst.toAbsolutePath.toString
   }
 
   override def read(filename: String, dst: Path): Unit = {
-    val src = config.path.resolve(filename)
+    val src = path.resolve(filename)
 
     // The source path must exist and be a directory to be usable.
     if (!src.toFile.exists()) {
@@ -46,7 +52,7 @@ final class PosixFileSystem @Inject()(config: PosixFileSystemConfig) extends Fil
 
     // If the destination already exists, it must be a symlink.
     if (dst.toFile.exists()) {
-      if (!config.symlink) {
+      if (!symlink) {
         throw new IOException(s"Destination already exists: ${dst.toAbsolutePath}")
       } else if (!Files.isSymbolicLink(dst)) {
         throw new IOException(s"Destination already exists and is not a symlink: ${dst.toAbsolutePath}")
@@ -57,7 +63,7 @@ final class PosixFileSystem @Inject()(config: PosixFileSystemConfig) extends Fil
     // Create parent directories.
     Files.createDirectories(dst.getParent)
 
-    if (config.symlink) {
+    if (symlink) {
       Files.createSymbolicLink(dst, src)
     } else {
       FileUtils.recursiveCopy(src, dst)
@@ -65,6 +71,6 @@ final class PosixFileSystem @Inject()(config: PosixFileSystemConfig) extends Fil
   }
 
   override def delete(filename: String): Unit = {
-    FileUtils.safeDelete(config.path.resolve(filename))
+    FileUtils.safeDelete(path.resolve(filename))
   }
 }
