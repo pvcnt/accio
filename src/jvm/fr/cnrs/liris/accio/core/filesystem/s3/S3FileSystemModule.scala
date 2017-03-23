@@ -29,28 +29,28 @@ import net.codingwell.scalaguice.ScalaMapBinder
  * Guice module provisioning an S3 filesystem.
  */
 object S3FileSystemModule extends TwitterModule {
-  private val enabled = flag("filesystem.s3.enabled", false, "Enable S3 filesystem")
+  private val enabledFlag = flag("filesystem.s3.enabled", false, "Enable S3 filesystem")
   private val uriFlag = flag("filesystem.s3.uri", "https://s3.amazonaws.com", "URI to S3 server")
   private val bucketFlag = flag("filesystem.s3.bucket", "accio", "Bucket name")
   private val accessKeyFlag = flag[String]("filesystem.s3.access_key", "Access key with write access")
   private val privateKeyFlag = flag[String]("filesystem.s3.private_key", "Private key with write access")
 
   def executorPassthroughFlags: Seq[Flag[_]] = {
-    if (enabled()) {
-      Seq(enabled, uriFlag, bucketFlag, accessKeyFlag, privateKeyFlag)
+    if (enabledFlag()) {
+      Seq(enabledFlag, uriFlag, bucketFlag, accessKeyFlag, privateKeyFlag)
     } else {
       Seq.empty
     }
   }
 
   override protected def configure(): Unit = {
-    if (enabled()) {
+    if (enabledFlag()) {
       val fileSystems = ScalaMapBinder.newMapBinder[String, FileSystem](binder)
       fileSystems.addBinding("s3").to[S3FileSystem]
     }
   }
 
-  @Provides @Singleton
+  @Provides
   def providesFileSystem: S3FileSystem = {
     val client = new MinioClient(uriFlag(), accessKeyFlag(), privateKeyFlag())
     new S3FileSystem(client, uriFlag(), bucketFlag())

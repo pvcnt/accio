@@ -29,15 +29,7 @@ import scala.util.control.NonFatal
  * Guice module provisioning storage-related services.
  */
 object StorageModule extends TwitterModule {
-  private[this] val storageFlag = flag("storage.type", "memory", "Storage type")
-
-  protected override def configure(): Unit = {
-    storageFlag() match {
-      case "memory" => install(MemoryStorageModule)
-      case "es" => install(ElasticStorageModule)
-      case unknown => throw new IllegalArgumentException(s"Unknown storage type: $unknown")
-    }
-  }
+  override val modules = Seq(MemoryStorageModule, ElasticStorageModule)
 
   override def singletonStartup(injector: Injector): Unit = {
     injector.instance[Storage].startAsync()

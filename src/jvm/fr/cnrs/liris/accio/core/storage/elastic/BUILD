@@ -7,7 +7,7 @@ scala_library(
     '3rdparty/jvm/com/sksamuel/elastic4s:jackson',
     '3rdparty/jvm/com/typesafe/scala-logging',
     '3rdparty/jvm:scrooge-core',
-    '3rdparty/jvm:scala-guice',
+    '3rdparty/jvm/com/twitter/inject:app',
     '3rdparty/jvm/com/twitter/finatra:jackson',
     '3rdparty/jvm/com/twitter/bijection:util',
   ],

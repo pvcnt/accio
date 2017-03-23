@@ -18,14 +18,18 @@
 
 package fr.cnrs.liris.accio.core.storage.memory
 
+import com.twitter.inject.TwitterModule
 import fr.cnrs.liris.accio.core.storage.Storage
-import net.codingwell.scalaguice.ScalaModule
 
 /**
  * Guice module provisioning in-memory storage.
  */
-object MemoryStorageModule extends ScalaModule {
+object MemoryStorageModule extends TwitterModule {
+  private[this] val enabledFlag = flag("storage.memory.enabled", false, "Enable in-memory storage")
+
   override def configure(): Unit = {
-    bind[Storage].to[MemoryStorage]
+    if (enabledFlag()) {
+      bind[Storage].to[MemoryStorage].asEagerSingleton()
+    }
   }
 }
