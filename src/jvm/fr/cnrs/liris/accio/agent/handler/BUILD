@@ -1,7 +1,7 @@
 scala_library(
   dependencies=[
     'src/jvm/fr/cnrs/liris/accio/agent/commandbus',
-    'src/jvm/fr/cnrs/liris/accio/agent/config',
+    'src/jvm/fr/cnrs/liris/accio/agent/config:annotations',
     'src/jvm/fr/cnrs/liris/accio/core/filesystem',
     'src/jvm/fr/cnrs/liris/accio/core/storage',
     'src/jvm/fr/cnrs/liris/accio/core/dsl',

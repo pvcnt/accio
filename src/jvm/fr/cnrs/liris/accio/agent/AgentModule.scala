@@ -28,9 +28,9 @@ import com.twitter.concurrent.NamedPoolThreadFactory
 import com.twitter.finagle.Thrift
 import com.twitter.finagle.service._
 import com.twitter.inject.{Injector, TwitterModule}
-import com.twitter.util.{Duration, FuturePool, Return, Throw}
+import com.twitter.util.{Duration, FuturePool}
 import fr.cnrs.liris.accio.agent.commandbus.Handler
-import fr.cnrs.liris.accio.agent.config.{AgentConfig, ClientConfig, MasterConfig, WorkerConfig}
+import fr.cnrs.liris.accio.agent.config._
 import fr.cnrs.liris.accio.agent.handler.inject.{MasterHandlerModule, WorkerHandlerModule}
 import fr.cnrs.liris.accio.core.api.Operator
 import fr.cnrs.liris.accio.core.domain._
@@ -49,9 +49,9 @@ object AgentModule extends TwitterModule {
   private[this] val bindFlag = flag("bind", "0.0.0.0", "Address on which to bound network interfaces")
   private[this] val masterAddrFlag = flag[String]("addr", "Address of the Accio master")
   private[this] val executorUriFlag = flag[String]("executor_uri", "URI to the executor JAR")
-  private[this] val javaHomeFlag = flag[String]("java_home", "Path to JRE when launching the executor")
   private[this] val workdirFlag = flag("workdir", "/var/lib/accio-agent", "Directory where to store local files")
   private[this] val clusterNameFlag = flag("cluster_name", "default", "Cluster name")
+  private[this] val agentNameFlag = flag[String]("agent_name", "Agent name")
   private[agent] val masterFlag = flag("master", false, "Whether this agent is a master")
   private[agent] val workerFlag = flag("worker", false, "Whether this agent is a worker")
 
@@ -69,50 +69,42 @@ object AgentModule extends TwitterModule {
     }
 
     // Bind remaining implementations.
-    val config = createConfig
     bind[OpMetaReader].to[ReflectOpMetaReader]
     bind[OpRegistry].to[RuntimeOpRegistry]
+
+    // Bind configuration values.
     bind[String].annotatedWith[ClusterName].toInstance(clusterNameFlag())
-    bind[Path].annotatedWith[WorkDir].toInstance(config.workDir)
-    bind[AgentConfig].toInstance(config)
+    bind[String].annotatedWith[MasterRpcDest].toInstance(if (masterFlag()) masterAddrFlag.getWithDefault.getOrElse(bindFlag() + ":9999") else masterAddrFlag())
+    // Executors are launched on the same host, without isolation, we can use directly the bind address.
+    bind[String].annotatedWith[WorkerRpcDest].toInstance(s"inet!${bindFlag()}:9999")
+    bind[String].annotatedWith[AgentName].toInstance(agentNameFlag.get.getOrElse(Try(InetAddress.getLocalHost.getHostName).getOrElse(UUID.randomUUID().toString)))
+    bind[String].annotatedWith[ExecutorUri].toInstance(executorUriFlag())
+    bind(new TypeLiteral[Seq[String]] {}).annotatedWith(classOf[ExecutorArgs]).toInstance {
+      FileSystemModule.executorPassthroughFlags.flatMap { flag =>
+        flag.getWithDefault.map(v => s"-${flag.name}=$v").toSeq
+      }
+    }
+    bind[Resource].annotatedWith[ReservedResource].toInstance(Resource(0, 0, 0))
+    bind[Path].annotatedWith[WorkDir].toInstance(Paths.get(workdirFlag()))
+    bind[Duration].annotatedWith[WorkerTimeout].toInstance(Duration.fromSeconds(60))
+    bind[Duration].annotatedWith[ExecutorTimeout].toInstance(Duration.fromSeconds(60))
   }
 
-  @Provides
-  @Singleton
-  @WorkerPool
+  @Provides @Singleton @WorkerPool
   def providesWorkerPool: FuturePool = {
     val executorService = Executors.newCachedThreadPool(new NamedPoolThreadFactory("agent/worker"))
     FuturePool.interruptible(executorService)
   }
 
-  private def createConfig: AgentConfig = {
-    val masterConfig = if (masterFlag()) {
-      Some(MasterConfig(None, 9999, clusterNameFlag()))
-    } else None
-    val workerConfig = if (workerFlag()) {
-      val executorArgs = FileSystemModule.executorPassthroughFlags.flatMap { flag =>
-        flag.getWithDefault.map(v => s"-${flag.name}=$v").toSeq
-      }
-      Some(WorkerConfig(9999, Resource(0, 0, 0), executorUriFlag(), javaHomeFlag.get, executorArgs))
-    } else None
-    val clientConfig = if (workerFlag()) {
-      val masterAddr = if (masterFlag()) masterAddrFlag.getWithDefault.getOrElse(bindFlag() + ":9999") else masterAddrFlag()
-      Some(ClientConfig(masterAddr))
-    } else None
-    val name = Try(InetAddress.getLocalHost.getHostName).getOrElse(UUID.randomUUID().toString)
-    AgentConfig(name, bindFlag(), Paths.get(workdirFlag()), clientConfig, masterConfig, workerConfig)
-  }
-
-  @Provides
-  @Singleton
-  def providesWorkerClient(config: AgentConfig): AgentService$FinagleClient = {
+  @Provides @Singleton
+  def providesMasterClient(@MasterRpcDest masterAddr: String): AgentService$FinagleClient = {
     //TODO: provide an alternative for same process communication.
     val service = Thrift.client
       .withRetryBudget(RetryBudget.Infinite)
       .withRetryBackoff(Backoff.const(Duration.fromSeconds(15)))
       .withSessionQualifier.noFailFast // Because there is likely to be only one master.
       .withResponseClassifier(AccioResponseClassifier.Default)
-      .newService(config.client.get.masterAddr)
+      .newService(masterAddr)
     new AgentService.FinagledClient(service)
   }
 

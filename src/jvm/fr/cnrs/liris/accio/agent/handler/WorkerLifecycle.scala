@@ -24,23 +24,23 @@ import com.google.inject.{Inject, Singleton}
 import com.twitter.util._
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.agent._
-import fr.cnrs.liris.accio.agent.config.AgentConfig
+import fr.cnrs.liris.accio.agent.config.{WorkerRpcDest, WorkerTimeout}
 import fr.cnrs.liris.accio.core.domain.{InvalidWorkerException, Resource}
 import fr.cnrs.liris.accio.core.util.{InfiniteLoopThreadLike, ThreadManager, WorkerPool}
 
 /**
  * Handles the registration lifecycle of a worker with its master, and the heartbeat.
  *
- * @param config Agent configuration.
  * @param state  Worker state.
  * @param client Client for the master server.
  * @param pool   Pool of threads.
  */
 @Singleton
 final class WorkerLifecycle @Inject()(
-  config: AgentConfig,
   state: WorkerState,
   client: AgentService$FinagleClient,
+  @WorkerTimeout timeout: Duration,
+  @WorkerRpcDest workerAddr: String,
   @WorkerPool pool: FuturePool)
   extends StrictLogging {
 
@@ -58,9 +58,7 @@ final class WorkerLifecycle @Inject()(
         state.totalCpu,
         state.totalRam.map(_.inMegabytes).getOrElse(0),
         state.totalDisk.map(_.inMegabytes).getOrElse(0))
-      // Executors are launched on the same host, without isolation, we can use directly the bind address.
-      val dest = s"inet!${config.bind}:${config.worker.get.rpcPort}"
-      val req = RegisterWorkerRequest(state.workerId, dest, maxResources)
+      val req = RegisterWorkerRequest(state.workerId, workerAddr, maxResources)
 
       client.registerWorker(req)
         .handle {
@@ -111,11 +109,11 @@ final class WorkerLifecycle @Inject()(
     override def singleOperation(): Unit = {
       val f = client.heartbeatWorker(HeartbeatWorkerRequest(state.workerId)).liftToTry
       Await.result(f) match {
-        case Return(_) => sleep(AgentConfig.WorkerTimeout / 2)
+        case Return(_) => sleep(timeout / 2)
         case Throw(_: InvalidWorkerException) => kill()
         case Throw(e) =>
           logger.error(s"Error while sending heartbeat", e)
-          sleep(AgentConfig.WorkerTimeout / 4)
+          sleep(timeout  / 4)
       }
     }
   }

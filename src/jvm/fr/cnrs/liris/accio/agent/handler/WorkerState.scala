@@ -22,7 +22,7 @@ import com.google.inject.{Inject, Singleton}
 import com.twitter.finagle.stats.{Gauge, StatsReceiver}
 import com.twitter.util.{StorageUnit, Time}
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.agent.config.AgentConfig
+import fr.cnrs.liris.accio.agent.config.{AgentName, ReservedResource}
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.common.util.Platform
 
@@ -33,17 +33,22 @@ import scala.collection.mutable
  * @param statsReceiver Stats receiver.
  */
 @Singleton
-class WorkerState @Inject()(config: AgentConfig, statsReceiver: StatsReceiver) extends StrictLogging {
+class WorkerState @Inject()(
+  statsReceiver: StatsReceiver,
+  @AgentName agentName: String,
+  @ReservedResource reserved: Resource)
+  extends StrictLogging {
+
   private[this] val pendingTasks = mutable.Set.empty[TaskId]
   private[this] val runningTasks = mutable.Map.empty[ExecutorId, TaskId]
   private[this] val heartbeats = mutable.Map.empty[ExecutorId, Time]
   private[this] val completedTaskCounter = statsReceiver.counter("task", "completed")
 
-  val workerId = WorkerId(config.name)
+  val workerId = WorkerId(agentName)
 
-  val totalCpu: Int = sys.runtime.availableProcessors - Math.ceil(config.worker.get.reserved.cpu).toInt
-  val totalRam: Option[StorageUnit] = Platform.totalMemory.map(ram => ram - StorageUnit.fromMegabytes(config.worker.get.reserved.ramMb))
-  val totalDisk: Option[StorageUnit] = Platform.totalDiskSpace.map(disk => disk - StorageUnit.fromMegabytes(config.worker.get.reserved.diskMb))
+  val totalCpu: Int = sys.runtime.availableProcessors - Math.ceil(reserved.cpu).toInt
+  val totalRam: Option[StorageUnit] = Platform.totalMemory.map(ram => ram - StorageUnit.fromMegabytes(reserved.ramMb))
+  val totalDisk: Option[StorageUnit] = Platform.totalDiskSpace.map(disk => disk - StorageUnit.fromMegabytes(reserved.diskMb))
 
   logger.debug(s"Detected available resources: CPU $totalCpu, RAM ${totalRam.map(_.toHuman).getOrElse("<unknown>")}, Disk ${totalDisk.map(_.toHuman).getOrElse("<unknown>")}")
 

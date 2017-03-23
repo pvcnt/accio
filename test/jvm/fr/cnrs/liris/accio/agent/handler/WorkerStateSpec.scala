@@ -18,11 +18,8 @@
 
 package fr.cnrs.liris.accio.agent.handler
 
-import java.nio.file.Paths
-
 import com.twitter.finagle.stats.NullStatsReceiver
 import com.twitter.util.{Duration, Time}
-import fr.cnrs.liris.accio.agent.config.{AgentConfig, WorkerConfig}
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.testing.UnitSpec
 
@@ -141,13 +138,5 @@ class WorkerStateSpec extends UnitSpec {
     }
   }
 
-  private def createState() = new WorkerState(
-    new AgentConfig(
-      "test-worker",
-      "0.0.0.0",
-      Paths.get("."),
-      None,
-      None,
-      Some(WorkerConfig(9999, Resource(0, 0, 0), "/dev/null", None, Seq.empty))),
-    NullStatsReceiver)
+  private def createState() = new WorkerState(NullStatsReceiver, "test-worker", Resource(0, 0, 0))
 }

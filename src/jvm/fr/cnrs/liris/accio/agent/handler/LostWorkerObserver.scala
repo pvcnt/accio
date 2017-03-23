@@ -19,10 +19,10 @@
 package fr.cnrs.liris.accio.agent.handler
 
 import com.google.inject.{Inject, Singleton}
-import com.twitter.util.Time
+import com.twitter.util.{Duration, Time}
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.agent.LostTaskRequest
-import fr.cnrs.liris.accio.agent.config.AgentConfig
+import fr.cnrs.liris.accio.agent.config.WorkerTimeout
 import fr.cnrs.liris.accio.core.scheduler.{ClusterState, WorkerInfo}
 import fr.cnrs.liris.accio.core.util.InfiniteLoopThreadLike
 
@@ -30,14 +30,14 @@ import fr.cnrs.liris.accio.core.util.InfiniteLoopThreadLike
  * Observer tracking lost tasks.
  */
 @Singleton
-final class LostWorkerObserver @Inject()(state: ClusterState, lostTaskHandler: LostTaskHandler)
+final class LostWorkerObserver @Inject()(state: ClusterState, lostTaskHandler: LostTaskHandler, @WorkerTimeout timeout: Duration)
   extends InfiniteLoopThreadLike with StrictLogging {
 
   override def singleOperation(): Unit = {
     state
-      .lostWorkers(Time.now - AgentConfig.WorkerTimeout)
+      .lostWorkers(Time.now - timeout)
       .foreach(handleLostWorker)
-    sleep(AgentConfig.WorkerTimeout)
+    sleep(timeout)
   }
 
 

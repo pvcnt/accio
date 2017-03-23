@@ -24,8 +24,7 @@ import com.google.common.io.ByteStreams
 import com.google.inject.{Inject, Singleton}
 import com.twitter.util._
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.agent._
-import fr.cnrs.liris.accio.agent.config.AgentConfig
+import fr.cnrs.liris.accio.agent.config.{ExecutorArgs, ExecutorUri, MasterRpcDest}
 import fr.cnrs.liris.accio.core.domain.{InvalidTaskException, Task, TaskId}
 import fr.cnrs.liris.accio.core.filesystem.FileSystem
 import fr.cnrs.liris.accio.core.util.{ThreadLike, ThreadManager, WorkDir, WorkerPool}
@@ -34,17 +33,19 @@ import fr.cnrs.liris.common.util.FileUtils
 import scala.collection.mutable
 
 /**
- * @param filesystem Distributed filesystem.
- * @param config     Agent configuration.
- * @param client     Master server client.
- * @param workDir    Working directory.
- * @param pool       Pool of threads.
+ * @param filesystem   Distributed filesystem.
+ * @param masterAddr   Master server address (as a Finagle name).
+ * @param executorUri  URI where to fetch the executor JAR.
+ * @param executorArgs Arguments to pass to the executor.
+ * @param workDir      Working directory.
+ * @param pool         Pool of threads.
  */
 @Singleton
 final class ExecutorTaskExecutor @Inject()(
   filesystem: FileSystem,
-  config: AgentConfig,
-  client: AgentService$FinagleClient,
+  @MasterRpcDest masterAddr: String,
+  @ExecutorUri executorUri: String,
+  @ExecutorArgs executorArgs: Seq[String],
   @WorkDir workDir: Path,
   @WorkerPool pool: FuturePool) extends StrictLogging {
 
@@ -162,8 +163,8 @@ final class ExecutorTaskExecutor @Inject()(
   }
 
   private def createCommandLine(task: Task): Seq[String] = {
-    val args = config.worker.get.executorArgs ++ Seq("-addr", config.client.get.masterAddr)
-    val javaBinary = config.worker.get.javaHome.orElse(sys.env.get("JAVA_HOME")).map(home => s"$home/bin/java").getOrElse("/usr/bin/java")
+    val args = executorArgs ++ Seq("-addr", masterAddr)
+    val javaBinary = sys.env.get("JAVA_HOME").map(home => s"$home/bin/java").getOrElse("/usr/bin/java")
     val cmd = mutable.ListBuffer.empty[String]
     cmd += javaBinary
     cmd ++= Seq("-cp", localExecutorPath.toString)
@@ -185,11 +186,11 @@ final class ExecutorTaskExecutor @Inject()(
       targetPath.toFile.delete()
     }
     logger.info(s"Downloading executor JAR to ${targetPath.toAbsolutePath}")
-    filesystem.read(config.worker.get.executorUri, targetPath)
+    filesystem.read(executorUri, targetPath)
     targetPath.toAbsolutePath
   }
 
-  private def dataDir = config.workDir.resolve("executor")
+  private def dataDir = workDir.resolve("executor")
 }
 
 private object TaskExecutor {

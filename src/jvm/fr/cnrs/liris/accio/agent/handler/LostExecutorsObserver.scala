@@ -19,9 +19,9 @@
 package fr.cnrs.liris.accio.agent.handler
 
 import com.google.inject.{Inject, Singleton}
-import com.twitter.util.{Await, Future, Time}
+import com.twitter.util.{Await, Duration, Future, Time}
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.agent.config.AgentConfig
+import fr.cnrs.liris.accio.agent.config.ExecutorTimeout
 import fr.cnrs.liris.accio.agent.{AgentService$FinagleClient, LostTaskRequest}
 import fr.cnrs.liris.accio.core.domain.{ExecutorId, TaskId}
 import fr.cnrs.liris.accio.core.util.InfiniteLoopThreadLike
@@ -33,15 +33,15 @@ import fr.cnrs.liris.accio.core.util.InfiniteLoopThreadLike
  * @param client Client for the master server.
  */
 @Singleton
-final class LostExecutorsObserver @Inject()(client: AgentService$FinagleClient, state: WorkerState)
+final class LostExecutorsObserver @Inject()(client: AgentService$FinagleClient, state: WorkerState, @ExecutorTimeout timeout: Duration)
   extends InfiniteLoopThreadLike with StrictLogging {
 
   override def singleOperation(): Unit = {
     val fs = state
-      .lostExecutors(Time.now - AgentConfig.ExecutorTimeout)
+      .lostExecutors(Time.now - timeout)
       .map { case (executorId, taskId) => handleLostExecutor(executorId, taskId) }
     Await.ready(Future.collect(fs.toSeq))
-    sleep(AgentConfig.ExecutorTimeout)
+    sleep(timeout)
   }
 
   private def handleLostExecutor(executorId: ExecutorId, taskId: TaskId): Future[Unit] = {
