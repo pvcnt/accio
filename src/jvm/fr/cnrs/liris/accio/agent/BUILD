@@ -1,7 +1,7 @@
 scala_library(
   dependencies=[
     'src/jvm/fr/cnrs/liris/accio/agent/commandbus',
-    'src/jvm/fr/cnrs/liris/accio/agent/handler/inject',
+    'src/jvm/fr/cnrs/liris/accio/agent/handler',
     'src/jvm/fr/cnrs/liris/accio/core/filesystem/inject',
     'src/jvm/fr/cnrs/liris/accio/core/storage/inject',
     'src/jvm/fr/cnrs/liris/accio/core/scheduler/inject',

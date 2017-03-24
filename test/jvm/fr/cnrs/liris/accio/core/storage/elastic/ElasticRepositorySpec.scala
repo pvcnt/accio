@@ -35,7 +35,7 @@ import org.scalatest.{BeforeAndAfterAll, Suite}
  * [[com.sksamuel.elastic4s.testkit.ElasticSugar]], except that we include the [[ReindexPlugin]] that is
  * desperately needed for the delete-by-query and update-by-query actions.
  */
-private[elastic] trait ElasticStorageSpec extends AbstractElasticSugar with LocalNodeProvider with BeforeAndAfterAll {
+private[elastic] trait ElasticRepositorySpec extends AbstractElasticSugar with LocalNodeProvider with BeforeAndAfterAll {
   this: Suite =>
 
   final override def getNode: LocalNode = {

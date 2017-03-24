@@ -26,7 +26,7 @@ import fr.cnrs.liris.accio.core.storage.{MutableWorkflowRepository, WorkflowRepo
 /**
  * Unit tests of [[ElasticWorkflowRepository]].
  */
-class ElasticWorkflowRepositorySpec extends WorkflowRepositorySpec with ElasticStorageSpec {
+class ElasticWorkflowRepositorySpec extends WorkflowRepositorySpec with ElasticRepositorySpec {
   behavior of "ElasticWorkflowRepository"
 
   private[this] val i = new AtomicInteger

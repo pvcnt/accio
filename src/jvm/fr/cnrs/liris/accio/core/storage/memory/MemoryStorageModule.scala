@@ -25,11 +25,8 @@ import fr.cnrs.liris.accio.core.storage.Storage
  * Guice module provisioning in-memory storage.
  */
 object MemoryStorageModule extends TwitterModule {
-  private[this] val enabledFlag = flag("storage.memory.enabled", false, "Enable in-memory storage")
-
   override def configure(): Unit = {
-    if (enabledFlag()) {
-      bind[Storage].to[MemoryStorage].asEagerSingleton()
-    }
+    println("using memory storage module")
+    bind[Storage].to[MemoryStorage].asEagerSingleton()
   }
 }

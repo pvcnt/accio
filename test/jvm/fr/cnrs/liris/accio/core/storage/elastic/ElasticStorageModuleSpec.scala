@@ -16,27 +16,20 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.agent
+package fr.cnrs.liris.accio.core.storage.elastic
 
-import com.twitter.finatra.thrift.ThriftServer
-import com.twitter.finatra.thrift.filters._
-import com.twitter.finatra.thrift.routing.ThriftRouter
-import fr.cnrs.liris.accio.runtime.logging.LogbackConfigurator
+import com.google.inject.Guice
+import fr.cnrs.liris.accio.core.storage.Storage
+import fr.cnrs.liris.testing.UnitSpec
 
-object AgentServerMain extends AgentServer
+/**
+ * Unit tests of [[ElasticStorageModule]].
+ */
+class ElasticStorageModuleSpec extends UnitSpec {
+  behavior of "ElasticStorageModule"
 
-class AgentServer extends ThriftServer with LogbackConfigurator {
-  override def failfastOnFlagsNotParsed = true
-
-  override def modules = Seq(AgentModule)
-
-  override def configureThrift(router: ThriftRouter): Unit = {
-    router
-      .filter[LoggingMDCFilter]
-      .filter[TraceIdMDCFilter]
-      .filter[ThriftMDCFilter]
-      .filter[AccessLoggingFilter]
-      .filter[StatsFilter]
-      .add[AgentController]
+  it should "provide a storage" in {
+    val injector = Guice.createInjector(ElasticStorageModule)
+    injector.getInstance(classOf[Storage]) shouldBe a[Storage]
   }
 }

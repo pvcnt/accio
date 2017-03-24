@@ -16,22 +16,20 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.agent.handler.inject
+package fr.cnrs.liris.accio.core.storage.memory
 
-import com.google.inject.TypeLiteral
-import fr.cnrs.liris.accio.agent.commandbus.Handler
-import fr.cnrs.liris.accio.agent.handler._
-import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
+import com.google.inject.Guice
+import fr.cnrs.liris.accio.core.storage.Storage
+import fr.cnrs.liris.testing.UnitSpec
 
-object WorkerHandlerModule extends ScalaModule {
-  protected override def configure(): Unit = {
-    // Bind command handlers.
-    val handlers = ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Handler[_, _]] {})
-    handlers.addBinding.to[AssignTaskHandler]
-    handlers.addBinding.to[HeartbeatExecutorHandler]
-    handlers.addBinding.to[KillTaskHandler]
-    handlers.addBinding.to[StartExecutorHandler]
-    handlers.addBinding.to[StopExecutorHandler]
-    handlers.addBinding.to[StreamExecutorLogsHandler]
+/**
+ * Unit tests of [[MemoryStorageModule]].
+ */
+class MemoryStorageModuleSpec extends UnitSpec {
+  behavior of "MemoryStorageModule"
+
+  it should "provide a storage" in {
+    val injector = Guice.createInjector(MemoryStorageModule)
+    injector.getInstance(classOf[Storage]) shouldBe a[Storage]
   }
 }

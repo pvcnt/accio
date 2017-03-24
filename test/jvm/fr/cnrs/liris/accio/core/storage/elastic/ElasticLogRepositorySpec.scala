@@ -26,7 +26,7 @@ import fr.cnrs.liris.accio.core.storage.{LogRepositorySpec, MutableLogRepository
 /**
  * Unit tests of [[ElasticLogRepository]].
  */
-class ElasticLogRepositorySpec extends LogRepositorySpec with ElasticStorageSpec {
+class ElasticLogRepositorySpec extends LogRepositorySpec with ElasticRepositorySpec {
   behavior of "ElasticLogRepository"
 
   private[this] val i = new AtomicInteger

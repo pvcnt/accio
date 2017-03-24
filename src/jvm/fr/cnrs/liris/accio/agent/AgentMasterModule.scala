@@ -16,16 +16,27 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.agent.handler.inject
+package fr.cnrs.liris.accio.agent
 
 import com.google.inject.TypeLiteral
+import com.twitter.inject.{Injector, TwitterModule}
+import com.twitter.util.FuturePool
 import fr.cnrs.liris.accio.agent.commandbus.Handler
-import fr.cnrs.liris.accio.agent.handler.api._
 import fr.cnrs.liris.accio.agent.handler._
-import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
+import fr.cnrs.liris.accio.agent.handler.api._
+import fr.cnrs.liris.accio.core.dsl.inject.DslModule
+import fr.cnrs.liris.accio.core.scheduler.inject.SchedulerModule
+import fr.cnrs.liris.accio.core.storage.inject.StorageModule
+import fr.cnrs.liris.privamov.ops.OpsModule
+import net.codingwell.scalaguice.ScalaMultibinder
 
-object MasterHandlerModule extends ScalaModule {
-  protected override def configure(): Unit = {
+/**
+ * Guice module provisioning services for the Accio agent.
+ */
+object AgentMasterModule extends TwitterModule {
+  override def modules = Seq(SchedulerModule, StorageModule, DslModule, OpsModule)
+
+  override def configure(): Unit = {
     // Bind command handlers.
     val handlers = ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Handler[_, _]] {})
     handlers.addBinding.to[CreateRunHandler]
@@ -52,5 +63,14 @@ object MasterHandlerModule extends ScalaModule {
     handlers.addBinding.to[StartTaskHandler]
     handlers.addBinding.to[StreamTaskLogsHandler]
     handlers.addBinding.to[UnregisterWorkerHandler]
+  }
+
+  override def singletonStartup(injector: Injector): Unit = {
+    val observer = injector.instance[LostWorkerObserver]
+    FuturePool.unboundedPool(observer.run())
+  }
+
+  override def singletonShutdown(injector: Injector): Unit = {
+    injector.instance[LostWorkerObserver].kill()
   }
 }
