@@ -36,10 +36,7 @@ import fr.cnrs.liris.accio.core.storage.Storage
  * @param runManager Run lifecycle manager.
  * @param state      Cluster state.
  */
-class StartTaskHandler @Inject()(
-  storage: Storage,
-  runManager: RunManager,
-  state: ClusterState)
+class StartTaskHandler @Inject()(storage: Storage, runManager: RunManager, state: ClusterState)
   extends AbstractHandler[StartTaskRequest, StartTaskResponse] with LazyLogging {
 
   @throws[InvalidTaskException]

@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.core.storage.elastic
 
-import com.google.inject.Singleton
+import com.google.inject.{Inject, Singleton}
 import com.sksamuel.elastic4s.ElasticDsl._
 import com.sksamuel.elastic4s.analyzers.KeywordAnalyzer
 import com.sksamuel.elastic4s.get.RichGetResponse
@@ -52,7 +52,7 @@ import scala.util.control.NonFatal
  * @param timeout Query timeout.
  */
 @Singleton
-private[elastic] final class ElasticRunRepository(
+private[elastic] final class ElasticRunRepository @Inject() (
   mapper: FinatraObjectMapper,
   client: ElasticClient,
   @ElasticPrefix prefix: String,

@@ -42,6 +42,7 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
   private[this] var executor: OpExecutor = null
 
   override protected def beforeAll(): Unit = {
+    super.beforeAll()
     tmpDir = Files.createTempDirectory("accio-test-")
     val injector = Guice.createInjector(MyOperatorsModule)
     val opRegistry = injector.getInstance(classOf[RuntimeOpRegistry])
@@ -51,12 +52,14 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
   }
 
   override protected def afterAll(): Unit = {
+    super.afterAll()
     FileUtils.safeDelete(tmpDir)
     tmpDir = null
     executor = null
   }
 
   override protected def beforeEach(): Unit = {
+    super.beforeEach()
     filesystem.clear()
   }
 
