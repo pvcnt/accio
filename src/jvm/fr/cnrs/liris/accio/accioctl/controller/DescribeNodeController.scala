@@ -64,7 +64,6 @@ class DescribeNodeController extends DescribeController[NodeState] with FormatHe
     node.result.foreach { result =>
       out.outErr.printOutLn(s"${padTo("Exit code", colWidth)} ${result.exitCode}")
       result.error.foreach { error =>
-        out.outErr.printOutLn()
         out.outErr.printOutLn(s"${padTo("Error class", colWidth)} <error>${error.root.classifier}</error>")
         out.outErr.printOutLn(s"<error>${padTo("Error message", colWidth)} <error>${error.root.message}</error>")
         out.outErr.printOutLn(s"${padTo("Error stack", colWidth)} " +
@@ -72,7 +71,6 @@ class DescribeNodeController extends DescribeController[NodeState] with FormatHe
           error.root.stacktrace.tail.map(s => (" " * (colWidth + 1)) + s).mkString("\n"))
       }
       if (result.artifacts.nonEmpty) {
-        out.outErr.printOutLn()
         out.outErr.printOutLn("Artifacts")
         out.outErr.printOutLn(s"  ${padTo("Name", 25)}  Value (preview)")
         result.artifacts.foreach { artifact =>
@@ -80,8 +78,7 @@ class DescribeNodeController extends DescribeController[NodeState] with FormatHe
         }
       }
       if (result.metrics.nonEmpty) {
-        out.outErr.printOutLn()
-        out.outErr.printOutLn("Metrics")
+         out.outErr.printOutLn("Metrics")
         out.outErr.printOutLn(s"  ${padTo("Name", 25)}  Value")
         result.metrics.foreach { metric =>
           out.outErr.printOutLn(s"  ${padTo(metric.name, 25)}  ${metric.value}")

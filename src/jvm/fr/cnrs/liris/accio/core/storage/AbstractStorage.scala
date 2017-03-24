@@ -30,7 +30,7 @@ private[storage] trait AbstractStorage extends AbstractIdleService with Storage 
 
   override final def read[T](fn: RepositoryProvider => T): T = {
     enforceRunning()
-    lock.readLock.lock()
+    //lock.readLock.lock()
     //try {
     fn(new RepositoryProvider {
       override def logs: LogRepository = logRepository

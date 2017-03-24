@@ -18,15 +18,12 @@
 
 package fr.cnrs.liris.accio.accioctl.controller
 
-import java.util.{Date, Locale}
-
 import com.twitter.util.{Duration, Future, Time}
 import fr.cnrs.liris.accio.agent.{AgentService$FinagleClient, GetRunRequest, ListRunsRequest}
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.runtime.event.Reporter
 import fr.cnrs.liris.common.util.StringUtils.padTo
 import fr.cnrs.liris.dal.core.api.Values
-import org.ocpsoft.prettytime.PrettyTime
 
 class DescribeRunController extends DescribeController[(Run, Seq[Run])] with FormatHelper {
   private[this] val colWidth = 15
@@ -76,7 +73,6 @@ class DescribeRunController extends DescribeController[(Run, Seq[Run])] with For
     }
 
     if (run.params.nonEmpty) {
-      out.outErr.printOutLn()
       out.outErr.printOutLn("Parameters")
       val maxLength = run.params.keySet.map(_.length).max
       run.params.foreach { case (name, value) =>
@@ -100,11 +96,10 @@ class DescribeRunController extends DescribeController[(Run, Seq[Run])] with For
       }
     } else {
       out.outErr.printOutLn("Child Runs")
-      val prettyTime = new PrettyTime().setLocale(Locale.ENGLISH)
       out.outErr.printOutLn(s"  ${padTo("ID", 32)}  ${padTo("CREATED", 15)}  ${padTo("NAME", 15)}  STATUS")
       children.foreach { run =>
         val name = run.name.getOrElse("<no name>")
-        out.outErr.printOutLn(s"  ${run.id.value}  ${padTo(prettyTime.format(new Date(run.createdAt)), 15)}  ${padTo(name, 15)}  ${run.state.status.name}")
+        out.outErr.printOutLn(s"  ${run.id.value}  ${padTo(format(Time.fromMilliseconds(run.createdAt)), 15)}  ${padTo(name, 15)}  ${run.state.status.name}")
       }
     }
   }
