@@ -121,6 +121,75 @@ class ValueValidatorSpec extends UnitSpec {
       ArgDef("foo", DataType(AtomicType.Double), constraint = Some(ArgConstraint(minValue = Some(10), minInclusive = Some(true), maxValue = Some(50), maxInclusive = Some(true)))))
   }
 
+  it should "validate strings" in {
+    assertValid(
+      Values.encodeString("string"),
+      ArgDef("foo", DataType(AtomicType.String)))
+    assertValid(
+      Values.encodeString("string"),
+      ArgDef("foo", DataType(AtomicType.String), constraint = Some(ArgConstraint(allowedValues = Some(Set("str", "string"))))))
+  }
+
+  it should "validate collections of strings" in {
+    // Lists.
+    assertValid(
+      Values.encodeList(Seq("string", "str"), AtomicType.String),
+      ArgDef("foo", DataType(AtomicType.List, Seq(AtomicType.String))))
+    assertValid(
+      Values.encodeList(Seq("string", "str"), AtomicType.String),
+      ArgDef("foo", DataType(AtomicType.List, Seq(AtomicType.String)), constraint = Some(ArgConstraint(allowedValues = Some(Set("str", "string"))))))
+
+    // Sets.
+    assertValid(
+      Values.encodeSet(Set("string", "str"), AtomicType.String),
+      ArgDef("foo", DataType(AtomicType.Set, Seq(AtomicType.String))))
+    assertValid(
+      Values.encodeSet(Set("string", "str"), AtomicType.String),
+      ArgDef("foo", DataType(AtomicType.Set, Seq(AtomicType.String)), constraint = Some(ArgConstraint(allowedValues = Some(Set("str", "string"))))))
+  }
+
+  it should "validate collections" in {
+    // Lists.
+    assertValid(
+      Values.encodeList(Seq(1, 2, 3), AtomicType.Integer),
+      ArgDef("foo", DataType(AtomicType.List, Seq(AtomicType.Integer))))
+    assertValid(
+      Values.encodeList(Seq(1, 2, 3), AtomicType.Integer),
+      ArgDef("foo", DataType(AtomicType.List, Seq(AtomicType.Integer)), constraint = Some(ArgConstraint(minValue = Some(2), minInclusive = Some(true)))))
+    assertValid(
+      Values.encodeList(Seq(1, 2, 3), AtomicType.Integer),
+      ArgDef("foo", DataType(AtomicType.List, Seq(AtomicType.Integer)), constraint = Some(ArgConstraint(minValue = Some(3), minInclusive = Some(true)))))
+    assertValid(
+      Values.encodeList(Seq(1, 2, 3), AtomicType.Integer),
+      ArgDef("foo", DataType(AtomicType.List, Seq(AtomicType.Integer)), constraint = Some(ArgConstraint(maxValue = Some(5), maxInclusive = Some(true)))))
+    assertValid(
+      Values.encodeList(Seq(1, 2, 3), AtomicType.Integer),
+      ArgDef("foo", DataType(AtomicType.List, Seq(AtomicType.Integer)), constraint = Some(ArgConstraint(maxValue = Some(3), maxInclusive = Some(true)))))
+    assertValid(
+      Values.encodeList(Seq(1, 2, 3), AtomicType.Integer),
+      ArgDef("foo", DataType(AtomicType.List, Seq(AtomicType.Integer)), constraint = Some(ArgConstraint(minValue = Some(2), minInclusive = Some(true), maxValue = Some(5), maxInclusive = Some(true)))))
+
+    // Sets.
+    assertValid(
+      Values.encodeSet(Set(1, 2, 3), AtomicType.Integer),
+      ArgDef("foo", DataType(AtomicType.Set, Seq(AtomicType.Integer))))
+    assertValid(
+      Values.encodeSet(Set(1, 2, 3), AtomicType.Integer),
+      ArgDef("foo", DataType(AtomicType.Set, Seq(AtomicType.Integer)), constraint = Some(ArgConstraint(minValue = Some(2), minInclusive = Some(true)))))
+    assertValid(
+      Values.encodeSet(Set(1, 2, 3), AtomicType.Integer),
+      ArgDef("foo", DataType(AtomicType.Set, Seq(AtomicType.Integer)), constraint = Some(ArgConstraint(minValue = Some(3), minInclusive = Some(true)))))
+    assertValid(
+      Values.encodeSet(Set(1, 2, 3), AtomicType.Integer),
+      ArgDef("foo", DataType(AtomicType.Set, Seq(AtomicType.Integer)), constraint = Some(ArgConstraint(maxValue = Some(5), maxInclusive = Some(true)))))
+    assertValid(
+      Values.encodeSet(Set(1, 2, 3), AtomicType.Integer),
+      ArgDef("foo", DataType(AtomicType.Set, Seq(AtomicType.Integer)), constraint = Some(ArgConstraint(maxValue = Some(3), maxInclusive = Some(true)))))
+    assertValid(
+      Values.encodeSet(Set(1, 2, 3), AtomicType.Integer),
+      ArgDef("foo", DataType(AtomicType.Set, Seq(AtomicType.Integer)), constraint = Some(ArgConstraint(minValue = Some(2), minInclusive = Some(true), maxValue = Some(5), maxInclusive = Some(true)))))
+  }
+
   it should "detect invalid integers" in {
     assertMessage(
       Values.encodeInteger(5),
@@ -227,6 +296,81 @@ class ValueValidatorSpec extends UnitSpec {
       Values.encodeDouble(50),
       ArgDef("foo", DataType(AtomicType.Double), constraint = Some(ArgConstraint(minValue = Some(10), minInclusive = Some(true), maxValue = Some(42), maxInclusive = Some(true)))),
       "Value must be <= 42.0")
+  }
+
+  it should "detect invalid strings" in {
+    assertMessage(
+      Values.encodeString("bar"),
+      ArgDef("foo", DataType(AtomicType.String), constraint = Some(ArgConstraint(allowedValues = Some(Set("str", "string"))))),
+      "Value must be one of {str,string}")
+  }
+
+  it should "detect invalid collections of strings" in {
+    // Lists.
+    assertMessage(
+      Values.encodeList(Seq("string", "bar"), AtomicType.String),
+      ArgDef("foo", DataType(AtomicType.List, Seq(AtomicType.String)), constraint = Some(ArgConstraint(allowedValues = Some(Set("str", "string"))))),
+      "Value must be one of {str,string}")
+
+    // Sets.
+    assertMessage(
+      Values.encodeSet(Set("string", "bar"), AtomicType.String),
+      ArgDef("foo", DataType(AtomicType.Set, Seq(AtomicType.String)), constraint = Some(ArgConstraint(allowedValues = Some(Set("str", "string"))))),
+      "Value must be one of {str,string}")
+  }
+
+  it should "detect invalid collections" in {
+    // Lists.
+    assertMessage(
+      Values.encodeList(Seq(1, 2, 3), AtomicType.Integer),
+      ArgDef("foo", DataType(AtomicType.List, Seq(AtomicType.Integer)), constraint = Some(ArgConstraint(minValue = Some(4), minInclusive = Some(true)))),
+      "Value must be >= 4.0")
+    assertMessage(
+      Values.encodeList(Seq(1, 2, 3), AtomicType.Integer),
+      ArgDef("foo", DataType(AtomicType.List, Seq(AtomicType.Integer)), constraint = Some(ArgConstraint(minValue = Some(3), minInclusive = Some(false)))),
+      "Value must be > 3.0")
+    assertMessage(
+      Values.encodeList(Seq(1, 2, 3), AtomicType.Integer),
+      ArgDef("foo", DataType(AtomicType.List, Seq(AtomicType.Integer)), constraint = Some(ArgConstraint(maxValue = Some(2), maxInclusive = Some(true)))),
+      "Value must be <= 2.0")
+    assertMessage(
+      Values.encodeList(Seq(1, 2, 3), AtomicType.Integer),
+      ArgDef("foo", DataType(AtomicType.List, Seq(AtomicType.Integer)), constraint = Some(ArgConstraint(maxValue = Some(3), maxInclusive = Some(false)))),
+      "Value must be < 3.0")
+    assertMessage(
+      Values.encodeList(Seq(1, 2), AtomicType.Integer),
+      ArgDef("foo", DataType(AtomicType.List, Seq(AtomicType.Integer)), constraint = Some(ArgConstraint(minValue = Some(3), minInclusive = Some(true), maxValue = Some(4), maxInclusive = Some(true)))),
+      "Value must be >= 3.0")
+    assertMessage(
+      Values.encodeList(Seq(1, 2, 3, 4, 5), AtomicType.Integer),
+      ArgDef("foo", DataType(AtomicType.List, Seq(AtomicType.Integer)), constraint = Some(ArgConstraint(minValue = Some(3), minInclusive = Some(true), maxValue = Some(4), maxInclusive = Some(true)))),
+      "Value must be <= 4.0")
+
+    // Sets.
+    assertMessage(
+      Values.encodeSet(Set(1, 2, 3), AtomicType.Integer),
+      ArgDef("foo", DataType(AtomicType.Set, Seq(AtomicType.Integer)), constraint = Some(ArgConstraint(minValue = Some(4), minInclusive = Some(true)))),
+      "Value must be >= 4.0")
+    assertMessage(
+      Values.encodeSet(Set(1, 2, 3), AtomicType.Integer),
+      ArgDef("foo", DataType(AtomicType.Set, Seq(AtomicType.Integer)), constraint = Some(ArgConstraint(minValue = Some(3), minInclusive = Some(false)))),
+      "Value must be > 3.0")
+    assertMessage(
+      Values.encodeSet(Set(1, 2, 3), AtomicType.Integer),
+      ArgDef("foo", DataType(AtomicType.Set, Seq(AtomicType.Integer)), constraint = Some(ArgConstraint(maxValue = Some(2), maxInclusive = Some(true)))),
+      "Value must be <= 2.0")
+    assertMessage(
+      Values.encodeSet(Set(1, 2, 3), AtomicType.Integer),
+      ArgDef("foo", DataType(AtomicType.Set, Seq(AtomicType.Integer)), constraint = Some(ArgConstraint(maxValue = Some(3), maxInclusive = Some(false)))),
+      "Value must be < 3.0")
+    assertMessage(
+      Values.encodeSet(Set(1, 2), AtomicType.Integer),
+      ArgDef("foo", DataType(AtomicType.Set, Seq(AtomicType.Integer)), constraint = Some(ArgConstraint(minValue = Some(3), minInclusive = Some(true), maxValue = Some(4), maxInclusive = Some(true)))),
+      "Value must be >= 3.0")
+    assertMessage(
+      Values.encodeSet(Set(1, 2, 3, 4, 5), AtomicType.Integer),
+      ArgDef("foo", DataType(AtomicType.Set, Seq(AtomicType.Integer)), constraint = Some(ArgConstraint(minValue = Some(3), minInclusive = Some(true), maxValue = Some(4), maxInclusive = Some(true)))),
+      "Value must be <= 4.0")
   }
 
   private def assertMessage(value: Value, argDef: ArgDef, messages: String*) = {

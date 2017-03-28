@@ -167,7 +167,7 @@ final class ReflectOpMetaReader @Inject()(valueValidator: ValueValidator) extend
         case DataType(AtomicType.String, _) => oneOf.value.toSet
         case DataType(AtomicType.Set, Seq(AtomicType.String)) => oneOf.value.toSet
         case DataType(AtomicType.List, Seq(AtomicType.String)) => oneOf.value.toSet
-        case _ => throw new IllegalArgumentException(s"Input ${field.name} of type ${DataTypes.toString(kind)} cannot have a @Max constraint")
+        case _ => throw new IllegalArgumentException(s"Input ${field.name} of type ${DataTypes.toString(kind)} cannot have a @OneOf constraint")
       }
     }
     if (minValue.isDefined || maxValue.isDefined || allowedValues.isDefined) {
