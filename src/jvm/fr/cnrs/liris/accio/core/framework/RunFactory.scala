@@ -32,9 +32,10 @@ import scala.util.Random
 /**
  * Factory for [[Run]].
  *
- * @param storage Storage.
+ * @param storage        Storage.
+ * @param valueValidator Value validator.
  */
-final class RunFactory @Inject()(storage: Storage) extends BaseFactory {
+final class RunFactory @Inject()(storage: Storage, valueValidator: ValueValidator) extends BaseFactory {
   /**
    * Create one or several runs from a run specification.
    *
@@ -79,6 +80,12 @@ final class RunFactory @Inject()(storage: Storage) extends BaseFactory {
 
     // Expand parameters w.r.t. to parameter sweep and repeat.
     val expandedParams = expandForSweep(spec.params.toMap).flatMap(expandForRepeat(repeat, _))
+    val errors = expandedParams.flatten.flatMap { case (name, value) =>
+      valueValidator.validate(value, workflow.params.find(_.name == name).get, Some(s"params.$name"))
+    }
+    if (errors.nonEmpty) {
+      throw new InvalidSpecException(errors)
+    }
 
     // Create all runs.
     val owner = spec.owner.getOrElse(user)

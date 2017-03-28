@@ -19,7 +19,7 @@
 package fr.cnrs.liris.accio.core.dsl
 
 import fr.cnrs.liris.accio.core.domain._
-import fr.cnrs.liris.accio.core.framework.RunFactory
+import fr.cnrs.liris.accio.core.framework.{RunFactory, ValueValidator}
 import fr.cnrs.liris.accio.core.storage.memory.{MemoryLogRepository, MemoryRunRepository, MemoryStorage, MemoryWorkflowRepository}
 import fr.cnrs.liris.dal.core.api.Values
 import fr.cnrs.liris.testing.UnitSpec
@@ -51,7 +51,7 @@ class RunParserSpec extends UnitSpec {
     val mapper = new ObjectMapperFactory().create()
     val storage = new MemoryStorage(new MemoryRunRepository, new MemoryLogRepository, new MemoryWorkflowRepository)
     storage.write(_.workflows.save(myWorkflow))
-    new RunParser(mapper, storage, new RunFactory(storage))
+    new RunParser(mapper, storage, new RunFactory(storage, new ValueValidator))
   }
 
   it should "parse a minimal run definition" in {

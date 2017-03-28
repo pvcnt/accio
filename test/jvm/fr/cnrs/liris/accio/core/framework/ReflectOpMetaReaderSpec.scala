@@ -29,7 +29,7 @@ import org.joda.time.{Duration, Instant}
  * Unit tests for [[ReflectOpMetaReader]].
  */
 class ReflectOperatorMetaReaderSpec extends UnitSpec {
-  private val reader = new ReflectOpMetaReader
+  private val reader = new ReflectOpMetaReader(new ValueValidator)
 
   behavior of "ReflectOpMetaReader"
 
@@ -210,6 +210,15 @@ class ReflectOperatorMetaReaderSpec extends UnitSpec {
     expected.getMessage should endWith(": Input i cannot be optional with a default value")
   }
 
+  it should "detect an input with invalid default value" in {
+    // We only check a specific case here, to verify this is actually validated.
+    // We otherwise rely on ValueValidatorSpec to test all edge cases.
+    val expected = intercept[InvalidOpException] {
+      reader.read(classOf[InvalidDefaultValueValueOp])
+    }
+    expected.getMessage should endWith(": Invalid default value: Value must be >= 5.0")
+  }
+
   private def assertMandatoryInput(defn: OpDef, name: String, kind: DataType): Unit =
     doAssertInput(defn, name, kind, optional = false, None)
 
@@ -338,6 +347,13 @@ private class NonAnnotatedOutOp extends Operator[Unit, NonAnnotatedOut] {
 }
 
 private case class OptionalWithDefaultValueIn(@Arg i: Option[Int] = Some(2))
+
+@Op
+private class InvalidDefaultValueValueOp extends Operator[InvalidDefaultValueValueIn, Unit] {
+  override def execute(in: InvalidDefaultValueValueIn, ctx: OpContext): Unit = {}
+}
+
+case class InvalidDefaultValueValueIn(@Arg @Min(5) i: Int = 2)
 
 @Op
 private class OptionalWithDefaultValueOp extends Operator[OptionalWithDefaultValueIn, Unit] {
