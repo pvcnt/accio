@@ -37,7 +37,7 @@ class ListWorkflowsHandler @Inject()(storage: Storage)
       name = req.name,
       owner = req.owner,
       q = req.q,
-      limit = req.limit.getOrElse(25),
+      limit = req.limit,
       offset = req.offset)
     val res = storage.read(_.workflows.find(query))
     Future(ListWorkflowsResponse(res.results, res.totalCount))

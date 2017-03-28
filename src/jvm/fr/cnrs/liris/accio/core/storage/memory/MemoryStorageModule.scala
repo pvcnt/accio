@@ -26,7 +26,6 @@ import fr.cnrs.liris.accio.core.storage.Storage
  */
 object MemoryStorageModule extends TwitterModule {
   override def configure(): Unit = {
-    println("using memory storage module")
     bind[Storage].to[MemoryStorage].asEagerSingleton()
   }
 }

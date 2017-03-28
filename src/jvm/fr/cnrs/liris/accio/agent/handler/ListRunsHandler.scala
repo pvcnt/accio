@@ -38,6 +38,7 @@ class ListRunsHandler @Inject()(storage: Storage) extends AbstractHandler[ListRu
       status = req.status.toSet.flatten,
       parent = req.parent,
       clonedFrom = req.clonedFrom,
+      tags = req.tags.toSet.flatten,
       q = req.q,
       limit = req.limit,
       offset = req.offset)
