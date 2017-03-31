@@ -4,9 +4,8 @@ weight: 10
 title: Implementing an operator
 ---
 
-Operators are the basic building block of workflows.
-Accio comes with some built-in operators, but you may need to implement new ones.
-Opeators need to be implemented directly in [Scala](http://www.scala-lang.org), though this may evolve in the future.
+This page provides a guide to implement a custom operator, step by step.
+More advanced topics are covered in other pages of this section.
 
 * TOC
 {:toc}
@@ -23,7 +22,7 @@ The following Accio-related dependencies must be included in any module containi
   * `src/jvm/fr/cnrs/liris/accio/core/api` contains interfaces and standard data types
   * `src/jvm/fr/cnrs/liris/accio/core/api:annotations` contains Java annotations.
 
-## 2. Implement the operator class
+## 2. Create the operator definition
 Then, you will need to implement the `Operator[In,Out]` interface and its `execute` method.
 
 ```scala
@@ -40,12 +39,17 @@ class TotallyUselessOp extends Operator[Unit, Unit] {
 ```
 
 This is an operator that simply prints something to the standard output but does actually nothing.
-A few things are worth noting so far.
-  * Operators must be annotated with an `@Op` annotation.
-Whereas all arguments are optional, it is very useful to provide information to the end-user about what this operator does.
+The `@Op` annotation is mandatory for an operator to be recognized as such (implementing the `Operator` interface is not enough).
+This annotation provides essential metadata are used by Accio.
+Whereas all its fields are optional, you may want to override some of them, e.g., to provide information to the end-user about what this operator does in the `help` field.
 By default, the operator name is the simple name of the class (i.e., without the namespace), with the "Op" suffix stripped.
-You may override this by explicitly specifying a `name` argument.
-  * This operator has no input and no output, indicated with the `Unit` type argument (first is for input, second for output).
+You may override this by explicitly specifying a `name` field.
+
+Among other things, you can also request computational resources with the `cpu`, `ram` and `disk` fields.
+Each operator is executed in a sandbox and need to declare resources it needs.
+Defaults values are defined but may not be convenient in all cases.
+
+The above operator has no input and no output, indicated with the `Unit` type argument (first is for input, second for output).
 
 **The execution of any operator must be deterministic and reproducible.**
 In other words, given some inputs, it should always produce the exact same outputs.
@@ -98,18 +102,25 @@ You can learn more about this topic on the [dedicated page](documenting-operator
 
 ## 4. Implement your operator
 Most of the work for a developper is to implement the body of the `execute` method.
-You have access to a context, which gives you access to the following methods:
+You have access to an execution context, which gives you access to the following methods:
 
   * `workDir`: Path to a directory where you can safely write data.
   This directory is a temporary directory, that will be deleted once the operator is completed.
   * `env`: A [Sparkle](sparkle.html) environment, allowing you to process large amounts of data efficiently.
-  * `seed`: A long, to be used with [unstable operators](#working-with-randomness).
+  * `seed`: A "random" 64 bits integer, can can be used in [unstable operators](cookbook.html#working-with-randomness).
   * `read` and `write`: Helpers methods to read and write datasets in the working directory, in conjunction with Sparkle.
 
-You do **not** have to care about transferring artifacts in this method.
+**You do not have to care about transferring artifacts**.
 Indeed, some artifacts are references to some binary content (e.g., datasets).
 Such artifacts will be automatically downloaded for you before an operator starts and be made accessible in the working directory.
 Conversely, these artifacts will be automatically uploaded once an operator finishes, before the working directory is deleted.
+In other words, all artifacts are available locally in the working directory of your operator when it starts, and can be written in that same working directory.
+However, you usually do not even have to care about this, because the `read` and `write` methods manage this for you.
+
+You have to be careful to stay within requested resources.
+You are guaranteed to have the number of CPU cores and the amount of RAM and storage you requested; you may have more, but maybe not.
+It is the developper's job to guarantee that memory will not be exceeded and the content written will not overflow the disk.
+It can be tempting to request more than actually needed; however, the whole point of Accio is allow to run experiments in parallel on a cluster, which is not possible if all operators consume the entire resources of a machine while they do not need them.
 
 ## 5. Register your operator
 All operators are registered in the `fr.cnrs.liris.privamov.ops.OpsModule` class, through the [Guice](https://github.com/google/guice) framework.
