@@ -22,6 +22,7 @@ import com.google.common.base.MoreObjects
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.dal.core.io.DataSink
 import fr.cnrs.liris.common.random._
+import fr.cnrs.liris.common.util.Identified
 
 import scala.collection.mutable
 import scala.reflect._
@@ -158,7 +159,19 @@ abstract class DataFrame[T: ClassTag](val env: SparkleEnv) extends LazyLogging {
 
   final def foreach(fn: T => Unit): Unit = env.submit[T, Unit](this, keys, (_, it) => it.foreach(fn))
 
-  final def write(sink: DataSink[T]): Unit = env.submit[T, Unit](this, keys, (key, it) => sink.write(key, it))
+  final def write(sink: DataSink[T]): Unit = {
+    val identifiable = classOf[Identified].isAssignableFrom(elementClassTag.runtimeClass)
+    env.submit[T, Unit](this, keys, (key, it) => {
+      if (identifiable) {
+        //TODO: Get a rid of that once for all!
+        it.toSeq
+          .groupBy(_.asInstanceOf[Identified].id)
+          .foreach { case (actualKey, elements) => sink.write(actualKey, elements) }
+      } else {
+        sink.write(key, it.toSeq)
+      }
+    })
+  }
 }
 
 private[sparkle] class RestrictDataFrame[T: ClassTag](inner: DataFrame[T], override val keys: Seq[String])

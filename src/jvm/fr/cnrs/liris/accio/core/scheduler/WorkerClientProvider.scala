@@ -23,7 +23,7 @@ import javax.annotation.concurrent.NotThreadSafe
 import com.google.inject.Singleton
 import com.twitter.finagle.Thrift
 import fr.cnrs.liris.accio.agent.{AgentService, AgentService$FinagleClient}
-import fr.cnrs.liris.accio.core.finagle.AccioResponseClassifier
+import fr.cnrs.liris.accio.runtime.finagle.AccioResponseClassifier
 
 import scala.collection.mutable
 
@@ -45,7 +45,6 @@ final class WorkerClientProvider {
     clients.getOrElseUpdate(dest, {
       val service = Thrift.client
         .withSessionQualifier.noFailFast
-        .withResponseClassifier(AccioResponseClassifier.Default)
         .newService(dest)
       new AgentService.FinagledClient(service)
     })

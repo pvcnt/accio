@@ -24,15 +24,15 @@ import fr.cnrs.liris.accio.core.api.OpContext
 import fr.cnrs.liris.accio.testing.WithSparkleEnv
 import fr.cnrs.liris.dal.core.api.Dataset
 import fr.cnrs.liris.dal.core.io.{CsvSink, CsvSource}
-import fr.cnrs.liris.privamov.core.io.{CsvEventCodec, CsvPoiCodec, CsvPoiSetCodec, CsvTraceCodec}
+import fr.cnrs.liris.privamov.core.io.{CsvEventCodec, CsvPoiSetCodec, TraceCodec}
 import fr.cnrs.liris.privamov.core.model.{PoiSet, Trace}
 
 /**
  * Trait facilitating testing operators.
  */
 private[ops] trait OperatorSpec extends WithSparkleEnv { FlatSpec =>
-  private[this] val traceCodec = new CsvTraceCodec(new CsvEventCodec)
-  private[this] val poiSetCodec = new CsvPoiSetCodec(new CsvPoiCodec)
+  private[this] val traceCodec = new TraceCodec(new CsvEventCodec)
+  private[this] val poiSetCodec = new CsvPoiSetCodec
 
   protected def ctx: OpContext = {
     val workDir = Files.createTempDirectory(getClass.getSimpleName + "-")

@@ -42,4 +42,4 @@ Our own Accio is a tool whose purpose is to execute a scientific workflow and ge
 If you are completly new to Accio, you should begin with the [getting started guide](../getting-started/), which will get you quickly familiar with Accio.
 Already familiar might be interested in the [reference documentation](../../reference/overview/).
 
-More specific guides are available for those willing to [deploy](../../deploy/overview/) or [extend](../../extend/compiling/) Accio.
+More specific guides are available for those willing to [deploy](../../deploy/architecture/) or [extend](../../extend/compiling/) Accio.

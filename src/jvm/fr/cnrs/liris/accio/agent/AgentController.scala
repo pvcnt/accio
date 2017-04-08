@@ -23,7 +23,7 @@ import com.twitter.finatra.thrift.Controller
 import com.twitter.scrooge.ThriftException
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.agent.AgentService.{CompleteTask, RegisterWorker, _}
-import fr.cnrs.liris.accio.agent.commandbus.CommandBus
+import fr.cnrs.liris.accio.runtime.commandbus.CommandBus
 
 import scala.util.control.NonFatal
 
@@ -48,6 +48,7 @@ class AgentController @Inject()(commandBus: CommandBus) extends Controller with 
   override val listLogs = handle(ListLogs) { args: ListLogs.Args => handleRequest(args.req) }
   override val getCluster = handle(GetCluster) { args: GetCluster.Args => handleRequest(args.req) }
   override val listAgents = handle(ListAgents) { args: ListAgents.Args => handleRequest(args.req) }
+  override val getDataset = handle(GetDataset) { args: GetDataset.Args => handleRequest(args.req) }
 
   /**
    * RPC endpoints used by workers to communicate with their master.

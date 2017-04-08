@@ -139,6 +139,7 @@ case class Trace private(id: String, user: String, events: Seq[Event]) extends I
     MoreObjects.toStringHelper(this)
       .add("id", id)
       .add("user", user)
+      .add("size", events.size)
       .toString
 }
 

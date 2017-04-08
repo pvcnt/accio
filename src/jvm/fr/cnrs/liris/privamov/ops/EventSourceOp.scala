@@ -19,9 +19,9 @@
 package fr.cnrs.liris.privamov.ops
 
 import fr.cnrs.liris.accio.core.api._
+import fr.cnrs.liris.common.util.FileUtils
 import fr.cnrs.liris.dal.core.api.Dataset
 import fr.cnrs.liris.dal.core.io.CsvSource
-import fr.cnrs.liris.common.util.FileUtils
 import fr.cnrs.liris.privamov.core.io._
 
 @Op(
@@ -31,7 +31,7 @@ import fr.cnrs.liris.privamov.core.io._
 class EventSourceOp extends Operator[EventSourceIn, EventSourceOut] {
   override def execute(in: EventSourceIn, ctx: OpContext): EventSourceOut = {
     val source = in.kind match {
-      case "csv" => new CsvSource(FileUtils.expand(in.url), new CsvTraceCodec(new CsvEventCodec))
+      case "csv" => new CsvSource(FileUtils.expand(in.url), new TraceCodec(new CsvEventCodec))
       case "cabspotting" => CabspottingSource(FileUtils.expand(in.url))
       case "geolife" => GeolifeSource(FileUtils.expand(in.url))
       case _ => throw new IllegalArgumentException(s"Unknown kind: ${in.kind}")

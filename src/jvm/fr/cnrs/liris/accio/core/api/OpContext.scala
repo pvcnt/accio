@@ -84,9 +84,10 @@ final class OpContext(_seed: Option[Long], val workDir: Path, val env: SparkleEn
     encoders.find(encoder => clazz.isAssignableFrom(encoder.elementClassTag.runtimeClass)) match {
       case None => throw new RuntimeException(s"No encoder available for ${clazz.getName}")
       case Some(encoder) =>
-        val uri = workDir.resolve(port).toAbsolutePath.toString
-        frame.write(new CsvSink(uri, encoder.asInstanceOf[Encoder[T]]))
-        Dataset(uri)
+        val path = workDir.resolve(port).toAbsolutePath
+        Files.createDirectories(path)
+        frame.write(new CsvSink(path.toString, encoder.asInstanceOf[Encoder[T]]))
+        Dataset(path.toString)
     }
   }
 
@@ -115,9 +116,8 @@ final class OpContext(_seed: Option[Long], val workDir: Path, val env: SparkleEn
       case None => throw new RuntimeException(s"No encoder available for ${clazz.getName}")
       case Some(encoder) =>
         val path = workDir.resolve(s"$port/$key.csv").toAbsolutePath
-        val textEncoder = new TextLineEncoder(encoder.asInstanceOf[Encoder[T]])
-        val bytes = textEncoder.encode(elements)
         Files.createDirectories(path.getParent)
+        val bytes = encoder.asInstanceOf[Encoder[T]].encode(key, elements)
         Files.write(path, bytes)
         Dataset(path.toString)
     }

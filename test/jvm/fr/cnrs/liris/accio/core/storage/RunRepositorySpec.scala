@@ -54,6 +54,29 @@ private[storage] abstract class RunRepositorySpec extends RepositorySpec[Mutable
     createdAt = System.currentTimeMillis() - 1000,
     state = RunState(status = RunStatus.Running, progress = .5))
 
+  private val runs = Seq(
+    foobarRun,
+    foobarRun.copy(
+      id = randomId,
+      createdAt = System.currentTimeMillis() + 10,
+      state = foobarRun.state.copy(status = RunStatus.Running),
+      tags = Set("foo")),
+    foobarRun.copy(
+      id = randomId,
+      createdAt = System.currentTimeMillis() + 40,
+      state = foobarRun.state.copy(status = RunStatus.Running),
+      owner = User("him"),
+      tags = Set("foobar")),
+    foobarRun.copy(
+      id = randomId,
+      createdAt = System.currentTimeMillis() + 50,
+      pkg = Package(WorkflowId("other_workflow"), "v1")),
+    foobarRun.copy(
+      id = randomId,
+      createdAt = System.currentTimeMillis() + 60,
+      parent = Some(foobarRun.id),
+      tags = Set.empty))
+
   protected val foobarResults = Map(
     "FooNode" -> OpResult(
       0,
@@ -98,13 +121,7 @@ private[storage] abstract class RunRepositorySpec extends RepositorySpec[Mutable
     repo.get(foobarRun.id) shouldBe None
   }
 
-  it should "search for runs" in {
-    val runs = Seq(
-      foobarRun,
-      foobarRun.copy(id = randomId, createdAt = System.currentTimeMillis() + 10, state = foobarRun.state.copy(status = RunStatus.Running)),
-      foobarRun.copy(id = randomId, createdAt = System.currentTimeMillis() + 40, state = foobarRun.state.copy(status = RunStatus.Running), owner = User("him")),
-      foobarRun.copy(id = randomId, createdAt = System.currentTimeMillis() + 50, pkg = Package(WorkflowId("other_workflow"), "v1")),
-      foobarRun.copy(id = randomId, parent = Some(foobarRun.id)))
+  it should "search for runs by owner" in {
     runs.foreach(repo.save)
     refreshBeforeSearch()
 
@@ -123,14 +140,43 @@ private[storage] abstract class RunRepositorySpec extends RepositorySpec[Mutable
     res = repo.find(RunQuery(owner = Some("him")))
     res.totalCount shouldBe 1
     res.results should contain theSameElementsInOrderAs Seq(runs(2)).map(unsetResult)
+  }
 
-    res = repo.find(RunQuery(workflow = Some(WorkflowId("other_workflow"))))
+  it should "search for runs by workflow" in {
+    runs.foreach(repo.save)
+    refreshBeforeSearch()
+
+    val res = repo.find(RunQuery(workflow = Some(WorkflowId("other_workflow"))))
     res.totalCount shouldBe 1
     res.results should contain theSameElementsInOrderAs Seq(runs(3)).map(unsetResult)
+  }
 
-    res = repo.find(RunQuery(status = Set(RunStatus.Running)))
+
+  it should "search for runs by status" in {
+    runs.foreach(repo.save)
+    refreshBeforeSearch()
+
+    val res = repo.find(RunQuery(status = Set(RunStatus.Running)))
     res.totalCount shouldBe 2
     res.results should contain theSameElementsInOrderAs Seq(runs(2), runs(1)).map(unsetResult)
+  }
+
+
+  it should "search for runs by tags" in {
+    runs.foreach(repo.save)
+    refreshBeforeSearch()
+
+    var res = repo.find(RunQuery(tags = Set("foo", "bar")))
+    res.totalCount shouldBe 2
+    res.results should contain theSameElementsInOrderAs Seq(runs(3), runs(0)).map(unsetResult)
+
+    res = repo.find(RunQuery(tags = Set("foo")))
+    res.totalCount shouldBe 3
+    res.results should contain theSameElementsInOrderAs Seq(runs(3), runs(1), runs(0)).map(unsetResult)
+
+    res = repo.find(RunQuery(tags = Set("foobar")))
+    res.totalCount shouldBe 1
+    res.results should contain theSameElementsInOrderAs Seq(runs(2)).map(unsetResult)
   }
 
   private def unsetResult(run: Run) = run.copy(state = run.state.copy(nodes = run.state.nodes.map(_.unsetResult)))
@@ -143,7 +189,6 @@ private[storage] trait RunRepositorySpecWithMemoization extends RunRepositorySpe
     NodeState(name = "FooNode", status = NodeStatus.Success, cacheKey = Some(CacheKey("MyFooCacheKey")), result = Some(foobarResults("FooNode"))),
     NodeState(name = "BarNode", status = NodeStatus.Success, cacheKey = Some(CacheKey("MyBarCacheKey")), result = Some(foobarResults("BarNode")))
   )))
-
   private val fooRunWithNodes = fooRun.copy(state = fooRun.state.copy(nodes = Set(
     NodeState(name = "FooNode", status = NodeStatus.Success, cacheKey = Some(CacheKey("YourFooCacheKey")), result = Some(fooResults("FooNode"))))))
 

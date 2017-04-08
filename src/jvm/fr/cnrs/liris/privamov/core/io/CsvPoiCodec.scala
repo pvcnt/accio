@@ -18,9 +18,12 @@
 
 package fr.cnrs.liris.privamov.core.io
 
+import java.nio.charset.Charset
+
 import com.google.common.base.Charsets
 import fr.cnrs.liris.dal.core.io.Codec
 import fr.cnrs.liris.common.geo.{Distance, LatLng}
+import fr.cnrs.liris.common.util.ByteUtils
 import fr.cnrs.liris.privamov.core.model.Poi
 import org.joda.time.Instant
 
@@ -28,16 +31,31 @@ import scala.reflect._
 
 /**
  * Codec for our CSV format handling POIs.
+ *
+ * @param charset Charset to use when decoding a line.
  */
-class CsvPoiCodec extends Codec[Poi] {
-  override def encode(obj: Poi): Array[Byte] = {
-    val latLng = obj.centroid.toLatLng
-    val fields = Seq(obj.user, latLng.lat.degrees, latLng.lng.degrees, obj.size, obj.firstSeen.getMillis, obj.lastSeen.getMillis, obj.diameter.meters)
-    fields.mkString(",").getBytes(Charsets.UTF_8)
+final class CsvPoiCodec(charset: Charset = Charsets.UTF_8) extends Codec[Poi] {
+  override def elementClassTag: ClassTag[Poi] = classTag[Poi]
+
+  override def encode(key: String, elements: Seq[Poi]): Array[Byte] = {
+    ByteUtils.foldLines(elements.map(encodePoi))
   }
 
-  override def decode(key: String, bytes: Array[Byte]): Option[Poi] = {
-    val line = new String(bytes, Charsets.UTF_8).trim
+  override def decode(key: String, bytes: Array[Byte]): Seq[Poi] = {
+    new String(bytes, charset)
+      .split("\n")
+      .toSeq
+      .flatMap(line => decodePoi(key, line.trim))
+  }
+
+  private def encodePoi(poi: Poi) = {
+    val latLng = poi.centroid.toLatLng
+    Seq(poi.user, latLng.lat.degrees, latLng.lng.degrees, poi.size, poi.firstSeen.getMillis, poi.lastSeen.getMillis, poi.diameter.meters)
+      .mkString(",")
+      .getBytes(charset)
+  }
+
+  private def decodePoi(key: String, line: String) = {
     val parts = line.split(",")
     if (parts.length < 7) {
       None
@@ -51,6 +69,4 @@ class CsvPoiCodec extends Codec[Poi] {
       Some(Poi(user, point, size, firstSeen, lastSeen, diameter))
     }
   }
-
-  override def elementClassTag: ClassTag[Poi] = classTag[Poi]
 }

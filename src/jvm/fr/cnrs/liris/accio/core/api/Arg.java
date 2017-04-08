@@ -24,6 +24,7 @@ import java.lang.annotation.*;
  * Annotation encoding metadata about a port of an operator.
  */
 @Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.PARAMETER)
 public @interface Arg {
     /**
      * Name of this port. By default it is the field name.

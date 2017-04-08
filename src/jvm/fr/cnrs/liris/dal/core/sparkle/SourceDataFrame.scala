@@ -30,7 +30,7 @@ import scala.reflect.ClassTag
  * @tparam T Elements' type.
  */
 private[sparkle] class SourceDataFrame[T: ClassTag](source: DataSource[T], env: SparkleEnv) extends DataFrame[T](env) {
-  override lazy val keys = source.keys
+  override lazy val keys: Seq[String] = source.keys
 
   override def load(key: String): Iterator[T] = source.read(key).iterator
 

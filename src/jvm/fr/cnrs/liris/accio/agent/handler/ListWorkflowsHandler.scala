@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.agent.handler
 
 import com.google.inject.Inject
 import com.twitter.util.Future
-import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
+import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{ListWorkflowsRequest, ListWorkflowsResponse}
 import fr.cnrs.liris.accio.core.storage.{Storage, WorkflowQuery}
 
@@ -37,7 +37,7 @@ class ListWorkflowsHandler @Inject()(storage: Storage)
       name = req.name,
       owner = req.owner,
       q = req.q,
-      limit = req.limit.getOrElse(25),
+      limit = req.limit,
       offset = req.offset)
     val res = storage.read(_.workflows.find(query))
     Future(ListWorkflowsResponse(res.results, res.totalCount))

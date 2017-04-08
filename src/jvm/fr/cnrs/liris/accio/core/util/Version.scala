@@ -37,5 +37,5 @@ object Version {
   /**
    * Return the current version of Accio.
    */
-  val Current = Version(2, 0, 0, Some("dev"))
+  val Current = Version(0, 5, 0, None)
 }

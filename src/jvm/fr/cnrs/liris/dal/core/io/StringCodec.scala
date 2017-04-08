@@ -24,10 +24,12 @@ import com.google.common.base.Charsets
 
 import scala.reflect._
 
-class StringCodec(charset: Charset = Charsets.UTF_8) extends Codec[String] {
-  override def decode(key: String, bytes: Array[Byte]): Option[String] = Some(new String(bytes, charset))
-
-  override def encode(obj: String): Array[Byte] = obj.getBytes(charset)
-
+final class StringCodec(charset: Charset = Charsets.UTF_8) extends Codec[String] {
   override def elementClassTag: ClassTag[String] = classTag[String]
+
+  override def decode(key: String, bytes: Array[Byte]): Seq[String] = {
+    if (bytes.nonEmpty) Seq(new String(bytes, charset)) else Seq.empty
+  }
+
+  override def encode(key: String, elements: Seq[String]): Array[Byte] = elements.mkString.getBytes(charset)
 }

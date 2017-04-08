@@ -22,7 +22,6 @@ import java.nio.file.{Files, Paths}
 
 import com.google.common.base.MoreObjects
 import com.typesafe.scalalogging.LazyLogging
-import fr.cnrs.liris.common.util.Identified
 
 import scala.reflect._
 
@@ -34,20 +33,25 @@ import scala.reflect._
  * @param failOnNonEmptyDirectory Whether to fail is specified directory exists and is not empty.
  * @tparam T Type of elements being written.
  */
-class CsvSink[T <: Identified : ClassTag](uri: String, encoder: Encoder[T], failOnNonEmptyDirectory: Boolean = true) extends DataSink[T] with LazyLogging {
-  private[this] val path = Paths.get(uri)
-  if (!path.toFile.exists) {
-    Files.createDirectories(path)
-  } else if (path.toFile.isDirectory && path.toFile.listFiles.nonEmpty && failOnNonEmptyDirectory) {
-    throw new IllegalArgumentException(s"Non-empty directory: ${path.toAbsolutePath}")
-  } else if (path.toFile.isFile) {
-    throw new IllegalArgumentException(s"${path.toAbsolutePath} already exists and is a file")
+class CsvSink[T: ClassTag](uri: String, encoder: Encoder[T], failOnNonEmptyDirectory: Boolean = true)
+  extends DataSink[T] with LazyLogging {
+
+  private[this] lazy val path = {
+    val path = Paths.get(uri)
+    if (!path.toFile.exists) {
+      Files.createDirectories(path)
+    } else if (path.toFile.isDirectory && path.toFile.listFiles.nonEmpty && failOnNonEmptyDirectory) {
+      throw new IllegalArgumentException(s"Non-empty directory: ${path.toAbsolutePath}")
+    } else if (path.toFile.isFile) {
+      throw new IllegalArgumentException(s"${path.toAbsolutePath} already exists and is a file")
+    }
+    path
   }
 
-  override def write(key: String, elements: TraversableOnce[T]): Unit = {
-    elements.foreach { element =>
-      val bytes = encoder.encode(element)
-      Files.write(path.resolve(s"${element.id}.csv"), bytes)
+  override def write(key: String, elements: Seq[T]): Unit = {
+    if (elements.nonEmpty) {
+      val bytes = encoder.encode(key, elements)
+      Files.write(path.resolve(s"$key.csv"), bytes)
     }
   }
 

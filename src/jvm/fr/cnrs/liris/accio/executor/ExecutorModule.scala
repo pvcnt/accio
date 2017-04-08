@@ -28,7 +28,7 @@ import com.twitter.inject.{Injector, TwitterModule}
 import com.twitter.util.{Duration, ExecutorServiceFuturePool, FuturePool}
 import fr.cnrs.liris.accio.agent.{AgentService, AgentService$FinagleClient}
 import fr.cnrs.liris.accio.core.api.Operator
-import fr.cnrs.liris.accio.core.finagle.AccioResponseClassifier
+import fr.cnrs.liris.accio.runtime.finagle.AccioResponseClassifier
 import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.util.WorkerPool
 import fr.cnrs.liris.dal.core.io.{Decoder, Encoder, StringCodec}
@@ -75,10 +75,7 @@ object ExecutorModule extends TwitterModule {
     //   avoiding to retry on InvalidTaskException's).
     // - We do not want to fail-fast, because there will always be only one reachable host.
     val service = Thrift.client
-      .withRetryBudget(RetryBudget.Infinite)
-      .withRetryBackoff(Backoff.const(Duration.fromSeconds(5)))
       .withSessionQualifier.noFailFast
-      .withResponseClassifier(AccioResponseClassifier.Default)
       .newService(addrFlag())
     new AgentService.FinagledClient(service)
   }

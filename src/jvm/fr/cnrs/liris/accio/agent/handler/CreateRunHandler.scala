@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.agent.handler
 import com.google.inject.Inject
 import com.twitter.util.{Future, FuturePool}
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
+import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{CreateRunRequest, CreateRunResponse}
 import fr.cnrs.liris.accio.core.domain.{InvalidSpecException, InvalidSpecMessage, RunId}
 import fr.cnrs.liris.accio.core.framework.{RunFactory, RunManager}

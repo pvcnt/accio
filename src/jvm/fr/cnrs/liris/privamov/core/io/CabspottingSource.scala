@@ -21,8 +21,8 @@ package fr.cnrs.liris.privamov.core.io
 import java.nio.file.{Files, Path, Paths}
 
 import com.google.common.base.MoreObjects
-import fr.cnrs.liris.dal.core.io.{DataSource, Decoder, TextLineDecoder}
 import fr.cnrs.liris.common.geo.LatLng
+import fr.cnrs.liris.dal.core.io.{DataSource, Decoder}
 import fr.cnrs.liris.privamov.core.model.{Event, Trace}
 import org.joda.time.Instant
 
@@ -37,7 +37,7 @@ import scala.sys.process._
  */
 case class CabspottingSource(uri: String) extends DataSource[Trace] {
   private[this] val path = Paths.get(uri)
-  private[this] val decoder = new TextLineDecoder(new CabspottingDecoder)
+  private[this] val decoder = new TraceDecoder(new CabspottingDecoder)
   require(path.toFile.isDirectory, s"$uri is not a directory")
   require(path.toFile.canRead, s"$uri is unreadable")
 
@@ -48,9 +48,8 @@ case class CabspottingSource(uri: String) extends DataSource[Trace] {
     .toSeq
     .sorted
 
-  override def read(key: String): Option[Trace] = {
-    val events = decoder.decode(key, Files.readAllBytes(path.resolve(s"new_$key.txt"))).getOrElse(Seq.empty)
-    if (events.nonEmpty) Some(Trace(events)) else None
+  override def read(key: String): Seq[Trace] = {
+    decoder.decode(key, Files.readAllBytes(path.resolve(s"new_$key.txt")))
   }
 
   override def toString: String =
@@ -90,8 +89,16 @@ object CabspottingSource {
  * Decoder decoding a line of a Cabspotting file into an event.
  */
 class CabspottingDecoder extends Decoder[Event] {
-  override def decode(key: String, bytes: Array[Byte]): Option[Event] = {
-    val line = new String(bytes)
+  override def elementClassTag: ClassTag[Event] = classTag[Event]
+
+  override def decode(key: String, bytes: Array[Byte]): Seq[Event] = {
+    new String(bytes)
+      .split("\n")
+      .toSeq
+      .flatMap(line => decodeEvent(key, line.trim))
+  }
+
+  private def decodeEvent(key: String, line: String) = {
     val parts = line.trim.split(" ")
     if (parts.length < 4) {
       None
@@ -103,10 +110,8 @@ class CabspottingDecoder extends Decoder[Event] {
         Some(Event(key, LatLng.degrees(lat, lng).toPoint, time))
       } catch {
         //Error in original data, skip record.
-        case e: IllegalArgumentException => None
+        case _: IllegalArgumentException => None
       }
     }
   }
-
-  override def elementClassTag: ClassTag[Event] = classTag[Event]
 }

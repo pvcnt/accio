@@ -29,25 +29,16 @@ import net.codingwell.scalaguice.ScalaMapBinder
  * Guice module provisioning a POSIX filesystem.
  */
 object PosixFileSystemModule extends TwitterModule {
-  private[this] val enabled = flag[Boolean]("filesystem.posix.enabled", false, "Enable POSIX filesystem")
   private[this] val pathFlag = flag[String]("filesystem.posix.root", "Path where to store files")
   private[this] val symlinkFlag = flag("filesystem.posix.symlink", true, "Whether to symlink files")
 
-  def executorPassthroughFlags: Seq[Flag[_]] = {
-    if (enabled()) {
-      Seq(enabled, pathFlag, symlinkFlag)
-    } else {
-      Seq.empty
-    }
-  }
+  def executorPassthroughFlags: Seq[Flag[_]] = Seq(pathFlag, symlinkFlag)
 
   override protected def configure(): Unit = {
-    if (enabled()) {
-      val fileSystems = ScalaMapBinder.newMapBinder[String, FileSystem](binder)
-      fileSystems.addBinding("posix").to[PosixFileSystem]
+    val fileSystems = ScalaMapBinder.newMapBinder[String, FileSystem](binder)
+    fileSystems.addBinding("posix").to[PosixFileSystem]
 
-      bind[Path].annotatedWith[PosixPath].toInstance(Paths.get(pathFlag()))
-      bind[Boolean].annotatedWith[PosixSymlink].toInstance(symlinkFlag())
-    }
+    bind[Path].annotatedWith[PosixPath].toInstance(Paths.get(pathFlag()))
+    bind[Boolean].annotatedWith[PosixSymlink].toInstance(symlinkFlag())
   }
 }

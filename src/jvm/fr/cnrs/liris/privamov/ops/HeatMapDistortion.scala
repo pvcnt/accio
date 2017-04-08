@@ -128,6 +128,7 @@ case class HeatMapDistortionIn(
   @Arg(help = "Input test dataset")
   test: Dataset,
   @Arg(help = "Type of distance metrics between matrices")
+  @OneOf(Array("kl", "det", "nonzerocellsratio", "loren", "innerp", "cosine", "dice", "ndiv", "clark", "topsoe", "jensendiv"))
   distanceType: String = "topsoe",
   @Arg(help = "Cell Size in meters")
   cellSize: Distance,

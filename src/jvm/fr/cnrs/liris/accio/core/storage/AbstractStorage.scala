@@ -24,13 +24,21 @@ import com.google.common.util.concurrent.{AbstractIdleService, ServiceManager}
 
 import scala.collection.JavaConverters._
 
+/**
+ * Base class for storage providing two features:
+ *  - storage will be automatically started before it's first used
+ *  - writes are ran while holding a lock, preventing concurrent writes.
+ */
 private[storage] trait AbstractStorage extends AbstractIdleService with Storage {
   private[this] val serviceManager = new ServiceManager(Set(runRepository, workflowRepository, logRepository).asJava)
   private[this] val lock = new ReentrantReadWriteLock()
 
   override final def read[T](fn: RepositoryProvider => T): T = {
     enforceRunning()
-    lock.readLock.lock()
+    // Activating this or not depend on the kind of isolation we want. If we enable this, what's being written will
+    // never be read. If we disable this, we can potentially see an uncommitted transaction.
+    // For now we disable this, for speed reasons.
+    //lock.readLock.lock()
     //try {
     fn(new RepositoryProvider {
       override def logs: LogRepository = logRepository
@@ -60,10 +68,19 @@ private[storage] trait AbstractStorage extends AbstractIdleService with Storage 
     }
   }
 
+  /**
+   * Return a mutable run repository.
+   */
   protected def runRepository: MutableRunRepository
 
+  /**
+   * Return a mutable workflow repository.
+   */
   protected def workflowRepository: MutableWorkflowRepository
 
+  /**
+   * Return a mutable log repository.
+   */
   protected def logRepository: MutableLogRepository
 
   override protected def shutDown(): Unit = {
@@ -74,6 +91,9 @@ private[storage] trait AbstractStorage extends AbstractIdleService with Storage 
     serviceManager.startAsync().awaitHealthy()
   }
 
+  /**
+   * Ensure all repositories are started.
+   */
   private def enforceRunning() = synchronized {
     if (!isRunning) {
       startAsync().awaitRunning()

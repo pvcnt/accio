@@ -24,10 +24,10 @@ import java.util.Locale
 
 import com.google.common.io.Resources
 import fr.cnrs.liris.accio.core.api._
+import fr.cnrs.liris.common.geo.{Distance, Point}
 import fr.cnrs.liris.dal.core.api.Dataset
 import fr.cnrs.liris.dal.core.io.{CsvSink, DataSink}
-import fr.cnrs.liris.common.geo.{Distance, Point}
-import fr.cnrs.liris.privamov.core.io.{CsvEventCodec, CsvTraceCodec}
+import fr.cnrs.liris.privamov.core.io.{CsvEventCodec, TraceCodec}
 import fr.cnrs.liris.privamov.core.model.{Event, Trace}
 import org.joda.time.{Duration, Instant}
 
@@ -177,7 +177,7 @@ class Wait4MeOp extends Operator[Wait4MeIn, Wait4MeOut] {
     var currIdx: Option[Int] = None
     val events = mutable.ListBuffer.empty[Event]
     val outputUri = ctx.workDir.resolve("data").toAbsolutePath.toString
-    val sink = new CsvSink(outputUri, new CsvTraceCodec(new CsvEventCodec), failOnNonEmptyDirectory = false)
+    val sink = new CsvSink(outputUri, new TraceCodec(new CsvEventCodec), failOnNonEmptyDirectory = false)
     Files.readAllLines(w4mOutputPath).asScala.foreach { line =>
       val parts = line.trim.split("\t")
       val idx = parts(0).toInt
@@ -229,12 +229,12 @@ private class W4MSink(uri: String, keysIndex: Map[String, Int]) extends DataSink
   private[this] val path = Paths.get(uri)
   Files.createDirectories(path.getParent)
 
-  override def write(key: String, elements: TraversableOnce[Trace]): Unit = synchronized {
+  override def write(key: String, elements: Seq[Trace]): Unit = synchronized {
     val lines = elements.flatMap { trace =>
       trace.events.map { event =>
         s"${keysIndex(trace.id)}\t${event.time.getMillis / 1000}\t${event.point.x}\t${event.point.y}"
       }
-    }.toSeq
+    }
     Files.write(path, lines.asJava, StandardOpenOption.CREATE, StandardOpenOption.APPEND)
   }
 }

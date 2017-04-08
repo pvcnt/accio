@@ -40,7 +40,7 @@ class Layout extends React.Component {
             </LinkContainer>
           </Nav>
           <Nav pullRight>
-            <NavItem href="https://privamov.github.io/accio/docs">Help</NavItem>
+            <NavItem href="https://privamov.github.io/accio/user-guide/introduction/">Help</NavItem>
             <Navbar.Text>
               <Glyphicon glyph="user"/> vprimault
             </Navbar.Text>

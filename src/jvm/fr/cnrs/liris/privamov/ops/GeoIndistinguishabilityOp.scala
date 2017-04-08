@@ -44,8 +44,10 @@ class GeoIndistinguishabilityOp extends Operator[GeoIndistinguishabilityIn, GeoI
 }
 
 case class GeoIndistinguishabilityIn(
-  @Arg(help = "Privacy budget") epsilon: Double = 0.001,
-  @Arg(help = "Input dataset") data: Dataset) {
+  @Arg(help = "Privacy budget") @Min(value = 0, inclusive = false)
+  epsilon: Double = 0.001,
+  @Arg(help = "Input dataset")
+  data: Dataset) {
   require(epsilon > 0, s"Epsilon must be strictly positive (got $epsilon)")
 }
 

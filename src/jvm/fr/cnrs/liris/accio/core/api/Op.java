@@ -47,10 +47,13 @@ public @interface Op {
     String description() default "";
 
     /**
-     * A category, which is used to classify operators in 'accio help list-ops'.
+     * A category, which is used to classify operators in 'accio get ops'.
      */
     String category() default "misc";
 
+    /**
+     * Whether this operator is marked as unstable.
+     */
     boolean unstable() default false;
 
     /**
@@ -58,9 +61,18 @@ public @interface Op {
      */
     String deprecation() default "";
 
+    /**
+     * Number of CPU cores required to execute this operator. It will be allocated at least this number of cores.
+     */
     float cpu() default 1;
 
+    /**
+     * Amount of RAM required to execute this operator. It will be allocated at least this amount of RAM.
+     */
     String ram() default "512M";
 
+    /**
+     * Amount of disk required to execute this operator. It will be allocated at least this amount of disk.
+     */
     String disk() default "1G";
 }

@@ -2,7 +2,7 @@ scala_library(
   dependencies=[
     'src/jvm/fr/cnrs/liris/accio/core/domain',
     'src/jvm/fr/cnrs/liris/accio/core/framework',
-    'src/jvm/fr/cnrs/liris/accio/core/finagle',
+    'src/jvm/fr/cnrs/liris/accio/runtime/finagle',
     'src/jvm/fr/cnrs/liris/accio/core/filesystem/inject',
     'src/jvm/fr/cnrs/liris/accio/core/util',
     'src/jvm/fr/cnrs/liris/accio/core/util:annotations',

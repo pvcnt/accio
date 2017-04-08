@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.agent.handler
 
 import com.google.inject.Inject
 import com.twitter.util.Future
-import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
+import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{ListRunsRequest, ListRunsResponse}
 import fr.cnrs.liris.accio.core.storage.{RunQuery, Storage}
 
@@ -35,9 +35,10 @@ class ListRunsHandler @Inject()(storage: Storage) extends AbstractHandler[ListRu
       name = req.name,
       owner = req.owner,
       workflow = req.workflowId,
-      status = req.status.toSet.flatten,
+      status = req.status.toSet,
       parent = req.parent,
       clonedFrom = req.clonedFrom,
+      tags = req.tags.toSet,
       q = req.q,
       limit = req.limit,
       offset = req.offset)

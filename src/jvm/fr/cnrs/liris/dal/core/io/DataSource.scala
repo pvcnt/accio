@@ -31,10 +31,9 @@ trait DataSource[T] {
   def keys: Seq[String]
 
   /**
-   * Read the element associated with a given key, if any.
+   * Read the elements associated with a given key.
    *
    * @param key Key.
-   * @return The element stored under that key, if any.
    */
-  def read(key: String): Option[T]
+  def read(key: String): Iterable[T]
 }

@@ -13,7 +13,7 @@ scala_library(
     'src/jvm/com/google/common/geometry',
     '3rdparty/jvm:scala-time',
     '3rdparty/jvm/org/scalanlp:breeze',
-    '3rdparty/jvm:scala-guice',
+    '3rdparty/jvm/com/twitter/inject:app',
   ],
   sources=globs('*.scala'),
   resources=[

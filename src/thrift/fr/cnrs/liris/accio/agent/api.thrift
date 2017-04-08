@@ -90,8 +90,8 @@ struct ListRunsRequest {
   1: optional string owner;
   2: optional string name;
   3: optional accio.WorkflowId workflow_id;
-  5: optional set<accio.RunStatus> status;
-  6: optional set<string> tags;
+  5: required set<accio.RunStatus> status;
+  6: required set<string> tags;
   7: optional accio.RunId parent;
   8: optional accio.RunId cloned_from;
   9: optional string q;
@@ -123,7 +123,7 @@ struct UpdateRunRequest {
   1: required accio.RunId id;
   2: optional string name;
   3: optional string notes;
-  4: optional set<string> tags;
+  4: required set<string> tags;
 }
 
 struct UpdateRunResponse {
@@ -177,4 +177,23 @@ struct ListAgentsRequest {
 
 struct ListAgentsResponse {
   1: required list<accio.Agent> results;
+}
+
+struct GetDatasetRequest {
+  1: required accio.RunId run_id;
+  2: required string node_name;
+  3: required string port_name;
+  4: optional i32 limit;
+  5: required bool sample;
+}
+
+struct ThriftEvent {
+  1: required string user;
+  2: required list<i32> location;
+  3: required accio.Timestamp timestamp;
+}
+
+struct GetDatasetResponse {
+  1: required list<ThriftEvent> events;
+  2: required i32 total_count;
 }

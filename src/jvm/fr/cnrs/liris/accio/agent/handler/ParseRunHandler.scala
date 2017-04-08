@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.agent.handler.api
 
 import com.google.inject.Inject
 import com.twitter.util.Future
-import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
+import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{ParseRunRequest, ParseRunResponse}
 import fr.cnrs.liris.accio.core.domain.{InvalidSpecException, InvalidSpecMessage}
 import fr.cnrs.liris.accio.core.dsl.RunParser

@@ -93,11 +93,11 @@ private[storage] abstract class WorkflowRepositorySpec extends RepositorySpec[Mu
     res.totalCount shouldBe 3
     res.results should contain theSameElementsInOrderAs Seq(workflows(4), workflows(3), workflows(1)).map(unsetNodes)
 
-    res = repo.find(WorkflowQuery(owner = Some("me"), limit = 2))
+    res = repo.find(WorkflowQuery(owner = Some("me"), limit = Some(2)))
     res.totalCount shouldBe 3
     res.results should contain theSameElementsInOrderAs Seq(workflows(4), workflows(3)).map(unsetNodes)
 
-    res = repo.find(WorkflowQuery(owner = Some("me"), limit = 2, offset = Some(2)))
+    res = repo.find(WorkflowQuery(owner = Some("me"), limit = Some(2), offset = Some(2)))
     res.totalCount shouldBe 3
     res.results should contain theSameElementsInOrderAs Seq(workflows(1)).map(unsetNodes)
   }

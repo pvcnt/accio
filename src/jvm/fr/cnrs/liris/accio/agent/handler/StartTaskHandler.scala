@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.agent.handler
 import com.google.inject.Inject
 import com.twitter.util.Future
 import com.typesafe.scalalogging.LazyLogging
-import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
+import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{StartTaskRequest, StartTaskResponse}
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.accio.core.framework.RunManager
@@ -36,10 +36,7 @@ import fr.cnrs.liris.accio.core.storage.Storage
  * @param runManager Run lifecycle manager.
  * @param state      Cluster state.
  */
-class StartTaskHandler @Inject()(
-  storage: Storage,
-  runManager: RunManager,
-  state: ClusterState)
+class StartTaskHandler @Inject()(storage: Storage, runManager: RunManager, state: ClusterState)
   extends AbstractHandler[StartTaskRequest, StartTaskResponse] with LazyLogging {
 
   @throws[InvalidTaskException]

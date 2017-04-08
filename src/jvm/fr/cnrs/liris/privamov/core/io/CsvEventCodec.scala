@@ -18,9 +18,12 @@
 
 package fr.cnrs.liris.privamov.core.io
 
+import java.nio.charset.Charset
+
 import com.google.common.base.Charsets
-import fr.cnrs.liris.dal.core.io.Codec
 import fr.cnrs.liris.common.geo.LatLng
+import fr.cnrs.liris.common.util.ByteUtils
+import fr.cnrs.liris.dal.core.io.Codec
 import fr.cnrs.liris.privamov.core.model.Event
 import org.joda.time.Instant
 
@@ -28,15 +31,31 @@ import scala.reflect.{ClassTag, classTag}
 
 /**
  * Codec for our CSV format handling events.
+ *
+ * @param charset Charset to use when decoding a line.
  */
-class CsvEventCodec extends Codec[Event] {
-  override def encode(obj: Event): Array[Byte] = {
-    val latLng = obj.point.toLatLng
-    s"${obj.user},${latLng.lat.degrees},${latLng.lng.degrees},${obj.time.getMillis}".getBytes(Charsets.UTF_8)
+final class CsvEventCodec(charset: Charset = Charsets.UTF_8) extends Codec[Event] {
+  override def elementClassTag: ClassTag[Event] = classTag[Event]
+
+  override def encode(key: String, elements: Seq[Event]): Array[Byte] = {
+    ByteUtils.foldLines(elements.map(encodeEvent))
   }
 
-  override def decode(key: String, bytes: Array[Byte]): Option[Event] = {
-    val line = new String(bytes, Charsets.UTF_8).trim
+  override def decode(key: String, bytes: Array[Byte]): Seq[Event] = {
+    new String(bytes, charset)
+      .split("\n")
+      .toSeq
+      .flatMap(line => decodeEvent(key, line.trim))
+  }
+
+  private def encodeEvent(event: Event) = {
+    val latLng = event.point.toLatLng
+    Seq(event.user, latLng.lat.degrees, latLng.lng.degrees, event.time.getMillis)
+      .mkString(",")
+      .getBytes(charset)
+  }
+
+  private def decodeEvent(key: String, line: String) = {
     val parts = line.split(",")
     if (parts.length < 3 || parts.length > 4) {
       None
@@ -50,6 +69,4 @@ class CsvEventCodec extends Codec[Event] {
       Some(Event(user, point, new Instant(time)))
     }
   }
-
-  override def elementClassTag: ClassTag[Event] = classTag[Event]
 }

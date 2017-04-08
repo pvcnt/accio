@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.agent.handler
 
 import com.google.inject.Inject
 import com.twitter.util.Future
-import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
+import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{DeleteRunRequest, DeleteRunResponse}
 import fr.cnrs.liris.accio.core.domain.{RunId, UnknownRunException}
 import fr.cnrs.liris.accio.core.scheduler.{ClusterState, EventType, Scheduler}

@@ -20,6 +20,11 @@ package fr.cnrs.liris.dal.core.io
 
 import scala.reflect.ClassTag
 
+/**
+ * A codec is the association of an encoder and a decoder of the same type.
+ *
+ * @tparam T Type of elements being read and written.
+ */
 trait Codec[T] extends Encoder[T] with Decoder[T]
 
 /**
@@ -29,17 +34,17 @@ trait Codec[T] extends Encoder[T] with Decoder[T]
  */
 trait Encoder[T] {
   /**
-   * Encode an object into a sequence of bytes.
-   *
-   * @param obj Plain object.
-   * @return Binary content.
-   */
-  def encode(obj: T): Array[Byte]
-
-  /**
    * Return the class tag of the element being written.
    */
   def elementClassTag: ClassTag[T]
+
+  /**
+   * Encode an object into a sequence of bytes.
+   *
+   * @param key      Key associated with the file being written.
+   * @param elements Elements to encode.
+   */
+  def encode(key: String, elements: Seq[T]): Array[Byte]
 }
 
 /**
@@ -49,16 +54,15 @@ trait Encoder[T] {
  */
 trait Decoder[T] {
   /**
-   * Decodes a binary record into an object.
-   *
-   * @param key   Key associated with the file containing this record
-   * @param bytes Binary content
-   * @return Plain object
-   */
-  def decode(key: String, bytes: Array[Byte]): Option[T]
-
-  /**
    * Return the class tag of the element being read.
    */
   def elementClassTag: ClassTag[T]
+
+  /**
+   * Decode a binary record into one or several objects.
+   *
+   * @param key   Key associated with the file being read.
+   * @param bytes Binary content.
+   */
+  def decode(key: String, bytes: Array[Byte]): Seq[T]
 }

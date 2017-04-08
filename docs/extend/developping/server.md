@@ -1,7 +1,7 @@
 ---
 layout: docs
 weight: 20
-title: Developping the server components
+title: Developping the server
 ---
 
 ## Agent

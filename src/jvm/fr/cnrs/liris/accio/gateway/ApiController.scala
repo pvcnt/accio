@@ -104,8 +104,8 @@ class ApiController @Inject()(client: AgentService$FinagleClient) extends Contro
       workflowId = httpReq.workflow.map(WorkflowId.apply),
       parent = httpReq.parent.map(RunId.apply),
       clonedFrom = httpReq.clonedFrom.map(RunId.apply),
-      status = httpReq.status.map(v => RunStatus.valueOf(v).toSet),
-      tags = httpReq.tags.map(explode(_, ",")),
+      status = httpReq.status.flatMap(v => RunStatus.valueOf(v)).toSet,
+      tags = explode(httpReq.tags, ","),
       q = httpReq.q,
       limit = Some(httpReq.perPage),
       offset = Some(offset))
@@ -205,6 +205,21 @@ class ApiController @Inject()(client: AgentService$FinagleClient) extends Contro
     }
   }
 
+  get("/api/v1/run/:id/dataset/:node/:port") { httpReq: GetDatasetHttpRequest =>
+    val req = GetDatasetRequest(
+      runId = RunId(httpReq.id),
+      nodeName = httpReq.node,
+      portName = httpReq.port,
+      limit = httpReq.limit,
+      sample = httpReq.sample)
+    client.getDataset(req).map { resp =>
+      val results = resp.events.map { event =>
+        Map("user" -> event.user, "position" -> event.location, "timestamp" -> event.timestamp)
+      }
+      ResultListResponse(results, resp.totalCount)
+    }
+  }
+
   private def readBody(httpReq: Request): Future[String] = {
     Reader.readAll(httpReq.reader).map { buf =>
       val bytes = Array.ofDim[Byte](buf.length)
@@ -241,7 +256,7 @@ case class UpdateRunHttpRequest(
   @RouteParam id: String,
   name: Option[String],
   notes: Option[String],
-  tags: Option[Set[String]])
+  tags: Set[String] = Set.empty)
 
 case class ListArtifactsHttpRequest(@RouteParam id: String, @RouteParam node: String)
 
@@ -274,8 +289,16 @@ case class ListLogsHttpRequest(
   @RouteParam id: String,
   @RouteParam node: String,
   @RouteParam classifier: String,
-  @QueryParam @Min(1) limit: Option[Int],
-  @QueryParam @Min(0) since: Option[DateTime],
+  @QueryParam @Min(0) limit: Option[Int],
+  @QueryParam since: Option[DateTime],
+  @QueryParam download: Boolean = false)
+
+case class GetDatasetHttpRequest(
+  @RouteParam id: String,
+  @RouteParam node: String,
+  @RouteParam port: String,
+  @QueryParam @Min(0) limit: Option[Int],
+  @QueryParam sample: Boolean = false,
   @QueryParam download: Boolean = false)
 
 case class ResultListResponse[T](results: Seq[T], totalCount: Int)

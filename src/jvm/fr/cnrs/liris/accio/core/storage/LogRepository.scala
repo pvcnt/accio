@@ -23,12 +23,12 @@ import com.twitter.util.{Future, Time}
 import fr.cnrs.liris.accio.core.domain._
 
 /**
- * Repository persisting run logs.
+ * Repository giving access to run logs.
  */
 trait LogRepository extends Service {
   /**
    * Search for logs matching a given query. Logs are returned ordered in chronological order, the oldest matching
-   * log being the first result (yes, this in *not* the same order than previous method).
+   * log being the first result.
    *
    * @param query Query.
    * @return List of logs.
@@ -39,8 +39,8 @@ trait LogRepository extends Service {
 /**
  * Mutable log repository.
  *
- * Repositories are *not* required to be thread-safe. Mutating methods might need to be wrapped inside transactions
- * on the application-level. However, repositories should still take care not to leave data in a corrupted state,
+ * Mutating methods are *not* required to be thread-safe in the sense they will be wrapped inside transactions
+ * at the application-level. However, they should still take care not to leave data in a corrupted state,
  * which can be hard to recover from.
  */
 trait MutableLogRepository extends LogRepository {
@@ -77,15 +77,16 @@ case class LogsQuery(
   limit: Option[Int] = None,
   since: Option[Time] = None) {
 
+  /**
+   * Check whether a given log matches this query.
+   *
+   * @param log Log.
+   * @return True if the log would be included in this query, false otherwise.
+   */
   def matches(log: RunLog): Boolean = {
-    if (log.runId != runId || log.nodeName != nodeName) {
-      false
-    } else if (classifier.isDefined && log.classifier != classifier.get) {
-      false
-    } else if (since.isDefined && log.createdAt <= since.get.inMillis) {
-      false
-    } else {
-      true
-    }
+    log.runId == runId &&
+      log.nodeName == nodeName &&
+      (classifier.isEmpty || log.classifier == classifier.get) &&
+      (since.isEmpty || log.createdAt > since.get.inMillis)
   }
 }

@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.core.storage.elastic
 
-import com.google.inject.Singleton
+import com.google.inject.{Inject, Singleton}
 import com.sksamuel.elastic4s.ElasticDsl._
 import com.sksamuel.elastic4s.analyzers.KeywordAnalyzer
 import com.sksamuel.elastic4s.get.RichGetResponse
@@ -52,7 +52,7 @@ import scala.util.control.NonFatal
  * @param timeout Query timeout.
  */
 @Singleton
-private[elastic] final class ElasticRunRepository(
+private[elastic] final class ElasticRunRepository @Inject() (
   mapper: FinatraObjectMapper,
   client: ElasticClient,
   @ElasticPrefix prefix: String,
@@ -76,6 +76,9 @@ private[elastic] final class ElasticRunRepository(
     query.clonedFrom.foreach { clonedFrom =>
       q = q.filter(termQuery("cloned_from.value", clonedFrom.value))
     }
+    query.tags.foreach { tag =>
+      q = q.filter(termQuery("tags", tag))
+    }
     query.parent match {
       case Some(parent) => q = q.filter(termQuery("parent.value", parent.value))
       case None => q = q.filter(not(existsQuery("parent")))
@@ -85,6 +88,7 @@ private[elastic] final class ElasticRunRepository(
         .should(matchQuery("owner.name", qs))
         .should(matchQuery("name", qs))
         .should(termQuery("pkg.workflow_id.value", qs))
+        //TODO: wrong, we should not tokenize by hand here with split().
         .should(qs.split(" ").map(s => termQuery("tags", s)))
         .minimumShouldMatch(1)
     }

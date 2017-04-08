@@ -56,7 +56,7 @@ final class MemoryWorkflowRepository extends AbstractIdleService with MutableWor
 
     val totalCount = results.size
     query.offset.foreach { offset => results = results.drop(offset) }
-    results = results.take(query.limit)
+    query.limit.foreach { limit => results = results.take(limit) }
 
     // Remove the graph of each workflow, that we do not want to return.
     results = results.map(workflow => workflow.copy(graph = workflow.graph.unsetNodes))

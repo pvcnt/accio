@@ -31,5 +31,5 @@ trait DataSink[T] {
    * @param key Key elements are associated to.
    * @param elements Elements to write.
    */
-  def write(key: String, elements: TraversableOnce[T]): Unit
+  def write(key: String, elements: Seq[T]): Unit
 }

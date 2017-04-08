@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.agent.handler
 import com.google.inject.Inject
 import com.twitter.util.Future
 import com.typesafe.scalalogging.LazyLogging
-import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
+import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{StreamTaskLogsRequest, StreamTaskLogsResponse}
 import fr.cnrs.liris.accio.core.domain.{InvalidTaskException, InvalidWorkerException}
 import fr.cnrs.liris.accio.core.scheduler.ClusterState

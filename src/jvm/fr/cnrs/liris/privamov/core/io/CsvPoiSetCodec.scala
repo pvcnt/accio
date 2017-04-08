@@ -18,30 +18,25 @@
 
 package fr.cnrs.liris.privamov.core.io
 
-import com.google.inject.Inject
-import fr.cnrs.liris.dal.core.io.{Codec, TextLineDecoder}
-import fr.cnrs.liris.common.util.ByteUtils
+import fr.cnrs.liris.dal.core.io.Codec
 import fr.cnrs.liris.privamov.core.model.PoiSet
 
 import scala.reflect._
 
 /**
  * Codec for our CSV format handling POIs sets.
- *
- * @param codec Codec handling POIs in our CSV format.
  */
-class CsvPoiSetCodec @Inject()(codec: CsvPoiCodec) extends Codec[PoiSet] {
-  private[this] val decoder = new TextLineDecoder(codec)
-
-  override def encode(obj: PoiSet): Array[Byte] = {
-    val encodedEvents = obj.pois.map(codec.encode)
-    ByteUtils.foldLines(encodedEvents)
-  }
-
-  override def decode(key: String, bytes: Array[Byte]): Option[PoiSet] = {
-    val pois = decoder.decode(key, bytes).getOrElse(Seq.empty)
-    Some(PoiSet(key, pois))
-  }
+final class CsvPoiSetCodec extends Codec[PoiSet] {
+  private[this] val poiCodec = new CsvPoiCodec
 
   override def elementClassTag: ClassTag[PoiSet] = classTag[PoiSet]
+
+  override def encode(key: String, elements: Seq[PoiSet]): Array[Byte] = {
+    poiCodec.encode(key, elements.flatMap(_.pois))
+  }
+
+  override def decode(key: String, bytes: Array[Byte]): Seq[PoiSet] = {
+    val pois = poiCodec.decode(key, bytes)
+    if (pois.nonEmpty) Seq(PoiSet(key, pois)) else Seq.empty
+  }
 }

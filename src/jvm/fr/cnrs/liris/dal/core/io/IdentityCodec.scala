@@ -18,15 +18,17 @@
 
 package fr.cnrs.liris.dal.core.io
 
-import scala.reflect._
+import fr.cnrs.liris.common.util.ByteUtils
+
+import scala.reflect.{ClassTag, classTag}
 
 /**
  * Codec doing nothing (reading and returning bytes).
  */
 object IdentityCodec extends Codec[Array[Byte]] {
-  override def encode(obj: Array[Byte]): Array[Byte] = obj
-
-  override def decode(key: String, bytes: Array[Byte]): Option[Array[Byte]] = Some(bytes)
-
   override def elementClassTag: ClassTag[Array[Byte]] = classTag[Array[Byte]]
+
+  override def encode(key: String, elements: Seq[Array[Byte]]): Array[Byte] = ByteUtils.foldLines(elements)
+
+  override def decode(key: String, bytes: Array[Byte]): Seq[Array[Byte]] = Seq(bytes)
 }

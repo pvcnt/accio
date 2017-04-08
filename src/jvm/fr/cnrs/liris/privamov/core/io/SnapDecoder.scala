@@ -25,20 +25,23 @@ import org.joda.time.Instant
 
 import scala.reflect._
 
-class SnapDecoder extends Decoder[Poi] {
-  override def decode(key: String, bytes: Array[Byte]): Option[Poi] = {
+/**
+ * Support for [[http://snap.stanford.edu/ Snap datasets]] encoding POIs from social networks.
+ */
+final class SnapDecoder extends Decoder[Poi] {
+  override def elementClassTag: ClassTag[Poi] = classTag[Poi]
+
+  override def decode(key: String, bytes: Array[Byte]): Seq[Poi] = {
     val line = new String(bytes)
     val parts = line.trim.split("\t")
     if (parts.length < 5) {
-      None
+      Seq.empty
     } else {
       val username = parts(0)
       val time = Instant.parse(parts(1))
       val lat = parts(2).toDouble
       val lng = parts(3).toDouble
-      Some(Poi(username, LatLng.degrees(lat, lng).toPoint, time))
+      Seq(Poi(username, LatLng.degrees(lat, lng).toPoint, time))
     }
   }
-
-  override def elementClassTag: ClassTag[Poi] = classTag[Poi]
 }

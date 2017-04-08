@@ -32,7 +32,7 @@ import org.joda.time.Instant
   ram = "2G")
 class CollapseTemporalGapsOp extends Operator[CollapseTemporalGapsIn, CollapseTemporalGapsOut] {
   override def execute(in: CollapseTemporalGapsIn, ctx: OpContext): CollapseTemporalGapsOut = {
-    val startAt = new Instant(in.startAt.millis).toDateTime.withTimeAtStartOfDay
+    val startAt = new Instant(in.startAt.millis).toDateTime(DateTimeZone.UTC).withTimeAtStartOfDay
     val input = ctx.read[Trace](in.data)
     val output = ctx.write(input.map(transform(_, startAt)))
     CollapseTemporalGapsOut(output)
@@ -43,7 +43,7 @@ class CollapseTemporalGapsOp extends Operator[CollapseTemporalGapsIn, CollapseTe
       var shift = 0L
       var prev: Option[DateTime] = None
       events.map { event =>
-        val time = event.time.toDateTime.withTimeAtStartOfDay
+        val time = event.time.toDateTime(DateTimeZone.UTC).withTimeAtStartOfDay
         if (prev.isEmpty) {
           shift = (if (time.isBefore(startAt)) time to startAt else startAt to time).duration.days
         } else if (time != prev.get) {

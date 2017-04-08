@@ -77,7 +77,7 @@ private[elastic] final class ElasticWorkflowRepository @Inject()(
     var s = search(indexName / typeName)
       .query(q)
       .sourceExclude("graph.nodes")
-      .limit(query.limit)
+      .limit(query.limit.getOrElse(10000)) // Max limit defaults to 10000.
       .from(query.offset.getOrElse(0))
     if (query.q.isEmpty) {
       s = s.sortBy(fieldSort("created_at").order(SortOrder.DESC))

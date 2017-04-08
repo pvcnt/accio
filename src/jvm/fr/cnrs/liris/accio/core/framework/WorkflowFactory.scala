@@ -23,17 +23,23 @@ import java.util.Objects
 import com.google.inject.Inject
 import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.common.util.{HashUtils, Seqs}
-import fr.cnrs.liris.dal.core.api.DataTypes
+import fr.cnrs.liris.dal.core.api._
 
 import scala.collection.mutable
 
 /**
  * Factory for [[Workflow]].
  *
- * @param graphFactory Graph factory.
- * @param opRegistry   Operator registry.
+ * @param graphFactory   Graph factory.
+ * @param opRegistry     Operator registry.
+ * @param valueValidator Value validator.
  */
-final class WorkflowFactory @Inject()(graphFactory: GraphFactory, opRegistry: OpRegistry) extends BaseFactory {
+final class WorkflowFactory @Inject()(
+  graphFactory: GraphFactory,
+  opRegistry: OpRegistry,
+  valueValidator: ValueValidator)
+  extends BaseFactory {
+
   /**
    * Create a workflow from a workflow specification.
    *
@@ -128,6 +134,16 @@ final class WorkflowFactory @Inject()(graphFactory: GraphFactory, opRegistry: Op
       if (dataTypes.head != argDef.kind) {
         val message = s"Param declared as ${DataTypes.toString(argDef.kind)} is used as ${DataTypes.toString(dataTypes.head)}"
         throw newError(message, s"params.${argDef.name}", warnings)
+      }
+
+      // Check the default value is valid w.r.t. every input definition.
+      argDef.defaultValue.foreach { defaultValue =>
+        val errors = usages.toSeq.flatMap { usage =>
+          valueValidator.validate(defaultValue, usage.argDef, Some(s"params.${argDef.name}.default_value"))
+        }
+        if (errors.nonEmpty) {
+          throw new InvalidSpecException(errors)
+        }
       }
 
       // Parameter is optional if either:

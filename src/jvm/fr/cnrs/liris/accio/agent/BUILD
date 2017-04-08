@@ -1,14 +1,14 @@
 scala_library(
   dependencies=[
-    'src/jvm/fr/cnrs/liris/accio/agent/commandbus',
-    'src/jvm/fr/cnrs/liris/accio/agent/handler/inject',
+    'src/jvm/fr/cnrs/liris/accio/agent/handler',
     'src/jvm/fr/cnrs/liris/accio/core/filesystem/inject',
     'src/jvm/fr/cnrs/liris/accio/core/storage/inject',
     'src/jvm/fr/cnrs/liris/accio/core/scheduler/inject',
     'src/jvm/fr/cnrs/liris/accio/core/dsl/inject',
     'src/jvm/fr/cnrs/liris/accio/core/framework',
-    'src/jvm/fr/cnrs/liris/accio/core/finagle',
+    'src/jvm/fr/cnrs/liris/accio/runtime/finagle',
     'src/jvm/fr/cnrs/liris/accio/core/util:annotations',
+    'src/jvm/fr/cnrs/liris/accio/runtime/commandbus',
     'src/jvm/fr/cnrs/liris/accio/runtime/logging',
     'src/jvm/fr/cnrs/liris/privamov/ops',
     'src/thrift/fr/cnrs/liris/accio/agent',

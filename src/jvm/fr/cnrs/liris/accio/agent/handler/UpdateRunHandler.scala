@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.agent.handler
 
 import com.google.inject.Inject
 import com.twitter.util.Future
-import fr.cnrs.liris.accio.agent.commandbus.AbstractHandler
+import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{UpdateRunRequest, UpdateRunResponse}
 import fr.cnrs.liris.accio.core.domain.{Run, UnknownRunException}
 import fr.cnrs.liris.accio.core.storage.Storage
@@ -57,8 +57,8 @@ final class UpdateRunHandler @Inject()(storage: Storage)
       req.notes.foreach { notes =>
         newRun = newRun.copy(notes = Some(notes))
       }
-      req.tags.foreach { tags =>
-        newRun = newRun.copy(tags = tags)
+      if (req.tags.nonEmpty) {
+        newRun = newRun.copy(tags = req.tags)
       }
       provider.runs.save(newRun)
     }

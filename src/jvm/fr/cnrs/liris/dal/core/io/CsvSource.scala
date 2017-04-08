@@ -45,7 +45,7 @@ class CsvSource[T: ClassTag](uri: String, decoder: Decoder[T]) extends DataSourc
       .sortWith(sort)
   }
 
-  override def read(id: String): Option[T] = {
+  override def read(id: String): Iterable[T] = {
     val bytes = Files.readAllBytes(path.resolve(s"$id.csv"))
     decoder.decode(id, bytes)
   }

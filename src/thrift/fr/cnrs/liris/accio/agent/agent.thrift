@@ -81,6 +81,9 @@ service AgentService {
   // List log lines.
   api.ListLogsResponse listLogs(1: api.ListLogsRequest req);
 
+  // Retrieve content of a dataset.
+  api.GetDatasetResponse getDataset(1: api.GetDatasetRequest req);
+
   /**
    * RPC endpoints used by workers to communicate with their master.
    */

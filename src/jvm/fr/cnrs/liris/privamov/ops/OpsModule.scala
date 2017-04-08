@@ -19,27 +19,28 @@
 package fr.cnrs.liris.privamov.ops
 
 import com.google.inject.TypeLiteral
+import com.twitter.inject.TwitterModule
 import fr.cnrs.liris.accio.core.api.Operator
 import fr.cnrs.liris.dal.core.io.{Decoder, Encoder}
-import fr.cnrs.liris.privamov.core.io.{CsvEventCodec, CsvPoiCodec, CsvPoiSetCodec, CsvTraceCodec}
-import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
+import fr.cnrs.liris.privamov.core.io.{CsvEventCodec, CsvPoiCodec, CsvPoiSetCodec, TraceCodec}
+import net.codingwell.scalaguice.ScalaMultibinder
 
 /**
  * Guice module providing bindings for all operators defined in this package.
  */
-object OpsModule extends ScalaModule {
+object OpsModule extends TwitterModule {
   override def configure(): Unit = {
     // List of available encoders.
     val encoders = ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Encoder[_]] {})
     encoders.addBinding.to[CsvEventCodec]
-    encoders.addBinding.to[CsvTraceCodec]
+    encoders.addBinding.to[TraceCodec]
     encoders.addBinding.to[CsvPoiCodec]
     encoders.addBinding.to[CsvPoiSetCodec]
 
     // List of available decoders.
     val decoders = ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Decoder[_]] {})
     decoders.addBinding.to[CsvEventCodec]
-    decoders.addBinding.to[CsvTraceCodec]
+    decoders.addBinding.to[TraceCodec]
     decoders.addBinding.to[CsvPoiCodec]
     decoders.addBinding.to[CsvPoiSetCodec]
 
