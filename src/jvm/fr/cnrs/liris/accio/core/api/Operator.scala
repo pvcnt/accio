@@ -19,23 +19,24 @@
 package fr.cnrs.liris.accio.core.api
 
 /**
- * An operator is the basic processing unit of Accio. It takes a typed input and produces a type output. Input and
+ * An operator is the basic processing unit of Accio. It takes a typed input and produces a typed output. Input and
  * output types must be case classes, whose fields are one of the allowed types. All operators should be annotated
  * with the [[Op]] annotation.
  *
- * @tparam In  Inputs type
- * @tparam Out Outputs type
+ * @tparam In  Input type
+ * @tparam Out Output type
  */
 trait Operator[In, Out] {
   /**
-   * Execute this operator. With given inputs and a given context, it should produce deterministic outputs.
+   * Execute this operator. With given input and context, it should produce a deterministic output.
    *
-   * Implementations can use a seed if they need to use some randomness. Outside of this, the execution should be
-   * perfectly deterministic. A working directory is provided for operators who need to write results somewhere.
+   * Implementations can use a seed if they need some randomness. Outside of this, the execution should be
+   * perfectly deterministic. A working directory is provided for operators who need to write results
+   * somewhere. This directory is only valid for the operator's life, it can be deleted at any point once
+   * the operator completed.
    *
-   * @param in  Inputs.
+   * @param in  Input.
    * @param ctx Execution context.
-   * @return Outputs.
    */
   def execute(in: In, ctx: OpContext): Out
 }

@@ -20,10 +20,10 @@ package fr.cnrs.liris.accio.core.api
 
 import java.nio.file.{Files, Path}
 
-import fr.cnrs.liris.dal.core.io._
-import fr.cnrs.liris.dal.core.sparkle._
 import fr.cnrs.liris.common.util.Identified
 import fr.cnrs.liris.dal.core.api.Dataset
+import fr.cnrs.liris.dal.core.io._
+import fr.cnrs.liris.dal.core.sparkle._
 
 import scala.reflect.{ClassTag, classTag}
 
@@ -36,18 +36,24 @@ import scala.reflect.{ClassTag, classTag}
  * @param decoders Decoders available to read data from CSV files.
  * @param encoders Encoders available to write data to CSV files.
  */
-class OpContext(_seed: Option[Long], val workDir: Path, val env: SparkleEnv, decoders: Set[Decoder[_]], encoders: Set[Encoder[_]]) {
+final class OpContext(_seed: Option[Long], val workDir: Path, val env: SparkleEnv, decoders: Set[Decoder[_]], encoders: Set[Encoder[_]]) {
   /**
    * Return the seed to use for an unstable operator.
    *
    * @throws IllegalStateException If the operator is not declared as unstable.
    */
-  @throws[IllegalStateException]
   def seed: Long = _seed match {
     case None => throw new IllegalStateException("Operator is not declared as unstable, cannot access the seed")
     case Some(s) => s
   }
 
+  /**
+   * Read a CSV dataset as a [[DataFrame]].
+   *
+   * @param dataset Dataset to read.
+   * @tparam T Dataframe type.
+   * @throws RuntimeException If there is no decoder to read as given type.
+   */
   def read[T: ClassTag](dataset: Dataset): DataFrame[T] = {
     val clazz = classTag[T].runtimeClass
     decoders.find(decoder => clazz.isAssignableFrom(decoder.elementClassTag.runtimeClass)) match {
@@ -56,8 +62,23 @@ class OpContext(_seed: Option[Long], val workDir: Path, val env: SparkleEnv, dec
     }
   }
 
+  /**
+   * Write a [[DataFrame]] as a CSV dataset, for a "data" output port.
+   *
+   * @param frame Dataframe to write.
+   * @tparam T Dataframe type.
+   * @throws RuntimeException If there is no encoder to write dataframe.
+   */
   def write[T <: Identified : ClassTag](frame: DataFrame[T]): Dataset = write(frame, "data")
 
+  /**
+   * Write a [[DataFrame]] as a CSV dataset.
+   *
+   * @param frame Dataframe to write.
+   * @param port  Output port name.
+   * @tparam T Dataframe type.
+   * @throws RuntimeException If there is no encoder to write dataframe.
+   */
   def write[T <: Identified : ClassTag](frame: DataFrame[T], port: String): Dataset = {
     val clazz = classTag[T].runtimeClass
     encoders.find(encoder => clazz.isAssignableFrom(encoder.elementClassTag.runtimeClass)) match {
@@ -69,8 +90,25 @@ class OpContext(_seed: Option[Long], val workDir: Path, val env: SparkleEnv, dec
     }
   }
 
+  /**
+   * Write a list of elements as a CSV dataset, for a "data" output port.
+   *
+   * @param elements Elements to write.
+   * @param key      Key associated with those elements.
+   * @tparam T Elements type.
+   * @throws RuntimeException If there is no encoder to write elements.
+   */
   def write[T: ClassTag](elements: Seq[T], key: String): Dataset = write(elements, key, "data")
 
+  /**
+   * Write a list of elements as a CSV dataset.
+   *
+   * @param elements Elements to write.
+   * @param key      Key associated with those elements.
+   * @param port     Output port name.
+   * @tparam T Elements type.
+   * @throws RuntimeException If there is no encoder to write elements.
+   */
   def write[T: ClassTag](elements: Seq[T], key: String, port: String): Dataset = {
     val clazz = classTag[T].runtimeClass
     encoders.find(encoder => clazz.isAssignableFrom(encoder.elementClassTag.runtimeClass)) match {

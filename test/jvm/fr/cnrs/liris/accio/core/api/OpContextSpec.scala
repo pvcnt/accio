@@ -18,15 +18,39 @@
 
 package fr.cnrs.liris.accio.core.api
 
-import fr.cnrs.liris.testing.UnitSpec
-import org.scalatest.BeforeAndAfter
+import java.nio.file.{Files, Paths}
 
-import scala.collection.mutable
-import scala.reflect._
+import fr.cnrs.liris.accio.testing.WithSparkleEnv
+import fr.cnrs.liris.dal.core.api.Dataset
+import fr.cnrs.liris.dal.core.io.IdentityCodec
+import fr.cnrs.liris.testing.{UnitSpec, WithTmpDirectory}
 
 /**
  * Unit tests for [[OpContext]].
  */
-class OpContextSpec extends UnitSpec {
+class OpContextSpec extends UnitSpec with WithSparkleEnv with WithTmpDirectory {
   behavior of "OpContext"
+
+  it should "provide a seed for unstable operators" in {
+    val ctx = new OpContext(Some(1234567890L), Paths.get("."), env, Set.empty, Set.empty)
+    ctx.seed shouldBe 1234567890L
+  }
+
+  it should "not provide a seed for stable operators" in {
+    val ctx = new OpContext(None, Paths.get("."), env, Set.empty, Set.empty)
+    an[IllegalStateException] shouldBe thrownBy {
+      ctx.seed
+    }
+  }
+
+  it should "read a dataset" in {
+    val ctx = new OpContext(None, tmpDir, env, Set(IdentityCodec), Set(IdentityCodec))
+    val bytes = "some string that will ultimately be converted into bytes".getBytes
+    Files.write(tmpDir.resolve("foo.csv"), bytes)
+    Files.write(tmpDir.resolve("bar.csv"), "other content".getBytes)
+
+    val ds = ctx.read[Array[Byte]](Dataset(tmpDir.toString))
+    ds.keys should contain theSameElementsAs Set("bar", "foo")
+    ds.restrict(Set("foo")).toArray.map(_.deep) should contain theSameElementsAs Set(bytes.deep)
+  }
 }
