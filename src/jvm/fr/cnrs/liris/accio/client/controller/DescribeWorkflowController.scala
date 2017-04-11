@@ -41,8 +41,8 @@ class DescribeWorkflowController extends DescribeController[Workflow] with Forma
   override def print(out: Reporter, workflow: Workflow): Unit = {
     out.outErr.printOutLn(s"${padTo("Id", colWidth)} ${workflow.id.value}")
     out.outErr.printOutLn(s"${padTo("Last version", colWidth)} ${workflow.version}")
-    out.outErr.printOutLn(s"${padTo("Created", colWidth)} ${format(Time.fromMilliseconds(workflow.createdAt))}")
-    out.outErr.printOutLn(s"${padTo("Owner", colWidth)} ${workflow.owner.name}")
+    out.outErr.printOutLn(s"${padTo("Created", colWidth)} ${format(Time.fromMilliseconds(workflow.createdAt.get))}")
+    out.outErr.printOutLn(s"${padTo("Owner", colWidth)} ${workflow.owner.map(_.name).getOrElse("<anonymous>")}")
     out.outErr.printOutLn(s"${padTo("Name", colWidth)} ${workflow.name}")
     out.outErr.printOutLn("Parameters")
     val maxLength = workflow.params.map(_.name.length).max

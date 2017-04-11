@@ -36,8 +36,8 @@ class GetWorkflowController extends AbstractGetController[ListWorkflowsResponse]
     resp.results.map { workflow =>
       Seq(
         workflow.id.value,
-        workflow.owner.name,
-        format(Time.fromMilliseconds(workflow.createdAt)),
+        workflow.owner.map(_.name).getOrElse("<anonymous>"),
+        format(Time.fromMilliseconds(workflow.createdAt.get)),
         workflow.name.getOrElse("<no name>"))
     }
   }

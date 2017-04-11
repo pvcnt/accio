@@ -42,7 +42,7 @@ class RunParser(mapper: FinatraObjectMapper, storage: Storage, factory: RunFacto
     } else {
       // Otherwise, we consider content is a workflow specification.
       val workflow = findWorkflow(new String(content), warnings)
-      val spec = RunSpec(Package(workflow.id, workflow.version))
+      val spec = RunSpec(Package(workflow.id, workflow.version.get))
       (workflow, spec)
     }
 
@@ -118,7 +118,7 @@ class RunParser(mapper: FinatraObjectMapper, storage: Storage, factory: RunFacto
       }
     }
     val spec = RunSpec(
-      pkg = Package(workflow.id, workflow.version),
+      pkg = Package(workflow.id, workflow.version.get),
       owner = None,
       name = json.name,
       notes = json.notes,

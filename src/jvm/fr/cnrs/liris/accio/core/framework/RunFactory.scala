@@ -133,7 +133,7 @@ final class RunFactory @Inject()(storage: Storage, valueValidator: ValueValidato
 
     Run(
       id = randomId,
-      pkg = Package(workflow.id, workflow.version),
+      pkg = Package(workflow.id, workflow.version.get),
       owner = owner,
       name = name,
       cluster = "default",
@@ -175,7 +175,7 @@ final class RunFactory @Inject()(storage: Storage, valueValidator: ValueValidato
     repeat: Int,
     clonedFrom: Option[RunId]): Seq[Run] = {
 
-    val pkg = Package(workflow.id, workflow.version)
+    val pkg = Package(workflow.id, workflow.version.get)
     val actualSeed = seed.getOrElse(Random.nextLong())
     val now = System.currentTimeMillis()
     val random = new Random(actualSeed)

@@ -23,9 +23,9 @@ import java.nio.file.Files
 import com.google.inject.Inject
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.agent.{AgentService$FinagleClient, ParseWorkflowRequest, PushWorkflowRequest}
-import fr.cnrs.liris.accio.runtime.event.{Event, EventKind, Reporter}
+import fr.cnrs.liris.accio.core.api.{Utils, Workflow}
 import fr.cnrs.liris.accio.runtime.cli.{Cmd, ExitCode}
-import fr.cnrs.liris.accio.core.api.{Utils, WorkflowSpec}
+import fr.cnrs.liris.accio.runtime.event.{Event, EventKind, Reporter}
 import fr.cnrs.liris.common.flags.FlagsProvider
 import fr.cnrs.liris.common.util.FileUtils
 
@@ -71,7 +71,7 @@ class PushCommand @Inject()(clientProvider: ClusterClientProvider)
     }
   }
 
-  private def push(spec: WorkflowSpec, client: AgentService$FinagleClient, out: Reporter): ExitCode = {
+  private def push(spec: Workflow, client: AgentService$FinagleClient, out: Reporter): ExitCode = {
     val req = PushWorkflowRequest(spec, Utils.DefaultUser)
     handleResponse(client.pushWorkflow(req), out) { _ =>
       out.handle(Event.info(s"Pushed workflow: ${spec.id.value}"))

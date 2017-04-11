@@ -19,12 +19,28 @@
 package fr.cnrs.liris.accio.core.statemgr
 
 import com.twitter.scrooge.ThriftStruct
+import fr.cnrs.liris.accio.core.api.{ObjectReference, User}
+import fr.cnrs.liris.dal.core.api.Value
 
 /**
  */
 trait StateManager {
-  //def save(id: String, obj: ThriftStruct): Unit
-  //def delete(id: String, obj: ThriftStruct): Unit
+  /*def saveObject(ref: ObjectReference, obj: ThriftStruct): Unit
+
+  def deleteObject(ref: ObjectReference): Unit
+
+  def getObject[T <: ThriftStruct](ref: ObjectReference): Option[T]
+
+  def listObjects[T <: ThriftStruct](query: ListQuery): ObjectList[T]*/
 
   def close(): Unit = {}
 }
+
+/*case class ListQuery(
+  fields: Map[String, Set[Value]] = Map.empty,
+  tags: Set[String] = Set.empty,
+  owner: Option[User] = None,
+  limit: Option[Int] = None,
+  offset: Int = 0)
+
+case class ObjectList[T](results: Seq[T], totalCount: Int)*/

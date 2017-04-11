@@ -26,4 +26,23 @@ import fr.cnrs.liris.accio.core.statemgr.StateManager
  */
 @Singleton
 final class MemoryStateMgr extends StateManager {
+  /*private[this] val objects = new ConcurrentHashMap[ObjectType, mutable.Map[String, ThriftStruct]]().asScala
+
+  override def saveObject(ref: ObjectReference, obj: ThriftStruct): Unit = {
+    objects
+      .getOrElseUpdate(ref.kind, new ConcurrentHashMap[String, ThriftStruct]().asScala)
+      .update(ref.name.value, obj)
+  }
+
+  override def deleteObject(ref: ObjectReference): Unit = {
+    objects.get(ref.kind).foreach(_.remove(ref.name.value))
+  }
+
+  override def getObject[T <: ThriftStruct](ref: ObjectReference): Option[T] = {
+    objects.get(ref.kind).flatMap(_.get(ref.name.value)).map(_.asInstanceOf[T])
+  }
+
+  override def listObjects[T <: ThriftStruct](query: ListQuery): ObjectList[T] = {
+
+  }*/
 }

@@ -40,14 +40,14 @@ class WorkflowFactorySpec extends UnitSpec {
     workflow.id shouldBe WorkflowId("my_workflow")
     workflow.name shouldBe Some("my workflow")
     workflow.isActive shouldBe true
-    workflow.owner shouldBe User("him")
+    workflow.owner shouldBe Some(User("him"))
     workflow.graph shouldBe Workflows.workflow1.graph
     workflow.params should have size 0
   }
 
   it should "populate default owner" in {
     val workflow = factory.create(Workflows.workflow2, User("me"))
-    workflow.owner shouldBe User("me")
+    workflow.owner shouldBe Some(User("me"))
   }
 
   it should "create a workflow with params" in {
@@ -102,7 +102,7 @@ class WorkflowFactorySpec extends UnitSpec {
       InvalidSpecMessage("Value must be <= 2000.0", Some("params.foo.default_value")))
   }
 
-  private def assertErrors(spec: WorkflowSpec, errors: InvalidSpecMessage*) = {
+  private def assertErrors(spec: Workflow, errors: InvalidSpecMessage*) = {
     val expected = intercept[InvalidSpecException] {
       factory.create(spec, User("me"))
     }
@@ -114,8 +114,9 @@ class WorkflowFactorySpec extends UnitSpec {
 }
 
 object Workflows {
-  val workflow1 = WorkflowSpec(
+  val workflow1 = Workflow(
     id = WorkflowId("my_workflow"),
+    isActive = true,
     graph = GraphDef(Set(
       NodeDef(
         op = "FirstSimple",
@@ -130,8 +131,9 @@ object Workflows {
     name = Some("my workflow"),
     owner = Some(User("him")))
 
-  val workflow2 = WorkflowSpec(
+  val workflow2 = Workflow(
     id = WorkflowId("workflow2"),
+    isActive = true,
     params = Set(
       ArgDef("foo", DataType(AtomicType.Integer)),
       ArgDef("bar", DataType(AtomicType.Double))
@@ -148,8 +150,9 @@ object Workflows {
           "dbl" -> InputDef.Param("bar"),
           "data" -> InputDef.Reference(Reference("FirstSimple", "data")))))))
 
-  val workflow3 = WorkflowSpec(
+  val workflow3 = Workflow(
     id = WorkflowId("workflow3"),
+    isActive = true,
     params = Set(
       ArgDef("foo", DataType(AtomicType.Integer), defaultValue = Some(Values.encodeInteger(42))),
       ArgDef("bar", DataType(AtomicType.Double)),
@@ -168,8 +171,9 @@ object Workflows {
           "str" -> InputDef.Param("string"),
           "data" -> InputDef.Reference(Reference("FirstSimple", "data")))))))
 
-   val invalidParamNameWorkflow = WorkflowSpec(
+   val invalidParamNameWorkflow = Workflow(
     id = WorkflowId("invalid_workflow"),
+     isActive = true,
     params = Set(
       ArgDef("foo/foo", DataType(AtomicType.Integer))
     ),
@@ -179,8 +183,9 @@ object Workflows {
         name = "FirstSimple",
         inputs = Map("foo" -> InputDef.Param("foo/foo"))))))
 
-   val invalidParamTypeWorkflow = WorkflowSpec(
+   val invalidParamTypeWorkflow = Workflow(
     id = WorkflowId("invalid_workflow"),
+     isActive = true,
     params = Set(ArgDef("foo", DataType(AtomicType.String))),
     graph = GraphDef(Set(
       NodeDef(
@@ -188,8 +193,9 @@ object Workflows {
         name = "FirstSimple",
         inputs = Map("foo" -> InputDef.Param("foo"))))))
 
-  val invalidDefaultValueWorkflow = WorkflowSpec(
+  val invalidDefaultValueWorkflow = Workflow(
     id = WorkflowId("invalid_workflow"),
+    isActive = true,
     params = Set(ArgDef("foo", DataType(AtomicType.Integer), defaultValue = Some(Values.encodeInteger(15008)))),
     graph = GraphDef(Set(
       NodeDef(
@@ -197,16 +203,18 @@ object Workflows {
         name = "FirstSimple",
         inputs = Map("foo" -> InputDef.Param("foo"))))))
 
-   val undeclaredParamWorkflow = WorkflowSpec(
+   val undeclaredParamWorkflow = Workflow(
     id = WorkflowId("invalid_workflow"),
+     isActive = true,
     graph = GraphDef(Set(
       NodeDef(
         op = "FirstSimple",
         name = "FirstSimple",
         inputs = Map("foo" -> InputDef.Param("foo"))))))
 
-   val heterogeneousWorkflow = WorkflowSpec(
+   val heterogeneousWorkflow = Workflow(
     id = WorkflowId("invalid_workflow"),
+     isActive = true,
     params = Set(ArgDef("foo", DataType(AtomicType.Integer))),
     graph = GraphDef(Set(
       NodeDef(

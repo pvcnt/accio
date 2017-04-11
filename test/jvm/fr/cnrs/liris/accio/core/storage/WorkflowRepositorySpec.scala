@@ -27,10 +27,10 @@ import fr.cnrs.liris.dal.core.api.{AtomicType, DataType, Values}
 private[storage] abstract class WorkflowRepositorySpec extends RepositorySpec[MutableWorkflowRepository] {
   private[this] val workflow1 = Workflow(
     id = WorkflowId("workflow1"),
-    version = "v1",
-    owner = User("me"),
+    version = Some("v1"),
+    owner = Some(User("me")),
     isActive = true,
-    createdAt = System.currentTimeMillis(),
+    createdAt = Some(System.currentTimeMillis()),
     graph = GraphDef(Set(
       NodeDef(
         op = "FirstSimple",
@@ -46,11 +46,11 @@ private[storage] abstract class WorkflowRepositorySpec extends RepositorySpec[Mu
 
   private[this] val workflow2 = Workflow(
     id = WorkflowId("workflow2"),
-    version = "v1",
-    owner = User("me"),
+    version = Some("v1"),
+    owner = Some(User("me")),
     isActive = true,
     params = Set(ArgDef("foo", DataType(AtomicType.Integer))),
-    createdAt = System.currentTimeMillis() + 10,
+    createdAt = Some(System.currentTimeMillis() + 10),
     graph = GraphDef(Set(
       NodeDef(
         op = "FirstSimple",
@@ -81,11 +81,11 @@ private[storage] abstract class WorkflowRepositorySpec extends RepositorySpec[Mu
   it should "search for workflows" in {
     val workflows = Seq(
       workflow1,
-      workflow1.copy(version = "v2"),
+      workflow1.copy(version = Some("v2")),
       workflow2,
-      workflow2.copy(version = "v2"),
-      workflow1.copy(id = WorkflowId("other_workflow"), createdAt = System.currentTimeMillis() + 20),
-      workflow1.copy(id = WorkflowId("another_workflow"), createdAt = System.currentTimeMillis() + 30, owner = User("him")))
+      workflow2.copy(version = Some("v2")),
+      workflow1.copy(id = WorkflowId("other_workflow"), createdAt = Some(System.currentTimeMillis() + 20)),
+      workflow1.copy(id = WorkflowId("another_workflow"), createdAt = Some(System.currentTimeMillis() + 30), owner = Some(User("him"))))
     workflows.foreach(repo.save)
     refreshBeforeSearch()
 
@@ -105,7 +105,7 @@ private[storage] abstract class WorkflowRepositorySpec extends RepositorySpec[Mu
   it should "retrieve a workflow at a specific version" in {
     val workflows = Seq(
       workflow1,
-      workflow1.copy(version = "v2"),
+      workflow1.copy(version = Some("v2")),
       workflow2)
     workflows.foreach(repo.save)
     refreshBeforeSearch()

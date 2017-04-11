@@ -30,10 +30,10 @@ import fr.cnrs.liris.testing.UnitSpec
 class RunParserSpec extends UnitSpec {
   private[this] val myWorkflow = Workflow(
     id = WorkflowId("my_workflow"),
-    version = "v1",
-    owner = User("me"),
+    version = Some("v1"),
+    owner = Some(User("me")),
     isActive = true,
-    createdAt = System.currentTimeMillis(),
+    createdAt = Some(System.currentTimeMillis()),
     graph = GraphDef(Set(
       NodeDef(
         op = "FirstSimple",
@@ -57,7 +57,7 @@ class RunParserSpec extends UnitSpec {
   it should "parse a minimal run definition" in {
     val spec = parser.parse("""{"workflow": "my_workflow"}""", Map.empty)
     spec.pkg.workflowId shouldBe myWorkflow.id
-    spec.pkg.workflowVersion shouldBe "v1"
+    spec.pkg.workflowVersion shouldBe Some("v1")
     spec.owner shouldBe None
     spec.name shouldBe None
     spec.notes shouldBe None
@@ -78,7 +78,7 @@ class RunParserSpec extends UnitSpec {
         |"repeat": 15}""".stripMargin,
       Map.empty)
     spec.pkg.workflowId shouldBe myWorkflow.id
-    spec.pkg.workflowVersion shouldBe "v1"
+    spec.pkg.workflowVersion shouldBe Some("v1")
     spec.owner shouldBe None // There is never an owner from definition.
     spec.name shouldBe Some("named run")
     spec.notes shouldBe Some("All my notes")

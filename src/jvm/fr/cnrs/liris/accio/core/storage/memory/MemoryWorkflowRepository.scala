@@ -44,7 +44,7 @@ final class MemoryWorkflowRepository extends AbstractIdleService with MutableWor
         workflows(version) = oldWorkflow.copy(isActive = false)
       }
     }
-    workflows(workflow.version) = workflow
+    workflows(workflow.version.get) = workflow
   }
 
   override def find(query: WorkflowQuery): WorkflowList = {
@@ -52,7 +52,7 @@ final class MemoryWorkflowRepository extends AbstractIdleService with MutableWor
       .flatMap(_.values.find(_.isActive))
       .filter(query.matches)
       .toSeq
-      .sortWith((a, b) => a.createdAt > b.createdAt)
+      .sortWith((a, b) => a.createdAt.get > b.createdAt.get)
 
     val totalCount = results.size
     query.offset.foreach { offset => results = results.drop(offset) }

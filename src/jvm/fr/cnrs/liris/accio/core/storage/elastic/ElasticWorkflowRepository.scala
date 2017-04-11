@@ -105,7 +105,7 @@ private[elastic] final class ElasticWorkflowRepository @Inject()(
       .execute {
         // We insert the new version.
         indexInto(indexName / typeName)
-          .id(internalId(workflow.id, workflow.version))
+          .id(internalId(workflow.id, workflow.version.get))
           .source(json)
           .refresh(RefreshPolicy.WAIT_UNTIL)
       }
@@ -117,7 +117,7 @@ private[elastic] final class ElasticWorkflowRepository @Inject()(
           val q = boolQuery()
             .filter(termQuery("id.value", workflow.id.value))
             .filter(termQuery("is_active", 1))
-            .filter(not(termQuery("version", workflow.version)))
+            .filter(not(termQuery("version", workflow.version.get)))
           client
             .execute {
               updateIn(indexName)

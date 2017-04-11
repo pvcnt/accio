@@ -77,7 +77,7 @@ class ApiController @Inject()(client: AgentService$FinagleClient) extends Contro
         case Some(workflow) =>
           val req = PushWorkflowRequest(workflow, user)
           client.pushWorkflow(req).map { resp =>
-            UpdateWorkflowResponse(resp.workflow.version)
+            UpdateWorkflowResponse(resp.workflow.version.get)
           }
       }
     }

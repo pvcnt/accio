@@ -24,8 +24,7 @@ import com.fasterxml.jackson.databind.JsonMappingException
 import com.twitter.finatra.json.FinatraObjectMapper
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.core.api.{InvalidSpecException, _}
-import fr.cnrs.liris.accio.core.framework.{BaseFactory, WorkflowFactory}
-import fr.cnrs.liris.accio.core.framework.{BaseFactory, OpRegistry}
+import fr.cnrs.liris.accio.core.framework.{BaseFactory, OpRegistry, WorkflowFactory}
 import fr.cnrs.liris.dal.core.api.{DataTypes, Values}
 
 import scala.collection.mutable
@@ -47,7 +46,7 @@ class WorkflowParser(mapper: FinatraObjectMapper, opRegistry: OpRegistry, factor
    * @throws InvalidSpecException If the workflow specification is invalid.
    */
   @throws[InvalidSpecException]
-  def parse(content: String, filename: Option[String], warnings: mutable.Set[InvalidSpecMessage] = mutable.Set.empty[InvalidSpecMessage]): WorkflowSpec = {
+  def parse(content: String, filename: Option[String], warnings: mutable.Set[InvalidSpecMessage] = mutable.Set.empty[InvalidSpecMessage]): Workflow = {
     val json = parse(content, warnings)
     val id = json.id.orElse(filename.map(defaultId)).getOrElse(throw newError("No workflow identifier", warnings))
     val owner = json.owner.map(Utils.parseUser)
@@ -57,7 +56,7 @@ class WorkflowParser(mapper: FinatraObjectMapper, opRegistry: OpRegistry, factor
       val defaultValue = paramDef.defaultValue.map(Values.encode(_, kind))
       ArgDef(name = paramDef.name, kind = kind, defaultValue = defaultValue)
     }.toSet
-    val spec = WorkflowSpec(WorkflowId(id), None, json.name, owner, GraphDef(nodes), params)
+    val spec = Workflow(WorkflowId(id), isActive = true, name = json.name, owner = owner, graph = GraphDef(nodes), params = params)
 
     // Validate the specification would generate a valid workflow.
     val validationResult = factory.validate(spec)

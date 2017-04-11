@@ -97,7 +97,7 @@ case class WorkflowQuery(
    */
   def matches(workflow: Workflow): Boolean = {
     (name.isEmpty || workflow.name.contains(name.get)) &&
-      (owner.isEmpty || owner.get == workflow.owner.name)
+      (owner.isEmpty || workflow.owner.map(_.name).contains(owner.get))
   }
 }
 

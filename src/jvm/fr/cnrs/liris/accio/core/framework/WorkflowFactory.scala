@@ -49,7 +49,7 @@ final class WorkflowFactory @Inject()(
    * @throws InvalidSpecException If the workflow specification is invalid.
    */
   @throws[InvalidSpecException]
-  def create(spec: WorkflowSpec, user: User, warnings: mutable.Set[InvalidSpecMessage] = mutable.Set.empty[InvalidSpecMessage]): Workflow = {
+  def create(spec: Workflow, user: User, warnings: mutable.Set[InvalidSpecMessage] = mutable.Set.empty[InvalidSpecMessage]): Workflow = {
     val graph = graphFactory.create(spec.graph, warnings)
     val params = getParams(graph, spec.params.toSet, warnings)
     val owner = spec.owner.getOrElse(user)
@@ -59,11 +59,11 @@ final class WorkflowFactory @Inject()(
     }
     Workflow(
       id = spec.id,
-      version = version,
+      version = Some(version),
       isActive = true,
-      createdAt = System.currentTimeMillis(),
+      createdAt = Some(System.currentTimeMillis()),
       name = spec.name,
-      owner = owner,
+      owner = Some(owner),
       graph = spec.graph,
       params = params)
   }
@@ -74,7 +74,7 @@ final class WorkflowFactory @Inject()(
    *
    * @param spec Workflow specification.
    */
-  def validate(spec: WorkflowSpec): ValidationResult = {
+  def validate(spec: Workflow): ValidationResult = {
     doValidate(warnings => create(spec, User("dummy user"), warnings))
   }
 

@@ -455,34 +455,25 @@ struct Workflow {
 
   // Version identifier, unique among all version of a particular workflow. Besires this, there is no constraint on
   // it, it is just a plain string.
-  2: required string version;
+  2: optional string version;
 
   // Whether this object represents the active (i.e., latest) version of the workflow.
   3: required bool is_active;
 
   // Time at which this version of the workflow was created.
-  4: required Timestamp created_at;
+  4: optional Timestamp created_at;
 
   // Human-readable name.
   5: optional string name;
 
   // User owning this workflow (usually the one who created it).
-  6: required User owner;
+  6: optional User owner;
 
   // Graph definition.
   7: required GraphDef graph;
 
   // Workflow parameters.
   8: required set<ArgDef> params;
-}
-
-struct WorkflowSpec {
-  1: required WorkflowId id;
-  2: optional string version;
-  3: optional string name;
-  4: optional User owner;
-  5: required GraphDef graph;
-  6: required set<ArgDef> params;
 }
 
 struct Task {

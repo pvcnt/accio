@@ -37,7 +37,7 @@ struct ListOperatorsResponse {
 }
 
 struct PushWorkflowRequest {
-  1: required accio.WorkflowSpec spec;
+  1: required accio.Workflow spec;
   2: required accio.User user;
 }
 
@@ -159,7 +159,7 @@ struct ParseWorkflowRequest {
 }
 
 struct ParseWorkflowResponse {
-  1: optional accio.WorkflowSpec workflow;
+  1: optional accio.Workflow workflow;
   2: required list<accio.InvalidSpecMessage> warnings;
   3: required list<accio.InvalidSpecMessage> errors;
 }
