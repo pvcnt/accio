@@ -18,7 +18,8 @@
 
 package fr.cnrs.liris.accio.core.framework
 
-import fr.cnrs.liris.accio.core.api.thrift.{InvalidSpecMessage, _}
+import fr.cnrs.liris.accio.core.api.thrift
+import fr.cnrs.liris.accio.core.api.thrift.{InvalidSpecException, InvalidSpecMessage}
 import fr.cnrs.liris.accio.testing.Operators
 import fr.cnrs.liris.dal.core.api.Values
 import fr.cnrs.liris.testing.UnitSpec
@@ -36,189 +37,189 @@ class GraphFactorySpec extends UnitSpec {
   behavior of "GraphFactory"
 
   it should "populate node outputs" in {
-    val graphDef = GraphDef(Set(
-      NodeDef(
+    val struct = thrift.Graph(Set(
+      thrift.Node(
         op = "FirstSimple",
         name = "FirstSimple",
-        inputs = Map("foo" -> InputDef.Value(Values.encodeInteger(42)))),
-      NodeDef(
+        inputs = Map("foo" -> thrift.Input.Value(Values.encodeInteger(42)))),
+      thrift.Node(
         op = "FirstSimple",
         name = "FirstSimple1",
-        inputs = Map("foo" -> InputDef.Value(Values.encodeInteger(42)))),
-      NodeDef(
+        inputs = Map("foo" -> thrift.Input.Value(Values.encodeInteger(42)))),
+      thrift.Node(
         op = "ThirdSimple",
         name = "ThirdSimple",
         inputs = Map(
-          "data1" -> InputDef.Reference(Reference("FirstSimple", "data")),
-          "data2" -> InputDef.Reference(Reference("FirstSimple1", "data")))),
-      NodeDef(
+          "data1" -> thrift.Input.Reference(thrift.Reference("FirstSimple", "data")),
+          "data2" -> thrift.Input.Reference(thrift.Reference("FirstSimple1", "data")))),
+      thrift.Node(
         op = "SecondSimple",
         name = "SecondSimple",
         inputs = Map(
-          "dbl" -> InputDef.Value(Values.encodeDouble(3.14)),
-          "data" -> InputDef.Reference(Reference("FirstSimple", "data"))))
+          "dbl" -> thrift.Input.Value(Values.encodeDouble(3.14)),
+          "data" -> thrift.Input.Reference(thrift.Reference("FirstSimple", "data"))))
     ))
-    val graph = factory.create(graphDef)
+    val graph = factory.create(struct)
 
     graph("FirstSimple").outputs should contain theSameElementsAs Map("data" -> Set(
-      Reference("ThirdSimple", "data1"),
-      Reference("SecondSimple", "data")))
+      thrift.Reference("ThirdSimple", "data1"),
+      thrift.Reference("SecondSimple", "data")))
     graph("FirstSimple1").outputs should contain theSameElementsAs Map("data" -> Set(
-      Reference("ThirdSimple", "data2")))
+      thrift.Reference("ThirdSimple", "data2")))
   }
 
   it should "detect duplicate node name" in {
-    val graphDef = GraphDef(Set(
-      NodeDef(
+    val struct = thrift.Graph(Set(
+      thrift.Node(
         op = "FirstSimple",
         name = "FirstSimple",
-        inputs = Map("foo" -> InputDef.Value(Values.encodeInteger(42)))),
-      NodeDef(
+        inputs = Map("foo" -> thrift.Input.Value(Values.encodeInteger(42)))),
+      thrift.Node(
         op = "SecondSimple",
         name = "FirstSimple",
         inputs = Map(
-          "dbl" -> InputDef.Value(Values.encodeDouble(3.14)),
-          "data" -> InputDef.Reference(Reference("FirstSimple", "data"))))
+          "dbl" -> thrift.Input.Value(Values.encodeDouble(3.14)),
+          "data" -> thrift.Input.Reference(thrift.Reference("FirstSimple", "data"))))
     ))
-    assertErrors(graphDef, InvalidSpecMessage("Duplicate node name", Some("graph.FirstSimple")))
+    assertErrors(struct, InvalidSpecMessage("Duplicate node name", Some("graph.FirstSimple")))
   }
 
   it should "detect unknown operator" in {
-    val graphDef = GraphDef(Set(NodeDef(op = "InvalidOp", name = "MyOp")))
-    assertErrors(graphDef, InvalidSpecMessage("Unknown operator: InvalidOp", Some("graph.MyOp.op")))
+    val struct = thrift.Graph(Set(thrift.Node(op = "InvalidOp", name = "MyOp")))
+    assertErrors(struct, InvalidSpecMessage("Unknown operator: InvalidOp", Some("graph.MyOp.op")))
   }
 
   it should "detect unknown input name" in {
-    val graphDef = GraphDef(Set(
-      NodeDef(
+    val struct = thrift.Graph(Set(
+      thrift.Node(
         op = "FirstSimple",
         name = "FirstSimple",
         inputs = Map(
-          "foo" -> InputDef.Value(Values.encodeInteger(42)),
-          "bar" -> InputDef.Value(Values.encodeInteger(43))))
+          "foo" -> thrift.Input.Value(Values.encodeInteger(42)),
+          "bar" -> thrift.Input.Value(Values.encodeInteger(43))))
     ))
-    assertErrors(graphDef, InvalidSpecMessage("Unknown input port", Some("graph.FirstSimple.inputs.bar")))
+    assertErrors(struct, InvalidSpecMessage("Unknown input port", Some("graph.FirstSimple.inputs.bar")))
   }
 
   it should "detect invalid input type" in {
-    val graphDef = GraphDef(Set(
-      NodeDef(
+    val struct = thrift.Graph(Set(
+      thrift.Node(
         op = "FirstSimple",
         name = "FirstSimple",
-        inputs = Map("foo" -> InputDef.Value(Values.encodeString("bar"))))
+        inputs = Map("foo" -> thrift.Input.Value(Values.encodeString("bar"))))
     ))
-    assertErrors(graphDef, InvalidSpecMessage("Data type mismatch: requires integer, got string", Some("graph.FirstSimple.inputs.foo")))
+    assertErrors(struct, InvalidSpecMessage("Data type mismatch: requires integer, got string", Some("graph.FirstSimple.inputs.foo")))
   }
 
   it should "detect unknown input predecessor name" in {
-    val graphDef = GraphDef(Set(
-      NodeDef(
+    val struct = thrift.Graph(Set(
+      thrift.Node(
         op = "FirstSimple",
         name = "FirstSimple",
-        inputs = Map("foo" -> InputDef.Value(Values.encodeInteger(42)))),
-      NodeDef(
+        inputs = Map("foo" -> thrift.Input.Value(Values.encodeInteger(42)))),
+      thrift.Node(
         op = "SecondSimple",
         name = "SecondSimple",
         inputs = Map(
-          "dbl" -> InputDef.Value(Values.encodeDouble(3.14)),
-          "data" -> InputDef.Reference(Reference("UnknownTesting", "data"))))))
-    assertErrors(graphDef, InvalidSpecMessage("Unknown node: UnknownTesting", Some("graph.SecondSimple.inputs.data")))
+          "dbl" -> thrift.Input.Value(Values.encodeDouble(3.14)),
+          "data" -> thrift.Input.Reference(thrift.Reference("UnknownTesting", "data"))))))
+    assertErrors(struct, InvalidSpecMessage("Unknown node: UnknownTesting", Some("graph.SecondSimple.inputs.data")))
   }
 
   it should "detect unknown input predecessor port" in {
-    val graphDef = GraphDef(Set(
-      NodeDef(
+    val struct = thrift.Graph(Set(
+      thrift.Node(
         op = "FirstSimple",
         name = "FirstSimple",
-        inputs = Map("foo" -> InputDef.Value(Values.encodeInteger(42)))),
-      NodeDef(
+        inputs = Map("foo" -> thrift.Input.Value(Values.encodeInteger(42)))),
+      thrift.Node(
         op = "SecondSimple",
         name = "SecondSimple",
         inputs = Map(
-          "dbl" -> InputDef.Value(Values.encodeDouble(3.14)),
-          "data" -> InputDef.Reference(Reference("FirstSimple", "unknown"))))))
-    assertErrors(graphDef, InvalidSpecMessage("Unknown output port: FirstSimple/unknown", Some("graph.SecondSimple.inputs.data")))
+          "dbl" -> thrift.Input.Value(Values.encodeDouble(3.14)),
+          "data" -> thrift.Input.Reference(thrift.Reference("FirstSimple", "unknown"))))))
+    assertErrors(struct, InvalidSpecMessage("Unknown output port: FirstSimple/unknown", Some("graph.SecondSimple.inputs.data")))
   }
 
   it should "detect missing roots" in {
-    val graphDef = GraphDef(Set(
-      NodeDef(
+    val struct = thrift.Graph(Set(
+      thrift.Node(
         op = "SecondSimple",
         name = "First",
         inputs = Map(
-          "dbl" -> InputDef.Value(Values.encodeDouble(3.14)),
-          "data" -> InputDef.Reference(Reference("Second", "data")))),
-      NodeDef(
+          "dbl" -> thrift.Input.Value(Values.encodeDouble(3.14)),
+          "data" -> thrift.Input.Reference(thrift.Reference("Second", "data")))),
+      thrift.Node(
         op = "SecondSimple",
         name = "Second",
         inputs = Map(
-          "dbl" -> InputDef.Value(Values.encodeDouble(3.14)),
-          "data" -> InputDef.Reference(Reference("First", "data"))))))
-    assertErrors(graphDef, InvalidSpecMessage("No root node"))
+          "dbl" -> thrift.Input.Value(Values.encodeDouble(3.14)),
+          "data" -> thrift.Input.Reference(thrift.Reference("First", "data"))))))
+    assertErrors(struct, InvalidSpecMessage("No root node"))
   }
 
   it should "detect inconsistent data type" in {
-    val graphDef = GraphDef(Set(
-      NodeDef(
+    val struct = thrift.Graph(Set(
+      thrift.Node(
         op = "FirstSimple",
         name = "First",
-        inputs = Map("foo" -> InputDef.Value(Values.encodeInteger(42)))),
-      NodeDef(
+        inputs = Map("foo" -> thrift.Input.Value(Values.encodeInteger(42)))),
+      thrift.Node(
         op = "FirstSimple",
         name = "Second",
-        inputs = Map("foo" -> InputDef.Reference(Reference("First", "data"))))))
-    assertErrors(graphDef, InvalidSpecMessage("Data type mismatch: requires integer, got dataset", Some("graph.Second.inputs.foo")))
+        inputs = Map("foo" -> thrift.Input.Reference(thrift.Reference("First", "data"))))))
+    assertErrors(struct, InvalidSpecMessage("Data type mismatch: requires integer, got dataset", Some("graph.Second.inputs.foo")))
   }
 
   it should "detect missing input" in {
-    val graphDef = GraphDef(Set(NodeDef(op = "FirstSimple", name = "FirstSimple")))
-    assertErrors(graphDef, InvalidSpecMessage("No value for required input", Some("graph.FirstSimple.inputs.foo")))
+    val struct = thrift.Graph(Set(thrift.Node(op = "FirstSimple", name = "FirstSimple")))
+    assertErrors(struct, InvalidSpecMessage("No value for required input", Some("graph.FirstSimple.inputs.foo")))
   }
 
   it should "detect invalid node name" in {
-    val graphDef = GraphDef(Set(
-      NodeDef(
+    val struct = thrift.Graph(Set(
+      thrift.Node(
         op = "FirstSimple",
         name = "First/Simple",
-        inputs = Map("foo" -> InputDef.Value(Values.encodeInteger(42))))))
-    assertErrors(graphDef, InvalidSpecMessage("Invalid node name: First/Simple (should match [A-Z][a-zA-Z0-9_]+)"))
+        inputs = Map("foo" -> thrift.Input.Value(Values.encodeInteger(42))))))
+    assertErrors(struct, InvalidSpecMessage("Invalid node name: First/Simple (should match [A-Z][a-zA-Z0-9_]+)"))
   }
 
   it should "detect cycles" in {
-    val graphDef = GraphDef(Set(
-      NodeDef(
+    val struct = thrift.Graph(Set(
+      thrift.Node(
         op = "FirstSimple",
         name = "FirstSimple",
-        inputs = Map("foo" -> InputDef.Value(Values.encodeInteger(42)))),
-      NodeDef(
+        inputs = Map("foo" -> thrift.Input.Value(Values.encodeInteger(42)))),
+      thrift.Node(
         op = "ThirdSimple",
         name = "ThirdSimple",
         inputs = Map(
-          "data1" -> InputDef.Reference(Reference("FirstSimple", "data")),
-          "data2" -> InputDef.Reference(Reference("SecondSimple", "data")))),
-      NodeDef(
+          "data1" -> thrift.Input.Reference(thrift.Reference("FirstSimple", "data")),
+          "data2" -> thrift.Input.Reference(thrift.Reference("SecondSimple", "data")))),
+      thrift.Node(
         op = "SecondSimple",
         name = "SecondSimple",
         inputs = Map(
-          "dbl" -> InputDef.Value(Values.encodeDouble(3.14)),
-          "data" -> InputDef.Reference(Reference("ThirdSimple", "data"))))))
-    assertErrors(graphDef, InvalidSpecMessage("Cycle detected: ThirdSimple -> SecondSimple -> ThirdSimple"))
+          "dbl" -> thrift.Input.Value(Values.encodeDouble(3.14)),
+          "data" -> thrift.Input.Reference(thrift.Reference("ThirdSimple", "data"))))))
+    assertErrors(struct, InvalidSpecMessage("Cycle detected: ThirdSimple -> SecondSimple -> ThirdSimple"))
   }
 
   it should "detect deprecated operators" in {
-    val graphDef = GraphDef(Set(
-      NodeDef(
+    val struct = thrift.Graph(Set(
+      thrift.Node(
         op = "Deprecated",
         name = "Deprecated",
-        inputs = Map("foo" -> InputDef.Value(Values.encodeInteger(42))))))
+        inputs = Map("foo" -> thrift.Input.Value(Values.encodeInteger(42))))))
     val warnings = mutable.Set.empty[InvalidSpecMessage]
-    factory.create(graphDef, warnings)
+    factory.create(struct, warnings)
     warnings should contain(InvalidSpecMessage("Operator is deprecated: Do not use it!", Some("graph.Deprecated")))
   }
 
-  private def assertErrors(graphDef: GraphDef, errors: InvalidSpecMessage*) = {
+  private def assertErrors(struct: thrift.Graph, errors: InvalidSpecMessage*) = {
     val expected = intercept[InvalidSpecException] {
-      factory.create(graphDef)
+      factory.create(struct)
     }
     expected.errors should contain theSameElementsAs errors
   }

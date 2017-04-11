@@ -18,7 +18,8 @@
 
 package fr.cnrs.liris.accio.core.dsl
 
-import fr.cnrs.liris.accio.core.api.thrift._
+import fr.cnrs.liris.accio.core.api.thrift
+import fr.cnrs.liris.accio.core.api.thrift.{InvalidSpecException, InvalidSpecMessage}
 import fr.cnrs.liris.accio.core.framework.{RunFactory, ValueValidator}
 import fr.cnrs.liris.accio.core.storage.memory.{MemoryLogRepository, MemoryRunRepository, MemoryStorage, MemoryWorkflowRepository}
 import fr.cnrs.liris.dal.core.api.Values
@@ -28,23 +29,23 @@ import fr.cnrs.liris.testing.UnitSpec
  * Unit tests for [[RunParser]].
  */
 class RunParserSpec extends UnitSpec {
-  private[this] val myWorkflow = Workflow(
-    id = WorkflowId("my_workflow"),
+  private[this] val myWorkflow = thrift.Workflow(
+    id = thrift.WorkflowId("my_workflow"),
     version = Some("v1"),
-    owner = Some(User("me")),
+    owner = Some(thrift.User("me")),
     isActive = true,
     createdAt = Some(System.currentTimeMillis()),
-    graph = GraphDef(Set(
-      NodeDef(
+    graph = thrift.Graph(Set(
+      thrift.Node(
         op = "FirstSimple",
         name = "FirstSimple",
-        inputs = Map("foo" -> InputDef.Value(Values.encodeInteger(42)))),
-      NodeDef(
+        inputs = Map("foo" -> thrift.Input.Value(Values.encodeInteger(42)))),
+      thrift.Node(
         op = "SecondSimple",
         name = "SecondSimple",
         inputs = Map(
-          "dbl" -> InputDef.Value(Values.encodeDouble(3.14)),
-          "data" -> InputDef.Reference(Reference("FirstSimple", "data")))))),
+          "dbl" -> thrift.Input.Value(Values.encodeDouble(3.14)),
+          "data" -> thrift.Input.Reference(thrift.Reference("FirstSimple", "data")))))),
     name = Some("my workflow"))
 
   private[this] val parser = {
@@ -57,7 +58,7 @@ class RunParserSpec extends UnitSpec {
   it should "parse a minimal run definition" in {
     val spec = parser.parse("""{"workflow": "my_workflow"}""", Map.empty)
     spec.pkg.workflowId shouldBe myWorkflow.id
-    spec.pkg.workflowVersion shouldBe Some("v1")
+    spec.pkg.workflowVersion shouldBe "v1"
     spec.owner shouldBe None
     spec.name shouldBe None
     spec.notes shouldBe None
@@ -78,7 +79,7 @@ class RunParserSpec extends UnitSpec {
         |"repeat": 15}""".stripMargin,
       Map.empty)
     spec.pkg.workflowId shouldBe myWorkflow.id
-    spec.pkg.workflowVersion shouldBe Some("v1")
+    spec.pkg.workflowVersion shouldBe "v1"
     spec.owner shouldBe None // There is never an owner from definition.
     spec.name shouldBe Some("named run")
     spec.notes shouldBe Some("All my notes")

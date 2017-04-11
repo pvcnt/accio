@@ -20,6 +20,7 @@ package fr.cnrs.liris.accio.core.framework
 
 import com.google.inject.{Inject, Singleton}
 import com.typesafe.scalalogging.StrictLogging
+import fr.cnrs.liris.accio.core.api
 import fr.cnrs.liris.accio.core.api.Utils
 import fr.cnrs.liris.accio.core.api.thrift._
 import fr.cnrs.liris.accio.core.storage.{RunQuery, Storage}
@@ -189,7 +190,7 @@ final class RunManager @Inject()(schedulerService: SchedulerService, graphFactor
     run.copy(state = run.state.copy(nodes = run.state.nodes - nodeState + newNodeState))
   }
 
-  private def schedule(run: Run, nodes: Set[Node]): Run = {
+  private def schedule(run: Run, nodes: Set[api.Node]): Run = {
     var newRun = run
     nodes.foreach { node =>
       newRun = schedule(newRun, node)
@@ -204,7 +205,7 @@ final class RunManager @Inject()(schedulerService: SchedulerService, graphFactor
    * @param node Node to execute, as part of the run.
    * @return Updated run.
    */
-  private def schedule(run: Run, node: Node): Run = {
+  private def schedule(run: Run, node: api.Node): Run = {
     val nodeState = run.state.nodes.find(_.name == node.name).get
     val maybeResult = schedulerService.submit(run, node)
     maybeResult match {
@@ -316,7 +317,7 @@ final class RunManager @Inject()(schedulerService: SchedulerService, graphFactor
     newRun
   }
 
-  private def getNextNodes(run: Run, graph: Graph, nodeName: String): Set[Node] = {
+  private def getNextNodes(run: Run, graph: api.Graph, nodeName: String): Set[api.Node] = {
     graph(nodeName).successors
       .map(graph.apply)
       .filter { nextNode =>

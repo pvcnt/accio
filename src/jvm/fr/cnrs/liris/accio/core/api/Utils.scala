@@ -37,16 +37,6 @@ object Utils {
   val OpRegex: Regex = ("^" + OpPattern + "$").r
 
   /**
-   * Pattern for valid node names.
-   */
-  val NodePattern = "[A-Z][a-zA-Z0-9_]+"
-
-  /**
-   * Regex for valid node names.
-   */
-  val NodeRegex: Regex = ("^" + NodePattern + "$").r
-
-  /**
    * Pattern for valid workflow identifiers.
    */
   val WorkflowPattern = "[a-zA-Z][a-zA-Z0-9_.-]+"

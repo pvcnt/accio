@@ -232,7 +232,7 @@ final class RunFactory @Inject()(storage: Storage, valueValidator: ValueValidato
    *
    * @param graph Graph for which to create state.
    */
-  private def initialState(graph: GraphDef) = {
+  private def initialState(graph: Graph) = {
     val nodes = graph.nodes.map { node =>
       NodeState(name = node.name, status = NodeStatus.Waiting)
     }

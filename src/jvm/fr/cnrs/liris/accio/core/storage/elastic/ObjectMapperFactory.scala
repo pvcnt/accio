@@ -86,11 +86,11 @@ private object ElasticJacksonModule extends SimpleModule {
   // Workflow-related deserializers.
   addDeserializer(classOf[WorkflowId], new ScroogeStructDeserializer[WorkflowId](WorkflowId))
   addDeserializer(classOf[Workflow], new ScroogeStructDeserializer[Workflow](Workflow))
-  addDeserializer(classOf[GraphDef], new ScroogeStructDeserializer[GraphDef](GraphDef))
-  addDeserializer(classOf[NodeDef], new ScroogeStructDeserializer[NodeDef](NodeDef))
+  addDeserializer(classOf[Graph], new ScroogeStructDeserializer[Graph](Graph))
+  addDeserializer(classOf[Node], new ScroogeStructDeserializer[Node](Node))
   addDeserializer(classOf[ArgDef], new ScroogeStructDeserializer[ArgDef](ArgDef))
   addDeserializer(classOf[Reference], new ScroogeStructDeserializer[Reference](Reference))
-  addDeserializer(classOf[InputDef], new ScroogeUnionDeserializer[InputDef](InputDef))
+  addDeserializer(classOf[Input], new ScroogeUnionDeserializer[Input](Input))
 
   // Task-related deserializers.
   addDeserializer(classOf[TaskId], new ScroogeStructDeserializer[TaskId](TaskId))

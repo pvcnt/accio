@@ -23,8 +23,8 @@ import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.JsonMappingException
 import com.twitter.finatra.json.FinatraObjectMapper
 import com.typesafe.scalalogging.LazyLogging
-import fr.cnrs.liris.accio.core.api.{References, Utils}
-import fr.cnrs.liris.accio.core.api.thrift.{InvalidSpecException, _}
+import fr.cnrs.liris.accio.core.api.thrift.{InvalidSpecException, InvalidSpecMessage}
+import fr.cnrs.liris.accio.core.api.{References, Utils, thrift}
 import fr.cnrs.liris.accio.core.framework.{BaseFactory, OpRegistry, WorkflowFactory}
 import fr.cnrs.liris.dal.core.api.{DataTypes, Values}
 
@@ -47,7 +47,7 @@ class WorkflowParser(mapper: FinatraObjectMapper, opRegistry: OpRegistry, factor
    * @throws InvalidSpecException If the workflow specification is invalid.
    */
   @throws[InvalidSpecException]
-  def parse(content: String, filename: Option[String], warnings: mutable.Set[InvalidSpecMessage] = mutable.Set.empty[InvalidSpecMessage]): Workflow = {
+  def parse(content: String, filename: Option[String], warnings: mutable.Set[InvalidSpecMessage] = mutable.Set.empty[InvalidSpecMessage]): thrift.Workflow = {
     val json = parse(content, warnings)
     val id = json.id.orElse(filename.map(defaultId)).getOrElse(throw newError("No workflow identifier", warnings))
     val owner = json.owner.map(Utils.parseUser)
@@ -55,9 +55,9 @@ class WorkflowParser(mapper: FinatraObjectMapper, opRegistry: OpRegistry, factor
     val params = json.params.map { paramDef =>
       val kind = DataTypes.parse(paramDef.kind)
       val defaultValue = paramDef.defaultValue.map(Values.encode(_, kind))
-      ArgDef(name = paramDef.name, kind = kind, defaultValue = defaultValue)
+      thrift.ArgDef(name = paramDef.name, kind = kind, defaultValue = defaultValue)
     }.toSet
-    val spec = Workflow(WorkflowId(id), isActive = true, name = json.name, owner = owner, graph = GraphDef(nodes), params = params)
+    val spec = thrift.Workflow(thrift.WorkflowId(id), isActive = true, name = json.name, owner = owner, graph = thrift.Graph(nodes), params = params)
 
     // Validate the specification would generate a valid workflow.
     val validationResult = factory.validate(spec)
@@ -87,17 +87,17 @@ class WorkflowParser(mapper: FinatraObjectMapper, opRegistry: OpRegistry, factor
         opRegistry.get(node.op) match {
           case Some(opDef) =>
             opDef.inputs.find(_.name == argName) match {
-              case Some(argDef) => Some(argName -> InputDef.Value(Values.encode(rawValue, argDef.kind)))
+              case Some(argDef) => Some(argName -> thrift.Input.Value(Values.encode(rawValue, argDef.kind)))
               case None =>
                 warnings += InvalidSpecMessage("Unknown input port", Some(s"graph.${node.name}.inputs.$argName"))
                 None
             }
           case None => throw newError(s"Unknown operator: ${node.op}", s"graph.${node.name}.op", warnings)
         }
-      case (argName, JsonReferenceInputDef(ref)) => Some(argName -> InputDef.Reference(References.parse(ref)))
-      case (argName, JsonParamInputDef(paramName)) => Some(argName -> InputDef.Param(paramName))
+      case (argName, JsonReferenceInputDef(ref)) => Some(argName -> thrift.Input.Reference(References.parse(ref)))
+      case (argName, JsonParamInputDef(paramName)) => Some(argName -> thrift.Input.Param(paramName))
     }
-    NodeDef(node.op, node.name, inputs)
+    thrift.Node(node.op, node.name, inputs)
   }
 }
 

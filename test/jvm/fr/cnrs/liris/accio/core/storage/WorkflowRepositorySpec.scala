@@ -18,50 +18,50 @@
 
 package fr.cnrs.liris.accio.core.storage
 
-import fr.cnrs.liris.accio.core.api.thrift._
+import fr.cnrs.liris.accio.core.api.thrift
 import fr.cnrs.liris.dal.core.api.{AtomicType, DataType, Values}
 
 /**
  * Common unit tests for all [[MutableWorkflowRepository]] implementations, ensuring they all have consistent behavior.
  */
 private[storage] abstract class WorkflowRepositorySpec extends RepositorySpec[MutableWorkflowRepository] {
-  private[this] val workflow1 = Workflow(
-    id = WorkflowId("workflow1"),
+  private[this] val workflow1 = thrift.Workflow(
+    id = thrift.WorkflowId("workflow1"),
     version = Some("v1"),
-    owner = Some(User("me")),
+    owner = Some(thrift.User("me")),
     isActive = true,
     createdAt = Some(System.currentTimeMillis()),
-    graph = GraphDef(Set(
-      NodeDef(
+    graph = thrift.Graph(Set(
+      thrift.Node(
         op = "FirstSimple",
         name = "FirstSimple",
-        inputs = Map("foo" -> InputDef.Value(Values.encodeInteger(42)))),
-      NodeDef(
+        inputs = Map("foo" -> thrift.Input.Value(Values.encodeInteger(42)))),
+      thrift.Node(
         op = "SecondSimple",
         name = "SecondSimple",
         inputs = Map(
-          "dbl" -> InputDef.Value(Values.encodeDouble(3.14)),
-          "data" -> InputDef.Reference(Reference("FirstSimple", "data")))))),
+          "dbl" -> thrift.Input.Value(Values.encodeDouble(3.14)),
+          "data" -> thrift.Input.Reference(thrift.Reference("FirstSimple", "data")))))),
     name = Some("my workflow"))
 
-  private[this] val workflow2 = Workflow(
-    id = WorkflowId("workflow2"),
+  private[this] val workflow2 = thrift.Workflow(
+    id = thrift.WorkflowId("workflow2"),
     version = Some("v1"),
-    owner = Some(User("me")),
+    owner = Some(thrift.User("me")),
     isActive = true,
-    params = Set(ArgDef("foo", DataType(AtomicType.Integer))),
+    params = Set(thrift.ArgDef("foo", DataType(AtomicType.Integer))),
     createdAt = Some(System.currentTimeMillis() + 10),
-    graph = GraphDef(Set(
-      NodeDef(
+    graph = thrift.Graph(Set(
+      thrift.Node(
         op = "FirstSimple",
         name = "FirstSimple",
-        inputs = Map("foo" -> InputDef.Param("foo"))),
-      NodeDef(
+        inputs = Map("foo" -> thrift.Input.Param("foo"))),
+      thrift.Node(
         op = "SecondSimple",
         name = "SecondSimple",
         inputs = Map(
-          "dbl" -> InputDef.Param("bar"),
-          "data" -> InputDef.Reference(Reference("FirstSimple", "data")))))))
+          "dbl" -> thrift.Input.Param("bar"),
+          "data" -> thrift.Input.Reference(thrift.Reference("FirstSimple", "data")))))))
 
   protected def refreshBeforeSearch(): Unit = {}
 
@@ -84,8 +84,8 @@ private[storage] abstract class WorkflowRepositorySpec extends RepositorySpec[Mu
       workflow1.copy(version = Some("v2")),
       workflow2,
       workflow2.copy(version = Some("v2")),
-      workflow1.copy(id = WorkflowId("other_workflow"), createdAt = Some(System.currentTimeMillis() + 20)),
-      workflow1.copy(id = WorkflowId("another_workflow"), createdAt = Some(System.currentTimeMillis() + 30), owner = Some(User("him"))))
+      workflow1.copy(id = thrift.WorkflowId("other_workflow"), createdAt = Some(System.currentTimeMillis() + 20)),
+      workflow1.copy(id = thrift.WorkflowId("another_workflow"), createdAt = Some(System.currentTimeMillis() + 30), owner = Some(thrift.User("him"))))
     workflows.foreach(repo.save)
     refreshBeforeSearch()
 
@@ -117,5 +117,5 @@ private[storage] abstract class WorkflowRepositorySpec extends RepositorySpec[Mu
     repo.get(workflow2.id, "v2") shouldBe None
   }
 
-  private def unsetNodes(workflow: Workflow) = workflow.copy(graph = workflow.graph.unsetNodes)
+  private def unsetNodes(workflow: thrift.Workflow) = workflow.copy(graph = workflow.graph.unsetNodes)
 }

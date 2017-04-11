@@ -24,6 +24,8 @@ import com.google.common.base.Charsets
 import com.google.common.hash.Hashing
 import com.google.inject.Inject
 import com.typesafe.scalalogging.StrictLogging
+import fr.cnrs.liris.accio.core.api
+import fr.cnrs.liris.accio.core.api.Input
 import fr.cnrs.liris.accio.core.api.thrift._
 import fr.cnrs.liris.accio.core.scheduler.{EventType, Scheduler}
 import fr.cnrs.liris.accio.core.storage.Storage
@@ -49,7 +51,7 @@ final class SchedulerService @Inject()(scheduler: Scheduler, opRegistry: OpRegis
    * @param readCache Whether to allow to fetch a cached result from the cache.
    * @return Node result and cache key, if available.
    */
-  def submit(run: Run, node: Node, readCache: Boolean = true): Option[(CacheKey, OpResult)] = {
+  def submit(run: Run, node: api.Node, readCache: Boolean = true): Option[(CacheKey, OpResult)] = {
     val opDef = opRegistry(node.op)
     val payload = createPayload(run, node, opDef)
     val maybeResult = if (readCache) storage.read(_.runs.get(payload.cacheKey)) else None
@@ -74,15 +76,15 @@ final class SchedulerService @Inject()(scheduler: Scheduler, opRegistry: OpRegis
    * @param node  Node to execute, as part of the run.
    * @param opDef Operator definition for the node.
    */
-  private def createPayload(run: Run, node: Node, opDef: OpDef): OpPayload = {
+  private def createPayload(run: Run, node: api.Node, opDef: OpDef): OpPayload = {
     val inputs = node.inputs.flatMap { case (portName, input) =>
       val maybeValue = input match {
-        case ParamInput(paramName) => run.params.get(paramName)
-        case ReferenceInput(ref) =>
+        case Input.Param(paramName) => run.params.get(paramName)
+        case Input.Reference(ref) =>
           run.state.nodes.find(_.name == ref.node)
             .flatMap(node => node.result.flatMap(_.artifacts.find(_.name == ref.port)))
             .map(_.value)
-        case ValueInput(v) => Some(v)
+        case Input.Constant(v) => Some(v)
       }
       maybeValue.map(value => portName -> value)
     }

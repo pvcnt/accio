@@ -404,41 +404,20 @@ struct RunSpec {
   9: optional RunId cloned_from;
 }
 
-/**
- * Definition of where the value of an input comes from.
- */
-union InputDef {
-  // If the input value comes from the value of a workflow parameter.
+union Input {
   1: string param;
-
-  // If the input value comes from the output of another node.
   2: Reference reference;
-
-  // If the input value is statically fixed.
   3: dal.Value value;
 }
 
-/**
- * Definition of a node inside a graph.
- */
-struct NodeDef {
-  // Operator name.
+struct Node {
   1: required string op;
-
-  // Node name.
   2: required string name;
-
-  // Inputs of the operator. Only required inputs (i.e., those non-optional and without a default value) have to be
-  // specified here, others can be omitted.
-  3: required map<string, InputDef> inputs;
+  3: required map<string, Input> inputs;
 }
 
-/**
- * Definition of a graph.
- */
-struct GraphDef {
-  // Definition of nodes forming this graph.
-  1: required set<NodeDef> nodes;
+struct Graph {
+  1: required set<Node> nodes;
 }
 
 /**
@@ -470,7 +449,7 @@ struct Workflow {
   6: optional User owner;
 
   // Graph definition.
-  7: required GraphDef graph;
+  7: required Graph graph;
 
   // Workflow parameters.
   8: required set<ArgDef> params;

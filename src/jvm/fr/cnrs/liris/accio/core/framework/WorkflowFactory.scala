@@ -21,8 +21,9 @@ package fr.cnrs.liris.accio.core.framework
 import java.util.Objects
 
 import com.google.inject.Inject
-import fr.cnrs.liris.accio.core.api.Utils
+import fr.cnrs.liris.accio.core.api
 import fr.cnrs.liris.accio.core.api.thrift._
+import fr.cnrs.liris.accio.core.api.{Input, Utils}
 import fr.cnrs.liris.common.util.{HashUtils, Seqs}
 import fr.cnrs.liris.dal.core.api._
 
@@ -88,7 +89,7 @@ final class WorkflowFactory @Inject()(
    * @param graph  Graph definition.
    * @param params Workflow parameters.
    */
-  private def defaultVersion(id: WorkflowId, name: Option[String], owner: User, graph: GraphDef, params: Set[ArgDef]) = {
+  private def defaultVersion(id: WorkflowId, name: Option[String], owner: User, graph: Graph, params: Set[ArgDef]) = {
     HashUtils.sha1(Objects.hash(id.value, name.getOrElse(""), owner, graph, params).toString)
   }
 
@@ -99,13 +100,13 @@ final class WorkflowFactory @Inject()(
    * @param params   Workflow parameters.
    * @param warnings Mutable list collecting warnings.
    */
-  private def getParams(graph: Graph, params: Set[ArgDef], warnings: mutable.Set[InvalidSpecMessage]) = {
+  private def getParams(graph: api.Graph, params: Set[ArgDef], warnings: mutable.Set[InvalidSpecMessage]) = {
     case class ParamUsage(ref: Reference, argDef: ArgDef)
 
     // First we extract all references to parameters with their names and references to ports where they are used.
     val paramUsages = Seqs.index(graph.nodes.flatMap { node =>
       node.inputs.flatMap {
-        case (inputName, ParamInput(paramName)) =>
+        case (inputName, Input.Param(paramName)) =>
           val argDef = opRegistry(graph(node.name).op).inputs.find(_.name == inputName).get
           Some(paramName -> ParamUsage(Reference(node.name, inputName), argDef))
         case _ => None
