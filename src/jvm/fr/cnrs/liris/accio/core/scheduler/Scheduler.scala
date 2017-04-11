@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.core.scheduler
 
-import fr.cnrs.liris.accio.core.api._
+import fr.cnrs.liris.accio.core.api.thrift._
 
 trait Scheduler {
   def submit(task: Task): Unit

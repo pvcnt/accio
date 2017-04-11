@@ -23,13 +23,11 @@ import java.util.concurrent.Executors
 import com.google.inject._
 import com.twitter.concurrent.NamedPoolThreadFactory
 import com.twitter.finagle.Thrift
-import com.twitter.finagle.service.{Backoff, RetryBudget}
 import com.twitter.inject.{Injector, TwitterModule}
-import com.twitter.util.{Duration, ExecutorServiceFuturePool, FuturePool}
+import com.twitter.util.{ExecutorServiceFuturePool, FuturePool}
 import fr.cnrs.liris.accio.agent.{AgentService, AgentService$FinagleClient}
-import fr.cnrs.liris.accio.core.operator.Operator
-import fr.cnrs.liris.accio.runtime.finagle.AccioResponseClassifier
 import fr.cnrs.liris.accio.core.framework._
+import fr.cnrs.liris.accio.core.operator.Operator
 import fr.cnrs.liris.accio.core.util.WorkerPool
 import fr.cnrs.liris.dal.core.io.{Decoder, Encoder, StringCodec}
 import fr.cnrs.liris.dal.core.sparkle.SparkleEnv

@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.core.dsl
 
 import com.fasterxml.jackson.annotation.{JsonIgnoreProperties, JsonSubTypes}
 import com.typesafe.scalalogging.LazyLogging
-import fr.cnrs.liris.accio.core.api._
+import fr.cnrs.liris.accio.core.api.thrift._
 import fr.cnrs.liris.common.geo.Distance
 import fr.cnrs.liris.dal.core.api._
 import org.joda.time.{Duration, Instant}

@@ -27,11 +27,11 @@ class ReferencesSpec extends UnitSpec {
   behavior of "References"
 
   it should "parse references" in {
-    References.parse("foo/bar") shouldBe Reference("foo", "bar")
+    References.parse("foo/bar") shouldBe thrift.Reference("foo", "bar")
   }
 
   it should "return a parsable reference string representation" in {
-    References.parse(Utils.toString(Reference("foo", "bar"))) shouldBe Reference("foo", "bar")
+    References.parse(Utils.toString(thrift.Reference("foo", "bar"))) shouldBe thrift.Reference("foo", "bar")
   }
 
   it should "detect non-parsable reference strings" in {

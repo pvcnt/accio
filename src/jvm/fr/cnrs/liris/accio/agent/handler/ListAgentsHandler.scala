@@ -23,7 +23,7 @@ import com.twitter.util.Future
 import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.config.AgentName
 import fr.cnrs.liris.accio.agent.{ListAgentsRequest, ListAgentsResponse}
-import fr.cnrs.liris.accio.core.api.{Agent, Resource, WorkerId}
+import fr.cnrs.liris.accio.core.api.thrift.{Agent, Resource, WorkerId}
 import fr.cnrs.liris.accio.core.scheduler.ClusterState
 
 class ListAgentsHandler @Inject()(state: ClusterState, @AgentName agentName: String)

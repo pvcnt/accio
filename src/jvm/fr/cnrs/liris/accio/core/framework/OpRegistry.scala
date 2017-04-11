@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.core.framework
 
-import fr.cnrs.liris.accio.core.api.OpDef
+import fr.cnrs.liris.accio.core.api.thrift.OpDef
 
 /**
  * Registry providing definitions of all operators known to Accio.

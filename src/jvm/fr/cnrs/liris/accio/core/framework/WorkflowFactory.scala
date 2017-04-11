@@ -21,7 +21,8 @@ package fr.cnrs.liris.accio.core.framework
 import java.util.Objects
 
 import com.google.inject.Inject
-import fr.cnrs.liris.accio.core.api._
+import fr.cnrs.liris.accio.core.api.Utils
+import fr.cnrs.liris.accio.core.api.thrift._
 import fr.cnrs.liris.common.util.{HashUtils, Seqs}
 import fr.cnrs.liris.dal.core.api._
 

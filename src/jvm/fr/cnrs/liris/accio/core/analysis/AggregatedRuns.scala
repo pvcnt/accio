@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.core.analysis
 
-import fr.cnrs.liris.accio.core.api._
+import fr.cnrs.liris.accio.core.api.thrift._
 import fr.cnrs.liris.common.geo.Distance
 import fr.cnrs.liris.common.util.Seqs
 import fr.cnrs.liris.common.util.MathUtils.mean

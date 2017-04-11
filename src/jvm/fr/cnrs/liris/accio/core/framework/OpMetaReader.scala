@@ -19,7 +19,7 @@
 package fr.cnrs.liris.accio.core.framework
 
 import fr.cnrs.liris.accio.core.operator.Operator
-import fr.cnrs.liris.accio.core.api.OpDef
+import fr.cnrs.liris.accio.core.api.thrift.OpDef
 
 /**
  * Metadata about an operator, i.e., its definition plus runtime information.

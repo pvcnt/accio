@@ -18,10 +18,6 @@
 
 package fr.cnrs.liris.accio.core.statemgr
 
-import com.twitter.scrooge.ThriftStruct
-import fr.cnrs.liris.accio.core.api.{ObjectReference, User}
-import fr.cnrs.liris.dal.core.api.Value
-
 /**
  */
 trait StateManager {

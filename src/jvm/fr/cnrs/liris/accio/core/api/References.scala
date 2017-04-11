@@ -19,7 +19,7 @@
 package fr.cnrs.liris.accio.core.api
 
 /**
- * Utils for [[Reference]].
+ * Utils for [[thrift.Reference]].
  */
 object References {
   /**
@@ -29,13 +29,13 @@ object References {
    * @throws IllegalArgumentException If the string is not formatted as a valid reference.
    */
   @throws[IllegalArgumentException]
-  def parse(str: String): Reference = str.split("/") match {
+  def parse(str: String): thrift.Reference = str.split("/") match {
     case Array(node, port) =>
       require(node.nonEmpty, s"Invalid reference, empty node name: $str")
       require(port.nonEmpty, s"Invalid reference, empty port name: $str")
-      Reference(node, port)
+      thrift.Reference(node, port)
     case _ => throw new IllegalArgumentException(s"Invalid reference: $str")
   }
 
-  def toString(ref: Reference): String = s"${ref.node}/${ref.port}"
+  def toString(ref: thrift.Reference): String = s"${ref.node}/${ref.port}"
 }

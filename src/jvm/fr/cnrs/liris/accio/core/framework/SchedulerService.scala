@@ -24,7 +24,7 @@ import com.google.common.base.Charsets
 import com.google.common.hash.Hashing
 import com.google.inject.Inject
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.core.api._
+import fr.cnrs.liris.accio.core.api.thrift._
 import fr.cnrs.liris.accio.core.scheduler.{EventType, Scheduler}
 import fr.cnrs.liris.accio.core.storage.Storage
 import fr.cnrs.liris.dal.core.api.Value

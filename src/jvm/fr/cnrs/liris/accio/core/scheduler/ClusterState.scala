@@ -24,8 +24,8 @@ import javax.annotation.concurrent.ThreadSafe
 import com.google.inject.Singleton
 import com.twitter.util.Time
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.core.api.NodeStatus.EnumUnknownNodeStatus
-import fr.cnrs.liris.accio.core.api.{InvalidTaskException, _}
+import fr.cnrs.liris.accio.core.api.thrift.NodeStatus.EnumUnknownNodeStatus
+import fr.cnrs.liris.accio.core.api.thrift.{InvalidTaskException, _}
 
 import scala.collection.mutable
 

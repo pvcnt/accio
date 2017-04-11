@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.agent.handler
 
 import com.twitter.finagle.stats.NullStatsReceiver
 import com.twitter.util.{Duration, Time}
-import fr.cnrs.liris.accio.core.api._
+import fr.cnrs.liris.accio.core.api.thrift._
 import fr.cnrs.liris.testing.UnitSpec
 
 /**

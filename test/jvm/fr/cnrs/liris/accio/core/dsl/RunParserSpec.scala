@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.core.dsl
 
-import fr.cnrs.liris.accio.core.api._
+import fr.cnrs.liris.accio.core.api.thrift._
 import fr.cnrs.liris.accio.core.framework.{RunFactory, ValueValidator}
 import fr.cnrs.liris.accio.core.storage.memory.{MemoryLogRepository, MemoryRunRepository, MemoryStorage, MemoryWorkflowRepository}
 import fr.cnrs.liris.dal.core.api.Values

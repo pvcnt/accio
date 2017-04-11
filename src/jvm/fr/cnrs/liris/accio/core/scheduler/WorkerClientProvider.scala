@@ -23,7 +23,6 @@ import javax.annotation.concurrent.NotThreadSafe
 import com.google.inject.Singleton
 import com.twitter.finagle.Thrift
 import fr.cnrs.liris.accio.agent.{AgentService, AgentService$FinagleClient}
-import fr.cnrs.liris.accio.runtime.finagle.AccioResponseClassifier
 
 import scala.collection.mutable
 

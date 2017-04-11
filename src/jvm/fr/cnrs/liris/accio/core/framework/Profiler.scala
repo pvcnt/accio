@@ -22,13 +22,13 @@ import java.lang.management.ManagementFactory
 import java.util.concurrent.atomic.AtomicLong
 
 import com.twitter.util.{Duration, StorageUnit}
-import fr.cnrs.liris.accio.core.api.Metric
+import fr.cnrs.liris.accio.core.api.thrift.Metric
 
 import scala.collection.JavaConverters._
 
 /**
  * Profile the execution of parts of code. These metrics will be included as part of the
- * [[fr.cnrs.liris.accio.core.api.OpResult]] structure. It means they should respect the reproducibility principle,
+ * [[fr.cnrs.liris.accio.core.api.thrift.OpResult]] structure. It means they should respect the reproducibility principle,
  * and not include anything that would be context-specific (such as started/completed times).
  */
 trait Profiler {

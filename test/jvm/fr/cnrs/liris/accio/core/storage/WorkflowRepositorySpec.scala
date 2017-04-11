@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.core.storage
 
-import fr.cnrs.liris.accio.core.api._
+import fr.cnrs.liris.accio.core.api.thrift._
 import fr.cnrs.liris.dal.core.api.{AtomicType, DataType, Values}
 
 /**

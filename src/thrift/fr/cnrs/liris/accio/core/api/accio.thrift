@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace java fr.cnrs.liris.accio.core.api
+namespace java fr.cnrs.liris.accio.core.api.thrift
 
 include "fr/cnrs/liris/dal/core/api/dal.thrift"
 

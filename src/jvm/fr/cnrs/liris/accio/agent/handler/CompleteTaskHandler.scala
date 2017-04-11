@@ -23,7 +23,7 @@ import com.twitter.util.Future
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{CompleteTaskRequest, CompleteTaskResponse}
-import fr.cnrs.liris.accio.core.api._
+import fr.cnrs.liris.accio.core.api.thrift._
 import fr.cnrs.liris.accio.core.framework.RunManager
 import fr.cnrs.liris.accio.core.scheduler.{ClusterState, EventType, Scheduler}
 import fr.cnrs.liris.accio.core.storage.Storage

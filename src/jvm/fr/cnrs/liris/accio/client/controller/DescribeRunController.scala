@@ -20,7 +20,8 @@ package fr.cnrs.liris.accio.client.controller
 
 import com.twitter.util.{Duration, Future, Time}
 import fr.cnrs.liris.accio.agent.{AgentService$FinagleClient, GetRunRequest, ListRunsRequest}
-import fr.cnrs.liris.accio.core.api._
+import fr.cnrs.liris.accio.core.api.Utils
+import fr.cnrs.liris.accio.core.api.thrift._
 import fr.cnrs.liris.accio.runtime.event.Reporter
 import fr.cnrs.liris.common.util.StringUtils.padTo
 import fr.cnrs.liris.dal.core.api.Values

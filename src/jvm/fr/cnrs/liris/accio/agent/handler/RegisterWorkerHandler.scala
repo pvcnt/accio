@@ -22,7 +22,7 @@ import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.agent._
 import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
-import fr.cnrs.liris.accio.core.api.InvalidWorkerException
+import fr.cnrs.liris.accio.core.api.thrift.InvalidWorkerException
 import fr.cnrs.liris.accio.core.scheduler.{ClusterState, EventType, Scheduler}
 
 /**

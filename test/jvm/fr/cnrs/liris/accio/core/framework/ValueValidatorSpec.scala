@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.core.framework
 
-import fr.cnrs.liris.accio.core.api.{ArgConstraint, ArgDef}
+import fr.cnrs.liris.accio.core.api.thrift.{ArgConstraint, ArgDef}
 import fr.cnrs.liris.testing.UnitSpec
 import fr.cnrs.liris.dal.core.api.{AtomicType, DataType, Value, Values}
 

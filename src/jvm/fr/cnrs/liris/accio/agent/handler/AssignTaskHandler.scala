@@ -22,7 +22,7 @@ import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.agent._
 import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
-import fr.cnrs.liris.accio.core.api.InvalidTaskException
+import fr.cnrs.liris.accio.core.api.thrift.InvalidTaskException
 
 /**
  * Handle a request from the master, asking to execute a task on this worker node. It will launch an executor and

@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.executor
 
 import com.twitter.inject.app.App
 import com.twitter.util.Await
-import fr.cnrs.liris.accio.core.api.TaskId
+import fr.cnrs.liris.accio.core.api.thrift.TaskId
 import fr.cnrs.liris.accio.core.filesystem.inject.FileSystemModule
 import fr.cnrs.liris.privamov.ops.OpsModule
 

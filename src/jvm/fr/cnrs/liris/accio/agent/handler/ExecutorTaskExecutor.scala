@@ -25,7 +25,7 @@ import com.google.inject.{Inject, Singleton}
 import com.twitter.util._
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.agent.config.{ExecutorArgs, ExecutorUri, MasterRpcDest, WorkDir}
-import fr.cnrs.liris.accio.core.api.{InvalidTaskException, Task, TaskId}
+import fr.cnrs.liris.accio.core.api.thrift.{InvalidTaskException, Task, TaskId}
 import fr.cnrs.liris.accio.core.filesystem.FileSystem
 import fr.cnrs.liris.accio.core.util.{ThreadLike, ThreadManager, WorkerPool}
 import fr.cnrs.liris.common.util.FileUtils

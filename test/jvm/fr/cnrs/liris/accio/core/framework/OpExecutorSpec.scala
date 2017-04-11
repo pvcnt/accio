@@ -22,7 +22,7 @@ import java.nio.file.{Files, Path, Paths}
 
 import com.google.inject.{Guice, TypeLiteral}
 import fr.cnrs.liris.accio.core.operator._
-import fr.cnrs.liris.accio.core.api._
+import fr.cnrs.liris.accio.core.api.thrift._
 import fr.cnrs.liris.accio.core.filesystem.FileSystem
 import fr.cnrs.liris.accio.testing.WithSparkleEnv
 import fr.cnrs.liris.common.util.FileUtils

@@ -29,18 +29,18 @@ object Errors {
    *
    * @param e Throwable.
    */
-  def create(e: Throwable): Error = {
-    val causes = mutable.ListBuffer.empty[ErrorData]
+  def create(e: Throwable): thrift.Error = {
+    val causes = mutable.ListBuffer.empty[thrift.ErrorData]
     var maybeException = Option(e.getCause)
     while (maybeException.isDefined) {
       causes += createData(maybeException.get)
       maybeException = Option(maybeException.get.getCause)
     }
-    Error(createData(e), causes)
+    thrift.Error(createData(e), causes)
   }
 
   private def createData(e: Throwable) = {
-    ErrorData(
+    thrift.ErrorData(
       classifier = e.getClass.getName,
       message = Some(e.getMessage),
       stacktrace = e.getStackTrace.map(_.toString))

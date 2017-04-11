@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.core.framework
 
-import fr.cnrs.liris.accio.core.api.Reference
+import fr.cnrs.liris.accio.core.api.thrift.Reference
 import fr.cnrs.liris.common.util.Named
 import fr.cnrs.liris.dal.core.api.Value
 

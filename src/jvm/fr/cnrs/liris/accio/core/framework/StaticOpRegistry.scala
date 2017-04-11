@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.core.framework
 
-import fr.cnrs.liris.accio.core.api.OpDef
+import fr.cnrs.liris.accio.core.api.thrift.OpDef
 
 /**
  * Operator registry embedding static definitions (i.e., known when instantiating the object).

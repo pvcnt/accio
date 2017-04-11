@@ -24,7 +24,7 @@ import java.util.concurrent.{ConcurrentHashMap, ConcurrentLinkedQueue}
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.util.concurrent.AbstractIdleService
 import com.google.inject.Singleton
-import fr.cnrs.liris.accio.core.api._
+import fr.cnrs.liris.accio.core.api.thrift._
 import fr.cnrs.liris.accio.core.storage._
 
 import scala.collection.JavaConverters._

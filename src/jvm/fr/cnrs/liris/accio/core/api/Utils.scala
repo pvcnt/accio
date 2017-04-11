@@ -70,7 +70,7 @@ object Utils {
    * Return the default user, inferred from the environment of the shell user login. It is of course only
    * valid in a client context.
    */
-  val DefaultUser: User = sys.env.get("ACCIO_USER").map(parseUser).getOrElse(User(sys.props("user.name")))
+  val DefaultUser: thrift.User = sys.env.get("ACCIO_USER").map(parseUser).getOrElse(thrift.User(sys.props("user.name")))
 
   /**
    * Generate a human-readable label for a list of parameters.
@@ -103,28 +103,28 @@ object Utils {
    *
    * @param str String to parse
    */
-  def parseUser(str: String): User = str match {
-    case UserRegex(name, email) => User(name.trim, Some(email.trim))
-    case _ => User(str, None)
+  def parseUser(str: String): thrift.User = str match {
+    case UserRegex(name, email) => thrift.User(name.trim, Some(email.trim))
+    case _ => thrift.User(str, None)
   }
 
-  def toString(ref: Reference): String = s"${ref.node}/${ref.port}"
+  def toString(ref: thrift.Reference): String = s"${ref.node}/${ref.port}"
 
-  def toString(user: User): String = s"${user.name}${user.email.map(email => s" <$email>").getOrElse("")}"
+  def toString(user: thrift.User): String = s"${user.name}${user.email.map(email => s" <$email>").getOrElse("")}"
 
-  def isCompleted(status: NodeStatus): Boolean = status match {
-    case NodeStatus.Success => true
-    case NodeStatus.Failed => true
-    case NodeStatus.Killed => true
-    case NodeStatus.Cancelled => true
-    case NodeStatus.Lost => true
+  def isCompleted(status: thrift.NodeStatus): Boolean = status match {
+    case thrift.NodeStatus.Success => true
+    case thrift.NodeStatus.Failed => true
+    case thrift.NodeStatus.Killed => true
+    case thrift.NodeStatus.Cancelled => true
+    case thrift.NodeStatus.Lost => true
     case _ => false
   }
 
-  def isCompleted(status: RunStatus): Boolean = status match {
-    case RunStatus.Success => true
-    case RunStatus.Failed => true
-    case RunStatus.Killed => true
+  def isCompleted(status: thrift.RunStatus): Boolean = status match {
+    case thrift.RunStatus.Success => true
+    case thrift.RunStatus.Failed => true
+    case thrift.RunStatus.Killed => true
     case _ => false
   }
 }

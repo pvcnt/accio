@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.core.storage
 
 import com.google.common.util.concurrent.Service
 import com.twitter.util.Future
-import fr.cnrs.liris.accio.core.api.{Workflow, WorkflowId}
+import fr.cnrs.liris.accio.core.api.thrift.{Workflow, WorkflowId}
 
 /**
  * Repository giving access to workflows.

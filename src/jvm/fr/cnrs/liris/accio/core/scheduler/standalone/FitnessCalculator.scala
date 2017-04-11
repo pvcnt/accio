@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.core.scheduler.standalone
 
-import fr.cnrs.liris.accio.core.api.Resource
+import fr.cnrs.liris.accio.core.api.thrift.Resource
 import fr.cnrs.liris.accio.core.scheduler.WorkerInfo
 
 trait FitnessCalculator {

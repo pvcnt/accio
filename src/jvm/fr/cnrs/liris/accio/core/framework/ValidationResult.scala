@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.core.framework
 
-import fr.cnrs.liris.accio.core.api.{InvalidSpecException, InvalidSpecMessage}
+import fr.cnrs.liris.accio.core.api.thrift.{InvalidSpecException, InvalidSpecMessage}
 
 case class ValidationResult(errors: Seq[InvalidSpecMessage], warnings: Seq[InvalidSpecMessage]) {
   def valid: Boolean = errors.isEmpty

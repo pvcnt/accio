@@ -25,7 +25,7 @@ import com.twitter.util._
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.agent._
 import fr.cnrs.liris.accio.agent.config.{WorkerRpcDest, WorkerTimeout}
-import fr.cnrs.liris.accio.core.api.{InvalidWorkerException, Resource}
+import fr.cnrs.liris.accio.core.api.thrift.{InvalidWorkerException, Resource}
 import fr.cnrs.liris.accio.core.util.{InfiniteLoopThreadLike, ThreadManager, WorkerPool}
 
 /**

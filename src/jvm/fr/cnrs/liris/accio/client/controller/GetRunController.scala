@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.client.controller
 
 import com.twitter.util.{Future, Time}
 import fr.cnrs.liris.accio.agent._
-import fr.cnrs.liris.accio.core.api.RunStatus
+import fr.cnrs.liris.accio.core.api.thrift.RunStatus
 
 class GetRunController extends AbstractGetController[ListRunsResponse] with FormatHelper {
   override def retrieve(opts: GetQuery, client: AgentService$FinagleClient): Future[ListRunsResponse] = {

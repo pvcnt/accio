@@ -23,7 +23,7 @@ import com.twitter.util.{Await, Duration, Future, Time}
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.agent.config.ExecutorTimeout
 import fr.cnrs.liris.accio.agent.{AgentService$FinagleClient, LostTaskRequest}
-import fr.cnrs.liris.accio.core.api.{ExecutorId, TaskId}
+import fr.cnrs.liris.accio.core.api.thrift.{ExecutorId, TaskId}
 import fr.cnrs.liris.accio.core.util.InfiniteLoopThreadLike
 
 /**

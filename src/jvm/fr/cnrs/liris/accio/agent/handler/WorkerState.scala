@@ -23,7 +23,7 @@ import com.twitter.finagle.stats.{Gauge, StatsReceiver}
 import com.twitter.util.{StorageUnit, Time}
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.agent.config.{AgentName, ReservedResource}
-import fr.cnrs.liris.accio.core.api._
+import fr.cnrs.liris.accio.core.api.thrift._
 import fr.cnrs.liris.common.util.Platform
 
 import scala.collection.mutable

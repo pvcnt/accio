@@ -22,7 +22,7 @@ import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{HeartbeatExecutorRequest, HeartbeatExecutorResponse}
-import fr.cnrs.liris.accio.core.api.InvalidExecutorException
+import fr.cnrs.liris.accio.core.api.thrift.InvalidExecutorException
 
 /**
  * Handle a request from an executor sending a heartbeat indicating it is still alive.
