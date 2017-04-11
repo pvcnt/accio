@@ -22,7 +22,7 @@ import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{UpdateRunRequest, UpdateRunResponse}
-import fr.cnrs.liris.accio.core.domain.{Run, UnknownRunException}
+import fr.cnrs.liris.accio.core.api.{Run, UnknownRunException}
 import fr.cnrs.liris.accio.core.storage.Storage
 
 /**

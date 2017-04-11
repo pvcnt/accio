@@ -22,7 +22,7 @@ import com.google.inject.Inject
 import fr.cnrs.liris.accio.agent.KillRunRequest
 import fr.cnrs.liris.accio.runtime.event.{Event, Reporter}
 import fr.cnrs.liris.accio.runtime.cli.{Cmd, ExitCode}
-import fr.cnrs.liris.accio.core.domain._
+import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.common.flags.FlagsProvider
 
 @Cmd(

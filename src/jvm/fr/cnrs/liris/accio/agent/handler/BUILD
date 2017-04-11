@@ -9,7 +9,7 @@ scala_library(
     'src/jvm/fr/cnrs/liris/accio/core/scheduler',
     'src/jvm/fr/cnrs/liris/accio/core/util',
     'src/jvm/fr/cnrs/liris/accio/core/util:annotations',
-    'src/thrift/fr/cnrs/liris/accio/core/domain',
+    'src/thrift/fr/cnrs/liris/accio/core/api',
     'src/thrift/fr/cnrs/liris/accio/agent',
     '3rdparty/jvm/com/typesafe/scala-logging',
     '3rdparty/jvm/com/google/guice',

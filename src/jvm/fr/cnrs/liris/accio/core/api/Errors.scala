@@ -16,21 +16,33 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.api;
+package fr.cnrs.liris.accio.core.api
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import scala.collection.mutable
 
 /**
- * Annotation requiring the value of an operator input to be taken among those specified.
+ * Factory for [[Error]].
  */
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.PARAMETER)
-public @interface OneOf {
-    /**
-     * List of allowed values (only strings for now).
-     */
-    String[] value();
+object Errors {
+  /**
+   * Create a new error from a throwable.
+   *
+   * @param e Throwable.
+   */
+  def create(e: Throwable): Error = {
+    val causes = mutable.ListBuffer.empty[ErrorData]
+    var maybeException = Option(e.getCause)
+    while (maybeException.isDefined) {
+      causes += createData(maybeException.get)
+      maybeException = Option(maybeException.get.getCause)
+    }
+    Error(createData(e), causes)
+  }
+
+  private def createData(e: Throwable) = {
+    ErrorData(
+      classifier = e.getClass.getName,
+      message = Some(e.getMessage),
+      stacktrace = e.getStackTrace.map(_.toString))
+  }
 }

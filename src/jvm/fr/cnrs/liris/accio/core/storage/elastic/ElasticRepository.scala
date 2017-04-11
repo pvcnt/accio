@@ -32,7 +32,7 @@ import com.twitter.bijection.twitter_util.UtilBijections._
 import com.twitter.finatra.json.FinatraObjectMapper
 import com.twitter.util.{Await, Future}
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.core.domain._
+import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.accio.core.storage._
 import org.apache.lucene.search.join.ScoreMode
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse

@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.api
+package fr.cnrs.liris.accio.core.operator
 
 import java.nio.file.{Files, Path}
 

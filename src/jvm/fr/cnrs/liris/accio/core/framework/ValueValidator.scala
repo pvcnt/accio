@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.core.framework
 
-import fr.cnrs.liris.accio.core.domain.{ArgConstraint, ArgDef, InvalidSpecMessage}
+import fr.cnrs.liris.accio.core.api.{ArgConstraint, ArgDef, InvalidSpecMessage}
 import fr.cnrs.liris.dal.core.api._
 
 import scala.collection.mutable

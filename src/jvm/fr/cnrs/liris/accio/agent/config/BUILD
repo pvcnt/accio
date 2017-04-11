@@ -1,6 +1,6 @@
 scala_library(
   dependencies=[
-    'src/thrift/fr/cnrs/liris/accio/core/domain',
+    'src/thrift/fr/cnrs/liris/accio/core/api',
   ],
   sources=globs('*.scala')
 )

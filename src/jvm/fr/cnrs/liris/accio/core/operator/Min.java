@@ -16,33 +16,26 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.domain
+package fr.cnrs.liris.accio.core.operator;
 
-import scala.collection.mutable
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * Factory for [[Error]].
+ * Annotation requiring a minimum value for an operator input.
  */
-object Errors {
-  /**
-   * Create a new error from a throwable.
-   *
-   * @param e Throwable.
-   */
-  def create(e: Throwable): Error = {
-    val causes = mutable.ListBuffer.empty[ErrorData]
-    var maybeException = Option(e.getCause)
-    while (maybeException.isDefined) {
-      causes += createData(maybeException.get)
-      maybeException = Option(maybeException.get.getCause)
-    }
-    Error(createData(e), causes)
-  }
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.PARAMETER)
+public @interface Min {
+    /**
+     * Minimum value that can be taken.
+     */
+    double value();
 
-  private def createData(e: Throwable) = {
-    ErrorData(
-      classifier = e.getClass.getName,
-      message = Some(e.getMessage),
-      stacktrace = e.getStackTrace.map(_.toString))
-  }
+    /**
+     * Whether the lower bound is inclusive or not.
+     */
+    boolean inclusive() default true;
 }

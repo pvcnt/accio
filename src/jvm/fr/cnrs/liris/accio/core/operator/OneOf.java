@@ -16,26 +16,21 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.domain
+package fr.cnrs.liris.accio.core.operator;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * Utils for [[Reference]].
+ * Annotation requiring the value of an operator input to be taken among those specified.
  */
-object References {
-  /**
-   * Parse a string into a dependency.
-   *
-   * @param str String to parse.
-   * @throws IllegalArgumentException If the string is not formatted as a valid reference.
-   */
-  @throws[IllegalArgumentException]
-  def parse(str: String): Reference = str.split("/") match {
-    case Array(node, port) =>
-      require(node.nonEmpty, s"Invalid reference, empty node name: $str")
-      require(port.nonEmpty, s"Invalid reference, empty port name: $str")
-      Reference(node, port)
-    case _ => throw new IllegalArgumentException(s"Invalid reference: $str")
-  }
-
-  def toString(ref: Reference): String = s"${ref.node}/${ref.port}"
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.PARAMETER)
+public @interface OneOf {
+    /**
+     * List of allowed values (only strings for now).
+     */
+    String[] value();
 }

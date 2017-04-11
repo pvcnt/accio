@@ -2,7 +2,7 @@ scala_library(
   dependencies=[
     ':annotations',
     'src/jvm/fr/cnrs/liris/accio/core/storage',
-    'src/thrift/fr/cnrs/liris/accio/core/domain',
+    'src/thrift/fr/cnrs/liris/accio/core/api',
     '3rdparty/jvm/com/sksamuel/elastic4s:core',
     '3rdparty/jvm/com/sksamuel/elastic4s:jackson',
     '3rdparty/jvm/com/typesafe/scala-logging',

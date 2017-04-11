@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.client.command
 import com.twitter.scrooge.ThriftException
 import com.twitter.util.{Await, Future, Return, Throw}
 import fr.cnrs.liris.accio.agent.AgentService$FinagleClient
-import fr.cnrs.liris.accio.core.domain.{InvalidSpecException, InvalidSpecMessage, UnknownRunException}
+import fr.cnrs.liris.accio.core.api.{InvalidSpecException, InvalidSpecMessage, UnknownRunException}
 import fr.cnrs.liris.accio.runtime.cli.{Command, ExitCode}
 import fr.cnrs.liris.accio.runtime.event.{Event, EventKind, Reporter}
 import fr.cnrs.liris.common.flags.FlagsProvider

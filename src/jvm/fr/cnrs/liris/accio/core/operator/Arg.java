@@ -16,26 +16,23 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.api;
+package fr.cnrs.liris.accio.core.operator;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 /**
- * Annotation requiring a minimum value for an operator input.
+ * Annotation encoding metadata about a port of an operator.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.PARAMETER)
-public @interface Min {
+public @interface Arg {
     /**
-     * Minimum value that can be taken.
+     * Name of this port. By default it is the field name.
      */
-    double value();
+    String name() default "";
 
     /**
-     * Whether the lower bound is inclusive or not.
+     * A short description.
      */
-    boolean inclusive() default true;
+    String help() default "";
 }

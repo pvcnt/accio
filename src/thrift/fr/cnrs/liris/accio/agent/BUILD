@@ -2,7 +2,7 @@ java_thrift_library(
   name='api',
   sources=['api.thrift'],
   dependencies=[
-    'src/thrift/fr/cnrs/liris/accio/core/domain',
+    'src/thrift/fr/cnrs/liris/accio/core/api',
     '3rdparty/jvm:scrooge-core',
     '3rdparty/jvm/com/twitter/finagle:thrift',
   ],
@@ -15,7 +15,7 @@ java_thrift_library(
   name='master',
   sources=['master.thrift'],
   dependencies=[
-    'src/thrift/fr/cnrs/liris/accio/core/domain',
+    'src/thrift/fr/cnrs/liris/accio/core/api',
     '3rdparty/jvm:scrooge-core',
     '3rdparty/jvm/com/twitter/finagle:thrift',
   ],
@@ -28,7 +28,7 @@ java_thrift_library(
   name='worker',
   sources=['worker.thrift'],
   dependencies=[
-    'src/thrift/fr/cnrs/liris/accio/core/domain',
+    'src/thrift/fr/cnrs/liris/accio/core/api',
     '3rdparty/jvm:scrooge-core',
     '3rdparty/jvm/com/twitter/finagle:thrift',
   ],
@@ -45,7 +45,7 @@ java_thrift_library(
     ':api',
     ':worker',
     ':master',
-    'src/thrift/fr/cnrs/liris/accio/core/domain',
+    'src/thrift/fr/cnrs/liris/accio/core/api',
     '3rdparty/jvm:scrooge-core',
     '3rdparty/jvm/com/twitter/finagle:thrift',
   ],

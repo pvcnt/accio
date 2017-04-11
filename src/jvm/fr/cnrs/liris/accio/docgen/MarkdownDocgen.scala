@@ -22,7 +22,7 @@ import java.io.{BufferedOutputStream, FileOutputStream, OutputStream, PrintStrea
 import java.nio.file.Files
 
 import com.google.inject.Inject
-import fr.cnrs.liris.accio.core.domain.OpDef
+import fr.cnrs.liris.accio.core.api.OpDef
 import fr.cnrs.liris.accio.core.framework.OpRegistry
 import fr.cnrs.liris.dal.core.api.{DataTypes, Values}
 

@@ -18,7 +18,7 @@
 
 namespace java fr.cnrs.liris.accio.agent
 
-include "fr/cnrs/liris/accio/core/domain/accio.thrift"
+include "fr/cnrs/liris/accio/core/api/accio.thrift"
 
 struct GetOperatorRequest {
   1: required string name;

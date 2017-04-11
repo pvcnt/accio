@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.core.storage
 import java.util.UUID
 
 import com.twitter.util.Time
-import fr.cnrs.liris.accio.core.domain._
+import fr.cnrs.liris.accio.core.api._
 
 /**
  * Common unit tests for all [[MutableLogRepository]] implementations, ensuring they all have consistent behavior.

@@ -23,8 +23,8 @@ import java.io.IOException
 import com.google.inject.Inject
 import com.twitter.util.StorageUnit
 import com.typesafe.scalalogging.LazyLogging
+import fr.cnrs.liris.accio.core.operator._
 import fr.cnrs.liris.accio.core.api._
-import fr.cnrs.liris.accio.core.domain._
 import fr.cnrs.liris.common.reflect.{CaseClass, CaseClassField, PlainClass, ScalaType}
 import fr.cnrs.liris.common.util.ResourceFileLoader
 import fr.cnrs.liris.common.util.StringUtils.maybe

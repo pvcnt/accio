@@ -23,7 +23,7 @@ import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.JsonMappingException
 import com.twitter.finatra.json.FinatraObjectMapper
 import com.typesafe.scalalogging.LazyLogging
-import fr.cnrs.liris.accio.core.domain.{InvalidSpecException, _}
+import fr.cnrs.liris.accio.core.api.{InvalidSpecException, _}
 import fr.cnrs.liris.accio.core.framework.{BaseFactory, WorkflowFactory}
 import fr.cnrs.liris.accio.core.framework.{BaseFactory, OpRegistry}
 import fr.cnrs.liris.dal.core.api.{DataTypes, Values}

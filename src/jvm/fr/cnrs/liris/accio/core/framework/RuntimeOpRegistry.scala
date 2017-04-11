@@ -19,8 +19,8 @@
 package fr.cnrs.liris.accio.core.framework
 
 import com.google.inject.{Inject, Singleton}
-import fr.cnrs.liris.accio.core.api.Operator
-import fr.cnrs.liris.accio.core.domain.OpDef
+import fr.cnrs.liris.accio.core.operator.Operator
+import fr.cnrs.liris.accio.core.api.OpDef
 
 /**
  * Registry extracting operator definitions from implementation classes. It also provides runtime information such

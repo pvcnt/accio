@@ -18,8 +18,13 @@
 
 package fr.cnrs.liris.accio.core.statemgr
 
+import com.twitter.scrooge.ThriftStruct
+
 /**
  */
 trait StateManager {
+  //def save(id: String, obj: ThriftStruct): Unit
+  //def delete(id: String, obj: ThriftStruct): Unit
+
   def close(): Unit = {}
 }

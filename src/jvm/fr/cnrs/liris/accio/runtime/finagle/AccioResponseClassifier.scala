@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.runtime.finagle
 
 import com.twitter.finagle.service.{ReqRep, ResponseClass, ResponseClassifier}
 import com.twitter.util.Throw
-import fr.cnrs.liris.accio.core.domain._
+import fr.cnrs.liris.accio.core.api._
 
 object AccioResponseClassifier {
   val Default: ResponseClassifier = {

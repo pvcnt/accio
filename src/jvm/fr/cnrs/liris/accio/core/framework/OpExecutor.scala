@@ -24,8 +24,8 @@ import java.util.UUID
 import com.google.common.annotations.VisibleForTesting
 import com.google.inject.Inject
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.core.api.{OpContext, Operator}
-import fr.cnrs.liris.accio.core.domain._
+import fr.cnrs.liris.accio.core.operator.{OpContext, Operator}
+import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.accio.core.filesystem.FileSystem
 import fr.cnrs.liris.common.util.FileUtils
 import fr.cnrs.liris.dal.core.api.{AtomicType, Value, Values}

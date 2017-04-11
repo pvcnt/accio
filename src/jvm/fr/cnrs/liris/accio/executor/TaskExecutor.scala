@@ -24,7 +24,7 @@ import com.google.inject.Inject
 import com.twitter.util._
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.agent._
-import fr.cnrs.liris.accio.core.domain._
+import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.accio.core.framework.{OpExecutor, OpExecutorOpts, OutErr}
 import fr.cnrs.liris.accio.core.util.{InfiniteLoopThreadLike, ThreadManager, WorkerPool}
 

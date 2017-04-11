@@ -27,7 +27,7 @@ import com.twitter.finagle.service.{Backoff, RetryBudget}
 import com.twitter.inject.{Injector, TwitterModule}
 import com.twitter.util.{Duration, ExecutorServiceFuturePool, FuturePool}
 import fr.cnrs.liris.accio.agent.{AgentService, AgentService$FinagleClient}
-import fr.cnrs.liris.accio.core.api.Operator
+import fr.cnrs.liris.accio.core.operator.Operator
 import fr.cnrs.liris.accio.runtime.finagle.AccioResponseClassifier
 import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.util.WorkerPool

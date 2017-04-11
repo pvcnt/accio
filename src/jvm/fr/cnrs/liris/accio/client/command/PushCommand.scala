@@ -25,7 +25,7 @@ import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.agent.{AgentService$FinagleClient, ParseWorkflowRequest, PushWorkflowRequest}
 import fr.cnrs.liris.accio.runtime.event.{Event, EventKind, Reporter}
 import fr.cnrs.liris.accio.runtime.cli.{Cmd, ExitCode}
-import fr.cnrs.liris.accio.core.domain.{Utils, WorkflowSpec}
+import fr.cnrs.liris.accio.core.api.{Utils, WorkflowSpec}
 import fr.cnrs.liris.common.flags.FlagsProvider
 import fr.cnrs.liris.common.util.FileUtils
 

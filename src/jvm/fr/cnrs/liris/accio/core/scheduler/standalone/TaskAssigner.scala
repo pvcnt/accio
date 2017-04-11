@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.core.scheduler.standalone
 
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
-import fr.cnrs.liris.accio.core.domain.{Resource, Task}
+import fr.cnrs.liris.accio.core.api.{Resource, Task}
 import fr.cnrs.liris.accio.core.scheduler.WorkerInfo
 
 class TaskAssigner @Inject()(fitnessCalculator: FitnessCalculator) extends LazyLogging {

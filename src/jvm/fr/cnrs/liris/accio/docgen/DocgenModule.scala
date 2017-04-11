@@ -19,7 +19,7 @@
 package fr.cnrs.liris.accio.docgen
 
 import com.google.inject.{AbstractModule, TypeLiteral}
-import fr.cnrs.liris.accio.core.api.Operator
+import fr.cnrs.liris.accio.core.operator.Operator
 import fr.cnrs.liris.accio.core.framework.{OpMetaReader, OpRegistry, ReflectOpMetaReader, RuntimeOpRegistry}
 import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
 

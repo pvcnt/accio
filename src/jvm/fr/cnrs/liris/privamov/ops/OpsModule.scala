@@ -20,7 +20,7 @@ package fr.cnrs.liris.privamov.ops
 
 import com.google.inject.TypeLiteral
 import com.twitter.inject.TwitterModule
-import fr.cnrs.liris.accio.core.api.Operator
+import fr.cnrs.liris.accio.core.operator.Operator
 import fr.cnrs.liris.dal.core.io.{Decoder, Encoder}
 import fr.cnrs.liris.privamov.core.io.{CsvEventCodec, CsvPoiCodec, CsvPoiSetCodec, TraceCodec}
 import net.codingwell.scalaguice.ScalaMultibinder

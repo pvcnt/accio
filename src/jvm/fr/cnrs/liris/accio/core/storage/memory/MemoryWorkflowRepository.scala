@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.util.concurrent.AbstractIdleService
 import com.google.inject.Singleton
-import fr.cnrs.liris.accio.core.domain.{Workflow, WorkflowId}
+import fr.cnrs.liris.accio.core.api.{Workflow, WorkflowId}
 import fr.cnrs.liris.accio.core.storage.{MutableWorkflowRepository, WorkflowList, WorkflowQuery}
 
 import scala.collection.JavaConverters._

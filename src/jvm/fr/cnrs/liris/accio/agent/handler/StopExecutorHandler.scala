@@ -23,7 +23,7 @@ import com.twitter.util.{Future, Throw}
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.agent._
 import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
-import fr.cnrs.liris.accio.core.domain.{InvalidExecutorException, InvalidTaskException, InvalidWorkerException}
+import fr.cnrs.liris.accio.core.api.{InvalidExecutorException, InvalidTaskException, InvalidWorkerException}
 
 /**
  * Handle a request from an executor who completed the task that was assigned to it (either successfully or not).

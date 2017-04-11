@@ -22,7 +22,7 @@ import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{ParseWorkflowRequest, ParseWorkflowResponse}
-import fr.cnrs.liris.accio.core.domain.{InvalidSpecException, InvalidSpecMessage}
+import fr.cnrs.liris.accio.core.api.{InvalidSpecException, InvalidSpecMessage}
 import fr.cnrs.liris.accio.core.dsl.WorkflowParser
 
 import scala.collection.mutable

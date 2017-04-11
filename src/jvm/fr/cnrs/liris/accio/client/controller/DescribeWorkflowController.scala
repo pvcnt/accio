@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.client.controller
 
 import com.twitter.util.{Future, Time}
 import fr.cnrs.liris.accio.agent.{AgentService$FinagleClient, GetWorkflowRequest}
-import fr.cnrs.liris.accio.core.domain._
+import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.accio.runtime.event.Reporter
 import fr.cnrs.liris.dal.core.api.DataTypes
 import fr.cnrs.liris.common.util.StringUtils.padTo

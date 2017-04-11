@@ -22,7 +22,7 @@ import com.google.inject.Inject
 import fr.cnrs.liris.accio.agent.ListLogsRequest
 import fr.cnrs.liris.accio.runtime.event.{Event, Reporter}
 import fr.cnrs.liris.accio.runtime.cli.{Cmd, ExitCode}
-import fr.cnrs.liris.accio.core.domain.RunId
+import fr.cnrs.liris.accio.core.api.RunId
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 
 case class LogsCommandFlags(

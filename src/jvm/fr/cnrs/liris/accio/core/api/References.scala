@@ -16,26 +16,26 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.api;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+package fr.cnrs.liris.accio.core.api
 
 /**
- * Annotation requiring a minimum value for an operator input.
+ * Utils for [[Reference]].
  */
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.PARAMETER)
-public @interface Max {
-    /**
-     * Minimum value that can be taken.
-     */
-    double value();
+object References {
+  /**
+   * Parse a string into a dependency.
+   *
+   * @param str String to parse.
+   * @throws IllegalArgumentException If the string is not formatted as a valid reference.
+   */
+  @throws[IllegalArgumentException]
+  def parse(str: String): Reference = str.split("/") match {
+    case Array(node, port) =>
+      require(node.nonEmpty, s"Invalid reference, empty node name: $str")
+      require(port.nonEmpty, s"Invalid reference, empty port name: $str")
+      Reference(node, port)
+    case _ => throw new IllegalArgumentException(s"Invalid reference: $str")
+  }
 
-    /**
-     * Whether the lower bound is inclusive or not.
-     */
-    boolean inclusive() default true;
+  def toString(ref: Reference): String = s"${ref.node}/${ref.port}"
 }

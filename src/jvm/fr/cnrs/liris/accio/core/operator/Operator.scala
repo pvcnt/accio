@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.core.api
+package fr.cnrs.liris.accio.core.operator
 
 /**
  * An operator is the basic processing unit of Accio. It takes a typed input and produces a typed output. Input and

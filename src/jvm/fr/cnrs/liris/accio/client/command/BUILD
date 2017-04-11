@@ -2,7 +2,7 @@ scala_library(
   dependencies=[
     'src/jvm/fr/cnrs/liris/accio/client/config',
     'src/jvm/fr/cnrs/liris/accio/client/controller',
-    'src/jvm/fr/cnrs/liris/accio/core/domain',
+    'src/jvm/fr/cnrs/liris/accio/core/api',
     'src/jvm/fr/cnrs/liris/accio/core/analysis',
     'src/jvm/fr/cnrs/liris/accio/core/util',
     'src/jvm/fr/cnrs/liris/accio/runtime/cli:annotations',

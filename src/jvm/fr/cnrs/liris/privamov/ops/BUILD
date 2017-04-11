@@ -1,7 +1,7 @@
 scala_library(
   dependencies=[
-    'src/jvm/fr/cnrs/liris/accio/core/api',
-    'src/jvm/fr/cnrs/liris/accio/core/api:annotations',
+    'src/jvm/fr/cnrs/liris/accio/core/operator',
+    'src/jvm/fr/cnrs/liris/accio/core/operator:annotations',
     'src/jvm/fr/cnrs/liris/dal/core/sparkle',
     'src/jvm/fr/cnrs/liris/privamov/core/model',
     'src/jvm/fr/cnrs/liris/privamov/core/lppm',

@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.core.storage
 
 import com.google.common.util.concurrent.Service
 import com.twitter.util.Future
-import fr.cnrs.liris.accio.core.domain._
+import fr.cnrs.liris.accio.core.api._
 
 /**
  * Repository giving access to runs.

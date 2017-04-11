@@ -28,7 +28,7 @@ import com.twitter.concurrent.NamedPoolThreadFactory
 import com.twitter.inject.TwitterModule
 import com.twitter.util.{Duration, FuturePool}
 import fr.cnrs.liris.accio.agent.config._
-import fr.cnrs.liris.accio.core.api.Operator
+import fr.cnrs.liris.accio.core.operator.Operator
 import fr.cnrs.liris.accio.core.filesystem.inject.FileSystemModule
 import fr.cnrs.liris.accio.core.framework._
 import fr.cnrs.liris.accio.core.util.WorkerPool

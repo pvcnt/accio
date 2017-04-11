@@ -23,7 +23,7 @@ import com.twitter.util.{Future, FuturePool}
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{CreateRunRequest, CreateRunResponse}
-import fr.cnrs.liris.accio.core.domain.{InvalidSpecException, InvalidSpecMessage, RunId}
+import fr.cnrs.liris.accio.core.api.{InvalidSpecException, InvalidSpecMessage, RunId}
 import fr.cnrs.liris.accio.core.framework.{RunFactory, RunManager}
 import fr.cnrs.liris.accio.core.storage.Storage
 import fr.cnrs.liris.accio.core.util.WorkerPool

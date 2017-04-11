@@ -26,7 +26,7 @@ import com.twitter.finatra.validation.{Max, Min}
 import com.twitter.io.Reader
 import com.twitter.util.{Future, Return, Throw}
 import fr.cnrs.liris.accio.agent.{ListOperatorsRequest, _}
-import fr.cnrs.liris.accio.core.domain._
+import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.common.util.StringUtils.explode
 import org.joda.time.DateTime
 

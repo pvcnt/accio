@@ -18,7 +18,7 @@
 
 namespace java fr.cnrs.liris.accio.agent
 
-include "fr/cnrs/liris/accio/core/domain/accio.thrift"
+include "fr/cnrs/liris/accio/core/api/accio.thrift"
 include "fr/cnrs/liris/accio/agent/api.thrift"
 include "fr/cnrs/liris/accio/agent/worker.thrift"
 include "fr/cnrs/liris/accio/agent/master.thrift"

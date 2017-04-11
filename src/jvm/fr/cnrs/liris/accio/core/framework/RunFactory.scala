@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.core.framework
 import java.util.UUID
 
 import com.google.inject.Inject
-import fr.cnrs.liris.accio.core.domain._
+import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.accio.core.storage.Storage
 import fr.cnrs.liris.common.util.Seqs
 import fr.cnrs.liris.dal.core.api.Value
@@ -185,7 +185,7 @@ final class RunFactory @Inject()(storage: Storage, valueValidator: ValueValidato
     // If I don't force it, I get the strangest compiler error (head lines follow):
     // java.lang.AssertionError: assertion failed:
     //   Some(children.<map: error>(((x$2) => x$2.id)).<toSet: error>)
-    //     while compiling: /path/to/code/src/jvm/fr/cnrs/liris/accio/core/domain/RunFactory.scala
+    //     while compiling: /path/to/code/src/jvm/fr/cnrs/liris/accio/core/api/RunFactory.scala
     //       during phase: superaccessors
     val children: Seq[Run] = expandedParams.map { params =>
       val discriminantParams = params.filter { case (key, _) => !fixedParams.contains(key) }

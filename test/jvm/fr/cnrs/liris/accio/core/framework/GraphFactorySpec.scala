@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.core.framework
 
-import fr.cnrs.liris.accio.core.domain.{InvalidSpecMessage, _}
+import fr.cnrs.liris.accio.core.api.{InvalidSpecMessage, _}
 import fr.cnrs.liris.accio.testing.Operators
 import fr.cnrs.liris.dal.core.api.Values
 import fr.cnrs.liris.testing.UnitSpec

@@ -24,7 +24,7 @@ import com.google.inject.{Inject, Singleton}
 import com.twitter.util.{Await, Return, Throw}
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.agent.{AssignTaskRequest, KillTaskRequest}
-import fr.cnrs.liris.accio.core.domain._
+import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.accio.core.scheduler._
 
 import scala.collection.JavaConverters._

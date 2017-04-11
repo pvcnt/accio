@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.core.framework
 
 import com.google.inject.{Inject, Singleton}
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.core.domain._
+import fr.cnrs.liris.accio.core.api._
 import fr.cnrs.liris.accio.core.storage.{RunQuery, Storage}
 import fr.cnrs.liris.common.util.cache.CacheBuilder
 
