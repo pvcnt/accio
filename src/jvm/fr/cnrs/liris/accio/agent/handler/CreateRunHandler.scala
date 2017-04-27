@@ -21,12 +21,12 @@ package fr.cnrs.liris.accio.agent.handler
 import com.google.inject.Inject
 import com.twitter.util.{Future, FuturePool}
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{CreateRunRequest, CreateRunResponse}
 import fr.cnrs.liris.accio.framework.api.thrift.{InvalidSpecException, InvalidSpecMessage, RunId}
 import fr.cnrs.liris.accio.framework.service.{RunFactory, RunManager}
 import fr.cnrs.liris.accio.framework.storage.Storage
 import fr.cnrs.liris.accio.framework.util.WorkerPool
+import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 
 import scala.collection.mutable
 
@@ -49,9 +49,7 @@ final class CreateRunHandler @Inject()(
   def handle(req: CreateRunRequest): Future[CreateRunResponse] = {
     val warnings = mutable.Set.empty[InvalidSpecMessage]
     val runs = runFactory.create(req.spec, req.user, warnings)
-    storage.write { provider =>
-      runs.foreach(provider.runs.save)
-    }
+    runs.foreach(storage.runs.save)
 
     // We save the runs before launching them asynchronously. It allows to return more quickly to the client, as
     // launching runs can take some times.
@@ -70,28 +68,28 @@ final class CreateRunHandler @Inject()(
    *            parent and the other its children.
    */
   private def launch(ids: Seq[RunId]) = {
-    storage.write { provider =>
-      // We do not reuse runs from the `handle` method, as they could have been modified in-between by other calls.
-      // This is why we fetch them back from the repository.
-      provider.runs.get(ids.head).foreach { parent =>
-        // We are guaranteed there will be at least one run. It is either a single run or the parent run, we may
-        // launch it safely.
-        var (newParent, _) = runManager.launch(parent, None)
+    //TODO: we still have a too long lock here. If we have thousand child runs, we could hold the lock for
+    // too much time.
+    // We do not reuse runs from the `handle` method, as they could have been modified in-between by other calls.
+    // This is why we fetch them back from the repository.
+    storage.runs.foreach(ids.head) { parent =>
+      // We are guaranteed there will be at least one run. It is either a single run or the parent run, we may
+      // launch it safely.
+      var (newParent, _) = runManager.launch(parent, None)
 
-        // Sequentially launch other runs, which are children of the first run.
-        ids.tail.foreach { childId =>
-          provider.runs.get(childId).foreach { run =>
-            val res = runManager.launch(run, Some(newParent))
-            provider.runs.save(res._1)
-            res._2.foreach { nextParent =>
-              newParent = nextParent
-            }
+      // Sequentially launch other runs, which are children of the first run.
+      ids.tail.foreach { childId =>
+        storage.runs.foreach(childId) { run =>
+          val res = runManager.launch(run, Some(newParent))
+          storage.runs.save(res._1)
+          res._2.foreach { nextParent =>
+            newParent = nextParent
           }
         }
-        // We finally save the parent run.
-        // TODO: maybe we should save it after each child run started.
-        provider.runs.save(newParent)
       }
+      // We finally save the parent run.
+      // TODO: maybe we should save it after each child run started.
+      storage.runs.save(newParent)
     }
   }
 }

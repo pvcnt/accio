@@ -33,6 +33,7 @@ import com.twitter.util.{Await, Duration, Future}
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.framework.api.thrift._
 import fr.cnrs.liris.accio.framework.storage._
+import fr.cnrs.liris.accio.framework.util.Lockable
 import org.apache.lucene.search.join.ScoreMode
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse
 import org.elasticsearch.action.delete.DeleteResponse
@@ -57,9 +58,10 @@ private[elastic] final class ElasticRunRepository @Inject() (
   client: ElasticClient,
   @ElasticPrefix prefix: String,
   @ElasticTimeout timeout: Duration)
-  extends ElasticRepository(client) with MutableRunRepository with StrictLogging {
+  extends ElasticRepository(client) with MutableRunRepository with Lockable[String] with StrictLogging {
 
   override def find(query: RunQuery): RunList = {
+    ensureRunning()
     var q = boolQuery()
     query.owner.foreach { owner =>
       q = q.must(matchQuery("owner.name", owner))
@@ -118,17 +120,8 @@ private[elastic] final class ElasticRunRepository @Inject() (
     Await.result(f, timeout)
   }
 
-  override def save(run: Run): Unit = {
-    val json = mapper.writeValueAsString(run)
-    val f = client
-      .execute(indexInto(indexName / typeName).id(run.id.value).source(json))
-      .as[Future[RichIndexResponse]]
-      .onFailure(e => logger.error(s"Error while saving run ${run.id.value}", e))
-      .unit
-    Await.result(f, timeout)
-  }
-
   override def get(id: RunId): Option[Run] = {
+    ensureRunning()
     val f = client
       .execute(ElasticDsl.get(id.value).from(indexName / typeName))
       .as[Future[RichGetResponse]]
@@ -148,7 +141,19 @@ private[elastic] final class ElasticRunRepository @Inject() (
     Await.result(f, timeout)
   }
 
-  override def remove(id: RunId): Unit = {
+  override def save(run: Run): Unit = locked(run.id.value) {
+    ensureRunning()
+    val json = mapper.writeValueAsString(run)
+    val f = client
+      .execute(indexInto(indexName / typeName).id(run.id.value).source(json))
+      .as[Future[RichIndexResponse]]
+      .onFailure(e => logger.error(s"Error while saving run ${run.id.value}", e))
+      .unit
+    Await.result(f, timeout)
+  }
+
+  override def remove(id: RunId): Unit = locked(id.value) {
+    ensureRunning()
     val f = client
       .execute(delete(id.value).from(indexName / typeName))
       .as[Future[DeleteResponse]]
@@ -156,7 +161,12 @@ private[elastic] final class ElasticRunRepository @Inject() (
     Await.result(f, timeout)
   }
 
+  override def transactional[T](id: RunId)(fn: Option[Run] => T): T = locked(id.value) {
+    fn(get(id))
+  }
+
   override def get(cacheKey: CacheKey): Option[OpResult] = {
+    ensureRunning()
     val q = nestedQuery("state.nodes")
       .query(termQuery("state.nodes.cache_key.hash", cacheKey.hash))
       .scoreMode(ScoreMode.None)

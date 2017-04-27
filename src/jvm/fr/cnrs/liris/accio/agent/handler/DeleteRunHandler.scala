@@ -20,11 +20,11 @@ package fr.cnrs.liris.accio.agent.handler
 
 import com.google.inject.Inject
 import com.twitter.util.Future
-import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{DeleteRunRequest, DeleteRunResponse}
 import fr.cnrs.liris.accio.framework.api.thrift.{RunId, UnknownRunException}
 import fr.cnrs.liris.accio.framework.scheduler.{ClusterState, EventType, Scheduler}
 import fr.cnrs.liris.accio.framework.storage.Storage
+import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 
 /**
  * Delete a run, and all its children if it is a parent run.
@@ -41,36 +41,34 @@ final class DeleteRunHandler @Inject()(
 
   @throws[UnknownRunException]
   override def handle(req: DeleteRunRequest): Future[DeleteRunResponse] = {
-    storage.write { provider =>
-      provider.runs.get(req.id) match {
-        case None => throw UnknownRunException(req.id)
-        case Some(run) =>
-          if (run.children.nonEmpty) {
-            // It is a parent run, cancel and delete child all runs.
-            cancelRuns(run.children)
-            run.children.foreach { runId =>
-              provider.runs.remove(runId)
-              provider.logs.remove(runId)
-            }
-          } else if (run.parent.isDefined) {
-            // It is a child run, update or delete parent run.
-            provider.runs.get(run.parent.get).foreach { parent =>
-              if (parent.children.size > 1) {
-                // There are several child runs left, remove current one from the list.
-                provider.runs.save(parent.copy(children = parent.children.filterNot(_ == run.id)))
-              } else {
-                // It was the last child of this run, delete it as it is now useless.
-                provider.runs.remove(parent.id)
-              }
-            }
-          } else {
-            // It is a single run, cancel it.
-            cancelRuns(Seq(run.id))
+    storage.runs.transactional(req.id) {
+      case None => throw UnknownRunException(req.id)
+      case Some(run) =>
+        if (run.children.nonEmpty) {
+          // It is a parent run, cancel and delete child all runs.
+          cancelRuns(run.children)
+          run.children.foreach { runId =>
+            storage.runs.remove(runId)
+            storage.logs.remove(runId)
           }
-          // Finally, delete the run.
-          provider.runs.remove(run.id)
-          provider.logs.remove(run.id)
-      }
+        } else if (run.parent.isDefined) {
+          // It is a child run, update or delete parent run.
+          storage.runs.foreach(run.parent.get) { parent =>
+            if (parent.children.size > 1) {
+              // There are several child runs left, remove current one from the list.
+              storage.runs.save(parent.copy(children = parent.children.filterNot(_ == run.id)))
+            } else {
+              // It was the last child of this run, delete it as it is now useless.
+              storage.runs.remove(parent.id)
+            }
+          }
+        } else {
+          // It is a single run, cancel it.
+          cancelRuns(Seq(run.id))
+        }
+        // Finally, delete the run.
+        storage.runs.remove(run.id)
+        storage.logs.remove(run.id)
     }
     Future(DeleteRunResponse())
   }

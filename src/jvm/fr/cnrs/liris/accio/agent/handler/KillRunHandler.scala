@@ -20,12 +20,12 @@ package fr.cnrs.liris.accio.agent.handler
 
 import com.google.inject.Inject
 import com.twitter.util.Future
-import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{KillRunRequest, KillRunResponse}
 import fr.cnrs.liris.accio.framework.api.thrift.{Run, UnknownRunException}
-import fr.cnrs.liris.accio.framework.service.RunManager
 import fr.cnrs.liris.accio.framework.scheduler.{ClusterState, EventType, Scheduler}
+import fr.cnrs.liris.accio.framework.service.RunManager
 import fr.cnrs.liris.accio.framework.storage.Storage
+import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 
 /**
  * Kill a run and all running tasks.
@@ -44,31 +44,40 @@ final class KillRunHandler @Inject()(
 
   @throws[UnknownRunException]
   override def handle(req: KillRunRequest): Future[KillRunResponse] = {
-    storage.write { provider =>
-      val newRun = provider.runs.get(req.id) match {
-        case None => throw UnknownRunException(req.id)
-        case Some(run) =>
-          if (run.children.nonEmpty) {
-            var newParent = run
-            // If is a parent run, kill child all runs.
-            run.children.foreach { childId =>
-              provider.runs.get(childId).foreach { child =>
-                val res = cancelRun(child, Some(run))
-                provider.runs.save(res._1)
-                res._2.foreach(p => newParent = p)
-              }
+    val newRun = storage.runs.transactional(req.id) {
+      case None => throw UnknownRunException(req.id)
+      case Some(run) =>
+        if (run.children.nonEmpty) {
+          var newParent = run
+          // If is a parent run, kill child all runs.
+          run.children.foreach { childId =>
+            storage.runs.foreach(childId) { child =>
+              val res = cancelRun(child, Some(run))
+              storage.runs.save(res._1)
+              res._2.foreach(p => newParent = p)
             }
-            provider.runs.save(newParent)
-            newParent
-          } else {
-            val (newRun, newParent) = cancelRun(run, run.parent.flatMap(provider.runs.get))
-            provider.runs.save(newRun)
-            newParent.foreach(provider.runs.save)
-            newRun
           }
-      }
-      Future(KillRunResponse(newRun))
+          storage.runs.save(newParent)
+          newParent
+        } else {
+          run.parent match {
+            case None =>
+              val (newRun, _) = cancelRun(run, None)
+              storage.runs.save(newRun)
+              newRun
+            case Some(parentId) =>
+              var newRun = run
+              storage.runs.foreach(parentId) { parent =>
+                val res = cancelRun(run, Some(parent))
+                newRun = res._1
+                storage.runs.save(newRun)
+                res._2.foreach(storage.runs.save)
+              }
+              newRun
+          }
+        }
     }
+    Future(KillRunResponse(newRun))
   }
 
   private def cancelRun(run: Run, parent: Option[Run]) = {

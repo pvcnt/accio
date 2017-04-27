@@ -34,8 +34,8 @@ final class GetWorkflowHandler @Inject()(storage: Storage)
 
     override def handle(req: GetWorkflowRequest): Future[GetWorkflowResponse] = {
       val maybeWorkflow = req.version match {
-        case Some(version) => storage.read(_.workflows.get(req.id, version))
-        case None => storage.read(_.workflows.get(req.id))
+        case Some(version) => storage.workflows.get(req.id, version)
+        case None => storage.workflows.get(req.id)
       }
       Future(GetWorkflowResponse(maybeWorkflow))
     }

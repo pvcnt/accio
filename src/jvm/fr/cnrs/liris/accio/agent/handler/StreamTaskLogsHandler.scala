@@ -21,11 +21,11 @@ package fr.cnrs.liris.accio.agent.handler
 import com.google.inject.Inject
 import com.twitter.util.Future
 import com.typesafe.scalalogging.LazyLogging
-import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{StreamTaskLogsRequest, StreamTaskLogsResponse}
 import fr.cnrs.liris.accio.framework.api.thrift.{InvalidTaskException, InvalidWorkerException}
 import fr.cnrs.liris.accio.framework.scheduler.ClusterState
 import fr.cnrs.liris.accio.framework.storage.Storage
+import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 
 /**
  * Receive run logs from a task.
@@ -40,10 +40,7 @@ class StreamTaskLogsHandler @Inject()(storage: Storage, state: ClusterState)
   @throws[InvalidWorkerException]
   override def handle(req: StreamTaskLogsRequest): Future[StreamTaskLogsResponse] = {
     state.ensure(req.workerId, req.taskId)
-    // TODO: It could be done in an unsafe manner, because logs are append-only.
-    storage.write { provider =>
-      provider.logs.save(req.logs)
-    }
+    storage.logs.save(req.logs)
     Future(StreamTaskLogsResponse())
   }
 }

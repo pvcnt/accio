@@ -54,7 +54,7 @@ final class SchedulerService @Inject()(scheduler: Scheduler, opRegistry: OpRegis
   def submit(run: Run, node: api.Node, readCache: Boolean = true): Option[(CacheKey, OpResult)] = {
     val opDef = opRegistry(node.op)
     val payload = createPayload(run, node, opDef)
-    val maybeResult = if (readCache) storage.read(_.runs.get(payload.cacheKey)) else None
+    val maybeResult = if (readCache) storage.runs.get(payload.cacheKey) else None
     maybeResult match {
       case Some(result) =>
         logger.debug(s"Cache hit. Run: ${run.id.value}, node: ${node.name}.")

@@ -18,70 +18,15 @@
 
 package fr.cnrs.liris.accio.framework.storage
 
-import java.util.concurrent.locks.ReentrantReadWriteLock
-
 import com.google.common.util.concurrent.{AbstractIdleService, ServiceManager}
 
 import scala.collection.JavaConverters._
 
 /**
- * Base class for storage providing two features:
- *  - storage will be automatically started before it's first used
- *  - writes are ran while holding a lock, preventing concurrent writes.
+ * Base class for storage.
  */
 private[storage] trait AbstractStorage extends AbstractIdleService with Storage {
-  private[this] val serviceManager = new ServiceManager(Set(runRepository, workflowRepository, logRepository).asJava)
-  private[this] val lock = new ReentrantReadWriteLock()
-
-  override final def read[T](fn: RepositoryProvider => T): T = {
-    enforceRunning()
-    // Activating this or not depend on the kind of isolation we want. If we enable this, what's being written will
-    // never be read. If we disable this, we can potentially see an uncommitted transaction.
-    // For now we disable this, for speed reasons.
-    //lock.readLock.lock()
-    //try {
-    fn(new RepositoryProvider {
-      override def logs: LogRepository = logRepository
-
-      override def runs: RunRepository = runRepository
-
-      override def workflows: WorkflowRepository = workflowRepository
-    })
-    //} finally {
-    //lock.readLock.unlock()
-    //}
-  }
-
-  override final def write[T](fn: MutableRepositoryProvider => T): T = {
-    enforceRunning()
-    lock.writeLock.lock()
-    try {
-      fn(new MutableRepositoryProvider {
-        override def logs: MutableLogRepository = logRepository
-
-        override def runs: MutableRunRepository = runRepository
-
-        override def workflows: MutableWorkflowRepository = workflowRepository
-      })
-    } finally {
-      lock.writeLock.unlock()
-    }
-  }
-
-  /**
-   * Return a mutable run repository.
-   */
-  protected def runRepository: MutableRunRepository
-
-  /**
-   * Return a mutable workflow repository.
-   */
-  protected def workflowRepository: MutableWorkflowRepository
-
-  /**
-   * Return a mutable log repository.
-   */
-  protected def logRepository: MutableLogRepository
+  private[this] val serviceManager = new ServiceManager(Set(runs, workflows, logs).asJava)
 
   override protected def shutDown(): Unit = {
     serviceManager.stopAsync().awaitStopped()
@@ -89,14 +34,5 @@ private[storage] trait AbstractStorage extends AbstractIdleService with Storage 
 
   override protected def startUp(): Unit = {
     serviceManager.startAsync().awaitHealthy()
-  }
-
-  /**
-   * Ensure all repositories are started.
-   */
-  private def enforceRunning() = synchronized {
-    if (!isRunning) {
-      startAsync().awaitRunning()
-    }
   }
 }

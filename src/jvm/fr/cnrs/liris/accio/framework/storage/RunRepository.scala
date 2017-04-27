@@ -19,7 +19,6 @@
 package fr.cnrs.liris.accio.framework.storage
 
 import com.google.common.util.concurrent.Service
-import com.twitter.util.Future
 import fr.cnrs.liris.accio.framework.api.thrift._
 
 /**
@@ -73,6 +72,15 @@ trait MutableRunRepository extends RunRepository {
    * @param id Run identifier.
    */
   def remove(id: RunId): Unit
+
+  def transactional[T](id: Option[RunId])(fn: Option[Run] => T): T = id match {
+    case Some(i) => transactional(i)(fn)
+    case None => fn(None)
+  }
+
+  def transactional[T](id: RunId)(fn: Option[Run] => T): T
+
+  final def foreach[T](id: RunId)(fn: Run => Unit): Unit = transactional(id)(_.foreach(fn))
 }
 
 /**

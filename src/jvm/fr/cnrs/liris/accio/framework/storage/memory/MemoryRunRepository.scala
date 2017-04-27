@@ -25,6 +25,7 @@ import com.google.common.util.concurrent.AbstractIdleService
 import com.google.inject.Singleton
 import fr.cnrs.liris.accio.framework.api.thrift._
 import fr.cnrs.liris.accio.framework.storage.{MutableRunRepository, RunList, RunQuery}
+import fr.cnrs.liris.accio.framework.util.Lockable
 
 import scala.collection.JavaConverters._
 
@@ -33,16 +34,8 @@ import scala.collection.JavaConverters._
  */
 @Singleton
 @VisibleForTesting
-final class MemoryRunRepository extends AbstractIdleService with MutableRunRepository {
+final class MemoryRunRepository extends AbstractIdleService with MutableRunRepository with Lockable[String] {
   private[this] val index = new ConcurrentHashMap[RunId, Run]().asScala
-
-  override def save(run: Run): Unit = {
-    index(run.id) = run
-  }
-
-  override def remove(id: RunId): Unit = {
-    index.remove(id)
-  }
 
   override def find(query: RunQuery): RunList = {
     var results = index.values
@@ -63,6 +56,18 @@ final class MemoryRunRepository extends AbstractIdleService with MutableRunRepos
   override def get(id: RunId): Option[Run] = index.get(id)
 
   override def get(cacheKey: CacheKey): Option[OpResult] = None
+
+  override def save(run: Run): Unit = locked(run.id.value) {
+    index(run.id) = run
+  }
+
+  override def remove(id: RunId): Unit = locked(id.value) {
+    index.remove(id)
+  }
+
+  override def transactional[T](id: RunId)(fn: Option[Run] => T): T = locked(id.value) {
+    fn(get(id))
+  }
 
   override protected def shutDown(): Unit = {}
 

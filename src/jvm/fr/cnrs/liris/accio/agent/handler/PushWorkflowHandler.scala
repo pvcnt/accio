@@ -41,7 +41,7 @@ class PushWorkflowHandler @Inject()(workflowFactory: WorkflowFactory, storage: S
   override def handle(req: PushWorkflowRequest): Future[PushWorkflowResponse] = {
     val warnings = mutable.Set.empty[InvalidSpecMessage]
     val workflow = workflowFactory.create(req.spec, req.user, warnings)
-    storage.write(_.workflows.save(workflow))
+    storage.workflows.save(workflow)
     Future(PushWorkflowResponse(workflow, warnings.toSeq))
   }
 }

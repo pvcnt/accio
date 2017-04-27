@@ -246,7 +246,7 @@ final class RunFactory @Inject()(storage: Storage, valueValidator: ValueValidato
    * @param warnings Mutable list collecting warnings.
    */
   private def getWorkflow(pkg: Package, warnings: mutable.Set[InvalidSpecMessage]) = {
-    val maybeWorkflow = storage.read(_.workflows.get(pkg.workflowId, pkg.workflowVersion))
+    val maybeWorkflow = storage.workflows.get(pkg.workflowId, pkg.workflowVersion)
     maybeWorkflow match {
       case None => throw newError(s"Workflow not found: ${pkg.workflowId.value}@${pkg.workflowVersion}", "pkg", warnings)
       case Some(workflow) => workflow

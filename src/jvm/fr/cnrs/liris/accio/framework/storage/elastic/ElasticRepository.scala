@@ -69,4 +69,13 @@ private[elastic] abstract class ElasticRepository(client: ElasticClient) extends
   protected def createMappings(): Future[CreateIndexResponse]
 
   override final protected def shutDown(): Unit = {}
+
+  /**
+   * Ensure all repositories are started.
+   */
+  protected final def ensureRunning(): Unit = synchronized {
+    if (!isRunning) {
+      startAsync().awaitRunning()
+    }
+  }
 }

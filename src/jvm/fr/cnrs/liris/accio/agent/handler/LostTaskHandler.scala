@@ -21,12 +21,12 @@ package fr.cnrs.liris.accio.agent.handler
 import com.google.inject.Inject
 import com.twitter.util.Future
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{LostTaskRequest, LostTaskResponse}
 import fr.cnrs.liris.accio.framework.api.thrift._
-import fr.cnrs.liris.accio.framework.service.RunManager
 import fr.cnrs.liris.accio.framework.scheduler.ClusterState
+import fr.cnrs.liris.accio.framework.service.RunManager
 import fr.cnrs.liris.accio.framework.storage.Storage
+import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 
 /**
  * @param storage    Storage.
@@ -42,22 +42,13 @@ final class LostTaskHandler @Inject()(storage: Storage, runManager: RunManager, 
     val worker = state.ensure(req.workerId, req.taskId)
     state.update(req.workerId, req.taskId, NodeStatus.Lost)
     val task = worker.activeTasks.find(_.id == req.taskId).get
-    storage.write { provider =>
-      provider.runs.get(task.runId).foreach { run =>
-        run.parent match {
-          case Some(parentId) => processRun(run, task, provider.runs.get(parentId))
-          case None => processRun(run, task, None)
-        }
+    storage.runs.get(task.runId).foreach { run =>
+      storage.runs.transactional(run.parent) { parent =>
+        val (newRun, newParent) = runManager.onLost(run, task.nodeName, parent)
+        storage.runs.save(newRun)
+        newParent.foreach(storage.runs.save)
       }
     }
     Future(LostTaskResponse())
-  }
-
-  private def processRun(run: Run, task: Task, parent: Option[Run]) = {
-    storage.write { provider =>
-      val (newRun, newParent) = runManager.onLost(run, task.nodeName, parent)
-      provider.runs.save(newRun)
-      newParent.foreach(provider.runs.save)
-    }
   }
 }

@@ -16,22 +16,23 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.agent.handler
+package fr.cnrs.liris.accio.framework.util
 
-import com.google.inject.Inject
-import com.twitter.util.Future
-import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
-import fr.cnrs.liris.accio.agent.{GetRunRequest, GetRunResponse}
-import fr.cnrs.liris.accio.framework.storage.Storage
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.locks.{Lock, ReentrantLock}
 
-/**
- * Retrieve a single run, if it exists.
- *
- * @param storage Storage.
- */
-class GetRunHandler @Inject()(storage: Storage) extends AbstractHandler[GetRunRequest, GetRunResponse] {
-  override def handle(req: GetRunRequest): Future[GetRunResponse] = {
-    val maybeRun = storage.runs.get(req.id)
-    Future(GetRunResponse(maybeRun))
+import scala.collection.JavaConverters._
+
+trait Lockable[T] {
+  private[this] val locks = new ConcurrentHashMap[T, Lock]().asScala
+
+  final protected def locked[U](key: T)(fn: U): U = {
+    val lock = locks.getOrElseUpdate(key, new ReentrantLock)
+    lock.lock()
+    try {
+      fn
+    } finally {
+      lock.unlock()
+    }
   }
 }

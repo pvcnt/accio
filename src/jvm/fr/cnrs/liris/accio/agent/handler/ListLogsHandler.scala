@@ -37,7 +37,7 @@ class ListLogsHandler @Inject()(storage: Storage) extends AbstractHandler[ListLo
       classifier = req.classifier,
       limit = req.limit,
       since = req.since.map(Time.fromMilliseconds))
-    val results = storage.read(_.logs.find(query))
+    val results = storage.logs.find(query)
     Future(ListLogsResponse(results))
   }
 }

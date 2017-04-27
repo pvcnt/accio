@@ -25,13 +25,14 @@ import fr.cnrs.liris.accio.framework.storage.AbstractStorage
 /**
  * Storage giving access in-memory repositories.
  *
- * @param runRepository In-memory run repository.
- * @param workflowRepository In-memory workflow repository.
- * @param logRepository In-memory log repository.
+ * @param runs      In-memory run repository.
+ * @param workflows In-memory workflow repository.
+ * @param logs      In-memory log repository.
  */
-@Singleton @VisibleForTesting
-final class MemoryStorage @Inject() (
-  override protected val runRepository: MemoryRunRepository,
-  override protected val logRepository: MemoryLogRepository,
-  override protected val workflowRepository: MemoryWorkflowRepository)
+@Singleton
+@VisibleForTesting
+final class MemoryStorage @Inject()(
+  override val runs: MemoryRunRepository,
+  override val logs: MemoryLogRepository,
+  override val workflows: MemoryWorkflowRepository)
   extends AbstractStorage

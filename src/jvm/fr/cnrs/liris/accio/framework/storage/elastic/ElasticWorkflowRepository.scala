@@ -34,6 +34,7 @@ import com.twitter.util.{Await, Duration, Future}
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.framework.api.thrift._
 import fr.cnrs.liris.accio.framework.storage.{MutableWorkflowRepository, WorkflowList, WorkflowQuery}
+import fr.cnrs.liris.accio.framework.util.Lockable
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse
 import org.elasticsearch.action.admin.indices.refresh.RefreshResponse
 import org.elasticsearch.action.support.WriteRequest.RefreshPolicy
@@ -58,9 +59,10 @@ private[elastic] final class ElasticWorkflowRepository @Inject()(
   client: ElasticClient,
   @ElasticPrefix prefix: String,
   @ElasticTimeout timeout: Duration)
-  extends ElasticRepository(client) with MutableWorkflowRepository with StrictLogging {
+  extends ElasticRepository(client) with MutableWorkflowRepository with Lockable[String] with StrictLogging {
 
   override def find(query: WorkflowQuery): WorkflowList = {
+    ensureRunning()
     var q = boolQuery().filter(termQuery("is_active", 1))
     query.owner.foreach { owner =>
       q = q.must(matchQuery("owner.name", owner))
@@ -99,7 +101,54 @@ private[elastic] final class ElasticWorkflowRepository @Inject()(
     Await.result(f, timeout)
   }
 
+  override def get(id: WorkflowId): Option[Workflow] = {
+    ensureRunning()
+    val q = boolQuery()
+      .filter(termQuery("id.value", id.value))
+      .filter(termQuery("is_active", 1))
+
+    val f = client
+      .execute(search(indexName / typeName).query(q).limit(1))
+      .as[Future[RichSearchResponse]]
+      .map { resp =>
+        if (resp.totalHits > 0) {
+          Some(mapper.parse[Workflow](resp.hits.head.sourceAsString))
+        } else {
+          None
+        }
+      }
+      .rescue {
+        case _: IndexNotFoundException => Future.value(None)
+        case NonFatal(e) =>
+          logger.error(s"Error while retrieving workflow ${id.value}", e)
+          Future.value(None)
+      }
+    Await.result(f, timeout)
+  }
+
+  override def get(id: WorkflowId, version: String): Option[Workflow] = {
+    ensureRunning()
+    val f = client
+      .execute(ElasticDsl.get(internalId(id, version)).from(indexName / typeName))
+      .as[Future[RichGetResponse]]
+      .map { resp =>
+        if (resp.isSourceEmpty) {
+          None
+        } else {
+          Some(mapper.parse[Workflow](resp.sourceAsString))
+        }
+      }
+      .rescue {
+        case _: IndexNotFoundException => Future.value(None)
+        case NonFatal(e) =>
+          logger.error(s"Error while retrieving workflow ${id.value}", e)
+          Future.value(None)
+      }
+    Await.result(f, timeout)
+  }
+
   override def save(workflow: Workflow): Unit = {
+    ensureRunning()
     val json = mapper.writeValueAsString(workflow)
     val f = client
       .execute {
@@ -145,48 +194,8 @@ private[elastic] final class ElasticWorkflowRepository @Inject()(
     Await.result(f, timeout)
   }
 
-  override def get(id: WorkflowId): Option[Workflow] = {
-    val q = boolQuery()
-      .filter(termQuery("id.value", id.value))
-      .filter(termQuery("is_active", 1))
-
-    val f = client
-      .execute(search(indexName / typeName).query(q).limit(1))
-      .as[Future[RichSearchResponse]]
-      .map { resp =>
-        if (resp.totalHits > 0) {
-          Some(mapper.parse[Workflow](resp.hits.head.sourceAsString))
-        } else {
-          None
-        }
-      }
-      .rescue {
-        case _: IndexNotFoundException => Future.value(None)
-        case NonFatal(e) =>
-          logger.error(s"Error while retrieving workflow ${id.value}", e)
-          Future.value(None)
-      }
-    Await.result(f, timeout)
-  }
-
-  override def get(id: WorkflowId, version: String): Option[Workflow] = {
-    val f = client
-      .execute(ElasticDsl.get(internalId(id, version)).from(indexName / typeName))
-      .as[Future[RichGetResponse]]
-      .map { resp =>
-        if (resp.isSourceEmpty) {
-          None
-        } else {
-          Some(mapper.parse[Workflow](resp.sourceAsString))
-        }
-      }
-      .rescue {
-        case _: IndexNotFoundException => Future.value(None)
-        case NonFatal(e) =>
-          logger.error(s"Error while retrieving workflow ${id.value}", e)
-          Future.value(None)
-      }
-    Await.result(f, timeout)
+  override def transactional[T](id: WorkflowId)(fn: Option[Workflow] => T): T = locked(id.value) {
+    fn(get(id))
   }
 
   private def internalId(id: WorkflowId, version: String) = s"${id.value}:$version"

@@ -42,7 +42,7 @@ class ListRunsHandler @Inject()(storage: Storage) extends AbstractHandler[ListRu
       q = req.q,
       limit = req.limit,
       offset = req.offset)
-    val res = storage.read(_.runs.find(query))
+    val res = storage.runs.find(query)
     Future(ListRunsResponse(res.results, res.totalCount))
   }
 }

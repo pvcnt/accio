@@ -20,10 +20,10 @@ package fr.cnrs.liris.accio.agent.handler
 
 import com.google.inject.Inject
 import com.twitter.util.Future
-import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{UpdateRunRequest, UpdateRunResponse}
 import fr.cnrs.liris.accio.framework.api.thrift.{Run, UnknownRunException}
 import fr.cnrs.liris.accio.framework.storage.Storage
+import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 
 /**
  * Update metadata of a run.
@@ -35,32 +35,28 @@ final class UpdateRunHandler @Inject()(storage: Storage)
 
   @throws[UnknownRunException]
   override def handle(req: UpdateRunRequest): Future[UpdateRunResponse] = {
-    storage.write { provider =>
-      provider.runs.get(req.id) match {
-        case None => throw UnknownRunException(req.id)
-        case Some(run) =>
-          run.parent match {
-            case None => process(run, req)
-            case Some(parentId) => provider.runs.get(parentId).foreach(process(_, req))
-          }
-      }
+    storage.runs.transactional(req.id) {
+      case None => throw UnknownRunException(req.id)
+      case Some(run) =>
+        run.parent match {
+          case None => process(run, req)
+          case Some(parentId) => storage.runs.foreach(parentId)(process(_, req))
+        }
     }
     Future(UpdateRunResponse())
   }
 
   private def process(run: Run, req: UpdateRunRequest) = {
-    storage.write { provider =>
-      var newRun = run
-      req.name.foreach { name =>
-        newRun = newRun.copy(name = Some(name))
-      }
-      req.notes.foreach { notes =>
-        newRun = newRun.copy(notes = Some(notes))
-      }
-      if (req.tags.nonEmpty) {
-        newRun = newRun.copy(tags = req.tags)
-      }
-      provider.runs.save(newRun)
+    var newRun = run
+    req.name.foreach { name =>
+      newRun = newRun.copy(name = Some(name))
     }
+    req.notes.foreach { notes =>
+      newRun = newRun.copy(notes = Some(notes))
+    }
+    if (req.tags.nonEmpty) {
+      newRun = newRun.copy(tags = req.tags)
+    }
+    storage.runs.save(newRun)
   }
 }

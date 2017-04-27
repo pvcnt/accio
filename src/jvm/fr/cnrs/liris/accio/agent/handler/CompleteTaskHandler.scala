@@ -21,12 +21,12 @@ package fr.cnrs.liris.accio.agent.handler
 import com.google.inject.Inject
 import com.twitter.util.Future
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{CompleteTaskRequest, CompleteTaskResponse}
 import fr.cnrs.liris.accio.framework.api.thrift._
-import fr.cnrs.liris.accio.framework.service.RunManager
 import fr.cnrs.liris.accio.framework.scheduler.{ClusterState, EventType, Scheduler}
+import fr.cnrs.liris.accio.framework.service.RunManager
 import fr.cnrs.liris.accio.framework.storage.Storage
+import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 
 /**
  * Handle the completion of a task. It will store the result and update state of the appropriate run.
@@ -49,30 +49,21 @@ final class CompleteTaskHandler @Inject()(
     val worker = state.ensure(req.workerId, req.taskId)
     val task = worker.activeTasks.find(_.id == req.taskId).get
     state.update(req.workerId, req.taskId, if (req.result.exitCode == 0) NodeStatus.Success else NodeStatus.Failed)
-    storage.write { provider =>
-      provider.runs.get(task.runId) match {
-        case None => throw InvalidTaskException(task.id, Some(s"Task is associated with invalid run ${task.runId.value}"))
-        case Some(run) =>
-          run.parent match {
-            case Some(parentId) => processRun(run, task, req.result, provider.runs.get(parentId))
-            case None => processRun(run, task, req.result, None)
-          }
-
-      }
+    storage.runs.transactional(task.runId) {
+      case None => throw InvalidTaskException(task.id, Some(s"Task is associated with invalid run ${task.runId.value}"))
+      case Some(run) =>
+        storage.runs.transactional(run.parent) { parent =>
+          val (newRun, newParent) =
+            if (req.result.exitCode == 0) {
+              runManager.onSuccess(run, task.nodeName, req.result, Some(task.payload.cacheKey), parent)
+            } else {
+              runManager.onFailed(run, task.nodeName, req.result, parent)
+            }
+          storage.runs.save(newRun)
+          newParent.foreach(storage.runs.save)
+        }
     }
     scheduler.houseKeeping(EventType.MoreResource)
     Future(CompleteTaskResponse())
-  }
-
-  private def processRun(run: Run, task: Task, result: OpResult, parent: Option[Run]) = {
-    storage.write { provider =>
-      val (newRun, newParent) = if (result.exitCode == 0) {
-        runManager.onSuccess(run, task.nodeName, result, Some(task.payload.cacheKey), parent)
-      } else {
-        runManager.onFailed(run, task.nodeName, result, parent)
-      }
-      provider.runs.save(newRun)
-      newParent.foreach(provider.runs.save)
-    }
   }
 }

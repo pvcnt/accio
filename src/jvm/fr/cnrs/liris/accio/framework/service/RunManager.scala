@@ -39,7 +39,7 @@ final class RunManager @Inject()(schedulerService: SchedulerService, graphFactor
 
   private[this] val graphs = CacheBuilder().maximumSize(25).build((pkg: Package) => {
     // Workflow does exist, because it has been validate when creating the runs.
-    val workflow = storage.read(_.workflows.get(pkg.workflowId, pkg.workflowVersion).get)
+    val workflow = storage.workflows.get(pkg.workflowId, pkg.workflowVersion).get
     graphFactory.create(workflow.graph)
   })
 
@@ -260,7 +260,7 @@ final class RunManager @Inject()(schedulerService: SchedulerService, graphFactor
   private def updateParentProgress(run: Run, parent: Option[Run]): Option[Run] = {
     parent.map { parent =>
       if (parent.state.completedAt.isEmpty) {
-        val siblings = storage.read(_.runs.find(RunQuery(parent = Some(parent.id))).results.filter(_.id != run.id)) ++ Seq(run)
+        val siblings = storage.runs.find(RunQuery(parent = Some(parent.id))).results.filter(_.id != run.id) ++ Seq(run)
         if (siblings.forall(s => Utils.isCompleted(s.state.status))) {
           // Mark parent run as completed if all children are completed. It is successful if all runs were successful.
           val newRunState = if (siblings.forall(_.state.status == RunStatus.Success)) {

@@ -23,8 +23,9 @@ import java.util.concurrent.ConcurrentHashMap
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.util.concurrent.AbstractIdleService
 import com.google.inject.Singleton
-import fr.cnrs.liris.accio.framework.api.thrift.{Workflow, WorkflowId}
+import fr.cnrs.liris.accio.framework.api.thrift.{Run, RunId, Workflow, WorkflowId}
 import fr.cnrs.liris.accio.framework.storage.{MutableWorkflowRepository, WorkflowList, WorkflowQuery}
+import fr.cnrs.liris.accio.framework.util.Lockable
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -34,18 +35,8 @@ import scala.collection.mutable
  */
 @Singleton
 @VisibleForTesting
-final class MemoryWorkflowRepository extends AbstractIdleService with MutableWorkflowRepository {
+final class MemoryWorkflowRepository extends AbstractIdleService with MutableWorkflowRepository with Lockable[String] {
   private[this] val index = new ConcurrentHashMap[WorkflowId, mutable.Map[String, Workflow]]().asScala
-
-  override def save(workflow: Workflow): Unit = {
-    val workflows = index.getOrElseUpdate(workflow.id, new ConcurrentHashMap[String, Workflow]().asScala)
-    if (workflow.isActive) {
-      workflows.foreach { case (version, oldWorkflow) =>
-        workflows(version) = oldWorkflow.copy(isActive = false)
-      }
-    }
-    workflows(workflow.version.get) = workflow
-  }
 
   override def find(query: WorkflowQuery): WorkflowList = {
     var results = index.values
@@ -70,6 +61,20 @@ final class MemoryWorkflowRepository extends AbstractIdleService with MutableWor
 
   override def get(id: WorkflowId, version: String): Option[Workflow] = {
     index.get(id).flatMap(_.get(version))
+  }
+
+  override def save(workflow: Workflow): Unit = locked(workflow.id.value) {
+    val workflows = index.getOrElseUpdate(workflow.id, new ConcurrentHashMap[String, Workflow]().asScala)
+    if (workflow.isActive) {
+      workflows.foreach { case (version, oldWorkflow) =>
+        workflows(version) = oldWorkflow.copy(isActive = false)
+      }
+    }
+    workflows(workflow.version.get) = workflow
+  }
+
+  override def transactional[T](id: WorkflowId)(fn: Option[Workflow] => T): T = locked(id.value) {
+    fn(get(id))
   }
 
   override protected def shutDown(): Unit = {}

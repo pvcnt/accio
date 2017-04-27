@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.framework.storage
 
 import com.google.common.util.concurrent.Service
 import com.twitter.util.Future
-import fr.cnrs.liris.accio.framework.api.thrift.{Workflow, WorkflowId}
+import fr.cnrs.liris.accio.framework.api.thrift.{Run, RunId, Workflow, WorkflowId}
 
 /**
  * Repository giving access to workflows.
@@ -71,6 +71,8 @@ trait MutableWorkflowRepository extends WorkflowRepository {
    * @param workflow Workflow to save.
    */
   def save(workflow: Workflow): Unit
+
+  def transactional[T](id: WorkflowId)(fn: Option[Workflow] => T): T
 }
 
 /**

@@ -21,12 +21,12 @@ package fr.cnrs.liris.accio.agent.handler
 import com.google.inject.Inject
 import com.twitter.util.Future
 import com.typesafe.scalalogging.LazyLogging
-import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{StartTaskRequest, StartTaskResponse}
 import fr.cnrs.liris.accio.framework.api.thrift._
-import fr.cnrs.liris.accio.framework.service.RunManager
 import fr.cnrs.liris.accio.framework.scheduler.ClusterState
+import fr.cnrs.liris.accio.framework.service.RunManager
 import fr.cnrs.liris.accio.framework.storage.Storage
+import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 
 /**
  * When the executor starts its execution, it only has the identifier of a task to execute. Its first action should
@@ -44,18 +44,16 @@ class StartTaskHandler @Inject()(storage: Storage, runManager: RunManager, state
   override def handle(req: StartTaskRequest): Future[StartTaskResponse] = {
     val worker = state.ensure(req.workerId, req.taskId)
     val task = worker.activeTasks.find(_.id == req.taskId).get
-    storage.write { provider =>
-      provider.runs.get(task.runId) match {
-        case None =>
-          // Illegal state: no run found for this task.
-          logger.warn(s"Task ${task.id.value} is associated with unknown run ${task.runId.value}")
-          throw InvalidTaskException(task.id, Some(s"Task is associated with invalid run ${task.runId.value}"))
-        case Some(run) =>
-          state.update(worker.id, task.id, NodeStatus.Running)
-          val newRun = runManager.onStart(run, task.nodeName)
-          provider.runs.save(newRun)
-          Future(StartTaskResponse(task.runId, task.nodeName, task.payload))
-      }
+    storage.runs.transactional(task.runId) {
+      case None =>
+        // Illegal state: no run found for this task.
+        logger.warn(s"Task ${task.id.value} is associated with unknown run ${task.runId.value}")
+        throw InvalidTaskException(task.id, Some(s"Task is associated with invalid run ${task.runId.value}"))
+      case Some(run) =>
+        state.update(worker.id, task.id, NodeStatus.Running)
+        val newRun = runManager.onStart(run, task.nodeName)
+        storage.runs.save(newRun)
     }
+    Future(StartTaskResponse(task.runId, task.nodeName, task.payload))
   }
 }

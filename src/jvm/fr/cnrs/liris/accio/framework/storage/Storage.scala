@@ -26,61 +26,9 @@ import com.google.common.util.concurrent.Service
  * level control over repositories, notably including support for transactions.
  */
 trait Storage extends Service {
-  /**
-   * Read data from underlying repositories.
-   *
-   * @param fn Operations to execute with repositories.
-   * @tparam T Type of result.
-   * @return Operations result.
-   */
-  def read[T](fn: RepositoryProvider => T): T
-
-  /**
-   * Write (and read) data to underlying repositories.
-   *
-   * @param fn Operations to execute with repositories.
-   * @tparam T Type of result.
-   * @return Operations result.
-   */
-  def write[T](fn: MutableRepositoryProvider => T): T
-}
-
-/**
- * Repository provider giving access to read-only repositories.
- */
-trait RepositoryProvider {
-  /**
-   * Return a read-only run repository.
-   */
-  def runs: RunRepository
-
-  /**
-   * Return a read-only workflow repository.
-   */
-  def workflows: WorkflowRepository
-
-  /**
-   * Return a read-only log repository.
-   */
-  def logs: LogRepository
-}
-
-/**
- * Repository provider giving access to read/write repositories.
- */
-trait MutableRepositoryProvider {
-  /**
-   * Return a read/write run repository.
-   */
   def runs: MutableRunRepository
 
-  /**
-   * Return a read/write workflow repository.
-   */
-  def workflows: MutableWorkflowRepository
-
-  /**
-   * Return a read/write log repository.
-   */
   def logs: MutableLogRepository
+
+  def workflows: MutableWorkflowRepository
 }

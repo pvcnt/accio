@@ -39,7 +39,7 @@ class ListWorkflowsHandler @Inject()(storage: Storage)
       q = req.q,
       limit = req.limit,
       offset = req.offset)
-    val res = storage.read(_.workflows.find(query))
+    val res = storage.workflows.find(query)
     Future(ListWorkflowsResponse(res.results, res.totalCount))
   }
 }

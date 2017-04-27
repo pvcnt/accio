@@ -57,6 +57,7 @@ private[elastic] final class ElasticLogRepository @Inject()(
   extends ElasticRepository(client) with MutableLogRepository with StrictLogging {
 
   override def find(query: LogsQuery): Seq[RunLog] = {
+    ensureRunning()
     var q = boolQuery()
       .filter(termQuery("run_id.value", query.runId.value))
       .filter(termQuery("node_name", query.nodeName))
@@ -88,6 +89,7 @@ private[elastic] final class ElasticLogRepository @Inject()(
   }
 
   override def save(logs: Seq[RunLog]): Unit = {
+    ensureRunning()
     val actions = logs.map { log =>
       val json = mapper.writeValueAsString(log)
       indexInto(indexName / typeName).source(json)
@@ -101,6 +103,7 @@ private[elastic] final class ElasticLogRepository @Inject()(
   }
 
   override def remove(id: RunId): Unit = {
+    ensureRunning()
     val f = client
       .execute(deleteIn(indexName).by(termQuery("id.value", id.value)))
       .as[Future[BulkIndexByScrollResponse]]

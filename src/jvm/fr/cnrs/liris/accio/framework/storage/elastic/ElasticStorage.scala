@@ -24,13 +24,13 @@ import fr.cnrs.liris.accio.framework.storage._
 /**
  * Storage giving access Elasticsearch-based repositories.
  *
- * @param runRepository Elasticsearch-based run repository.
- * @param workflowRepository Elasticsearch-based workflow repository.
- * @param logRepository Elasticsearch-based log repository.
+ * @param runs      Elasticsearch-based run repository.
+ * @param workflows Elasticsearch-based workflow repository.
+ * @param logs      Elasticsearch-based log repository.
  */
 @Singleton
 private[elastic] final class ElasticStorage @Inject()(
-  protected override val runRepository: ElasticRunRepository,
-  protected override val workflowRepository: ElasticWorkflowRepository,
-  protected override val logRepository: ElasticLogRepository)
+  override val runs: ElasticRunRepository,
+  override val workflows: ElasticWorkflowRepository,
+  override val logs: ElasticLogRepository)
   extends AbstractStorage
