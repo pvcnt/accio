@@ -31,7 +31,7 @@ function upstart_update {
 }
 
 function build_client {
-  ./pants binary src/jvm/fr/cnrs/liris/accio/client:bin
+  ./pants binary src/jvm/fr/cnrs/liris/accio/tools/cli:bin
   cp build-support/stub.sh $DIST_DIR
   pushd $DIST_DIR
     cat stub.sh accio-client.jar > accio

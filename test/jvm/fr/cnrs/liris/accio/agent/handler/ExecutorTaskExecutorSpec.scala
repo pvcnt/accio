@@ -22,7 +22,7 @@ import java.io.FileOutputStream
 import java.nio.file.{Files, Path, Paths}
 
 import com.google.common.io.Resources
-import fr.cnrs.liris.accio.core.filesystem.FileSystem
+import fr.cnrs.liris.accio.framework.filesystem.FileSystem
 import fr.cnrs.liris.testing.{UnitSpec, WithTmpDirectory}
 
 /**

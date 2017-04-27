@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.executor
 
 /**
  * This is a dummy executor intended for testing the scheduler. It has to be compiled, and the resulting jar should be
- * placed into test/resources/fr/cnrs/liris/accio/core/scheduler.
+ * placed into test/resources/fr/cnrs/liris/accio/framework/scheduler.
  *
  * As Scala is not tied to the directory hierarchyas Java is, we can safely define here a class in the
  * `fr.cnrs.liris.accio.executor` package.

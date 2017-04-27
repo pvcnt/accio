@@ -26,5 +26,6 @@ jar_library(name='http', jars=[scala_jar('com.twitter', 'finatra-http', VERSION)
 jar_library(name='httpclient', jars=[scala_jar('com.twitter', 'finatra-httpclient', VERSION)])
 jar_library(name='thrift', jars=[scala_jar('com.twitter', 'finatra-thrift', VERSION)])
 jar_library(name='jackson', jars=[scala_jar('com.twitter', 'finatra-jackson', VERSION)])
+jar_library(name='slf4j', jars=[scala_jar('com.twitter', 'finatra-slf4j', VERSION)])
 
 jar_library(name='scalap-compiler-deps', jars=[scala_jar('com.twitter.finatra', 'finatra-scalap-compiler-deps', '2.0.0')])

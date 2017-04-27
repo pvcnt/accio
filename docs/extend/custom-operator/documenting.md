@@ -41,11 +41,11 @@ All other metadata is automatically extracted from the case class definition.
 ## Generating documentation
 
 Accio comes with a tool to automatically generate a documentation page for registered operators.
-This tool is under the `fr.cnrs.liris.accio.docgen` package, and can be built as usual using Pants.
+This tool is under the `fr.cnrs.liris.accio.tools.docgen` package, and can be built as usual using Pants.
 You can build and run it in two simple steps:
 
 ```
-$ ./pants binary src/jvm/fr/cnrs/liris/accio/docgen:bin
+$ ./pants binary src/jvm/fr/cnrs/liris/accio/tools/docgen:bin
 $ java -jar dist/accio-docgen.jar -out=docs/docs/operators/index.md
 ```
 

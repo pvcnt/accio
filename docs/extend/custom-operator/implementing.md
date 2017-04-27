@@ -19,14 +19,14 @@ By convention, all operators' names finish with the "Op" suffix (that is later a
 You may need to add some dependencies to the `BUILD` file if you wish to add new libraries.
 The following Accio-related dependencies must be included in any module containing operator implementations:
 
-  * `src/jvm/fr/cnrs/liris/accio/core/operator` contains interfaces and standard data types
-  * `src/jvm/fr/cnrs/liris/accio/core/operator:annotations` contains Java annotations.
+  * `src/jvm/fr/cnrs/liris/accio/framework/sdk` contains interfaces and standard data types
+  * `src/jvm/fr/cnrs/liris/accio/framework/sdk:annotations` contains Java annotations.
 
 ## 2. Create the operator definition
 Then, you will need to implement the `Operator[In,Out]` interface and its `execute` method.
 
 ```scala
-import fr.cnrs.liris.accio.core.operator._
+import fr.cnrs.liris.accio.framework.sdk._
 
 @Op(
   category = "useless",
@@ -68,7 +68,7 @@ Inputs and outputs are defined with Scala case classes, each constructor argumen
 By convention the input class is named after the operator suffixed with "In" (instead of "Op") and the output class is named after the operator suffixed with "Out" (instead of "Op").
 
 ```scala
-import fr.cnrs.liris.accio.core.operator._
+import fr.cnrs.liris.accio.framework.sdk._
 
 @Op(
   category = "numeric",
@@ -129,7 +129,7 @@ You simply need to add a new line to register your operator.
 
 ```scala
 import com.google.inject.TypeLiteral
-import fr.cnrs.liris.accio.core.operator.Operator
+import fr.cnrs.liris.accio.framework.sdk.Operator
 import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
 
 object OpsModule extends ScalaModule {

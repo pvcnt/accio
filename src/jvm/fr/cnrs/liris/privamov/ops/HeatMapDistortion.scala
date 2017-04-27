@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.privamov.ops
 
-import fr.cnrs.liris.accio.core.operator._
+import fr.cnrs.liris.accio.framework.sdk._
 import fr.cnrs.liris.common.geo._
 import fr.cnrs.liris.dal.core.api.Dataset
 import fr.cnrs.liris.dal.core.sparkle.DataFrame

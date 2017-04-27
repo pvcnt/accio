@@ -19,7 +19,7 @@
 package fr.cnrs.liris.privamov.ops
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.core.operator._
+import fr.cnrs.liris.accio.framework.sdk._
 import fr.cnrs.liris.dal.core.api.Dataset
 import fr.cnrs.liris.common.geo.Point
 import fr.cnrs.liris.privamov.core.model.{Event, Trace}

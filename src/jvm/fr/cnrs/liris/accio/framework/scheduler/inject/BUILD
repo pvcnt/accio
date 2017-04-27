@@ -1,0 +1,8 @@
+scala_library(
+  dependencies=[
+    'src/jvm/fr/cnrs/liris/accio/framework/scheduler',
+    'src/jvm/fr/cnrs/liris/accio/framework/scheduler/standalone',
+    '3rdparty/jvm/com/twitter/inject:app',
+  ],
+  sources=globs('*.scala')
+)

@@ -1,0 +1,17 @@
+scala_library(
+  dependencies=[
+    'src/jvm/fr/cnrs/liris/accio/framework/sdk',
+    'src/jvm/fr/cnrs/liris/accio/framework/sdk:annotations',
+    'src/jvm/fr/cnrs/liris/accio/framework/api',
+    'src/jvm/fr/cnrs/liris/accio/framework/filesystem',
+    'src/jvm/fr/cnrs/liris/accio/framework/storage',
+    'src/jvm/fr/cnrs/liris/accio/framework/scheduler',
+    'src/jvm/fr/cnrs/liris/common/cache',
+    'src/jvm/fr/cnrs/liris/common/util',
+    'src/jvm/fr/cnrs/liris/common/reflect',
+    'src/jvm/fr/cnrs/liris/dal/core/api',
+    '3rdparty/jvm/com/typesafe/scala-logging',
+    '3rdparty/jvm/com/google/guice',
+  ],
+  sources=globs('*.scala')
+)

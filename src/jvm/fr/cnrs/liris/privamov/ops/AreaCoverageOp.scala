@@ -19,7 +19,7 @@
 package fr.cnrs.liris.privamov.ops
 
 import com.google.common.geometry.S2CellId
-import fr.cnrs.liris.accio.core.operator._
+import fr.cnrs.liris.accio.framework.sdk._
 import fr.cnrs.liris.common.geo.LatLng
 import fr.cnrs.liris.common.util.Requirements._
 import fr.cnrs.liris.dal.core.api.Dataset

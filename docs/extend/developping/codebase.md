@@ -22,12 +22,11 @@ We describe briefly the role of each top-level directory.
   * `src/`: contains source code of Accio, with one sub-directory per language.
   * `test/`: contains tests of Accio, with one sub-directory per language.
 
-## Accio core
+## accio.framework
 We have split Accio code into a *core* library, and applications.
 The core library contains no executable application but all of Accio generic code, that can be used later as a library by other modules and by applications.
-Accio core is grouped under the `fr.cnrs.liris.accio.core` package, which contains several subpackages.
+accio.framework is grouped under the `fr.cnrs.liris.accio.framework` package, which contains several subpackages.
 
-  * `analysis`: code used when generating reports from run results.
   * `api`: it is the only dependency that modules defining custom operators need to rely on.
   It is a lightweight package that only defines an interface to be implemented by operators, and provides the [Sparkle library](../extending/sparkle.html).
   You can find more information about implementing custom operators in [the dedicated section](../extending/custom-operator.html).
@@ -35,10 +34,10 @@ Accio core is grouped under the `fr.cnrs.liris.accio.core` package, which contai
   Most of the data structures are defined using the [Thrift IDL](https://thrift.apache.org/).
   * `downloader`: interface and implementation of downloader.
   * `dsl`: code related to DSL files parsing.
+  * `reporting`: code used when generating reports from run results.
   * `runtime`: code needed to actually execute workflows.
   This package contains most of the logic of Accio, from validating data structures to executing an operator.
   * `scheduler`: interface and implementation of schedulers.
-  * `statemgr`: interface and implementation of state managers.
   * `storage`: interface and implementation of persistent storage.
   * `uploader`: interface and implementation of uploaders.
   * `util`: small helper code.

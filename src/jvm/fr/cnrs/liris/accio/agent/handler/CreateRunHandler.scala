@@ -23,10 +23,10 @@ import com.twitter.util.{Future, FuturePool}
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{CreateRunRequest, CreateRunResponse}
-import fr.cnrs.liris.accio.core.api.thrift.{InvalidSpecException, InvalidSpecMessage, RunId}
-import fr.cnrs.liris.accio.core.framework.{RunFactory, RunManager}
-import fr.cnrs.liris.accio.core.storage.Storage
-import fr.cnrs.liris.accio.core.util.WorkerPool
+import fr.cnrs.liris.accio.framework.api.thrift.{InvalidSpecException, InvalidSpecMessage, RunId}
+import fr.cnrs.liris.accio.framework.service.{RunFactory, RunManager}
+import fr.cnrs.liris.accio.framework.storage.Storage
+import fr.cnrs.liris.accio.framework.util.WorkerPool
 
 import scala.collection.mutable
 

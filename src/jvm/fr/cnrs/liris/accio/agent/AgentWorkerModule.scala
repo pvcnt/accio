@@ -26,8 +26,8 @@ import com.twitter.util.{Duration, FuturePool}
 import fr.cnrs.liris.accio.runtime.commandbus.Handler
 import fr.cnrs.liris.accio.agent.config._
 import fr.cnrs.liris.accio.agent.handler._
-import fr.cnrs.liris.accio.core.api.thrift.Resource
-import fr.cnrs.liris.accio.core.filesystem.inject.FileSystemModule
+import fr.cnrs.liris.accio.framework.api.thrift.Resource
+import fr.cnrs.liris.accio.framework.filesystem.inject.FileSystemModule
 import fr.cnrs.liris.privamov.ops.OpsModule
 import net.codingwell.scalaguice.ScalaMultibinder
 

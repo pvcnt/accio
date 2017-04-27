@@ -1,10 +1,10 @@
 scala_library(
   dependencies=[
-    'src/jvm/fr/cnrs/liris/accio/core/api',
-    'src/jvm/fr/cnrs/liris/accio/core/framework',
-    'src/jvm/fr/cnrs/liris/accio/core/filesystem/inject',
-    'src/jvm/fr/cnrs/liris/accio/core/util',
-    'src/jvm/fr/cnrs/liris/accio/core/util:annotations',
+    'src/jvm/fr/cnrs/liris/accio/framework/api',
+    'src/jvm/fr/cnrs/liris/accio/framework/service',
+    'src/jvm/fr/cnrs/liris/accio/framework/filesystem/inject',
+    'src/jvm/fr/cnrs/liris/accio/framework/util',
+    'src/jvm/fr/cnrs/liris/accio/framework/util:annotations',
     'src/thrift/fr/cnrs/liris/accio/agent',
     'src/jvm/fr/cnrs/liris/privamov/ops',
     '3rdparty/jvm/com/twitter/inject:app',

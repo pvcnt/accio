@@ -22,7 +22,7 @@ import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{ListRunsRequest, ListRunsResponse}
-import fr.cnrs.liris.accio.core.storage.{RunQuery, Storage}
+import fr.cnrs.liris.accio.framework.storage.{RunQuery, Storage}
 
 /**
  * Handler retrieving runs matching some search criteria.

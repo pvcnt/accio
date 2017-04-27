@@ -22,7 +22,7 @@ import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{ListOperatorsRequest, ListOperatorsResponse}
-import fr.cnrs.liris.accio.core.framework.OpRegistry
+import fr.cnrs.liris.accio.framework.service.OpRegistry
 
 /**
  * Retrieve all known operators.

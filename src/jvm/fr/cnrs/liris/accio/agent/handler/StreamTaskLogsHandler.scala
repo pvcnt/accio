@@ -23,9 +23,9 @@ import com.twitter.util.Future
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{StreamTaskLogsRequest, StreamTaskLogsResponse}
-import fr.cnrs.liris.accio.core.api.thrift.{InvalidTaskException, InvalidWorkerException}
-import fr.cnrs.liris.accio.core.scheduler.ClusterState
-import fr.cnrs.liris.accio.core.storage.Storage
+import fr.cnrs.liris.accio.framework.api.thrift.{InvalidTaskException, InvalidWorkerException}
+import fr.cnrs.liris.accio.framework.scheduler.ClusterState
+import fr.cnrs.liris.accio.framework.storage.Storage
 
 /**
  * Receive run logs from a task.

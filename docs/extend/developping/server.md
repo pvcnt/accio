@@ -12,7 +12,7 @@ Using Finagle/Finatra gives us a lot of bonuses, such as an integrated admin int
 
 Source code for the agent is located under the `fr.cnrs.liris.accio.agent` package.
 It contains the implementation of each Thrift endpoint, though each of these should not exceed ~100 lines of code.
-Indeed, it essentially on Accio core class to implement features.
+Indeed, it essentially on accio.framework class to implement features.
 It also provide bindings for essential services such as the scheduler or persistent storage.
 
 ## Executor

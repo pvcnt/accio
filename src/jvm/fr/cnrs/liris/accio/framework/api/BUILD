@@ -1,0 +1,9 @@
+scala_library(
+  dependencies=[
+    'src/jvm/fr/cnrs/liris/dal/core/api',
+    'src/jvm/fr/cnrs/liris/common/util',
+    #'src/jvm/fr/cnrs/liris/accio/framework/sdk',
+    'src/thrift/fr/cnrs/liris/accio/framework/api',
+  ],
+  sources=globs('*.scala')
+)

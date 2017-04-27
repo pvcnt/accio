@@ -23,7 +23,7 @@ import java.nio.file.{Files, Path, Paths, StandardOpenOption}
 import java.util.Locale
 
 import com.google.common.io.Resources
-import fr.cnrs.liris.accio.core.operator._
+import fr.cnrs.liris.accio.framework.sdk._
 import fr.cnrs.liris.common.geo.{Distance, Point}
 import fr.cnrs.liris.dal.core.api.Dataset
 import fr.cnrs.liris.dal.core.io.{CsvSink, DataSink}

@@ -1,9 +1,0 @@
-scala_library(
-  dependencies=[
-    'src/jvm/fr/cnrs/liris/accio/core/filesystem',
-    'src/jvm/fr/cnrs/liris/accio/core/filesystem/archive',
-    '3rdparty/jvm/io/minio',
-    '3rdparty/jvm/com/twitter/inject:app',
-  ],
-  sources=globs('*.scala')
-)

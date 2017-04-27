@@ -22,7 +22,7 @@ import java.io.{ByteArrayOutputStream, IOException, OutputStream, PrintStream}
 
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Charsets
-import fr.cnrs.liris.accio.core.framework.OutErr
+import fr.cnrs.liris.accio.framework.service.OutErr
 
 /**
  * Helper allowing to record stdout and stderr.

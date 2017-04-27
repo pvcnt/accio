@@ -26,9 +26,9 @@ import com.twitter.finagle.Thrift
 import com.twitter.inject.{Injector, TwitterModule}
 import com.twitter.util.{ExecutorServiceFuturePool, FuturePool}
 import fr.cnrs.liris.accio.agent.{AgentService, AgentService$FinagleClient}
-import fr.cnrs.liris.accio.core.framework._
-import fr.cnrs.liris.accio.core.operator.Operator
-import fr.cnrs.liris.accio.core.util.WorkerPool
+import fr.cnrs.liris.accio.framework.service._
+import fr.cnrs.liris.accio.framework.sdk.Operator
+import fr.cnrs.liris.accio.framework.util.WorkerPool
 import fr.cnrs.liris.dal.core.io.{Decoder, Encoder, StringCodec}
 import fr.cnrs.liris.dal.core.sparkle.SparkleEnv
 import net.codingwell.scalaguice.ScalaMultibinder

@@ -22,9 +22,9 @@ import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{DeleteRunRequest, DeleteRunResponse}
-import fr.cnrs.liris.accio.core.api.thrift.{RunId, UnknownRunException}
-import fr.cnrs.liris.accio.core.scheduler.{ClusterState, EventType, Scheduler}
-import fr.cnrs.liris.accio.core.storage.Storage
+import fr.cnrs.liris.accio.framework.api.thrift.{RunId, UnknownRunException}
+import fr.cnrs.liris.accio.framework.scheduler.{ClusterState, EventType, Scheduler}
+import fr.cnrs.liris.accio.framework.storage.Storage
 
 /**
  * Delete a run, and all its children if it is a parent run.

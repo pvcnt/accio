@@ -22,10 +22,10 @@ import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{KillRunRequest, KillRunResponse}
-import fr.cnrs.liris.accio.core.api.thrift.{Run, UnknownRunException}
-import fr.cnrs.liris.accio.core.framework.RunManager
-import fr.cnrs.liris.accio.core.scheduler.{ClusterState, EventType, Scheduler}
-import fr.cnrs.liris.accio.core.storage.Storage
+import fr.cnrs.liris.accio.framework.api.thrift.{Run, UnknownRunException}
+import fr.cnrs.liris.accio.framework.service.RunManager
+import fr.cnrs.liris.accio.framework.scheduler.{ClusterState, EventType, Scheduler}
+import fr.cnrs.liris.accio.framework.storage.Storage
 
 /**
  * Kill a run and all running tasks.

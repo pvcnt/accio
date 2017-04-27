@@ -22,8 +22,8 @@ import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{UpdateRunRequest, UpdateRunResponse}
-import fr.cnrs.liris.accio.core.api.thrift.{Run, UnknownRunException}
-import fr.cnrs.liris.accio.core.storage.Storage
+import fr.cnrs.liris.accio.framework.api.thrift.{Run, UnknownRunException}
+import fr.cnrs.liris.accio.framework.storage.Storage
 
 /**
  * Update metadata of a run.

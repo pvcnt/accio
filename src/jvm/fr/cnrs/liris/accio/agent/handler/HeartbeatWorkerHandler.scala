@@ -22,8 +22,8 @@ import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{HeartbeatWorkerRequest, HeartbeatWorkerResponse}
-import fr.cnrs.liris.accio.core.api.thrift.InvalidWorkerException
-import fr.cnrs.liris.accio.core.scheduler.ClusterState
+import fr.cnrs.liris.accio.framework.api.thrift.InvalidWorkerException
+import fr.cnrs.liris.accio.framework.scheduler.ClusterState
 
 /**
  * Handle a request from a worker sending a heartbeat indicating it is still alive.

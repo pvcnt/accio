@@ -22,7 +22,7 @@ import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{ListWorkflowsRequest, ListWorkflowsResponse}
-import fr.cnrs.liris.accio.core.storage.{Storage, WorkflowQuery}
+import fr.cnrs.liris.accio.framework.storage.{Storage, WorkflowQuery}
 
 /**
  * Retrieve workflows matching some search criteria.

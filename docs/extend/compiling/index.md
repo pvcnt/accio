@@ -65,7 +65,7 @@ You can build all the components with the following commands.
 ```
 $ ./pants binary src/jvm/fr/cnrs/liris/accio/executor:bin
 $ ./pants binary src/jvm/fr/cnrs/liris/accio/agent:bin
-$ ./pants binary src/jvm/fr/cnrs/liris/accio/client:bin
+$ ./pants binary src/jvm/fr/cnrs/liris/accio/tools/cli:bin
 $ ./pants binary src/jvm/fr/cnrs/liris/accio/gateway:bin
 ```
 
@@ -74,7 +74,7 @@ When developing, it can also be convinient to run Accio directly, which involves
 For example, to run the client:
 
 ```
-$ ./pants run src/jvm/fr/cnrs/liris/accio/client:bin -- command line arguments to accio
+$ ./pants run src/jvm/fr/cnrs/liris/accio/tools/cli:bin -- command line arguments to accio
 ```
 
 In the Vagrant-based only environment, you have access to the `acciobuild` script.

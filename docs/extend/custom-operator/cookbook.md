@@ -35,7 +35,7 @@ Other sources of randomness, such as system time, should still be banished for t
 Operators not declared as unstable will not have access to this seed and an exception will be raised.
 
 ```scala
-import fr.cnrs.liris.accio.core.operator._
+import fr.cnrs.liris.accio.framework.sdk._
 import scala.util.Random
 
 @Op(
