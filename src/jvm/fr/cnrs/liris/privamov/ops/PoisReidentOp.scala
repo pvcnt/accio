@@ -35,10 +35,10 @@ import fr.cnrs.liris.privamov.core.model.PoiSet
   help = "Re-identification attack using POIs a the discriminating information.",
   cpu = 6,
   ram = "3G")
-class PoisReidentOp extends Operator[ReidentificationIn, ReidentificationOut] {
+class PoisReidentOp extends SparkleOperator[ReidentificationIn, ReidentificationOut] {
   override def execute(in: ReidentificationIn, ctx: OpContext): ReidentificationOut = {
-    val trainPois = ctx.read[PoiSet](in.train).toArray
-    val testPois = ctx.read[PoiSet](in.test).toArray
+    val trainPois = read[PoiSet](in.train).toArray
+    val testPois = read[PoiSet](in.test).toArray
 
     val distances = getDistances(trainPois, testPois)
     val matches = getMatches(distances)

@@ -29,11 +29,11 @@ import fr.cnrs.liris.privamov.core.model.Trace
   help = "Enforce speed smoothing guarantees on traces.",
   cpu = 4,
   ram = "2G")
-class PromesseOp extends Operator[PromesseIn, PromesseOut] {
+class PromesseOp extends SparkleOperator[PromesseIn, PromesseOut] {
   override def execute(in: PromesseIn, ctx: OpContext): PromesseOut = {
     val lppm = new SpeedSmoothing(in.epsilon)
-    val output = ctx.read[Trace](in.data).map(lppm.transform)
-    PromesseOut(ctx.write(output))
+    val output = read[Trace](in.data).map(lppm.transform)
+    PromesseOut(write(output, ctx))
   }
 }
 

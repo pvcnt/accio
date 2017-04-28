@@ -31,10 +31,10 @@ import org.joda.time.{Duration, Instant}
   help = "Compute area coverage difference between two datasets of traces",
   cpu = 4,
   ram = "2G")
-class AreaCoverageOp extends Operator[AreaCoverageIn, AreaCoverageOut] {
+class AreaCoverageOp extends SparkleOperator[AreaCoverageIn, AreaCoverageOut] {
   override def execute(in: AreaCoverageIn, ctx: OpContext): AreaCoverageOut = {
-    val train = ctx.read[Trace](in.train)
-    val test = ctx.read[Trace](in.test)
+    val train = read[Trace](in.train)
+    val test = read[Trace](in.test)
     val metrics = train.zip(test).map { case (ref, res) => evaluate(ref, res, in.level, in.width) }.toArray
     AreaCoverageOut(
       precision = metrics.map { case (k, v) => k -> v._1 }.toMap,

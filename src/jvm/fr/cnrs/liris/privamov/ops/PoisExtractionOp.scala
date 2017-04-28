@@ -29,10 +29,10 @@ import fr.cnrs.liris.privamov.core.model.{Poi, PoiSet, Trace}
   help = "Compute POIs retrieval difference between two datasets of traces",
   cpu = 4,
   ram = "3G")
-class PoisExtractionOp extends Operator[PoisExtractionIn, PoisExtractionOut] {
+class PoisExtractionOp extends SparkleOperator[PoisExtractionIn, PoisExtractionOut] {
 
   override def execute(in: PoisExtractionIn, ctx: OpContext): PoisExtractionOut = {
-    val input = ctx.read[Trace](in.data)
+    val input = read[Trace](in.data)
     val output =  if (in.minPoints == 0) {
       val clusterer = new DTClusterer(in.duration, in.diameter)
       input.map { trace =>
@@ -46,7 +46,7 @@ class PoisExtractionOp extends Operator[PoisExtractionIn, PoisExtractionOut] {
         PoiSet(trace.id, pois)
       }
     }
-    PoisExtractionOut(ctx.write(output))
+    PoisExtractionOut(write(output, ctx))
   }
 }
 

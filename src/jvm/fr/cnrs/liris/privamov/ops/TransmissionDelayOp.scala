@@ -29,11 +29,11 @@ import fr.cnrs.liris.privamov.core.model.Trace
   help = "Compute transmission delay between two datasets of traces",
   cpu = 4,
   ram = "2G")
-class TransmissionDelayOp extends Operator[TransmissionDelayIn, TransmissionDelayOut] {
+class TransmissionDelayOp extends SparkleOperator[TransmissionDelayIn, TransmissionDelayOut] {
 
   override def execute(in: TransmissionDelayIn, ctx: OpContext): TransmissionDelayOut = {
-    val train = ctx.read[Trace](in.train)
-    val test = ctx.read[Trace](in.test)
+    val train = read[Trace](in.train)
+    val test = read[Trace](in.test)
     val values = train.zip(test).map { case (ref, res) => evaluate(ref, res) }.toArray
     TransmissionDelayOut(values.toMap)
   }

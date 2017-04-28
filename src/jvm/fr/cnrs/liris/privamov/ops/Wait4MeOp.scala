@@ -27,7 +27,7 @@ import fr.cnrs.liris.accio.framework.sdk._
 import fr.cnrs.liris.common.geo.{Distance, Point}
 import fr.cnrs.liris.dal.core.api.Dataset
 import fr.cnrs.liris.dal.core.io.{CsvSink, DataSink}
-import fr.cnrs.liris.privamov.core.io.{CsvEventCodec, TraceCodec}
+import fr.cnrs.liris.privamov.core.io.TraceCodec
 import fr.cnrs.liris.privamov.core.model.{Event, Trace}
 import org.joda.time.{Duration, Instant}
 
@@ -46,9 +46,9 @@ import scala.collection.mutable
   help = "Time-tolerant k-anonymization",
   description = "Wrapper around the implementation of the Wait4Me algorithm provided by their authors.",
   category = "lppm")
-class Wait4MeOp extends Operator[Wait4MeIn, Wait4MeOut] {
+class Wait4MeOp extends SparkleOperator[Wait4MeIn, Wait4MeOut] {
   override def execute(in: Wait4MeIn, ctx: OpContext): Wait4MeOut = {
-    val input = ctx.read[Trace](in.data)
+    val input = read[Trace](in.data)
     if (input.count() == 0) {
       Wait4MeOut(
         data = in.data,
@@ -177,12 +177,12 @@ class Wait4MeOp extends Operator[Wait4MeIn, Wait4MeOut] {
     var currIdx: Option[Int] = None
     val events = mutable.ListBuffer.empty[Event]
     val outputUri = ctx.workDir.resolve("data").toAbsolutePath.toString
-    val sink = new CsvSink(outputUri, new TraceCodec(new CsvEventCodec), failOnNonEmptyDirectory = false)
+    val sink = new CsvSink(outputUri, new TraceCodec, failOnNonEmptyDirectory = false)
     Files.readAllLines(w4mOutputPath).asScala.foreach { line =>
       val parts = line.trim.split("\t")
       val idx = parts(0).toInt
       if (events.nonEmpty && currIdx.get != idx) {
-        ctx.env.parallelize(keysReverseIndex(currIdx.get) -> Seq(Trace(keysReverseIndex(currIdx.get), events.toList))).write(sink)
+        env.parallelize(keysReverseIndex(currIdx.get) -> Seq(Trace(keysReverseIndex(currIdx.get), events.toList))).write(sink)
         events.clear()
         currIdx = Some(idx)
       } else if (currIdx.isEmpty) {
@@ -191,7 +191,7 @@ class Wait4MeOp extends Operator[Wait4MeIn, Wait4MeOut] {
       events += Event(keysReverseIndex(idx).split("-").head, Point(parts(2).toDouble, parts(3).toDouble), new Instant(parts(1).toLong))
     }
     if (events.nonEmpty) {
-      ctx.env.parallelize(keysReverseIndex(currIdx.get) -> Seq(Trace(keysReverseIndex(currIdx.get), events.toList))).write(sink)
+      env.parallelize(keysReverseIndex(currIdx.get) -> Seq(Trace(keysReverseIndex(currIdx.get), events.toList))).write(sink)
     }
     Dataset(outputUri)
   }

@@ -18,14 +18,11 @@
 
 package fr.cnrs.liris.accio.agent.handler
 
-import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.agent.{GetDatasetRequest, GetDatasetResponse}
-import fr.cnrs.liris.accio.framework.storage.Storage
 import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
-import fr.cnrs.liris.dal.core.io.Decoder
 
-final class GetDatasetHandler @Inject()(storage: Storage, decoders: Set[Decoder[_]])
+final class GetDatasetHandler
   extends AbstractHandler[GetDatasetRequest, GetDatasetResponse] {
 
   override def handle(req: GetDatasetRequest): Future[GetDatasetResponse] = {

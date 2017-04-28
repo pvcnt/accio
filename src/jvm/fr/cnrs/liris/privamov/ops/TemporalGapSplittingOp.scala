@@ -28,11 +28,11 @@ import fr.cnrs.liris.privamov.core.model.{Event, Trace}
   help = "Split traces, when there is a too long duration between consecutive events.",
   cpu = 4,
   ram = "2G")
-class TemporalGapSplittingOp extends Operator[TemporalGapSplittingIn, TemporalGapSplittingOut] with SlidingSplitting {
+class TemporalGapSplittingOp extends SparkleOperator[TemporalGapSplittingIn, TemporalGapSplittingOut] with SlidingSplitting {
   override def execute(in: TemporalGapSplittingIn, ctx: OpContext): TemporalGapSplittingOut = {
     val split = (buffer: Seq[Event], curr: Event) => (buffer.last.time to curr.time).duration >= in.duration
-    val output = ctx.read[Trace](in.data).flatMap(transform(_, split))
-    TemporalGapSplittingOut(ctx.write(output))
+    val output = read[Trace](in.data).flatMap(transform(_, split))
+    TemporalGapSplittingOut(write(output, ctx))
   }
 }
 

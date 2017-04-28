@@ -23,7 +23,9 @@ import fr.cnrs.liris.privamov.core.model._
 
 import scala.reflect._
 
-class TraceCodec(eventCodec: Codec[Event]) extends TraceDecoder(eventCodec) with Codec[Trace] {
+class TraceCodec extends TraceDecoder with Codec[Trace] {
+  private[this] val eventCodec = new CsvEventCodec
+
   override def elementClassTag: ClassTag[Trace] = classTag[Trace]
 
   override def encode(key: String, elements: Seq[Trace]): Array[Byte] = {
@@ -31,7 +33,9 @@ class TraceCodec(eventCodec: Codec[Event]) extends TraceDecoder(eventCodec) with
   }
 }
 
-class TraceDecoder(eventDecoder: Decoder[Event]) extends Decoder[Trace] {
+class TraceDecoder extends Decoder[Trace] {
+  private[this] val eventDecoder = new CsvEventCodec
+
   override def elementClassTag: ClassTag[Trace] = classTag[Trace]
 
   override def decode(key: String, bytes: Array[Byte]): Seq[Trace] = {

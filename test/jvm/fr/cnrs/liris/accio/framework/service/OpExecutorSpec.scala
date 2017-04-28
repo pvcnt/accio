@@ -21,10 +21,9 @@ package fr.cnrs.liris.accio.framework.service
 import java.nio.file.{Files, Path, Paths}
 
 import com.google.inject.{Guice, TypeLiteral}
-import fr.cnrs.liris.accio.framework.sdk._
 import fr.cnrs.liris.accio.framework.api.thrift._
 import fr.cnrs.liris.accio.framework.filesystem.FileSystem
-import fr.cnrs.liris.accio.testing.WithSparkleEnv
+import fr.cnrs.liris.accio.framework.sdk._
 import fr.cnrs.liris.common.util.FileUtils
 import fr.cnrs.liris.dal.core.api.{Dataset, Values}
 import fr.cnrs.liris.testing.UnitSpec
@@ -36,7 +35,7 @@ import scala.collection.mutable
 /**
  * Unit tests for [[OpExecutor]].
  */
-class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfterEach with WithSparkleEnv {
+class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfterEach {
   private[this] val filesystem = new MockFileSystem
   private[this] var tmpDir: Path = null
   private[this] var executor: OpExecutor = null
@@ -47,7 +46,7 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
     val injector = Guice.createInjector(MyOperatorsModule)
     val opRegistry = injector.getInstance(classOf[RuntimeOpRegistry])
     val opFactory = new OpFactory(opRegistry, injector)
-    executor = new OpExecutor(opRegistry, opFactory, filesystem, env, Set.empty, Set.empty)
+    executor = new OpExecutor(opRegistry, opFactory, filesystem)
     executor.setWorkDir(tmpDir)
   }
 

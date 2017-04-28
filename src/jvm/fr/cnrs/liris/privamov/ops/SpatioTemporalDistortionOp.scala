@@ -30,10 +30,10 @@ import org.joda.time.Instant
   help = "Compute temporal distortion difference between two datasets of traces",
   cpu = 3,
   ram = "6G")
-class SpatioTemporalDistortionOp extends Operator[SpatioTemporalDistortionIn, SpatioTemporalDistortionOut] {
+class SpatioTemporalDistortionOp extends SparkleOperator[SpatioTemporalDistortionIn, SpatioTemporalDistortionOut] {
   override def execute(in: SpatioTemporalDistortionIn, ctx: OpContext): SpatioTemporalDistortionOut = {
-    val train = ctx.read[Trace](in.train)
-    val test = ctx.read[Trace](in.test)
+    val train = read[Trace](in.train)
+    val test = read[Trace](in.test)
     val metrics = train.zip(test).map { case (ref, res) => evaluate(ref, res) }.toArray
     SpatioTemporalDistortionOut(
       min = metrics.map { case (k, v) => k -> v.min }.toMap,

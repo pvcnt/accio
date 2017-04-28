@@ -28,10 +28,10 @@ import fr.cnrs.liris.privamov.core.model.Trace
   help = "Compute data completeness difference between two datasets of traces.",
   cpu = 2,
   ram = "1G")
-class DataCompletenessOp extends Operator[DataCompletenessIn, DataCompletenessOut] {
+class DataCompletenessOp extends SparkleOperator[DataCompletenessIn, DataCompletenessOut] {
   override def execute(in: DataCompletenessIn, ctx: OpContext): DataCompletenessOut = {
-    val train = ctx.read[Trace](in.train)
-    val test = ctx.read[Trace](in.test)
+    val train = read[Trace](in.train)
+    val test = read[Trace](in.test)
     val values = train.zip(test).map { case (ref, res) => evaluate(ref, res) }.toArray
     DataCompletenessOut(values.toMap)
   }

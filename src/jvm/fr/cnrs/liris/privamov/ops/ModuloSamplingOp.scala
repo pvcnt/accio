@@ -28,11 +28,11 @@ import fr.cnrs.liris.privamov.core.model.Trace
   description = "It will ensure that the final number of events is exactly (+/- 1) the one required, and that events are regularly sampled (i.e., one out of x).",
   cpu = 4,
   ram = "2G")
-class ModuloSamplingOp extends Operator[ModuloSamplingIn, ModuloSamplingOut] {
+class ModuloSamplingOp extends SparkleOperator[ModuloSamplingIn, ModuloSamplingOut] {
   override def execute(in: ModuloSamplingIn, ctx: OpContext): ModuloSamplingOut = {
-    val input = ctx.read[Trace](in.data)
+    val input = read[Trace](in.data)
     val output = input.map(trace => transform(trace, in.n))
-    ModuloSamplingOut(ctx.write(output))
+    ModuloSamplingOut(write(output, ctx))
   }
 
   private def transform(trace: Trace, n: Int) = {

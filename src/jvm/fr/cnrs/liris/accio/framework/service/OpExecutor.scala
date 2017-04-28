@@ -30,8 +30,6 @@ import fr.cnrs.liris.accio.framework.filesystem.FileSystem
 import fr.cnrs.liris.accio.framework.sdk.{OpContext, Operator}
 import fr.cnrs.liris.common.util.FileUtils
 import fr.cnrs.liris.dal.core.api.{AtomicType, Value, Values}
-import fr.cnrs.liris.dal.core.io.{Decoder, Encoder}
-import fr.cnrs.liris.dal.core.sparkle.SparkleEnv
 
 import scala.util.control.NonFatal
 
@@ -71,18 +69,9 @@ class UnknownOpException(val op: String) extends RuntimeException(s"Unknown oper
  * @param opRegistry Operator registry.
  * @param opFactory  Operator factory.
  * @param filesystem Distributed filesystem, to read inputs and store outputs.
- * @param env        Sparkle environment.
- * @param encoders   Encoders available to write data to CSV files.
- * @param decoders   Decoders available to read data from CSV files.
  */
 @Inject
-final class OpExecutor @Inject()(
-  opRegistry: RuntimeOpRegistry,
-  opFactory: OpFactory,
-  filesystem: FileSystem,
-  env: SparkleEnv,
-  encoders: Set[Encoder[_]],
-  decoders: Set[Decoder[_]])
+final class OpExecutor @Inject()(opRegistry: RuntimeOpRegistry, opFactory: OpFactory, filesystem: FileSystem)
   extends StrictLogging {
 
   // Because the executor is designed to run inside a sandbox, we simply use current directory as temporary path
@@ -134,7 +123,7 @@ final class OpExecutor @Inject()(
     val in = createInput(opDef, inputs).asInstanceOf[In]
 
     val maybeSeed = if (opDef.unstable) Some(payload.seed) else None
-    val ctx = new OpContext(maybeSeed, sandboxDir.resolve("outputs"), env, decoders, encoders)
+    val ctx = new OpContext(maybeSeed, sandboxDir.resolve("outputs"))
     val profiler = if (opts.useProfiler) new JvmProfiler else NullProfiler
 
     // The actual operator is the only profiled section. The outcome is either an output object or an exception.

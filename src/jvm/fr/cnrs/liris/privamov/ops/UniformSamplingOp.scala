@@ -32,14 +32,14 @@ import scala.util.Random
   unstable = true,
   cpu = 4,
   ram = "2G")
-class UniformSamplingOp extends Operator[UniformSamplingIn, UniformSamplingOut] {
+class UniformSamplingOp extends SparkleOperator[UniformSamplingIn, UniformSamplingOut] {
 
   override def execute(in: UniformSamplingIn, ctx: OpContext): UniformSamplingOut = {
-    val input = ctx.read[Trace](in.data)
+    val input = read[Trace](in.data)
     val rnd = new Random(ctx.seed)
     val seeds = input.keys.map(key => key -> rnd.nextLong()).toMap
     val output = input.map(trace => transform(trace, in.probability, seeds(trace.id)))
-    UniformSamplingOut(ctx.write(output))
+    UniformSamplingOut(write(output, ctx))
   }
 
   private def transform(trace: Trace, probability: Double, seed: Long): Trace = {

@@ -37,7 +37,7 @@ import scala.sys.process._
  */
 case class CabspottingSource(uri: String) extends DataSource[Trace] {
   private[this] val path = Paths.get(uri)
-  private[this] val decoder = new TraceDecoder(new CabspottingDecoder)
+  private[this] val decoder = new TraceDecoder
   require(path.toFile.isDirectory, s"$uri is not a directory")
   require(path.toFile.canRead, s"$uri is unreadable")
 

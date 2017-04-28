@@ -28,11 +28,11 @@ import fr.cnrs.liris.privamov.core.model.{Event, Trace}
   help = "Split traces, when there is a too huge distance between consecutive events.",
   cpu = 4,
   ram = "2G")
-class SpatialGapSplittingOp extends Operator[SpatialGapSplittingIn, SpatialGapSplittingOut] with SlidingSplitting {
+class SpatialGapSplittingOp extends SparkleOperator[SpatialGapSplittingIn, SpatialGapSplittingOut] with SlidingSplitting {
   override def execute(in: SpatialGapSplittingIn, ctx: OpContext): SpatialGapSplittingOut = {
     val split = (buffer: Seq[Event], curr: Event) => buffer.last.point.distance(curr.point) >= in.distance
-    val output = ctx.read[Trace](in.data).flatMap(transform(_, split))
-    SpatialGapSplittingOut(ctx.write(output))
+    val output = read[Trace](in.data).flatMap(transform(_, split))
+    SpatialGapSplittingOut(write(output, ctx))
   }
 }
 

@@ -19,12 +19,12 @@
 package fr.cnrs.liris.privamov.testing
 
 import com.google.common.io.Resources
-import fr.cnrs.liris.privamov.core.io.{CsvEventCodec, TraceCodec}
+import fr.cnrs.liris.privamov.core.io.TraceCodec
 import fr.cnrs.liris.privamov.core.model.Trace
 
 trait WithCabspotting {
   // It doesn't work with a val..
-  private def decoder = new TraceCodec(new CsvEventCodec)
+  private def decoder = new TraceCodec
 
   lazy val abboipTrace = cabspottingTrace("abboip")
 

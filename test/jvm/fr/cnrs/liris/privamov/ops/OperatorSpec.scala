@@ -24,21 +24,21 @@ import fr.cnrs.liris.accio.framework.sdk.OpContext
 import fr.cnrs.liris.accio.testing.WithSparkleEnv
 import fr.cnrs.liris.dal.core.api.Dataset
 import fr.cnrs.liris.dal.core.io.{CsvSink, CsvSource}
-import fr.cnrs.liris.privamov.core.io.{CsvEventCodec, CsvPoiSetCodec, TraceCodec}
+import fr.cnrs.liris.privamov.core.io.{CsvPoiSetCodec, TraceCodec}
 import fr.cnrs.liris.privamov.core.model.{PoiSet, Trace}
 
 /**
  * Trait facilitating testing operators.
  */
 private[ops] trait OperatorSpec extends WithSparkleEnv { FlatSpec =>
-  private[this] val traceCodec = new TraceCodec(new CsvEventCodec)
+  private[this] val traceCodec = new TraceCodec
   private[this] val poiSetCodec = new CsvPoiSetCodec
 
   protected def ctx: OpContext = {
     val workDir = Files.createTempDirectory(getClass.getSimpleName + "-")
     workDir.toFile.deleteOnExit()
     // This seed makes tests of unstable operators to pass for now. Be careful is you modify it!!
-    new OpContext(Some(-7590331047132310476L), workDir, env, Set(traceCodec, poiSetCodec), Set(traceCodec, poiSetCodec))
+    new OpContext(Some(-7590331047132310476L), workDir)
   }
 
   protected def writeTraces(data: Trace*): Dataset = {

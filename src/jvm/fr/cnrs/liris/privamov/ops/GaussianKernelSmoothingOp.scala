@@ -30,10 +30,10 @@ import fr.cnrs.liris.privamov.core.model.{Event, Trace}
   description = "Apply gaussian kernel smoothing on a trace, attenuating the impact of noisy observations.",
   cpu = 4,
   ram = "2G")
-class GaussianKernelSmoothingOp extends Operator[GaussianKernelSmoothingIn, GaussianKernelSmoothingOut] {
+class GaussianKernelSmoothingOp extends SparkleOperator[GaussianKernelSmoothingIn, GaussianKernelSmoothingOut] {
   override def execute(in: GaussianKernelSmoothingIn, ctx: OpContext): GaussianKernelSmoothingOut = {
-    val data = ctx.read[Trace](in.data)
-    val output = ctx.write(data.map(transform(_, in.omega)))
+    val data = read[Trace](in.data)
+    val output = write(data.map(transform(_, in.omega)), ctx)
     GaussianKernelSmoothingOut(output)
   }
 

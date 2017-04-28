@@ -27,10 +27,10 @@ import fr.cnrs.liris.privamov.core.model.Trace
   help = "Split traces sequentially, according to chronological order.",
   cpu = 4,
   ram = "2G")
-class SequentialSplittingOp extends Operator[SequentialSplittingIn, SequentialSplittingOut] {
+class SequentialSplittingOp extends SparkleOperator[SequentialSplittingIn, SequentialSplittingOut] {
   override def execute(in: SequentialSplittingIn, ctx: OpContext): SequentialSplittingOut = {
-    val output = ctx.read[Trace](in.data).map(transform(_, in.percentBegin, in.percentEnd, in.complement))
-    SequentialSplittingOut(ctx.write(output))
+    val output = read[Trace](in.data).map(transform(_, in.percentBegin, in.percentEnd, in.complement))
+    SequentialSplittingOut(write(output, ctx))
   }
 
   private def transform(trace: Trace, percentBegin: Double, percentEnd: Double, complement: Boolean): Trace = {
