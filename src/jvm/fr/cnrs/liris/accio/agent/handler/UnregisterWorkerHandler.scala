@@ -23,7 +23,8 @@ import com.twitter.util.Future
 import fr.cnrs.liris.accio.agent._
 import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.framework.api.thrift.InvalidWorkerException
-import fr.cnrs.liris.accio.framework.scheduler.{ClusterState, EventType, Scheduler}
+import fr.cnrs.liris.accio.framework.scheduler.standalone.ClusterState
+import fr.cnrs.liris.accio.framework.scheduler.{EventType, Scheduler}
 
 /**
  * @param state Cluster state.

@@ -16,10 +16,11 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.framework.scheduler
+package fr.cnrs.liris.accio.framework.scheduler.standalone
 
 import com.twitter.util.{Duration, Time}
 import fr.cnrs.liris.accio.framework.api.thrift._
+import fr.cnrs.liris.accio.framework.scheduler.standalone.ClusterState
 import fr.cnrs.liris.testing.UnitSpec
 
 /**

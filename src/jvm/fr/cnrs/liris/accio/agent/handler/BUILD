@@ -6,7 +6,7 @@ scala_library(
     'src/jvm/fr/cnrs/liris/accio/framework/storage',
     'src/jvm/fr/cnrs/liris/accio/framework/dsl',
     'src/jvm/fr/cnrs/liris/accio/framework/service',
-    'src/jvm/fr/cnrs/liris/accio/framework/scheduler',
+    'src/jvm/fr/cnrs/liris/accio/framework/scheduler/standalone',
     'src/jvm/fr/cnrs/liris/accio/framework/util',
     'src/jvm/fr/cnrs/liris/accio/framework/util:annotations',
     'src/thrift/fr/cnrs/liris/accio/framework/api',

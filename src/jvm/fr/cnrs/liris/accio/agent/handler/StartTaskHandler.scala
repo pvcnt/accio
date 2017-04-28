@@ -23,7 +23,7 @@ import com.twitter.util.Future
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.agent.{StartTaskRequest, StartTaskResponse}
 import fr.cnrs.liris.accio.framework.api.thrift._
-import fr.cnrs.liris.accio.framework.scheduler.ClusterState
+import fr.cnrs.liris.accio.framework.scheduler.standalone.ClusterState
 import fr.cnrs.liris.accio.framework.service.RunManager
 import fr.cnrs.liris.accio.framework.storage.Storage
 import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler

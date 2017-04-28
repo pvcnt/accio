@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.framework.scheduler
+package fr.cnrs.liris.accio.framework.scheduler.standalone
 
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import javax.annotation.concurrent.ThreadSafe

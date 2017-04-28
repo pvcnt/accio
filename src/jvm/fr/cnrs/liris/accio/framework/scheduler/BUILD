@@ -1,9 +1,6 @@
 scala_library(
   dependencies=[
     'src/thrift/fr/cnrs/liris/accio/framework/api',
-    'src/thrift/fr/cnrs/liris/accio/agent',
-    '3rdparty/jvm/com/typesafe/scala-logging',
-    '3rdparty/jvm/com/twitter/inject:core',
   ],
   sources=globs('*.scala')
 )

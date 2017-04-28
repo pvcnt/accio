@@ -24,7 +24,7 @@ import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.config.AgentName
 import fr.cnrs.liris.accio.agent.{ListAgentsRequest, ListAgentsResponse}
 import fr.cnrs.liris.accio.framework.api.thrift.{Agent, Resource, WorkerId}
-import fr.cnrs.liris.accio.framework.scheduler.ClusterState
+import fr.cnrs.liris.accio.framework.scheduler.standalone.ClusterState
 
 class ListAgentsHandler @Inject()(state: ClusterState, @AgentName agentName: String)
   extends AbstractHandler[ListAgentsRequest, ListAgentsResponse] {

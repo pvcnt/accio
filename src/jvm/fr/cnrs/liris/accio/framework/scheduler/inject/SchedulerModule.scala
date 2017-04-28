@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.framework.scheduler.inject
 import com.google.inject.{Provides, Singleton}
 import com.twitter.inject.{Injector, TwitterModule}
 import fr.cnrs.liris.accio.framework.scheduler.standalone._
-import fr.cnrs.liris.accio.framework.scheduler.{Scheduler, WorkerClientProvider}
+import fr.cnrs.liris.accio.framework.scheduler.Scheduler
 
 /**
  * Guice module provisioning the scheduler service.

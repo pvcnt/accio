@@ -21,7 +21,6 @@ package fr.cnrs.liris.accio.framework.scheduler.standalone
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.framework.api.thrift.{Resource, Task}
-import fr.cnrs.liris.accio.framework.scheduler.WorkerInfo
 
 class TaskAssigner @Inject()(fitnessCalculator: FitnessCalculator) extends LazyLogging {
   def assign(task: Task, workers: Set[WorkerInfo]): Option[WorkerInfo] = {

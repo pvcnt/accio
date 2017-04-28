@@ -16,23 +16,22 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.framework.scheduler
+package fr.cnrs.liris.accio.framework.scheduler.standalone
 
-import javax.annotation.concurrent.NotThreadSafe
+import java.util.concurrent.ConcurrentHashMap
 
 import com.google.inject.Singleton
 import com.twitter.finagle.Thrift
 import fr.cnrs.liris.accio.agent.{AgentService, AgentService$FinagleClient}
 
-import scala.collection.mutable
+import scala.collection.JavaConverters._
 
 /**
  * Create clients to communicate with workers. Clients are memoized, avoiding to re-create one each time.
  */
 @Singleton
-@NotThreadSafe
 final class WorkerClientProvider {
-  private[this] val clients = mutable.Map.empty[String, AgentService$FinagleClient]
+  private[this] val clients = new ConcurrentHashMap[String, AgentService$FinagleClient]().asScala
 
   /**
    *
