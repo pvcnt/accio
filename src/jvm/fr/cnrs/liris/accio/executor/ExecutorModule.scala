@@ -25,7 +25,7 @@ import com.twitter.concurrent.NamedPoolThreadFactory
 import com.twitter.finagle.Thrift
 import com.twitter.finagle.param.HighResTimer
 import com.twitter.finagle.service.{Backoff, RetryFilter}
-import com.twitter.finagle.stats.StatsReceiver
+import com.twitter.finagle.stats.{NullStatsReceiver, StatsReceiver}
 import com.twitter.finagle.thrift.ThriftClientRequest
 import com.twitter.inject.{Injector, TwitterModule}
 import com.twitter.util.{Duration, ExecutorServiceFuturePool, FuturePool}
@@ -41,6 +41,10 @@ object ExecutorModule extends TwitterModule {
   private[this] val addrFlag = flag[String]("addr", "Address of the Accio worker")
 
   override def modules = Seq(DiscoveryModule)
+
+  override def configure(): Unit = {
+    bind[StatsReceiver].to[NullStatsReceiver]
+  }
 
   @Singleton @Provides @WorkerPool
   def providesWorkerPool: FuturePool = {
