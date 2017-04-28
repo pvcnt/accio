@@ -18,37 +18,28 @@
 
 package fr.cnrs.liris.accio.framework.scheduler.inject
 
-import com.google.inject.{Provides, Singleton}
+import com.google.inject.Module
 import com.twitter.inject.{Injector, TwitterModule}
-import fr.cnrs.liris.accio.framework.scheduler.standalone._
 import fr.cnrs.liris.accio.framework.scheduler.Scheduler
+import fr.cnrs.liris.accio.framework.scheduler.standalone._
 
 /**
  * Guice module provisioning the scheduler service.
  */
 object SchedulerModule extends TwitterModule {
-  private[this] val fitnessCalculatorFlag = flag("scheduler.bin_packer", "cpu,ram", "Bin packing algorithms to use")
+  private[this] val typeFlag = flag("scheduler.type", "standalone", "Scheduler type")
 
-  protected override def configure(): Unit = {
-    bind[Scheduler].to[StandaloneScheduler]
-  }
-
-  @Provides
-  @Singleton
-  def providesFitnessCalculator: FitnessCalculator = {
-    val types = fitnessCalculatorFlag().split(",")
-    val packers = types.map {
-      case "cpu" => new CpuBinPacker
-      case "ram" => new RamBinPacker
-      case "disk" => new DiskBinPacker
-      case invalid => throw new IllegalArgumentException(s"Invalid bin packer: $invalid")
+  override def modules: Seq[Module] =
+    typeFlag.get match {
+      case Some("standalone") => Seq(StandaloneSchedulerModule)
+      case Some(invalid) => throw new IllegalArgumentException(s"Invalid scheduler type: $invalid")
+      case None =>
+        // This only happen when this method is called the first time, during App's initialization.
+        // We provide the entire list of all modules, making all flags available.
+        Seq(StandaloneSchedulerModule)
     }
-    require(packers.nonEmpty, "You must specify at least one bin packing algorithm to use")
-    new ComposedFitnessCalculator(packers)
-  }
 
   override def singletonShutdown(injector: Injector): Unit = {
     injector.instance[Scheduler].close()
-    injector.instance[WorkerClientProvider].close()
   }
 }

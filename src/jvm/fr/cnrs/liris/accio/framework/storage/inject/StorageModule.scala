@@ -43,8 +43,6 @@ object StorageModule extends TwitterModule {
         Seq(MemoryStorageModule, ElasticStorageModule)
     }
 
-  override protected def configure() = println("using storage module")
-
   override def singletonStartup(injector: Injector): Unit = {
     injector.instance[Storage].startAsync()
   }
