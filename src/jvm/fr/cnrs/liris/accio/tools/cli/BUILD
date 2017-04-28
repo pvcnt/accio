@@ -27,6 +27,8 @@ scala_library(
     '3rdparty/jvm/org/slf4j:jul-to-slf4j',
   ],
   excludes = [
+    # Multiple logging frameworks.
+    exclude('commons-logging', 'commons-logging'),
     # common/reflect comes with its own Scala compiler library, we do not need the one provided by Finatra.
     exclude(org='com.twitter.finatra', name='finatra-scalap-compiler-deps_2.11'),
     # Finagle comes with its own Thrift library.
