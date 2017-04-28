@@ -35,7 +35,7 @@ import org.joda.time.{Duration, Interval}
   unstable = true,
   cpu = 2,
   ram = "1G")
-class CountQueriesDistortionOp extends SparkleOperator[CountQueriesDistortionIn, CountQueriesDistortionOut] {
+class CountQueriesDistortionOp extends Operator[CountQueriesDistortionIn, CountQueriesDistortionOut] with SparkleOperator {
   override def execute(in: CountQueriesDistortionIn, ctx: OpContext): CountQueriesDistortionOut = {
     val trainDs = read[Trace](in.train)
     val testDs = read[Trace](in.test)

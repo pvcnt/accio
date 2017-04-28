@@ -30,7 +30,7 @@ import fr.cnrs.liris.privamov.core.model.{Event, Trace}
     "that fulfills the minimum distance requirement.",
   cpu = 4,
   ram = "2G")
-class SpatialSamplingOp extends SparkleOperator[SpatialSamplingIn, SpatialSamplingOut] with SlidingSampling {
+class SpatialSamplingOp extends Operator[SpatialSamplingIn, SpatialSamplingOut] with SlidingSampling with SparkleOperator {
   override def execute(in: SpatialSamplingIn, ctx: OpContext): SpatialSamplingOut = {
     val sample = (prev: Event, curr: Event) => prev.point.distance(curr.point) >= in.distance
     val output = read[Trace](in.data).map(transform(_, sample))

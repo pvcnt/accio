@@ -46,7 +46,7 @@ import scala.collection.mutable
   help = "Time-tolerant k-anonymization",
   description = "Wrapper around the implementation of the Wait4Me algorithm provided by their authors.",
   category = "lppm")
-class Wait4MeOp extends SparkleOperator[Wait4MeIn, Wait4MeOut] {
+class Wait4MeOp extends Operator[Wait4MeIn, Wait4MeOut] with SparkleOperator {
   override def execute(in: Wait4MeIn, ctx: OpContext): Wait4MeOut = {
     val input = read[Trace](in.data)
     if (input.count() == 0) {

@@ -29,7 +29,9 @@ import fr.cnrs.liris.privamov.core.io.{CsvEventCodec, CsvPoiCodec, CsvPoiSetCode
 
 import scala.reflect.{ClassTag, classTag}
 
-trait SparkleOperator[In, Out] extends Operator[In, Out] {
+trait SparkleOperator {
+  this: Operator[_, _] =>
+
   // Create a Sparkle environment using the numProcs' flag to limit parallelism.
   // It is a poor-man's way to isolate execution in terms of CPU usage.
   protected val env = new SparkleEnv(math.max(1, com.twitter.jvm.numProcs().round.toInt))

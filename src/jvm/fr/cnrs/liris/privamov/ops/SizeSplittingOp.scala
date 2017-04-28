@@ -27,7 +27,7 @@ import fr.cnrs.liris.privamov.core.model.{Event, Trace}
   help = "Split traces, ensuring a maximum size for each one.",
   cpu = 4,
   ram = "2G")
-class SizeSplittingOp extends SparkleOperator[SizeSplittingIn, SizeSplittingOut] with SlidingSplitting {
+class SizeSplittingOp extends Operator[SizeSplittingIn, SizeSplittingOut] with SlidingSplitting with SparkleOperator {
   override def execute(in: SizeSplittingIn, ctx: OpContext): SizeSplittingOut = {
     val split = (buffer: Seq[Event], curr: Event) => buffer.size >= in.size
     val output = read[Trace](in.data).flatMap(transform(_, split))

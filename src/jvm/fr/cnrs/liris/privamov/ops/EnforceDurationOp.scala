@@ -29,7 +29,7 @@ import fr.cnrs.liris.privamov.core.model.Trace
   description = "Longer traces will be truncated, shorter traces will be discarded.",
   cpu = 4,
   ram = "2G")
-class EnforceDurationOp extends SparkleOperator[EnforceDurationIn, EnforceDurationOut] {
+class EnforceDurationOp extends Operator[EnforceDurationIn, EnforceDurationOut] with SparkleOperator {
   override def execute(in: EnforceDurationIn, ctx: OpContext): EnforceDurationOut = {
     val data = read[Trace](in.data)
     val output = write(data.flatMap(transform(_, in.minDuration, in.maxDuration)), ctx)

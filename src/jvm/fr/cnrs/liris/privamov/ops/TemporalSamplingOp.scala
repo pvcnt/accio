@@ -30,7 +30,7 @@ import fr.cnrs.liris.privamov.core.model.{Event, Trace}
     "that fulfills the minimum duration requirement.",
   cpu = 4,
   ram = "2G")
-class TemporalSamplingOp extends SparkleOperator[TemporalSamplingIn, TemporalSamplingOut] with SlidingSampling {
+class TemporalSamplingOp extends Operator[TemporalSamplingIn, TemporalSamplingOut] with SlidingSampling with SparkleOperator {
   override def execute(in: TemporalSamplingIn, ctx: OpContext): TemporalSamplingOut = {
     val sample = (prev: Event, curr: Event) => (prev.time to curr.time).duration >= in.duration
     val output = read[Trace](in.data).map(transform(_, sample))

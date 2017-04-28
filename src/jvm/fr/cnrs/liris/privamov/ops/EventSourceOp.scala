@@ -28,7 +28,7 @@ import fr.cnrs.liris.privamov.core.io._
   category = "source",
   help = "Read a dataset of traces.",
   description = "This operator can manipulate the source dataset, essentially to reduce its size, through some basic preprocessing.")
-class EventSourceOp extends SparkleOperator[EventSourceIn, EventSourceOut] {
+class EventSourceOp extends Operator[EventSourceIn, EventSourceOut] with SparkleOperator {
   override def execute(in: EventSourceIn, ctx: OpContext): EventSourceOut = {
     val source = in.kind match {
       case "csv" => new CsvSource(FileUtils.expand(in.url), new TraceCodec)
@@ -36,24 +36,13 @@ class EventSourceOp extends SparkleOperator[EventSourceIn, EventSourceOut] {
       case "geolife" => GeolifeSource(FileUtils.expand(in.url))
       case _ => throw new IllegalArgumentException(s"Unknown kind: ${in.kind}")
     }
-    val output = if (willWrite(in)) {
-      var data = env.read(source)
-      if (in.users.nonEmpty) {
-        data = data.restrict(in.users.toSet)
-      }
-      write(data, ctx)
-    } else {
-      Dataset(in.url)
-    }
+    val output = if (in.kind != "csv") write(env.read(source), ctx) else Dataset(in.url)
     EventSourceOut(output)
   }
-
-  private def willWrite(in: EventSourceIn) = in.kind != "csv" || in.users.nonEmpty
 }
 
 case class EventSourceIn(
   @Arg(help = "Dataset URL") url: String,
-  @Arg(help = "Kind of dataset") kind: String = "csv",
-  @Arg(help = "Users to include") users: Seq[String] = Seq.empty)
+  @Arg(help = "Kind of dataset") kind: String = "csv")
 
 case class EventSourceOut(@Arg(help = "Source dataset") data: Dataset)

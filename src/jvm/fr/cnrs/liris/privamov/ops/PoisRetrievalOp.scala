@@ -30,7 +30,7 @@ import org.joda.time.Duration
   help = "Compute POIs retrieval difference between two POIs datasets",
   cpu = 2,
   ram = "1G")
-class PoisRetrievalOp extends SparkleOperator[PoisRetrievalIn, PoisRetrievalOut] {
+class PoisRetrievalOp extends Operator[PoisRetrievalIn, PoisRetrievalOut] with SparkleOperator {
   override def execute(in: PoisRetrievalIn, ctx: OpContext): PoisRetrievalOut = {
     val train = read[PoiSet](in.train)
     val test = read[PoiSet](in.test)

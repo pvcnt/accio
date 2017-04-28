@@ -33,7 +33,7 @@ import scala.util.Random
   unstable = true,
   cpu = 4,
   ram = "2G")
-class GeoIndistinguishabilityOp extends SparkleOperator[GeoIndistinguishabilityIn, GeoIndistinguishabilityOut] {
+class GeoIndistinguishabilityOp extends Operator[GeoIndistinguishabilityIn, GeoIndistinguishabilityOut] with SparkleOperator {
   override def execute(in: GeoIndistinguishabilityIn, ctx: OpContext): GeoIndistinguishabilityOut = {
     val input = read[Trace](in.data)
     val rnd = new Random(ctx.seed)

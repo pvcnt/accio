@@ -29,7 +29,7 @@ import fr.cnrs.liris.privamov.core.model.{Poi, PoiSet, Trace}
   help = "Compute POIs retrieval difference between two datasets of traces",
   cpu = 4,
   ram = "3G")
-class PoisExtractionOp extends SparkleOperator[PoisExtractionIn, PoisExtractionOut] {
+class PoisExtractionOp extends Operator[PoisExtractionIn, PoisExtractionOut] with SparkleOperator {
 
   override def execute(in: PoisExtractionIn, ctx: OpContext): PoisExtractionOut = {
     val input = read[Trace](in.data)

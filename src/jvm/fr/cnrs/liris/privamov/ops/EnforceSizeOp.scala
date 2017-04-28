@@ -28,7 +28,7 @@ import fr.cnrs.liris.privamov.core.model.Trace
   description = "Larger traces will be truncated, smaller traces will be discarded.",
   cpu = 4,
   ram = "2G")
-class EnforceSizeOp  extends SparkleOperator[EnforceSizeIn, EnforceSizeOut] {
+class EnforceSizeOp  extends Operator[EnforceSizeIn, EnforceSizeOut] with SparkleOperator {
   override def execute(in: EnforceSizeIn, ctx: OpContext): EnforceSizeOut = {
     val data = read[Trace](in.data)
     val output = write(data.flatMap(transform(_, in.minSize, in.maxSize)), ctx)

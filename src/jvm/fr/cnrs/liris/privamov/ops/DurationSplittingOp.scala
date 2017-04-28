@@ -28,7 +28,7 @@ import fr.cnrs.liris.privamov.core.model.{Event, Trace}
   help = "Split traces, ensuring a maximum duration for each one.",
   cpu = 4,
   ram = "2G")
-class DurationSplittingOp extends SparkleOperator[DurationSplittingIn, DurationSplittingOut] with SlidingSplitting {
+class DurationSplittingOp extends Operator[DurationSplittingIn, DurationSplittingOut] with SlidingSplitting with SparkleOperator {
   override def execute(in: DurationSplittingIn, ctx: OpContext): DurationSplittingOut = {
     val split = (buffer: Seq[Event], curr: Event) => (buffer.head.time to curr.time).duration >= in.duration
     val output = read[Trace](in.data).flatMap(transform(_, split))

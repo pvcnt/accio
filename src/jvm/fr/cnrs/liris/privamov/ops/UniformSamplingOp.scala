@@ -32,7 +32,7 @@ import scala.util.Random
   unstable = true,
   cpu = 4,
   ram = "2G")
-class UniformSamplingOp extends SparkleOperator[UniformSamplingIn, UniformSamplingOut] {
+class UniformSamplingOp extends Operator[UniformSamplingIn, UniformSamplingOut] with SparkleOperator {
 
   override def execute(in: UniformSamplingIn, ctx: OpContext): UniformSamplingOut = {
     val input = read[Trace](in.data)

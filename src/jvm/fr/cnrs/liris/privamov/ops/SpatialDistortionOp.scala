@@ -29,7 +29,7 @@ import fr.cnrs.liris.privamov.core.model.Trace
   help = "Compute spatial distortion between two datasets of traces",
   cpu = 3,
   ram = "6G")
-class SpatialDistortionOp extends SparkleOperator[SpatialDistortionIn, SpatialDistortionOut] {
+class SpatialDistortionOp extends Operator[SpatialDistortionIn, SpatialDistortionOut] with SparkleOperator {
   override def execute(in: SpatialDistortionIn, ctx: OpContext): SpatialDistortionOut = {
     val train = read[Trace](in.train)
     val test = read[Trace](in.test)

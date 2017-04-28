@@ -27,7 +27,7 @@ import fr.cnrs.liris.privamov.core.model.Trace
 @Op(
   category = "metric",
   help = "Computes the HeatMaps' distortions between two datasets")
-class HeatMapDistortionOp extends SparkleOperator[HeatMapDistortionIn, HeatMapDistortionOut] {
+class HeatMapDistortionOp extends Operator[HeatMapDistortionIn, HeatMapDistortionOut] with SparkleOperator {
   override def execute(in: HeatMapDistortionIn, ctx: OpContext): HeatMapDistortionOut = {
     // read the data
     val dstrain = read[Trace](in.train)

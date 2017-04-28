@@ -30,20 +30,6 @@ import net.codingwell.scalaguice.ScalaMultibinder
  */
 object OpsModule extends TwitterModule {
   override def configure(): Unit = {
-    // List of available encoders.
-    val encoders = ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Encoder[_]] {})
-    encoders.addBinding.to[CsvEventCodec]
-    encoders.addBinding.to[TraceCodec]
-    encoders.addBinding.to[CsvPoiCodec]
-    encoders.addBinding.to[CsvPoiSetCodec]
-
-    // List of available decoders.
-    val decoders = ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Decoder[_]] {})
-    decoders.addBinding.to[CsvEventCodec]
-    decoders.addBinding.to[TraceCodec]
-    decoders.addBinding.to[CsvPoiCodec]
-    decoders.addBinding.to[CsvPoiSetCodec]
-
     // List of available operators.
     val ops = ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Class[_ <: Operator[_, _]]] {})
     ops.addBinding.toInstance(classOf[AreaCoverageOp])

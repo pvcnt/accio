@@ -15,7 +15,6 @@ This operator can manipulate the source dataset, essentially to reduce its size,
 |:-----------|:-----|:------------|
 | `url` | string; required | Dataset URL |
 | `kind` | string; optional; default: csv | Kind of dataset |
-| `users` | list(string); optional; default:  | Users to include |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
