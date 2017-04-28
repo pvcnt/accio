@@ -61,7 +61,7 @@ object AgentWorkerModule extends TwitterModule {
 
   @Singleton @Provides @WorkerRpcDest
   def providesWorkerRpcDest(@Flag("thrift.port") thriftAddress: String): String = {
-    val port = thriftAddress.drop(thriftAddress.indexOf(":"))
+    val port = thriftAddress.drop(thriftAddress.indexOf(":") + 1)
     val dest = Platform.hostname + ":" + port
     logger.info(s"Advertising $dest")
     dest
