@@ -30,7 +30,7 @@ class ListAgentsHandler @Inject()(state: ClusterState, @AgentName agentName: Str
   extends AbstractHandler[ListAgentsRequest, ListAgentsResponse] {
 
   override def handle(req: ListAgentsRequest): Future[ListAgentsResponse] = {
-    val workers = state.read(identity).map(worker => Agent(worker.id, Some(worker.dest), isMaster = false, isWorker = true, worker.registeredAt.inMillis, worker.maxResources))
+    val workers = state.snapshot.map(worker => Agent(worker.id, Some(worker.dest), isMaster = false, isWorker = true, worker.registeredAt.inMillis, worker.maxResources))
     val master = Agent(WorkerId(agentName), None, isMaster = true, isWorker = false, 0, Resource(0, 0, 0))
 
     Future(ListAgentsResponse(Seq(master) ++ workers))

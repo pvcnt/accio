@@ -20,7 +20,6 @@ package fr.cnrs.liris.accio.framework.scheduler.standalone
 
 import com.twitter.util.{Duration, Time}
 import fr.cnrs.liris.accio.framework.api.thrift._
-import fr.cnrs.liris.accio.framework.scheduler.standalone.ClusterState
 import fr.cnrs.liris.testing.UnitSpec
 
 /**
@@ -32,14 +31,14 @@ class ClusterStateSpec extends UnitSpec {
   it should "register workers" in {
     val state = createState()
     state.register(WorkerId("foo-worker"), "foo:9999", Resource(2, 4000, 40000))
-    state.read(identity).map(_.id) should contain theSameElementsAs Set(WorkerId("foo-worker"))
+    state.snapshot.map(_.id) should contain theSameElementsAs Set(WorkerId("foo-worker"))
     state(WorkerId("foo-worker")).id shouldBe WorkerId("foo-worker")
     state(WorkerId("foo-worker")).maxResources shouldBe Resource(2, 4000, 40000)
     state(WorkerId("foo-worker")).availableResources shouldBe Resource(2, 4000, 40000)
     state(WorkerId("foo-worker")).reservedResources shouldBe Resource(0, 0, 0)
 
     state.register(WorkerId("bar-worker"), "bar:9999", Resource(8, 8000, 100000))
-    state.read(identity).map(_.id) should contain theSameElementsAs Set(WorkerId("foo-worker"), WorkerId("bar-worker"))
+    state.snapshot.map(_.id) should contain theSameElementsAs Set(WorkerId("foo-worker"), WorkerId("bar-worker"))
     state(WorkerId("bar-worker")).id shouldBe WorkerId("bar-worker")
     state(WorkerId("bar-worker")).maxResources shouldBe Resource(8, 8000, 100000)
     state(WorkerId("bar-worker")).availableResources shouldBe Resource(8, 8000, 100000)
@@ -98,7 +97,7 @@ class ClusterStateSpec extends UnitSpec {
     state.register(WorkerId("bar-worker"), "bar:9999", Resource(2, 4000, 40000))
     val task = createTask(TaskId("foo-task"))
     state.assign(WorkerId("foo-worker"), task)
-    an[InvalidTaskException] shouldBe thrownBy {
+    an[InvalidWorkerException] shouldBe thrownBy {
       state.assign(WorkerId("bar-worker"), task)
     }
   }
@@ -116,7 +115,7 @@ class ClusterStateSpec extends UnitSpec {
     state.register(WorkerId("bar-worker"), "bar:9999", Resource(2, 4000, 40000))
     state.unregister(WorkerId("foo-worker"))
 
-    state.read(identity).map(_.id) should contain theSameElementsAs Set(WorkerId("bar-worker"))
+    state.snapshot.map(_.id) should contain theSameElementsAs Set(WorkerId("bar-worker"))
     an[InvalidWorkerException] shouldBe thrownBy {
       state(WorkerId("foo-worker"))
     }

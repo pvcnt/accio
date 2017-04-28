@@ -1,6 +1,7 @@
 scala_library(
   dependencies=[
     'src/jvm/fr/cnrs/liris/accio/framework/scheduler',
+    'src/jvm/fr/cnrs/liris/accio/framework/util',
     'src/thrift/fr/cnrs/liris/accio/agent',
     '3rdparty/jvm/com/typesafe/scala-logging',
     '3rdparty/jvm/com/twitter/inject:core',

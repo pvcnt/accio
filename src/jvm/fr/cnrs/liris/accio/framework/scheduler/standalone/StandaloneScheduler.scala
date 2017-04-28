@@ -60,17 +60,15 @@ class StandaloneScheduler @Inject()(
   }
 
   override def kill(taskId: TaskId): Unit = {
-    val maybeWorker = clusterState.read(_.find(_.activeTasks.exists(_.id == taskId)))
+    val maybeWorker = clusterState.snapshot.find(_.activeTasks.exists(_.id == taskId))
     maybeWorker match {
-      case None =>
-        logger.warn(s"No worker is currently executing ${taskId.value}")
-        throw InvalidTaskException(taskId, Some("No worker is currently executing this task"))
+      case None => throw InvalidTaskException(taskId, Some("No worker is currently executing this task"))
       case Some(worker) => kill(worker, taskId)
     }
   }
 
   override def kill(runId: RunId): Set[Task] = {
-    val activeWorkers = clusterState.read(_.filter(_.activeTasks.exists(task => task.runId == runId)))
+    val activeWorkers = clusterState.snapshot.filter(_.activeTasks.exists(task => task.runId == runId))
     activeWorkers.flatMap { worker =>
       val tasks = worker.activeTasks.filter(task => task.runId == runId)
       tasks.foreach(task => kill(worker, task.id))
@@ -84,7 +82,7 @@ class StandaloneScheduler @Inject()(
   }
 
   private def maybeAssign(task: Task): Boolean = synchronized {
-    val maybeWorkerId = clusterState.read(taskAssigner.assign(task, _))
+    val maybeWorkerId = taskAssigner.assign(task, clusterState.snapshot)
     maybeWorkerId match {
       case None => false
       case Some(worker) =>

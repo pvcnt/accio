@@ -18,16 +18,17 @@
 
 package fr.cnrs.liris.accio.framework.scheduler.standalone
 
-import java.util.concurrent.locks.ReentrantReadWriteLock
+import java.util.concurrent.ConcurrentHashMap
 import javax.annotation.concurrent.ThreadSafe
 
 import com.google.inject.Singleton
 import com.twitter.util.Time
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.framework.api.thrift.NodeStatus.EnumUnknownNodeStatus
-import fr.cnrs.liris.accio.framework.api.thrift.{InvalidTaskException, _}
+import fr.cnrs.liris.accio.framework.api.thrift._
+import fr.cnrs.liris.accio.framework.util.Lockable
 
-import scala.collection.mutable
+import scala.collection.JavaConverters._
 
 /**
  * Hold information about the global state of a cluster. It handles registration and un-registration of workers
@@ -35,11 +36,9 @@ import scala.collection.mutable
  *
  * Everything is stored in memory, and this class has to be a singleton.
  */
-@ThreadSafe
-@Singleton
-class ClusterState extends StrictLogging {
-  private[this] val index = mutable.Map.empty[WorkerId, WorkerInfo]
-  private[this] val lock = new ReentrantReadWriteLock
+@ThreadSafe @Singleton
+class ClusterState extends StrictLogging with Lockable[String] {
+  private[this] val index = new ConcurrentHashMap[String, WorkerInfo]().asScala
 
   /**
    * Register a worker as part of this cluster.
@@ -50,12 +49,11 @@ class ClusterState extends StrictLogging {
    * @throws InvalidWorkerException If the worker is already registered.
    */
   @throws[InvalidWorkerException]
-  def register(workerId: WorkerId, dest: String, resources: Resource): Unit = write {
-    if (index.contains(workerId)) {
-      logger.debug(s"Worker ${workerId.value} is already registered")
+  def register(workerId: WorkerId, dest: String, resources: Resource): Unit = locked(workerId.value) {
+    if (index.contains(workerId.value)) {
       throw InvalidWorkerException(workerId, Some("Worker is already registered"))
     }
-    index(workerId) = WorkerInfo(workerId, dest, resources)
+    index(workerId.value.intern()) = WorkerInfo(workerId, dest, resources)
   }
 
   /**
@@ -65,9 +63,8 @@ class ClusterState extends StrictLogging {
    * @throws InvalidWorkerException If the worker is not registered.
    */
   @throws[InvalidWorkerException]
-  def unregister(workerId: WorkerId): Unit = write {
-    if (index.remove(workerId).isEmpty) {
-      logger.debug(s"Worker ${workerId.value} is not registered")
+  def unregister(workerId: WorkerId): Unit = locked(workerId.value) {
+    if (index.remove(workerId.value).isEmpty) {
       throw InvalidWorkerException(workerId, Some("Worker is not registered"))
     }
   }
@@ -80,9 +77,9 @@ class ClusterState extends StrictLogging {
    * @throws InvalidWorkerException If the worker is not registered.
    */
   @throws[InvalidWorkerException]
-  def recordHeartbeat(workerId: WorkerId, at: Time = Time.now): Unit = write {
+  def recordHeartbeat(workerId: WorkerId, at: Time = Time.now): Unit = locked(workerId.value) {
     val worker = apply(workerId)
-    index(workerId) = worker.copy(heartbeatAt = at)
+    index(workerId.value.intern()) = worker.copy(heartbeatAt = at)
   }
 
   /**
@@ -90,17 +87,15 @@ class ClusterState extends StrictLogging {
    *
    * @param workerId Worker identifier.
    * @param task     Task that will be processed.
-   * @throws InvalidWorkerException If the worker is not registered.
-   * @throws InvalidTaskException   If the task is already assigned to another worker.
+   * @throws InvalidWorkerException If the worker is not registered of if the task is already assigned to another worker.
    */
   @throws[InvalidWorkerException]
-  @throws[InvalidTaskException]
-  def assign(workerId: WorkerId, task: Task): Unit = write {
+  def assign(workerId: WorkerId, task: Task): Unit = locked(workerId.value) {
     index.values.find(_.activeTasks.exists(_.id == task.id)) match {
       case Some(w) =>
         logger.debug(s"Task ${task.id.value} is already assigned to worker ${w.id.value}")
         if (w.id != workerId) {
-          throw InvalidTaskException(task.id, Some(s"Task is already assigned to worker ${w.id.value}"))
+          throw InvalidWorkerException(workerId, Some(s"Task ${task.id.value} is already assigned to worker ${w.id.value}"))
         }
       case None =>
         var worker = apply(workerId)
@@ -119,7 +114,7 @@ class ClusterState extends StrictLogging {
           availableResources = availableResources,
           reservedResources = reservedResources)
 
-        index(workerId) = worker
+        index(workerId.value.intern()) = worker
         logger.debug(s"Assigned task ${task.id.value} to worker ${workerId.value}")
     }
   }
@@ -151,12 +146,10 @@ class ClusterState extends StrictLogging {
    * @param workerId Worker identifier.
    * @param taskId   Task identifier.
    * @param status   Final task status.
-   * @throws InvalidWorkerException If the worker is not registered.
-   * @throws InvalidTaskException   If the task is not assigned to the previously specified worker.
+   * @throws InvalidWorkerException If the worker is not registered of if the task is not assigned to this worker.
    */
   @throws[InvalidWorkerException]
-  @throws[InvalidTaskException]
-  def update(workerId: WorkerId, taskId: TaskId, status: NodeStatus): Unit = write {
+  def update(workerId: WorkerId, taskId: TaskId, status: NodeStatus): Unit = locked(workerId.value) {
     // Remove completed task from running tasks and update resources of the worker accordingly.
     var worker = ensure(workerId, taskId)
     val task = worker.activeTasks.find(_.id == taskId).get
@@ -196,7 +189,7 @@ class ClusterState extends StrictLogging {
         logger.debug(s"Un-assigned ${status.name} task ${task.id.value} from worker ${workerId.value}")
       case EnumUnknownNodeStatus(_) => throw new IllegalArgumentException
     }
-    index(workerId) = worker
+    index(workerId.value.intern()) = worker
   }
 
   /**
@@ -204,44 +197,19 @@ class ClusterState extends StrictLogging {
    *
    * @param deadline Deadline for sending a heartbeat.
    */
-  def lostWorkers(deadline: Time): Set[WorkerInfo] = read(_.filter(_.heartbeatAt < deadline))
+  def lostWorkers(deadline: Time): Set[WorkerInfo] = index.values.toSet.filter(_.heartbeatAt < deadline)
 
   /**
-   * Run an arbitrary section of code, accessing the inner cluster state (read-only).
-   *
-   * @param fn Function to execute.
-   * @tparam T Return type.
-   * @return Return value of `fn`.
+   * Return a snapshot of current cluster state. Returned value is a copy of current workers in the cluster.
    */
-  def read[T](fn: Set[WorkerInfo] => T): T = {
-    val lock = this.lock.readLock()
-    lock.lock()
-    try {
-      fn(index.values.toSet)
-    } finally {
-      lock.unlock()
-    }
-  }
-
-  private def write[T](fn: => T) = {
-    val lock = this.lock.writeLock()
-    lock.lock()
-    try {
-      fn
-    } finally {
-      lock.unlock()
-    }
-  }
+  def snapshot: Set[WorkerInfo] = index.values.toSet
 
   @throws[InvalidWorkerException]
-  def apply(workerId: WorkerId): WorkerInfo = read { _ =>
-    index.get(workerId) match {
-      case None =>
-        logger.debug(s"Worker ${workerId.value} is not registered")
-        throw InvalidWorkerException(workerId, Some("Worker is not registered"))
+  def apply(workerId: WorkerId): WorkerInfo =
+    index.get(workerId.value) match {
+      case None => throw InvalidWorkerException(workerId, Some("Worker is not registered"))
       case Some(worker) => worker
     }
-  }
 }
 
 /**
