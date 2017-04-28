@@ -24,7 +24,7 @@ import com.google.common.io.ByteStreams
 import com.google.inject.{Inject, Singleton}
 import com.twitter.util._
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.agent.config.{ExecutorArgs, ExecutorUri, MasterRpcDest}
+import fr.cnrs.liris.accio.agent.config.{ExecutorArgs, ExecutorUri, WorkerRpcDest}
 import fr.cnrs.liris.accio.framework.api.thrift.{InvalidTaskException, Task, TaskId}
 import fr.cnrs.liris.accio.framework.filesystem.FileSystem
 import fr.cnrs.liris.accio.framework.util.{ThreadLike, ThreadManager, WorkDir, WorkerPool}
@@ -43,7 +43,7 @@ import scala.collection.mutable
 @Singleton
 final class ExecutorTaskExecutor @Inject()(
   filesystem: FileSystem,
-  @MasterRpcDest masterAddr: String,
+  @WorkerRpcDest masterAddr: String,
   @ExecutorUri executorUri: String,
   @ExecutorArgs executorArgs: Seq[String],
   @WorkDir workDir: Path,
