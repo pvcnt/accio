@@ -209,7 +209,7 @@ final class RunFactory @Inject()(storage: Storage) extends BaseFactory {
       children = children.map(_.id),
       clonedFrom = clonedFrom,
       createdAt = now,
-      state = RunState(progress = 0, status = RunStatus.Scheduled))
+      state = RunStatus(progress = 0, status = TaskState.Scheduled))
 
     Seq(parent) ++ children
   }
@@ -226,9 +226,9 @@ final class RunFactory @Inject()(storage: Storage) extends BaseFactory {
    */
   private def initialState(graph: Graph) = {
     val nodes = graph.nodes.map { node =>
-      NodeState(name = node.name, status = NodeStatus.Waiting)
+      NodeStatus(name = node.name, status = TaskState.Waiting)
     }
-    RunState(progress = 0, status = RunStatus.Scheduled, nodes = nodes)
+    RunStatus(progress = 0, status = TaskState.Scheduled, nodes = nodes)
   }
 
   /**

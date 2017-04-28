@@ -40,7 +40,7 @@ private[storage] abstract class RunRepositorySpec extends RepositorySpec[Mutable
     seed = 1234,
     params = Map.empty,
     createdAt = System.currentTimeMillis(),
-    state = RunState(status = RunStatus.Scheduled, progress = 0))
+    state = RunStatus(status = TaskState.Scheduled, progress = 0))
 
   protected val fooRun = Run(
     id = RunId("foo"),
@@ -52,19 +52,19 @@ private[storage] abstract class RunRepositorySpec extends RepositorySpec[Mutable
     seed = 54321,
     params = Map.empty,
     createdAt = System.currentTimeMillis() - 1000,
-    state = RunState(status = RunStatus.Running, progress = .5))
+    state = RunStatus(status = TaskState.Running, progress = .5))
 
   private val runs = Seq(
     foobarRun,
     foobarRun.copy(
       id = randomId,
       createdAt = System.currentTimeMillis() + 10,
-      state = foobarRun.state.copy(status = RunStatus.Running),
+      state = foobarRun.state.copy(status = TaskState.Running),
       tags = Set("foo")),
     foobarRun.copy(
       id = randomId,
       createdAt = System.currentTimeMillis() + 40,
-      state = foobarRun.state.copy(status = RunStatus.Running),
+      state = foobarRun.state.copy(status = TaskState.Running),
       owner = User("him"),
       tags = Set("foobar")),
     foobarRun.copy(
@@ -156,7 +156,7 @@ private[storage] abstract class RunRepositorySpec extends RepositorySpec[Mutable
     runs.foreach(repo.save)
     refreshBeforeSearch()
 
-    val res = repo.find(RunQuery(status = Set(RunStatus.Running)))
+    val res = repo.find(RunQuery(status = Set(TaskState.Running)))
     res.totalCount shouldBe 2
     res.results should contain theSameElementsInOrderAs Seq(runs(2), runs(1)).map(unsetResult)
   }
@@ -186,11 +186,11 @@ private[storage] abstract class RunRepositorySpec extends RepositorySpec[Mutable
 
 private[storage] trait RunRepositorySpecWithMemoization extends RunRepositorySpec {
   private val foobarRunWithNodes = foobarRun.copy(state = foobarRun.state.copy(nodes = Set(
-    NodeState(name = "FooNode", status = NodeStatus.Success, cacheKey = Some(CacheKey("MyFooCacheKey")), result = Some(foobarResults("FooNode"))),
-    NodeState(name = "BarNode", status = NodeStatus.Success, cacheKey = Some(CacheKey("MyBarCacheKey")), result = Some(foobarResults("BarNode")))
+    NodeStatus(name = "FooNode", status = TaskState.Success, cacheKey = Some(CacheKey("MyFooCacheKey")), result = Some(foobarResults("FooNode"))),
+    NodeStatus(name = "BarNode", status = TaskState.Success, cacheKey = Some(CacheKey("MyBarCacheKey")), result = Some(foobarResults("BarNode")))
   )))
   private val fooRunWithNodes = fooRun.copy(state = fooRun.state.copy(nodes = Set(
-    NodeState(name = "FooNode", status = NodeStatus.Success, cacheKey = Some(CacheKey("YourFooCacheKey")), result = Some(fooResults("FooNode"))))))
+    NodeStatus(name = "FooNode", status = TaskState.Success, cacheKey = Some(CacheKey("YourFooCacheKey")), result = Some(fooResults("FooNode"))))))
 
   it should "memoize artifacts" in {
     repo.save(foobarRunWithNodes)

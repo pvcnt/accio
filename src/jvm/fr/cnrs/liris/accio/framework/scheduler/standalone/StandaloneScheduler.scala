@@ -78,7 +78,7 @@ class StandaloneScheduler @Inject()(
 
   private def kill(worker: WorkerInfo, taskId: TaskId): Unit = {
     Await.result(clientProvider.apply(worker.dest).killTask(KillTaskRequest(taskId)))
-    clusterState.update(worker.id, taskId, NodeStatus.Killed)
+    clusterState.update(worker.id, taskId, TaskState.Killed)
   }
 
   private def maybeAssign(task: Task): Boolean = synchronized {

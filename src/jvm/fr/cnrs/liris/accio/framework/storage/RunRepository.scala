@@ -101,7 +101,7 @@ case class RunQuery(
   workflow: Option[WorkflowId] = None,
   owner: Option[String] = None,
   name: Option[String] = None,
-  status: Set[RunStatus] = Set.empty,
+  status: Set[TaskState] = Set.empty,
   parent: Option[RunId] = None,
   clonedFrom: Option[RunId] = None,
   tags: Set[String] = Set.empty,

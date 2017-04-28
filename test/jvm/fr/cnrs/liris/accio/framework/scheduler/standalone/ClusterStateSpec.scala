@@ -61,13 +61,13 @@ class ClusterStateSpec extends UnitSpec {
     state(WorkerId("foo-worker")).reservedResources shouldBe Resource(2, 3000, 10000)
 
     // -> Running
-    state.update(WorkerId("foo-worker"), TaskId("foo-task"), NodeStatus.Running)
-    state(WorkerId("foo-worker")).activeTasks.find(_.id == TaskId("foo-task")).get.status shouldBe NodeStatus.Running
+    state.update(WorkerId("foo-worker"), TaskId("foo-task"), TaskState.Running)
+    state(WorkerId("foo-worker")).activeTasks.find(_.id == TaskId("foo-task")).get.status shouldBe TaskState.Running
     state(WorkerId("foo-worker")).availableResources shouldBe Resource(0, 1000, 30000)
     state(WorkerId("foo-worker")).reservedResources shouldBe Resource(2, 3000, 10000)
 
     // -> Done
-    state.update(WorkerId("foo-worker"), TaskId("foo-task"), NodeStatus.Success)
+    state.update(WorkerId("foo-worker"), TaskId("foo-task"), TaskState.Success)
     state(WorkerId("foo-worker")).activeTasks.map(_.id) should contain theSameElementsAs Set(TaskId("bar-task"))
     state(WorkerId("foo-worker")).availableResources shouldBe Resource(1, 2000, 30000)
     state(WorkerId("foo-worker")).reservedResources shouldBe Resource(1, 2000, 10000)
@@ -75,7 +75,7 @@ class ClusterStateSpec extends UnitSpec {
     state(WorkerId("foo-worker")).lostTasks shouldBe 0
 
     // -> Lost
-    state.update(WorkerId("foo-worker"), TaskId("bar-task"), NodeStatus.Lost)
+    state.update(WorkerId("foo-worker"), TaskId("bar-task"), TaskState.Lost)
     state(WorkerId("foo-worker")).activeTasks should have size 0
     state(WorkerId("foo-worker")).availableResources shouldBe Resource(2, 4000, 40000)
     state(WorkerId("foo-worker")).reservedResources shouldBe Resource(0, 0, 0)
@@ -185,6 +185,6 @@ class ClusterStateSpec extends UnitSpec {
     "somenode",
     OpPayload("fr.cnrs.liris.accio.ops.SomeOp", 1234, Map.empty, CacheKey("cachekey")),
     System.currentTimeMillis(),
-    NodeStatus.Waiting,
+    TaskState.Waiting,
     resource)
 }

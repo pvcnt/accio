@@ -104,7 +104,7 @@ class ApiController @Inject()(client: AgentService$FinagleClient) extends Contro
       workflowId = httpReq.workflow.map(WorkflowId.apply),
       parent = httpReq.parent.map(RunId.apply),
       clonedFrom = httpReq.clonedFrom.map(RunId.apply),
-      status = httpReq.status.flatMap(v => RunStatus.valueOf(v)).toSet,
+      status = httpReq.status.flatMap(v => TaskState.valueOf(v)).toSet,
       tags = explode(httpReq.tags, ","),
       q = httpReq.q,
       limit = Some(httpReq.perPage),

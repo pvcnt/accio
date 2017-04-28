@@ -22,7 +22,7 @@ import {Row, Col, Glyphicon, Panel} from 'react-bootstrap'
 import autobind from 'autobind-decorator'
 import {sortBy} from 'lodash'
 import ChildrenTableContainer from './ChildrenTableContainer'
-import NodeStatusRow from './NodeStatusRow'
+import TaskStateRow from './TaskStateRow'
 import ErrorModal from './ErrorModal'
 
 class StatusPanel extends React.Component {
@@ -74,7 +74,7 @@ class StatusPanel extends React.Component {
 
     const nodes = sortBy(run.state.nodes, ['started_at'])
     const nodeRows = nodes.map((node, idx) =>
-      <NodeStatusRow key={idx}
+      <TaskStateRow key={idx}
                      runId={run.id}
                      node={node}
                      logs={this.state.logs && this.state.logs.node == node.name ? this.state.logs.classifier : null}

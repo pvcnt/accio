@@ -24,7 +24,7 @@ import javax.annotation.concurrent.ThreadSafe
 import com.google.inject.Singleton
 import com.twitter.util.Time
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.framework.api.thrift.NodeStatus.EnumUnknownNodeStatus
+import fr.cnrs.liris.accio.framework.api.thrift.TaskState.EnumUnknownTaskState
 import fr.cnrs.liris.accio.framework.api.thrift._
 import fr.cnrs.liris.accio.framework.util.Lockable
 
@@ -100,7 +100,7 @@ class ClusterState extends StrictLogging with Lockable[String] {
       case None =>
         var worker = apply(workerId)
         // Add starting task to running tasks and update resources of the worker accordingly.
-        val runningTasks = worker.activeTasks + task.copy(status = NodeStatus.Scheduled)
+        val runningTasks = worker.activeTasks + task.copy(status = TaskState.Scheduled)
         val availableResources = Resource(
           worker.availableResources.cpu - task.resource.cpu,
           worker.availableResources.ramMb - task.resource.ramMb,
@@ -149,19 +149,19 @@ class ClusterState extends StrictLogging with Lockable[String] {
    * @throws InvalidWorkerException If the worker is not registered of if the task is not assigned to this worker.
    */
   @throws[InvalidWorkerException]
-  def update(workerId: WorkerId, taskId: TaskId, status: NodeStatus): Unit = locked(workerId.value) {
+  def update(workerId: WorkerId, taskId: TaskId, status: TaskState): Unit = locked(workerId.value) {
     // Remove completed task from running tasks and update resources of the worker accordingly.
     var worker = ensure(workerId, taskId)
     val task = worker.activeTasks.find(_.id == taskId).get
     status match {
-      case NodeStatus.Waiting | NodeStatus.Scheduled =>
+      case TaskState.Waiting | TaskState.Scheduled =>
         throw new IllegalArgumentException(s"Cannot update task ${taskId.value}: ${task.status} => $status")
-      case NodeStatus.Running =>
+      case TaskState.Running =>
         worker = worker.copy(activeTasks = worker.activeTasks.filter(_.id != taskId) ++ Seq(task.copy(status = status)))
         logger.debug(s"Updated ${task.id.value}: ${task.status} => $status")
-      case NodeStatus.Success | NodeStatus.Failed | NodeStatus.Killed | NodeStatus.Cancelled | NodeStatus.Lost =>
+      case TaskState.Success | TaskState.Failed | TaskState.Killed | TaskState.Cancelled | TaskState.Lost =>
         //TODO: check transition is correct. But how to mark resources as freed in case of an incorrect transition??
-        if (task.status != NodeStatus.Running && status != NodeStatus.Lost) {
+        if (task.status != TaskState.Running && status != TaskState.Lost) {
           logger.warn(s"Suspicious transition of task ${taskId.value}: ${task.status} => $status")
         }
         val runningTasks = worker.activeTasks.filterNot(_.id == taskId)
@@ -180,14 +180,14 @@ class ClusterState extends StrictLogging with Lockable[String] {
 
         // Update worker stats depending on task state.
         status match {
-          case NodeStatus.Success | NodeStatus.Failed =>
+          case TaskState.Success | TaskState.Failed =>
             worker = worker.copy(completedTasks = worker.completedTasks + 1)
-          case NodeStatus.Lost =>
+          case TaskState.Lost =>
             worker = worker.copy(lostTasks = worker.lostTasks + 1)
           case _ => // Do nothing.
         }
         logger.debug(s"Un-assigned ${status.name} task ${task.id.value} from worker ${workerId.value}")
-      case EnumUnknownNodeStatus(_) => throw new IllegalArgumentException
+      case EnumUnknownTaskState(_) => throw new IllegalArgumentException
     }
     index(workerId.value.intern()) = worker
   }

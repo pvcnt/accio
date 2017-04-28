@@ -19,6 +19,7 @@
 namespace java fr.cnrs.liris.accio.framework.api.thrift
 
 typedef i64 Timestamp
+typedef string ObjectName
 
 struct WorkflowId {
   1: string value;
@@ -44,22 +45,17 @@ struct CacheKey {
   1: string hash;
 }
 
-/*struct Metadata {
-  // Human-readable name.
-  1: optional string name;
+enum ObjectType {
+  RUN,
+  WORKFLOW,
+  EXPERIMENT,
+  AGENT
+}
 
-  // User initiating the run.
-  2: required User owner;
-
-  // Time at which this run has been created.
-  3: required Timestamp created_at;
-
-  // Notes describing the purpose of the workflow.
-  4: optional string notes;
-
-  // Arbitrary tags used when looking for workflows.
-  5: required set<string> tags;
-}*/
+struct ObjectReference {
+  1: required ObjectType kind;
+  2: required ObjectName name;
+}
 
 enum AtomicType {
   BYTE,
@@ -127,6 +123,15 @@ struct User {
 
   // Email address.
   2: optional string email;
+}
+
+struct ObjectMetadata {
+  1: required ObjectName name;
+  2: required string version;
+  3: optional User owner;
+  4: required Timestamp created_at = 0;
+  5: optional ObjectReference parent;
+  6: required set<string> tags = [];
 }
 
 struct Reference {
@@ -265,9 +270,9 @@ struct OpResult {
 }
 
 /**
- * Status of the execution of a node.
+ * Status of the execution of a task.
  **/
-enum NodeStatus {
+enum TaskState {
   // Waiting for all dependencies to be satisfied.
   WAITING,
   // Submitted to the scheduler.
@@ -289,12 +294,12 @@ enum NodeStatus {
 /**
  * State of a node, as part of a run. This structure is regularly updated as the execution of a node progresses.
  */
-struct NodeState {
+struct NodeStatus {
   // Name of the node this state is about.
   1: required string name;
 
   // Node execution status.
-  2: required NodeStatus status;
+  2: required TaskState status;
 
   // Time at which the execution of the node started.
   3: optional Timestamp started_at;
@@ -313,28 +318,12 @@ struct NodeState {
   7: required bool cache_hit = false;
 }
 
-/**
- * Status of the execution of a run.
- */
-enum RunStatus {
-  // Root nodes have been submitted to the scheduler but have not yet started.
-  SCHEDULED,
-  // Run is active, nodes have been executed or are still running.
-  RUNNING,
-  // Completed, successfully (i.e., all nodes completed successfully).
-  SUCCESS,
-  // Completed, but resulted in a failure (i.e., at least one node resulted in a failure).
-  FAILED,
-  // Killed by the client.
-  KILLED,
-}
-
-struct RunState {
+struct RunStatus {
   1: optional Timestamp started_at;
   2: optional Timestamp completed_at;
   3: required double progress;
-  4: required RunStatus status;
-  5: required set<NodeState> nodes;
+  4: required TaskState status;
+  5: required set<NodeStatus> nodes;
 }
 
 struct Package {
@@ -397,7 +386,7 @@ struct Run {
   13: optional RunId cloned_from;
 
   // Execution state.
-  14: required RunState state;
+  14: required RunStatus state;
 }
 
 struct RunLog {
@@ -495,7 +484,7 @@ struct Task {
   3: required string node_name;
   4: required OpPayload payload;
   6: required Timestamp created_at;
-  7: required NodeStatus status;
+  7: required TaskState status;
   8: required Resource resource;
 }
 

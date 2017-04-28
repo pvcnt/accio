@@ -34,9 +34,9 @@ import scala.reflect.{ClassTag, classTag}
  */
 object AccioJacksonModule extends SimpleModule {
   addSerializer(new ScroogeStructSerializer[Run](Run))
-  addSerializer(new ScroogeStructSerializer[RunState](RunState))
+  addSerializer(new ScroogeStructSerializer[RunStatus](RunStatus))
   addSerializer(new ScroogeStructSerializer[Package](Package))
-  addSerializer(new ScroogeStructSerializer[NodeState](NodeState))
+  addSerializer(new ScroogeStructSerializer[NodeStatus](NodeStatus))
   addSerializer(new ScroogeStructSerializer[Artifact](Artifact))
   addSerializer(new ScroogeStructSerializer[Metric](Metric))
   addSerializer(new ScroogeStructSerializer[ErrorData](ErrorData))

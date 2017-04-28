@@ -50,7 +50,7 @@ class StartTaskHandler @Inject()(storage: Storage, runManager: RunManager, state
         logger.warn(s"Task ${task.id.value} is associated with unknown run ${task.runId.value}")
         throw InvalidTaskException(task.id, Some(s"Task is associated with invalid run ${task.runId.value}"))
       case Some(run) =>
-        state.update(worker.id, task.id, NodeStatus.Running)
+        state.update(worker.id, task.id, TaskState.Running)
         val newRun = runManager.onStart(run, task.nodeName)
         storage.runs.save(newRun)
     }

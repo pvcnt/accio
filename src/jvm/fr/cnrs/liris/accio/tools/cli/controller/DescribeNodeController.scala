@@ -25,10 +25,10 @@ import fr.cnrs.liris.accio.framework.api.thrift._
 import fr.cnrs.liris.accio.runtime.event.Reporter
 import fr.cnrs.liris.common.util.StringUtils.padTo
 
-class DescribeNodeController extends DescribeController[NodeState] with FormatHelper {
+class DescribeNodeController extends DescribeController[NodeStatus] with FormatHelper {
   private[this] val colWidth = 15
 
-  override def retrieve(id: String, client: AgentService$FinagleClient): Future[NodeState] = {
+  override def retrieve(id: String, client: AgentService$FinagleClient): Future[NodeStatus] = {
     val parts = id.split("/")
     client.getRun(GetRunRequest(RunId(parts.head)))
       .map { resp =>
@@ -43,7 +43,7 @@ class DescribeNodeController extends DescribeController[NodeState] with FormatHe
       }
   }
 
-  override def print(out: Reporter, node: NodeState): Unit = {
+  override def print(out: Reporter, node: NodeStatus): Unit = {
     out.outErr.printOutLn(s"${padTo("Node name", colWidth)} ${node.name}")
     out.outErr.printOutLn(s"${padTo("Status", colWidth)} ${node.status.name}")
     node.startedAt.foreach { startedAt =>

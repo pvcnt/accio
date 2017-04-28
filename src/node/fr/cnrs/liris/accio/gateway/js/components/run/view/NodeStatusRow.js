@@ -22,7 +22,7 @@ import {noop} from "lodash";
 import {Row, Col, Glyphicon, Label, Button} from "react-bootstrap";
 import RunLogsContainer from "./RunLogsContainer";
 
-let NodeStatusRow = React.createClass({
+let TaskStateRow = React.createClass({
   getDefaultProps: function() {
     return {
       onErrorShow: noop,
@@ -120,7 +120,7 @@ let NodeStatusRow = React.createClass({
   }
 });
 
-NodeStatusRow.propTypes = {
+TaskStateRow.propTypes = {
   runId: React.PropTypes.string.isRequired,
   node: React.PropTypes.object.isRequired,
   logs: React.PropTypes.string,
@@ -128,4 +128,4 @@ NodeStatusRow.propTypes = {
   onErrorShow: React.PropTypes.func.isRequired,
 };
 
-export default NodeStatusRow;
+export default TaskStateRow;

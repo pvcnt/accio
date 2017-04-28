@@ -20,12 +20,12 @@ package fr.cnrs.liris.accio.tools.cli.controller
 
 import com.twitter.util.{Future, Time}
 import fr.cnrs.liris.accio.agent._
-import fr.cnrs.liris.accio.framework.api.thrift.RunStatus
+import fr.cnrs.liris.accio.framework.api.thrift.TaskState
 
 class GetRunController extends AbstractGetController[ListRunsResponse] with FormatHelper {
   override def retrieve(opts: GetQuery, client: AgentService$FinagleClient): Future[ListRunsResponse] = {
-    val status = Set[RunStatus](RunStatus.Scheduled, RunStatus.Running) ++
-      (if (opts.all) Set(RunStatus.Failed, RunStatus.Success, RunStatus.Killed) else Set.empty)
+    val status = Set[TaskState](TaskState.Scheduled, TaskState.Running) ++
+      (if (opts.all) Set(TaskState.Failed, TaskState.Success, TaskState.Killed) else Set.empty)
     val req = ListRunsRequest(owner = opts.owner, tags = opts.tags, status = status, limit = opts.limit)
     client.listRuns(req)
   }

@@ -40,7 +40,7 @@ final class LostTaskHandler @Inject()(storage: Storage, runManager: RunManager, 
   @throws[InvalidWorkerException]
   override def handle(req: LostTaskRequest): Future[LostTaskResponse] = {
     val worker = state.ensure(req.workerId, req.taskId)
-    state.update(req.workerId, req.taskId, NodeStatus.Lost)
+    state.update(req.workerId, req.taskId, TaskState.Lost)
     val task = worker.activeTasks.find(_.id == req.taskId).get
     storage.runs.get(task.runId).foreach { run =>
       storage.runs.transactional(run.parent) { parent =>

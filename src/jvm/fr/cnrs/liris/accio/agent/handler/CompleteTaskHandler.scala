@@ -49,7 +49,7 @@ final class CompleteTaskHandler @Inject()(
   override def handle(req: CompleteTaskRequest): Future[CompleteTaskResponse] = {
     val worker = state.ensure(req.workerId, req.taskId)
     val task = worker.activeTasks.find(_.id == req.taskId).get
-    state.update(req.workerId, req.taskId, if (req.result.exitCode == 0) NodeStatus.Success else NodeStatus.Failed)
+    state.update(req.workerId, req.taskId, if (req.result.exitCode == 0) TaskState.Success else TaskState.Failed)
     storage.runs.transactional(task.runId) {
       case None => throw InvalidTaskException(task.id, Some(s"Task is associated with invalid run ${task.runId.value}"))
       case Some(run) =>

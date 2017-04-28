@@ -90,7 +90,7 @@ struct ListRunsRequest {
   1: optional string owner;
   2: optional string name;
   3: optional accio.WorkflowId workflow_id;
-  5: required set<accio.RunStatus> status = [];
+  5: required set<accio.TaskState> status = [];
   6: required set<string> tags = [];
   7: optional accio.RunId parent;
   8: optional accio.RunId cloned_from;

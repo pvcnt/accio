@@ -69,9 +69,9 @@ private object ElasticJacksonModule extends SimpleModule {
   // Run-related deserializers.
   addDeserializer(classOf[Run], new ScroogeStructDeserializer[Run](Run))
   addDeserializer(classOf[RunId], new ScroogeStructDeserializer[RunId](RunId))
-  addDeserializer(classOf[RunState], new ScroogeStructDeserializer[RunState](RunState))
+  addDeserializer(classOf[RunStatus], new ScroogeStructDeserializer[RunStatus](RunStatus))
   addDeserializer(classOf[Package], new ScroogeStructDeserializer[Package](Package))
-  addDeserializer(classOf[NodeState], new ScroogeStructDeserializer[NodeState](NodeState))
+  addDeserializer(classOf[NodeStatus], new ScroogeStructDeserializer[NodeStatus](NodeStatus))
   addDeserializer(classOf[Artifact], new ScroogeStructDeserializer[Artifact](Artifact))
   addDeserializer(classOf[Metric], new ScroogeStructDeserializer[Metric](Metric))
   addDeserializer(classOf[ErrorData], new ScroogeStructDeserializer[ErrorData](ErrorData))
@@ -79,8 +79,7 @@ private object ElasticJacksonModule extends SimpleModule {
   addDeserializer(classOf[RunLog], new ScroogeStructDeserializer[RunLog](RunLog))
   addDeserializer(classOf[OpResult], new ScroogeStructDeserializer[OpResult](OpResult))
   addDeserializer(classOf[CacheKey], new ScroogeStructDeserializer[CacheKey](CacheKey))
-  addDeserializer(classOf[NodeStatus], new ScroogeEnumDeserializer[NodeStatus](NodeStatus))
-  addDeserializer(classOf[RunStatus], new ScroogeEnumDeserializer[RunStatus](RunStatus))
+  addDeserializer(classOf[TaskState], new ScroogeEnumDeserializer[TaskState](TaskState))
 
   // Workflow-related deserializers.
   addDeserializer(classOf[WorkflowId], new ScroogeStructDeserializer[WorkflowId](WorkflowId))

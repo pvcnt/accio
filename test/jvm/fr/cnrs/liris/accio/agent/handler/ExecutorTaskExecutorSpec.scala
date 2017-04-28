@@ -49,7 +49,7 @@ class ExecutorTaskExecutorSpec extends UnitSpec with WithTmpDirectory {
         "NodeName",
         OpPayload("MyOp", 1234L, Map.empty, CacheKey("cache_key")),
         System.currentTimeMillis(),
-        TaskState(NodeStatus.Waiting),
+        TaskState(TaskState.Waiting),
         Resource(1, 128, 0))
       val key = scheduler.submit(job)
       Thread.sleep(1000)
@@ -68,7 +68,7 @@ class ExecutorTaskExecutorSpec extends UnitSpec with WithTmpDirectory {
         "NodeName",
         OpPayload("MyOp", 1234L, Map.empty, CacheKey("cache_key")),
         System.currentTimeMillis(),
-        TaskState(NodeStatus.Running, startedAt = Some(System.currentTimeMillis()), heartbeatAt = Some(System.currentTimeMillis())),
+        TaskState(TaskState.Running, startedAt = Some(System.currentTimeMillis()), heartbeatAt = Some(System.currentTimeMillis())),
         Resource(1, 128, 0))
       val key = scheduler.submit(job)
       Thread.sleep(1000)

@@ -102,19 +102,12 @@ object Utils {
 
   def toString(user: thrift.User): String = s"${user.name}${user.email.map(email => s" <$email>").getOrElse("")}"
 
-  def isCompleted(status: thrift.NodeStatus): Boolean = status match {
-    case thrift.NodeStatus.Success => true
-    case thrift.NodeStatus.Failed => true
-    case thrift.NodeStatus.Killed => true
-    case thrift.NodeStatus.Cancelled => true
-    case thrift.NodeStatus.Lost => true
-    case _ => false
-  }
-
-  def isCompleted(status: thrift.RunStatus): Boolean = status match {
-    case thrift.RunStatus.Success => true
-    case thrift.RunStatus.Failed => true
-    case thrift.RunStatus.Killed => true
+  def isCompleted(status: thrift.TaskState): Boolean = status match {
+    case thrift.TaskState.Success => true
+    case thrift.TaskState.Failed => true
+    case thrift.TaskState.Killed => true
+    case thrift.TaskState.Cancelled => true
+    case thrift.TaskState.Lost => true
     case _ => false
   }
 }

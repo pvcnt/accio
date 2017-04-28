@@ -60,7 +60,7 @@ final class SchedulerService @Inject()(scheduler: Scheduler, opRegistry: OpRegis
         Some(payload.cacheKey -> result)
       case None =>
         val taskId = TaskId(UUID.randomUUID().toString)
-        val task = Task(taskId, run.id, node.name, payload, System.currentTimeMillis(), NodeStatus.Waiting, opDef.resource)
+        val task = Task(taskId, run.id, node.name, payload, System.currentTimeMillis(), TaskState.Waiting, opDef.resource)
         scheduler.submit(task)
         scheduler.houseKeeping(EventType.LessResource)
         logger.debug(s"Scheduled task ${task.id.value}. Run: ${run.id.value}, node: ${node.name}, op: ${payload.op}")

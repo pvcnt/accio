@@ -53,7 +53,7 @@ final class RunManager @Inject()(schedulerService: SchedulerService, graphFactor
   def launch(run: Run, parent: Option[Run]): (Run, Option[Run]) = {
     if (run.children.nonEmpty) {
       // A parent run is never launched, only mark it as started.
-      (run.copy(state = run.state.copy(startedAt = Some(System.currentTimeMillis()), status = RunStatus.Running)), parent)
+      (run.copy(state = run.state.copy(startedAt = Some(System.currentTimeMillis()), status = TaskState.Running)), parent)
     } else {
       // Submit root nodes of child runs to the scheduler.
       val rootNodes = graphs(run.pkg).roots
@@ -73,13 +73,13 @@ final class RunManager @Inject()(schedulerService: SchedulerService, graphFactor
   def onKill(run: Run, nodeNames: Set[String], parent: Option[Run]): (Run, Option[Run]) = {
     var newRun = run
     nodeNames.foreach { nodeName =>
-      val nodeState = run.state.nodes.find(_.name == nodeName).get
-      if (nodeState.completedAt.isDefined) {
+      val NodeStatus = run.state.nodes.find(_.name == nodeName).get
+      if (NodeStatus.completedAt.isDefined) {
         // On race requests, node state could be already marked as completed.
         (run, parent)
       } else {
-        val newNodeState = nodeState.copy(completedAt = Some(System.currentTimeMillis()), status = NodeStatus.Killed)
-        newRun = replace(run, nodeState, newNodeState)
+        val newNodeStatus = NodeStatus.copy(completedAt = Some(System.currentTimeMillis()), status = TaskState.Killed)
+        newRun = replace(run, NodeStatus, newNodeStatus)
       }
     }
     newRun = cancelAllNodes(newRun)
@@ -94,18 +94,18 @@ final class RunManager @Inject()(schedulerService: SchedulerService, graphFactor
    * @return Updated run.
    */
   def onStart(run: Run, nodeName: String): Run = {
-    val nodeState = run.state.nodes.find(_.name == nodeName).get
-    if (nodeState.startedAt.nonEmpty) {
+    val NodeStatus = run.state.nodes.find(_.name == nodeName).get
+    if (NodeStatus.startedAt.nonEmpty) {
       // Node state could be already marked as started if another task was already spawned for this node.
       run
     } else {
       // Mark node as started.
       val now = System.currentTimeMillis()
-      val newNodeState = nodeState.copy(startedAt = Some(now), status = NodeStatus.Running)
-      var newRun = replace(run, nodeState, newNodeState)
+      val newNodeStatus = NodeStatus.copy(startedAt = Some(now), status = TaskState.Running)
+      var newRun = replace(run, NodeStatus, newNodeStatus)
       // Mark run as started, if not already.
       if (newRun.state.startedAt.isEmpty) {
-        newRun = newRun.copy(state = newRun.state.copy(startedAt = Some(now), status = RunStatus.Running))
+        newRun = newRun.copy(state = newRun.state.copy(startedAt = Some(now), status = TaskState.Running))
       }
       newRun
     }
@@ -122,16 +122,16 @@ final class RunManager @Inject()(schedulerService: SchedulerService, graphFactor
    * @return Updated run and parent run.
    */
   def onFailed(run: Run, nodeName: String, result: OpResult, parent: Option[Run]): (Run, Option[Run]) = {
-    val nodeState = run.state.nodes.find(_.name == nodeName).get
-    if (nodeState.completedAt.isDefined) {
+    val NodeStatus = run.state.nodes.find(_.name == nodeName).get
+    if (NodeStatus.completedAt.isDefined) {
       // On race requests, node state could be already marked as completed.
       (run, parent)
     } else {
-      val newNodeState = nodeState.copy(
+      val newNodeStatus = NodeStatus.copy(
         completedAt = Some(System.currentTimeMillis()),
-        status = NodeStatus.Failed,
+        status = TaskState.Failed,
         result = Some(result))
-      var newRun = replace(run, nodeState, newNodeState)
+      var newRun = replace(run, NodeStatus, newNodeStatus)
       newRun = cancelNextNodes(newRun, nodeName)
       updateProgress(newRun, parent)
     }
@@ -147,13 +147,13 @@ final class RunManager @Inject()(schedulerService: SchedulerService, graphFactor
    * @return Updated run and parent run.
    */
   def onLost(run: Run, nodeName: String, parent: Option[Run]): (Run, Option[Run]) = {
-    val nodeState = run.state.nodes.find(_.name == nodeName).get
-    if (nodeState.completedAt.isDefined) {
+    val NodeStatus = run.state.nodes.find(_.name == nodeName).get
+    if (NodeStatus.completedAt.isDefined) {
       // On race requests, node state could be already marked as completed.
       (run, parent)
     } else {
-      val newNodeState = nodeState.copy(completedAt = Some(System.currentTimeMillis()), status = NodeStatus.Lost)
-      var newRun = replace(run, nodeState, newNodeState)
+      val newNodeStatus = NodeStatus.copy(completedAt = Some(System.currentTimeMillis()), status = TaskState.Lost)
+      var newRun = replace(run, NodeStatus, newNodeStatus)
       newRun = cancelNextNodes(newRun, nodeName)
       updateProgress(newRun, parent)
     }
@@ -170,24 +170,24 @@ final class RunManager @Inject()(schedulerService: SchedulerService, graphFactor
    * @return Updated run and parent run.
    */
   def onSuccess(run: Run, nodeName: String, result: OpResult, cacheKey: Option[CacheKey], parent: Option[Run]): (Run, Option[Run]) = {
-    val nodeState = run.state.nodes.find(_.name == nodeName).get
-    if (nodeState.completedAt.isDefined) {
+    val NodeStatus = run.state.nodes.find(_.name == nodeName).get
+    if (NodeStatus.completedAt.isDefined) {
       // On race requests, node state could be already marked as completed.
       (run, parent)
     } else {
-      val newNodeState = nodeState.copy(
+      val newNodeStatus = NodeStatus.copy(
         completedAt = Some(System.currentTimeMillis()),
-        status = NodeStatus.Success,
+        status = TaskState.Success,
         result = Some(result),
         cacheKey = cacheKey)
-      var newRun = replace(run, nodeState, newNodeState)
+      var newRun = replace(run, NodeStatus, newNodeStatus)
       newRun = scheduleNextNodes(newRun, nodeName)
       updateProgress(newRun, parent)
     }
   }
 
-  private def replace(run: Run, nodeState: NodeState, newNodeState: NodeState) = {
-    run.copy(state = run.state.copy(nodes = run.state.nodes - nodeState + newNodeState))
+  private def replace(run: Run, NodeStatus: NodeStatus, newNodeStatus: NodeStatus) = {
+    run.copy(state = run.state.copy(nodes = run.state.nodes - NodeStatus + newNodeStatus))
   }
 
   private def schedule(run: Run, nodes: Set[api.Node]): Run = {
@@ -206,30 +206,30 @@ final class RunManager @Inject()(schedulerService: SchedulerService, graphFactor
    * @return Updated run.
    */
   private def schedule(run: Run, node: api.Node): Run = {
-    val nodeState = run.state.nodes.find(_.name == node.name).get
+    val NodeStatus = run.state.nodes.find(_.name == node.name).get
     val maybeResult = schedulerService.submit(run, node)
     maybeResult match {
       case Some((cacheKey, result)) =>
         // Save node result.
         val now = System.currentTimeMillis()
-        var newRun = replace(run, nodeState, nodeState.copy(
+        var newRun = replace(run, NodeStatus, NodeStatus.copy(
           startedAt = Some(now),
           completedAt = Some(now),
-          status = NodeStatus.Success,
+          status = TaskState.Success,
           cacheKey = Some(cacheKey),
           cacheHit = true,
           result = Some(result)))
 
         // Mark run as started, if not already.
         if (newRun.state.startedAt.isEmpty) {
-          newRun = newRun.copy(state = newRun.state.copy(startedAt = Some(now), status = RunStatus.Running))
+          newRun = newRun.copy(state = newRun.state.copy(startedAt = Some(now), status = TaskState.Running))
         }
 
         // Schedule next nodes.
         scheduleNextNodes(newRun, node.name)
       case None =>
         // Node has been scheduled.
-        replace(run, nodeState, nodeState.copy(status = NodeStatus.Scheduled))
+        replace(run, NodeStatus, NodeStatus.copy(status = TaskState.Scheduled))
     }
   }
 
@@ -239,14 +239,14 @@ final class RunManager @Inject()(schedulerService: SchedulerService, graphFactor
     if (newRun.state.completedAt.isEmpty) {
       if (newRun.state.nodes.forall(s => Utils.isCompleted(s.status))) {
         // Mark run as completed, if all nodes are completed. It is successful if all nodes were successful.
-        val newRunStatus = if (newRun.state.nodes.forall(_.status == NodeStatus.Success)) {
-          RunStatus.Success
-        } else if (newRun.state.nodes.exists(_.status == NodeStatus.Killed)) {
-          RunStatus.Killed
+        val newTaskState = if (newRun.state.nodes.forall(_.status == TaskState.Success)) {
+          TaskState.Success
+        } else if (newRun.state.nodes.exists(_.status == TaskState.Killed)) {
+          TaskState.Killed
         } else {
-          RunStatus.Failed
+          TaskState.Failed
         }
-        newRun = newRun.copy(state = newRun.state.copy(progress = 1, status = newRunStatus, completedAt = Some(now)))
+        newRun = newRun.copy(state = newRun.state.copy(progress = 1, status = newTaskState, completedAt = Some(now)))
       } else {
         // Run is not yet completed, only update progress.
         val progress = newRun.state.nodes.count(s => Utils.isCompleted(s.status)).toDouble / newRun.state.nodes.size
@@ -263,14 +263,14 @@ final class RunManager @Inject()(schedulerService: SchedulerService, graphFactor
         val siblings = storage.runs.find(RunQuery(parent = Some(parent.id))).results.filter(_.id != run.id) ++ Seq(run)
         if (siblings.forall(s => Utils.isCompleted(s.state.status))) {
           // Mark parent run as completed if all children are completed. It is successful if all runs were successful.
-          val newRunState = if (siblings.forall(_.state.status == RunStatus.Success)) {
-            RunStatus.Success
-          } else if (siblings.exists(_.state.status == RunStatus.Killed)) {
-            RunStatus.Killed
+          val newRunStatus = if (siblings.forall(_.state.status == TaskState.Success)) {
+            TaskState.Success
+          } else if (siblings.exists(_.state.status == TaskState.Killed)) {
+            TaskState.Killed
           } else {
-            RunStatus.Failed
+            TaskState.Failed
           }
-          parent.copy(state = parent.state.copy(progress = 1, status = newRunState, completedAt = Some(System.currentTimeMillis())))
+          parent.copy(state = parent.state.copy(progress = 1, status = newRunStatus, completedAt = Some(System.currentTimeMillis())))
         } else {
           // Parent is not yet completed, only update progress.
           val progress = siblings.map(_.state.progress).sum / parent.children.size
@@ -286,7 +286,7 @@ final class RunManager @Inject()(schedulerService: SchedulerService, graphFactor
     val graph = graphs(run.pkg)
     val nextNodes = getNextNodes(run, graph, nodeName).filter { nextNode =>
       nextNode.predecessors.forall { dep =>
-        run.state.nodes.find(_.name == dep).get.status == NodeStatus.Success
+        run.state.nodes.find(_.name == dep).get.status == TaskState.Success
       }
     }
     schedule(run, nextNodes)
@@ -297,9 +297,9 @@ final class RunManager @Inject()(schedulerService: SchedulerService, graphFactor
     val nextNodes = getNextNodes(run, graph, nodeName).flatMap(node => Seq(node) ++ getNextNodes(run, graph, node.name))
     var newRun = run
     nextNodes.foreach { nextNode =>
-      val nodeState = newRun.state.nodes.find(_.name == nextNode.name).get
-      val newNodeState = nodeState.copy(completedAt = Some(System.currentTimeMillis()), status = NodeStatus.Cancelled)
-      newRun = replace(newRun, nodeState, newNodeState)
+      val NodeStatus = newRun.state.nodes.find(_.name == nextNode.name).get
+      val newNodeStatus = NodeStatus.copy(completedAt = Some(System.currentTimeMillis()), status = TaskState.Cancelled)
+      newRun = replace(newRun, NodeStatus, newNodeStatus)
     }
     newRun
   }
@@ -308,10 +308,10 @@ final class RunManager @Inject()(schedulerService: SchedulerService, graphFactor
     val graph = graphs(run.pkg)
     var newRun = run
     graph.nodes.foreach { node =>
-      val nodeState = newRun.state.nodes.find(_.name == node.name).get
-      if (!Utils.isCompleted(nodeState.status)) {
-        val newNodeState = nodeState.copy(completedAt = Some(System.currentTimeMillis()), status = NodeStatus.Cancelled)
-        newRun = replace(newRun, nodeState, newNodeState)
+      val NodeStatus = newRun.state.nodes.find(_.name == node.name).get
+      if (!Utils.isCompleted(NodeStatus.status)) {
+        val newNodeStatus = NodeStatus.copy(completedAt = Some(System.currentTimeMillis()), status = TaskState.Cancelled)
+        newRun = replace(newRun, NodeStatus, newNodeStatus)
       }
     }
     newRun
@@ -321,7 +321,7 @@ final class RunManager @Inject()(schedulerService: SchedulerService, graphFactor
     graph(nodeName).successors
       .map(graph.apply)
       .filter { nextNode =>
-        run.state.nodes.find(_.name == nextNode.name).get.status == NodeStatus.Waiting
+        run.state.nodes.find(_.name == nextNode.name).get.status == TaskState.Waiting
       }
   }
 }
