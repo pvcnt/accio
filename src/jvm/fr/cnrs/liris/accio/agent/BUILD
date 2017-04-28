@@ -10,6 +10,7 @@ scala_library(
     'src/jvm/fr/cnrs/liris/accio/framework/util:annotations',
     'src/jvm/fr/cnrs/liris/accio/runtime/commandbus',
     'src/jvm/fr/cnrs/liris/accio/runtime/logging',
+    'src/jvm/fr/cnrs/liris/accio/runtime/finagle',
     scoped('src/jvm/fr/cnrs/liris/accio/ops', 'runtime'),
     'src/thrift/fr/cnrs/liris/accio/agent',
     '3rdparty/jvm/com/twitter/finatra:thrift',

@@ -23,11 +23,16 @@ import java.util.concurrent.Executors
 import com.google.inject._
 import com.twitter.concurrent.NamedPoolThreadFactory
 import com.twitter.finagle.Thrift
+import com.twitter.finagle.param.HighResTimer
+import com.twitter.finagle.service.{Backoff, RetryFilter}
+import com.twitter.finagle.stats.StatsReceiver
+import com.twitter.finagle.thrift.ThriftClientRequest
 import com.twitter.inject.{Injector, TwitterModule}
-import com.twitter.util.{ExecutorServiceFuturePool, FuturePool}
+import com.twitter.util.{Duration, ExecutorServiceFuturePool, FuturePool}
 import fr.cnrs.liris.accio.agent.{AgentService, AgentService$FinagleClient}
 import fr.cnrs.liris.accio.framework.discovery.inject.DiscoveryModule
 import fr.cnrs.liris.accio.framework.util.WorkerPool
+import fr.cnrs.liris.accio.runtime.finagle.RetryPolicies
 
 /**
  * Guice module providing executor-specific bindings.
@@ -37,24 +42,22 @@ object ExecutorModule extends TwitterModule {
 
   override def modules = Seq(DiscoveryModule)
 
-  @Singleton
-  @Provides
-  @WorkerPool
+  @Singleton @Provides @WorkerPool
   def providesWorkerPool: FuturePool = {
     val executorService = Executors.newCachedThreadPool(new NamedPoolThreadFactory("executor"))
     FuturePool.interruptible(executorService)
   }
 
-  @Singleton
-  @Provides
-  def providesClient: AgentService$FinagleClient = {
-    // - We communicate directly with our local worker (and *not* with the master).
-    // - If the executor is still alive, then the worker is still alive (because the executor is a subprocess of
-    //   the worker's process). So we retry indefinitely, w.r.t. our domain-aware response classifier (e.g.,
-    //   avoiding to retry on InvalidTaskException's).
-    // - We do not want to fail-fast, because there will always be only one reachable host.
+  @Singleton @Provides
+  def providesClient(statsReceiver: StatsReceiver): AgentService$FinagleClient = {
+    // We communicate directly with our local worker (and *not* with the master).
+    // We configure the client to retry constantly every 15 seconds if the master is not available.
+    // We disable fail-fast module, because will often be only one master.
+    val retryPolicy = RetryPolicies.onFailure[ThriftClientRequest, Array[Byte]](Backoff.const(Duration.fromSeconds(15)))
+    val retryFilter = new RetryFilter(retryPolicy, HighResTimer.Default, statsReceiver)
     val service = Thrift.client
       .withSessionQualifier.noFailFast
+      .filtered(retryFilter)
       .newService(addrFlag())
     new AgentService.FinagledClient(service)
   }

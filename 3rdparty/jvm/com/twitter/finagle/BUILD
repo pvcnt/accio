@@ -17,6 +17,7 @@
 # In Sync with Finatra's version.
 VERSION = '6.44.0'
 
+jar_library(name='core', jars=[scala_jar('com.twitter', 'finagle-core', VERSION)])
 jar_library(name='http', jars=[scala_jar('com.twitter', 'finagle-http', VERSION)])
 jar_library(name='thrift', jars=[scala_jar('com.twitter', 'finagle-thrift', VERSION)])
 jar_library(name='serversets', jars=[scala_jar('com.twitter', 'finagle-serversets', VERSION)])

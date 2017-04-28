@@ -6,6 +6,7 @@ scala_library(
     'src/jvm/fr/cnrs/liris/accio/framework/filesystem/inject',
     'src/jvm/fr/cnrs/liris/accio/framework/util',
     'src/jvm/fr/cnrs/liris/accio/framework/util:annotations',
+    'src/jvm/fr/cnrs/liris/accio/runtime/finagle',
     'src/thrift/fr/cnrs/liris/accio/agent',
     scoped('src/jvm/fr/cnrs/liris/accio/ops', 'runtime'),
     '3rdparty/jvm/com/twitter/inject:app',

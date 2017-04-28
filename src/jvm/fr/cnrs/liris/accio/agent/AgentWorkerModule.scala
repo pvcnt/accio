@@ -20,13 +20,18 @@ package fr.cnrs.liris.accio.agent
 
 import com.google.inject.{Provides, Singleton, TypeLiteral}
 import com.twitter.finagle.Thrift
+import com.twitter.finagle.param.HighResTimer
+import com.twitter.finagle.service.{Backoff, RetryFilter}
+import com.twitter.finagle.stats.StatsReceiver
+import com.twitter.finagle.thrift.ThriftClientRequest
 import com.twitter.inject.{Injector, TwitterModule}
-import com.twitter.util.FuturePool
+import com.twitter.util._
 import fr.cnrs.liris.accio.agent.config._
 import fr.cnrs.liris.accio.agent.handler._
 import fr.cnrs.liris.accio.framework.api.thrift.Resource
 import fr.cnrs.liris.accio.framework.filesystem.inject.FileSystemModule
 import fr.cnrs.liris.accio.runtime.commandbus.Handler
+import fr.cnrs.liris.accio.runtime.finagle.RetryPolicies
 import net.codingwell.scalaguice.ScalaMultibinder
 
 /**
@@ -53,10 +58,14 @@ object AgentWorkerModule extends TwitterModule {
   }
 
   @Provides @Singleton
-  def providesMasterClient(@MasterRpcDest masterAddr: String): AgentService$FinagleClient = {
-    //TODO: provide an alternative for same process communication.
+  def providesMasterClient(@MasterRpcDest masterAddr: String, statsReceiver: StatsReceiver): AgentService$FinagleClient = {
+    // We configure the client to retry constantly every 15 seconds if the master is not available.
+    // We disable fail-fast module, because will often be only one master.
+    val retryPolicy = RetryPolicies.onFailure[ThriftClientRequest, Array[Byte]](Backoff.const(Duration.fromSeconds(15)))
+    val retryFilter = new RetryFilter(retryPolicy, HighResTimer.Default, statsReceiver)
     val service = Thrift.client
-      .withSessionQualifier.noFailFast // Because there is likely to be only one master.
+      .withSessionQualifier.noFailFast
+      .filtered(retryFilter)
       .newService(masterAddr)
     new AgentService.FinagledClient(service)
   }
