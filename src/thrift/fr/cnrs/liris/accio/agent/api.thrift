@@ -178,22 +178,3 @@ struct ListAgentsRequest {
 struct ListAgentsResponse {
   1: required list<accio.Agent> results;
 }
-
-struct GetDatasetRequest {
-  1: required accio.RunId run_id;
-  2: required string node_name;
-  3: required string port_name;
-  4: optional i32 limit;
-  5: required bool sample;
-}
-
-struct ThriftEvent {
-  1: required string user;
-  2: required list<i32> location;
-  3: required accio.Timestamp timestamp;
-}
-
-struct GetDatasetResponse {
-  1: required list<ThriftEvent> events;
-  2: required i32 total_count;
-}

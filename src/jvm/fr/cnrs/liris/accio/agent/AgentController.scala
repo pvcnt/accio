@@ -48,7 +48,6 @@ class AgentController @Inject()(commandBus: CommandBus) extends Controller with 
   override val listLogs = handle(ListLogs) { args: ListLogs.Args => handleRequest(args.req) }
   override val getCluster = handle(GetCluster) { args: GetCluster.Args => handleRequest(args.req) }
   override val listAgents = handle(ListAgents) { args: ListAgents.Args => handleRequest(args.req) }
-  override val getDataset = handle(GetDataset) { args: GetDataset.Args => handleRequest(args.req) }
 
   /**
    * RPC endpoints used by workers to communicate with their master.
