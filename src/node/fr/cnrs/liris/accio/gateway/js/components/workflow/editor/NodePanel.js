@@ -30,7 +30,7 @@ import {
   ButtonToolbar
 } from 'react-bootstrap';
 import autobind from 'autobind-decorator';
-import {prettyPrintKind} from' ../../../utils/prettyPrint';
+import {prettyPrintKind} from '../../../utils/prettyPrint';
 
 const initState = (nodeDef, opDef) => {
   const inputs = fromPairs(opDef.inputs.map((inputDef) => {

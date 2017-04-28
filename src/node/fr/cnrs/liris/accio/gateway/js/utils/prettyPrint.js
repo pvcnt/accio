@@ -30,7 +30,7 @@ function prettyPrint(obj) {
 }
 
 function prettyPrintKind(kind) {
-  if (kind.base === 'list' || kind.base == 'set') {
+  if (kind.base === 'list' || kind.base === 'set') {
     return kind.base + '(' + kind.args[0] + ')'
   } else if (kind.base === 'map') {
     return kind.base + '(' + kind.args[0] + ', ' + kind.args[1] + ')'
