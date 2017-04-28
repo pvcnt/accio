@@ -19,6 +19,7 @@
 package fr.cnrs.liris.common.util
 
 import java.io.File
+import java.net.InetAddress
 
 import com.twitter.util.StorageUnit
 
@@ -29,6 +30,11 @@ import scala.util.control.NonFatal
  * Provide some system level information.
  */
 object Platform {
+  /**
+   * Return hostname.
+   */
+  lazy val hostname: String = InetAddress.getLocalHost.getHostName
+
   /**
    * Return total RAM memory mounted on the machine, if possible to obtain. Works only on Unix platforms.
    */

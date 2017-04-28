@@ -24,6 +24,7 @@ import com.twitter.finagle.param.HighResTimer
 import com.twitter.finagle.service.{Backoff, RetryFilter}
 import com.twitter.finagle.stats.StatsReceiver
 import com.twitter.finagle.thrift.ThriftClientRequest
+import com.twitter.inject.annotations.Flag
 import com.twitter.inject.{Injector, TwitterModule}
 import com.twitter.util._
 import fr.cnrs.liris.accio.agent.config._
@@ -32,6 +33,7 @@ import fr.cnrs.liris.accio.framework.api.thrift.Resource
 import fr.cnrs.liris.accio.framework.filesystem.inject.FileSystemModule
 import fr.cnrs.liris.accio.runtime.commandbus.Handler
 import fr.cnrs.liris.accio.runtime.finagle.RetryPolicies
+import fr.cnrs.liris.common.util.Platform
 import net.codingwell.scalaguice.ScalaMultibinder
 
 /**
@@ -55,6 +57,14 @@ object AgentWorkerModule extends TwitterModule {
     // Bind configuration values.
     bind[String].annotatedWith[ExecutorUri].toInstance(executorUriFlag())
     bind[Resource].annotatedWith[ReservedResource].toInstance(Resource(0, 0, 0))
+  }
+
+  @Singleton @Provides @WorkerRpcDest
+  def providesWorkerRpcDest(@Flag("thrift.port") thriftAddress: String): String = {
+    val port = thriftAddress.drop(thriftAddress.indexOf(":"))
+    val dest = Platform.hostname + ":" + port
+    logger.info(s"Advertising $dest")
+    dest
   }
 
   @Provides @Singleton

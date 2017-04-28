@@ -20,7 +20,6 @@ package fr.cnrs.liris.accio.agent
 
 import java.net.InetAddress
 import java.nio.file.{Path, Paths}
-import java.util.UUID
 import java.util.concurrent.{ExecutorService, Executors}
 
 import com.google.common.eventbus.{AsyncEventBus, EventBus}
@@ -34,10 +33,10 @@ import fr.cnrs.liris.accio.framework.filesystem.inject.FileSystemModule
 import fr.cnrs.liris.accio.framework.service._
 import fr.cnrs.liris.accio.framework.util.{WorkDir, WorkerPool}
 import fr.cnrs.liris.accio.runtime.commandbus.Handler
+import fr.cnrs.liris.common.util.Platform
 import net.codingwell.scalaguice.ScalaMultibinder
 
 import scala.collection.mutable
-import scala.util.Try
 
 /**
  * Guice module provisioning services for the Accio agent.
@@ -80,9 +79,7 @@ object AgentModule extends TwitterModule {
     bind[String].annotatedWith[ClusterName].toInstance(clusterNameFlag())
     // Default is only valid with a same-host master.
     bind[String].annotatedWith[MasterRpcDest].toInstance(masterAddrFlag.getWithDefault.getOrElse(bindFlag() + ":9999"))
-    // Executors are launched on the same host, without isolation, we can use directly the bind address.
-    bind[String].annotatedWith[WorkerRpcDest].toInstance(s"inet!${bindFlag()}:9999")
-    bind[String].annotatedWith[AgentName].toInstance(agentNameFlag.get.getOrElse(Try(InetAddress.getLocalHost.getHostName).getOrElse(UUID.randomUUID().toString)))
+    bind[String].annotatedWith[AgentName].toInstance(agentNameFlag.get.getOrElse(Platform.hostname))
     bind(new TypeLiteral[Seq[String]] {}).annotatedWith(classOf[ExecutorArgs]).toInstance {
       FileSystemModule.executorPassthroughFlags.flatMap { flag =>
         flag.getWithDefault.map(v => s"-${flag.name}=$v").toSeq
@@ -93,22 +90,29 @@ object AgentModule extends TwitterModule {
     bind[Duration].annotatedWith[ExecutorTimeout].toInstance(Duration.fromSeconds(60))
   }
 
-  @Provides
-  @Singleton
-  @WorkerPool
+  /*@Singleton @Provides @MasterRpcDest
+  def providesMasterRpcDest(@Flag("thrift.port") port: String): String = {
+    val pos = port.indexOf(":")
+    if (pos == -1) {
+      s"$hostname:$port"
+    } else if (pos == 0) {
+      s"$hostname$port"
+    } else {
+      port
+    }
+  }*/
+
+  @Provides @Singleton @WorkerPool
   def providesWorkerPool(@WorkerPool executor: ExecutorService): FuturePool = {
     FuturePool.interruptible(executor)
   }
 
-  @Provides
-  @Singleton
-  @WorkerPool
+  @Provides @Singleton @WorkerPool
   def providesExecutorService: ExecutorService = {
     Executors.newCachedThreadPool(new NamedPoolThreadFactory("agent/worker"))
   }
 
-  @Provides
-  @Singleton
+  @Provides @Singleton
   def providesEventBus(@WorkerPool executor: ExecutorService): EventBus = {
     new AsyncEventBus(executor)
   }
