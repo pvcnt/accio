@@ -158,7 +158,7 @@ struct ArgConstraint {
   2: optional bool min_inclusive;
   3: optional double max_value;
   4: optional bool max_inclusive;
-  5: required set<string> allowed_values;
+  5: required set<string> allowed_values = [];
 }
 
 /**
