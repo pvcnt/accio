@@ -21,15 +21,16 @@ package fr.cnrs.liris.accio.agent
 import java.net.InetAddress
 import java.nio.file.{Path, Paths}
 import java.util.UUID
-import java.util.concurrent.Executors
+import java.util.concurrent.{ExecutorService, Executors}
 
+import com.google.common.eventbus.{AsyncEventBus, EventBus}
 import com.google.inject.{Module, Provides, Singleton, TypeLiteral}
 import com.twitter.concurrent.NamedPoolThreadFactory
 import com.twitter.inject.TwitterModule
 import com.twitter.util.{Duration, FuturePool}
 import fr.cnrs.liris.accio.agent.config._
-import fr.cnrs.liris.accio.framework.sdk.Operator
 import fr.cnrs.liris.accio.framework.filesystem.inject.FileSystemModule
+import fr.cnrs.liris.accio.framework.sdk.Operator
 import fr.cnrs.liris.accio.framework.service._
 import fr.cnrs.liris.accio.framework.util.WorkerPool
 import fr.cnrs.liris.accio.runtime.commandbus.Handler
@@ -102,8 +103,17 @@ object AgentModule extends TwitterModule {
   }
 
   @Provides @Singleton @WorkerPool
-  def providesWorkerPool: FuturePool = {
-    val executorService = Executors.newCachedThreadPool(new NamedPoolThreadFactory("agent/worker"))
-    FuturePool.interruptible(executorService)
+  def providesWorkerPool(@WorkerPool executor: ExecutorService): FuturePool = {
+    FuturePool.interruptible(executor)
+  }
+
+  @Provides @Singleton @WorkerPool
+  def providesExecutorService: ExecutorService = {
+    Executors.newCachedThreadPool(new NamedPoolThreadFactory("agent/worker"))
+  }
+
+  @Provides @Singleton
+  def providesEventBus(@WorkerPool executor: ExecutorService): EventBus = {
+    new AsyncEventBus(executor)
   }
 }
