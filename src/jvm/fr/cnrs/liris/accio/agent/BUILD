@@ -32,9 +32,11 @@ scala_library(
     exclude('io.netty', 'netty-handler'),
     exclude('io.netty', 'netty-handler-proxy'),
     exclude('io.netty', 'netty-transport'),
+    exclude('io.netty', 'netty-transport-native-epoll'),
     exclude('io.netty', 'netty-resolver'),
     exclude('io.netty', 'netty-codec'),
     exclude('io.netty', 'netty-codec-http'),
+    exclude('io.netty', 'netty-codec-http2'),
     exclude('io.netty', 'netty-codec-socks'),
     # common/reflect comes with its own Scala compiler library, we do not need the one provided by Finatra.
     exclude('com.twitter.finatra', 'finatra-scalap-compiler-deps_2.11'),

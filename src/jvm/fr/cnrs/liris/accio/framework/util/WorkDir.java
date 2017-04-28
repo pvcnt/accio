@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.agent.config;
+package fr.cnrs.liris.accio.framework.util;
 
 import com.google.inject.BindingAnnotation;
 

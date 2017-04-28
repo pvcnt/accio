@@ -10,6 +10,8 @@ scala_library(
     '3rdparty/jvm/com/twitter/inject:app',
   ],
   excludes = [
+    # Multiple logging frameworks.
+    exclude('commons-logging', 'commons-logging'),
     # common/reflect comes with its own Scala compiler library, we do not need the one provided by Finatra.
     exclude('com.twitter.finatra', 'finatra-scalap-compiler-deps_2.11'),
     # We already include canonical Thrift library, we do not need the one provided by Finagle.

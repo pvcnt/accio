@@ -32,7 +32,7 @@ import fr.cnrs.liris.accio.agent.config._
 import fr.cnrs.liris.accio.framework.filesystem.inject.FileSystemModule
 import fr.cnrs.liris.accio.framework.sdk.Operator
 import fr.cnrs.liris.accio.framework.service._
-import fr.cnrs.liris.accio.framework.util.WorkerPool
+import fr.cnrs.liris.accio.framework.util.{WorkDir, WorkerPool}
 import fr.cnrs.liris.accio.runtime.commandbus.Handler
 import fr.cnrs.liris.dal.core.io.{Decoder, StringCodec}
 import net.codingwell.scalaguice.ScalaMultibinder

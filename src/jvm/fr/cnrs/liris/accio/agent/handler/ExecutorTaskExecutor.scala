@@ -24,10 +24,10 @@ import com.google.common.io.ByteStreams
 import com.google.inject.{Inject, Singleton}
 import com.twitter.util._
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.agent.config.{ExecutorArgs, ExecutorUri, MasterRpcDest, WorkDir}
+import fr.cnrs.liris.accio.agent.config.{ExecutorArgs, ExecutorUri, MasterRpcDest}
 import fr.cnrs.liris.accio.framework.api.thrift.{InvalidTaskException, Task, TaskId}
 import fr.cnrs.liris.accio.framework.filesystem.FileSystem
-import fr.cnrs.liris.accio.framework.util.{ThreadLike, ThreadManager, WorkerPool}
+import fr.cnrs.liris.accio.framework.util.{ThreadLike, ThreadManager, WorkDir, WorkerPool}
 import fr.cnrs.liris.common.util.FileUtils
 
 import scala.collection.mutable
