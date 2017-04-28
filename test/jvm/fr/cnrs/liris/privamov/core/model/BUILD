@@ -1,9 +1,0 @@
-junit_tests(
-    name='model',
-    dependencies=[
-        'src/jvm/fr/cnrs/liris/privamov/core/model',
-        'test/jvm/fr/cnrs/liris/privamov/testing',
-        'test/jvm/fr/cnrs/liris/testing',
-    ],
-    sources=globs('*.scala'),
-)

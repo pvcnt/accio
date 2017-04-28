@@ -29,7 +29,6 @@ import fr.cnrs.liris.accio.framework.api.Input
 import fr.cnrs.liris.accio.framework.api.thrift._
 import fr.cnrs.liris.accio.framework.scheduler.{EventType, Scheduler}
 import fr.cnrs.liris.accio.framework.storage.Storage
-import fr.cnrs.liris.dal.core.api.Value
 
 /**
  * Wrapper around the actual scheduler, handling task creation.
@@ -89,7 +88,7 @@ final class SchedulerService @Inject()(scheduler: Scheduler, opRegistry: OpRegis
       maybeValue.map(value => portName -> value)
     }
     val cacheKey = generateCacheKey(opDef, inputs, run.seed)
-    OpPayload(node.op, run.seed, inputs, cacheKey)
+    OpPayload(opDef.className, run.seed, inputs, cacheKey)
   }
 
   /**

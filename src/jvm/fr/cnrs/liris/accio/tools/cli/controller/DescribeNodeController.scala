@@ -20,10 +20,10 @@ package fr.cnrs.liris.accio.tools.cli.controller
 
 import com.twitter.util.{Duration, Future, Time}
 import fr.cnrs.liris.accio.agent.{AgentService$FinagleClient, GetRunRequest}
+import fr.cnrs.liris.accio.framework.api.Values
 import fr.cnrs.liris.accio.framework.api.thrift._
 import fr.cnrs.liris.accio.runtime.event.Reporter
 import fr.cnrs.liris.common.util.StringUtils.padTo
-import fr.cnrs.liris.dal.core.api.Values
 
 class DescribeNodeController extends DescribeController[NodeState] with FormatHelper {
   private[this] val colWidth = 15

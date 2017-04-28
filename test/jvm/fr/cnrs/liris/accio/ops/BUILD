@@ -1,0 +1,10 @@
+junit_tests(
+    name='ops',
+    dependencies=[
+        'src/jvm/fr/cnrs/liris/accio/ops',
+        'test/jvm/fr/cnrs/liris/accio/ops/testing',
+        'test/jvm/fr/cnrs/liris/accio/testing',
+        'test/jvm/fr/cnrs/liris/testing',
+    ],
+    sources=globs('*.scala'),
+)

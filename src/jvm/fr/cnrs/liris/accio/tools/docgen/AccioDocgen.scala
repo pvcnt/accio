@@ -18,44 +18,32 @@
 
 package fr.cnrs.liris.accio.tools.docgen
 
-import java.nio.file.Path
+import java.nio.file.Paths
 
-import com.google.inject.Guice
+import com.twitter.inject.app.App
 import com.twitter.util.Stopwatch
-import fr.cnrs.liris.common.flags._
-import fr.cnrs.liris.privamov.ops.OpsModule
+import fr.cnrs.liris.accio.framework.discovery.OpDiscovery
+import fr.cnrs.liris.accio.framework.discovery.inject.DiscoveryModule
 
 object AccioDocgenMain extends AccioDocgen
-
-case class AccioDocgenFlags(
-  @Flag(name = "out", help = "File where to write generated documentation")
-  out: Path,
-  @Flag(name = "toc", help = "Whether to include a table of contents")
-  toc: Boolean = true,
-  @Flag(name = "layout")
-  layout: String = "docs")
 
 /**
  * Quick and dirty Markdown documentation generator for operators.
  */
-class AccioDocgen {
-  def main(args: Array[String]): Unit = {
+class AccioDocgen extends App {
+  private[this] val outFlag = flag[String]("out", "File where to write generated documentation")
+  private[this] val tocFlag = flag("toc", true, "Whether to include a table of contents")
+  private[this] val layoutFlag = flag("layout", "docs", "Layout name")
+
+  override def modules = Seq(DiscoveryModule)
+
+  override def run(): Unit = {
     val elapsed = Stopwatch.start()
-    val injector = Guice.createInjector(DocgenModule, OpsModule)
-    val parser = FlagsParser[AccioDocgenFlags](allowResidue = false)
-    parser.parseAndExitUponError(args)
-
-    val flags = try {
-      parser.as[AccioDocgenFlags]
-    } catch {
-      case e: Exception =>
-        Console.err.println(s"Error parsing command line: ${e.getMessage.stripPrefix("requirement failed: ")}")
-        Console.err.println("Try -help.")
-        sys.exit(1)
-    }
-
-    val docgen = injector.getInstance(classOf[MarkdownDocgen])
-    docgen.generate(flags)
+    val reader = injector.instance[OpDiscovery]
+    val ops = reader.discover.map(reader.read(_).defn)
+    println(s"Discovered ${ops.size} operators")
+    val docgen = injector.instance[MarkdownDocgen]
+    docgen.generate(ops, DocgenOpts(Paths.get(outFlag()), tocFlag(), layoutFlag()))
     println(s"Done in ${elapsed().inSeconds} seconds.")
   }
 }

@@ -20,9 +20,9 @@ package fr.cnrs.liris.accio.tools.cli.controller
 
 import com.twitter.util.{Future, Time}
 import fr.cnrs.liris.accio.agent.{AgentService$FinagleClient, GetWorkflowRequest}
+import fr.cnrs.liris.accio.framework.api.DataTypes
 import fr.cnrs.liris.accio.framework.api.thrift._
 import fr.cnrs.liris.accio.runtime.event.Reporter
-import fr.cnrs.liris.dal.core.api.DataTypes
 import fr.cnrs.liris.common.util.StringUtils.padTo
 
 class DescribeWorkflowController extends DescribeController[Workflow] with FormatHelper {

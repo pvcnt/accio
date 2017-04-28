@@ -22,7 +22,6 @@ import com.twitter.inject.app.App
 import com.twitter.util.Await
 import fr.cnrs.liris.accio.framework.api.thrift.TaskId
 import fr.cnrs.liris.accio.framework.filesystem.inject.FileSystemModule
-import fr.cnrs.liris.privamov.ops.OpsModule
 
 /**
  * Accio executor main method.
@@ -49,7 +48,7 @@ object AccioExecutorMain {
 class AccioExecutor extends App {
   override protected def failfastOnFlagsNotParsed = true
 
-  override protected def modules = Seq(ExecutorModule, FileSystemModule, OpsModule)
+  override protected def modules = Seq(ExecutorModule, FileSystemModule)
 
   override protected def run(): Unit = {
     require(args.length == 1, "You must provide a single task identifier as argument")

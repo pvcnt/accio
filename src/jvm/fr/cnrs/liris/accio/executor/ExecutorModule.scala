@@ -26,12 +26,8 @@ import com.twitter.finagle.Thrift
 import com.twitter.inject.{Injector, TwitterModule}
 import com.twitter.util.{ExecutorServiceFuturePool, FuturePool}
 import fr.cnrs.liris.accio.agent.{AgentService, AgentService$FinagleClient}
-import fr.cnrs.liris.accio.framework.service._
-import fr.cnrs.liris.accio.framework.sdk.Operator
+import fr.cnrs.liris.accio.framework.discovery.inject.DiscoveryModule
 import fr.cnrs.liris.accio.framework.util.WorkerPool
-import fr.cnrs.liris.dal.core.io.{Decoder, Encoder, StringCodec}
-import fr.cnrs.liris.dal.core.sparkle.SparkleEnv
-import net.codingwell.scalaguice.ScalaMultibinder
 
 /**
  * Guice module providing executor-specific bindings.
@@ -39,22 +35,7 @@ import net.codingwell.scalaguice.ScalaMultibinder
 object ExecutorModule extends TwitterModule {
   private[this] val addrFlag = flag[String]("addr", "Address of the Accio worker")
 
-  override protected def configure(): Unit = {
-    // Create an empty set of operators, in case nothing else is bound.
-    ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Class[_ <: Operator[_, _]]] {})
-
-    // Default encoders.
-    val encoders = ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Encoder[_]] {})
-    encoders.addBinding.toInstance(new StringCodec)
-
-    // Default decoders.
-    val decoders = ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Decoder[_]] {})
-    decoders.addBinding.toInstance(new StringCodec)
-
-    // Bind remaining implementations.
-    bind[OpMetaReader].to[ReflectOpMetaReader]
-    bind[OpRegistry].to[RuntimeOpRegistry]
-  }
+  override def modules = Seq(DiscoveryModule)
 
   @Singleton
   @Provides
@@ -83,13 +64,5 @@ object ExecutorModule extends TwitterModule {
     injector.instance[FuturePool, WorkerPool] match {
       case p: ExecutorServiceFuturePool => p.executor.shutdownNow()
     }
-  }
-
-  @Provides
-  @Singleton
-  def providesSparkleEnv: SparkleEnv = {
-    // Create a Sparkle environment using the numProcs' flag to limit parallelism.
-    // It is a poor-man's way to isolate an executor in terms of CPU usage.
-    new SparkleEnv(math.max(1, com.twitter.jvm.numProcs().round.toInt))
   }
 }

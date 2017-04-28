@@ -18,8 +18,8 @@
 
 package fr.cnrs.liris.accio.framework.storage
 
-import fr.cnrs.liris.accio.framework.api.thrift
-import fr.cnrs.liris.dal.core.api.{AtomicType, DataType, Values}
+import fr.cnrs.liris.accio.framework.api.thrift.{AtomicType, DataType}
+import fr.cnrs.liris.accio.framework.api.{Values, thrift}
 
 /**
  * Common unit tests for all [[MutableWorkflowRepository]] implementations, ensuring they all have consistent behavior.

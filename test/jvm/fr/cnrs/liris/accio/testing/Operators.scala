@@ -18,8 +18,8 @@
 
 package fr.cnrs.liris.accio.testing
 
+import fr.cnrs.liris.accio.framework.api.Values
 import fr.cnrs.liris.accio.framework.api.thrift._
-import fr.cnrs.liris.dal.core.api.{AtomicType, DataType, Values}
 
 /**
  * Static definition of operators to be used in tests.
@@ -53,6 +53,7 @@ private[accio] object Operators {
   private def createOpDef(name: String, inputs: Seq[ArgDef], outputs: Seq[ArgDef]) = {
     OpDef(
       name = name,
+      className = s"fr.cnrs.liris.accio.ops.${name}Op",
       category = "misc",
       help = None,
       description = None,

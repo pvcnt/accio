@@ -20,14 +20,13 @@ package fr.cnrs.liris.accio.framework.service
 
 import java.nio.file.{Files, Path, Paths}
 
-import com.google.inject.{Guice, TypeLiteral}
+import fr.cnrs.liris.accio.framework.api.Values
 import fr.cnrs.liris.accio.framework.api.thrift._
+import fr.cnrs.liris.accio.framework.discovery.reflect.ReflectOpDiscovery
 import fr.cnrs.liris.accio.framework.filesystem.FileSystem
 import fr.cnrs.liris.accio.framework.sdk._
 import fr.cnrs.liris.common.util.FileUtils
-import fr.cnrs.liris.dal.core.api.{Dataset, Values}
 import fr.cnrs.liris.testing.UnitSpec
-import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 
 import scala.collection.mutable
@@ -43,10 +42,7 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
   override protected def beforeAll(): Unit = {
     super.beforeAll()
     tmpDir = Files.createTempDirectory("accio-test-")
-    val injector = Guice.createInjector(MyOperatorsModule)
-    val opRegistry = injector.getInstance(classOf[RuntimeOpRegistry])
-    val opFactory = new OpFactory(opRegistry, injector)
-    executor = new OpExecutor(opRegistry, opFactory, filesystem)
+    executor = new OpExecutor(new ReflectOpDiscovery, filesystem)
     executor.setWorkDir(tmpDir)
   }
 
@@ -65,16 +61,16 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
   behavior of "OpExecutor"
 
   it should "execute operators and return artifacts" in {
-    var payload = OpPayload("Simple", 123, Map("str" -> Values.encodeString("foo")), CacheKey("MyCacheKey"))
-    var res = executor.execute(payload, OpExecutorOpts(false))
+    var payload = OpPayload(classOf[SimpleOp].getName, 123, Map("str" -> Values.encodeString("foo")), CacheKey("MyCacheKey"))
+    var res = executor.execute(payload, OpExecutorOpts(useProfiler = false))
     res.artifacts should have size 2
     res.exitCode shouldBe 0
     res.error shouldBe None
     res.artifacts should contain(Artifact("str", Values.encodeString("foo+0")))
     res.artifacts should contain(Artifact("b", Values.encodeBoolean(false)))
 
-    payload = OpPayload("Simple", 123, Map("str" -> Values.encodeString("bar"), "i" -> Values.encodeInteger(3)), CacheKey("MyCacheKey"))
-    res = executor.execute(payload, OpExecutorOpts(false))
+    payload = OpPayload(classOf[SimpleOp].getName, 123, Map("str" -> Values.encodeString("bar"), "i" -> Values.encodeInteger(3)), CacheKey("MyCacheKey"))
+    res = executor.execute(payload, OpExecutorOpts(useProfiler = false))
     res.artifacts should have size 2
     res.exitCode shouldBe 0
     res.error shouldBe None
@@ -83,8 +79,8 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
   }
 
   it should "execute operators with no input" in {
-    val payload = OpPayload("NoInput", 123, Map.empty, CacheKey("MyCacheKey"))
-    val res = executor.execute(payload, OpExecutorOpts(false))
+    val payload = OpPayload(classOf[NoInputOp].getName, 123, Map.empty, CacheKey("MyCacheKey"))
+    val res = executor.execute(payload, OpExecutorOpts(useProfiler = false))
     res.artifacts should have size 1
     res.exitCode shouldBe 0
     res.error shouldBe None
@@ -92,33 +88,33 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
   }
 
   it should "execute operators with no output" in {
-    val payload = OpPayload("NoOutput", 123, Map("s" -> Values.encodeString("foo")), CacheKey("MyCacheKey"))
-    val res = executor.execute(payload, OpExecutorOpts(false))
+    val payload = OpPayload(classOf[NoOutputOp].getName, 123, Map("s" -> Values.encodeString("foo")), CacheKey("MyCacheKey"))
+    val res = executor.execute(payload, OpExecutorOpts(useProfiler = false))
     res.artifacts should have size 0
     res.exitCode shouldBe 0
     res.error shouldBe None
   }
 
   it should "detect a missing input" in {
-    val payload = OpPayload("Simple", 123, Map.empty, CacheKey("MyCacheKey"))
+    val payload = OpPayload(classOf[SimpleOp].getName, 123, Map.empty, CacheKey("MyCacheKey"))
     val e = intercept[MissingOpInputException] {
-      executor.execute(payload, OpExecutorOpts(false))
+      executor.execute(payload, OpExecutorOpts(useProfiler = false))
     }
     e.op shouldBe "Simple"
     e.arg shouldBe "str"
   }
 
   it should "detect an unknown operator" in {
-    val payload = OpPayload("Unknown", 123, Map.empty, CacheKey("MyCacheKey"))
-    val e = intercept[UnknownOpException] {
-      executor.execute(payload, OpExecutorOpts(false))
+    val payload = OpPayload("fr.cnrs.liris.accio.ops.UnknownOp", 123, Map.empty, CacheKey("MyCacheKey"))
+    val e = intercept[InvalidOpException] {
+      executor.execute(payload, OpExecutorOpts(useProfiler = false))
     }
-    e.op shouldBe "Unknown"
+    e.op shouldBe "fr.cnrs.liris.accio.ops.UnknownOp"
   }
 
   it should "catch exceptions thrown by the operator" in {
-    val payload = OpPayload("Exceptional", 123, Map("str" -> Values.encodeString("foo")), CacheKey("MyCacheKey"))
-    val res = executor.execute(payload, OpExecutorOpts(false))
+    val payload = OpPayload(classOf[ExceptionalOp].getName, 123, Map("str" -> Values.encodeString("foo")), CacheKey("MyCacheKey"))
+    val res = executor.execute(payload, OpExecutorOpts(useProfiler = false))
     res.artifacts should have size 0
     res.exitCode shouldNot be(0)
     res.error.isDefined shouldBe true
@@ -127,8 +123,8 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
   }
 
   it should "give a seed to unstable operators" in {
-    val payload = OpPayload("Unstable", 123, Map.empty, CacheKey("MyCacheKey"))
-    val res = executor.execute(payload, OpExecutorOpts(false))
+    val payload = OpPayload(classOf[UnstableOp].getName, 123, Map.empty, CacheKey("MyCacheKey"))
+    val res = executor.execute(payload, OpExecutorOpts(useProfiler = false))
     res.artifacts should have size 1
     res.exitCode shouldBe 0
     res.error shouldBe None
@@ -136,8 +132,8 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
   }
 
   it should "not give a seed to non-unstable operators" in {
-    val payload = OpPayload("InvalidUnstable", 123, Map.empty, CacheKey("MyCacheKey"))
-    val res = executor.execute(payload, OpExecutorOpts(false))
+    val payload = OpPayload(classOf[InvalidUnstableOp].getName, 123, Map.empty, CacheKey("MyCacheKey"))
+    val res = executor.execute(payload, OpExecutorOpts(useProfiler = false))
     res.artifacts should have size 0
     res.exitCode shouldNot be(0)
     res.error.isDefined shouldBe true
@@ -146,8 +142,8 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
   }
 
   it should "upload artifacts" in {
-    val payload = OpPayload("DatasetProducer", 123, Map.empty, CacheKey("MyCacheKey"))
-    val res = executor.execute(payload, OpExecutorOpts(false))
+    val payload = OpPayload(classOf[DatasetProducerOp].getName, 123, Map.empty, CacheKey("MyCacheKey"))
+    val res = executor.execute(payload, OpExecutorOpts(useProfiler = false))
     res.artifacts should have size 1
     res.exitCode shouldBe 0
     res.error shouldBe None
@@ -159,9 +155,9 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
   }
 
   it should "download inputs" in {
-    val payload = OpPayload("DatasetConsumer", 123, Map("data" -> Values.encodeDataset(Dataset(s"/mock/data"))), CacheKey("MyCacheKey"))
+    val payload = OpPayload(classOf[DatasetConsumerOp].getName, 123, Map("data" -> Values.encodeDataset(Dataset(s"/mock/data"))), CacheKey("MyCacheKey"))
     filesystem.write(Paths.get("/dev/null"), "data")
-    val res = executor.execute(payload, OpExecutorOpts(false))
+    val res = executor.execute(payload, OpExecutorOpts(useProfiler = false))
     res.artifacts should have size 1
     res.exitCode shouldBe 0
     res.error shouldBe None
@@ -169,19 +165,18 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
   }
 }
 
-private object MyOperatorsModule extends ScalaModule {
-  override def configure(): Unit = {
-    bind[OpMetaReader].to[ReflectOpMetaReader]
-    val ops = ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Class[_ <: Operator[_, _]]] {})
-    ops.addBinding.toInstance(classOf[SimpleOp])
-    ops.addBinding.toInstance(classOf[UnstableOp])
-    ops.addBinding.toInstance(classOf[InvalidUnstableOp])
-    ops.addBinding.toInstance(classOf[ExceptionalOp])
-    ops.addBinding.toInstance(classOf[NoInputOp])
-    ops.addBinding.toInstance(classOf[NoOutputOp])
-    ops.addBinding.toInstance(classOf[DatasetProducerOp])
-    ops.addBinding.toInstance(classOf[DatasetConsumerOp])
-  }
+case class NoOutputIn(@Arg s: String)
+
+@Op
+class NoOutputOp extends Operator[NoOutputIn, Unit] {
+  override def execute(in: NoOutputIn, ctx: OpContext): Unit = {}
+}
+
+case class NoInputOut(@Arg s: String)
+
+@Op
+class NoInputOp extends Operator[Unit, NoInputOut] {
+  override def execute(in: Unit, ctx: OpContext): NoInputOut = NoInputOut("foo")
 }
 
 case class SimpleOpIn(@Arg str: String, @Arg i: Option[Int])

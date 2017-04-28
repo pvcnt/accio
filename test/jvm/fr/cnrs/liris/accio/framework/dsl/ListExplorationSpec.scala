@@ -18,7 +18,8 @@
 
 package fr.cnrs.liris.accio.framework.dsl
 
-import fr.cnrs.liris.dal.core.api.{AtomicType, DataType, Values}
+import fr.cnrs.liris.accio.framework.api.Values
+import fr.cnrs.liris.accio.framework.api.thrift.{AtomicType, DataType}
 import fr.cnrs.liris.testing.UnitSpec
 
 /**

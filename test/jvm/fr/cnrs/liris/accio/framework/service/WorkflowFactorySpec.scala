@@ -18,10 +18,9 @@
 
 package fr.cnrs.liris.accio.framework.service
 
+import fr.cnrs.liris.accio.framework.api.{Values, thrift}
 import fr.cnrs.liris.accio.framework.api.thrift.{InvalidSpecException, InvalidSpecMessage}
-import fr.cnrs.liris.accio.framework.api.thrift
 import fr.cnrs.liris.accio.testing.Operators
-import fr.cnrs.liris.dal.core.api.{AtomicType, DataType, Values}
 import fr.cnrs.liris.testing.UnitSpec
 
 /**
@@ -31,7 +30,7 @@ class WorkflowFactorySpec extends UnitSpec {
   private[this] val factory = {
     val opRegistry = new StaticOpRegistry(Operators.ops)
     val graphFactory = new GraphFactory(opRegistry)
-    new WorkflowFactory(graphFactory, opRegistry, new ValueValidator)
+    new WorkflowFactory(graphFactory, opRegistry)
   }
 
   behavior of "thrift.WorkflowFactory"
@@ -54,16 +53,16 @@ class WorkflowFactorySpec extends UnitSpec {
   it should "create a workflow with params" in {
     val workflow = factory.create(Workflows.workflow2, thrift.User("me"))
     workflow.params should contain theSameElementsAs Set(
-      thrift.ArgDef("foo", DataType(AtomicType.Integer)),
-      thrift.ArgDef("bar", DataType(AtomicType.Double)))
+      thrift.ArgDef("foo", thrift.DataType(thrift.AtomicType.Integer)),
+      thrift.ArgDef("bar", thrift.DataType(thrift.AtomicType.Double)))
   }
 
   it should "create a workflow with optional params" in {
     val workflow = factory.create(Workflows.workflow3, thrift.User("me"))
     workflow.params should contain theSameElementsAs Set(
-      thrift.ArgDef("foo", DataType(AtomicType.Integer), isOptional = true, defaultValue = Some(Values.encodeInteger(42))),
-      thrift.ArgDef("bar", DataType(AtomicType.Double)),
-      thrift.ArgDef("string", DataType(AtomicType.String), isOptional = true))
+      thrift.ArgDef("foo", thrift.DataType(thrift.AtomicType.Integer), isOptional = true, defaultValue = Some(Values.encodeInteger(42))),
+      thrift.ArgDef("bar", thrift.DataType(thrift.AtomicType.Double)),
+      thrift.ArgDef("string", thrift.DataType(thrift.AtomicType.String), isOptional = true))
   }
 
   it should "detect an invalid identifier" in {
@@ -93,14 +92,6 @@ class WorkflowFactorySpec extends UnitSpec {
     assertErrors(
       Workflows.undeclaredParamWorkflow,
       InvalidSpecMessage("Param is not declared", Some("params.foo")))
-  }
-
-  it should "detect a param with invalid default value" in {
-    // We only check a specific case here, to verify this is actually validated.
-    // We otherwise rely on ValueValidatorSpec to test all edge cases.
-    assertErrors(
-      Workflows.invalidDefaultValueWorkflow,
-      InvalidSpecMessage("Value must be <= 2000.0", Some("params.foo.default_value")))
   }
 
   private def assertErrors(spec: thrift.Workflow, errors: InvalidSpecMessage*) = {
@@ -136,8 +127,8 @@ object Workflows {
     id = thrift.WorkflowId("workflow2"),
     isActive = true,
     params = Set(
-      thrift.ArgDef("foo", DataType(AtomicType.Integer)),
-      thrift.ArgDef("bar", DataType(AtomicType.Double))
+      thrift.ArgDef("foo", thrift.DataType(thrift.AtomicType.Integer)),
+      thrift.ArgDef("bar", thrift.DataType(thrift.AtomicType.Double))
     ),
     graph = thrift.Graph(Set(
       thrift.Node(
@@ -155,9 +146,9 @@ object Workflows {
     id = thrift.WorkflowId("workflow3"),
     isActive = true,
     params = Set(
-      thrift.ArgDef("foo", DataType(AtomicType.Integer), defaultValue = Some(Values.encodeInteger(42))),
-      thrift.ArgDef("bar", DataType(AtomicType.Double)),
-      thrift.ArgDef("string", DataType(AtomicType.String))
+      thrift.ArgDef("foo", thrift.DataType(thrift.AtomicType.Integer), defaultValue = Some(Values.encodeInteger(42))),
+      thrift.ArgDef("bar", thrift.DataType(thrift.AtomicType.Double)),
+      thrift.ArgDef("string", thrift.DataType(thrift.AtomicType.String))
     ),
     graph = thrift.Graph(Set(
       thrift.Node(
@@ -176,7 +167,7 @@ object Workflows {
     id = thrift.WorkflowId("invalid_workflow"),
     isActive = true,
     params = Set(
-      thrift.ArgDef("foo/foo", DataType(AtomicType.Integer))
+      thrift.ArgDef("foo/foo", thrift.DataType(thrift.AtomicType.Integer))
     ),
     graph = thrift.Graph(Set(
       thrift.Node(
@@ -187,7 +178,7 @@ object Workflows {
   val invalidParamTypeWorkflow = thrift.Workflow(
     id = thrift.WorkflowId("invalid_workflow"),
     isActive = true,
-    params = Set(thrift.ArgDef("foo", DataType(AtomicType.String))),
+    params = Set(thrift.ArgDef("foo", thrift.DataType(thrift.AtomicType.String))),
     graph = thrift.Graph(Set(
       thrift.Node(
         op = "FirstSimple",
@@ -197,7 +188,7 @@ object Workflows {
   val invalidDefaultValueWorkflow = thrift.Workflow(
     id = thrift.WorkflowId("invalid_workflow"),
     isActive = true,
-    params = Set(thrift.ArgDef("foo", DataType(AtomicType.Integer), defaultValue = Some(Values.encodeInteger(15008)))),
+    params = Set(thrift.ArgDef("foo", thrift.DataType(thrift.AtomicType.Integer), defaultValue = Some(Values.encodeInteger(15008)))),
     graph = thrift.Graph(Set(
       thrift.Node(
         op = "FirstSimple",
@@ -216,7 +207,7 @@ object Workflows {
   val heterogeneousWorkflow = thrift.Workflow(
     id = thrift.WorkflowId("invalid_workflow"),
     isActive = true,
-    params = Set(thrift.ArgDef("foo", DataType(AtomicType.Integer))),
+    params = Set(thrift.ArgDef("foo", thrift.DataType(thrift.AtomicType.Integer))),
     graph = thrift.Graph(Set(
       thrift.Node(
         op = "FirstSimple",

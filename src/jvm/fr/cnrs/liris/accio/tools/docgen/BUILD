@@ -1,11 +1,9 @@
 scala_library(
   name='docgen',
   dependencies=[
-    'src/jvm/fr/cnrs/liris/accio/framework/sdk',
-    'src/jvm/fr/cnrs/liris/accio/framework/service',
-    'src/jvm/fr/cnrs/liris/privamov/ops',
-    'src/jvm/fr/cnrs/liris/common/flags',
-    '3rdparty/jvm:scala-guice',
+    'src/jvm/fr/cnrs/liris/accio/framework/discovery/inject',
+    scoped('src/jvm/fr/cnrs/liris/accio/ops', 'runtime'),
+    '3rdparty/jvm/com/twitter/inject:app',
   ],
   excludes = [
     exclude(org='com.twitter.finatra', name='finatra-scalap-compiler-deps_2.11')

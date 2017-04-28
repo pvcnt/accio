@@ -18,17 +18,15 @@
 
 package fr.cnrs.liris.accio.agent
 
-import com.google.inject.{Module, Provides, Singleton, TypeLiteral}
+import com.google.inject.{Provides, Singleton, TypeLiteral}
 import com.twitter.finagle.Thrift
-import com.twitter.finagle.service._
 import com.twitter.inject.{Injector, TwitterModule}
-import com.twitter.util.{Duration, FuturePool}
-import fr.cnrs.liris.accio.runtime.commandbus.Handler
+import com.twitter.util.FuturePool
 import fr.cnrs.liris.accio.agent.config._
 import fr.cnrs.liris.accio.agent.handler._
 import fr.cnrs.liris.accio.framework.api.thrift.Resource
 import fr.cnrs.liris.accio.framework.filesystem.inject.FileSystemModule
-import fr.cnrs.liris.privamov.ops.OpsModule
+import fr.cnrs.liris.accio.runtime.commandbus.Handler
 import net.codingwell.scalaguice.ScalaMultibinder
 
 /**
@@ -37,7 +35,7 @@ import net.codingwell.scalaguice.ScalaMultibinder
 object AgentWorkerModule extends TwitterModule {
   private[this] val executorUriFlag = flag[String]("executor_uri", "URI to the executor JAR")
 
-  override def modules = Seq(FileSystemModule, OpsModule)
+  override def modules = Seq(FileSystemModule)
 
   override def configure(): Unit = {
     // Bind command handlers.

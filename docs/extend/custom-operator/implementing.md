@@ -11,7 +11,7 @@ More advanced topics are covered in other pages of this section.
 {:toc}
 
 ## 1. Create a new operator class
-As of now, all operators are implemented inside the `src/jvm/fr/cnrs/liris/privamov/ops` module.
+As of now, all operators are implemented inside the `src/jvm/fr/cnrs/liris/accio/ops` module.
 You may decide to create a new module for a new operator or new family of operators, or stick inside this module.
 The first step is to decide a name for your operator and create a new class for its implementation.
 By convention, all operators' names finish with the "Op" suffix (that is later automatically removed from its actual name).
@@ -106,9 +106,7 @@ You have access to an execution context, which gives you access to the following
 
   * `workDir`: Path to a directory where you can safely write data.
   This directory is a temporary directory, that will be deleted once the operator is completed.
-  * `env`: A [Sparkle](sparkle.html) environment, allowing you to process large amounts of data efficiently.
   * `seed`: A "random" 64 bits integer, can can be used in [unstable operators](cookbook.html#working-with-randomness).
-  * `read` and `write`: Helpers methods to read and write datasets in the working directory, in conjunction with Sparkle.
 
 **You do not have to care about transferring artifacts**.
 Indeed, some artifacts are references to some binary content (e.g., datasets).
@@ -119,25 +117,9 @@ However, you usually do not even have to care about this, because the `read` and
 
 You have to be careful to stay within requested resources.
 You are guaranteed to have the number of CPU cores and the amount of RAM and storage you requested; you may have more, but maybe not.
-It is the developper's job to guarantee that memory will not be exceeded and the content written will not overflow the disk.
+It is the developer's job to guarantee that memory will not be exceeded and the content written will not overflow the disk.
 It can be tempting to request more than actually needed; however, the whole point of Accio is allow to run experiments in parallel on a cluster, which is not possible if all operators consume the entire resources of a machine while they do not need them.
 
 ## 5. Register your operator
-All operators are registered in the `fr.cnrs.liris.privamov.ops.OpsModule` class, through the [Guice](https://github.com/google/guice) framework.
-Operators are registered by their class name (not an instance of them).
-You simply need to add a new line to register your operator.
-
-```scala
-import com.google.inject.TypeLiteral
-import fr.cnrs.liris.accio.framework.sdk.Operator
-import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
-
-object OpsModule extends ScalaModule {
-  override def configure(): Unit = {
-    val ops = ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Class[_ <: Operator[_, _]]] {})
-    // Many other operators registrations.
-    // Here goes our new operator.
-    ops.addBinding.toInstance(classOf[MultiplyOp])
-  }
-}
-```
+All operators are automatically discovered as long as they implement the `Operator` interface and they are in the JVM classpath.
+You have nothing else to do to register it to Accio.

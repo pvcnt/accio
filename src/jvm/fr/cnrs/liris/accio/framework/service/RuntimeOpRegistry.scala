@@ -19,28 +19,22 @@
 package fr.cnrs.liris.accio.framework.service
 
 import com.google.inject.{Inject, Singleton}
-import fr.cnrs.liris.accio.framework.sdk.Operator
 import fr.cnrs.liris.accio.framework.api.thrift.OpDef
+import fr.cnrs.liris.accio.framework.discovery.OpDiscovery
 
 /**
- * Registry extracting operator definitions from implementation classes. It also provides runtime information such
- * as classes implementing these operators.
+ * Registry extracting operator definitions from implementation classes.
  *
- * @param reader  Operator metadata reader.
- * @param classes Classes containing operator implementations.
+ * @param opDiscovery Operator discovery.
  */
 @Singleton
-class RuntimeOpRegistry @Inject()(reader: OpMetaReader, classes: Set[Class[_ <: Operator[_, _]]]) extends OpRegistry {
+class RuntimeOpRegistry @Inject()(opDiscovery: OpDiscovery) extends OpRegistry {
   // This field is declared as lazy because it can throw errors and we do not want them to be thrown while
   // Guice is injecting dependencies.
-  private[this] lazy val index = classes.map { clazz =>
-    val meta = reader.read(clazz)
+  private[this] lazy val index = opDiscovery.discover.map { clazz =>
+    val meta = opDiscovery.read(clazz)
     meta.defn.name -> meta
   }.toMap
-
-  def getMeta(name: String): Option[OpMeta] = index.get(name)
-
-  def meta(name: String): OpMeta = index(name)
 
   override def ops: Set[OpDef] = index.values.map(_.defn).toSet
 

@@ -21,20 +21,19 @@ package fr.cnrs.liris.accio.agent
 import com.google.inject.TypeLiteral
 import com.twitter.inject.{Injector, TwitterModule}
 import com.twitter.util.FuturePool
-import fr.cnrs.liris.accio.runtime.commandbus.Handler
 import fr.cnrs.liris.accio.agent.handler._
 import fr.cnrs.liris.accio.agent.handler.api._
 import fr.cnrs.liris.accio.framework.dsl.inject.DslModule
 import fr.cnrs.liris.accio.framework.scheduler.inject.SchedulerModule
 import fr.cnrs.liris.accio.framework.storage.inject.StorageModule
-import fr.cnrs.liris.privamov.ops.OpsModule
+import fr.cnrs.liris.accio.runtime.commandbus.Handler
 import net.codingwell.scalaguice.ScalaMultibinder
 
 /**
  * Guice module provisioning services for the Accio agent.
  */
 object AgentMasterModule extends TwitterModule {
-  override def modules = Seq(SchedulerModule, StorageModule, DslModule, OpsModule)
+  override def modules = Seq(SchedulerModule, StorageModule, DslModule)
 
   override def configure(): Unit = {
     // Bind command handlers.

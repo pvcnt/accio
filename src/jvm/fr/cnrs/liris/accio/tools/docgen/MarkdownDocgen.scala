@@ -18,29 +18,27 @@
 
 package fr.cnrs.liris.accio.tools.docgen
 
-import java.io.{BufferedOutputStream, FileOutputStream, OutputStream, PrintStream}
-import java.nio.file.Files
+import java.io.{BufferedOutputStream, FileOutputStream, PrintStream}
+import java.nio.file.{Files, Path}
 
-import com.google.inject.Inject
 import fr.cnrs.liris.accio.framework.api.thrift.OpDef
-import fr.cnrs.liris.accio.framework.service.OpRegistry
-import fr.cnrs.liris.dal.core.api.{DataTypes, Values}
+import fr.cnrs.liris.accio.framework.api.{DataTypes, Values}
+
+case class DocgenOpts(out: Path, toc: Boolean, layout: String)
 
 /**
  * Generate documentation for all operators known to a registry in Markdown format.
- *
- * @param opRegistry Operator registry.
  */
-class MarkdownDocgen @Inject()(opRegistry: OpRegistry) {
+class MarkdownDocgen {
   /**
    * Generate documentation w.r.t. given options.
    *
+   * @param ops   Operator definitions.
    * @param flags Generator options.
    */
-  def generate(flags: AccioDocgenFlags): Unit = {
+  def generate(ops: Set[OpDef], flags: DocgenOpts): Unit = {
     Files.createDirectories(flags.out)
-    opRegistry
-      .ops
+    ops
       .groupBy(_.category)
       .toSeq
       .sortBy(_._1)
@@ -49,16 +47,14 @@ class MarkdownDocgen @Inject()(opRegistry: OpRegistry) {
         val out = new PrintStream(new BufferedOutputStream(new FileOutputStream(flags.out.resolve(s"ops-$category.md").toFile)))
         try {
           writeIntro(out, flags, category, 50 + idx)
-          ops.toSeq.sortBy(_.name).foreach { opMeta =>
-            writeOp(out, opMeta)
-          }
+          ops.toSeq.sortBy(_.name).foreach(opDef => writeOp(out, opDef))
         } finally {
           out.close()
         }
       }
   }
 
-  private def writeIntro(out: PrintStream, flags: AccioDocgenFlags, category: String, weight: Int) = {
+  private def writeIntro(out: PrintStream, flags: DocgenOpts, category: String, weight: Int) = {
     out.println("---")
     out.println(s"layout: ${flags.layout}")
     out.println(s"""title: "Operators: ${category.capitalize}"""")

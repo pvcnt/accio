@@ -2,11 +2,12 @@ scala_library(
   dependencies=[
     'src/jvm/fr/cnrs/liris/accio/framework/api',
     'src/jvm/fr/cnrs/liris/accio/framework/service',
+    'src/jvm/fr/cnrs/liris/accio/framework/discovery/inject',
     'src/jvm/fr/cnrs/liris/accio/framework/filesystem/inject',
     'src/jvm/fr/cnrs/liris/accio/framework/util',
     'src/jvm/fr/cnrs/liris/accio/framework/util:annotations',
     'src/thrift/fr/cnrs/liris/accio/agent',
-    'src/jvm/fr/cnrs/liris/privamov/ops',
+    scoped('src/jvm/fr/cnrs/liris/accio/ops', 'runtime'),
     '3rdparty/jvm/com/twitter/inject:app',
   ],
   excludes = [

@@ -1,0 +1,10 @@
+scala_library(
+  dependencies=[
+    'src/jvm/fr/cnrs/liris/common/random',
+    'src/jvm/fr/cnrs/liris/common/util',
+    '3rdparty/jvm/com/typesafe/scala-logging',
+    '3rdparty/jvm/com/google/guava',
+    '3rdparty/jvm/org/scalanlp:breeze',
+  ],
+  sources=globs('*.scala')
+)

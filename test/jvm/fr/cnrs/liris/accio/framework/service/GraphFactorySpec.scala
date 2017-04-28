@@ -18,10 +18,9 @@
 
 package fr.cnrs.liris.accio.framework.service
 
-import fr.cnrs.liris.accio.framework.api.thrift
+import fr.cnrs.liris.accio.framework.api.{Values, thrift}
 import fr.cnrs.liris.accio.framework.api.thrift.{InvalidSpecException, InvalidSpecMessage}
 import fr.cnrs.liris.accio.testing.Operators
-import fr.cnrs.liris.dal.core.api.Values
 import fr.cnrs.liris.testing.UnitSpec
 
 import scala.collection.mutable

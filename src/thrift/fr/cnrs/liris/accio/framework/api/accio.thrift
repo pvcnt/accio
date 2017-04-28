@@ -18,8 +18,6 @@
 
 namespace java fr.cnrs.liris.accio.framework.api.thrift
 
-include "fr/cnrs/liris/dal/core/api/dal.thrift"
-
 typedef i64 Timestamp
 
 struct WorkflowId {
@@ -63,12 +61,45 @@ struct CacheKey {
   5: required set<string> tags;
 }*/
 
+enum AtomicType {
+  BYTE,
+  INTEGER,
+  LONG,
+  DOUBLE,
+  STRING,
+  BOOLEAN,
+  LOCATION,
+  TIMESTAMP,
+  DURATION,
+  DISTANCE,
+  DATASET,
+  LIST,
+  SET,
+  MAP,
+}
+
+struct DataType {
+  1: required AtomicType base;
+  2: required list<AtomicType> args;
+}
+
+struct Value {
+  1: required DataType kind;
+  2: list<string> strings;
+  3: list<i64> longs;
+  4: list<double> doubles;
+  5: list<i32> integers;
+  6: list<bool> booleans;
+  7: list<byte> bytes;
+  8: required i32 size = 1;
+}
+
 struct Artifact {
   // Artifact name.
   1: required string name;
 
   // Value, that should be consistent with above data type.
-  2: required dal.Value value;
+  2: required Value value;
 }
 
 struct Metric {
@@ -138,7 +169,7 @@ struct ArgDef {
   1: required string name;
 
   // Data type.
-  2: required dal.DataType kind;
+  2: required DataType kind;
 
   // One-line help text.
   3: optional string help;
@@ -147,7 +178,7 @@ struct ArgDef {
   4: required bool is_optional = false;
 
   // Default value taken by this input if none is specified. It should be empty for output ports.
-  5: optional dal.Value default_value;
+  5: optional Value default_value;
 
   6: optional ArgConstraint constraint;
 }
@@ -161,6 +192,9 @@ struct OpDef {
 
   // Category. Only used for presentational purposes.
   2: required string category;
+
+  // Name of the class implementing this operator.
+  10: required string class_name;
 
   // One-line help text.
   3: optional string help;
@@ -199,7 +233,7 @@ struct OpPayload {
   2: required i64 seed;
 
   // Mapping between a port name and its value. It should contain at least required inputs.
-  3: required map<string, dal.Value> inputs;
+  3: required map<string, Value> inputs;
 
   // Cache key associated with this payload, used for further memoization.
   4: required CacheKey cache_key;
@@ -351,7 +385,7 @@ struct Run {
   9: required i64 seed;
 
   // Values of workflow parameters.
-  10: required map<string, dal.Value> params;
+  10: required map<string, Value> params;
 
   // Identifier of the run this instance is a child of.
   11: optional RunId parent;
@@ -395,7 +429,7 @@ struct RunSpec {
 
   // Values of workflow parameters. There can possibly be many values for a single parameter, which will cause a
   // parameter sweep to be executed.
-  7: required map<string, list<dal.Value>> params;
+  7: required map<string, list<Value>> params;
 
   // Number of times to repeat each run.
   8: optional i32 repeat;
@@ -407,7 +441,7 @@ struct RunSpec {
 union Input {
   1: string param;
   2: Reference reference;
-  3: dal.Value value;
+  3: Value value;
 }
 
 struct Node {

@@ -1,0 +1,10 @@
+scala_library(
+  dependencies=[
+    'src/jvm/fr/cnrs/liris/accio/ops/model',
+    'src/jvm/fr/cnrs/liris/accio/ops/sparkle',
+    'src/jvm/fr/cnrs/liris/common/util',
+    'src/jvm/fr/cnrs/liris/common/geo',
+    '3rdparty/jvm/com/twitter/inject:core',
+  ],
+  sources=globs('*.scala')
+)

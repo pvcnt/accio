@@ -1,7 +1,4 @@
 scala_library(
-  dependencies=[
-    'src/jvm/fr/cnrs/liris/dal/core/api',
-  ],
   sources=globs('*.scala')
 )
 

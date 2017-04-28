@@ -20,8 +20,8 @@ package fr.cnrs.liris.accio.framework.storage
 
 import java.util.UUID
 
+import fr.cnrs.liris.accio.framework.api.Values
 import fr.cnrs.liris.accio.framework.api.thrift._
-import fr.cnrs.liris.dal.core.api.Values
 
 import scala.collection.Map
 

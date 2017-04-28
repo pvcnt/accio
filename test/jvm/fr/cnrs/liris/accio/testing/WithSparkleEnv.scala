@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.testing
 
-import fr.cnrs.liris.dal.core.sparkle.SparkleEnv
+import fr.cnrs.liris.accio.ops.sparkle.SparkleEnv
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterEach, FlatSpec}
 
 trait WithSparkleEnv extends FlatSpec with BeforeAndAfterEach {

@@ -1,9 +1,10 @@
 scala_library(
   dependencies=[
-    'src/jvm/fr/cnrs/liris/dal/core/api',
+    'src/jvm/fr/cnrs/liris/accio/framework/sdk',
     'src/jvm/fr/cnrs/liris/common/util',
-    #'src/jvm/fr/cnrs/liris/accio/framework/sdk',
+    'src/jvm/fr/cnrs/liris/common/geo',
     'src/thrift/fr/cnrs/liris/accio/framework/api',
+    '3rdparty/jvm/org/joda/time',
   ],
   sources=globs('*.scala')
 )

@@ -20,3 +20,4 @@ VERSION='6.43.0'
 jar_library(name='app', jars=[scala_jar('com.twitter', 'util-app', VERSION)])
 jar_library(name='core', jars=[scala_jar('com.twitter', 'util-core', VERSION)])
 jar_library(name='eval', jars=[scala_jar('com.twitter', 'util-eval', VERSION)])
+jar_library(name='jvm', jars=[scala_jar('com.twitter', 'util-jvm', VERSION)])

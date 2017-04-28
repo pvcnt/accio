@@ -23,10 +23,10 @@ import com.fasterxml.jackson.databind.JsonMappingException
 import com.twitter.finatra.json.FinatraObjectMapper
 import com.twitter.finatra.validation.Min
 import com.typesafe.scalalogging.LazyLogging
+import fr.cnrs.liris.accio.framework.api.{DataTypes, Values}
 import fr.cnrs.liris.accio.framework.api.thrift._
 import fr.cnrs.liris.accio.framework.service.{BaseFactory, RunFactory}
 import fr.cnrs.liris.accio.framework.storage.Storage
-import fr.cnrs.liris.dal.core.api.{DataTypes, Values}
 
 import scala.collection.mutable
 import scala.util.control.NonFatal

@@ -19,10 +19,8 @@
 package fr.cnrs.liris.accio.framework.service
 
 import com.google.inject.Inject
-import fr.cnrs.liris.accio.framework.api._
-import fr.cnrs.liris.accio.framework.api.thrift
+import fr.cnrs.liris.accio.framework.api.{thrift, _}
 import fr.cnrs.liris.accio.framework.api.thrift.{InvalidSpecException, InvalidSpecMessage}
-import fr.cnrs.liris.dal.core.api.DataTypes
 
 import scala.collection.mutable
 

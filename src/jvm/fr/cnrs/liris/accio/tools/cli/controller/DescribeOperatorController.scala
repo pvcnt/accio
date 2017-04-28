@@ -20,10 +20,10 @@ package fr.cnrs.liris.accio.tools.cli.controller
 
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.agent.{AgentService$FinagleClient, GetOperatorRequest}
+import fr.cnrs.liris.accio.framework.api.{DataTypes, Values}
 import fr.cnrs.liris.accio.framework.api.thrift._
 import fr.cnrs.liris.accio.runtime.event.Reporter
 import fr.cnrs.liris.common.util.StringUtils
-import fr.cnrs.liris.dal.core.api.{DataTypes, Values}
 
 class DescribeOperatorController extends DescribeController[OpDef] {
   override def retrieve(id: String, client: AgentService$FinagleClient): Future[OpDef] = {

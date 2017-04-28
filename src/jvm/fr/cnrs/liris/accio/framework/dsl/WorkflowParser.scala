@@ -24,9 +24,8 @@ import com.fasterxml.jackson.databind.JsonMappingException
 import com.twitter.finatra.json.FinatraObjectMapper
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.framework.api.thrift.{InvalidSpecException, InvalidSpecMessage}
-import fr.cnrs.liris.accio.framework.api.{References, Utils, thrift}
+import fr.cnrs.liris.accio.framework.api._
 import fr.cnrs.liris.accio.framework.service.{BaseFactory, OpRegistry, WorkflowFactory}
-import fr.cnrs.liris.dal.core.api.{DataTypes, Values}
 
 import scala.collection.mutable
 import scala.util.control.NonFatal

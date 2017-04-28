@@ -29,12 +29,11 @@ import com.twitter.concurrent.NamedPoolThreadFactory
 import com.twitter.inject.TwitterModule
 import com.twitter.util.{Duration, FuturePool}
 import fr.cnrs.liris.accio.agent.config._
+import fr.cnrs.liris.accio.framework.discovery.inject.DiscoveryModule
 import fr.cnrs.liris.accio.framework.filesystem.inject.FileSystemModule
-import fr.cnrs.liris.accio.framework.sdk.Operator
 import fr.cnrs.liris.accio.framework.service._
 import fr.cnrs.liris.accio.framework.util.{WorkDir, WorkerPool}
 import fr.cnrs.liris.accio.runtime.commandbus.Handler
-import fr.cnrs.liris.dal.core.io.{Decoder, StringCodec}
 import net.codingwell.scalaguice.ScalaMultibinder
 
 import scala.collection.mutable
@@ -55,7 +54,7 @@ object AgentModule extends TwitterModule {
 
   override def modules: Seq[Module] = {
     if (masterFlag.isDefined || workerFlag.isDefined) {
-      val active = mutable.ListBuffer.empty[Module]
+      val active = mutable.ListBuffer[Module](DiscoveryModule)
       if (masterFlag()) {
         active += AgentMasterModule
       }
@@ -66,23 +65,15 @@ object AgentModule extends TwitterModule {
     } else {
       // This only happen when this method is called the first time, during App's initialization.
       // We provide the entire list of all modules, making all flags available.
-      Seq(AgentMasterModule, AgentWorkerModule)
+      Seq(AgentMasterModule, AgentWorkerModule, DiscoveryModule)
     }
   }
 
   protected override def configure(): Unit = {
-    // Create an empty set of operators, in case nothing else is bound.
-    ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Class[_ <: Operator[_, _]]] {})
-
     // Create an empty set of command handlers, in case nothing else is bound.
     ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Handler[_, _]] {})
 
-    // Default decoders.
-    val decoders = ScalaMultibinder.newSetBinder(binder, new TypeLiteral[Decoder[_]] {})
-    decoders.addBinding.toInstance(new StringCodec)
-
     // Bind remaining implementations.
-    bind[OpMetaReader].to[ReflectOpMetaReader]
     bind[OpRegistry].to[RuntimeOpRegistry]
 
     // Bind configuration values.
@@ -102,17 +93,22 @@ object AgentModule extends TwitterModule {
     bind[Duration].annotatedWith[ExecutorTimeout].toInstance(Duration.fromSeconds(60))
   }
 
-  @Provides @Singleton @WorkerPool
+  @Provides
+  @Singleton
+  @WorkerPool
   def providesWorkerPool(@WorkerPool executor: ExecutorService): FuturePool = {
     FuturePool.interruptible(executor)
   }
 
-  @Provides @Singleton @WorkerPool
+  @Provides
+  @Singleton
+  @WorkerPool
   def providesExecutorService: ExecutorService = {
     Executors.newCachedThreadPool(new NamedPoolThreadFactory("agent/worker"))
   }
 
-  @Provides @Singleton
+  @Provides
+  @Singleton
   def providesEventBus(@WorkerPool executor: ExecutorService): EventBus = {
     new AsyncEventBus(executor)
   }

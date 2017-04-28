@@ -20,8 +20,8 @@ package fr.cnrs.liris.accio.framework.reporting
 
 import java.nio.file.{Files, Path, StandardOpenOption}
 
-import fr.cnrs.liris.accio.framework.api.Utils
-import fr.cnrs.liris.dal.core.api.{AtomicType, DataType, Value, Values}
+import fr.cnrs.liris.accio.framework.api.thrift.{AtomicType, DataType, Value}
+import fr.cnrs.liris.accio.framework.api.{Utils, Values}
 
 import scala.collection.JavaConverters._
 
@@ -123,27 +123,29 @@ class CsvReportCreator {
     filePath
   }
 
-  private def asHeader(kind: DataType): Seq[String] = kind.base match {
-    case AtomicType.List => asHeader(DataType(kind.args.head))
-    case AtomicType.Set => asHeader(DataType(kind.args.head))
-    case AtomicType.Map => Seq("key", "key_index") ++ asHeader(DataType(kind.args.last))
-    case AtomicType.Distance => Seq("value_in_meters")
-    case AtomicType.Duration => Seq("value_in_millis")
-    case _ => Seq("value")
-  }
+  private def asHeader(kind: DataType): Seq[String] =
+    kind.base match {
+      case AtomicType.List => asHeader(DataType(kind.args.head))
+      case AtomicType.Set => asHeader(DataType(kind.args.head))
+      case AtomicType.Map => Seq("key", "key_index") ++ asHeader(DataType(kind.args.last))
+      case AtomicType.Distance => Seq("value_in_meters")
+      case AtomicType.Duration => Seq("value_in_millis")
+      case _ => Seq("value")
+    }
 
-  private def asString(value: Value): Seq[Seq[String]] = value.kind.base match {
-    case AtomicType.List => Values.decodeList(value).map(v => Seq(v.toString))
-    case AtomicType.Set => Values.decodeSet(value).toSeq.map(v => Seq(v.toString))
-    case AtomicType.Map =>
-      val map = Values.decodeMap(value)
-      val keysIndex = map.keySet.zipWithIndex.toMap
-      map.toSeq.map { case (k, v) =>
-        val kIdx = keysIndex(k.asInstanceOf[Any])
-        Seq(k.toString, kIdx.toString, v.toString)
-      }
-    case AtomicType.Distance => Seq(Seq(Values.decodeDistance(value).meters.toString))
-    case AtomicType.Duration => Seq(Seq(Values.decodeDuration(value).getMillis.toString))
-    case _ => Seq(Seq(Values.decode(value).toString))
-  }
+  private def asString(value: Value): Seq[Seq[String]] =
+    value.kind.base match {
+      case AtomicType.List => Values.decodeList(value).map(v => Seq(v.toString))
+      case AtomicType.Set => Values.decodeSet(value).toSeq.map(v => Seq(v.toString))
+      case AtomicType.Map =>
+        val map = Values.decodeMap(value)
+        val keysIndex = map.keySet.zipWithIndex.toMap
+        map.toSeq.map { case (k, v) =>
+          val kIdx = keysIndex(k.asInstanceOf[Any])
+          Seq(k.toString, kIdx.toString, v.toString)
+        }
+      case AtomicType.Distance => Seq(Seq(Values.decodeDistance(value).meters.toString))
+      case AtomicType.Duration => Seq(Seq(Values.decodeDuration(value).getMillis.toString))
+      case _ => Seq(Seq(Values.decode(value).toString))
+    }
 }

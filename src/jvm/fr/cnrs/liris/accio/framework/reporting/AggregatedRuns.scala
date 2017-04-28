@@ -18,11 +18,11 @@
 
 package fr.cnrs.liris.accio.framework.reporting
 
+import fr.cnrs.liris.accio.framework.api.{DataTypes, Values}
 import fr.cnrs.liris.accio.framework.api.thrift._
 import fr.cnrs.liris.common.geo.Distance
 import fr.cnrs.liris.common.util.Seqs
 import fr.cnrs.liris.common.util.MathUtils.mean
-import fr.cnrs.liris.dal.core.api._
 import org.joda.time.Duration
 
 /**

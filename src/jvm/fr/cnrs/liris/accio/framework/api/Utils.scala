@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.framework.api
 
-import fr.cnrs.liris.dal.core.api.{Value, Values}
+import fr.cnrs.liris.accio.framework.api.thrift.Value
 
 import scala.util.matching.Regex
 

@@ -24,12 +24,12 @@ import java.util.UUID
 import com.google.common.annotations.VisibleForTesting
 import com.google.inject.Inject
 import com.typesafe.scalalogging.StrictLogging
-import fr.cnrs.liris.accio.framework.api.Errors
 import fr.cnrs.liris.accio.framework.api.thrift._
+import fr.cnrs.liris.accio.framework.api.{Errors, Values}
+import fr.cnrs.liris.accio.framework.discovery.{OpDiscovery, OpMeta}
 import fr.cnrs.liris.accio.framework.filesystem.FileSystem
 import fr.cnrs.liris.accio.framework.sdk.{OpContext, Operator}
 import fr.cnrs.liris.common.util.FileUtils
-import fr.cnrs.liris.dal.core.api.{AtomicType, Value, Values}
 
 import scala.util.control.NonFatal
 
@@ -52,9 +52,10 @@ class MissingOpInputException(val op: String, val arg: String) extends Exception
 /**
  * Exception thrown when an operator is unknown.
  *
- * @param op Operator name.
+ * @param op    Operator name.
+ * @param cause Cause exception.
  */
-class UnknownOpException(val op: String) extends RuntimeException(s"Unknown operator: $op")
+class InvalidOpException(val op: String, cause: Throwable = null) extends RuntimeException(s"Invalid operator: $op", cause)
 
 /**
  * Entry point for executing an operator from a payload. It manages the whole lifecycle of instantiating an operator,
@@ -66,12 +67,11 @@ class UnknownOpException(val op: String) extends RuntimeException(s"Unknown oper
  * timing or load information may vary and are not controllable). This is why this class knows and should never know
  * anything about runs, graphs or nodes.
  *
- * @param opRegistry Operator registry.
- * @param opFactory  Operator factory.
- * @param filesystem Distributed filesystem, to read inputs and store outputs.
+ * @param opDiscovery Operator discovery.
+ * @param filesystem  Filesystem, where to read inputs and write outputs.
  */
 @Inject
-final class OpExecutor @Inject()(opRegistry: RuntimeOpRegistry, opFactory: OpFactory, filesystem: FileSystem)
+final class OpExecutor @Inject()(opDiscovery: OpDiscovery, filesystem: FileSystem)
   extends StrictLogging {
 
   // Because the executor is designed to run inside a sandbox, we simply use current directory as temporary path
@@ -89,45 +89,50 @@ final class OpExecutor @Inject()(opRegistry: RuntimeOpRegistry, opFactory: OpFac
    *
    * @param payload Operator payload.
    * @param opts    Executor options.
-   * @throws UnknownOpException      If the operator is unknown.
+   * @throws InvalidOpException      If the operator is unknown.
    * @throws MissingOpInputException If an input is missing.
    * @return Result of the operator execution.
    */
-  @throws[UnknownOpException]
+  @throws[InvalidOpException]
   @throws[MissingOpInputException]
   def execute(payload: OpPayload, opts: OpExecutorOpts): OpResult = {
-    if (!opRegistry.contains(payload.op)) {
-      throw new UnknownOpException(payload.op)
+    val clazz = try {
+      Class.forName(payload.op)
+    } catch {
+      case NonFatal(e) => throw new InvalidOpException(payload.op)
     }
-    val opDef = opRegistry(payload.op)
-    val operator = opFactory.create(opDef)
-    execute(operator, opDef, payload, opts)
+    clazz.newInstance() match {
+      case operator: Operator[_, _] =>
+        val opMeta = opDiscovery.read(operator.getClass)
+        execute(operator, opMeta, payload, opts)
+      case _ => throw new InvalidOpException(payload.op)
+    }
   }
 
   /**
    * Execute the instantiated operator.
    *
    * @param operator Operator instance.
-   * @param opDef    Operator definition (consistent with the operator instance).
+   * @param opMeta   Operator metadata.
    * @param payload  Operator payload.
    * @param opts     Executor options.
    * @tparam In Operator input type.
    * @return Result of the operator execution.
    */
-  private def execute[In](operator: Operator[In, _], opDef: OpDef, payload: OpPayload, opts: OpExecutorOpts) = {
+  private def execute[In](operator: Operator[In, _], opMeta: OpMeta, payload: OpPayload, opts: OpExecutorOpts) = {
     val sandboxDir = workDir.resolve(UUID.randomUUID().toString)
     Files.createDirectories(sandboxDir.resolve("outputs"))
     Files.createDirectories(sandboxDir.resolve("inputs"))
 
-    val inputs = downloadInputs(opDef, sandboxDir, payload.inputs.toMap)
-    val in = createInput(opDef, inputs).asInstanceOf[In]
+    val inputs = downloadInputs(opMeta.defn, sandboxDir, payload.inputs.toMap)
+    val in = createInput(opMeta, inputs).asInstanceOf[In]
 
-    val maybeSeed = if (opDef.unstable) Some(payload.seed) else None
+    val maybeSeed = if (opMeta.defn.unstable) Some(payload.seed) else None
     val ctx = new OpContext(maybeSeed, sandboxDir.resolve("outputs"))
     val profiler = if (opts.useProfiler) new JvmProfiler else NullProfiler
 
     // The actual operator is the only profiled section. The outcome is either an output object or an exception.
-    logger.debug(s"Starting operator ${opDef.name} (sandbox in ${sandboxDir.toAbsolutePath})")
+    logger.debug(s"Starting operator ${opMeta.defn.name} (sandbox in ${sandboxDir.toAbsolutePath})")
     val res = profiler.profile {
       try {
         Left(operator.execute(in, ctx))
@@ -138,11 +143,11 @@ final class OpExecutor @Inject()(opRegistry: RuntimeOpRegistry, opFactory: OpFac
           Right(Errors.create(e))
       }
     }
-    logger.debug(s"Completed operator ${opDef.name}")
+    logger.debug(s"Completed operator ${opMeta.defn.name}")
 
     // We convert the outcome into an exit code, artifacts, metrics and possibly and error.
     val (artifacts, error) = res match {
-      case Left(out) => (uploadArtifacts(extractArtifacts(opDef, out), payload.cacheKey), None)
+      case Left(out) => (uploadArtifacts(extractArtifacts(opMeta, out), payload.cacheKey), None)
       case Right(ex) => (Set.empty[Artifact], Some(ex))
     }
     val metrics = profiler.metrics
@@ -161,11 +166,10 @@ final class OpExecutor @Inject()(opRegistry: RuntimeOpRegistry, opFactory: OpFac
   /**
    * Create the input for an operator.
    *
-   * @param opDef  Operator definition.
+   * @param opMeta Operator metadata.
    * @param inputs Mapping between input arguments and values.
    */
-  private def createInput(opDef: OpDef, inputs: Map[String, Value]): Any = {
-    val opMeta = opRegistry.meta(opDef.name)
+  private def createInput(opMeta: OpMeta, inputs: Map[String, Value]): Any = {
     opMeta.inClass match {
       case None => Unit.box(Unit)
       case Some(inClass) =>
@@ -178,7 +182,7 @@ final class OpExecutor @Inject()(opRegistry: RuntimeOpRegistry, opFactory: OpFac
                   Values.decode(defaultValue, argDef.kind)
                 case None =>
                   if (!argDef.isOptional) {
-                    throw new MissingOpInputException(opDef.name, argDef.name)
+                    throw new MissingOpInputException(opMeta.defn.name, argDef.name)
                   }
                   // An optional argument always accept None as value.
                   None
@@ -195,11 +199,10 @@ final class OpExecutor @Inject()(opRegistry: RuntimeOpRegistry, opFactory: OpFac
   /**
    * Extract artifacts from the output of an operator.
    *
-   * @param opDef Operator definition.
-   * @param out   Operator output.
+   * @param opMeta Operator metadata.
+   * @param out    Operator output.
    */
-  private def extractArtifacts(opDef: OpDef, out: Any): Set[Artifact] = {
-    val opMeta = opRegistry.meta(opDef.name)
+  private def extractArtifacts(opMeta: OpMeta, out: Any): Set[Artifact] = {
     opMeta.outClass match {
       case None => Set.empty
       case Some(outClass) =>

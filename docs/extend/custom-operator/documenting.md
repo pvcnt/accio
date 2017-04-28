@@ -49,4 +49,4 @@ $ ./pants binary src/jvm/fr/cnrs/liris/accio/tools/docgen:bin
 $ java -jar dist/accio-docgen.jar -out=docs/docs/operators/index.md
 ```
 
-It generates documentation for all operators registered in the `fr.cnrs.liris.privamov.ops.OpsModule` Guice module.
+It generates documentation for all operators registered in the `fr.cnrs.liris.accio.ops.OpsModule` Guice module.

@@ -19,7 +19,6 @@
 package fr.cnrs.liris.accio.framework.api
 
 import fr.cnrs.liris.common.util.{Named, Seqs}
-import fr.cnrs.liris.dal.core.api.Value
 
 import scala.util.matching.Regex
 
@@ -220,7 +219,7 @@ object Input {
    *
    * @param value Input value.
    */
-  case class Constant(value: Value) extends Input
+  case class Constant(value: thrift.Value) extends Input
 
   /**
    * Input coming from the output of another node.
