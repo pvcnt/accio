@@ -86,10 +86,11 @@ class StandaloneScheduler @Inject()(
     maybeWorkerId match {
       case None => false
       case Some(worker) =>
-        clusterState.assign(worker.id, task)
         val f = clientProvider.apply(worker.dest).assignTask(AssignTaskRequest(task)).liftToTry
         Await.result(f) match {
-          case Return(_) => true
+          case Return(_) =>
+            clusterState.assign(worker.id, task)
+            true
           case Throw(_: InvalidTaskException) =>
             // This error case should not happen, as it corresponds to the worker already handling the task under
             // scrutiny. If it happens, we log it but can let the execution continue safely.
