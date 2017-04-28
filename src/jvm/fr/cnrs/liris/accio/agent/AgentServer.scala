@@ -32,6 +32,7 @@ class AgentServer extends ThriftServer with LogbackConfigurator {
 
   override def configureThrift(router: ThriftRouter): Unit = {
     router
+      .filter[ExceptionMappingFilter]
       .filter[LoggingMDCFilter]
       .filter[TraceIdMDCFilter]
       .filter[ThriftMDCFilter]

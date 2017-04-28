@@ -3,7 +3,7 @@ scala_library(
     'src/jvm/fr/cnrs/liris/accio/framework/scheduler',
     'src/thrift/fr/cnrs/liris/accio/agent',
     '3rdparty/jvm/com/typesafe/scala-logging',
-    '3rdparty/jvm/com/google/guice',
+    '3rdparty/jvm/com/twitter/inject:core',
   ],
   sources=globs('*.scala')
 )

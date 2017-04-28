@@ -3,7 +3,7 @@ scala_library(
   dependencies=[
     ':annotations',
     'src/jvm/fr/cnrs/liris/common/flags',
-    '3rdparty/jvm/com/google/guice',
+    '3rdparty/jvm/com/twitter/inject:core',
     '3rdparty/jvm/com/typesafe/scala-logging',
   ],
   java_sources=[
@@ -15,7 +15,7 @@ scala_library(
 java_library(
   name='annotations',
   dependencies = [
-    '3rdparty/jvm/com/google/guice',
+    '3rdparty/jvm/com/twitter/inject:core',
   ],
   sources=globs('*.java')
 )

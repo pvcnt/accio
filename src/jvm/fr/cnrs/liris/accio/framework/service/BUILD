@@ -11,7 +11,7 @@ scala_library(
     'src/jvm/fr/cnrs/liris/common/reflect',
     'src/jvm/fr/cnrs/liris/dal/core/api',
     '3rdparty/jvm/com/typesafe/scala-logging',
-    '3rdparty/jvm/com/google/guice',
+    '3rdparty/jvm/com/twitter/inject:core',
   ],
   sources=globs('*.scala')
 )

@@ -1,7 +1,7 @@
 scala_library(
   dependencies=[
     '3rdparty/jvm/com/twitter/util:core',
-    '3rdparty/jvm/com/google/guice',
+    '3rdparty/jvm/com/twitter/inject:core',
   ],
   sources=globs('*.scala')
 )

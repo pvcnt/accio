@@ -9,7 +9,7 @@ scala_library(
 scala_library(
   name='annotations',
   dependencies=[
-    '3rdparty/jvm/com/google/guice',
+    '3rdparty/jvm/com/twitter/inject:core',
   ],
   sources=globs('*.java')
 )

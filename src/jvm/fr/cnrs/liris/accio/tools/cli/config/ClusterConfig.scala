@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.tools.cli.config
 
-import com.twitter.finatra.domain.WrappedValue
+import com.twitter.inject.domain.WrappedValue
 
 /**
  * Configuration specifying how to contact multiple Accio clusters.

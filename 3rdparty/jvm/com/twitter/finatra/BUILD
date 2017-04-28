@@ -19,8 +19,9 @@
 #   - com/twitter/finagle
 #   - com/twitter/util
 #   - com/twitter/inject
+#   - com/twitter/bijection
 #   - com/fasterxml/jackson
-VERSION = '2.7.0'
+VERSION = '2.10.0'
 
 jar_library(name='http', jars=[scala_jar('com.twitter', 'finatra-http', VERSION)])
 jar_library(name='httpclient', jars=[scala_jar('com.twitter', 'finatra-httpclient', VERSION)])

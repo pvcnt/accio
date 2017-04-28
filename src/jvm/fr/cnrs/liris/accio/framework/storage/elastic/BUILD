@@ -8,7 +8,7 @@ scala_library(
     '3rdparty/jvm/com/sksamuel/elastic4s:jackson',
     '3rdparty/jvm/com/typesafe/scala-logging',
     '3rdparty/jvm:scrooge-core',
-    '3rdparty/jvm/com/twitter/inject:app',
+    '3rdparty/jvm/com/twitter/inject:core',
     '3rdparty/jvm/com/twitter/finatra:jackson',
     '3rdparty/jvm/com/twitter/bijection:util',
   ],
@@ -18,7 +18,7 @@ scala_library(
 java_library(
   name='annotations',
   dependencies=[
-    '3rdparty/jvm/com/google/guice',
+    '3rdparty/jvm/com/twitter/inject:core',
   ],
   sources=globs('*.java')
 )

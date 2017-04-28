@@ -3,7 +3,7 @@ scala_library(
     'src/jvm/fr/cnrs/liris/accio/framework/filesystem',
     'src/jvm/fr/cnrs/liris/accio/framework/filesystem/archive',
     '3rdparty/jvm/io/minio',
-    '3rdparty/jvm/com/twitter/inject:app',
+    '3rdparty/jvm/com/twitter/inject:core',
   ],
   sources=globs('*.scala')
 )

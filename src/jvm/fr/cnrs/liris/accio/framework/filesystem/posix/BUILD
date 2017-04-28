@@ -3,7 +3,7 @@ scala_library(
     ':annotations',
     'src/jvm/fr/cnrs/liris/accio/framework/filesystem',
     'src/jvm/fr/cnrs/liris/common/util',
-    '3rdparty/jvm/com/twitter/inject:app',
+    '3rdparty/jvm/com/twitter/inject:core',
   ],
   sources=globs('*.scala')
 )
@@ -11,7 +11,7 @@ scala_library(
 java_library(
   name='annotations',
   dependencies=[
-    '3rdparty/jvm/com/google/guice',
+    '3rdparty/jvm/com/twitter/inject:core',
   ],
   sources=globs('*.java')
 )
