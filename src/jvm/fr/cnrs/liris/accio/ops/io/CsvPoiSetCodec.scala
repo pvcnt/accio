@@ -35,7 +35,6 @@ final class CsvPoiSetCodec extends Codec[PoiSet] {
   }
 
   override def decode(key: String, bytes: Array[Byte]): Seq[PoiSet] = {
-    val pois = poiCodec.decode(key, bytes)
-    if (pois.nonEmpty) Seq(PoiSet(key, pois)) else Seq.empty
+    Seq(PoiSet(key, poiCodec.decode(key, bytes)))
   }
 }
