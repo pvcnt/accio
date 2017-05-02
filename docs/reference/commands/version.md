@@ -25,6 +25,6 @@ As they are installed and upgraded independently, these two versions can possibl
 ## Examples
 ```
 $ accio version
-Server version: 0.5.0
-Client version: 0.5.0
+Server version: 0.6.0
+Client version: 0.6.0
 ```

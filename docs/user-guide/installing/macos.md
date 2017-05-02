@@ -22,7 +22,7 @@ This file is actually a simple bash wrapper around an embedded JAR.
 You need to give it the executable permissions before executing it.
 
 ```bash
-curl -L -o accio https://github.com/privamov/accio/releases/download/v0.5.0/accio
+curl -L -o accio https://github.com/privamov/accio/releases/download/v0.6.0/accio
 chmod +x accio
 ./accio version -client
 ```
