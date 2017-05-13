@@ -107,10 +107,7 @@ class SparkleEnv(level: Int) extends StrictLogging {
     } else if (keys.size == 1) {
       Array(processor(keys.head, frame.load(keys.head)))
     } else {
-      val futures = keys.map(key => Future {
-        logger.debug(s"Processing $key on $frame")
-        processor(key, frame.load(key))
-      })
+      val futures = keys.map(key => Future(processor(key, frame.load(key))))
       val future = Future.sequence(futures).map(_.toArray)
       Await.ready[Array[U]](future, Duration.Inf)
       future.value.get match {
@@ -121,4 +118,4 @@ class SparkleEnv(level: Int) extends StrictLogging {
   }
 }
 
-class SparkleJobException(frame: DataFrame[_], cause: Throwable) extends Exception(s"Error while processing $frame", cause)
+class SparkleJobException(val frame: DataFrame[_], cause: Throwable) extends Exception(s"Error while processing $frame", cause)
