@@ -18,6 +18,7 @@
 
 package fr.cnrs.liris.accio.ops
 
+import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.framework.sdk.{Dataset, _}
 import fr.cnrs.liris.accio.ops.model.PoiSet
 
@@ -34,25 +35,29 @@ import fr.cnrs.liris.accio.ops.model.PoiSet
   help = "Re-identification attack using POIs a the discriminating information.",
   cpu = 6,
   ram = "3G")
-class PoisReidentOp extends Operator[ReidentificationIn, ReidentificationOut] with SparkleOperator {
+class PoisReidentOp extends Operator[ReidentificationIn, ReidentificationOut] with SparkleOperator with StrictLogging {
   override def execute(in: ReidentificationIn, ctx: OpContext): ReidentificationOut = {
     val trainPois = read[PoiSet](in.train).toArray
     val testPois = read[PoiSet](in.test).toArray
+    logger.debug(s"Using ${trainPois.length} train POIs, ${testPois.length} test POIs")
 
-    val distances = getDistances(trainPois, testPois)
-    val matches = getMatches(distances)
-    val successRate = getSuccessRate(trainPois, matches)
+    val distances = computeDistances(trainPois, testPois)
+    val matches = computeMatches(distances)
+    val successRate = computeSuccessRate(trainPois, matches)
 
     ReidentificationOut(distances.map { case (k, v) => k -> v.toMap }, matches, successRate)
   }
 
-  private def getDistances(trainPois: Array[PoiSet], testPois: Array[PoiSet]) = {
+  private def computeDistances(trainPois: Array[PoiSet], testPois: Array[PoiSet]) = {
     val costs = collection.mutable.Map[String, Map[String, Double]]()
     testPois.foreach { pois =>
       val distances = if (pois.nonEmpty) {
-        //Compute the distance between the set of pois from the test user and the models (from the training users).
+        //Compute the distance between the set of POIs from the test user and the models (from the training users).
         //This will give us an association between a training user and a distance. We only keep finite distances.
-        trainPois.map(model => model.user -> model.distance(pois).meters).filter { case (u, d) => !d.isInfinite }.toMap
+        trainPois
+          .map(model => model.user -> model.distance(pois).meters)
+          .filter { case (_, d) => !d.isInfinite }
+          .toMap
       } else {
         Map[String, Double]()
       }
@@ -65,19 +70,13 @@ class PoisReidentOp extends Operator[ReidentificationIn, ReidentificationOut] wi
     }.toMap
   }
 
-  private def getMatches(distances: Map[String, Seq[(String, Double)]]) = {
-    distances.map { case (testUser, res) =>
-      if (res.isEmpty) {
-        testUser -> "-"
-      } else {
-        testUser -> res.head._1
-      }
-    }
+  private def computeMatches(distances: Map[String, Seq[(String, Double)]]) = {
+    distances.map { case (testUser, res) => testUser -> res.headOption.map(_._1).getOrElse("-") }
   }
 
-  private def getSuccessRate(trainPois: Array[PoiSet], matches: Map[String, String]) = {
+  private def computeSuccessRate(trainPois: Array[PoiSet], matches: Map[String, String]) = {
     val trainUsers = trainPois.map(_.user)
-    matches.map { case (testUser, trainUser) => if (testUser == trainUser) 1 else 0 }.sum / trainUsers.size.toDouble
+    matches.map { case (testUser, trainUser) => if (testUser == trainUser) 1 else 0 }.sum / trainUsers.length.toDouble
   }
 }
 
