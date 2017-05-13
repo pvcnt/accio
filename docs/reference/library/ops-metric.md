@@ -73,6 +73,24 @@ weight: 51
 | `avgDist` | double | Average distortion |
 {: class="table table-striped"}
 
+## MmcReident
+
+| Input name | Type | Description |
+|:-----------|:-----|:------------|
+| `train` | dataset; required | Input train dataset |
+| `test` | dataset; required | Input test dataset |
+| `minPts` | integer; optional; default: 10 | Clustering parameter : minimum points in a cluster |
+| `diameter` | distance; optional; default: 3000.0.meters | Clustering parameter : maximum size cluster |
+| `duration` | duration; optional; default: 3.seconds+600.milliseconds | Clustering parameter : maximum cluster duration |
+| `attack` | string; optional; default: gambs | Attack |
+{: class="table table-striped"}
+
+| Output name | Type | Description |
+|:------------|:-----|:------------|
+| `matches` | map(string, string) | Matches between users |
+| `rate` | double | Re-Ident rate |
+{: class="table table-striped"}
+
 ## PoisReident
 
 | Input name | Type | Description |
