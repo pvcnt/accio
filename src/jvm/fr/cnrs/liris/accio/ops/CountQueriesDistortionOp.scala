@@ -142,7 +142,7 @@ private class CountQueryGenerator(data: DataFrame[Trace], seed: Long, minSize: D
     val traces = data.takeSample(withReplacement = true, num = nb)
     val queries = traces.map { trace =>
       val event = RandomUtils.randomElement(trace.events, seed)
-      val box = BoundingBox(Point(event.point.x + halfSizeMeters, event.point.y + halfSizeMeters), Point(event.point.x - halfSizeMeters, event.point.y - halfSizeMeters))
+      val box = BoundingBox(Point(event.point.x - halfSizeMeters, event.point.y - halfSizeMeters), Point(event.point.x + halfSizeMeters, event.point.y + halfSizeMeters))
       val span = new Interval(event.time.minus(halfDurationMillis), event.time.plus(halfDurationMillis))
       CountQuery(box, span)
     }

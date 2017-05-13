@@ -137,9 +137,11 @@ final class OpExecutor @Inject()(opDiscovery: OpDiscovery, filesystem: FileSyste
       try {
         Left(operator.execute(in, ctx))
       } catch {
-        case NonFatal(e) => Right(Errors.create(e))
         case e: OutOfMemoryError =>
           System.gc()
+          Right(Errors.create(e))
+        case NonFatal(e) =>
+          logger.warn(s"Unexpected error while executing operator ${opMeta.defn.name}", e)
           Right(Errors.create(e))
       }
     }

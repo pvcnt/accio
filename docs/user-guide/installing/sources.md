@@ -24,7 +24,7 @@ All the development is done on the `master` branch, and releases are tagged.
 You can hence build a specific version:
 
 ```bash
-git checkout v0.5.0 # Replace the version number with the one you target
+git checkout v0.6.0 # Replace the version number with the one you target
 ```
 
 ## 2. Install build dependencies

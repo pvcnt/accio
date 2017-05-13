@@ -102,7 +102,7 @@ class SubmitCommand @Inject()(clientProvider: ClusterClientProvider)
           val mergedSpec = merge(spec, opts)
           submit(mergedSpec, opts, client, out)
         case None =>
-          out.handle(Event.error("Some errors where found in the workflow definition"))
+          out.handle(Event.error("Some errors where found in the run definition"))
           ExitCode.DefinitionError
       }
     }

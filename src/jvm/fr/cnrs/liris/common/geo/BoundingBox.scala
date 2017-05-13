@@ -25,6 +25,8 @@ package fr.cnrs.liris.common.geo
  * @param upper Upper corner.
  */
 case class BoundingBox(lower: Point, upper: Point) {
+  require(lower.x <= upper.x && lower.y <= upper.y, "Lower point must be lower than upper point")
+
   def contains(point: Point): Boolean = {
     point.x >= lower.x && point.y >= lower.y && point.x <= upper.x && point.y <= upper.y
   }

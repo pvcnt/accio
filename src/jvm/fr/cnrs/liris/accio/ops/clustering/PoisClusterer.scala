@@ -50,4 +50,21 @@ class PoisClusterer(minDuration: Duration, maxDiameter: Distance, minPoints: Int
       Poi(poi.events.flatMap(event => stays(event.user.toInt).events))
     }.toSet
   }
+
+  /**
+    * Perform clustering of spatio-temporal points.
+    *
+    * @param events Temporally ordered list of events.
+    * @return List of Clusters.
+    */
+  def clusterKeepCluster(events: Iterable[Event]): Seq[Cluster] = {
+    val stays = dtClusterer.cluster(events.toSeq)
+    val staysAsEvents = stays.zipWithIndex.map {
+      case (stay, idx) => Event(idx.toString, stay.centroid, Instant.now)
+    }
+    val pois = djClusterer.cluster(staysAsEvents)
+    pois.map { poi =>
+      new Cluster(poi.events.flatMap(event => stays(event.user.toInt).events))
+    }
+  }
 }
