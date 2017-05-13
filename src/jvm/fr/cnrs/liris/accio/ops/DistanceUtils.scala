@@ -66,7 +66,7 @@ private[ops] object DistanceUtils {
       case (i, j) =>
         dist = dist + (m1(i, j) - d_i_1(i) - d_j_1(j) + avg1) * (m2(i, j) - d_i_2(i) - d_j_2(j) + avg2)
     }
-    dist = dist / (m1.nbRow * m1.nbCol)
+    dist = dist / (m1.nbRows * m1.nbCols)
     dist / math.sqrt(auto1 * auto2)
   }
 
@@ -233,8 +233,8 @@ private[ops] object DistanceUtils {
   }
 
   def dcov2(m1: SparseMatrix[Double], m2: SparseMatrix[Double]): Double = {
-    val nbRow = m1.nbRow
-    val nbCol = m1.nbCol
+    val nbRow = m1.nbRows
+    val nbCol = m1.nbCols
     var dc = 0.0
     val d_i_1 = Array.fill[Double](nbRow)(0)
     val d_i_2 = Array.fill[Double](nbRow)(0)
@@ -257,12 +257,12 @@ private[ops] object DistanceUtils {
         d2 += m2(i, j)
     }
     for (i <- set_i) {
-      d_i_1(i) = d_i_1(i) / m1.nbCol.toDouble
-      d_i_2(i) = d_i_2(i) / m2.nbCol.toDouble
+      d_i_1(i) = d_i_1(i) / m1.nbCols.toDouble
+      d_i_2(i) = d_i_2(i) / m2.nbCols.toDouble
     }
     for (j <- set_j) {
-      d_j_1(j) = d_j_1(j) / m1.nbRow.toDouble
-      d_j_2(j) = d_j_2(j) / m2.nbRow.toDouble
+      d_j_1(j) = d_j_1(j) / m1.nbRows.toDouble
+      d_j_2(j) = d_j_2(j) / m2.nbRows.toDouble
     }
     d1 = d1 / (nbRow * nbCol).toDouble
     d2 = d2 / (nbRow * nbCol).toDouble
@@ -292,7 +292,7 @@ private[ops] object DistanceUtils {
   }
 
   def dotProduct(m1: SparseMatrix[Double], m2: SparseMatrix[Double]): SparseMatrix[Double] = {
-    val newMat = new SparseMatrix[Double](m1.nbRow, m1.nbCol)
+    val newMat = new SparseMatrix[Double](m1.nbRows, m1.nbCols)
     val indices = m1.data.keys.toSet.intersect(m2.data.keys.toSet)
     indices.foreach {
       case (i: Int, j: Int) => newMat.assign(i, j, m1(i, j) * m2(i, j))

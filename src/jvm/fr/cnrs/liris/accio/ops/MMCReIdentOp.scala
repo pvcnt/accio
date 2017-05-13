@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.ops
 
-import fr.cnrs.liris.accio.framework.sdk.{Arg, Dataset, OpContext, Operator}
+import fr.cnrs.liris.accio.framework.sdk._
 import fr.cnrs.liris.accio.ops.clustering.{Cluster, PoisClusterer}
 import fr.cnrs.liris.accio.ops.model.{Event, Trace}
 import fr.cnrs.liris.accio.ops.sparkle.DataFrame
@@ -27,190 +27,166 @@ import org.joda.time.Duration
 
 import scala.collection.immutable
 
-
-
-
-class MMCReIdentOp extends Operator[MMCReIdentIn, MMCReIdentOut] with SparkleOperator {
-
-
-
-
-  override def execute(in: MMCReIdentIn, ctx: OpContext): MMCReIdentOut = {
-
+@Op(
+  category = "metric",
+  help = "Re-identification attack using mobility Markov chains.",
+  cpu = 6,
+  ram = "3G")
+class MmcReidentOp extends Operator[MmcReidentIn, MmcReidentOut] with SparkleOperator {
+  override def execute(in: MmcReidentIn, ctx: OpContext): MmcReidentOut = {
     val dstrain = read[Trace](in.train)
     val dstest = read[Trace](in.test)
 
-
-    val mapPOisTrain = formPOIs(dstrain,in.minPts,in.diameter,in.duration)
-    val mapPOisTest =  formPOIs(dstest,in.minPts,in.diameter, in.duration)
+    val mapPOisTrain = formPOIs(dstrain, in.minPts, in.diameter, in.duration)
+    val mapPOisTest = formPOIs(dstest, in.minPts, in.diameter, in.duration)
     // form MMC transition matrices
-    val mapMMCTrain = formMMCMap(dstrain,mapPOisTrain)
-    val mapMMCTest =   formMMCMap(dstest,mapPOisTest)
-    val (rate, userMatches) = reIdentAttackGambs(dstest.keys.size,mapPOisTrain,mapMMCTrain,mapPOisTest,mapMMCTest)
+    val mapMMCTrain = formMMCMap(dstrain, mapPOisTrain)
+    val mapMMCTest = formMMCMap(dstest, mapPOisTest)
+    val (rate, userMatches) = reIdentAttackGambs(dstest.keys.size, mapPOisTrain, mapMMCTrain, mapPOisTest, mapMMCTest)
     var matches = userMatches
-    dstrain.keys.union(dstest.keys).toSet.foreach { u : String =>
+    dstrain.keys.union(dstest.keys).toSet.foreach { u: String =>
       if (!matches.contains(u)) matches += u -> "-"
     }
-    MMCReIdentOut(matches,rate)
-
+    MmcReidentOut(matches, rate)
   }
-  def reIdentAttackGambs(nbUser : Int , mapPOisTrain : immutable.Map[String,Seq[Cluster]] ,mapMMCTrain :  immutable.Map[String,(SparseMatrix[Double],Array[Double])],  mapPOisTest : immutable.Map[String,Seq[Cluster]],mapMMCTest :  immutable.Map[String,(SparseMatrix[Double],Array[Double])]) : (Double, immutable.Map[String, String]) = {
 
-    var matches: scala.collection.immutable.Map[String, String] = scala.collection.immutable.Map[String, String]()
-    var nbMatches: Int = 0
-    mapPOisTest.par.foreach{
-      case( k : String , states_k : Seq[Cluster]) =>
-        var order = immutable.Map[String, Double]()
-        mapPOisTrain.foreach{
-          case( u : String , states_u : Seq[Cluster]) =>
-            val dist = d(states_k,mapMMCTest(k),states_u,mapMMCTrain(u))
-            order += (u -> dist)
-        }
-        val seq = order.toSeq.sortBy(_._2)
-        synchronized(matches += (k -> seq.head._1))
-        if (k == seq.head._1) nbMatches += 1
+  private def reIdentAttackGambs(nbUser: Int, mapPOisTrain: Map[String, Seq[Cluster]], mapMMCTrain: Map[String, (SparseMatrix[Double], Array[Double])], mapPOisTest: Map[String, Seq[Cluster]], mapMMCTest: Map[String, (SparseMatrix[Double], Array[Double])]): (Double, Map[String, String]) = {
+    var matches = Map[String, String]()
+    var nbMatches = 0
+    mapPOisTest.par.foreach { case (k, states_k) =>
+      var order = Map[String, Double]()
+      mapPOisTrain.foreach { case (u, states_u) =>
+        val dist = d(states_k, mapMMCTest(k), states_u, mapMMCTrain(u))
+        order += (u -> dist)
+      }
+      val seq = order.toSeq.sortBy(_._2)
+      synchronized(matches += (k -> seq.head._1))
+      if (k == seq.head._1) nbMatches += 1
     }
-    val rate: Double = nbMatches.toDouble / nbUser.toDouble
+    val rate = nbMatches.toDouble / nbUser.toDouble
     (rate, matches)
   }
 
-
-
-
-  def d( states_k : Seq[Cluster], mmc_k : (SparseMatrix[Double],Array[Double])  , states_u : Seq[Cluster] , mmc_u :  (SparseMatrix[Double],Array[Double]) ) : Double = {
-    val stat = stationary_distance(states_k,mmc_k,states_u,mmc_u)
-    val prox = proximity_distance(states_k,mmc_k,states_u,mmc_u)
-
-    if(prox < 100000 && stat > 2000 ) prox else stat
-
+  private def d(states_k: Seq[Cluster], mmc_k: (SparseMatrix[Double], Array[Double]), states_u: Seq[Cluster], mmc_u: (SparseMatrix[Double], Array[Double])): Double = {
+    val stat = stationary_distance(states_k, mmc_k, states_u, mmc_u)
+    val prox = proximity_distance(states_k, mmc_k, states_u, mmc_u)
+    if (prox < 100000 && stat > 2000) prox else stat
   }
 
-  def stationary_distance(states_k : Seq[Cluster], mmc_k : (SparseMatrix[Double],Array[Double])  , states_u : Seq[Cluster] , mmc_u :  (SparseMatrix[Double],Array[Double]) ) : Double = {
+  private def stationary_distance(states_k: Seq[Cluster], mmc_k: (SparseMatrix[Double], Array[Double]), states_u: Seq[Cluster], mmc_u: (SparseMatrix[Double], Array[Double])): Double = {
     var dist = 0.0
-    for(i <- states_k.indices){
+    for (i <- states_k.indices) {
       val pi = states_k(i)
       var min_distance = new Distance(1E8)
-      for(j <- states_u.indices){
+      for (j <- states_u.indices) {
         val pj = states_u(j)
         val currentDistance = pi.centroid.distance(pj.centroid)
-        if(currentDistance < min_distance) min_distance = currentDistance
+        if (currentDistance < min_distance) min_distance = currentDistance
       }
-      dist = dist + min_distance.meters*mmc_k._2(i)
+      dist = dist + min_distance.meters * mmc_k._2(i)
     }
     dist
   }
 
-
-  def sym_stationary_distance(states_k : Seq[Cluster], mmc_k : (SparseMatrix[Double],Array[Double])  , states_u : Seq[Cluster] , mmc_u :  (SparseMatrix[Double],Array[Double]) ) : Double = {
-    val dku = stationary_distance(states_k , mmc_k   , states_u , mmc_u  )
-    val duk = stationary_distance(states_u , mmc_u   , states_k , mmc_k  )
+  private def sym_stationary_distance(states_k: Seq[Cluster], mmc_k: (SparseMatrix[Double], Array[Double]), states_u: Seq[Cluster], mmc_u: (SparseMatrix[Double], Array[Double])): Double = {
+    val dku = stationary_distance(states_k, mmc_k, states_u, mmc_u)
+    val duk = stationary_distance(states_u, mmc_u, states_k, mmc_k)
+    //TODO: parenthesis missing?
     dku + duk / 2.0
   }
 
-  def proximity_distance(states_k : Seq[Cluster], mmc_k : (SparseMatrix[Double],Array[Double])  , states_u : Seq[Cluster] , mmc_u :  (SparseMatrix[Double],Array[Double]) ) : Double = {
+  private def proximity_distance(states_k: Seq[Cluster], mmc_k: (SparseMatrix[Double], Array[Double]), states_u: Seq[Cluster], mmc_u: (SparseMatrix[Double], Array[Double])): Double = {
     val delta = new Distance(100)
     var rank = 10
-    val  v1 = mmc_k._2
-    val  v2 = mmc_u._2
-    val vo1 = v1.zipWithIndex.sortBy( _._1)
-    val vo2 = v2.zipWithIndex.sortBy( _._1)
+    val v1 = mmc_k._2
+    val v2 = mmc_u._2
+    val vo1 = v1.zipWithIndex.sortBy(_._1)
+    val vo2 = v2.zipWithIndex.sortBy(_._1)
     var score = 0
 
-
     //for(i <- 0 to  math.min(states_k.size,states_u.size)){
-    for(i <-states_k.indices.intersect(states_u.indices)){
-      val pk =  states_k(vo1(i)._2)
-      val pu =  states_u(vo2(i)._2)
-      if(pk.centroid.distance(pu.centroid) < delta) {
+    for (i <- states_k.indices.intersect(states_u.indices)) {
+      val pk = states_k(vo1(i)._2)
+      val pu = states_u(vo2(i)._2)
+      if (pk.centroid.distance(pu.centroid) < delta) {
         score += rank
       }
-      rank = rank/2
-      if(rank  == 0 ) rank = 1
+      rank = rank / 2
+      if (rank == 0) rank = 1
 
     }
-    val dist = if(score> 0) 1.0/score.toDouble else 100000
-    dist
+    if (score > 0) 1.0 / score.toDouble else 100000
   }
 
-
-
-  def formPOIs(ds: DataFrame[Trace],minPts : Int , epsilon : Distance, duration : Duration ) : immutable.Map[String,Seq[Cluster]] = {
-    var mmcMapPOisTrain = immutable.Map[String,Seq[Cluster]]()
-    val clusterMachine = new PoisClusterer(duration,epsilon, minPts)
-    ds.foreach{
-      t =>
-        val poiSet = clusterMachine.clusterKeepCluster(t.events)
-        if(poiSet.nonEmpty) synchronized(mmcMapPOisTrain +=  (t.user -> poiSet))
+  private def formPOIs(ds: DataFrame[Trace], minPts: Int, epsilon: Distance, duration: Duration): Map[String, Seq[Cluster]] = {
+    var mmcMapPOisTrain = Map[String, Seq[Cluster]]()
+    val clusterMachine = new PoisClusterer(duration, epsilon, minPts)
+    ds.foreach { t =>
+      val poiSet = clusterMachine.clusterKeepCluster(t.events)
+      if (poiSet.nonEmpty) synchronized(mmcMapPOisTrain += (t.user -> poiSet))
     }
     mmcMapPOisTrain
   }
 
-  def formMMCMap(ds: DataFrame[Trace], mapPOis : immutable.Map[String,Seq[Cluster]] ) : immutable.Map[String,(SparseMatrix[Double],Array[Double])] = {
-    var mapTransMat = immutable.Map[String,(SparseMatrix[Double],Array[Double])]()
-    ds.foreach{
-      t =>
-        val poiset = mapPOis.get(t.user)
-        poiset match {
-          case Some(pois) => {
-            if(pois.nonEmpty)
-              synchronized(mapTransMat +=  (t.user ->  formTransitionMatrix(t.events,pois)))
-          }
-          case _ =>
-        }
-
+  private def formMMCMap(ds: DataFrame[Trace], mapPOis: Map[String, Seq[Cluster]]): Map[String, (SparseMatrix[Double], Array[Double])] = {
+    var mapTransMat = Map[String, (SparseMatrix[Double], Array[Double])]()
+    ds.foreach { t =>
+      val poiset = mapPOis.get(t.user)
+      poiset match {
+        case Some(pois) =>
+          if (pois.nonEmpty) synchronized(mapTransMat += (t.user -> formTransitionMatrix(t.events, pois)))
+        case None => // Do nothing.
+      }
     }
     mapTransMat
   }
 
-  def formTransitionMatrix(events : Seq[Event], states : Seq [Cluster]) : (SparseMatrix[Double],Array[Double]) = {
+  private def formTransitionMatrix(events: Seq[Event], states: Seq[Cluster]): (SparseMatrix[Double], Array[Double]) = {
     val labels = Array.fill[Int](events.size)(-1)
-    val mat = new SparseMatrix[Int](states.size,states.size)
+    val mat = new SparseMatrix[Int](states.size, states.size)
     val count = Array.fill[Int](states.size)(0)
     var prev = -1
     var lastPoi = -1
-    for(i <- events.indices){
+    for (i <- events.indices) {
       val e = events(i)
-      for(j <- states.indices){
+      for (j <- states.indices) {
         val state = states(j)
-        if(state.events.contains(e)) labels(i) = j
+        if (state.events.contains(e)) labels(i) = j
       }
       val dest = labels(i)
-      if(dest!= -1) count(dest) = count(dest) +1
-      if(lastPoi== -1) {
+      if (dest != -1) count(dest) = count(dest) + 1
+      if (lastPoi == -1) {
         lastPoi = dest
-      }else {
+      } else {
         // transition  prev -> dest
-        if (prev != dest  && dest != -1) {
+        if (prev != dest && dest != -1) {
           mat.inc(lastPoi, dest)
         }
       }
       prev = dest
     }
     val s = count.sum.toDouble
-    val vector : Array[Double] = count.map(c => c.toDouble/s)
-    (mat.proportional,vector)
+    val vector = count.map(c => c.toDouble / s)
+    (mat.proportional, vector)
   }
-
 }
 
-case class MMCReIdentIn(
-                         @Arg(help = "Input train dataset")
-                         train: Dataset,
-                         @Arg(help = "Input test dataset")
-                         test: Dataset,
-                         @Arg(help = "Clustering parameter : minimum points in a cluster")
-                         minPts: Int = 10,
-                         @Arg(help = "Clustering parameter : maximum size cluster")
-                         diameter: Distance = new Distance(3000),
-                         @Arg(help = "Clustering parameter : maximum cluster duration")
-                         duration : Duration = new Duration(3600),
-                         @Arg(help = "Attack")
-                         attack : String = "gambs"
-                       )
+case class MmcReidentIn(
+  @Arg(help = "Input train dataset")
+  train: Dataset,
+  @Arg(help = "Input test dataset")
+  test: Dataset,
+  @Arg(help = "Clustering parameter : minimum points in a cluster")
+  minPts: Int = 10,
+  @Arg(help = "Clustering parameter : maximum size cluster")
+  diameter: Distance = new Distance(3000),
+  @Arg(help = "Clustering parameter : maximum cluster duration")
+  duration: Duration = new Duration(3600),
+  @Arg(help = "Attack")
+  attack: String = "gambs")
 
-case class MMCReIdentOut(
-                          @Arg(help = "Matches between users") matches: immutable.Map[String, String],
-                          @Arg(help = "Re-Ident rate") rate: Double
-                        )
+case class MmcReidentOut(
+  @Arg(help = "Matches between users") matches: immutable.Map[String, String],
+  @Arg(help = "Re-Ident rate") rate: Double)
 
 
