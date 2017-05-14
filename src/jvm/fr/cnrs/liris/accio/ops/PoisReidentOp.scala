@@ -45,7 +45,8 @@ class PoisReidentOp extends Operator[ReidentificationIn, ReidentificationOut] wi
     val matches = computeMatches(distances)
     val successRate = computeSuccessRate(trainPois, matches)
 
-    ReidentificationOut(distances.map { case (k, v) => k -> v.toMap }, matches, successRate)
+    //distances.map { case (k, v) => k -> v.toMap },
+    ReidentificationOut(matches, successRate)
   }
 
   private def computeDistances(trainPois: Array[PoiSet], testPois: Array[PoiSet]) = {
@@ -87,8 +88,8 @@ case class ReidentificationIn(
   test: Dataset)
 
 case class ReidentificationOut(
-  @Arg(help = "Distances between users from test and train datasets")
-  distances: Map[String, Map[String, Double]],
+  //@Arg(help = "Distances between users from test and train datasets")
+  //distances: Map[String, Map[String, Double]],
   @Arg(help = "Matches between users from test and train datasets")
   matches: Map[String, String],
   @Arg(help = "Correct re-identifications rate")

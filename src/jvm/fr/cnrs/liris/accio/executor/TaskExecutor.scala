@@ -85,22 +85,21 @@ final class TaskExecutor @Inject()(
     threads.submit(new HeartbeatThread(taskId))
     threads.submit(new StreamLogsThread(taskId, runId, nodeName, outErr))
     pool(execute(taskId, payload))
-      .transform {
-        case Throw(e) =>
-          // Normally, operator executor is supposed to be robust enough to catch all errors. But we still handle
-          // and uncaught error here, just in case...
-          threads.killAll()
-          logger.error(s"Operator raised an unexpected error", e)
-          Future.value(OpResult(-999, Some(Errors.create(e))))
-        case Return(result) =>
-          //TODO: we should drain logs before killing the thread.
-          threads.killAll()
-          client
-            .stopExecutor(StopExecutorRequest(executorId, taskId, result))
-            .rescue { case e: Throwable =>
-              logger.error(s"Error while marking task ${taskId.value} as completed", e)
-              Future.Done
-            }
+      .handle { case e: Throwable =>
+        // Normally, operator executor is supposed to be robust enough to catch all errors. But we still handle
+        // and uncaught error here, just in case...
+        logger.error(s"Operator raised an unexpected error", e)
+        OpResult(-999, Some(Errors.create(e)))
+      }
+      .flatMap { result =>
+        //TODO: we should drain logs before killing the thread.
+        threads.killAll()
+        client
+          .stopExecutor(StopExecutorRequest(executorId, taskId, result))
+          .rescue { case e: Throwable =>
+            logger.error(s"Error while marking task ${taskId.value} as completed", e)
+            Future.Done
+          }
       }
       .unit
   }
