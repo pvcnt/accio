@@ -18,7 +18,6 @@
 
 package fr.cnrs.liris.accio.ops
 
-import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.framework.sdk.{Dataset, _}
 import fr.cnrs.liris.accio.ops.model.PoiSet
 
@@ -35,11 +34,10 @@ import fr.cnrs.liris.accio.ops.model.PoiSet
   help = "Re-identification attack using POIs a the discriminating information.",
   cpu = 6,
   ram = "3G")
-class PoisReidentOp extends Operator[ReidentificationIn, ReidentificationOut] with SparkleOperator with StrictLogging {
+class PoisReidentOp extends Operator[ReidentificationIn, ReidentificationOut] with SparkleOperator {
   override def execute(in: ReidentificationIn, ctx: OpContext): ReidentificationOut = {
     val trainPois = read[PoiSet](in.train).toArray
     val testPois = read[PoiSet](in.test).toArray
-    logger.debug(s"Using ${trainPois.length} train POIs, ${testPois.length} test POIs")
 
     val distances = computeDistances(trainPois, testPois)
     val matches = computeMatches(distances)
