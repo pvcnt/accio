@@ -71,14 +71,23 @@ class StandaloneScheduler @Inject()(
     val activeWorkers = clusterState.snapshot.filter(_.activeTasks.exists(task => task.runId == runId))
     activeWorkers.flatMap { worker =>
       val tasks = worker.activeTasks.filter(task => task.runId == runId)
-      tasks.foreach(task => kill(worker, task.id))
+      tasks.foreach { task =>
+        try {
+          kill(worker, task.id)
+        } catch {
+          case _: InvalidTaskException => // Do nothing.
+        }
+      }
       tasks
     }
   }
 
   private def kill(worker: WorkerInfo, taskId: TaskId): Unit = {
-    Await.result(clientProvider.apply(worker.dest).killTask(KillTaskRequest(taskId)))
-    clusterState.update(worker.id, taskId, TaskState.Killed)
+    try {
+      Await.result(clientProvider.apply(worker.dest).killTask(KillTaskRequest(taskId)))
+    } finally {
+      clusterState.update(worker.id, taskId, TaskState.Killed)
+    }
   }
 
   private def maybeAssign(task: Task): Boolean = synchronized {
