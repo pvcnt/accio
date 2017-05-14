@@ -48,9 +48,9 @@ class PoisReidentOpSpec extends UnitSpec with OperatorSpec with WithTraceGenerat
     res.matches("user1") shouldBe "user1"
     res.matches("user2") shouldBe "user2"
     res.matches("user3") shouldBe "user3"
-    res.distances("user1").find(_._1 == "user1").get._2 shouldBe 0
-    res.distances("user2").find(_._1 == "user2").get._2 shouldBe 0
-    res.distances("user3").find(_._1 == "user3").get._2 shouldBe 0
+    //res.distances("user1").find(_._1 == "user1").get._2 shouldBe 0
+    //res.distances("user2").find(_._1 == "user2").get._2 shouldBe 0
+    //res.distances("user3").find(_._1 == "user3").get._2 shouldBe 0
   }
 
   it should "identify users" in {
