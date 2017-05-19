@@ -18,16 +18,15 @@
 
 package fr.cnrs.liris.accio.framework.util
 
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.{Lock, ReentrantLock}
 
-import scala.collection.JavaConverters._
+import scala.collection.mutable
 
 trait Lockable[T] {
-  private[this] val locks = new ConcurrentHashMap[T, Lock]().asScala
+  private[this] val locks = mutable.Map[T, Lock]()
 
   final protected def locked[U](key: T)(fn: U): U = {
-    val lock = locks.getOrElseUpdate(key, new ReentrantLock)
+    val lock = locks.synchronized(locks.getOrElseUpdate(key, new ReentrantLock))
     lock.lock()
     try {
       fn
