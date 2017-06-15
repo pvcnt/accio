@@ -42,7 +42,7 @@ function prepare_extras() {
   mkdir -p /etc/accio && cp /home/ubuntu/accio/etc/vagrant/clusters.json /etc/accio
 
   # Install Pants bash completion. It will trigger Pants initialization (including download).
-  su ubuntu -c "./pants bash-completion" > /etc/bash_completion.d/pants-completion.bash
+  #su ubuntu -c "./pants bash-completion" > /etc/bash_completion.d/pants-completion.bash
 }
 
 function prepare_sources {
@@ -50,6 +50,7 @@ function prepare_sources {
   ln -sf /vagrant/etc/vagrant/update-sources.sh /usr/local/bin/update-sources
   chmod +x /usr/local/bin/update-sources
   update-sources > /dev/null
+  mkdir /home/ubuntu/dist
   chown -R ubuntu: /home/ubuntu/accio
 }
 
