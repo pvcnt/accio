@@ -14,12 +14,17 @@ We have installation guides for the following platforms:
   * [Windows](windows.html)
   * [From sources](sources.html)
 
-**We recommend installing Accio from a binary distribution**, as it is the easiest method and more robust method.
+**We recommend installing Accio from a binary distribution**, as it is the easiest and more robust method.
 Compiling from source should be reserved for those who want to live on the edge.
+
 These instructions are for installing a client communicating with an existing Accio cluster.
 Instructions about how to deploy an Accio cluster can be found [in the appropriate section](../../deploy/architecture/).
 
 ## Local Vagrant cluster
-If you want to quickly bootstrap a local cluster, or to develop Accio, you can also use the [Vagrant distribution](vagrant.html).
-It allows to create a full cluster on a virtual machine, useful to test all features without having a live cluster.
-This is however not recommended for production.
+If you want to quickly bootstrap a local cluster, or to develop Accio, you can also use the [Vagrant](https://www.vagrantup.com/) distribution.
+Vagrant is a tool to easily create virtual machines on any operating system.
+Using Vagrant allows to create a full cluster contained inside a virtual machine, useful to test all features without having a live cluster.
+It is also the preferred way for developpers to contribute to Accio.
+This is however *not recommended for production usage*.
+
+  * [Running a local cluster with Vagrant](vagrant.html)
