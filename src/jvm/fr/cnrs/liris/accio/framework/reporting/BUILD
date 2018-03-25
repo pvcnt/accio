@@ -1,9 +1,0 @@
-scala_library(
-  dependencies=[
-    'src/jvm/fr/cnrs/liris/accio/framework/api',
-    'src/jvm/fr/cnrs/liris/common/geo',
-    'src/jvm/fr/cnrs/liris/common/util',
-    '3rdparty/jvm/org/joda/time',
-  ],
-  sources=globs('*.scala')
-)

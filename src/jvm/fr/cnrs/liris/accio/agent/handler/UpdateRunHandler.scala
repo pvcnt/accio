@@ -21,8 +21,8 @@ package fr.cnrs.liris.accio.agent.handler
 import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.agent.{UpdateRunRequest, UpdateRunResponse}
-import fr.cnrs.liris.accio.framework.api.thrift.{Run, UnknownRunException}
-import fr.cnrs.liris.accio.framework.storage.Storage
+import fr.cnrs.liris.accio.api.thrift.{Run, UnknownRunException}
+import fr.cnrs.liris.accio.storage.Storage
 import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 
 /**

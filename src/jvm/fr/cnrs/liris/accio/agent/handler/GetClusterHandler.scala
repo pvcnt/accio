@@ -22,7 +22,7 @@ import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.agent.config.ClusterName
 import fr.cnrs.liris.accio.agent.{GetClusterRequest, GetClusterResponse}
-import fr.cnrs.liris.accio.framework.util.Version
+import fr.cnrs.liris.accio.util.Version
 import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 
 /**

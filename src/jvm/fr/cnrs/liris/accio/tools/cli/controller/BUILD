@@ -1,6 +1,6 @@
 scala_library(
   dependencies=[
-    'src/jvm/fr/cnrs/liris/accio/framework/api',
+    'src/jvm/fr/cnrs/liris/accio/api',
     'src/jvm/fr/cnrs/liris/accio/runtime/event',
     'src/jvm/fr/cnrs/liris/common/util',
     'src/thrift/fr/cnrs/liris/accio/agent',

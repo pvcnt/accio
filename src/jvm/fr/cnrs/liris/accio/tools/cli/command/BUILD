@@ -2,9 +2,9 @@ scala_library(
   dependencies=[
     'src/jvm/fr/cnrs/liris/accio/tools/cli/config',
     'src/jvm/fr/cnrs/liris/accio/tools/cli/controller',
-    'src/jvm/fr/cnrs/liris/accio/framework/api',
-    'src/jvm/fr/cnrs/liris/accio/framework/reporting',
-    'src/jvm/fr/cnrs/liris/accio/framework/util',
+    'src/jvm/fr/cnrs/liris/accio/api',
+    'src/jvm/fr/cnrs/liris/accio/reporting',
+    'src/jvm/fr/cnrs/liris/accio/util',
     'src/jvm/fr/cnrs/liris/accio/runtime/cli:annotations',
     'src/jvm/fr/cnrs/liris/accio/runtime/cli',
     'src/jvm/fr/cnrs/liris/accio/runtime/event',

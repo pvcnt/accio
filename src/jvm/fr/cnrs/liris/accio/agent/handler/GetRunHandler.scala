@@ -22,7 +22,7 @@ import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{GetRunRequest, GetRunResponse}
-import fr.cnrs.liris.accio.framework.storage.Storage
+import fr.cnrs.liris.accio.storage.Storage
 
 /**
  * Retrieve a single run, if it exists.

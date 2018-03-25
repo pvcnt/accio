@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.accio.framework.sdk._
+import fr.cnrs.liris.accio.sdk._
 import fr.cnrs.liris.locapriv.clustering.{Cluster, PoisClusterer}
 import fr.cnrs.liris.locapriv.model.{Event, Trace}
 import fr.cnrs.liris.locapriv.sparkle.DataFrame

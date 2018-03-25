@@ -22,7 +22,7 @@ import fr.cnrs.liris.locapriv.model.Trace
 import fr.cnrs.liris.locapriv.testing.WithTraceGenerator
 import fr.cnrs.liris.testing.UnitSpec
 import org.joda.time.{DateTime, Duration, Instant}
-import fr.cnrs.liris.accio.framework.api.Values.instantOrdering
+import fr.cnrs.liris.accio.api.Values.instantOrdering
 
 /**
  * Unit tests for [[CollapseTemporalGapsOp]].

@@ -23,8 +23,8 @@ import com.twitter.util.{Duration, Time}
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.agent.LostTaskRequest
 import fr.cnrs.liris.accio.agent.config.WorkerTimeout
-import fr.cnrs.liris.accio.framework.scheduler.standalone.{ClusterState, WorkerInfo}
-import fr.cnrs.liris.accio.framework.util.InfiniteLoopThreadLike
+import fr.cnrs.liris.accio.scheduler.standalone.{ClusterState, WorkerInfo}
+import fr.cnrs.liris.accio.util.InfiniteLoopThreadLike
 
 /**
  * Observer tracking lost tasks.

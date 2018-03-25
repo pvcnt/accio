@@ -1,0 +1,13 @@
+scala_library(
+  dependencies=[
+    'src/jvm/fr/cnrs/liris/accio/api',
+    'src/jvm/fr/cnrs/liris/accio/sdk',
+    'src/jvm/fr/cnrs/liris/accio/sdk:annotations',
+    'src/jvm/fr/cnrs/liris/accio/discovery',
+    'src/jvm/fr/cnrs/liris/common/reflect',
+    '3rdparty/jvm/com/typesafe/scala-logging',
+    '3rdparty/jvm/com/twitter/inject:core',
+    '3rdparty/jvm/io/github/lukehutch/fast-classpath-scanner',
+  ],
+  sources=globs('*.scala')
+)

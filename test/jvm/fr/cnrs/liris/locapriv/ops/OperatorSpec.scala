@@ -20,7 +20,7 @@ package fr.cnrs.liris.locapriv.ops
 
 import java.nio.file.Files
 
-import fr.cnrs.liris.accio.framework.sdk.{Dataset, OpContext}
+import fr.cnrs.liris.accio.sdk.{Dataset, OpContext}
 import fr.cnrs.liris.accio.testing.WithSparkleEnv
 import fr.cnrs.liris.locapriv.io.{CsvSink, CsvSource}
 import fr.cnrs.liris.locapriv.io.{CsvPoiSetCodec, TraceCodec}

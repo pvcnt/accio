@@ -22,9 +22,9 @@ import com.google.inject.Inject
 import com.twitter.util.Future
 import com.typesafe.scalalogging.LazyLogging
 import fr.cnrs.liris.accio.agent.{StreamTaskLogsRequest, StreamTaskLogsResponse}
-import fr.cnrs.liris.accio.framework.api.thrift.{InvalidTaskException, InvalidWorkerException}
-import fr.cnrs.liris.accio.framework.scheduler.standalone.ClusterState
-import fr.cnrs.liris.accio.framework.storage.Storage
+import fr.cnrs.liris.accio.api.thrift.{InvalidTaskException, InvalidWorkerException}
+import fr.cnrs.liris.accio.scheduler.standalone.ClusterState
+import fr.cnrs.liris.accio.storage.Storage
 import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 
 /**

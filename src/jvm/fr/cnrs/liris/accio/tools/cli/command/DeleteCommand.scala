@@ -22,7 +22,7 @@ import com.google.inject.Inject
 import fr.cnrs.liris.accio.agent.{AgentService$FinagleClient, DeleteRunRequest}
 import fr.cnrs.liris.accio.runtime.event.{Event, Reporter}
 import fr.cnrs.liris.accio.runtime.cli.{Cmd, ExitCode}
-import fr.cnrs.liris.accio.framework.api.thrift._
+import fr.cnrs.liris.accio.api.thrift._
 import fr.cnrs.liris.common.flags.FlagsProvider
 
 @Cmd(

@@ -25,9 +25,9 @@ import com.google.inject.{Inject, Singleton}
 import com.twitter.util._
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.agent.config.{ExecutorArgs, ExecutorUri, WorkerRpcDest}
-import fr.cnrs.liris.accio.framework.api.thrift.{InvalidTaskException, Task, TaskId}
-import fr.cnrs.liris.accio.framework.filesystem.FileSystem
-import fr.cnrs.liris.accio.framework.util.{ThreadLike, ThreadManager, WorkDir, WorkerPool}
+import fr.cnrs.liris.accio.api.thrift.{InvalidTaskException, Task, TaskId}
+import fr.cnrs.liris.accio.filesystem.FileSystem
+import fr.cnrs.liris.accio.util.{ThreadLike, ThreadManager, WorkDir, WorkerPool}
 import fr.cnrs.liris.common.util.FileUtils
 
 import scala.collection.mutable

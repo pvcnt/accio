@@ -21,10 +21,10 @@ package fr.cnrs.liris.accio.agent.handler
 import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.agent.{DeleteRunRequest, DeleteRunResponse}
-import fr.cnrs.liris.accio.framework.api.thrift.{RunId, UnknownRunException}
-import fr.cnrs.liris.accio.framework.scheduler.standalone.ClusterState
-import fr.cnrs.liris.accio.framework.scheduler.{EventType, Scheduler}
-import fr.cnrs.liris.accio.framework.storage.Storage
+import fr.cnrs.liris.accio.api.thrift.{RunId, UnknownRunException}
+import fr.cnrs.liris.accio.scheduler.standalone.ClusterState
+import fr.cnrs.liris.accio.scheduler.{EventType, Scheduler}
+import fr.cnrs.liris.accio.storage.Storage
 import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 
 /**

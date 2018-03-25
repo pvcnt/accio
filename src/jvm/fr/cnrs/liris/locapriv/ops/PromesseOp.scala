@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.accio.framework.sdk.{Dataset, _}
+import fr.cnrs.liris.accio.sdk.{Dataset, _}
 import fr.cnrs.liris.common.geo.Distance
 import fr.cnrs.liris.locapriv.lppm.SpeedSmoothing
 import fr.cnrs.liris.locapriv.model.Trace

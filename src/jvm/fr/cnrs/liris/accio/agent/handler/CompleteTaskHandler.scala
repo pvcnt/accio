@@ -22,11 +22,11 @@ import com.google.inject.Inject
 import com.twitter.util.Future
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.agent.{CompleteTaskRequest, CompleteTaskResponse}
-import fr.cnrs.liris.accio.framework.api.thrift._
-import fr.cnrs.liris.accio.framework.scheduler.standalone.ClusterState
-import fr.cnrs.liris.accio.framework.scheduler.{EventType, Scheduler}
-import fr.cnrs.liris.accio.framework.service.RunManager
-import fr.cnrs.liris.accio.framework.storage.Storage
+import fr.cnrs.liris.accio.api.thrift._
+import fr.cnrs.liris.accio.scheduler.standalone.ClusterState
+import fr.cnrs.liris.accio.scheduler.{EventType, Scheduler}
+import fr.cnrs.liris.accio.service.RunManager
+import fr.cnrs.liris.accio.storage.Storage
 import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 
 /**

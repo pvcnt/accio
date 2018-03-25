@@ -24,10 +24,10 @@ import com.google.inject.Inject
 import com.twitter.util._
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.agent._
-import fr.cnrs.liris.accio.framework.api.Errors
-import fr.cnrs.liris.accio.framework.api.thrift._
-import fr.cnrs.liris.accio.framework.service.{OpExecutor, OpExecutorOpts, OutErr}
-import fr.cnrs.liris.accio.framework.util.{InfiniteLoopThreadLike, ThreadManager, WorkerPool}
+import fr.cnrs.liris.accio.api.Errors
+import fr.cnrs.liris.accio.api.thrift._
+import fr.cnrs.liris.accio.service.{OpExecutor, OpExecutorOpts, OutErr}
+import fr.cnrs.liris.accio.util.{InfiniteLoopThreadLike, ThreadManager, WorkerPool}
 
 /**
  * Execute tasks. Starting the execution of a task only requires a task identifier. The task executor will then

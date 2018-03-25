@@ -25,8 +25,8 @@ import com.twitter.util._
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.agent._
 import fr.cnrs.liris.accio.agent.config.{WorkerRpcDest, WorkerTimeout}
-import fr.cnrs.liris.accio.framework.api.thrift.{InvalidWorkerException, Resource}
-import fr.cnrs.liris.accio.framework.util.{InfiniteLoopThreadLike, ThreadManager, WorkerPool}
+import fr.cnrs.liris.accio.api.thrift.{InvalidWorkerException, Resource}
+import fr.cnrs.liris.accio.util.{InfiniteLoopThreadLike, ThreadManager, WorkerPool}
 
 /**
  * Handles the registration lifecycle of a worker with its master, and the heartbeat.

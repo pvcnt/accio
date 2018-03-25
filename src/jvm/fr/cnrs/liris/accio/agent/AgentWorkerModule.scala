@@ -29,8 +29,8 @@ import com.twitter.inject.{Injector, TwitterModule}
 import com.twitter.util._
 import fr.cnrs.liris.accio.agent.config._
 import fr.cnrs.liris.accio.agent.handler._
-import fr.cnrs.liris.accio.framework.api.thrift.Resource
-import fr.cnrs.liris.accio.framework.filesystem.inject.FileSystemModule
+import fr.cnrs.liris.accio.api.thrift.Resource
+import fr.cnrs.liris.accio.filesystem.inject.FileSystemModule
 import fr.cnrs.liris.accio.runtime.commandbus.Handler
 import fr.cnrs.liris.accio.runtime.finagle.RetryPolicies
 import fr.cnrs.liris.common.util.Platform

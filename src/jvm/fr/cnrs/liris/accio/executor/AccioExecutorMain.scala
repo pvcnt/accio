@@ -20,8 +20,8 @@ package fr.cnrs.liris.accio.executor
 
 import com.twitter.inject.app.App
 import com.twitter.util.Await
-import fr.cnrs.liris.accio.framework.api.thrift.TaskId
-import fr.cnrs.liris.accio.framework.filesystem.inject.FileSystemModule
+import fr.cnrs.liris.accio.api.thrift.TaskId
+import fr.cnrs.liris.accio.filesystem.inject.FileSystemModule
 
 /**
  * Accio executor main method.

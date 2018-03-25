@@ -1,9 +1,9 @@
 junit_tests(
   name='testing',
   dependencies=[
-    'src/jvm/fr/cnrs/liris/accio/framework/api',
+    'src/jvm/fr/cnrs/liris/accio/api',
     'src/jvm/fr/cnrs/liris/locapriv/sparkle',
-    'src/thrift/fr/cnrs/liris/accio/framework/api',
+    'src/thrift/fr/cnrs/liris/accio/api',
     'test/jvm/fr/cnrs/liris/testing',
   ],
   sources=globs('*.scala'),

@@ -22,8 +22,8 @@ import com.google.inject.Inject
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.runtime.commandbus.AbstractHandler
 import fr.cnrs.liris.accio.agent.{ParseRunRequest, ParseRunResponse}
-import fr.cnrs.liris.accio.framework.api.thrift.{InvalidSpecException, InvalidSpecMessage}
-import fr.cnrs.liris.accio.framework.dsl.RunParser
+import fr.cnrs.liris.accio.api.thrift.{InvalidSpecException, InvalidSpecMessage}
+import fr.cnrs.liris.accio.dsl.RunParser
 
 import scala.collection.mutable
 

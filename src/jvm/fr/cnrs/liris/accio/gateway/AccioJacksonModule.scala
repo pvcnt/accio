@@ -23,8 +23,8 @@ import com.fasterxml.jackson.databind.SerializerProvider
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.databind.ser.std.StdSerializer
 import com.twitter.scrooge.{ThriftEnum, ThriftStruct, ThriftStructCodec, ThriftUnion}
-import fr.cnrs.liris.accio.framework.api.Values
-import fr.cnrs.liris.accio.framework.api.thrift._
+import fr.cnrs.liris.accio.api.Values
+import fr.cnrs.liris.accio.api.thrift._
 import fr.cnrs.liris.common.geo.Distance
 
 import scala.reflect.{ClassTag, classTag}

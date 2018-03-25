@@ -24,7 +24,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.util.Comparator;
 
-import junit.framework.Assert;
+import junit.Assert;
 
 import java.util.Iterator;
 import java.util.List;

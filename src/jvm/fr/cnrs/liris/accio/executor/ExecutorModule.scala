@@ -30,8 +30,8 @@ import com.twitter.finagle.thrift.ThriftClientRequest
 import com.twitter.inject.{Injector, TwitterModule}
 import com.twitter.util.{Duration, ExecutorServiceFuturePool, FuturePool}
 import fr.cnrs.liris.accio.agent.{AgentService, AgentService$FinagleClient}
-import fr.cnrs.liris.accio.framework.discovery.inject.DiscoveryModule
-import fr.cnrs.liris.accio.framework.util.WorkerPool
+import fr.cnrs.liris.accio.discovery.inject.DiscoveryModule
+import fr.cnrs.liris.accio.util.WorkerPool
 import fr.cnrs.liris.accio.runtime.finagle.RetryPolicies
 
 /**

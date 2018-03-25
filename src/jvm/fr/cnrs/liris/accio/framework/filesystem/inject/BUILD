@@ -1,8 +1,0 @@
-scala_library(
-  dependencies=[
-    'src/jvm/fr/cnrs/liris/accio/framework/filesystem/posix',
-    'src/jvm/fr/cnrs/liris/accio/framework/filesystem/s3',
-    '3rdparty/jvm/com/twitter/inject:core',
-  ],
-  sources=globs('*.scala')
-)

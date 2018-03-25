@@ -15,7 +15,7 @@
  */
 package com.google.common.geometry;
 
-import junit.framework.TestCase;
+import junit.TestCase;
 
 public strictfp class S1AngleTest extends TestCase {
 

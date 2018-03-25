@@ -20,7 +20,7 @@ package fr.cnrs.liris.locapriv.ops
 
 import java.nio.file.Files
 
-import fr.cnrs.liris.accio.framework.sdk.{Dataset, OpContext, Operator}
+import fr.cnrs.liris.accio.sdk.{Dataset, OpContext, Operator}
 import fr.cnrs.liris.common.util.Identified
 import fr.cnrs.liris.locapriv.io._
 import fr.cnrs.liris.locapriv.sparkle.{DataFrame, SparkleEnv}

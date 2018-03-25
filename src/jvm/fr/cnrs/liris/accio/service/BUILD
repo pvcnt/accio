@@ -1,0 +1,15 @@
+scala_library(
+  dependencies=[
+    'src/jvm/fr/cnrs/liris/accio/sdk',
+    'src/jvm/fr/cnrs/liris/accio/api',
+    'src/jvm/fr/cnrs/liris/accio/filesystem',
+    'src/jvm/fr/cnrs/liris/accio/storage',
+    'src/jvm/fr/cnrs/liris/accio/scheduler',
+    'src/jvm/fr/cnrs/liris/accio/discovery',
+    'src/jvm/fr/cnrs/liris/common/cache',
+    'src/jvm/fr/cnrs/liris/common/util',
+    '3rdparty/jvm/com/typesafe/scala-logging',
+    '3rdparty/jvm/com/twitter/inject:core',
+  ],
+  sources=globs('*.scala')
+)

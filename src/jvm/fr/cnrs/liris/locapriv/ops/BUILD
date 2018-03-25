@@ -1,8 +1,8 @@
 scala_library(
   dependencies=[
     ':resources',
-    'src/jvm/fr/cnrs/liris/accio/framework/sdk',
-    'src/jvm/fr/cnrs/liris/accio/framework/sdk:annotations',
+    'src/jvm/fr/cnrs/liris/accio/sdk',
+    'src/jvm/fr/cnrs/liris/accio/sdk:annotations',
     'src/jvm/fr/cnrs/liris/locapriv/sparkle',
     'src/jvm/fr/cnrs/liris/locapriv/model',
     'src/jvm/fr/cnrs/liris/locapriv/lppm',

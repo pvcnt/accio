@@ -19,7 +19,7 @@
 package fr.cnrs.liris.locapriv.ops
 
 import com.google.common.geometry.S2CellId
-import fr.cnrs.liris.accio.framework.sdk.{Dataset, _}
+import fr.cnrs.liris.accio.sdk.{Dataset, _}
 import fr.cnrs.liris.common.geo.LatLng
 import fr.cnrs.liris.common.util.Requirements._
 import fr.cnrs.liris.locapriv.model.Trace

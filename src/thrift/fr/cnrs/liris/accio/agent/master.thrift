@@ -18,7 +18,7 @@
 
 namespace java fr.cnrs.liris.accio.agent
 
-include "fr/cnrs/liris/accio/framework/api/accio.thrift"
+include "fr/cnrs/liris/accio/api/accio.thrift"
 
 struct RegisterWorkerRequest {
   // Identifier of this worker, which should be unique across all workers.

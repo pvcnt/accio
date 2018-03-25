@@ -22,8 +22,8 @@ import java.nio.file.Paths
 
 import com.twitter.inject.app.App
 import com.twitter.util.Stopwatch
-import fr.cnrs.liris.accio.framework.discovery.OpDiscovery
-import fr.cnrs.liris.accio.framework.discovery.inject.DiscoveryModule
+import fr.cnrs.liris.accio.discovery.OpDiscovery
+import fr.cnrs.liris.accio.discovery.inject.DiscoveryModule
 
 object AccioDocgenMain extends AccioDocgen
 

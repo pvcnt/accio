@@ -18,8 +18,8 @@
 
 package fr.cnrs.liris.accio.testing
 
-import fr.cnrs.liris.accio.framework.api.Values
-import fr.cnrs.liris.accio.framework.api.thrift._
+import fr.cnrs.liris.accio.api.Values
+import fr.cnrs.liris.accio.api.thrift._
 
 /**
  * Static definition of operators to be used in tests.

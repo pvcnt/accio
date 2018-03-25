@@ -28,10 +28,10 @@ import com.twitter.concurrent.NamedPoolThreadFactory
 import com.twitter.inject.TwitterModule
 import com.twitter.util.{Duration, FuturePool}
 import fr.cnrs.liris.accio.agent.config._
-import fr.cnrs.liris.accio.framework.discovery.inject.DiscoveryModule
-import fr.cnrs.liris.accio.framework.filesystem.inject.FileSystemModule
-import fr.cnrs.liris.accio.framework.service._
-import fr.cnrs.liris.accio.framework.util.{WorkDir, WorkerPool}
+import fr.cnrs.liris.accio.discovery.inject.DiscoveryModule
+import fr.cnrs.liris.accio.filesystem.inject.FileSystemModule
+import fr.cnrs.liris.accio.service._
+import fr.cnrs.liris.accio.util.{WorkDir, WorkerPool}
 import fr.cnrs.liris.accio.runtime.commandbus.Handler
 import fr.cnrs.liris.common.util.Platform
 import net.codingwell.scalaguice.ScalaMultibinder

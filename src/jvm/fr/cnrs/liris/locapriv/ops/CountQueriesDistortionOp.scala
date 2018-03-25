@@ -20,7 +20,7 @@ package fr.cnrs.liris.locapriv.ops
 
 import java.util.concurrent.atomic.AtomicLong
 
-import fr.cnrs.liris.accio.framework.sdk.{Dataset, _}
+import fr.cnrs.liris.accio.sdk.{Dataset, _}
 import fr.cnrs.liris.locapriv.sparkle.DataFrame
 import fr.cnrs.liris.common.geo.{BoundingBox, Distance, Point}
 import fr.cnrs.liris.common.random.RandomUtils

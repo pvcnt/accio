@@ -20,7 +20,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
-import junit.framework.TestCase;
+import junit.TestCase;
 
 import java.util.List;
 import java.util.Random;

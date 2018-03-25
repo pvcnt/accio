@@ -2,7 +2,7 @@ scala_library(
   name='docgen',
   dependencies=[
     ':resources',
-    'src/jvm/fr/cnrs/liris/accio/framework/discovery/inject',
+    'src/jvm/fr/cnrs/liris/accio/discovery/inject',
     '3rdparty/jvm:logback',
     scoped('src/jvm/fr/cnrs/liris/locapriv/ops', 'runtime'),
     '3rdparty/jvm/com/twitter/inject:app',

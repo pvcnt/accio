@@ -1,0 +1,9 @@
+scala_library(
+  dependencies=[
+    'src/thrift/fr/cnrs/liris/accio/api',
+    'src/jvm/fr/cnrs/liris/accio/storage',
+    'src/jvm/fr/cnrs/liris/accio/util',
+    '3rdparty/jvm/com/twitter/inject:core',
+  ],
+  sources=globs('*.scala')
+)

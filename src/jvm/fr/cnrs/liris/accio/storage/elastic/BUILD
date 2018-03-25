@@ -1,0 +1,24 @@
+scala_library(
+  dependencies=[
+    ':annotations',
+    'src/jvm/fr/cnrs/liris/accio/storage',
+    'src/jvm/fr/cnrs/liris/accio/util',
+    'src/thrift/fr/cnrs/liris/accio/api',
+    '3rdparty/jvm/com/sksamuel/elastic4s:core',
+    '3rdparty/jvm/com/sksamuel/elastic4s:jackson',
+    '3rdparty/jvm/com/typesafe/scala-logging',
+    '3rdparty/jvm:scrooge-core',
+    '3rdparty/jvm/com/twitter/inject:core',
+    '3rdparty/jvm/com/twitter/finatra:jackson',
+    '3rdparty/jvm/com/twitter/bijection:util',
+  ],
+  sources=globs('*.scala')
+)
+
+java_library(
+  name='annotations',
+  dependencies=[
+    '3rdparty/jvm/com/twitter/inject:core',
+  ],
+  sources=globs('*.java')
+)

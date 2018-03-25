@@ -23,9 +23,9 @@ import com.twitter.inject.{Injector, TwitterModule}
 import com.twitter.util.FuturePool
 import fr.cnrs.liris.accio.agent.handler._
 import fr.cnrs.liris.accio.agent.handler.api._
-import fr.cnrs.liris.accio.framework.dsl.inject.DslModule
-import fr.cnrs.liris.accio.framework.scheduler.inject.SchedulerModule
-import fr.cnrs.liris.accio.framework.storage.inject.StorageModule
+import fr.cnrs.liris.accio.dsl.inject.DslModule
+import fr.cnrs.liris.accio.scheduler.inject.SchedulerModule
+import fr.cnrs.liris.accio.storage.inject.StorageModule
 import fr.cnrs.liris.accio.runtime.commandbus.Handler
 import net.codingwell.scalaguice.ScalaMultibinder
 

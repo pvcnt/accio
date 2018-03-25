@@ -26,8 +26,8 @@ import com.twitter.util.Await
 import fr.cnrs.liris.accio.agent.{AgentService$FinagleClient, GetRunRequest}
 import fr.cnrs.liris.accio.runtime.event.{Event, Reporter}
 import fr.cnrs.liris.accio.runtime.cli.{Cmd, ExitCode}
-import fr.cnrs.liris.accio.framework.reporting._
-import fr.cnrs.liris.accio.framework.api.thrift.RunId
+import fr.cnrs.liris.accio.reporting._
+import fr.cnrs.liris.accio.api.thrift.RunId
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.util.{FileUtils, HashUtils, StringUtils}
 

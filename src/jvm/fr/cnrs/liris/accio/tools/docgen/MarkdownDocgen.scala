@@ -21,8 +21,8 @@ package fr.cnrs.liris.accio.tools.docgen
 import java.io.{BufferedOutputStream, FileOutputStream, PrintStream}
 import java.nio.file.{Files, Path}
 
-import fr.cnrs.liris.accio.framework.api.thrift.OpDef
-import fr.cnrs.liris.accio.framework.api.{DataTypes, Values}
+import fr.cnrs.liris.accio.api.thrift.OpDef
+import fr.cnrs.liris.accio.api.{DataTypes, Values}
 
 case class DocgenOpts(out: Path, toc: Boolean, layout: String)
 

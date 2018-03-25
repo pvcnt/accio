@@ -1,9 +1,0 @@
-scala_library(
-  dependencies=[
-    'src/jvm/fr/cnrs/liris/accio/framework/api',
-    'src/jvm/fr/cnrs/liris/accio/framework/service',
-    '3rdparty/jvm/com/twitter/finatra:jackson',
-    '3rdparty/jvm/com/typesafe/scala-logging',
-  ],
-  sources=globs('*.scala')
-)

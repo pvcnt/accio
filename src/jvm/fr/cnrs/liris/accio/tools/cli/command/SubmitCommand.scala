@@ -23,8 +23,8 @@ import java.nio.file.Files
 import com.google.inject.Inject
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.agent.{AgentService$FinagleClient, CreateRunRequest, ParseRunRequest}
-import fr.cnrs.liris.accio.framework.api.Utils
-import fr.cnrs.liris.accio.framework.api.thrift.RunSpec
+import fr.cnrs.liris.accio.api.Utils
+import fr.cnrs.liris.accio.api.thrift.RunSpec
 import fr.cnrs.liris.accio.runtime.cli.{Cmd, ExitCode}
 import fr.cnrs.liris.accio.runtime.event.{Event, EventKind, Reporter}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}

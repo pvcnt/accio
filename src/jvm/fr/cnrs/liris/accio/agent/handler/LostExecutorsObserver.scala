@@ -23,8 +23,8 @@ import com.twitter.util.{Await, Duration, Future, Time}
 import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.agent.config.ExecutorTimeout
 import fr.cnrs.liris.accio.agent.{AgentService$FinagleClient, LostTaskRequest}
-import fr.cnrs.liris.accio.framework.api.thrift.{ExecutorId, TaskId}
-import fr.cnrs.liris.accio.framework.util.InfiniteLoopThreadLike
+import fr.cnrs.liris.accio.api.thrift.{ExecutorId, TaskId}
+import fr.cnrs.liris.accio.util.InfiniteLoopThreadLike
 
 /**
  * Observer tracking lost executors.

@@ -1,11 +1,11 @@
 scala_library(
   dependencies=[
-    'src/jvm/fr/cnrs/liris/accio/framework/api',
-    'src/jvm/fr/cnrs/liris/accio/framework/service',
-    'src/jvm/fr/cnrs/liris/accio/framework/discovery/inject',
-    'src/jvm/fr/cnrs/liris/accio/framework/filesystem/inject',
-    'src/jvm/fr/cnrs/liris/accio/framework/util',
-    'src/jvm/fr/cnrs/liris/accio/framework/util:annotations',
+    'src/jvm/fr/cnrs/liris/accio/api',
+    'src/jvm/fr/cnrs/liris/accio/service',
+    'src/jvm/fr/cnrs/liris/accio/discovery/inject',
+    'src/jvm/fr/cnrs/liris/accio/filesystem/inject',
+    'src/jvm/fr/cnrs/liris/accio/util',
+    'src/jvm/fr/cnrs/liris/accio/util:annotations',
     'src/jvm/fr/cnrs/liris/accio/runtime/finagle',
     'src/thrift/fr/cnrs/liris/accio/agent',
     scoped('src/jvm/fr/cnrs/liris/locapriv/ops', 'runtime'),
