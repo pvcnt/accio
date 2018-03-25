@@ -16,6 +16,7 @@
 
 scala_library(
   dependencies=[
+    ':resources',
     'src/jvm/fr/cnrs/liris/accio/tools/cli/config/inject',
     'src/jvm/fr/cnrs/liris/accio/tools/cli/command/inject',
     'src/jvm/fr/cnrs/liris/accio/runtime/cli',
@@ -37,12 +38,14 @@ scala_library(
   sources=globs('*.scala')
 )
 
+resources(
+  name='resources',
+  sources=['logback.xml']
+)
+
 jvm_binary(
   name='bin',
-  dependencies=[
-    ':cli',
-    'src/resources/fr/cnrs/liris/accio/tools/cli',
-  ],
+  dependencies=[':cli'],
   main='fr.cnrs.liris.accio.tools.cli.AccioClientMain',
   basename='accio-client',
 )

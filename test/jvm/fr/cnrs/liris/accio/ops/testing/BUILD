@@ -1,10 +1,15 @@
 scala_library(
   dependencies=[
-    '3rdparty/jvm:scala-time',
+    ':resources',
     'src/jvm/fr/cnrs/liris/accio/ops/model',
     'src/jvm/fr/cnrs/liris/accio/ops/io',
     'src/jvm/fr/cnrs/liris/common/geo',
-    'test/resources/fr/cnrs/liris/accio/ops/testing',
+    '3rdparty/jvm:scala-time',
   ],
   sources=globs('*.scala'),
+)
+
+resources(
+  name='resources',
+  sources=['abboip.csv'],
 )

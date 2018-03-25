@@ -1,7 +1,9 @@
 scala_library(
   name='docgen',
   dependencies=[
+    ':resources',
     'src/jvm/fr/cnrs/liris/accio/framework/discovery/inject',
+    '3rdparty/jvm:logback',
     scoped('src/jvm/fr/cnrs/liris/accio/ops', 'runtime'),
     '3rdparty/jvm/com/twitter/inject:app',
   ],
@@ -11,13 +13,14 @@ scala_library(
   sources=globs('*.scala')
 )
 
+resources(
+  name='resources',
+  sources=['logback.xml']
+)
+
 jvm_binary(
   name='bin',
-  dependencies=[
-    ':docgen',
-    'src/resources/fr/cnrs/liris/accio/tools/cli',
-    '3rdparty/jvm:logback',
-  ],
+  dependencies=[':docgen'],
   main='fr.cnrs.liris.accio.tools.docgen.AccioDocgenMain',
   basename='accio-docgen',
 )

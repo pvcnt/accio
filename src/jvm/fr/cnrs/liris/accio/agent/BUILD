@@ -1,5 +1,6 @@
 scala_library(
   dependencies=[
+    ':resources',
     'src/jvm/fr/cnrs/liris/accio/agent/handler',
     'src/jvm/fr/cnrs/liris/accio/framework/filesystem/inject',
     'src/jvm/fr/cnrs/liris/accio/framework/storage/inject',
@@ -11,7 +12,6 @@ scala_library(
     'src/jvm/fr/cnrs/liris/accio/runtime/commandbus',
     'src/jvm/fr/cnrs/liris/accio/runtime/logging',
     'src/jvm/fr/cnrs/liris/accio/runtime/finagle',
-    'src/resources/fr/cnrs/liris/accio/agent',
     scoped('src/jvm/fr/cnrs/liris/accio/ops', 'runtime'),
     'src/thrift/fr/cnrs/liris/accio/agent',
     '3rdparty/jvm/com/twitter/finatra:thrift',
@@ -41,6 +41,11 @@ scala_library(
     exclude('com.twitter.finatra', 'finatra-scalap-compiler-deps_2.11'),
   ],
   sources=globs('*.scala')
+)
+
+resources(
+  name='resources',
+  sources=['logback.xml']
 )
 
 jvm_binary(

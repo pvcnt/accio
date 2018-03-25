@@ -1,9 +1,9 @@
 scala_library(
   dependencies=[
+    ':resources',
     'src/jvm/fr/cnrs/liris/accio/framework/api',
     'src/jvm/fr/cnrs/liris/common/util',
     'src/thrift/fr/cnrs/liris/accio/agent',
-    'src/resources/fr/cnrs/liris/accio/gateway',
     'src/node/fr/cnrs/liris/accio/gateway',
     '3rdparty/jvm/com/twitter/finatra:http',
     '3rdparty/jvm/com/twitter/finatra:httpclient',
@@ -20,6 +20,11 @@ scala_library(
     exclude('com.twitter', 'libthrift'),
   ],
   sources=globs('*.scala')
+)
+
+resources(
+  name='resources',
+  sources=['logback.xml']
 )
 
 jvm_binary(
