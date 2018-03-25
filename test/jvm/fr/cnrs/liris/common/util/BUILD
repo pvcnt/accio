@@ -3,8 +3,6 @@ junit_tests(
     dependencies=[
         'src/jvm/fr/cnrs/liris/common/util',
         'test/jvm/fr/cnrs/liris/testing',
-    ],
-    resources=[
         ':messages',
     ],
     sources=globs('*.scala'),

@@ -8,7 +8,7 @@ java_thrift_library(
   ],
   compiler='scrooge',
   language='scala',
-  rpc_style = 'finagle',
+  compiler_args=['--finagle'],
 )
 
 java_thrift_library(
@@ -21,7 +21,7 @@ java_thrift_library(
   ],
   compiler='scrooge',
   language='scala',
-  rpc_style = 'finagle',
+  compiler_args=['--finagle'],
 )
 
 java_thrift_library(
@@ -34,7 +34,7 @@ java_thrift_library(
   ],
   compiler='scrooge',
   language='scala',
-  rpc_style = 'finagle',
+  compiler_args=['--finagle'],
 )
 
 
@@ -51,5 +51,5 @@ java_thrift_library(
   ],
   compiler='scrooge',
   language='scala',
-  rpc_style = 'finagle',
+  compiler_args=['--finagle'],
 )

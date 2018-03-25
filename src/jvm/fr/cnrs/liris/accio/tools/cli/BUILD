@@ -41,8 +41,6 @@ jvm_binary(
   name='bin',
   dependencies=[
     ':cli',
-  ],
-  resources=[
     'src/resources/fr/cnrs/liris/accio/tools/cli',
   ],
   main='fr.cnrs.liris.accio.tools.cli.AccioClientMain',

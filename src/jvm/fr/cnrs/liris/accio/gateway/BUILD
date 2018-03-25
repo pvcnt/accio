@@ -3,6 +3,8 @@ scala_library(
     'src/jvm/fr/cnrs/liris/accio/framework/api',
     'src/jvm/fr/cnrs/liris/common/util',
     'src/thrift/fr/cnrs/liris/accio/agent',
+    'src/resources/fr/cnrs/liris/accio/gateway',
+    'src/node/fr/cnrs/liris/accio/gateway',
     '3rdparty/jvm/com/twitter/finatra:http',
     '3rdparty/jvm/com/twitter/finatra:httpclient',
     '3rdparty/jvm/com/twitter/finagle:serversets',
@@ -16,10 +18,6 @@ scala_library(
     exclude('commons-logging', 'commons-logging'),
     # We already include canonical Thrift library, we do not need the one provided by Finagle.
     exclude('com.twitter', 'libthrift'),
-  ],
-  resources = [
-    'src/resources/fr/cnrs/liris/accio/gateway',
-    'src/node/fr/cnrs/liris/accio/gateway',
   ],
   sources=globs('*.scala')
 )

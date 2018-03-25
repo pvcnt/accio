@@ -15,10 +15,8 @@ jvm_binary(
   name='bin',
   dependencies=[
     ':docgen',
-    '3rdparty/jvm:logback',
-  ],
-  resources=[
     'src/resources/fr/cnrs/liris/accio/tools/cli',
+    '3rdparty/jvm:logback',
   ],
   main='fr.cnrs.liris.accio.tools.docgen.AccioDocgenMain',
   basename='accio-docgen',

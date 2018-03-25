@@ -11,14 +11,12 @@ scala_library(
     'src/jvm/fr/cnrs/liris/accio/runtime/commandbus',
     'src/jvm/fr/cnrs/liris/accio/runtime/logging',
     'src/jvm/fr/cnrs/liris/accio/runtime/finagle',
+    'src/resources/fr/cnrs/liris/accio/agent',
     scoped('src/jvm/fr/cnrs/liris/accio/ops', 'runtime'),
     'src/thrift/fr/cnrs/liris/accio/agent',
     '3rdparty/jvm/com/twitter/finatra:thrift',
     '3rdparty/jvm/com/twitter/finatra:slf4j',
     '3rdparty/jvm/com/twitter/finagle:serversets',
-  ],
-  resources = [
-    'src/resources/fr/cnrs/liris/accio/agent',
   ],
   excludes = [
     # Multiple logging frameworks.
