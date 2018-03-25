@@ -21,12 +21,15 @@ fi
 tmpdir=/tmp/accio-agent
 mkdir -p $tmpdir
 
-./pants run src/jvm/fr/cnrs/liris/accio/server/:bin -- \
-  -ui \
+./pants run src/jvm/fr/cnrs/liris/accio/agent:bin -- \
+  -cluster_name=devcluster \
+  -master \
+  -worker \
+  -admin.port=":9990" \
+  -thrift.port=":9999" \
+  -executor_uri=$(pwd)/dist/accio-executor.jar \
+  -workdir=$tmpdir/tmp \
   -storage.type=memory \
   -filesystem.type=posix \
-  -filesystem.posix.root=$tmpdir/filesystem \
-  -scheduler.type=local \
-  -scheduler.local.workdir=$tmpdir/scheduler \
-  -scheduler.executor_uri=$(pwd)/dist/accio-executor.jar \
+  -filesystem.posix.root=$tmpdir/fs \
   "$@"

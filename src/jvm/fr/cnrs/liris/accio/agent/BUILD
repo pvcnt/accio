@@ -15,7 +15,6 @@ scala_library(
     scoped('src/jvm/fr/cnrs/liris/locapriv/ops', 'runtime'),
     'src/thrift/fr/cnrs/liris/accio/agent',
     '3rdparty/jvm/com/twitter/finatra:thrift',
-    '3rdparty/jvm/com/twitter/finagle:serversets',
   ],
   excludes = [
     # Multiple logging frameworks.
@@ -25,18 +24,6 @@ scala_library(
     exclude('commons-logging', 'commons-logging'),
     # We already include canonical Thrift library, we do not need the one provided by Finagle.
     exclude('com.twitter', 'libthrift'),
-    # Multiple inclusions of Netty through netty-all and netty-*.
-    exclude('io.netty', 'netty-buffer'),
-    exclude('io.netty', 'netty-common'),
-    exclude('io.netty', 'netty-handler'),
-    exclude('io.netty', 'netty-handler-proxy'),
-    exclude('io.netty', 'netty-transport'),
-    exclude('io.netty', 'netty-transport-native-epoll'),
-    exclude('io.netty', 'netty-resolver'),
-    exclude('io.netty', 'netty-codec'),
-    exclude('io.netty', 'netty-codec-http'),
-    exclude('io.netty', 'netty-codec-http2'),
-    exclude('io.netty', 'netty-codec-socks'),
     # common/reflect comes with its own Scala compiler library, we do not need the one provided by Finatra.
     exclude('com.twitter.finatra', 'finatra-scalap-compiler-deps_2.11'),
   ],
@@ -50,9 +37,7 @@ resources(
 
 jvm_binary(
   name='bin',
-  dependencies=[
-    ':agent',
-  ],
+  dependencies=[':agent'],
   main='fr.cnrs.liris.accio.agent.AgentServerMain',
   basename='accio-agent',
 )

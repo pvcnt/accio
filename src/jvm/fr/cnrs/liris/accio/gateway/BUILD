@@ -7,7 +7,6 @@ scala_library(
     'src/node/fr/cnrs/liris/accio/gateway',
     '3rdparty/jvm/com/twitter/finatra:http',
     '3rdparty/jvm/com/twitter/finatra:httpclient',
-    '3rdparty/jvm/com/twitter/finagle:serversets',
     '3rdparty/jvm:logback',
   ],
   excludes = [
