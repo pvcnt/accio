@@ -1,6 +1,6 @@
 /*
  * Copyright LIRIS-CNRS (2016)
- * Contributors: Vincent Primault <vincent.primault@liris.cnrs.fr>
+ * Contributors: Vincent Primault <v.primault@ucl.ac.uk>
  *
  * This software is a computer program whose purpose is to study location privacy.
  *
@@ -39,7 +39,7 @@ import org.scalatest.junit.JUnitRunner
 /**
  * Base class for all tests.
  *
- * @author Vincent Primault <vincent.primault@liris.cnrs.fr>
+ * @author Vincent Primault <v.primault@ucl.ac.uk>
  */
 @RunWith(classOf[JUnitRunner])
 abstract class UnitSpec extends FlatSpec with Matchers with CustomMatchers

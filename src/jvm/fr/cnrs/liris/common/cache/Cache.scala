@@ -1,6 +1,6 @@
 /*
  * Copyright LIRIS-CNRS (2016)
- * Contributors: Vincent Primault <vincent.primault@liris.cnrs.fr>
+ * Contributors: Vincent Primault <v.primault@ucl.ac.uk>
  *
  * This software is a computer program whose purpose is to study location privacy.
  *
