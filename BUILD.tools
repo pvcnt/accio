@@ -2,7 +2,7 @@ jar_library(
   name = 'scrooge-gen',
   jars = [
     scala_jar(
-      org='com.twitter', name='scrooge-generator', rev='4.16.0',
+      org='com.twitter', name='scrooge-generator', rev='18.3.0',
       excludes=[
         # scrooge requires libthrift 0.5.0-1 which is not available on the default maven repos.
         # Force a newer version, which is compatible.
@@ -19,7 +19,7 @@ jar_library(
   name = 'scrooge-linter',
   jars = [
     scala_jar(
-      org='com.twitter', name='scrooge-linter', rev='4.16.0',
+      org='com.twitter', name='scrooge-linter', rev='18.3.0',
       excludes=[exclude(org = 'org.apache.thrift', name = 'libthrift')]
     )
   ],

@@ -14,8 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
-# In Sync with Finatra's version.
-VERSION='2.10.0'
+VERSION = '18.3.0'
 
 jar_library(name='app', jars=[scala_jar('com.twitter', 'inject-app', VERSION)])
 jar_library(name='core', jars=[scala_jar('com.twitter', 'inject-core', VERSION)])

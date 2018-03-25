@@ -15,7 +15,6 @@ scala_library(
     scoped('src/jvm/fr/cnrs/liris/accio/ops', 'runtime'),
     'src/thrift/fr/cnrs/liris/accio/agent',
     '3rdparty/jvm/com/twitter/finatra:thrift',
-    '3rdparty/jvm/com/twitter/finatra:slf4j',
     '3rdparty/jvm/com/twitter/finagle:serversets',
   ],
   excludes = [

@@ -17,7 +17,6 @@
   <resolvers>
     <chain name="chain-repos" returnFirst="true">
       <ibiblio name="maven-central" m2compatible="true" descriptor="required"/>
-      <ibiblio name="twitter" m2compatible="true" root="http://maven.twttr.com" descriptor="required"/>
 
       <!-- Fall back to local repositories -->
 
