@@ -105,11 +105,11 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
   }
 
   it should "detect an unknown operator" in {
-    val payload = OpPayload("fr.cnrs.liris.accio.ops.UnknownOp", 123, Map.empty, CacheKey("MyCacheKey"))
+    val payload = OpPayload("fr.cnrs.liris.locapriv.UnknownOp", 123, Map.empty, CacheKey("MyCacheKey"))
     val e = intercept[InvalidOpException] {
       executor.execute(payload, OpExecutorOpts(useProfiler = false))
     }
-    e.op shouldBe "fr.cnrs.liris.accio.ops.UnknownOp"
+    e.op shouldBe "fr.cnrs.liris.locapriv.UnknownOp"
   }
 
   it should "catch exceptions thrown by the operator" in {

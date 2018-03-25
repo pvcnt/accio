@@ -12,7 +12,7 @@ scala_library(
     'src/jvm/fr/cnrs/liris/accio/runtime/commandbus',
     'src/jvm/fr/cnrs/liris/accio/runtime/logging',
     'src/jvm/fr/cnrs/liris/accio/runtime/finagle',
-    scoped('src/jvm/fr/cnrs/liris/accio/ops', 'runtime'),
+    scoped('src/jvm/fr/cnrs/liris/locapriv/ops', 'runtime'),
     'src/thrift/fr/cnrs/liris/accio/agent',
     '3rdparty/jvm/com/twitter/finatra:thrift',
     '3rdparty/jvm/com/twitter/finagle:serversets',

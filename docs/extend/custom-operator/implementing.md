@@ -11,7 +11,7 @@ More advanced topics are covered in other pages of this section.
 {:toc}
 
 ## 1. Create a new operator class
-As of now, all operators are implemented inside the `src/jvm/fr/cnrs/liris/accio/ops` module.
+As of now, all operators are implemented inside the `src/jvm/fr/cnrs/liris/locapriv` module.
 You may decide to create a new module for a new operator or new family of operators, or stick inside this module.
 The first step is to decide a name for your operator and create a new class for its implementation.
 By convention, all operators' names finish with the "Op" suffix (that is later automatically removed from its actual name).

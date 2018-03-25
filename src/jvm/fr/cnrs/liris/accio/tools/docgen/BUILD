@@ -4,7 +4,7 @@ scala_library(
     ':resources',
     'src/jvm/fr/cnrs/liris/accio/framework/discovery/inject',
     '3rdparty/jvm:logback',
-    scoped('src/jvm/fr/cnrs/liris/accio/ops', 'runtime'),
+    scoped('src/jvm/fr/cnrs/liris/locapriv/ops', 'runtime'),
     '3rdparty/jvm/com/twitter/inject:app',
   ],
   excludes = [

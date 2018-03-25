@@ -183,7 +183,7 @@ class ClusterStateSpec extends UnitSpec {
     id,
     RunId("foorun"),
     "somenode",
-    OpPayload("fr.cnrs.liris.accio.ops.SomeOp", 1234, Map.empty, CacheKey("cachekey")),
+    OpPayload("fr.cnrs.liris.locapriv.SomeOp", 1234, Map.empty, CacheKey("cachekey")),
     System.currentTimeMillis(),
     TaskState.Waiting,
     resource)

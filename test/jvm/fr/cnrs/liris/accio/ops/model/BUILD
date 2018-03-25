@@ -1,9 +1,0 @@
-junit_tests(
-    name='model',
-    dependencies=[
-        'src/jvm/fr/cnrs/liris/accio/ops/model',
-        'test/jvm/fr/cnrs/liris/accio/ops/testing',
-        'test/jvm/fr/cnrs/liris/testing',
-    ],
-    sources=globs('*.scala'),
-)

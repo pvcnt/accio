@@ -69,7 +69,7 @@ final class ReflectOpDiscovery extends OpDiscovery with LazyLogging {
     }
 
   override def discover: Set[Class[_ <: Operator[_, _]]] = {
-    val classNames = new FastClasspathScanner("fr.cnrs.liris.accio.ops")
+    val classNames = new FastClasspathScanner("fr.cnrs.liris.locapriv")
       .scan
       .getNamesOfClassesImplementing(classOf[Operator[_ ,_]])
     classNames.asScala.toSet.map((name: String) => Class.forName(name).asInstanceOf[Class[Operator[_, _]]])
