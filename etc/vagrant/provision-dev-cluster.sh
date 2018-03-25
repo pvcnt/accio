@@ -1,3 +1,4 @@
+#!/bin/bash -ex
 # Accio is a program whose purpose is to study location privacy.
 # Copyright (C) 2016-2018 Vincent Primault <v.primault@ucl.ac.uk>
 #
@@ -13,8 +14,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
-
-#!/bin/bash -ex
 
 function install_packages() {
   curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -

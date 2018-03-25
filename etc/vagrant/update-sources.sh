@@ -1,3 +1,4 @@
+#!/bin/bash
 # Accio is a program whose purpose is to study location privacy.
 # Copyright (C) 2016-2018 Vincent Primault <v.primault@ucl.ac.uk>
 #
@@ -14,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
-#!/bin/bash
 rsync -urzvhl /vagrant/ /home/ubuntu/accio \
     --filter=':- /vagrant/.gitignore' \
     --exclude=.git \
