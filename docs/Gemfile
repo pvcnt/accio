@@ -14,17 +14,5 @@
 # You should have received a copy of the GNU General Public License
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
-# Site settings.
-title: Accio
-email: v.primault@ucl.ac.uk
-description: >
-  Accio is a location privacy framework.
-baseurl: "/accio"
-url: "https://privamov.github.io"
-nav: index
-
-# Build settings.
-markdown: kramdown
-plugins:
-  - jemoji
-  - jekyll-sitemap
+source 'https://rubygems.org'
+gem 'github-pages', group: :jekyll_plugins
