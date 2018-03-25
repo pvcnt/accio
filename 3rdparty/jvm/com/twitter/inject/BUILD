@@ -1,4 +1,4 @@
-# Accio is a program whose purpose is to study location privacy.
+# Accio is a platform to launch computer science experiments.
 # Copyright (C) 2016-2018 Vincent Primault <v.primault@ucl.ac.uk>
 #
 # Accio is free software: you can redistribute it and/or modify
