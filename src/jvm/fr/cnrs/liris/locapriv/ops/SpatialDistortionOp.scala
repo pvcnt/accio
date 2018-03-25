@@ -27,7 +27,7 @@ import fr.cnrs.liris.locapriv.model.Trace
   category = "metric",
   help = "Compute spatial distortion between two datasets of traces",
   cpu = 3,
-  ram = "6G")
+  ram = "3G")
 class SpatialDistortionOp extends Operator[SpatialDistortionIn, SpatialDistortionOut] with SparkleOperator {
   override def execute(in: SpatialDistortionIn, ctx: OpContext): SpatialDistortionOut = {
     val train = read[Trace](in.train)
