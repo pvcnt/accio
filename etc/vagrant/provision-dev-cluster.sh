@@ -20,12 +20,12 @@
 BAZEL_VERSION=0.11.0
 
 function install_packages() {
-  # Enable user namespaces.
+  # Enable user namespaces for Bazel.
   sysctl kernel.unprivileged_userns_clone=1
   echo 'kernel.unprivileged_userns_clone=1' | tee /etc/sysctl.d/99-enable-user-namespaces.conf
 
-  # Install Java.
-  apt-get install -y openjdk-8-jdk
+  # Install Java and NodeJS.
+  apt-get update && apt-get install -y openjdk-8-jdk nodejs-legacy
 
   # Install Bazel and its dependencies.
   apt-get install -y pkg-config zip g++ zlib1g-dev unzip python
