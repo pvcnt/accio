@@ -15,21 +15,22 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_binary(
-  name = 'executor',
+  name = "executor",
   srcs = glob(["*.scala"]),
   deps = [
-    '//accio/java/fr/cnrs/liris/accio/api',
-    '//accio/java/fr/cnrs/liris/accio/service',
-    '//accio/java/fr/cnrs/liris/accio/discovery',
-    '//accio/java/fr/cnrs/liris/accio/discovery/reflect',
-    '//3rdparty/jvm/com/twitter:inject_slf4j',
-    '//3rdparty/jvm/com/twitter:util_codec',
-    '//3rdparty/jvm/com/google/guava',
-    '//3rdparty/jvm/ch/qos/logback:logback_core',
-    '//3rdparty/jvm/ch/qos/logback:logback_classic',
+    "//accio/java/fr/cnrs/liris/accio/api",
+    "//accio/java/fr/cnrs/liris/accio/service",
+    "//accio/java/fr/cnrs/liris/accio/discovery",
+    "//accio/java/fr/cnrs/liris/accio/discovery/reflect",
+    "//3rdparty/jvm/com/twitter:inject_slf4j",
+    "//3rdparty/jvm/com/twitter:inject_app",
+    "//3rdparty/jvm/com/twitter:util_codec",
+    "//3rdparty/jvm/com/google/guava",
+    "//3rdparty/jvm/ch/qos/logback:logback_core",
+    "//3rdparty/jvm/ch/qos/logback:logback_classic",
   ],
   runtime_deps = [
-    '//accio/java/fr/cnrs/liris/locapriv/ops',
+    "//accio/java/fr/cnrs/liris/locapriv/ops",
   ],
-  main_class = 'fr.cnrs.liris.accio.executor.AccioExecutorMain',
+  main_class = "fr.cnrs.liris.accio.executor.AccioExecutorMain",
 )

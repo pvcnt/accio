@@ -199,7 +199,7 @@ final class LocalScheduler @Inject()(
 
     new ProcessBuilder()
       .command(command: _*)
-      .directory(outputsDir.toFile)
+      //.directory(outputsDir.toFile)
       .redirectOutput(workDir.resolve("stdout").toFile)
       .redirectError(workDir.resolve("stderr").toFile)
       .start()
@@ -234,6 +234,7 @@ final class LocalScheduler @Inject()(
     cmd ++= Seq("-com.twitter.jvm.numProcs", task.resource.cpu.toString)
     cmd += encode(task)
     cmd += outputFile.toAbsolutePath.toString
+    println(cmd)
     cmd.toList
   }
 

@@ -18,11 +18,10 @@
 
 package fr.cnrs.liris.accio.executor
 
-import java.io.{ByteArrayInputStream, FileOutputStream}
+import java.io.FileOutputStream
 import java.nio.file.{Files, Path}
 
 import com.twitter.inject.Logging
-import com.twitter.util.Base64StringEncoder
 import fr.cnrs.liris.accio.api.Errors
 import fr.cnrs.liris.accio.api.thrift.{OpResult, Task}
 import fr.cnrs.liris.accio.service.{OpExecutor, OpExecutorOpts}
@@ -32,8 +31,7 @@ import org.apache.thrift.transport.TIOStreamTransport
 final class TaskExecutor(opExecutor: OpExecutor) extends Logging {
   private[this] val protocolFactory = new TBinaryProtocol.Factory
 
-  def execute(encodedTask: String, output: Path): Unit = {
-    val task = decode(encodedTask)
+  def execute(task: Task, output: Path): Unit = {
     val result = execute(task)
     write(result, output)
   }
@@ -50,12 +48,6 @@ final class TaskExecutor(opExecutor: OpExecutor) extends Logging {
         logger.error(s"Operator raised an unexpected error", e)
         OpResult(-999, Some(Errors.create(e)))
     }
-  }
-
-  private def decode(str: String): Task = {
-    val bytes = Base64StringEncoder.decode(str)
-    val protocol = protocolFactory.getProtocol(new TIOStreamTransport(new ByteArrayInputStream(bytes)))
-    Task.decode(protocol)
   }
 
   private def write(result: OpResult, to: Path): Unit = {
