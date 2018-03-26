@@ -38,6 +38,6 @@ yarn-error.log*
 
 # Temporary/IDE files
 .DS_Store
-.ropeproject
+.project/
 .idea/
 .vagrant/
