@@ -32,6 +32,10 @@ object AccioClientMain extends AccioClient
 class AccioClient extends App with LogbackConfigurator {
   override def modules = Seq(CommandModule, ConfigModule)
 
+  override def failfastOnFlagsNotParsed = false
+
+  override def allowUndefinedFlags = true
+
   override def run(): Unit = {
     val dispatcher = injector.instance[CommandDispatcher]
     val exitCode = dispatcher.exec(args, OutErr.System)
