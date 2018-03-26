@@ -14,33 +14,54 @@
 # You should have received a copy of the GNU General Public License
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
-# Enables support for a docker container-based build which should provide faster startup times and beefier
-# "machines". This is also required in order to use the cache configured below.
-sudo: false
+# Cf. https://github.com/bazelbuild/rules_go#how-do-i-run-bazel-on-travis-ci
 
-before_cache:
-  # The `ivydata-*.properties` & root level `*.{properties,xml}` files' effect on resolution time is in the noise,
-  # but they are re-timestamped in internal comments and fields on each run and this leads to travis-ci cache thrash.
-  # Kill these files before the cache check to avoid un-needed cache re-packing and re-upload (a ~100s operation).
-  - find $HOME/.ivy2/cache -type f -name "ivydata-*.properties" -print -delete
-  - rm -fv $HOME/.ivy2/cache/*.{css,properties,xml,xsl}
-  # The stats cache contains timestamped reports unused by CI but that
-  # thrash the cache.  Skip caching these.
-  - rm -rf $HOME/.cache/pants/stats
+dist: trusty
+sudo: required
+language: java
 
-cache:
-  directories:
-    - $HOME/.cache/pants
-    - $HOME/.ivy2/pants
-    - $HOME/.ivy2/cache
+env:
+  - V=0.11.0
 
-language: scala
-jdk: oraclejdk8
-scala:
-   - 2.11.8
+before_install:
+  - |
+    sysctl kernel.unprivileged_userns_clone=1
+    fi
+    if [[ "${V}" == "HEAD" ]]; then
+      # Determine last successful build number. This may change while we are
+      # downloading, so it's important to determine ahead of time, in case
+      # we need to resume the download.
+      CI_BASE="http://ci.bazel.io/view/Bazel%20bootstrap%20and%20maintenance/job/Bazel/PLATFORM_NAME=linux-x86_64/"
+      CI_INDEX_URL="${CI_BASE}/lastSuccessfulBuild/"
+      wget -q -O build-index.html "${CI_INDEX_URL}"
+      CI_BUILD=$(grep '<title>' build-index.html | sed -e 's/^.*#\([0-9]*\).*$/\1/')
+
+      # Determine the artifact name. This is normally, bazel--installer.sh,
+      # but it may be, for example, bazel-0.5rc2-installer.sh before a release.
+      CI_ARTIFACT=$(grep -o 'bazel-[^\"-]*-installer.sh' build-index.html | head -n 1)
+      URL="${CI_BASE}/${CI_BUILD}/artifact/output/ci/${CI_ARTIFACT}"
+      rm build-index.html
+    else
+      URL="https://github.com/bazelbuild/bazel/releases/download/${V}/bazel-${V}-installer-linux-x86_64.sh"
+    fi
+    wget -O install.sh "${URL}"
+    chmod +x install.sh
+    ./install.sh --user
+    rm -f install.sh
 
 script:
-  - uname -a
-  - java -version
-  - echo $JAVA_HOME
-  - "./pants test ::"
+  - |
+    bazel \
+      --output_base=$HOME/.cache/bazel \
+      --batch \
+      --host_jvm_args=-Xmx500m \
+      --host_jvm_args=-Xms500m \
+      test \
+      --config=ci \
+      --experimental_repository_cache="$HOME/.bazel_repository_cache" \
+      --local_resources=400,1,1.0 \
+      --test_tag_filters=-dev \
+      //accio/...
+
+notifications:
+  email: false
