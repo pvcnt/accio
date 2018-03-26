@@ -26,7 +26,6 @@ env:
 before_install:
   - |
     sysctl kernel.unprivileged_userns_clone=1
-    fi
     if [[ "${V}" == "HEAD" ]]; then
       # Determine last successful build number. This may change while we are
       # downloading, so it's important to determine ahead of time, in case
