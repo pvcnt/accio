@@ -15,7 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
-bazel run accio/java/fr/cnrs/liris/accio/gateway -- \
+bazel build accio/java/fr/cnrs/liris/accio/gateway
+./bazel-bin/accio/java/fr/cnrs/liris/accio/gateway/gateway \
   -admin.port=":9991" \
   -http.port=":8888" \
   -ui \

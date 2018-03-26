@@ -18,10 +18,12 @@
 bazel build accio/java/fr/cnrs/liris/accio/executor:executor_deploy.jar
 mkdir -p /tmp/accio-agent
 
-bazel run accio/java/fr/cnrs/liris/accio/agent -- \
+bazel build accio/java/fr/cnrs/liris/accio/agent
+./bazel-bin/accio/java/fr/cnrs/liris/accio/agent/agent \
   -cluster_name=devcluster \
   -admin.port=":9990" \
   -thrift.port=":9999" \
+  -force_scheduling \
   -executor_uri=$(pwd)/bazel-bin/accio/java/fr/cnrs/liris/accio/executor/executor_deploy.jar \
   -datadir=/tmp/accio-agent \
   -storage.type=memory \
