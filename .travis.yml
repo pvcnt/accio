@@ -26,24 +26,7 @@ env:
 before_install:
   - |
     sysctl kernel.unprivileged_userns_clone=1
-    if [[ "${V}" == "HEAD" ]]; then
-      # Determine last successful build number. This may change while we are
-      # downloading, so it's important to determine ahead of time, in case
-      # we need to resume the download.
-      CI_BASE="http://ci.bazel.io/view/Bazel%20bootstrap%20and%20maintenance/job/Bazel/PLATFORM_NAME=linux-x86_64/"
-      CI_INDEX_URL="${CI_BASE}/lastSuccessfulBuild/"
-      wget -q -O build-index.html "${CI_INDEX_URL}"
-      CI_BUILD=$(grep '<title>' build-index.html | sed -e 's/^.*#\([0-9]*\).*$/\1/')
-
-      # Determine the artifact name. This is normally, bazel--installer.sh,
-      # but it may be, for example, bazel-0.5rc2-installer.sh before a release.
-      CI_ARTIFACT=$(grep -o 'bazel-[^\"-]*-installer.sh' build-index.html | head -n 1)
-      URL="${CI_BASE}/${CI_BUILD}/artifact/output/ci/${CI_ARTIFACT}"
-      rm build-index.html
-    else
-      URL="https://github.com/bazelbuild/bazel/releases/download/${V}/bazel-${V}-installer-linux-x86_64.sh"
-    fi
-    wget -O install.sh "${URL}"
+    wget -O install.sh "https://github.com/bazelbuild/bazel/releases/download/${V}/bazel-${V}-installer-linux-x86_64.sh"
     chmod +x install.sh
     ./install.sh --user
     rm -f install.sh
@@ -56,7 +39,7 @@ script:
       --batch \
       --host_jvm_args=-Xmx500m \
       --host_jvm_args=-Xms500m \
-      run
+      run \
       --config=ci \
       --experimental_repository_cache="$HOME/.bazel_repository_cache" \
       --local_resources=400,1,1.0 \
