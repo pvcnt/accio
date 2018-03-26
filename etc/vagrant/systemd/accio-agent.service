@@ -27,12 +27,8 @@ ExecStart=/usr/bin/java \
   -agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=n \
   -jar /home/ubuntu/accio/dist/accio-agent.jar \
     -cluster_name=devcluster \
-    -master \
-    -worker \
     -admin.port=":9990" \
     -thrift.port=":9999" \
     -executor_uri=/home/ubuntu/accio/dist/accio-executor.jar \
     -datadir=/var/lib/accio-agent \
-    -storage.type=memory \
-    -filesystem.type=posix \
-    -filesystem.posix.root=/var/lib/accio-agent/fs
+    -storage.type=memory

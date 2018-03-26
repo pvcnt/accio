@@ -15,19 +15,23 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_binary(
-  name = 'gateway',
+  name = "gateway",
   srcs = glob(["*.scala"]),
   deps = [
-    '//accio/java/fr/cnrs/liris/accio/api',
-    '//accio/java/fr/cnrs/liris/accio/logging',
-    '//accio/java/fr/cnrs/liris/common/util',
-    '//accio/java/fr/cnrs/liris/common/geo',
-    '//accio/thrift/fr/cnrs/liris/accio/agent',
-    '//accio/node/fr/cnrs/liris/accio/gateway',
-    '//3rdparty/jvm/com/twitter:finatra_http',
-    '//3rdparty/jvm/com/twitter:finatra_httpclient',
+    "//accio/java/fr/cnrs/liris/accio/api",
+    "//accio/java/fr/cnrs/liris/accio/logging",
+    "//accio/java/fr/cnrs/liris/common/util",
+    "//accio/java/fr/cnrs/liris/common/geo",
+    "//accio/thrift/fr/cnrs/liris/accio/agent",
+    "//3rdparty/jvm/com/twitter:finatra_http",
+    "//3rdparty/jvm/com/twitter:finatra_httpclient",
   ],
-  resources = ['logback.xml'],
-  resource_strip_prefix = "accio/java",
-  main_class = 'fr.cnrs.liris.accio.gateway.GatewayServerMain',
+  resources = [
+    "//accio/node/fr/cnrs/liris/accio/gateway:index.bundle.js",
+    "//accio/node/fr/cnrs/liris/accio/gateway:index.html",
+    "//accio/node/fr/cnrs/liris/accio/gateway:robots.txt",
+    "//accio/node/fr/cnrs/liris/accio/gateway:favicon.ico",
+  ],
+  resource_strip_prefix = "accio/node/fr/cnrs/liris/accio/gateway",
+  main_class = "fr.cnrs.liris.accio.gateway.GatewayServerMain",
 )

@@ -16,10 +16,16 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React from 'react'
-import ReactDOM from 'react-dom'
-import 'babel-polyfill'
-import 'whatwg-fetch'
-import App from './components/App'
+import React from 'react';
+import ReactDOM from 'react-dom';
+import 'whatwg-fetch';
 
-ReactDOM.render(<App />, document.getElementById('app'))
+import App from './components/App';
+
+import './css/app.css';
+import 'bootstrap/dist/fonts/glyphicons-halflings-regular.ttf';
+import 'bootstrap/dist/fonts/glyphicons-halflings-regular.woff';
+import 'bootstrap/dist/fonts/glyphicons-halflings-regular.woff2';
+import 'bootstrap/dist/css/bootstrap.min.css';
+
+ReactDOM.render(<App />, document.getElementById('app'));

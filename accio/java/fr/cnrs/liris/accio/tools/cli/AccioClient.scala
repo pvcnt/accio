@@ -30,7 +30,7 @@ object AccioClientMain extends AccioClient
 /**
  * Entry point of the Accio command line application.
  */
-class AccioClient extends LogbackConfigurator with Slf4jBridgeInstaller with Logging {
+class AccioClient extends LogbackConfigurator with Logging {
   def main(args: Array[String]): Unit = {
     val injector = Guice.createInjector(CommandModule, ConfigModule)
     val dispatcher = injector.getInstance(classOf[CommandDispatcher])

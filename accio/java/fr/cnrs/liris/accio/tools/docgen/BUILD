@@ -15,22 +15,21 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_binary(
-  name = 'docgen',
+  name = "docgen",
   srcs = glob(["*.scala"]),
   deps = [
-    '//accio/java/fr/cnrs/liris/accio/api',
-    '//accio/thrift/fr/cnrs/liris/accio/api',
-    '//accio/java/fr/cnrs/liris/accio/discovery',
-    '//accio/java/fr/cnrs/liris/accio/discovery/inject',
-    '//accio/java/fr/cnrs/liris/accio/logging',
-    '//accio/java/fr/cnrs/liris/accio/sdk',
-    '//accio/java/fr/cnrs/liris/common/util',
-    '//3rdparty/jvm/com/twitter:inject_app',
+    "//accio/java/fr/cnrs/liris/accio/api",
+    "//accio/thrift/fr/cnrs/liris/accio/api",
+    "//accio/java/fr/cnrs/liris/accio/discovery",
+    "//accio/java/fr/cnrs/liris/accio/discovery/inject",
+    "//accio/java/fr/cnrs/liris/accio/logging",
+    "//accio/java/fr/cnrs/liris/accio/sdk",
+    "//accio/java/fr/cnrs/liris/common/util",
+    "//3rdparty/jvm/com/twitter:inject_app",
   ],
   runtime_deps = [
-    '//accio/java/fr/cnrs/liris/locapriv/ops',
+    "//accio/java/fr/cnrs/liris/locapriv/ops",
   ],
-  resources = ['logback.xml'],
   resource_strip_prefix = "accio/java",
-  main_class = 'fr.cnrs.liris.accio.tools.docgen.AccioDocgenMain',
+  main_class = "fr.cnrs.liris.accio.tools.docgen.AccioDocgenMain",
 )

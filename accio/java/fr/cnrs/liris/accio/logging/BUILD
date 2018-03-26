@@ -15,16 +15,16 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_library(
-  name = 'logging',
+  name = "logging",
   srcs = glob(["*.scala"]),
   deps = [
-    '//3rdparty/jvm/ch/qos/logback:logback_core',
-    '//3rdparty/jvm/ch/qos/logback:logback_classic',
-    '//3rdparty/jvm/org/slf4j:jul_to_slf4j',
+    "//3rdparty/jvm/ch/qos/logback:logback_core",
+    "//3rdparty/jvm/ch/qos/logback:logback_classic",
+    "//3rdparty/jvm/com/twitter:util_slf4j_jul_bridge",
   ],
   exports = [
-    '//3rdparty/jvm/ch/qos/logback:logback_core',
-    '//3rdparty/jvm/ch/qos/logback:logback_classic',
+    "//3rdparty/jvm/ch/qos/logback:logback_core",
+    "//3rdparty/jvm/ch/qos/logback:logback_classic",
   ],
   visibility = ["//visibility:public"],
 )

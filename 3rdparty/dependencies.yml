@@ -51,7 +51,7 @@ dependencies:
     util:
       version: 18.2.0
       lang: scala
-      modules: [app, core, jvm, codec, stats]
+      modules: [app, core, jvm, codec, stats, slf4j-jul-bridge]
   ch.qos.logback:
     logback-classic:
       version: 1.2.3

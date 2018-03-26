@@ -18,40 +18,40 @@
 
 package fr.cnrs.liris.accio.logging
 
-import ch.qos.logback.classic.LoggerContext
-import ch.qos.logback.classic.joran.JoranConfigurator
-import ch.qos.logback.core.joran.spi.JoranException
-import ch.qos.logback.core.util.StatusPrinter
-import org.slf4j.LoggerFactory
+import ch.qos.logback.classic.encoder.PatternLayoutEncoder
+import ch.qos.logback.classic.jul.LevelChangePropagator
+import ch.qos.logback.classic.spi.ILoggingEvent
+import ch.qos.logback.classic.{Level, LoggerContext}
+import ch.qos.logback.core.ConsoleAppender
+import com.twitter.util.logging.Slf4jBridgeUtility
+import org.slf4j.{Logger, LoggerFactory}
 
-/**
- * Traits to force the initialisation of Logback's configuration, following Pants conventions. It should be included
- * only once per application, typically in the class implementing the `main()` method.
- *
- * By default, logback.xml is only loaded if present at the root of resources path. However, because Pants puts
- * resources in namespaces. This trait loads a logback.xml file located under the same package than this class
- * (i.e., the concrete class implementing this trait).
- */
 trait LogbackConfigurator {
-  {
-    val logbackPath = getClass.getPackage.getName.replace(".", "/") + "/logback.xml"
-    val is = getClass.getClassLoader.getResourceAsStream(logbackPath)
-    if (null != is) {
-      // We assume SLF4J is bound to logback in the current environment.
-      val ctx = LoggerFactory.getILoggerFactory.asInstanceOf[LoggerContext]
-      try {
-        val configurator = new JoranConfigurator
-        configurator.setContext(ctx)
-        // Call context.reset() to clear any previous configuration, e.g. default
-        // configuration. For multi-step configuration, omit calling context.reset().
-        ctx.reset()
-        configurator.doConfigure(is)
-      } catch {
-        case _: JoranException => // StatusPrinter will handle this.
-      }
-      StatusPrinter.printInCaseOfErrorsOrWarnings(ctx)
-      LoggerFactory.getLogger(classOf[LogbackConfigurator])
-        .debug(s"Loaded logback configuration from resource $logbackPath")
-    }
+  initLogback()
+  Slf4jBridgeUtility.attemptSlf4jBridgeHandlerInstallation()
+
+  private def initLogback(): Unit = {
+    // We assume SLF4J is bound to logback in the current environment.
+    val ctx = LoggerFactory.getILoggerFactory.asInstanceOf[LoggerContext]
+    val rootLogger = ctx.getLogger(Logger.ROOT_LOGGER_NAME)
+    ctx.reset()
+
+    val patternEncoder = new PatternLayoutEncoder
+    patternEncoder.setPattern("%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n")
+    patternEncoder.setContext(ctx)
+    patternEncoder.start()
+    val consoleAppender = new ConsoleAppender[ILoggingEvent]
+    consoleAppender.setName("Console")
+    consoleAppender.setEncoder(patternEncoder)
+    consoleAppender.setContext(ctx)
+    consoleAppender.start()
+    rootLogger.addAppender(consoleAppender)
+
+    val levelChangePropagator = new LevelChangePropagator
+    levelChangePropagator.setContext(ctx)
+    levelChangePropagator.start()
+    ctx.addListener(levelChangePropagator)
+    rootLogger.setLevel(Level.INFO)
+    rootLogger.info("Switched logging level to INFO")
   }
 }

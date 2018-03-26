@@ -29,5 +29,4 @@ ExecStart=/usr/bin/java \
     -ui \
     -addr=localhost:9999 \
     -admin.port=":8880" \
-    -http.port=":80" \
-    -local.doc.root=/home/ubuntu/accio/src/node/fr/cnrs/liris/accio/gateway
+    -http.port=":80"

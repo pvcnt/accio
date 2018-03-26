@@ -19,7 +19,7 @@
 import React from 'react'
 import {map, noop, concat, without, values, min, max, range} from 'lodash'
 import {Row, Col, ButtonGroup, Button, Glyphicon} from 'react-bootstrap'
-import Plot from './Plot'
+//import Plot from './Plot'
 import autobind from 'autobind-decorator'
 
 const STEPS = 100
@@ -104,7 +104,8 @@ class PlotArtifactGroup extends React.Component {
   }
 
   render() {
-    const cols = this.props.artifacts.map((artifact, idx) => {
+    //TODO
+    /*const cols = this.props.artifacts.map((artifact, idx) => {
       const isSelected = this._isSelected(artifact.name)
       const kind = (artifact.value.kind.base == 'map') ? artifact.value.kind.args[1] : artifact.value.kind.args[0]
       const unit = (kind == 'distance') ? 'meters' : (kind == 'duration') ? 'milliseconds' : null
@@ -142,7 +143,8 @@ class PlotArtifactGroup extends React.Component {
         </div>
         <Row>{cols}</Row>
       </div>
-    );
+    );*/
+    return null;
   }
 }
 

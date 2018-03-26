@@ -49,6 +49,21 @@ before_install:
     rm -f install.sh
 
 script:
+  # Install NPM dependencies. Unfortunately this is not integrated as Bazel external dependencies.
+  - |
+    bazel \
+      --output_base=$HOME/.cache/bazel \
+      --batch \
+      --host_jvm_args=-Xmx500m \
+      --host_jvm_args=-Xms500m \
+      run
+      --config=ci \
+      --experimental_repository_cache="$HOME/.bazel_repository_cache" \
+      --local_resources=400,1,1.0 \
+      @yarn//:yarn
+
+  # We only test what is inside the accio/ directory, as some files in 3rdparty/node_modules
+  # (named build/BUILD) mess up with Bazel.
   - |
     bazel \
       --output_base=$HOME/.cache/bazel \
@@ -59,8 +74,4 @@ script:
       --config=ci \
       --experimental_repository_cache="$HOME/.bazel_repository_cache" \
       --local_resources=400,1,1.0 \
-      --test_tag_filters=-dev \
       //accio/...
-
-notifications:
-  email: false

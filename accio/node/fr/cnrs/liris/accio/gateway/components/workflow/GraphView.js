@@ -19,7 +19,7 @@
 import React from "react";
 import d3plus from "d3plus";
 import {map, flatMap, fromPairs, toPairs, keys, identity, filter, head, uniqueId, uniq} from "lodash";
-import {prettyPrintValue} from '../../utils/prettyPrint'
+import {prettyPrintValue} from '../../utils/prettyPrint';
 
 let GraphView = React.createClass({
   getDefaultProps: function () {

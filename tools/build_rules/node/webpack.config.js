@@ -62,6 +62,10 @@ module.exports = {
         test: /\.(woff|woff2|eot|ttf|png|jpg|jpeg|svg)$/,
         loader: isHeadless ? 'null-loader' : 'url-loader',
       },
+      {
+        test: /\.coffee$/,
+        loader: 'coffee-loader',
+      }
     ],
   },
   plugins: [

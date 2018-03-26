@@ -15,18 +15,17 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_binary(
-  name = 'cli',
+  name = "cli",
   srcs = glob(["*.scala"]),
   deps = [
-    '//accio/java/fr/cnrs/liris/accio/tools/cli/config',
-    '//accio/java/fr/cnrs/liris/accio/tools/cli/command',
-    '//accio/java/fr/cnrs/liris/accio/logging',
-    '//accio/java/fr/cnrs/liris/common/io',
-    '//3rdparty/jvm/com/twitter:inject_core',
-    '//3rdparty/jvm/com/twitter:inject_slf4j',
-    '//3rdparty/jvm/com/twitter:finatra_jackson',
+    "//accio/java/fr/cnrs/liris/accio/tools/cli/config",
+    "//accio/java/fr/cnrs/liris/accio/tools/cli/command",
+    "//accio/java/fr/cnrs/liris/accio/logging",
+    "//accio/java/fr/cnrs/liris/common/io",
+    "//3rdparty/jvm/com/twitter:inject_core",
+    "//3rdparty/jvm/com/twitter:inject_slf4j",
+    "//3rdparty/jvm/com/twitter:finatra_jackson",
   ],
-  resources = ['logback.xml'],
   resource_strip_prefix = "accio/java",
-  main_class = 'fr.cnrs.liris.accio.tools.cli.AccioClientMain',
+  main_class = "fr.cnrs.liris.accio.tools.cli.AccioClientMain",
 )

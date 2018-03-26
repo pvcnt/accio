@@ -15,8 +15,16 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 common --color=yes
-
 build --strategy=Scalac=worker
 test --strategy=Scalac=worker
-
 build --workspace_status_command=tools/print-workspace-status.sh
+
+# Here follow the configuration relevant for continuous integration services.
+# Run with: bazel test --config=ci
+common:ci --color=no
+build:ci --verbose_failures
+build:ci --sandbox_debug
+build:ci --spawn_strategy=standalone
+build:ci --genrule_strategy=standalone
+test:ci --test_strategy=standalone
+test:ci --test_output=errors

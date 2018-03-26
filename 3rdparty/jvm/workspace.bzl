@@ -120,7 +120,7 @@ def list_dependencies():
     {"artifact": "com.twitter:util-registry_2.11:18.2.0", "lang": "java", "sha1": "8f31944c6898300e8975d040694cfabd60e5e3c4", "repository": "http://central.maven.org/maven2/", "name": "com_twitter_util_registry_2_11", "actual": "@com_twitter_util_registry_2_11//jar", "bind": "jar/com/twitter/util_registry_2_11"},
     {"artifact": "com.twitter:util-security_2.11:18.2.0", "lang": "java", "sha1": "77f8d6d07b58c3d31360243b6328eb02c458f048", "repository": "http://central.maven.org/maven2/", "name": "com_twitter_util_security_2_11", "actual": "@com_twitter_util_security_2_11//jar", "bind": "jar/com/twitter/util_security_2_11"},
     {"artifact": "com.twitter:util-slf4j-api_2.11:18.2.0", "lang": "java", "sha1": "598b48d17ee668f1e2b0e9e55266667d84dde198", "repository": "http://central.maven.org/maven2/", "name": "com_twitter_util_slf4j_api_2_11", "actual": "@com_twitter_util_slf4j_api_2_11//jar", "bind": "jar/com/twitter/util_slf4j_api_2_11"},
-    {"artifact": "com.twitter:util-slf4j-jul-bridge_2.11:18.2.0", "lang": "java", "sha1": "44a078fc2635fe1517f783fdacf3ba161134ded0", "repository": "http://central.maven.org/maven2/", "name": "com_twitter_util_slf4j_jul_bridge_2_11", "actual": "@com_twitter_util_slf4j_jul_bridge_2_11//jar", "bind": "jar/com/twitter/util_slf4j_jul_bridge_2_11"},
+    {"artifact": "com.twitter:util-slf4j-jul-bridge_2.11:18.2.0", "lang": "scala", "sha1": "44a078fc2635fe1517f783fdacf3ba161134ded0", "repository": "http://central.maven.org/maven2/", "name": "com_twitter_util_slf4j_jul_bridge_2_11", "actual": "@com_twitter_util_slf4j_jul_bridge_2_11//jar:file", "bind": "jar/com/twitter/util_slf4j_jul_bridge_2_11"},
     {"artifact": "com.twitter:util-stats_2.11:18.2.0", "lang": "scala", "sha1": "aec221e25cbcfafd8b8c1064135925001ea6b12b", "repository": "http://central.maven.org/maven2/", "name": "com_twitter_util_stats_2_11", "actual": "@com_twitter_util_stats_2_11//jar:file", "bind": "jar/com/twitter/util_stats_2_11"},
     {"artifact": "com.twitter:util-tunable_2.11:18.2.0", "lang": "java", "sha1": "38d211efed825ffc47aa96fd544052ef8e18f48b", "repository": "http://central.maven.org/maven2/", "name": "com_twitter_util_tunable_2_11", "actual": "@com_twitter_util_tunable_2_11//jar", "bind": "jar/com/twitter/util_tunable_2_11"},
     {"artifact": "com.typesafe:config:1.3.0", "lang": "java", "sha1": "f533aa6ea13e443b50e639d070986c42d03efc35", "repository": "http://central.maven.org/maven2/", "name": "com_typesafe_config", "actual": "@com_typesafe_config//jar", "bind": "jar/com/typesafe/config"},
@@ -276,6 +276,7 @@ def list_dependencies():
 # - com.twitter:util-codec_2.11:18.2.0 wanted version 2.11.11
 # - com.twitter:util-core_2.11:18.2.0 wanted version 2.11.11
 # - com.twitter:util-jvm_2.11:18.2.0 wanted version 2.11.11
+# - com.twitter:util-slf4j-jul-bridge_2.11:18.2.0 wanted version 2.11.11
 # - com.twitter:util-stats_2.11:18.2.0 wanted version 2.11.11
 # - org.scala-lang:scala-compiler:2.11.12 wanted version 2.11.12
 # - org.scalanlp:breeze_2.11:0.12 wanted version 2.11.7
