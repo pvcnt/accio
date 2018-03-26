@@ -19,8 +19,6 @@
 package fr.cnrs.liris.testing
 
 import org.scalatest._
-import org.scalatest.junit.JUnitRunner
-import fr.cnrs.liris.accio.logging.LogbackConfigurator
 
 /**
  * Base class for all tests.
@@ -29,4 +27,3 @@ abstract class UnitSpec
   extends FlatSpec
     with Matchers
     with CustomMatchers
-    with LogbackConfigurator

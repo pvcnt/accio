@@ -15,15 +15,15 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_library(
-  name = 'testing',
+  name = "testing",
   srcs = glob(["*.scala"]),
   deps = [
-    '//accio/java/fr/cnrs/liris/common/util',
-    '//accio/java/fr/cnrs/liris/accio/logging',
+    "//accio/java/fr/cnrs/liris/common/util",
+    "//3rdparty/jvm/com/twitter:util_app",
     "@scalatest//jar:jar",
   ],
-  exports = [
-    '//accio/java/fr/cnrs/liris/accio/logging',
+  runtime_deps = [
+    "//3rdparty/jvm/ch/qos/logback:logback_classic",
   ],
   visibility = ["//accio/javatests:__subpackages__"],
 )
