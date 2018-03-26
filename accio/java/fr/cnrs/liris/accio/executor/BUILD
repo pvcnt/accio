@@ -25,6 +25,7 @@ scala_binary(
     "//3rdparty/jvm/com/twitter:inject_slf4j",
     "//3rdparty/jvm/com/twitter:inject_app",
     "//3rdparty/jvm/com/twitter:util_codec",
+    "//3rdparty/jvm/com/twitter:util_jvm",
     "//3rdparty/jvm/com/google/guava",
     "//3rdparty/jvm/ch/qos/logback:logback_core",
     "//3rdparty/jvm/ch/qos/logback:logback_classic",

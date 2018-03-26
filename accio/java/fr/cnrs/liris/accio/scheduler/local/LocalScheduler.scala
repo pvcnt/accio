@@ -20,7 +20,6 @@ package fr.cnrs.liris.accio.scheduler.local
 
 import java.io.{ByteArrayOutputStream, FileInputStream}
 import java.nio.file.{Files, Path}
-import java.util.concurrent.locks.ReentrantLock
 import java.util.concurrent.{ConcurrentHashMap, ConcurrentLinkedDeque, Executors}
 
 import com.google.common.eventbus.EventBus
@@ -31,7 +30,7 @@ import com.twitter.inject.Logging
 import com.twitter.util.{Base64StringEncoder, Future, FuturePool}
 import fr.cnrs.liris.accio.api.thrift._
 import fr.cnrs.liris.accio.api.{TaskCompletedEvent, TaskStartedEvent}
-import fr.cnrs.liris.accio.config.{DataDir, ExecutorArgs, ExecutorUri, ReservedResource}
+import fr.cnrs.liris.accio.config._
 import fr.cnrs.liris.accio.scheduler.Scheduler
 import fr.cnrs.liris.common.util.Platform
 import org.apache.thrift.protocol.TBinaryProtocol
@@ -41,7 +40,6 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.io.Source
 
-// TODO: check for concurrency-correctness.
 @Singleton
 final class LocalScheduler @Inject()(
   statsReceiver: StatsReceiver,
@@ -49,6 +47,7 @@ final class LocalScheduler @Inject()(
   @ReservedResource reservedResources: Resource,
   @ExecutorUri executorUri: String,
   @ExecutorArgs executorArgs: Seq[String],
+  @ForceScheduling forceScheduling: Boolean,
   @DataDir dataDir: Path)
   extends Scheduler with Logging {
 
@@ -71,7 +70,6 @@ final class LocalScheduler @Inject()(
       diskMb = Platform.totalDiskSpace.map(disk => disk.inMegabytes - reservedResources.diskMb).getOrElse(0))
   }
   private[this] var availableResources = totalResources
-  private[this] val resourceLock = new ReentrantLock
 
   // Register gauges.
   /*totalResources.foreach { case (key, value) =>
@@ -86,11 +84,14 @@ final class LocalScheduler @Inject()(
 
 
   override def submit(task: Task): Unit = {
-    if (reserveResources(task.resource)) {
-      logger.info(s"Starting execution of task ${task.id.value}")
+    if (reserveResources(task.id, task.resource)) {
       val future = schedule(task)
       running(task.id) = Running(task, future)
     } else {
+      if (!isEnoughResources(task.id, task.resource, totalResources)) {
+        // TODO: We should cancel the task.
+        logger.warn(s"Not enough resources to schedule task ${task.id.value}")
+      }
       logger.info(s"Queued task ${task.id.value}")
       pending.add(task)
     }
@@ -119,25 +120,15 @@ final class LocalScheduler @Inject()(
     readLogFile(getWorkDir(id).resolve(kind), tail)
   }
 
-  private def trySchedule(): Unit = synchronized {
-    pending.asScala.foreach { task =>
-      if (reserveResources(task.resource)) {
-        pending.remove(task)
-        logger.info(s"Starting execution of task ${task.id.value}")
-        val future = schedule(task)
-        running(task.id) = Running(task, future)
-      }
-    }
-  }
-
   private def schedule(task: Task): Future[OpResult] = {
+    logger.info(s"Starting execution of task ${task.id.value}")
     pool(execute(task))
       .onSuccess { result =>
         eventBus.post(TaskCompletedEvent(task.runId, task.nodeName, result, task.payload.cacheKey))
       }
       .onFailure { e =>
         logger.error(s"Unexpected error while executing task ${task.id.value}", e)
-        eventBus.post(TaskCompletedEvent(task.runId, task.nodeName, OpResult(-999), task.payload.cacheKey))
+        eventBus.post(TaskCompletedEvent(task.runId, task.nodeName, OpResult(-998), task.payload.cacheKey))
       }
       .ensure {
         running.remove(task.id)
@@ -145,40 +136,45 @@ final class LocalScheduler @Inject()(
       }
   }
 
-  private def isEnoughResources(requests: Resource, resources: Resource): Boolean = {
-    requests.cpu <= resources.cpu &&
+  private def isEnoughResources(id: TaskId, requests: Resource, resources: Resource): Boolean = {
+    val ok = requests.cpu <= resources.cpu &&
       requests.ramMb <= resources.ramMb &&
       requests.diskMb <= resources.diskMb
-  }
-
-  private def reserveResources(requests: Resource): Boolean = {
-    resourceLock.lock()
-    try {
-      if (!isEnoughResources(requests, availableResources)) {
-        false
-      } else {
-        availableResources = Resource(
-          cpu = availableResources.cpu - requests.cpu,
-          ramMb = availableResources.ramMb - requests.ramMb,
-          diskMb = availableResources.diskMb - requests.diskMb)
-        true
-      }
-    } finally {
-      resourceLock.unlock()
+    if (ok) {
+      true
+    } else if (running.isEmpty && forceScheduling) {
+      logger.warn(s"Forcing scheduling of task ${id.value}")
+      true
+    } else {
+      false
     }
   }
 
-  private def releaseResources(requests: Resource): Unit = {
-    resourceLock.lock()
-    try {
+  private def reserveResources(id: TaskId, requests: Resource): Boolean = synchronized {
+    if (!isEnoughResources(id, requests, availableResources)) {
+      false
+    } else {
       availableResources = Resource(
-        cpu = availableResources.cpu + requests.cpu,
-        ramMb = availableResources.ramMb + requests.ramMb,
-        diskMb = availableResources.diskMb + requests.diskMb)
-    } finally {
-      resourceLock.unlock()
+        cpu = availableResources.cpu - requests.cpu,
+        ramMb = availableResources.ramMb - requests.ramMb,
+        diskMb = availableResources.diskMb - requests.diskMb)
+      true
     }
-    trySchedule()
+  }
+
+  private def releaseResources(requests: Resource): Unit = synchronized {
+    availableResources = Resource(
+      cpu = availableResources.cpu + requests.cpu,
+      ramMb = availableResources.ramMb + requests.ramMb,
+      diskMb = availableResources.diskMb + requests.diskMb)
+
+    pending.asScala.foreach { task =>
+      if (reserveResources(task.id, task.resource)) {
+        pending.remove(task)
+        val future = schedule(task)
+        running(task.id) = Running(task, future)
+      }
+    }
   }
 
   private def execute(task: Task): OpResult = {
@@ -193,15 +189,19 @@ final class LocalScheduler @Inject()(
   private def startProcess(task: Task): Process = {
     val workDir = getWorkDir(task.id)
     Files.createDirectories(workDir)
+
     val outputsDir = getOutputsDir(workDir)
+    Files.createDirectories(outputsDir)
     val command = createCommandLine(task, getResultFile(workDir))
     logger.debug(s"Command-line for task ${task.id.value}: ${command.mkString(" ")}")
 
     new ProcessBuilder()
       .command(command: _*)
-      //.directory(outputsDir.toFile)
+      .directory(outputsDir.toFile)
       .redirectOutput(workDir.resolve("stdout").toFile)
       .redirectError(workDir.resolve("stderr").toFile)
+      //.inheritIO()
+      //.redirectErrorStream(true)
       .start()
   }
 
@@ -233,7 +233,6 @@ final class LocalScheduler @Inject()(
     cmd += encode(task)
     cmd += outputFile.toAbsolutePath.toString
     cmd ++= executorArgs
-    println(cmd)
     cmd.toList
   }
 
@@ -245,12 +244,21 @@ final class LocalScheduler @Inject()(
   }
 
   private def read(file: Path): OpResult = {
-    val fis = new FileInputStream(file.toFile)
-    try {
+    if (!file.toFile.canRead) {
+      logger.warn(s"Result file is not readable: $file")
+      OpResult(-997)
+    } else {
+      val fis = new FileInputStream(file.toFile)
       val protocol = protocolFactory.getProtocol(new TIOStreamTransport(fis))
-      OpResult.decode(protocol)
-    } finally {
-      fis.close()
+      try {
+        OpResult.decode(protocol)
+      } catch {
+        case e: Throwable =>
+          logger.warn(s"Error while reading result file: $file", e)
+          OpResult(-996)
+      } finally {
+        fis.close()
+      }
     }
   }
 }

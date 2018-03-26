@@ -29,6 +29,7 @@ object ConfigModule extends TwitterModule {
   private[this] val datadirFlag = flag("datadir", "/var/lib/accio-agent", "Directory where to store local files")
   private[this] val executorUriFlag = flag[String]("executor_uri", "URI to the executor")
   private[this] val executorArgsFlag = flag("executor_args", "", "Additional arguments to the executor")
+  private[this] val forceSchedulingFlag = flag("force_scheduling", false, "Whether to force the scheduling of too large tasks")
 
   override def configure(): Unit = {
     bind[String].annotatedWith[ClusterName].toInstance(clusterNameFlag())
@@ -39,6 +40,7 @@ object ConfigModule extends TwitterModule {
     }
     bind[Path].annotatedWith[DataDir].toInstance(Paths.get(datadirFlag()))
     bind[String].annotatedWith[ExecutorUri].toInstance(executorUriFlag())
+    bind[Boolean].annotatedWith[ForceScheduling].toInstance(forceSchedulingFlag())
     bind[Resource].annotatedWith[ReservedResource].toInstance(Resource(0, 0, 0))
   }
 }

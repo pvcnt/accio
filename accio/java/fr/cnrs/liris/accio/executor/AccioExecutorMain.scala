@@ -37,7 +37,7 @@ class AccioExecutor {
   private[this] val protocolFactory = new TBinaryProtocol.Factory
 
   def main(args: Array[String]): Unit = {
-    require(args.length == 2)
+    require(args.length == 2, "There should be exactly two arguments: encoded task and result file")
     val task = decode(args.head)
     com.twitter.jvm.numProcs.let(task.resource.cpu) {
       val opExecutor = new OpExecutor(new ReflectOpDiscovery)

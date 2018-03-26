@@ -28,5 +28,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @BindingAnnotation
-public @interface ExecutorArgs {
+public @interface ForceScheduling {
 }
