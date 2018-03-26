@@ -230,10 +230,9 @@ final class LocalScheduler @Inject()(
     cmd ++= Seq("-cp", executorUri)
     cmd += s"-Xmx${task.resource.ramMb}M"
     cmd += "fr.cnrs.liris.accio.executor.AccioExecutorMain"
-    cmd ++= executorArgs
-    cmd ++= Seq("-com.twitter.jvm.numProcs", task.resource.cpu.toString)
     cmd += encode(task)
     cmd += outputFile.toAbsolutePath.toString
+    cmd ++= executorArgs
     println(cmd)
     cmd.toList
   }
