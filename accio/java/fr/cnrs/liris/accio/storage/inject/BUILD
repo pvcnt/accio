@@ -15,13 +15,12 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_library(
-  name = 'inject',
+  name = "inject",
   srcs = glob(["*.scala"]),
   deps = [
-    '//accio/java/fr/cnrs/liris/accio/storage',
-    '//accio/java/fr/cnrs/liris/accio/storage/elastic',
-    '//accio/java/fr/cnrs/liris/accio/storage/memory',
-    '//3rdparty/jvm/com/twitter:inject_core',
+    "//accio/java/fr/cnrs/liris/accio/storage",
+    "//accio/java/fr/cnrs/liris/accio/storage/memory",
+    "//3rdparty/jvm/com/twitter:inject_core",
   ],
   visibility = ["//visibility:public"],
 )

@@ -52,6 +52,5 @@ trait LogbackConfigurator {
     levelChangePropagator.start()
     ctx.addListener(levelChangePropagator)
     rootLogger.setLevel(Level.INFO)
-    rootLogger.info("Switched logging level to INFO")
   }
 }

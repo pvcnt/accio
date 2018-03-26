@@ -18,13 +18,9 @@
 
 package fr.cnrs.liris.accio.storage.inject
 
-import com.google.inject.Module
 import com.twitter.inject.{Injector, TwitterModule}
 import fr.cnrs.liris.accio.storage.Storage
-import fr.cnrs.liris.accio.storage.elastic.ElasticStorageModule
-import fr.cnrs.liris.accio.storage.memory.MemoryStorageModule
-
-import scala.util.control.NonFatal
+import fr.cnrs.liris.accio.storage.memory.MemoryStorage
 
 /**
  * Guice module provisioning storage-related services.
@@ -32,26 +28,18 @@ import scala.util.control.NonFatal
 object StorageModule extends TwitterModule {
   private[this] val typeFlag = flag("storage.type", "memory", "Storage type")
 
-  override def modules: Seq[Module] =
-    typeFlag.get match {
-      case Some("memory") => Seq(MemoryStorageModule)
-      case Some("es") => Seq(ElasticStorageModule)
-      case Some(invalid) => throw new IllegalArgumentException(s"Invalid storage type: $invalid")
-      case None =>
-        // This only happen when this method is called the first time, during App's initialization.
-        // We provide the entire list of all modules, making all flags available.
-        Seq(MemoryStorageModule, ElasticStorageModule)
+  override def configure(): Unit = {
+    typeFlag() match {
+      case "memory" => bind[Storage].to[MemoryStorage].asEagerSingleton()
+      case unknown => throw new IllegalArgumentException(s"Unknown storage type: $unknown")
     }
+  }
 
   override def singletonStartup(injector: Injector): Unit = {
-    injector.instance[Storage].startAsync()
+    injector.instance[Storage].startAsync().awaitRunning()
   }
 
   override def singletonShutdown(injector: Injector): Unit = {
-    try {
-      injector.instance[Storage].stopAsync().awaitTerminated()
-    } catch {
-      case NonFatal(e) => logger.warn("Error while shutting down storage", e)
-    }
+    injector.instance[Storage].stopAsync().awaitTerminated()
   }
 }

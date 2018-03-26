@@ -104,8 +104,7 @@ scala_import(
         "//3rdparty/jvm/org/scala_lang:scala_library",
         ":finagle_base_http",
         ":finagle_http2_2_11",
-        ":finagle_netty3_http",
-        ":finagle_netty4_http_2_11",
+        ":finagle_netty4_http",
         ":finagle_toggle_2_11",
         ":util_codec",
         ":util_collection_2_11",
@@ -198,25 +197,6 @@ java_library(
 
 
 
-scala_import(
-    name = "finagle_netty3_http",
-    exports = [
-        "//3rdparty/jvm/commons_lang:commons_lang",
-        ":util_app",
-        ":util_core",
-        ":util_jvm",
-        ":util_stats"
-    ],
-    jars = [
-        "//external:jar/com/twitter/finagle_netty3_http_2_11"
-    ],
-    visibility = [
-        "//visibility:public"
-    ]
-)
-
-
-
 java_library(
     name = "finagle_netty4_2_11",
     exports = [
@@ -234,11 +214,18 @@ java_library(
 
 
 
-java_library(
-    name = "finagle_netty4_http_2_11",
+scala_import(
+    name = "finagle_netty4_http",
     exports = [
-        "//external:jar/com/twitter/finagle_netty4_http_2_11",
-        ":finagle_netty4_2_11"
+        "//3rdparty/jvm/commons_lang:commons_lang",
+        ":finagle_netty4_2_11",
+        ":util_app",
+        ":util_core",
+        ":util_jvm",
+        ":util_stats"
+    ],
+    jars = [
+        "//external:jar/com/twitter/finagle_netty4_http_2_11"
     ],
     visibility = [
         "//visibility:public"

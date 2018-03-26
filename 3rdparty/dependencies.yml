@@ -25,60 +25,51 @@ options:
 dependencies:
   com.github.nscala-time:
     nscala-time:
-      version: 2.18.0
+      version: "2.18.0"
       lang: scala
   com.twitter:
     scrooge:
-      version: 18.2.0
+      version: "18.3.0"
       lang: scala
       modules: [core, generator]
     finagle:
-      version: 18.2.0
+      version: "18.3.0"
       lang: scala
       modules: [core, http, thrift, mysql, stats]
     finatra:
-      version: 18.2.0
+      version: "18.3.0"
       lang: scala
       modules: [http, httpclient, jackson]
     bijection:
-      version: 0.9.6
+      version: "0.9.6"
       lang: scala
       modules: [util]
     inject:
-      version: 18.2.0
+      version: "18.3.0"
       lang: scala
       modules: [core, app, modules, server, slf4j]
     util:
-      version: 18.2.0
+      version: "18.3.0"
       lang: scala
       modules: [app, core, jvm, codec, stats, slf4j-jul-bridge]
   ch.qos.logback:
     logback-classic:
-      version: 1.2.3
+      version: "1.2.3"
       lang: java
     logback-core:
-      version: 1.2.3
+      version: "1.2.3"
       lang: java
   org.scala-lang:
     scalap:
-      version: 2.11.12
+      version: "2.11.12"
       lang: scala/unmangled
   org.apache.commons:
     commons-math3:
-      version: 3.6.1
-      lang: java
-  com.sksamuel.elastic4s:
-    elastic4s:
-      version: 5.1.2
-      lang: scala
-      modules: [core, jackson, testkit]
-  org.codelibs.elasticsearch.module:
-    lang-painless:
-      version: 5.1.2
+      version: "3.6.1"
       lang: java
   io.github.lukehutch:
     fast-classpath-scanner:
-      version: 2.0.19
+      version: "2.0.19"
       lang: java
   org.scalanlp:
     breeze:
