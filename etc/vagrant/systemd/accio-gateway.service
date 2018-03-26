@@ -31,4 +31,6 @@ ExecStart=/usr/bin/java \
     -admin.port=":8880" \
     -http.port=":80"
 Restart=on-failure
+
+[Install]
 WantedBy=multi-user.target

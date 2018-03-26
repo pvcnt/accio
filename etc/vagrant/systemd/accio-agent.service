@@ -35,4 +35,6 @@ ExecStart=/usr/bin/java \
     -datadir=/var/lib/accio-agent \
     -storage.type=memory
 Restart=on-failure
+
+[Install]
 WantedBy=multi-user.target
