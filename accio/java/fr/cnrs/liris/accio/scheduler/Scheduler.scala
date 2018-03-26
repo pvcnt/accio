@@ -28,23 +28,7 @@ trait Scheduler {
 
   def kill(id: RunId): Set[Task]
 
-  /**
-   * Perform housekeeping operation. It is called after each operation that leads to a cluster state change.
-   * For instance, it is the place where to check for new available resources.
-   *
-   * @param kind
-   */
-  def houseKeeping(kind: EventType): Unit = {}
-
   def startUp(): Unit = {}
 
   def shutDown(): Unit = {}
-}
-
-sealed trait EventType
-
-object EventType {
-  case object MoreResource extends EventType
-
-  case object LessResource extends EventType
 }

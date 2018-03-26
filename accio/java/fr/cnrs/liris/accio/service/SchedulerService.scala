@@ -27,7 +27,7 @@ import com.twitter.inject.Logging
 import fr.cnrs.liris.accio.api
 import fr.cnrs.liris.accio.api.Input
 import fr.cnrs.liris.accio.api.thrift._
-import fr.cnrs.liris.accio.scheduler.{EventType, Scheduler}
+import fr.cnrs.liris.accio.scheduler.Scheduler
 import fr.cnrs.liris.accio.storage.Storage
 
 /**
@@ -62,7 +62,6 @@ final class SchedulerService @Inject()(scheduler: Scheduler, opRegistry: OpRegis
         val taskId = TaskId(UUID.randomUUID().toString)
         val task = Task(taskId, run.id, node.name, payload, System.currentTimeMillis(), TaskState.Waiting, opDef.resource)
         scheduler.submit(task)
-        scheduler.houseKeeping(EventType.LessResource)
         logger.debug(s"Scheduled task ${task.id.value}. Run: ${run.id.value}, node: ${node.name}, op: ${payload.op}")
         None
     }

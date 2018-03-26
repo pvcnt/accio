@@ -18,14 +18,7 @@
 
 package fr.cnrs.liris.accio.scheduler.inject
 
-import java.nio.file.Path
-
-import com.google.common.eventbus.EventBus
-import com.google.inject.{Inject, Provider, Singleton}
-import com.twitter.finagle.stats.StatsReceiver
 import com.twitter.inject.{Injector, TwitterModule}
-import fr.cnrs.liris.accio.api.thrift.Resource
-import fr.cnrs.liris.accio.config.{DataDir, ExecutorArgs, ExecutorUri, ReservedResource}
 import fr.cnrs.liris.accio.scheduler.Scheduler
 import fr.cnrs.liris.accio.scheduler.local.LocalScheduler
 
@@ -37,7 +30,7 @@ object SchedulerModule extends TwitterModule {
 
   override def configure(): Unit = {
     typeFlag() match {
-      case "local" => bind[Scheduler].toProvider[LocalSchedulerProvider].in[Singleton]
+      case "local" => bind[Scheduler].to[LocalScheduler]
       case invalid => throw new IllegalArgumentException(s"Unknown scheduler type: $invalid")
     }
   }
@@ -48,20 +41,6 @@ object SchedulerModule extends TwitterModule {
 
   override def singletonShutdown(injector: Injector): Unit = {
     injector.instance[Scheduler].shutDown()
-  }
-
-  private class LocalSchedulerProvider @Inject()(
-    statsReceiver: StatsReceiver,
-    eventBus: EventBus,
-    @ReservedResource reserved: Resource,
-    @ExecutorUri executorUri: String,
-    @ExecutorArgs executorArgs: Seq[String],
-    @DataDir dataDir: Path)
-    extends Provider[Scheduler] {
-
-    override def get(): Scheduler = {
-      new LocalScheduler(statsReceiver, eventBus, reserved, executorUri, executorArgs, dataDir.resolve("tasks"))
-    }
   }
 
 }

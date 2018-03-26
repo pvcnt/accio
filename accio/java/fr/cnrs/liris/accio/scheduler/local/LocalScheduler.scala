@@ -24,12 +24,14 @@ import java.util.concurrent.locks.ReentrantLock
 import java.util.concurrent.{ConcurrentHashMap, ConcurrentLinkedDeque, Executors}
 
 import com.google.common.eventbus.EventBus
+import com.google.inject.{Inject, Singleton}
 import com.twitter.concurrent.NamedPoolThreadFactory
 import com.twitter.finagle.stats.StatsReceiver
 import com.twitter.inject.Logging
 import com.twitter.util.{Base64StringEncoder, Future, FuturePool}
 import fr.cnrs.liris.accio.api.thrift._
 import fr.cnrs.liris.accio.api.{TaskCompletedEvent, TaskStartedEvent}
+import fr.cnrs.liris.accio.config.{DataDir, ExecutorArgs, ExecutorUri, ReservedResource}
 import fr.cnrs.liris.accio.scheduler.Scheduler
 import fr.cnrs.liris.common.util.Platform
 import org.apache.thrift.protocol.TBinaryProtocol
@@ -40,13 +42,14 @@ import scala.collection.mutable
 import scala.io.Source
 
 // TODO: check for concurrency-correctness.
-final class LocalScheduler(
+@Singleton
+final class LocalScheduler @Inject()(
   statsReceiver: StatsReceiver,
   eventBus: EventBus,
-  reservedResources: Resource,
-  executorUri: String,
-  executorArgs: Seq[String],
-  dataDir: Path)
+  @ReservedResource reservedResources: Resource,
+  @ExecutorUri executorUri: String,
+  @ExecutorArgs executorArgs: Seq[String],
+  @DataDir dataDir: Path)
   extends Scheduler with Logging {
 
   private case class Running(task: Task, future: Future[_])

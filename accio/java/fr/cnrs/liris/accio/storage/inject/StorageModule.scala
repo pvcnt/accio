@@ -30,7 +30,7 @@ object StorageModule extends TwitterModule {
 
   override def configure(): Unit = {
     typeFlag() match {
-      case "memory" => bind[Storage].to[MemoryStorage].asEagerSingleton()
+      case "memory" => bind[Storage].to[MemoryStorage]
       case unknown => throw new IllegalArgumentException(s"Unknown storage type: $unknown")
     }
   }
