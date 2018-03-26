@@ -19,7 +19,6 @@
 package fr.cnrs.liris.accio.filesystem.s3
 
 import com.google.inject.Provides
-import com.twitter.app.Flag
 import com.twitter.inject.TwitterModule
 import fr.cnrs.liris.accio.filesystem.FileSystem
 import io.minio.MinioClient
@@ -33,8 +32,6 @@ object S3FileSystemModule extends TwitterModule {
   private val bucketFlag = flag("filesystem.s3.bucket", "accio", "Bucket name")
   private val accessKeyFlag = flag[String]("filesystem.s3.access_key", "Access key with write access")
   private val privateKeyFlag = flag[String]("filesystem.s3.private_key", "Private key with write access")
-
-  def executorPassthroughFlags: Seq[Flag[_]] = Seq(uriFlag, bucketFlag, accessKeyFlag, privateKeyFlag)
 
   override protected def configure(): Unit = {
     val fileSystems = ScalaMapBinder.newMapBinder[String, FileSystem](binder)

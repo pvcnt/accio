@@ -138,28 +138,6 @@ final class RunManager @Inject()(schedulerService: SchedulerService, graphFactor
   }
 
   /**
-   * Mark a node inside a run as lost. It will recursively cancel all successors of this node. Execution of other
-   * branches of the graph will however continue.
-   *
-   * @param run      Run.
-   * @param nodeName Node that has failed, as part of the run.
-   * @param parent   Parent run, if any.
-   * @return Updated run and parent run.
-   */
-  def onLost(run: Run, nodeName: String, parent: Option[Run]): (Run, Option[Run]) = {
-    val NodeStatus = run.state.nodes.find(_.name == nodeName).get
-    if (NodeStatus.completedAt.isDefined) {
-      // On race requests, node state could be already marked as completed.
-      (run, parent)
-    } else {
-      val newNodeStatus = NodeStatus.copy(completedAt = Some(System.currentTimeMillis()), status = TaskState.Lost)
-      var newRun = replace(run, NodeStatus, newNodeStatus)
-      newRun = cancelNextNodes(newRun, nodeName)
-      updateProgress(newRun, parent)
-    }
-  }
-
-  /**
    * Mark a node inside a run as successful. It will schedule direct successors that are ready to be executed (i.e.,
    * whose all dependent nodes have been successfully completed).
    *

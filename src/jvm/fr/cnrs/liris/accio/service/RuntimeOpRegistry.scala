@@ -29,8 +29,8 @@ import fr.cnrs.liris.accio.discovery.OpDiscovery
  */
 @Singleton
 class RuntimeOpRegistry @Inject()(opDiscovery: OpDiscovery) extends OpRegistry {
-  // This field is declared as lazy because it can throw errors and we do not want them to be thrown while
-  // Guice is injecting dependencies.
+  // This field is declared as lazy because it can throw errors and we do not want them to be
+  // thrown while Guice is injecting dependencies.
   private[this] lazy val index = opDiscovery.discover.map { clazz =>
     val meta = opDiscovery.read(clazz)
     meta.defn.name -> meta

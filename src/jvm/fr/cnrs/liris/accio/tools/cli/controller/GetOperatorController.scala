@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.tools.cli.controller
 
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.agent._
-import fr.cnrs.liris.accio.runtime.event.Reporter
+import fr.cnrs.liris.accio.tools.cli.event.Reporter
 
 class GetOperatorController extends GetController[ListOperatorsResponse] {
   override def retrieve(opts: GetQuery, client: AgentService$FinagleClient): Future[ListOperatorsResponse] = {

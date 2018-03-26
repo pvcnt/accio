@@ -27,9 +27,7 @@ import com.typesafe.scalalogging.StrictLogging
 import fr.cnrs.liris.accio.api.thrift._
 import fr.cnrs.liris.accio.api.{Errors, Values}
 import fr.cnrs.liris.accio.discovery.{OpDiscovery, OpMeta}
-import fr.cnrs.liris.accio.filesystem.FileSystem
 import fr.cnrs.liris.accio.sdk.{OpContext, Operator}
-import fr.cnrs.liris.common.util.FileUtils
 
 import scala.util.control.NonFatal
 
@@ -47,7 +45,8 @@ case class OpExecutorOpts(useProfiler: Boolean, cleanSandbox: Boolean = true)
  * @param op  Operator name.
  * @param arg Input port name.
  */
-class MissingOpInputException(val op: String, val arg: String) extends Exception(s"Missing required input of $op operator: $arg")
+class MissingOpInputException(val op: String, val arg: String)
+  extends Exception(s"Missing required input of $op operator: $arg")
 
 /**
  * Exception thrown when an operator is unknown.
@@ -55,27 +54,24 @@ class MissingOpInputException(val op: String, val arg: String) extends Exception
  * @param op    Operator name.
  * @param cause Cause exception.
  */
-class InvalidOpException(val op: String, cause: Throwable = null) extends RuntimeException(s"Invalid operator: $op", cause)
+class InvalidOpException(val op: String, cause: Throwable = null)
+  extends RuntimeException(s"Invalid operator: $op", cause)
 
 /**
- * Entry point for executing an operator from a payload. It manages the whole lifecycle of instantiating an operator,
- * executing it, collecting its outputs and returning them. It also manages downloading and uploading artifacts that
- * need to be (e.g., datasets).
+ * Entry point for executing an operator from a payload. It manages the whole lifecycle of
+ * instantiating an operator, executing it, collecting its outputs and returning them.
  *
- * As stated in the [[OpPayload]] and [[OpResult]] classes' description, the main goal here is to enforce
- * reproducibility of execution. Given the same inputs, the result should be the same (modulo maybe some metrics, as
- * timing or load information may vary and are not controllable). This is why this class knows and should never know
- * anything about runs, graphs or nodes.
+ * As stated in the [[OpPayload]] and [[OpResult]] classes' description, the main goal here is to
+ * enforce reproducibility of execution. Given the same inputs, the result should be the same
+ * (modulo some metrics, as timing or load information may vary and are not controllable). This is
+ * why this class knows and should never know anything about runs, graphs or nodes.
  *
  * @param opDiscovery Operator discovery.
- * @param filesystem  Filesystem, where to read inputs and write outputs.
  */
 @Inject
-final class OpExecutor @Inject()(opDiscovery: OpDiscovery, filesystem: FileSystem)
-  extends StrictLogging {
-
-  // Because the executor is designed to run inside a sandbox, we simply use current directory as temporary path
-  // for the operator executor.
+final class OpExecutor @Inject()(opDiscovery: OpDiscovery) extends StrictLogging {
+  // Because the executor is designed to run inside a sandbox, we simply use current directory as
+  // temporary path for the operator executor.
   private[this] var workDir = Paths.get(".")
 
   @VisibleForTesting
@@ -124,7 +120,7 @@ final class OpExecutor @Inject()(opDiscovery: OpDiscovery, filesystem: FileSyste
     Files.createDirectories(sandboxDir.resolve("outputs"))
     Files.createDirectories(sandboxDir.resolve("inputs"))
 
-    val inputs = downloadInputs(opMeta.defn, sandboxDir, payload.inputs.toMap)
+    val inputs = payload.inputs.toMap
     val in = createInput(opMeta, inputs).asInstanceOf[In]
 
     val maybeSeed = if (opMeta.defn.unstable) Some(payload.seed) else None
@@ -149,7 +145,7 @@ final class OpExecutor @Inject()(opDiscovery: OpDiscovery, filesystem: FileSyste
 
     // We convert the outcome into an exit code, artifacts, metrics and possibly and error.
     val (artifacts, error) = res match {
-      case Left(out) => (uploadArtifacts(extractArtifacts(opMeta, out), payload.cacheKey), None)
+      case Left(out) => (extractArtifacts(opMeta, out), None)
       case Right(ex) => (Set.empty[Artifact], Some(ex))
     }
     val metrics = profiler.metrics
@@ -158,8 +154,8 @@ final class OpExecutor @Inject()(opDiscovery: OpDiscovery, filesystem: FileSyste
     if (opts.cleanSandbox) {
       // Sandbox directory can now be deleted. Caveat: If there was a fatal error before, this line will never be
       // reached and it will not be deleted.
-      FileUtils.safeDelete(sandboxDir)
-      logger.debug(s"Cleaned sandbox")
+      // TODO: clean only files that are not referenced in artifacts.
+      // logger.debug(s"Cleaned sandbox")
     }
 
     OpResult(exitCode, error, artifacts, metrics)
@@ -212,52 +208,6 @@ final class OpExecutor @Inject()(opDiscovery: OpDiscovery, filesystem: FileSyste
           val value = outClass.getMethod(argDef.name).invoke(out)
           Artifact(argDef.name, Values.encode(value, argDef.kind))
         }.toSet
-    }
-  }
-
-  /**
-   * Download inputs that need to be downloaded inside the sandbox directory, i.e., those that hold a reference to a
-   * remote storage.
-   *
-   * @param opDef      Operator definition.
-   * @param sandboxDir Sandbox directory.
-   * @param inputs     Operator inputs.
-   * @return Rewritten list of inputs, taking into account artifacts final local destination.
-   */
-  private def downloadInputs(opDef: OpDef, sandboxDir: Path, inputs: Map[String, Value]): Map[String, Value] = {
-    inputs.map { case (name, value) =>
-      val inputDef = opDef.inputs.find(_.name == name).get
-      val newValue = inputDef.kind.base match {
-        case AtomicType.Dataset =>
-          val dataset = Values.decodeDataset(value)
-          val dst = sandboxDir.resolve("inputs").resolve(name)
-          logger.debug(s"Downloading inputs/$name...")
-          filesystem.read(dataset.uri, dst)
-          Values.encodeDataset(dataset.copy(uri = dst.toAbsolutePath.toString))
-        case _ => value
-      }
-      name -> newValue
-    }
-  }
-
-  /**
-   * Upload artifacts that need to be uploaded, i.e., those that hold a reference to local storage.
-   *
-   * @param artifacts Artifacts produced by the operator.
-   * @param cacheKey  Cache key for the outputs.
-   * @return Rewritten list of artifacts, taking into account artifacts' final remote destination.
-   */
-  private def uploadArtifacts(artifacts: Set[Artifact], cacheKey: CacheKey): Set[Artifact] = {
-    artifacts.map { artifact =>
-      artifact.value.kind.base match {
-        case AtomicType.Dataset =>
-          val key = s"${cacheKey.hash}/${UUID.randomUUID}"
-          val dataset = Values.decodeDataset(artifact.value)
-          logger.debug(s"Uploading outputs/${artifact.name} under $key...")
-          val newUri = filesystem.write(Paths.get(dataset.uri), key)
-          artifact.copy(value = Values.encodeDataset(dataset.copy(uri = newUri)))
-        case _ => artifact
-      }
     }
   }
 }

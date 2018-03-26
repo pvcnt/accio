@@ -19,3 +19,4 @@ VERSION = '18.3.0'
 jar_library(name='app', jars=[scala_jar('com.twitter', 'util-app', VERSION)])
 jar_library(name='core', jars=[scala_jar('com.twitter', 'util-core', VERSION)])
 jar_library(name='jvm', jars=[scala_jar('com.twitter', 'util-jvm', VERSION)])
+jar_library(name='codec', jars=[scala_jar('com.twitter', 'util-codec', VERSION)])

@@ -23,7 +23,7 @@ import com.twitter.finagle.http.Request
 import com.twitter.finatra.http.Controller
 
 @Singleton
-class HealthController extends Controller {
+final class HealthController extends Controller {
   get("/health") { req: Request =>
     response.ok("OK")
   }

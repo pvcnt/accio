@@ -21,12 +21,11 @@ package fr.cnrs.liris.accio.tools.cli.command
 import java.nio.file.Files
 
 import com.google.inject.Inject
-import com.typesafe.scalalogging.StrictLogging
+import com.twitter.inject.Logging
 import fr.cnrs.liris.accio.agent.{AgentService$FinagleClient, CreateRunRequest, ParseRunRequest}
 import fr.cnrs.liris.accio.api.Utils
 import fr.cnrs.liris.accio.api.thrift.RunSpec
-import fr.cnrs.liris.accio.runtime.cli.{Cmd, ExitCode}
-import fr.cnrs.liris.accio.runtime.event.{Event, EventKind, Reporter}
+import fr.cnrs.liris.accio.tools.cli.event.{Event, EventKind, Reporter}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.util.{FileUtils, StringUtils}
 
@@ -60,7 +59,7 @@ case class SubmitCommandFlags(
   help = "Launch an Accio workflow.",
   allowResidue = true)
 class SubmitCommand @Inject()(clientProvider: ClusterClientProvider)
-  extends ClientCommand(clientProvider) with StrictLogging {
+  extends ClientCommand(clientProvider) with Logging {
 
   def execute(flags: FlagsProvider, out: Reporter): ExitCode = {
     if (flags.residue.isEmpty) {

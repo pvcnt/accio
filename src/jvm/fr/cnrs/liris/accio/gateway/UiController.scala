@@ -23,7 +23,7 @@ import com.twitter.finagle.http.Request
 import com.twitter.finatra.http.Controller
 
 @Singleton
-class UiController extends Controller {
+final class UiController extends Controller {
   get("/") { request: Request =>
     response.ok.file("index.html")
   }

@@ -84,7 +84,7 @@ Finally, the agent can be launched:
 ```
 java -jar /opt/accio-agent.jar
   -executor_uri=/opt/accio-executor.jar
-  -workdir=/var/lib/accio-agent
+  -datadir=/var/lib/accio-agent
   -master 
   -worker
 ```

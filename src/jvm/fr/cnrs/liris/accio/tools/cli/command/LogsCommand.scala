@@ -20,9 +20,8 @@ package fr.cnrs.liris.accio.tools.cli.command
 
 import com.google.inject.Inject
 import fr.cnrs.liris.accio.agent.ListLogsRequest
-import fr.cnrs.liris.accio.runtime.event.{Event, Reporter}
-import fr.cnrs.liris.accio.runtime.cli.{Cmd, ExitCode}
 import fr.cnrs.liris.accio.api.thrift.RunId
+import fr.cnrs.liris.accio.tools.cli.event.{Event, Reporter}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 
 case class LogsCommandFlags(

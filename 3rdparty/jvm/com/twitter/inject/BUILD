@@ -18,3 +18,6 @@ VERSION = '18.3.0'
 
 jar_library(name='app', jars=[scala_jar('com.twitter', 'inject-app', VERSION)])
 jar_library(name='core', jars=[scala_jar('com.twitter', 'inject-core', VERSION)])
+jar_library(name='server', jars=[scala_jar('com.twitter', 'inject-server', VERSION)])
+jar_library(name='modules', jars=[scala_jar('com.twitter', 'inject-modules', VERSION)])
+jar_library(name='slf4j', jars=[scala_jar('com.twitter', 'inject-slf4j', VERSION)])

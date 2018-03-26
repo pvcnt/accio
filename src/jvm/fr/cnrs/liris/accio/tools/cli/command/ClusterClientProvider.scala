@@ -19,10 +19,11 @@
 package fr.cnrs.liris.accio.tools.cli.command
 
 import java.nio.file.Paths
-import javax.annotation.concurrent.NotThreadSafe
 
+import javax.annotation.concurrent.NotThreadSafe
 import com.google.inject.{Inject, Singleton}
 import com.twitter.finagle.Thrift
+import com.twitter.finagle.thrift.RichClientParam
 import fr.cnrs.liris.accio.agent.{AgentService, AgentService$FinagleClient}
 import fr.cnrs.liris.accio.tools.cli.config.{Cluster, ClusterConfig, ConfigParser, InvalidConfigException}
 import fr.cnrs.liris.common.util.FileUtils
@@ -39,7 +40,7 @@ import scala.collection.mutable
  */
 @NotThreadSafe
 @Singleton
-class ClusterClientProvider @Inject()(parser: ConfigParser) {
+final class ClusterClientProvider @Inject()(parser: ConfigParser) {
   private[this] val clients = mutable.Map.empty[String, AgentService$FinagleClient]
   private[this] lazy val config = parseConfig
 
@@ -90,8 +91,9 @@ class ClusterClientProvider @Inject()(parser: ConfigParser) {
    */
   private def getOrCreate(config: Cluster) = {
     clients.getOrElseUpdate(config.name, {
+      val params = RichClientParam()
       val service = Thrift.newService(config.addr)
-      new AgentService.FinagledClient(service)
+      new AgentService.FinagledClient(service, params)
     })
   }
 

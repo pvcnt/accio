@@ -19,8 +19,7 @@
 package fr.cnrs.liris.accio.tools.cli.command
 
 import com.google.inject.Inject
-import fr.cnrs.liris.accio.runtime.event.{Event, Reporter}
-import fr.cnrs.liris.accio.runtime.cli._
+import fr.cnrs.liris.accio.tools.cli.event.{Event, Reporter}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.reflect.CaseClass
 import fr.cnrs.liris.common.util.StringUtils

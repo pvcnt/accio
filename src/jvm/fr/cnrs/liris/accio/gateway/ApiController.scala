@@ -31,7 +31,7 @@ import fr.cnrs.liris.common.util.StringUtils.explode
 import org.joda.time.DateTime
 
 @Singleton
-class ApiController @Inject()(client: AgentService$FinagleClient) extends Controller {
+final class ApiController @Inject()(client: AgentService$FinagleClient) extends Controller {
   private[this] val user = User("vprimault")
 
   get("/api/v1") { _: Request =>

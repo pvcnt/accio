@@ -1,33 +1,40 @@
+# Accio is a platform to launch computer science experiments.
+# Copyright (C) 2016-2018 Vincent Primault <v.primault@ucl.ac.uk>
+#
+# Accio is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Accio is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Accio.  If not, see <http://www.gnu.org/licenses/>.
+
 scala_library(
-  dependencies=[
+  name = 'executor',
+  sources = globs('*.scala'),
+  dependencies = [
     'src/jvm/fr/cnrs/liris/accio/api',
     'src/jvm/fr/cnrs/liris/accio/service',
-    'src/jvm/fr/cnrs/liris/accio/discovery/inject',
-    'src/jvm/fr/cnrs/liris/accio/filesystem/inject',
-    'src/jvm/fr/cnrs/liris/accio/util',
-    'src/jvm/fr/cnrs/liris/accio/util:annotations',
-    'src/jvm/fr/cnrs/liris/accio/runtime/finagle',
-    'src/thrift/fr/cnrs/liris/accio/agent',
+    'src/jvm/fr/cnrs/liris/accio/discovery/reflect',
+    '3rdparty/jvm/com/twitter/inject:slf4j',
+    '3rdparty/jvm/com/twitter/util:codec',
+    '3rdparty/jvm:logback',
     scoped('src/jvm/fr/cnrs/liris/locapriv/ops', 'runtime'),
-    '3rdparty/jvm/com/twitter/inject:app',
   ],
   excludes = [
     # Multiple logging frameworks.
     exclude('commons-logging', 'commons-logging'),
-    # common/reflect comes with its own Scala compiler library, we do not need the one provided by Finatra.
-    exclude('com.twitter.finatra', 'finatra-scalap-compiler-deps_2.11'),
-    # We already include canonical Thrift library, we do not need the one provided by Finagle.
-    exclude(org = 'com.twitter', name = 'libthrift'),
   ],
-  sources=globs('*.scala')
 )
 
 jvm_binary(
-  name='bin',
-  dependencies=[
-    ':executor',
-    '3rdparty/jvm:logback',
-  ],
-  main='fr.cnrs.liris.accio.executor.AccioExecutorMain',
-  basename='accio-executor',
+  name = 'bin',
+  dependencies = [':executor'],
+  main = 'fr.cnrs.liris.accio.executor.AccioExecutorMain',
+  basename = 'accio-executor',
 )

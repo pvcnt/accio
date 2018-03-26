@@ -23,26 +23,24 @@ import java.nio.file.{Files, Path, Paths}
 import fr.cnrs.liris.accio.api.Values
 import fr.cnrs.liris.accio.api.thrift._
 import fr.cnrs.liris.accio.discovery.reflect.ReflectOpDiscovery
-import fr.cnrs.liris.accio.filesystem.FileSystem
 import fr.cnrs.liris.accio.sdk._
 import fr.cnrs.liris.common.util.FileUtils
 import fr.cnrs.liris.testing.UnitSpec
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 
-import scala.collection.mutable
-
 /**
  * Unit tests for [[OpExecutor]].
  */
 class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfterEach {
-  private[this] val filesystem = new MockFileSystem
-  private[this] var tmpDir: Path = null
-  private[this] var executor: OpExecutor = null
+  behavior of "OpExecutor"
+
+  private[this] var tmpDir: Path = _
+  private[this] var executor: OpExecutor = _
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
     tmpDir = Files.createTempDirectory("accio-test-")
-    executor = new OpExecutor(new ReflectOpDiscovery, filesystem)
+    executor = new OpExecutor(new ReflectOpDiscovery)
     executor.setWorkDir(tmpDir)
   }
 
@@ -52,13 +50,6 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
     tmpDir = null
     executor = null
   }
-
-  override protected def beforeEach(): Unit = {
-    super.beforeEach()
-    filesystem.clear()
-  }
-
-  behavior of "OpExecutor"
 
   it should "execute operators and return artifacts" in {
     var payload = OpPayload(classOf[SimpleOp].getName, 123, Map("str" -> Values.encodeString("foo")), CacheKey("MyCacheKey"))
@@ -140,29 +131,6 @@ class OpExecutorSpec extends UnitSpec with BeforeAndAfterAll with BeforeAndAfter
     res.error.get.root.classifier shouldBe "java.lang.IllegalStateException"
     res.error.get.root.message shouldBe Some("Operator is not declared as unstable, cannot access the seed")
   }
-
-  it should "upload artifacts" in {
-    val payload = OpPayload(classOf[DatasetProducerOp].getName, 123, Map.empty, CacheKey("MyCacheKey"))
-    val res = executor.execute(payload, OpExecutorOpts(useProfiler = false))
-    res.artifacts should have size 1
-    res.exitCode shouldBe 0
-    res.error shouldBe None
-    res.artifacts should have size 1
-    res.artifacts.head.name shouldBe "data"
-    val dataset = Values.decodeDataset(res.artifacts.head.value)
-    dataset.uri should startWith("/mock")
-    filesystem.keys should contain(dataset.uri)
-  }
-
-  it should "download inputs" in {
-    val payload = OpPayload(classOf[DatasetConsumerOp].getName, 123, Map("data" -> Values.encodeDataset(Dataset(s"/mock/data"))), CacheKey("MyCacheKey"))
-    filesystem.write(Paths.get("/dev/null"), "data")
-    val res = executor.execute(payload, OpExecutorOpts(useProfiler = false))
-    res.artifacts should have size 1
-    res.exitCode shouldBe 0
-    res.error shouldBe None
-    res.artifacts should contain(Artifact("ok", Values.encodeBoolean(true)))
-  }
 }
 
 case class NoOutputIn(@Arg s: String)
@@ -236,26 +204,4 @@ class DatasetConsumerOp extends Operator[DatasetConsumerIn, DatasetConsumerOut] 
     val ok = Paths.get(in.data.uri).toFile.exists
     DatasetConsumerOut(ok)
   }
-}
-
-private class MockFileSystem extends FileSystem {
-  private[this] val _keys = mutable.Set.empty[String]
-
-  override def read(src: String, dst: Path): Unit = {
-    if (_keys.contains(src)) {
-      Files.createFile(dst)
-    }
-  }
-
-  override def write(src: Path, key: String): String = {
-    val uri = s"/mock/$key"
-    _keys += uri
-    uri
-  }
-
-  def keys: Set[String] = _keys.toSet
-
-  def clear(): Unit = _keys.clear()
-
-  override def delete(filename: String): Unit = throw new NotImplementedError
 }

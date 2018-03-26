@@ -22,8 +22,7 @@ import java.nio.file.{Files, Path}
 
 import com.google.inject.Inject
 import fr.cnrs.liris.accio.agent.{AgentService$FinagleClient, ParseRunRequest, ParseWorkflowRequest}
-import fr.cnrs.liris.accio.runtime.event.{Event, EventKind, Reporter}
-import fr.cnrs.liris.accio.runtime.cli.{Cmd, ExitCode}
+import fr.cnrs.liris.accio.tools.cli.event.{Event, EventKind, Reporter}
 import fr.cnrs.liris.common.flags.FlagsProvider
 import fr.cnrs.liris.common.util.FileUtils
 

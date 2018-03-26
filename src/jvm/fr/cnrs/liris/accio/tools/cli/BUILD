@@ -15,37 +15,34 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_library(
-  dependencies=[
+  sources = globs('*.scala'),
+  dependencies = [
     ':resources',
-    'src/jvm/fr/cnrs/liris/accio/tools/cli/config/inject',
-    'src/jvm/fr/cnrs/liris/accio/tools/cli/command/inject',
-    'src/jvm/fr/cnrs/liris/accio/runtime/cli',
-    'src/jvm/fr/cnrs/liris/accio/runtime/logging',
+    'src/jvm/fr/cnrs/liris/accio/tools/cli/config',
+    'src/jvm/fr/cnrs/liris/accio/tools/cli/command',
+    'src/jvm/fr/cnrs/liris/accio/logging',
     'src/jvm/fr/cnrs/liris/common/io',
-    '3rdparty/jvm:scala-guice',
-    '3rdparty/jvm/com/typesafe/scala-logging',
+    '3rdparty/jvm/com/twitter/inject:core',
+    '3rdparty/jvm/com/twitter/inject:slf4j',
     '3rdparty/jvm:logback',
     '3rdparty/jvm/org/slf4j:jul-to-slf4j',
   ],
   excludes = [
     # Multiple logging frameworks.
     exclude('commons-logging', 'commons-logging'),
-    # common/reflect comes with its own Scala compiler library, we do not need the one provided by Finatra.
-    exclude(org='com.twitter.finatra', name='finatra-scalap-compiler-deps_2.11'),
     # Finagle comes with its own Thrift library.
     exclude(org = 'com.twitter', name = 'libthrift'),
   ],
-  sources=globs('*.scala')
 )
 
 resources(
-  name='resources',
-  sources=['logback.xml']
+  name = 'resources',
+  sources = ['logback.xml'],
 )
 
 jvm_binary(
-  name='bin',
-  dependencies=[':cli'],
-  main='fr.cnrs.liris.accio.tools.cli.AccioClientMain',
-  basename='accio-client',
+  name = 'bin',
+  dependencies = [':cli'],
+  main = 'fr.cnrs.liris.accio.tools.cli.AccioClientMain',
+  basename = 'accio-client',
 )

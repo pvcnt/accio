@@ -20,7 +20,6 @@ package fr.cnrs.liris.accio.filesystem.posix
 
 import java.nio.file.{Path, Paths}
 
-import com.twitter.app.Flag
 import com.twitter.inject.TwitterModule
 import fr.cnrs.liris.accio.filesystem.FileSystem
 import net.codingwell.scalaguice.ScalaMapBinder
@@ -31,8 +30,6 @@ import net.codingwell.scalaguice.ScalaMapBinder
 object PosixFileSystemModule extends TwitterModule {
   private[this] val pathFlag = flag[String]("filesystem.posix.root", "Path where to store files")
   private[this] val symlinkFlag = flag("filesystem.posix.symlink", true, "Whether to symlink files")
-
-  def executorPassthroughFlags: Seq[Flag[_]] = Seq(pathFlag, symlinkFlag)
 
   override protected def configure(): Unit = {
     val fileSystems = ScalaMapBinder.newMapBinder[String, FileSystem](binder)

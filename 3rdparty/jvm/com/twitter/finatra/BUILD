@@ -18,5 +18,4 @@ VERSION = '18.3.0'
 
 jar_library(name='http', jars=[scala_jar('com.twitter', 'finatra-http', VERSION)])
 jar_library(name='httpclient', jars=[scala_jar('com.twitter', 'finatra-httpclient', VERSION)])
-jar_library(name='thrift', jars=[scala_jar('com.twitter', 'finatra-thrift', VERSION)])
 jar_library(name='jackson', jars=[scala_jar('com.twitter', 'finatra-jackson', VERSION)])

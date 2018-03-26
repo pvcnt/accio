@@ -24,7 +24,7 @@ trait Scheduler {
   def submit(task: Task): Unit
 
   @throws[InvalidTaskException]
-  def kill(id: TaskId): Unit
+  def kill(id: TaskId): Boolean
 
   def kill(id: RunId): Set[Task]
 
@@ -36,7 +36,9 @@ trait Scheduler {
    */
   def houseKeeping(kind: EventType): Unit = {}
 
-  def close(): Unit = {}
+  def startUp(): Unit = {}
+
+  def shutDown(): Unit = {}
 }
 
 sealed trait EventType

@@ -18,18 +18,15 @@
 if [ ! -f dist/accio-executor.jar ]; then
   ./pants binary src/jvm/fr/cnrs/liris/accio/executor:bin
 fi
+
 tmpdir=/tmp/accio-agent
-mkdir -p $tmpdir
+mkdir -p ${tmpdir}
 
 ./pants run src/jvm/fr/cnrs/liris/accio/agent:bin -- \
   -cluster_name=devcluster \
-  -master \
-  -worker \
   -admin.port=":9990" \
   -thrift.port=":9999" \
   -executor_uri=$(pwd)/dist/accio-executor.jar \
-  -workdir=$tmpdir/tmp \
+  -datadir=${tmpdir}/tmp \
   -storage.type=memory \
-  -filesystem.type=posix \
-  -filesystem.posix.root=$tmpdir/fs \
   "$@"

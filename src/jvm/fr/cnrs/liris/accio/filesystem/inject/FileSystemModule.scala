@@ -19,7 +19,6 @@
 package fr.cnrs.liris.accio.filesystem.inject
 
 import com.google.inject.Module
-import com.twitter.app.Flag
 import com.twitter.inject.{Injector, TwitterModule}
 import fr.cnrs.liris.accio.filesystem.FileSystem
 import fr.cnrs.liris.accio.filesystem.posix.PosixFileSystemModule
@@ -30,10 +29,6 @@ import fr.cnrs.liris.accio.filesystem.s3.S3FileSystemModule
  */
 object FileSystemModule extends TwitterModule {
   private[this] val typeFlag = flag[String]("filesystem.type", "Filesystem type(s)")
-
-  // Flags that will be forwarded "as-is" when invoking the executor.
-  def executorPassthroughFlags: Seq[Flag[_]] =
-    Seq(typeFlag) ++ PosixFileSystemModule.executorPassthroughFlags ++ S3FileSystemModule.executorPassthroughFlags
 
   override def modules: Seq[Module] =
     typeFlag.get match {

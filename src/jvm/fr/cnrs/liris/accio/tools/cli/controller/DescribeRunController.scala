@@ -22,7 +22,7 @@ import com.twitter.util.{Duration, Future, Time}
 import fr.cnrs.liris.accio.agent.{AgentService$FinagleClient, GetRunRequest, ListRunsRequest}
 import fr.cnrs.liris.accio.api.{Utils, Values}
 import fr.cnrs.liris.accio.api.thrift._
-import fr.cnrs.liris.accio.runtime.event.Reporter
+import fr.cnrs.liris.accio.tools.cli.event.Reporter
 import fr.cnrs.liris.common.util.StringUtils.padTo
 
 class DescribeRunController extends DescribeController[(Run, Seq[Run])] with FormatHelper {

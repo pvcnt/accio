@@ -16,13 +16,14 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.agent.handler
+package fr.cnrs.liris.accio.agent.service
 
 import java.io.FileOutputStream
 import java.nio.file.{Files, Path, Paths}
 
 import com.google.common.io.Resources
 import fr.cnrs.liris.accio.filesystem.FileSystem
+import fr.cnrs.liris.accio.scheduler.local.ExecutorTaskExecutor
 import fr.cnrs.liris.testing.{UnitSpec, WithTmpDirectory}
 
 /**
@@ -83,7 +84,7 @@ class ExecutorTaskExecutorSpec extends UnitSpec with WithTmpDirectory {
     val path = Files.createTempFile("SchedulerSpec-", ".jar")
     val fos = new FileOutputStream(path.toFile)
     try {
-      Resources.copy(Resources.getResource(s"fr/cnrs/liris/accio/agent/handler/accio-dummy-executor.jar"), fos)
+      Resources.copy(Resources.getResource(s"fr/cnrs/liris/accio/agent/command/accio-dummy-executor.jar"), fos)
     } finally {
       fos.close()
     }

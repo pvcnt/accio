@@ -22,8 +22,7 @@ import com.twitter.scrooge.ThriftException
 import com.twitter.util.{Await, Future, Return, Throw}
 import fr.cnrs.liris.accio.agent.AgentService$FinagleClient
 import fr.cnrs.liris.accio.api.thrift.{InvalidSpecException, InvalidSpecMessage, UnknownRunException}
-import fr.cnrs.liris.accio.runtime.cli.{Command, ExitCode}
-import fr.cnrs.liris.accio.runtime.event.{Event, EventKind, Reporter}
+import fr.cnrs.liris.accio.tools.cli.event.{Event, EventKind, Reporter}
 import fr.cnrs.liris.common.flags.FlagsProvider
 
 private[command] abstract class ClientCommand(clientProvider: ClusterClientProvider) extends Command {

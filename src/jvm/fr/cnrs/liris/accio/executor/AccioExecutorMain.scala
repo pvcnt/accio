@@ -18,41 +18,21 @@
 
 package fr.cnrs.liris.accio.executor
 
-import com.twitter.inject.app.App
-import com.twitter.util.Await
-import fr.cnrs.liris.accio.api.thrift.TaskId
-import fr.cnrs.liris.accio.filesystem.inject.FileSystemModule
+import java.nio.file.Paths
+
+import fr.cnrs.liris.accio.discovery.reflect.ReflectOpDiscovery
+import fr.cnrs.liris.accio.service.OpExecutor
+
+object AccioExecutorMain extends AccioExecutor
 
 /**
- * Accio executor main method.
+ * Accio executor.
  */
-object AccioExecutorMain {
+class AccioExecutor {
   def main(args: Array[String]): Unit = {
-    StdOutErr.record()
-    new AccioExecutor().main(args)
-
-    // Long story short: Yes, we need this.
-    //
-    // After leaving the executor there are still some alive threads, apparently related to Finagle, which causes,
-    // the executor process to never terminate. It is far from ideal, but after spending one day debugging this issue
-    // it was the best I could figure out. My only finding was that it did not happen with very short-lived operators
-    // (e.g., EventSource), but why?
-    sys.exit(0)
-  }
-}
-
-/**
- * Implementation of the Accio executor, as a standard [[App]]. Nonetheless, it is not supposed to be launched
- * manually, but instead by an Accio agent.
- */
-class AccioExecutor extends App {
-  override protected def failfastOnFlagsNotParsed = true
-
-  override protected def modules = Seq(ExecutorModule, FileSystemModule)
-
-  override protected def run(): Unit = {
-    require(args.length == 1, "You must provide a single task identifier as argument")
-    val executor = injector.instance[TaskExecutor]
-    Await.ready(executor.submit(TaskId(args.head), StdOutErr))
+    require(args.length == 2)
+    val opExecutor = new OpExecutor(new ReflectOpDiscovery)
+    val taskExecutor = new TaskExecutor(opExecutor)
+    taskExecutor.execute(args.head, Paths.get(args(1)))
   }
 }

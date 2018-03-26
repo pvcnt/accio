@@ -20,10 +20,9 @@ package fr.cnrs.liris.accio.tools.cli.command
 
 import com.google.inject.Inject
 import com.twitter.util._
-import fr.cnrs.liris.accio.tools.cli.controller._
 import fr.cnrs.liris.accio.agent.AgentService$FinagleClient
-import fr.cnrs.liris.accio.runtime.cli.{Cmd, ExitCode}
-import fr.cnrs.liris.accio.runtime.event.{Event, Reporter}
+import fr.cnrs.liris.accio.tools.cli.controller._
+import fr.cnrs.liris.accio.tools.cli.event.{Event, Reporter}
 import fr.cnrs.liris.common.flags.FlagsProvider
 
 case class DescribeCommandFlags()

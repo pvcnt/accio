@@ -19,10 +19,9 @@
 package fr.cnrs.liris.accio.tools.cli.command
 
 import com.google.inject.Inject
-import fr.cnrs.liris.accio.tools.cli.controller._
 import fr.cnrs.liris.accio.agent._
-import fr.cnrs.liris.accio.runtime.cli.{Cmd, ExitCode}
-import fr.cnrs.liris.accio.runtime.event.{Event, Reporter}
+import fr.cnrs.liris.accio.tools.cli.controller._
+import fr.cnrs.liris.accio.tools.cli.event.{Event, Reporter}
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 import fr.cnrs.liris.common.util.StringUtils.explode
 
@@ -45,20 +44,19 @@ class GetCommand @Inject()(clientProvider: ClusterClientProvider) extends Client
   override def execute(flags: FlagsProvider, reporter: Reporter): ExitCode = {
     if (flags.residue.isEmpty) {
       reporter.handle(Event.error("You must specify a resource type.\n" +
-        "Valid resource types are: workflow, run, operator, agent"))
+        "Valid resource types are: workflow, run, operator"))
       return ExitCode.CommandLineError
     }
     val maybeController: Option[GetController[_]] = flags.residue.head match {
       case "workflow" | "workflows" => Some(new GetWorkflowController)
       case "run" | "runs" => Some(new GetRunController)
       case "operator" | "operators" | "op" | "ops" => Some(new GetOperatorController)
-      case "agent" | "agents" => Some(new GetAgentController)
       case _ => None
     }
     maybeController match {
       case None =>
         reporter.handle(Event.error(s"Invalid resource type: ${flags.residue.head}.\n" +
-          s"Valid resource types are: workflow, run, operator, agent"))
+          s"Valid resource types are: workflow, run, operator"))
         ExitCode.CommandLineError
       case Some(controller) =>
         val client = createClient(flags)

@@ -18,28 +18,50 @@
 
 package fr.cnrs.liris.accio.scheduler.inject
 
-import com.google.inject.Module
+import java.nio.file.Path
+
+import com.google.common.eventbus.EventBus
+import com.google.inject.{Inject, Provider, Singleton}
+import com.twitter.finagle.stats.StatsReceiver
 import com.twitter.inject.{Injector, TwitterModule}
+import fr.cnrs.liris.accio.api.thrift.Resource
+import fr.cnrs.liris.accio.config.{DataDir, ExecutorArgs, ExecutorUri, ReservedResource}
 import fr.cnrs.liris.accio.scheduler.Scheduler
-import fr.cnrs.liris.accio.scheduler.standalone._
+import fr.cnrs.liris.accio.scheduler.local.LocalScheduler
 
 /**
  * Guice module provisioning the scheduler service.
  */
 object SchedulerModule extends TwitterModule {
-  private[this] val typeFlag = flag("scheduler.type", "standalone", "Scheduler type")
+  private[this] val typeFlag = flag("scheduler.type", "local", "Scheduler type")
 
-  override def modules: Seq[Module] =
-    typeFlag.get match {
-      case Some("standalone") => Seq(StandaloneSchedulerModule)
-      case Some(invalid) => throw new IllegalArgumentException(s"Invalid scheduler type: $invalid")
-      case None =>
-        // This only happen when this method is called the first time, during App's initialization.
-        // We provide the entire list of all modules, making all flags available.
-        Seq(StandaloneSchedulerModule)
+  override def configure(): Unit = {
+    typeFlag() match {
+      case "local" => bind[Scheduler].toProvider[LocalSchedulerProvider].in[Singleton]
+      case invalid => throw new IllegalArgumentException(s"Unknown scheduler type: $invalid")
     }
+  }
+
+  override def singletonStartup(injector: Injector): Unit = {
+    injector.instance[Scheduler].startUp()
+  }
 
   override def singletonShutdown(injector: Injector): Unit = {
-    injector.instance[Scheduler].close()
+    injector.instance[Scheduler].shutDown()
   }
+
+  private class LocalSchedulerProvider @Inject()(
+    statsReceiver: StatsReceiver,
+    eventBus: EventBus,
+    @ReservedResource reserved: Resource,
+    @ExecutorUri executorUri: String,
+    @ExecutorArgs executorArgs: Seq[String],
+    @DataDir dataDir: Path)
+    extends Provider[Scheduler] {
+
+    override def get(): Scheduler = {
+      new LocalScheduler(statsReceiver, eventBus, reserved, executorUri, executorArgs, dataDir.resolve("tasks"))
+    }
+  }
+
 }
