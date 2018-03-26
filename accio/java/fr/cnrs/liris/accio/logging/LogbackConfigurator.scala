@@ -30,8 +30,10 @@ import org.slf4j.{Logger, LoggerFactory}
 trait LogbackConfigurator {
   this: App =>
 
-  initLogback()
-  Slf4jBridgeUtility.attemptSlf4jBridgeHandlerInstallation()
+  init {
+    initLogback()
+    Slf4jBridgeUtility.attemptSlf4jBridgeHandlerInstallation()
+  }
 
   private def initLogback(): Unit = {
     // We assume SLF4J is bound to logback in the current environment.
