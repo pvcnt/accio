@@ -30,6 +30,9 @@ ExecStart=/usr/bin/java \
     -admin.port=":9990" \
     -thrift.port=":9999" \
     -log.level=DEBUG \
+    -force_scheduling \
     -executor_uri=/usr/local/bin/accio-executor.jar \
     -datadir=/var/lib/accio-agent \
     -storage.type=memory
+Restart=on-failure
+WantedBy=multi-user.target

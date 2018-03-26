@@ -30,3 +30,5 @@ ExecStart=/usr/bin/java \
     -addr=localhost:9999 \
     -admin.port=":8880" \
     -http.port=":80"
+Restart=on-failure
+WantedBy=multi-user.target
