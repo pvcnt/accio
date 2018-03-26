@@ -33,8 +33,7 @@ import scala.collection.JavaConverters._
  * Run repository storing data in memory. It has no persistence mechanism. Intended for testing only.
  */
 @Singleton
-@VisibleForTesting
-final class MemoryRunRepository extends AbstractIdleService with MutableRunRepository with Lockable[String] {
+private[memory] final class MemoryRunRepository extends AbstractIdleService with MutableRunRepository with Lockable[String] {
   private[this] val index = new ConcurrentHashMap[RunId, Run]().asScala
 
   override def find(query: RunQuery): RunList = {

@@ -18,9 +18,8 @@
 
 package fr.cnrs.liris.accio.storage.memory
 
-import com.google.common.annotations.VisibleForTesting
 import com.google.inject.{Inject, Singleton}
-import fr.cnrs.liris.accio.storage.AbstractStorage
+import fr.cnrs.liris.accio.storage.{AbstractStorage, Storage}
 
 /**
  * Storage giving access in-memory repositories.
@@ -30,9 +29,13 @@ import fr.cnrs.liris.accio.storage.AbstractStorage
  * @param logs      In-memory log repository.
  */
 @Singleton
-@VisibleForTesting
-final class MemoryStorage @Inject()(
+private[storage] final class MemoryStorage @Inject()(
   override val runs: MemoryRunRepository,
   override val logs: MemoryLogRepository,
   override val workflows: MemoryWorkflowRepository)
   extends AbstractStorage
+
+object MemoryStorage {
+  // Mainly present for testing purposes.
+  def create: Storage = new MemoryStorage(new MemoryRunRepository, new MemoryLogRepository, new MemoryWorkflowRepository)
+}

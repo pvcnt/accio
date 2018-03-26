@@ -33,8 +33,7 @@ import scala.collection.JavaConverters._
  * Run repository storing data in memory. It has no persistence mechanism. Intended for testing only.
  */
 @Singleton
-@VisibleForTesting
-final class MemoryLogRepository extends AbstractIdleService with MutableLogRepository {
+private[memory] class MemoryLogRepository extends AbstractIdleService with MutableLogRepository {
   private[this] val index = new ConcurrentHashMap[RunId, util.Queue[RunLog]]().asScala
 
   override def save(logs: Seq[RunLog]): Unit = {

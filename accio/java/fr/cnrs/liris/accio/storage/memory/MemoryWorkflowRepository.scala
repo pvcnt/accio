@@ -34,8 +34,9 @@ import scala.collection.mutable
  * Run repository storing data in memory. It has no persistence mechanism. Intended for testing only.
  */
 @Singleton
-@VisibleForTesting
-final class MemoryWorkflowRepository extends AbstractIdleService with MutableWorkflowRepository with Lockable[String] {
+private[memory] final class MemoryWorkflowRepository
+  extends AbstractIdleService with MutableWorkflowRepository with Lockable[String] {
+
   private[this] val index = new ConcurrentHashMap[WorkflowId, mutable.Map[String, Workflow]]().asScala
 
   override def find(query: WorkflowQuery): WorkflowList = {
