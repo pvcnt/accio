@@ -26,9 +26,10 @@ import org.scalatest.{BeforeAndAfterEach, Suite}
 /**
  * Trait for unit tests that need a temporary directory to be initialized before each test.
  */
-trait WithTmpDirectory extends BeforeAndAfterEach {
+trait CreateTmpDirectory extends BeforeAndAfterEach {
   this: Suite =>
-  private[this] var _tmpDir: Path = null
+
+  private[this] var _tmpDir: Path = _
 
   protected def tmpDir: Path = _tmpDir
 

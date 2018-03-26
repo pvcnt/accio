@@ -18,20 +18,25 @@
 
 package fr.cnrs.liris.common.flags
 
-sealed trait TriState
+case class BazFlags(
+  @Flag(name = "baz", category = "one")
+  baz: String = "defaultBaz")
 
-object TriState {
+case class CategoryTestFlags(
+  @Flag(name = "swiss_bank_account_number", category = "undocumented")
+  swissBankAccountNumber: Int = 123456789,
+  @Flag(name = "student_bank_account_number", category = "one")
+  studentBankAccountNumber: Int = 987654321)
 
-  case object Yes extends TriState {
-    override def toString: String = "true"
-  }
+case class FooFlags(
+  @Flag(name = "foo", category = "one")
+  foo: String = "defaultFoo",
+  @Flag(name = "bar", category = "two")
+  bar: Int = 42,
+  @Flag(name = "nodoc", category = "undocumented")
+  nodoc: String = "")
 
-  case object No extends TriState {
-    override def toString: String = "false"
-  }
-
-  case object Auto extends TriState {
-    override def toString: String = "auto"
-  }
-
-}
+case class OptionalFlags(
+  @Flag(name = "foo") foo: Option[Int],
+  @Flag(name = "bar") bar: Option[String],
+  @Flag(name = "baz") baz: Option[String] = Some("bazbaz"))

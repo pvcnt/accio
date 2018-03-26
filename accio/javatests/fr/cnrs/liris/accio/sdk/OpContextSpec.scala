@@ -20,12 +20,12 @@ package fr.cnrs.liris.accio.sdk
 
 import java.nio.file.Paths
 
-import fr.cnrs.liris.testing.{UnitSpec, WithTmpDirectory}
+import fr.cnrs.liris.testing.{UnitSpec, CreateTmpDirectory}
 
 /**
  * Unit tests for [[OpContext]].
  */
-class OpContextSpec extends UnitSpec with WithTmpDirectory {
+class OpContextSpec extends UnitSpec with CreateTmpDirectory {
   behavior of "OpContext"
 
   it should "provide a seed for unstable operators" in {

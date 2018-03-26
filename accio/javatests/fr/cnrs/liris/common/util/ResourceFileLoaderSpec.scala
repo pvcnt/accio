@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package fr.cnrs.liris.common.util
 
 import java.io.IOException

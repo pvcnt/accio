@@ -24,12 +24,12 @@ import java.nio.file.{Files, Path, Paths}
 import com.google.common.io.Resources
 import fr.cnrs.liris.accio.filesystem.FileSystem
 import fr.cnrs.liris.accio.scheduler.local.ExecutorTaskExecutor
-import fr.cnrs.liris.testing.{UnitSpec, WithTmpDirectory}
+import fr.cnrs.liris.testing.{UnitSpec, CreateTmpDirectory}
 
 /**
  * Unit tests for [[ExecutorTaskExecutor]].
  */
-class ExecutorTaskExecutorSpec extends UnitSpec with WithTmpDirectory {
+class ExecutorTaskExecutorSpec extends UnitSpec with CreateTmpDirectory {
   protected val executorUri: String = unpackExecutor().toAbsolutePath.toString
 
   /*protected def createExecutor: Scheduler = {
