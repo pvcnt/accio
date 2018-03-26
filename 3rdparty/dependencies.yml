@@ -1,0 +1,94 @@
+# Accio is a platform to launch computer science experiments.
+# Copyright (C) 2016-2018 Vincent Primault <v.primault@ucl.ac.uk>
+#
+# Accio is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Accio is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Accio.  If not, see <http://www.gnu.org/licenses/>.
+
+options:
+  languages:
+  - java
+  - scala:2.11.12
+  buildHeader:
+  - load("@io_bazel_rules_scala//scala:scala_import.bzl", "scala_import")
+  resolverCache: bazel_output_base
+
+dependencies:
+  com.github.nscala-time:
+    nscala-time:
+      version: 2.18.0
+      lang: scala
+  com.twitter:
+    scrooge:
+      version: 18.2.0
+      lang: scala
+      modules: [core, generator]
+    finagle:
+      version: 18.2.0
+      lang: scala
+      modules: [core, http, thrift, mysql, stats]
+    finatra:
+      version: 18.2.0
+      lang: scala
+      modules: [http, httpclient, jackson]
+    bijection:
+      version: 0.9.6
+      lang: scala
+      modules: [util]
+    inject:
+      version: 18.2.0
+      lang: scala
+      modules: [core, app, modules, server, slf4j]
+    util:
+      version: 18.2.0
+      lang: scala
+      modules: [app, core, jvm, codec, stats]
+  ch.qos.logback:
+    logback-classic:
+      version: 1.2.3
+      lang: java
+    logback-core:
+      version: 1.2.3
+      lang: java
+  org.scala-lang:
+    scalap:
+      version: 2.11.12
+      lang: scala/unmangled
+  org.apache.commons:
+    commons-math3:
+      version: 3.6.1
+      lang: java
+  com.sksamuel.elastic4s:
+    elastic4s:
+      version: 5.1.2
+      lang: scala
+      modules: [core, jackson, testkit]
+  org.codelibs.elasticsearch.module:
+    lang-painless:
+      version: 5.1.2
+      lang: java
+  io.github.lukehutch:
+    fast-classpath-scanner:
+      version: 2.0.19
+      lang: java
+  org.scalanlp:
+    breeze:
+      version: "0.12"
+      lang: scala
+  org.ocpsoft.prettytime:
+    prettytime:
+      version: "4.0.1.Final"
+      lang: java
+  org.junit.vintage:
+    junit-vintage-engine:
+      version: "5.1.0"
+      lang: java

@@ -1,0 +1,40 @@
+# Accio is a platform to launch computer science experiments.
+# Copyright (C) 2016-2018 Vincent Primault <v.primault@ucl.ac.uk>
+#
+# Accio is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Accio is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Accio.  If not, see <http://www.gnu.org/licenses/>.
+
+# Force bazel output to use colors (good for Gitlab CI) and print useful errors.
+common --color=yes
+
+# Start in batch mode, because we are running builds on a "shell" runner (and hence a shared
+# Bazel instance).
+startup --batch
+
+# For the same reasons, limit RAM usage.
+build --ram_utilization_factor=10
+test --ram_utilization_factor=10
+
+# Disable sandboxing.
+build  --spawn_strategy=standalone --genrule_strategy=standalone
+test --spawn_strategy=standalone
+
+# Configure build - print errors.
+build  --verbose_failures
+
+# Configure tests - increase timeout, print errors and timeout warnings.
+test --verbose_failures --test_output=errors --test_verbose_timeout_warnings
+
+# Build for production environment.
+build --define env=production
+test --define env=production
