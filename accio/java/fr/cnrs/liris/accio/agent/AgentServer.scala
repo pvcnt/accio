@@ -21,7 +21,6 @@ package fr.cnrs.liris.accio.agent
 import java.net.InetSocketAddress
 
 import com.twitter.conversions.time._
-import com.twitter.finagle.service.StatsFilter
 import com.twitter.finagle.stats.StatsReceiver
 import com.twitter.finagle.thrift.RichServerParam
 import com.twitter.finagle.{ListeningServer, Service, Thrift}

@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.tools.cli
 
 import com.google.inject.Guice
 import com.twitter.inject.Logging
-import fr.cnrs.liris.accio.logging.{LogbackConfigurator, Slf4jBridgeInstaller}
+import fr.cnrs.liris.accio.logging.LogbackConfigurator
 import fr.cnrs.liris.accio.tools.cli.command.{CommandDispatcher, CommandModule}
 import fr.cnrs.liris.accio.tools.cli.config.ConfigModule
 import fr.cnrs.liris.common.io.OutErr
