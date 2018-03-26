@@ -23,7 +23,7 @@ scala_binary(
     "//accio/java/fr/cnrs/liris/accio/logging",
     "//accio/java/fr/cnrs/liris/common/io",
     "//3rdparty/jvm/com/twitter:inject_core",
-    "//3rdparty/jvm/com/twitter:inject_slf4j",
+    "//3rdparty/jvm/com/twitter:inject_app",
     "//3rdparty/jvm/com/twitter:finatra_jackson",
   ],
   resource_strip_prefix = "accio/java",

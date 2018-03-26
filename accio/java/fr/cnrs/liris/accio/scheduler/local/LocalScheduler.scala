@@ -87,11 +87,11 @@ final class LocalScheduler @Inject()(
 
   override def submit(task: Task): Unit = {
     if (reserveResources(task.resource)) {
-      logger.debug(s"Starting execution of task ${task.id.value}")
-      val future = pool(execute(task))
+      logger.info(s"Starting execution of task ${task.id.value}")
+      val future = schedule(task)
       running(task.id) = Running(task, future)
     } else {
-      logger.debug(s"Queued task ${task.id.value}")
+      logger.info(s"Queued task ${task.id.value}")
       pending.add(task)
     }
   }
@@ -123,11 +123,26 @@ final class LocalScheduler @Inject()(
     pending.asScala.foreach { task =>
       if (reserveResources(task.resource)) {
         pending.remove(task)
-        logger.debug(s"Starting execution of task ${task.id.value}")
-        val future = pool(execute(task))
+        logger.info(s"Starting execution of task ${task.id.value}")
+        val future = schedule(task)
         running(task.id) = Running(task, future)
       }
     }
+  }
+
+  private def schedule(task: Task): Future[OpResult] = {
+    pool(execute(task))
+      .onSuccess { result =>
+        eventBus.post(TaskCompletedEvent(task.runId, task.nodeName, result, task.payload.cacheKey))
+      }
+      .onFailure { e =>
+        logger.error(s"Unexpected error while executing task ${task.id.value}", e)
+        eventBus.post(TaskCompletedEvent(task.runId, task.nodeName, OpResult(-999), task.payload.cacheKey))
+      }
+      .ensure {
+        running.remove(task.id)
+        releaseResources(task.resource)
+      }
   }
 
   private def isEnoughResources(requests: Resource, resources: Resource): Boolean = {
@@ -166,14 +181,13 @@ final class LocalScheduler @Inject()(
     trySchedule()
   }
 
-  private def execute(task: Task): Unit = {
+  private def execute(task: Task): OpResult = {
     // TODO: stream logs.
     val process = startProcess(task)
     eventBus.post(TaskStartedEvent(task.runId, task.nodeName))
     val exitCode = process.waitFor()
-    logger.debug(s"Completed execution of task ${task.id.value} (exit code: $exitCode)")
-    val result = read(getResultFile(getWorkDir(task.id))).copy(exitCode = exitCode)
-    eventBus.post(TaskCompletedEvent(task.runId, task.nodeName, result, task.payload.cacheKey))
+    logger.info(s"Completed execution of task ${task.id.value} (exit code: $exitCode)")
+    read(getResultFile(getWorkDir(task.id))).copy(exitCode = exitCode)
   }
 
   private def startProcess(task: Task): Process = {
@@ -220,6 +234,7 @@ final class LocalScheduler @Inject()(
     cmd ++= Seq("-com.twitter.jvm.numProcs", task.resource.cpu.toString)
     cmd += encode(task)
     cmd += outputFile.toAbsolutePath.toString
+    cmd.toList
   }
 
   private def encode(task: Task): String = {

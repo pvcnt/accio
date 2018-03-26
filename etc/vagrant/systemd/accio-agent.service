@@ -29,6 +29,7 @@ ExecStart=/usr/bin/java \
     -cluster_name=devcluster \
     -admin.port=":9990" \
     -thrift.port=":9999" \
+    -log.level=DEBUG \
     -executor_uri=/usr/local/bin/accio-executor.jar \
     -datadir=/var/lib/accio-agent \
     -storage.type=memory

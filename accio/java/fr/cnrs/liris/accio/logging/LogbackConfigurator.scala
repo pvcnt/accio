@@ -23,10 +23,13 @@ import ch.qos.logback.classic.jul.LevelChangePropagator
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.classic.{Level, LoggerContext}
 import ch.qos.logback.core.ConsoleAppender
+import com.twitter.app.App
 import com.twitter.util.logging.Slf4jBridgeUtility
 import org.slf4j.{Logger, LoggerFactory}
 
 trait LogbackConfigurator {
+  this: App =>
+
   initLogback()
   Slf4jBridgeUtility.attemptSlf4jBridgeHandlerInstallation()
 

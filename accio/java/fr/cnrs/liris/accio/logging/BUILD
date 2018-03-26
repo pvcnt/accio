@@ -21,6 +21,7 @@ scala_library(
     "//3rdparty/jvm/ch/qos/logback:logback_core",
     "//3rdparty/jvm/ch/qos/logback:logback_classic",
     "//3rdparty/jvm/com/twitter:util_slf4j_jul_bridge",
+    "//3rdparty/jvm/com/twitter:util_app",
   ],
   exports = [
     "//3rdparty/jvm/ch/qos/logback:logback_core",
