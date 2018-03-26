@@ -38,4 +38,8 @@ node_build(
   visibility = ["//visibility:public"],
 )
 
-exports_files(["index.html", "robots.txt", "favicon.ico"])
+filegroup(
+  name = "assets",
+  srcs = glob(["images/**"]) + ["index.html", "robots.txt", "favicon.ico"],
+  visibility = ["//visibility:public"],
+)

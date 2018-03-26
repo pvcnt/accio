@@ -28,9 +28,7 @@ scala_binary(
   ],
   resources = [
     "//accio/node/fr/cnrs/liris/accio/gateway:index.bundle.js",
-    "//accio/node/fr/cnrs/liris/accio/gateway:index.html",
-    "//accio/node/fr/cnrs/liris/accio/gateway:robots.txt",
-    "//accio/node/fr/cnrs/liris/accio/gateway:favicon.ico",
+    "//accio/node/fr/cnrs/liris/accio/gateway:assets",
   ],
   resource_strip_prefix = "accio/node/fr/cnrs/liris/accio/gateway",
   main_class = "fr.cnrs.liris.accio.gateway.GatewayServerMain",
