@@ -36,19 +36,19 @@ function build_client {
 
 function build_agent {
   bazel build accio/java/fr/cnrs/liris/accio/agent:agent_deploy.jar
-  sudo cp bazel-bin/accio/java/fr/cnrs/liris/accio/agent:agent_deploy.jar /usr/local/bin/accio-agent.jar
+  sudo cp bazel-bin/accio/java/fr/cnrs/liris/accio/agent/agent_deploy.jar /usr/local/bin/accio-agent.jar
   upstart_update accio-agent
 }
 
 function build_executor {
   bazel build accio/java/fr/cnrs/liris/accio/executor:executor_deploy.jar
-  sudo cp bazel-bin/accio/java/fr/cnrs/liris/accio/executor:executor_deploy.jar /usr/local/bin/accio-executor.jar
+  sudo cp bazel-bin/accio/java/fr/cnrs/liris/accio/executor/executor_deploy.jar /usr/local/bin/accio-executor.jar
 }
 
 function build_gateway {
   bazel run @yarn//:yarn
   bazel build accio/java/fr/cnrs/liris/accio/gateway:gateway_deploy.jar
-  sudo cp bazel-bin/accio/java/fr/cnrs/liris/accio/gateway:gateway_deploy.jar /usr/local/bin/accio-gateway.jar
+  sudo cp bazel-bin/accio/java/fr/cnrs/liris/accio/gateway/gateway_deploy.jar /usr/local/bin/accio-gateway.jar
   upstart_update accio-gateway
 }
 
