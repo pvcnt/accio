@@ -15,45 +15,45 @@
 # You should have received a copy of the GNU General Public License
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
+# This script is entirely executed as the root user by Vagrant.
+
+BAZEL_VERSION=0.11.0
+
 function install_packages() {
-  curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
-  echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
-  DEBIAN_FRONTEND=noninteractive sudo apt-get update && sudo apt-get install -y --force-yes \
-        python-dev \
-        libffi-dev \
-        openjdk-8-jdk-headless \
-        nodejs \
-        nodejs-legacy \
-        npm \
-        yarn \
-        autoconf \
-        automake \
-        htop
-  sudo npm install -g browserify watchify
+  # Enable user namespaces.
+  sysctl kernel.unprivileged_userns_clone=1
+  echo 'kernel.unprivileged_userns_clone=1' | tee /etc/sysctl.d/99-enable-user-namespaces.conf
+
+  # Install Java.
+  apt-get install -y openjdk-8-jdk
+
+  # Install Bazel and its dependencies.
+  apt-get install -y pkg-config zip g++ zlib1g-dev unzip python
+  wget -nv -O install.sh "https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}-installer-linux-x86_64.sh"
+  chmod +x install.sh
+  sudo ./install.sh
+  rm -f install.sh
 }
 
 function prepare_extras() {
   # Include build script in default PATH.
-  ln -sf /home/ubuntu/accio/etc/vagrant/acciobuild.sh /usr/local/bin/acciobuild
-  chown ubuntu: /usr/local/bin/acciobuild && chmod +x /usr/local/bin/acciobuild
+  ln -sf /home/vagrant/accio/etc/vagrant/acciobuild.sh /usr/local/bin/acciobuild
+  chown vagrant: /usr/local/bin/acciobuild && chmod +x /usr/local/bin/acciobuild
 
-  # Copy default clusters definition file. We do not link it, in case the user want to add other clusters in it.
-  mkdir -p /etc/accio && cp /home/ubuntu/accio/etc/vagrant/clusters.json /etc/accio
-
-  # Install Pants bash completion. It will trigger Pants initialization (including download).
-  #su ubuntu -c "./pants bash-completion" > /etc/bash_completion.d/pants-completion.bash
+  # Copy the default clusters definition file. We do not link it, in case the user want to add
+  # other clusters in it.
+  mkdir -p /etc/accio && cp /home/vagrant/accio/etc/vagrant/clusters.json /etc/accio
 }
 
 function prepare_sources {
-  mkdir -p /home/ubuntu/accio
+  mkdir -p /home/vagrant/accio
   ln -sf /vagrant/etc/vagrant/update-sources.sh /usr/local/bin/update-sources
   chmod +x /usr/local/bin/update-sources
   update-sources > /dev/null
-  mkdir /home/ubuntu/dist
-  chown -R ubuntu: /home/ubuntu/accio
+  chown -R vagrant: /home/vagrant/accio
 }
 
 install_packages
 prepare_sources
 prepare_extras
-su ubuntu -c "acciobuild all"
+su vagrant -c "acciobuild all"

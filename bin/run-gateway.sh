@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Accio is a platform to launch computer science experiments.
 # Copyright (C) 2016-2018 Vincent Primault <v.primault@ucl.ac.uk>
 #
@@ -15,17 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
-rsync -urzvhl /vagrant/ /home/vagrant/accio \
-    --filter=':- /vagrant/.gitignore' \
-    --exclude=.git \
-    --exclude=bazel-accio \
-    --exclude=bazel-bin \
-    --exclude=bazel-genfiles \
-    --exclude=bazel-out \
-    --exclude=bazel-testlogs \
-    --exclude=docs \
-    --delete \
-
-# Install/update the upstart configurations.
-sudo cp /vagrant/etc/vagrant/systemd/*.service /lib/systemd/system
-sudo systemctl daemon-reload
+bazel run accio/java/fr/cnrs/liris/accio/gateway -- \
+  -admin.port=":9991" \
+  -http.port=":8888" \
+  -ui \
+  -addr=localhost:9999 \
+  "$@"

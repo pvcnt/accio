@@ -25,7 +25,7 @@ ExecStart=/usr/bin/java \
   -Xmx1G \
   -server \
   -agentlib:jdwp=transport=dt_socket,server=y,address=8001,suspend=n \
-  -jar /home/ubuntu/accio/dist/accio-gateway.jar \
+  -jar /usr/local/bin/accio-gateway.jar \
     -ui \
     -addr=localhost:9999 \
     -admin.port=":8880" \

@@ -23,9 +23,9 @@ Vagrant.configure(2) do |config|
 
   # Configure Virtualbox.
   config.vm.provider "virtualbox" do |vb|
-      vb.name = "accio.local"
+      vb.name = "accio.dev"
       vb.memory = "4096"
-      vb.cpus = 4
+      vb.cpus = 2
     end
 
   # Initial provisioning.

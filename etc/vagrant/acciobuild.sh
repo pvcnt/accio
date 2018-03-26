@@ -17,8 +17,7 @@
 
 set -o nounset
 
-REPO_DIR=/home/ubuntu/accio
-DIST_DIR=$REPO_DIR/dist
+REPO_DIR=/home/vagrant/accio
 
 function upstart_update {
   # Stop and start is necessary to update a the configuration of
@@ -30,30 +29,26 @@ function upstart_update {
 }
 
 function build_client {
-  ./pants binary src/jvm/fr/cnrs/liris/accio/tools/cli:bin
-  cp build-support/stub.sh $DIST_DIR
-  pushd $DIST_DIR
-    cat stub.sh accio-client.jar > accio
-    chmod +x accio
-  popd
-  sudo ln -sf $DIST_DIR/accio /usr/local/bin/accio
+  bazel build accio/java/fr/cnrs/liris/accio/tools/cli:cli_deploy.jar
+  sudo touch /usr/local/bin/accio && sudo chown vagrant: /usr/local/bin/accio && chmod +x /usr/local/bin/accio
+  cat etc/vagrant/stub.sh bazel-bin/accio/java/fr/cnrs/liris/accio/tools/cli/cli_deploy.jar > /usr/local/bin/accio
 }
 
 function build_agent {
-  ./pants binary src/jvm/fr/cnrs/liris/accio/agent:bin
+  bazel build accio/java/fr/cnrs/liris/accio/agent:agent_deploy.jar
+  sudo cp bazel-bin/accio/java/fr/cnrs/liris/accio/agent:agent_deploy.jar /usr/local/bin/accio-agent.jar
   upstart_update accio-agent
 }
 
 function build_executor {
-  ./pants binary src/jvm/fr/cnrs/liris/accio/executor:bin
+  bazel build accio/java/fr/cnrs/liris/accio/executor:executor_deploy.jar
+  sudo cp bazel-bin/accio/java/fr/cnrs/liris/accio/executor:executor_deploy.jar /usr/local/bin/accio-executor.jar
 }
 
 function build_gateway {
-  pushd src/node/fr/cnrs/liris/accio/gateway
-    yarn install
-    npm run build
-  popd
-  ./pants binary src/jvm/fr/cnrs/liris/accio/gateway:bin
+  bazel run @yarn//:yarn
+  bazel build accio/java/fr/cnrs/liris/accio/gateway:gateway_deploy.jar
+  sudo cp bazel-bin/accio/java/fr/cnrs/liris/accio/gateway:gateway_deploy.jar /usr/local/bin/accio-gateway.jar
   upstart_update accio-gateway
 }
 

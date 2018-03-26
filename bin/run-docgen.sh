@@ -15,4 +15,4 @@
 # You should have received a copy of the GNU General Public License
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
-./pants run src/jvm/fr/cnrs/liris/accio/tools/docgen:bin -- -out=docs/reference/library
+bazel run accio/java/fr/cnrs/liris/accio/tools/docgen -- -out=docs/reference/library

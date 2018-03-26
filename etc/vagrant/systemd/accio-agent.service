@@ -25,10 +25,10 @@ ExecStart=/usr/bin/java \
   -Xmx2G \
   -server \
   -agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=n \
-  -jar /home/ubuntu/accio/dist/accio-agent.jar \
+  -jar /usr/local/bin/accio-agent.jar \
     -cluster_name=devcluster \
     -admin.port=":9990" \
     -thrift.port=":9999" \
-    -executor_uri=/home/ubuntu/accio/dist/accio-executor.jar \
+    -executor_uri=/usr/local/bin/accio-executor.jar \
     -datadir=/var/lib/accio-agent \
     -storage.type=memory

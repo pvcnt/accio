@@ -15,18 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
-if [ ! -f dist/accio-executor.jar ]; then
-  ./pants binary src/jvm/fr/cnrs/liris/accio/executor:bin
-fi
+bazel build accio/java/fr/cnrs/liris/accio/executor:executor_deploy.jar
+mkdir -p /tmp/accio-agent
 
-tmpdir=/tmp/accio-agent
-mkdir -p ${tmpdir}
-
-./pants run src/jvm/fr/cnrs/liris/accio/agent:bin -- \
+bazel run accio/java/fr/cnrs/liris/accio/agent -- \
   -cluster_name=devcluster \
   -admin.port=":9990" \
   -thrift.port=":9999" \
-  -executor_uri=$(pwd)/dist/accio-executor.jar \
-  -datadir=${tmpdir}/tmp \
+  -executor_uri=$(pwd)/bazel-bin/accio/java/fr/cnrs/liris/accio/executor/executor_deploy.jar \
+  -datadir=/tmp/accio-agent \
   -storage.type=memory \
   "$@"
