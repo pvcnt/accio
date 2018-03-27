@@ -2,44 +2,216 @@
 layout: base
 ---
 
-{% assign page_path = page.url | split: "/" %}
+<div class="banner">
+  <div class="container">
+    <h1>Documentation</h1>
+  </div>
+</div>
 
-<div class="row">
-  <div class="col-md-3 docs-sidebar">
-    <ul class="docs-menu">
-      {% assign entries = site.pages | where_exp: 'entry', 'entry.url contains page_path[1]' | sort: 'weight' %}
-      {% for entry in entries %}
-        {% assign entry_path = entry.url | split: "/" %}
-        {% unless entry_path[3] %}
-          {% if entry.separator %}<hr />{% endif %}
-          <li{% if page.url contains entry.url %} class="active"{% endif %}>
-            <a href="{{ entry.url | prepend: site.baseurl }}">
-              {{ entry.title }}
+<div class="container">
+  <div class="menu">
+    <ul>
+      <li>
+        <a href="{{ "/docs/" | prepend: site.baseurl }}">
+        Accio Overview
+        </a>
+      </li>
+      <li>
+        <a href="{{ "/docs/tutorial.html" | prepend: site.baseurl }}">
+        Hello World tutorial
+        </a>
+      </li>
+      <li>
+        <a href="{{ "/docs/install.html" | prepend: site.baseurl }}">
+        Installing Accio
+        </a>
+      </li>
+      <li>
+        <a href="{{ "/docs/vagrant.html" | prepend: site.baseurl }}">
+        Vagrant environment
+        </a>
+      </li>
+    </ul>
+
+    <h3>Concepts</h3>
+    <ul>
+      <li>
+        <a href="{{ "/docs/architecture.html" | prepend: site.baseurl }}">
+        Architecture
+        </a>
+      </li>
+      <li>
+        <a href="{{ "/docs/api-objects.html" | prepend: site.baseurl }}">
+        API objects
+        </a>
+      </li>
+      <li>
+        <a href="{{ "/docs/api-usage.html" | prepend: site.baseurl }}">
+        Accessing the API
+        </a>
+      </li>
+    </ul>
+
+    <h3>User guide</h3>
+    <ul>
+      <li>
+        <a href="{{ "/docs/creating-workflows.html" | prepend: site.baseurl }}">
+        Authoring workflows
+        </a>
+      </li>
+      <li>
+        <a href="{{ "/docs/creating-runs.html" | prepend: site.baseurl }}">
+        Launching runs
+        </a>
+      </li>
+      <li>
+        <a href="{{ "/docs/validating.html" | prepend: site.baseurl }}">
+        Validating definitions
+        </a>
+      </li>
+      <li>
+        <a href="{{ "/docs/monitoring.html" | prepend: site.baseurl }}">
+        Monitoring progress
+        </a>
+      </li>
+      <li>
+        <a href="{{ "/docs/analysing.html" | prepend: site.baseurl }}">
+        Analysing results
+        </a>
+      </li>
+      <li>
+        <a href="{{ "/docs/debugging.html" | prepend: site.baseurl }}">
+        Debugging failed runs
+        </a>
+      </li>
+      <li>
+        <a href="{{ "/docs/best-practices.html" | prepend: site.baseurl }}">
+        Best practices
+        </a>
+      </li>
+    </ul>
+
+    <h3>Reference</h3>
+    <ul>
+      <li>
+        <a href="{{ "/docs/run-dsl.html" | prepend: site.baseurl }}">
+        Run DSL
+        </a>
+      </li>
+      <li>
+        <a href="{{ "/docs/workflow-dsl.html" | prepend: site.baseurl }}">
+        Workflow DSL
+        </a>
+      </li>
+      <li>
+        <a href="{{ "/docs/operators/" | prepend: site.baseurl }}">
+        Operators
+        </a>
+        {% if page.url contains "/docs/operators/" %}
+        <ul>
+          <li>
+            <a href="{{ "/docs/operators/ops-source.html" | prepend: site.baseurl }}">
+            Category: Source
             </a>
-            {% if page.url contains entry.url %}
-              {% assign subentries = site.pages | where_exp: 'subentry', 'subentry.url contains entry.url' %}
-              {% assign subentries = subentries | where_exp: 'subentry', 'subentry.url != entry.url' | sort: 'weight' %}
-              {% assign subentries_count = subentries | size %}
-              {% if subentries_count > 0 %}
-                <ul>
-                  {% for subentry in subentries %}
-                    <li{% if page.url contains subentry.url %} class="active"{% endif %}>
-                      <a href="{{ subentry.url | prepend: site.baseurl }}">
-                        {{ subentry.title }}
-                      </a>
-                    </li>
-                  {% endfor %}
-                </ul>
-              {% endif %}
-            {% endif %}
           </li>
-        {% endunless %}
-      {% endfor %}
+          <li>
+            <a href="{{ "/docs/operators/ops-transform.html" | prepend: site.baseurl }}">
+            Category: Transform
+            </a>
+          </li>
+          <li>
+            <a href="{{ "/docs/operators/ops-lppm.html" | prepend: site.baseurl }}">
+            Category: LPPM
+            </a>
+          </li>
+          <li>
+            <a href="{{ "/docs/operators/ops-metric.html" | prepend: site.baseurl }}">
+            Category: Metric
+            </a>
+          </li>
+        </ul>
+        {% endif %}
+      </li>
+      <li>
+        <a href="{{ "/docs/commands/" | prepend: site.baseurl }}">
+        Client commands
+        </a>
+        {% if page.url contains "/docs/commands/" %}
+        <ul>
+          <li>
+            <a href="{{ "/docs/commands/delete.html" | prepend: site.baseurl }}">
+            Command: delete
+            </a>
+          </li>
+          <li>
+            <a href="{{ "/docs/commands/describe.html" | prepend: site.baseurl }}">
+            Command: describe
+            </a>
+          </li>
+          <li>
+            <a href="{{ "/docs/commands/export.html" | prepend: site.baseurl }}">
+            Command: export
+            </a>
+          </li>
+          <li>
+            <a href="{{ "/docs/commands/get.html" | prepend: site.baseurl }}">
+            Command: get
+            </a>
+          </li>
+          <li>
+            <a href="{{ "/docs/commands/help.html" | prepend: site.baseurl }}">
+            Command: help
+            </a>
+          </li>
+          <li>
+            <a href="{{ "/docs/commands/kill.html" | prepend: site.baseurl }}">
+            Command: kill
+            </a>
+          </li>
+          <li>
+            <a href="{{ "/docs/commands/logs.html" | prepend: site.baseurl }}">
+            Command: logs
+            </a>
+          </li>
+          <li>
+            <a href="{{ "/docs/commands/push.html" | prepend: site.baseurl }}">
+            Command: push
+            </a>
+          </li>
+          <li>
+            <a href="{{ "/docs/commands/submit.html" | prepend: site.baseurl }}">
+            Command: submit
+            </a>
+          </li>
+          <li>
+            <a href="{{ "/docs/commands/validation.html" | prepend: site.baseurl }}">
+            Command: validation
+            </a>
+          </li>
+          <li>
+            <a href="{{ "/docs/commands/version.html" | prepend: site.baseurl }}">
+            Command: version
+            </a>
+          </li>
+        </ul>
+        {% endif %}
+      </li>
+      <li>
+        <a href="{{ "/docs/configuration.html" | prepend: site.baseurl }}">
+        Client configuration
+        </a>
+      </li>
+      <li>
+        <a href="{{ "/docs/datasets.html" | prepend: site.baseurl }}">
+        Mobility datasets
+        </a>
+      </li>
     </ul>
   </div>
 
-  <div class="col-md-9" id="page">
-    <h1 class="page-title">{{ page.title }}</h1>
+  <div class="side page">
+    <h1>{{ page.title }}</h1>
+
     {{ content }}
   </div>
 </div>

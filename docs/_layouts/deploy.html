@@ -1,0 +1,66 @@
+---
+layout: base
+---
+
+<div class="banner">
+  <div class="container">
+    <h1>Deployment</h1>
+  </div>
+</div>
+
+<div class="container">
+  <div class="menu">
+    <ul>
+      <li>
+        <a href="{{ "/deploy/installation.html" | prepend: site.baseurl }}">
+          Installing Accio
+        </a>
+      </li>
+      <li>
+        <a href="{{ "/deploy/configuration.html" | prepend: site.baseurl }}">
+          Configuration
+        </a>
+      </li>
+      <li>
+        <a href="{{ "/deploy/monitoring.html" | prepend: site.baseurl }}">
+          Monitoring
+        </a>
+      </li>
+      <li>
+        <a href="{{ "/deploy/security.html" | prepend: site.baseurl }}">
+          Securing the access
+        </a>
+      </li>
+      <li>
+        <a href="{{ "/deploy/upgrades.html" | prepend: site.baseurl }}">
+          Upgrading
+        </a>
+      </li>
+    </ul>
+
+    <h3>Reference</h3>
+    <ul>
+      <li>
+        <a href="{{ "/deploy/storage.html" | prepend: site.baseurl }}">
+          Storage configuration
+        </a>
+      </li>
+      <li>
+        <a href="{{ "/deploy/scheduler.html" | prepend: site.baseurl }}">
+          Scheduler configuration
+        </a>
+      </li>
+      <li>
+        <a href="{{ "/deploy/system.html" | prepend: site.baseurl }}">
+          System-level configuration
+        </a>
+      </li>
+    </ul>
+  </div>
+
+  <div class="side page">
+    <h1>{{ page.title }}</h1>
+
+    {{ content }}
+  </div>
+</div>

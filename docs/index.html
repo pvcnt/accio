@@ -2,67 +2,65 @@
 layout: base
 ---
 
-<div class="jumbotron">
-  <div class="row">
-    <div class="col-sm-2">
-      <img src="{{ "/images/wand.svg" | prepend: site.baseurl }}" width="100"/>
-    </div>
-    <div class="col-sm-10">
-      <h1>Accio is a scientific workflow management tool, used to study location privacy.</h1>
-      <p>
-        <a class="btn btn-primary" href="{{ "/user-guide/getting-started/" | prepend: site.baseurl }}">
-          <i class="fa fa-book" aria-hidden="true"></i> Get started
-        </a>
-      </p>
-    </div>
+<div class="jumbotron striped">
+  <div class="container">
+    <h1>A scientific workflow management tool, used to study location privacy</h1>
+    <p>
+      <a class="btn btn-lg" href="{{ "/docs/" | prepend: site.baseurl }}">
+      <i class="fa fa-book" aria-hidden="true"></i> Get started
+      </a>
+    </p>
   </div>
 </div>
 
-<hr />
+<div class="home">
+  <div class="row container">
+    <h2>Why using Accio?</h2>
+    <div class="feature">
+      <img src="{{ "/images/home-file.png" | prepend: site.baseurl }}" />
+      <h3>Simple yet powerful DSL</h3>
+      <p>
+        Experiments are defined with a user-friendly JSON syntax, while still
+        supporting more complex use cases such as parameter sweeps.
+      </p>
+    </div>
 
-<div class="row features-summary">
-    <div class="col-md-offset-1 col-md-1">
-        <img src="{{ "/images/home-file.png" | prepend: site.baseurl }}" />
+    <div class="feature">
+      <img src="{{ "/images/home-library.png" | prepend: site.baseurl }}" />
+      <h3>Batteries included for location privacy</h3>
+      <p>
+        Accio allows to quickly get started by providing many built-in state-of-the-art
+        location privacy algorithms.
+      </p>
     </div>
-    <div class="col-md-4">
-        <h3>Simple yet powerful DSL</h3>
-        <p>
-            Experiments are defined with a user-friendly JSON syntax, still
-            supporting more complex use cases such as parameter sweeps.
-        </p>
-    </div>
-    <div class="col-md-1">
-        <img src="{{ "/images/home-library.png" | prepend: site.baseurl }}" />
-    </div>
-    <div class="col-md-4">
-        <h3>Batteries included for location privacy research</h3>
-        <p>
-            Accio is bundled with many pre-defined operators, allowing any
-            privacy researcher to quickly begin experimenting with state-of-the-art
-            algorithms.
-        </p>
-    </div>
-</div>
 
-<div class="row features-summary">
-    <div class="col-md-offset-1 col-md-1">
-        <img src="{{ "/images/home-user.png" | prepend: site.baseurl }}" />
+    <div class="feature">
+      <img src="{{ "/images/home-stats.png" | prepend: site.baseurl }}" />
+      <h3>Easy results analysis</h3>
+      <p>
+        Accio provides tools for quick insights into results, as well as
+        sophisticated ways to export your data for further analysis.
+      </p>
     </div>
-    <div class="col-md-4">
-        <h3>Multi-tenant and collaborative</h3>
-        <p>
-            Many users can use the same Accio cluster. Experiments are easily
-            accessible, allowing users to monitor progress and collaborate on results.
-        </p>
+
+    <div class="feature">
+      <img src="{{ "/images/home-user.png" | prepend: site.baseurl }}" />
+      <h3>Multi-tenant and collaborative</h3>
+      <p>
+        Several users can share the same Accio cluster and collaborate on
+        their results.
+      </p>
     </div>
-    <div class="col-md-1">
-        <img src="{{ "/images/home-stats.png" | prepend: site.baseurl }}" />
+  </div>
+
+  <div class="striped">
+    <div class="row container">
+      <h2>Straight out from the research laboratories</h2>
+
+      <div class="logos">
+        <a href="https://liris.cnrs.fr"><img src="{{ "/images/liris-big.png" | prepend: site.baseurl }}" /></a>
+        <a href="http://sec.cs.ucl.ac.uk"><img src="{{ "/images/ucl.png" | prepend: site.baseurl }}" /></a>
+      </div>
     </div>
-    <div class="col-md-4">
-        <h3>Easy results analysis</h3>
-        <p>
-            Accio provides tools for quick insights into results, as well as
-            sophisticated ways to export your data for further analysis.
-        </p>
-    </div>
+  </div>
 </div>

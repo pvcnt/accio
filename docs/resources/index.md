@@ -1,7 +1,6 @@
 ---
-layout: default
-title: Resources & Community
-weight: 50
+layout: page
+title: Resources
 ---
 
 <div style="float: right; position: relative; top: -10px; margin-left: 15px;">

@@ -1,0 +1,281 @@
+/* Color palette is from http://www.color-hex.com/color-palette/58215 */
+
+html {
+  height: 100%;
+}
+
+body {
+  min-height: 100%;
+  font-family: "Roboto", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  display: flex; /* Sticky footer */
+  flex-direction: column; /* Sticky footer */
+}
+
+#content {
+  flex: 1 0 auto; /* Sticky footer */
+}
+
+.container {
+  width: 1170px;
+  margin: auto;
+}
+
+.navbar {
+  background-color: #368ce7;
+  list-style-type: none;
+  line-height: 20px;
+}
+
+.navbar-nav {
+  margin: 0;
+  float: left;
+}
+
+.navbar-header {
+  font-size: 24px;
+  letter-spacing: 1px;
+  padding: 15px 0 15px 0;
+}
+
+.navbar-header a {
+  color: white;
+  text-decoration: none;
+}
+
+.navbar:after, .navbar-nav:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+.navbar-header, .navbar-nav li {
+  float: left;
+  display: block;
+  box-sizing: border-box;
+}
+
+.navbar-nav li {
+  padding: 15px;
+}
+
+.navbar-nav a {
+  color: #deecfb;
+  text-decoration: none;
+}
+
+.navbar-header:hover a, .navbar-header:focus a, .navbar-nav li:hover a, .navbar-nav li:focus a {
+  color: white;
+}
+
+.navbar-nav li:hover, .navbar-nav li.active {
+  padding-bottom: 13px;
+  border-bottom: 2px solid white;
+}
+
+.navbar-nav li.active a {
+  color: white;
+}
+
+footer {
+  flex-shrink: 0; /* Sticky footer */
+  padding: 15px 0 40px 0;
+  background-color: #4b4b4b;
+  color: white;
+  line-height: 20px;
+}
+
+footer a {
+  color: #e0e0e0;
+  text-decoration: none;
+}
+
+footer a:hover, footer a:focus {
+  color: white;
+  text-decoration: none;
+}
+
+.license {
+  margin-top: 25px;
+}
+
+.striped {
+  background-color: #f6f6f6;
+}
+
+/**
+ * Homepage.
+ */
+.jumbotron {
+  padding: 25px;
+}
+
+.jumbotron h1 {
+  font-weight: 300;
+  font-size: 34px;
+  line-height: 1.2;
+  max-width: 600px;
+}
+
+.jumbotron p {
+  margin-top: 50px;
+}
+
+.home .row {
+  padding: 30px 0 30px 0;
+}
+
+.home .row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+.home .feature {
+  float: left;
+  width: 25%;
+  box-sizing: border-box;
+  padding: 0 20px 0 20px;
+  text-align: center;
+}
+
+.home .feature img {
+  width: 100px;
+}
+
+.home .feature h3 {
+  font-size: 20px;
+  font-weight: 400;
+  height: 2em;
+}
+
+.home .feature p {
+  font-size: 16px;
+  line-height: 20px;
+  text-align: justify;
+}
+
+.home .row h2 {
+  margin-top: 0;
+  font-size: 24px;
+  font-weight: 400;
+  text-align: center;
+}
+
+.home .logos {
+  text-align: center;
+}
+
+.home .logos img {
+  width: 150px;
+  margin: 0 50px 0 50px;
+}
+
+.btn {
+  background-color: #1666ba;
+  padding: 10px;
+  border-radius: 3px;
+  color: white;
+  text-decoration: none;
+}
+
+.btn:hover, .btn:focus {
+  background-color: #368ce7;
+  text-decoration: none;
+}
+
+.btn-lg {
+  padding: 12px;
+  text-transform: uppercase;
+}
+
+.btn-lg i.fa {
+  margin-right: 10px;
+}
+
+/**
+ * Documentation.
+ */
+.banner {
+  background-color: #7ab3ef;
+  padding: 25px 0 25px 0;
+  color: white;
+}
+
+.banner h1 {
+  font-size: 26px;
+  font-weight: 300;
+  margin: 0;
+}
+
+.page {
+  margin-top: 25px;
+}
+
+.page p {
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.page ul {
+  margin-bottom: 10px;
+}
+
+.page ul ul {
+  margin-bottom: 0;
+}
+
+.page li {
+  line-height: 22px;
+}
+
+.page a {
+  color: #368ce7;
+  text-decoration: none;
+}
+
+.page a:hover, .page a:focus {
+  color: #1666ba;
+  text-decoration: underline;
+}
+
+.menu {
+  float: left;
+  width: 250px;
+}
+
+.menu > ul:first-child {
+  margin-top: 0;
+}
+
+.menu ul {
+  padding-left: 0;
+  list-style-type: none;
+}
+
+.menu ul ul {
+  padding-left: 15px;
+}
+
+.menu li {
+  line-height: 22px;
+  padding: 3px 0 3px 0;
+}
+
+.menu a {
+  color: #368ce7;
+  text-decoration: none;
+}
+
+.menu a:hover, .menu a:focus {
+  color: #1666ba;
+  text-decoration: none;
+}
+
+.page.side {
+  margin-left: 275px;
+}
+
+.page img {
+  max-width: 895px;
+}
