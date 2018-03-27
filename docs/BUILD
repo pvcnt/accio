@@ -16,7 +16,8 @@
 
 load("//tools/build_rules/jekyll:jekyll_build.bzl", "jekyll_build")
 
-jekyll_build(
-  name = "docs",
-  srcs = glob(["**"]),
-)
+# Disabled because it causes errors where Jekyll is not present.
+#jekyll_build(
+#  name = "docs",
+#  srcs = glob(["**"]),
+#)
