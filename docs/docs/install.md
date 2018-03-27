@@ -21,6 +21,7 @@ This section explains how to install the Accio client from a binary release.
 It is by far the easiest and preferred option.
 
 ###  1. Install requirements
+
 The only requirement to run Accio is to have a JRE for Java 8.
 Before running Accio, you hence need to install the Java runtime on your machine.
 Please that though you only need a JRE (Java Runtime Environment) to execute Accio, you may want to install a JDK (Java Development Kit) instead;
@@ -63,6 +64,7 @@ This will download a DMG image with an install wizard.
 
 
 ### 2. Download binary
+
 Download the `accio` file from [the latest release](https://github.com/privamov/accio/releases/latest).
 This file is actually a simple bash wrapper around an embedded JAR.
 You need to give it the executable permissions before executing it.
@@ -78,6 +80,7 @@ However, you may want to move it under a location that is in your PATH, thus all
 Depending on your operating system, it may also be possible to move the binary under a system-wide directory where it can be share by several users.
 
 ### 4. Configuration
+
 For now, you can only use a very restricted set of commands, because we have not yet configured our client how to communicate with the Accio cluster.
 Configuration is done inside a `.accio/clusters.json` file under your home directory.
 You can define multiple clusters, each one having at least a name and an address where to contact it.
@@ -99,10 +102,23 @@ More detailed information about the client configuration may be found on [the de
 
 This section explains how to compile the Accio client from the source code.
 
-### 1. Clone the Git repository
+### 1. Install requirements
 
-The source code is hosted inside a Git repository  [on GitHub](https://github.com/privamov/accio).
-You need to [install Git](https://git-scm.com/downloads) first, if it is not already done.
+The following dependencies must be met in order to build Accio:
+
+  * [Java JDK 8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) is required to run both Bazel and Accio.
+  * [Bazel](https://bazel.build) is required to build Accio.
+  * [Git](https://git-scm.com/) is needed to keep Accio's source code up-to-date.
+  * Internet access is required to download dependencies both for Bazel and Accio.
+
+Bazel is our build tool of choice.
+Accio and Bazel require at least Java 8 (Accio only needs a JRE, but Bazel may need a JDK).
+[Bazel installation documentation](https://docs.bazel.build/versions/master/install.html) contains more information about how to install it on various platforms (Linux, macOS and Windows are supported).
+Accio requires at least Bazel 0.11.0.
+
+### 2. Clone the Git repository
+
+The source code is hosted inside a Git repository [on GitHub](https://github.com/privamov/accio).
 You can directly clone the repository to get the latest version of the source code.
 
 ```bash
@@ -116,19 +132,6 @@ You can hence build a specific version:
 ```bash
 git checkout v0.6.0 # Replace the version number with the one you target
 ```
-
-### 2. Install dependencies
-
-The following dependencies must be met in order to build Accio:
-
-  * [Java JDK 8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) is required to run both Bazel and Accio.
-  * [Bazel](https://bazel.build) is required to build Accio.
-  * Internet access is required to download dependencies both for Bazel and Accio.
-
-Bazel is our build tool of choice.
-Accio and Bazel require at least Java 8 (Accio only needs a JRE, but Bazel may need a JDK).
-[Bazel installation documentation](https://docs.bazel.build/versions/master/install.html) contains more information about how to install it on various platforms (Linux, macOS and Windows are supported).
-Accio requires at least Bazel 0.11.0.
 
 ### 3. Build the client
 

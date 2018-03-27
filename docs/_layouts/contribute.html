@@ -4,10 +4,73 @@ layout: base
 
 <div class="banner">
   <div class="container">
-    <h1>{{ page.title }}</h1>
+    <h1>Contribute</h1>
   </div>
 </div>
 
-<div class="page container">
-  {{ content }}
+<div class="container">
+  <div class="menu">
+    <ul>
+      <li>
+        <a href="{{ "/contribute/index.html" | prepend: site.baseurl }}">
+          Contributing to Accio
+        </a>
+      </li>
+      <li>
+        <a href="{{ "/contribute/governance.html" | prepend: site.baseurl }}">
+          Governance
+        </a>
+      </li>
+    </ul>
+
+    <h3>Technical documentation</h3>
+    <ul>
+      <li>
+        <a href="{{ "/contribute/compile.html" | prepend: site.baseurl }}">
+          Compiling Accio
+        </a>
+      </li>
+      <li>
+        <a href="{{ "/contribute/codebase.html" | prepend: site.baseurl }}">
+          Codebase tour
+        </a>
+      </li>
+      <li>
+        <a href="{{ "/contribute/agent.html" | prepend: site.baseurl }}">
+          Developing the agent
+        </a>
+      </li>
+      <li>
+        <a href="{{ "/contribute/gateway.html" | prepend: site.baseurl }}">
+          Developing the gateway
+        </a>
+      </li>
+      <li>
+        <a href="{{ "/contribute/client.html" | prepend: site.baseurl }}">
+          Developing the client
+        </a>
+      </li>
+      <li>
+        <a href="{{ "/contribute/custom-operator.html" | prepend: site.baseurl }}">
+          Creating a custom operator
+        </a>
+      </li>
+      <li>
+        <a href="{{ "/contribute/custom-scheduler.html" | prepend: site.baseurl }}">
+          Creating a custom scheduler
+        </a>
+      </li>
+      <li>
+        <a href="{{ "/contribute/custom-storage.html" | prepend: site.baseurl }}">
+          Creating a custom storage
+        </a>
+      </li>
+    </ul>
+  </div>
+
+  <div class="side page">
+    <h1>{{ page.title }}</h1>
+
+    {{ content }}
+  </div>
 </div>

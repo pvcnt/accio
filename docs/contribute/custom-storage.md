@@ -1,5 +1,4 @@
 ---
-layout: docs
-weight: 40
+layout: contribute
 title: Creating a custom storage
 ---

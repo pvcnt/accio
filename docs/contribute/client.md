@@ -1,7 +1,6 @@
 ---
-layout: docs
-weight: 30
-title: Developping the client
+layout: contribute
+title: Developing the client
 ---
 
 Source code for the command-line application is stored under the `fr.cnrs.liris.accio.tools.cli` package.

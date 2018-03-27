@@ -26,11 +26,6 @@ ALP: Adaptive Location Privacy.
 In *Proceedings of the 35h Symposium on Reliable Distributed Systems (SRDS)*, September 2016, Budapest, Hungary.
 &lt;[hal-01370447](https://hal.archives-ouvertes.fr/hal-01370447)&gt;
 
-## Contributing
-Bugs and suggestions can be reported on [our GitHub issues tracker](https://github.com/privamov/accio/issues).
-You will need to create an account on GitHub first.
-We also welcome contributions under the form of [pull requests](https://github.com/privamov/accio/pulls).
-If you want to get started with developping Accio, there is even [a guide for you](../extend/developping/)!
-
 ## Presentations
+
 * **2017-01-27:** [LIRIS team seminar](resources/liris_2017-01-27.pdf)

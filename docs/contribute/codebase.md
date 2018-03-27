@@ -1,6 +1,5 @@
 ---
-layout: docs
-weight: 10
+layout: contribute
 title: Codebase tour
 ---
 
