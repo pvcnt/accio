@@ -70,7 +70,7 @@ Fortunately, this is very easily doable with Accio, thanks to a flexible definit
 
 In this above example, the `epsilon` parameter will take values for 0.00001 to 1 following a logarithmic progression, while the `uri` parameter will take two different values corresponding to two different datasets.
 A parent run will be created, associated with a child run for each combination of parameters.
-More precisely, `epsilon` will successively take values 0.0001, 0.001, 0.01, 0.1 and 1, and `uri` the two values provided in the definition, for a total of 10 different combinations of values. 
+More precisely, `epsilon` will successively take values 0.0001, 0.001, 0.01, 0.1 and 1, and `uri` the two values provided in the definition, for a total of 10 different combinations of values.
 Moreover, each combination of parameters will be repeated three times, because of the `repeat` field.
 At the end, this run definition ends up giving birth to 30 different runs, all belonging to a parent run.
 Repeating a workflow several times is especially useful in the presence of unstable operators.
@@ -96,9 +96,8 @@ It is particularly useful to "fix" randomness while testing other variations of 
 
 The above run definition guarantees that results will be the same at each execution, despite the presence of the `GeoIndistinguishability` unstable operator in the workflow.
 
-<div class="alert alert-info" markdown="1">
-  :mag: The reference section contains [the specification of the run definition language](run-dsl.html).
-</div>
+:mag: The reference section contains [the specification of the run definition language](run-dsl.html).
+{: .note}
 
 ## Submitting a run
 Once a run has been defined, it can be submitted to the cluster with the [`accio submit` command](commands/submit.html):

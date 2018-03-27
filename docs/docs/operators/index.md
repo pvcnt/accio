@@ -10,6 +10,5 @@ Moreover, Accio is for now only packaged with a operators aiming at studying loc
 The standard set of operators encompasses many state-of-the-art algorithms about location privacy, such as Location Privacy Protection Mechanisms (LPPMs), evaluation metrics, as well as generic spatio-temporal data manipulation tools.
 Accio has been used and is being used by privacy researchers to help them launch experiments and analyse their results.
 
-<div class="alert alert-success" markdown="1">
-  :thumbsup: You can browse all available operators organized by category by using the left menu.
-</div>
+:thumbsup: You can browse all available operators organised by category by using the left menu.
+{: .hooray }

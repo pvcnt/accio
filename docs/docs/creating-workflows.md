@@ -36,9 +36,8 @@ This interface is very useful to understand a graph, especially it is large, or 
 Operators are a system-level blocks: they need to be implemented by developers, who define their interface (i.e., their inputs and outputs).
 You cannot add a new operator without coding it.
 
-<div class="callout callout-info" markdown="1">
 :sunglasses: If you are a developper and want to create a custom operator, [there is a guide for that](../contribute/custom-operator.html)!
-</div>
+{: .note}
 
 Fortunately, workflows can be defined by non-programmers thanks to the workflow definition language, which is based on [JSON](https://en.wikipedia.org/wiki/JSON).
 Each workflow is described into its own file.
@@ -119,9 +118,8 @@ Each workflow has a unique identifier, the `id` field in the definition language
 This identifier is very important because it will have to be specified later when creating runs.
 By default, it falls back to the name of the file inside which the workflow is defined (without its extension).
 
-<div class="alert alert-info" markdown="1">
-  :mag: The reference section contains [the specification of the workflow definition language](workflow-dsl.html).
-</div>
+:mag: The reference section contains [the specification of the workflow definition language](workflow-dsl.html).
+{: .note}
 
 ## Publishing a workflow
 Once you have written your new workflow, or created a new version of an existing workflow, you need to make it available to the Accio cluster.

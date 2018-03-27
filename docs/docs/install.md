@@ -126,8 +126,8 @@ The following dependencies must be met in order to build Accio:
   * Internet access is required to download dependencies both for Bazel and Accio.
 
 Bazel is our build tool of choice.
-Accio and Bazel require at least Java 8 (Accio only needs a JRE, but Bazel may need a JDK). 
-[Bazel installation documentation](https://docs.bazel.build/versions/master/install.html) contains more information about how to install it on various platforms (Linux, macOS and Windows are supported). 
+Accio and Bazel require at least Java 8 (Accio only needs a JRE, but Bazel may need a JDK).
+[Bazel installation documentation](https://docs.bazel.build/versions/master/install.html) contains more information about how to install it on various platforms (Linux, macOS and Windows are supported).
 Accio requires at least Bazel 0.11.0.
 
 ### 3. Build the client
@@ -145,9 +145,8 @@ It can be executed wherever a Java JRE is available, for example:
 java -jar bazel-bin/accio/java/fr/cnrs/liris/accio/tools/cli/cli_deploy.jar version -client
 ```
 
-<div class="callout callout-info" markdown="1">
-  :mag: The section for contributors contains full instructions [how to compile and develop Accio](../contribute/compile.html).
-</div>
+:mag: The section for contributors contains full instructions [how to compile and develop Accio](../contribute/compile.html).
+{: .note}
 
 ## Local Vagrant cluster
 
