@@ -99,6 +99,15 @@ footer a:hover, footer a:focus {
   text-decoration: none;
 }
 
+#search-input, #search-input:focus {
+  background-color: #bedaf7;
+  border-color: #368ce7;
+  border-radius: 3px;
+  padding: 5px 10px 5px 10px;
+  box-shadow: none;
+  margin: 8px 0 8px 0;
+}
+
 /*.license {
   margin-top: 25px;
 }*/
@@ -341,4 +350,20 @@ code.highlighter-rouge {
   background-color: #f4f4f4;
   padding: 2px;
   color: #d14;
+}
+
+/**
+ * Search results.
+ */
+#search-results {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+#search-results h4 {
+  margin: 10px 0 5px 0;
+}
+
+#search-results p {
+  margin-top: 0;
 }

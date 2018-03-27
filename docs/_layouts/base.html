@@ -37,6 +37,7 @@
           <a href="{{ "/resources/" | prepend: site.baseurl }}">Resources</a>
         </li>
       </ul>
+
       <ul class="navbar-nav pull-right">
         <li>
           <a href="https://github.com/privamov/accio">
@@ -45,6 +46,11 @@
           </a>
         </li>
       </ul>
+
+      <form action="{{ site.baseurl }}/search/" method="get" class="pull-right">
+      	<input type="search" name="q" id="search-input" placeholder="Search">
+      	<input type="submit" value="Search" style="display: none;">
+      </form>
     </div>
   </div>
 

@@ -20,7 +20,7 @@ A run file should contain a single JSON object formed of the following fields.
 | seed | long; optional | Seed to be used for deterministic reproduction. If not specified, a random one will be generated. |
 | repeat | integer; optional; default: 1 | Number of times to repeat each run. |
 | params | object; optional | Mapping between parameter names and their values. |
-{: class="table table-striped"}
+{: .table .table-striped}
 
 ## Specifying parameters
 

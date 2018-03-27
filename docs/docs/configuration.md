@@ -13,7 +13,7 @@ You may define multiple clusters, each one having at least a name and an address
 Clusters defined in these two files are merged, the latter file having the precedence in case of a cluster defined in both files.
 The first cluster ever defined is the default cluster, that is used if none is explicitly given.
 
-An simple configuration file looks like this:
+A simple configuration file looks like this:
 
 ```json
 [{

@@ -26,7 +26,6 @@ nav: index
 # Build settings.
 markdown: kramdown
 plugins:
-  - jemoji
   - jekyll-sitemap
 exclude:
   - Gemfile

@@ -86,7 +86,7 @@ Configuration is done inside a `.accio/clusters.json` file under your home direc
 You can define multiple clusters, each one having at least a name and an address where to contact it.
 The first cluster ever is the default cluster, that is used if none is explicitly given.
 
-An simple configuration file looks like this:
+A simple configuration file looks like this:
 
 ```json
 [{
@@ -148,7 +148,7 @@ It can be executed wherever a Java JRE is available, for example:
 java -jar bazel-bin/accio/java/fr/cnrs/liris/accio/tools/cli/cli_deploy.jar version -client
 ```
 
-:mag: The section for contributors contains full instructions [how to compile and develop Accio](../contribute/compile.html).
+The section for contributors contains full instructions [how to compile and develop Accio](../contribute/compile.html).
 {: .note}
 
 ## Local Vagrant cluster

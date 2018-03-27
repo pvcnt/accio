@@ -24,7 +24,7 @@ A workflow file should contain a single JSON object formed of the following fiel
 | graph[].op | string; required | Operator name. |
 | graph[].name | string; optional | Node name. By default it will be the operator's name. Must match `[A-Z][a-zA-Z0-9_]+`. |
 | graph[].inputs | object; optional | Mapping between input names and their values. All parameters without a default value should be specified. |
-{: class="table table-striped"}
+{: .table .table-striped}
 
 This workflow is formed of four nodes, connected together.
 `EventSource` is the only root node (it has no dependency to another node), while `Privacy` and `Utility` are leaf nodes (no other node depend on them).
@@ -149,7 +149,7 @@ Here is a list of supported types, with their names (as they should be specified
 | timestamp | | JSON string, formatted with respect to [ISO 8601](https://www.w3.org/TR/NOTE-datetime), e.g., "2016-06-22T11:28:32Z". |
 | location | | JSON string, formatted as `<latitude>,<longitude>` where `<latitude>` and `<longitude>` are numbers and expressed in degrees. |
 | dataset | | JSON string, specifying the dataset URI. |
-| list | :heavy_check_mark: | JSON array of any other allowed type. |
-| set | :heavy_check_mark: | JSON array of any other allowed type. |
-| map | :heavy_check_mark: | JSON object of any other allowed type. |
-{: class="table table-striped"}
+| list | yes | JSON array of any other allowed type. |
+| set | yes | JSON array of any other allowed type. |
+| map | yes | JSON object of any other allowed type. |
+{: .table .table-striped}

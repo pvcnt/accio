@@ -96,7 +96,7 @@ It is particularly useful to "fix" randomness while testing other variations of 
 
 The above run definition guarantees that results will be the same at each execution, despite the presence of the `GeoIndistinguishability` unstable operator in the workflow.
 
-:mag: The reference section contains [the specification of the run definition language](run-dsl.html).
+The reference section contains [the specification of the run definition language](run-dsl.html).
 {: .note}
 
 ## Submitting a run

@@ -36,7 +36,7 @@ This interface is very useful to understand a graph, especially it is large, or 
 Operators are a system-level blocks: they need to be implemented by developers, who define their interface (i.e., their inputs and outputs).
 You cannot add a new operator without coding it.
 
-:sunglasses: If you are a developper and want to create a custom operator, [there is a guide for that](../contribute/custom-operator.html)!
+If you are a developer and want to create a custom operator, [there is a guide for that](../contribute/custom-operator.html)!
 {: .note}
 
 Fortunately, workflows can be defined by non-programmers thanks to the workflow definition language, which is based on [JSON](https://en.wikipedia.org/wiki/JSON).
@@ -118,7 +118,7 @@ Each workflow has a unique identifier, the `id` field in the definition language
 This identifier is very important because it will have to be specified later when creating runs.
 By default, it falls back to the name of the file inside which the workflow is defined (without its extension).
 
-:mag: The reference section contains [the specification of the workflow definition language](workflow-dsl.html).
+The reference section contains [the specification of the workflow definition language](workflow-dsl.html).
 {: .note}
 
 ## Publishing a workflow
