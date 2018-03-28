@@ -17,7 +17,7 @@
 # Cf. https://github.com/bazelbuild/rules_go#how-do-i-run-bazel-on-travis-ci
 
 dist: trusty
-sudo: required
+sudo: false
 language: java
 
 services:
@@ -27,18 +27,16 @@ env:
   global:
     - MYSQL_PASSWORD=""
   matrix:
-    - V=0.11.0
+    - BAZEL_VERSION=0.11.0
 
 before_install:
   - |
-    sysctl kernel.unprivileged_userns_clone=1
-    wget -O install.sh "https://github.com/bazelbuild/bazel/releases/download/${V}/bazel-${V}-installer-linux-x86_64.sh"
+    wget -O install.sh "https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}-installer-linux-x86_64.sh"
     chmod +x install.sh
     ./install.sh --user
     rm -f install.sh
 
 script:
-  # Install NPM dependencies. Unfortunately this is not integrated as Bazel external dependencies.
   - |
     bazel \
       --output_base=$HOME/.cache/bazel \
@@ -50,9 +48,6 @@ script:
       --experimental_repository_cache="$HOME/.bazel_repository_cache" \
       --local_resources=400,1,1.0 \
       @yarn//:yarn
-
-  # We only test what is inside the accio/ directory, as some files in 3rdparty/node_modules
-  # (named build/BUILD) mess up with Bazel.
   - |
     bazel \
       --output_base=$HOME/.cache/bazel \
