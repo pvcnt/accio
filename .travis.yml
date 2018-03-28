@@ -24,8 +24,10 @@ services:
   - mysql
 
 env:
-  - V=0.11.0
-  - MYSQL_PASSWORD=""
+  global:
+    - MYSQL_PASSWORD=""
+  matrix:
+    - V=0.11.0
 
 before_install:
   - |
