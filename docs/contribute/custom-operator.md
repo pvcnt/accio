@@ -10,7 +10,7 @@ More advanced topics are covered in other pages of this section.
 {:toc}
 
 ## 1. Creating a new operator class
-As of now, all operators are implemented inside the `src/jvm/fr/cnrs/liris/locapriv` module.
+As of now, all operators are implemented inside the `accio/java/fr/cnrs/liris/locapriv/ops` module.
 You may decide to create a new module for a new operator or new family of operators, or stick inside this module.
 The first step is to decide a name for your operator and create a new class for its implementation.
 By convention, all operators' names finish with the "Op" suffix (that is later automatically removed from its actual name).
@@ -18,8 +18,8 @@ By convention, all operators' names finish with the "Op" suffix (that is later a
 You may need to add some dependencies to the `BUILD` file if you wish to add new libraries.
 The following Accio-related dependencies must be included in any module containing operator implementations:
 
-  * `src/jvm/fr/cnrs/liris/accio/sdk` contains interfaces and standard data types
-  * `src/jvm/fr/cnrs/liris/accio/sdk:annotations` contains Java annotations.
+  * `accio/java/fr/cnrs/liris/accio/sdk` contains interfaces and standard data types
+  * `accio/java/fr/cnrs/liris/accio/sdk:annotations` contains Java annotations.
 
 Then, you will need to create a class that extends `Operator[In,Out]` trait.
 
@@ -174,10 +174,10 @@ The following arguments, all optional, can be used for documentation purposes.
   * `help` is used to provide a short (i.e., one-line) help message.
   It is usually displayed when listing operators to provide a quick summary of what it does.
   * `description` is used to provide a longer description.
-  It is a good place to describe in more details the operator's behavior and its inner-working.
+  It is a good place to describe in more details the operator's behaviour and its inner-working.
   It is usually displayed after the short help message.
   You can either write the description in-line in a string or load an external Java resource, located in the same directory than your operator, and reference this file by using as a description `resource:name_of_your_file.txt`.
-  * `category` is used to categorize operators.
+  * `category` is used to categorise operators.
   By default, all operators fall into the "misc" category.
   * `deprecation` is used to indicate that an operator is deprecated.
   If you fill this argument, a warning will appear in documentation and when the operator is used, with the deprecation message.

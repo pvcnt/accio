@@ -4,8 +4,8 @@ title: Installing Accio
 ---
 
 This section is dedicated to system administrators willing to install an Accio cluster.
-Documentation about installing a client to connect an existing cluster can be found [in the appropriate section](../../user-guide/installing).
-If you are not familiar with Accio's components, we suggest you read about [its architecture](../architecture) first.
+Documentation about installing a client to connect an existing cluster can be found [in the appropriate section](../docs/install.html).
+If you are not familiar with Accio's components, we suggest you read about [its architecture](../docs/architecture.html) first.
 
 Setting up a cluster is essentially about running one or several agents.
 We detail next the necessary steps to create your very own cluster.
@@ -28,17 +28,6 @@ Those agents cannot receive or process requests from clients, and should not be 
 Two storages are available: in-memory and Elasticsearch.
 Obviously, we recommend using Elasticsearch for production usages, as data will not be persisted otherwise.
 In that case, you will first need to [set-up an Elasticsearch cluster](https://www.elastic.co/guide/en/elasticsearch/reference/current/_installation.html).
-
-### Filesystem
-Two filesystems are available: POSIX and S3.
-POSIX provides an easy way to get started with a single node installation.
-It can also be used with multipe nodes if you setup a POSIX shared filesystem between your machines, such as NFS.
-S3 is another valid alternative, especially useful if you run your cluster on AWS.
-You can also use another S3-compatible implementation, such as [Minio](https://www.minio.io/).
-Because of current implementation, S3 filesystem is likely to be slower than a POSIX one, but should scale better.
-
-### State manager
-As of now, running multiple masters is not supported, so no hard choice to make here!
 
 ## Install requirements
 Besides dependencies required by pluggable parts you chose previously, the only other requirement is Java 8.
@@ -84,7 +73,7 @@ Finally, the agent can be launched:
 java -jar /opt/accio-agent.jar
   -executor_uri=/opt/accio-executor.jar
   -datadir=/var/lib/accio-agent
-  -master 
+  -master
   -worker
 ```
 

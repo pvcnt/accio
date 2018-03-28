@@ -12,13 +12,7 @@ You can either use a [Vagrant-based environment](#using-vagrant) or create your 
 * TOC
 {:toc}
 
-## Using Vagrant
-
-If you have [Vagrant](https://www.vagrantup.com) and [VirtualBox](https://www.virtualbox.org) installed on your machine, you can launch a fully configured development environment via `vagrant up`.
-More on this is described in the [dedicated section](../docs/vagrant.html).
-The virtual machine that is created comes with all the needed tools to develop Accio.
-
-## From scratch
+## Compile from scratch
 
 If you prefer, you can also create a development environment from scratch, by installing everything needed.
 
@@ -53,22 +47,53 @@ You can hence build a specific version:
 git checkout v0.6.0 # Replace the version number with the one you target
 ```
 
-## Building & running Accio
+### 3. Building with Bazel
 
 Once your environment is set up, you may want to build Accio.
 Bazel is used to produce executable JAR files for Accio, which will appear in the `bazel-bin/` folder.
 You can build the various components with the following commands:
 
 ```bash
-bazel build accio/java/fr/cnrs/liris/accio/executor
-bazel build accio/java/fr/cnrs/liris/accio/agent
-bazel build accio/java/fr/cnrs/liris/accio/tools/cli
-bazel build accio/java/fr/cnrs/liris/accio/gateway
+bazel run @yarn//:yarn
+bazel build accio/...
 ```
 
-In the Vagrant-based only environment, you have access to the `acciobuild` script.
-It is used to build and restart specific components.
-Those components are specified as a comma-separated list: agent, gateway, executor, client or all.
+The first command is used to retrieve NPM dependencies (it is otherwise not done automatically, and the gateway will not compile), and the next command is used to compile all of Accio's components.
+
+## Compile using Vagrant
+
+If you have [Vagrant](https://www.vagrantup.com) and [VirtualBox](https://www.virtualbox.org) installed on your machine, you can launch a fully configured development environment via `vagrant up`.
+More on this is described in the [dedicated section](../docs/vagrant.html).
+The virtual machine that is created comes with all the needed tools to develop Accio.
+
+The virtual machine is configured to the agent and the gateway processes as services.
+They are installed as standard systemd services (named `accio-agent` and `accio-gateway`), and may as such be controlled by using the standard `systemctl` command.
+For example, the agent can be restarted with the following command:
+```bash
+sudo systemctl restart accio-agent
+```
+
+Similarly, their logs can be accessed via the standard `journalctl` command.
+For example, the logs of the agent can be retrieved with the following command:
+```bash
+sudo journalctl -u accio-agent
+```
+
+Inside the virtual machine, all the code repository is mounted inside the `/vagrant` folder.
+However, to avoid altering files on your local computer, these files are later rsync'ed under `/home/vagrant/accio`, which is the actual workspace from which things will be built.
+You can manually sync the files by launching the `update-sources` utility.
+Note that some files are automatically excluded, such as `bazel-*` and `.git` directories.
+The systemd files (found in the repository under `etc/vagrant/systemd`) will also be synchronised, but the services will *not* be restarted.
+
+In addition to the standard `bazel` command, the `acciobuild` utility is also available to help you work in the Vagrant environment.
+It automatically handles the synchronisation of sources, before actually calling Bazel and restarting the running components.
+`acciobuild` takes as argument a list of components to build, where each component may be one of: agent, gateway, executor, client or all.
+For example, the agent and the executor can be built with the following command:
+```bash
+acciobuild agent executor
+```
+
+Once the components are built, they are installed on the system, and the associated services are restarted (in the case of the agent and the gateway).
 
 ## Running tests
 
@@ -81,3 +106,7 @@ bazel test ...
 The latter will compile all modules, independently on whether there are actually some tests associated with them, and then run all tests.
 It means that all committed code must at least compile, even if not actually used by the system.
 The test suit is launched automatically after each push by [Travis CI](https://travis-ci.org/privamov/accio).
+
+## IDE integration
+
+Bazel comes with an official plugin for [IntelliJ](https://plugins.jetbrains.com/plugin/8609-bazel), as well as [some non-official plugins](https://docs.bazel.build/versions/master/ide.html) for other IDEs (such as Eclipse).

@@ -3,5 +3,5 @@ layout: null
 sitemap: false
 ---
 User-agent: *
-Sitemap: {{ site.url }}/sitemap.xml
-Disallow: /search/
+Sitemap: {{ site.url }}{{ site.baseurl }}/sitemap.xml
+Disallow: /search.html

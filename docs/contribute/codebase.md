@@ -3,9 +3,8 @@ layout: contribute
 title: Codebase tour
 ---
 
-This page contains more information for people willing to contribute to Accio.
-It gives an overview of the code layout and pointers to help you getting ready into contributing to Accio.
-A good place to start is reading [compilation instructions](compiling.html), to have an overview of languages and tools used.
+This page contains an overview of the code organisation and pointers to help you getting ready.
+You should be able to [compile Accio](compile.html) before starting to contribute code.
 
 * TOC
 {:toc}
@@ -14,64 +13,108 @@ A good place to start is reading [compilation instructions](compiling.html), to 
 
 We describe briefly the role of each top-level directory.
 
-  * `3rdparty/`: contains Pants definitions of third party libraries, with one sub-directory per language.
-  * `build-support/`: contains additional resources needed by Pants to work.
+  * `3rdparty/`: contains Bazel definitions of third party libraries.
+  * `accio/`: contains the actual source code (and tests) of Accio.
+  * `bin/`: contains some shell utils that may be of help during development.
   * `docs/`: contains source code of these docs (but **not** the HTML of the compiled website).
   * `etc/`: contains configuration files and examples.
-  * `src/`: contains source code of Accio, with one sub-directory per language.
-  * `test/`: contains tests of Accio, with one sub-directory per language.
+  * `tools/`: contains Bazel related helpers and rules.
 
-## accio.framework
-We have split Accio code into a *core* library, and applications.
-The core library contains no executable application but all of Accio generic code, that can be used later as a library by other modules and by applications.
-accio.framework is grouped under the `fr.cnrs.liris.accio.framework` package, which contains several subpackages.
+## Languages & third-party dependencies
 
-  * `api`: it is the only dependency that modules defining custom operators need to rely on.
-  It is a lightweight package that only defines an interface to be implemented by operators, and provides the [Sparkle library](../extending/sparkle.html).
-  You can find more information about implementing custom operators in [the dedicated section](../extending/custom-operator.html).
-  * `domain`: classes implenting data structures for [Accio concepts](../concepts/index.html) and associated utils.
-  Most of the data structures are defined using the [Thrift IDL](https://thrift.apache.org/).
-  * `downloader`: interface and implementation of downloader.
-  * `dsl`: code related to DSL files parsing.
-  * `reporting`: code used when generating reports from run results.
-  * `runtime`: code needed to actually execute workflows.
-  This package contains most of the logic of Accio, from validating data structures to executing an operator.
-  * `scheduler`: interface and implementation of schedulers.
-  * `storage`: interface and implementation of persistent storage.
-  * `uploader`: interface and implementation of uploaders.
-  * `util`: small helper code.
+The core of Accio is developed in Scala, which is a language running on top of the JVM.
+However, besides some specific use cases (e.g., annotations), any contribution should be implemented in Scala (and not Java).
+Accio is written in Scala 2.11, and designed to run on the JRE 8.
+All of the Scala/Java code can be found under `accio/java` and `accio/javatests`.
+We use the official [Scala rules](https://github.com/bazelbuild/rules_scala) to integrate with Bazel.
+We also rely on third-party libraries whenever it is possible.
+We follow Bazel's philosophy, which is that only one version of a library should be used at the same time, in order to avoid diamond dependencies issues.
+Because Bazel do not handle Maven transitive dependencies, we make use of the [bazel-deps tools](https://github.com/johnynek/bazel-deps) to automatically generate a list of BUILD files under `3rdparty/jvm` with the required dependencies, and all of their own transitive dependencies.
+The dependencies are described in the `3rdparty/dependencies.yml` file, and the associated BUILD files may be regenerated with the following command (which is a simple wrapped around the bazel-deps JAR):
+```bash
+./bin/bazel-deps
+```
 
-## Accio components
-Each of Accio components is contained inside its own package.
-More information can be found on specific documentation pages.
+We rely on [Thrift]((https://thrift.apache.org) to provide to provide a description of Accio's public API.
+It notably provides type-safety and eases the creation of clients in heterogenous languages.
+All of the Thrift definition files can be found under `accio/thrift`.
+We use the rules provided by the Scala rules to generate Scala classes, thanks to [Scrooge](https://github.com/twitter/scrooge) (a Thrift generator for Scala).
 
-  * **[Server](server.html)**: technical information about the agent, gateway and executor.
-  * **[Client](client.html)**: technical information about the CLI application.
-  * **[Web UI](ui.html)**: technical information about the Web interface.
+The dashboard is developed in Javascript ES6, which is transpiled into plain Javascript by Babel.
+All of the Javascript code can be found under `accio/node`.
+We use the official [NodeJS rules](https://github.com/bazelbuild/rules_nodejs) to integrate with Bazel.
+Contrary to what is done with Maven dependencies, the NodeJS rules do not provide an integrated layer to retrieve third-party dependencies.
+For that reason, we rely on [Yarn](https://yarnpkg.com) to retrieve NPM packages.
+The dependencies are described in the `3rdparty/package.json` file, and may be retrieved with the following command:
+```bash
+bazel run @yarn//:yarn
+```
+
+Despite the similarities, we want to stress a difference in the workflow between Maven and NPM dependencies.
+The bazel-deps tool should be used only when Maven dependencies described in `dependencies.yml` change.
+Its sole purpose is to generate BUILD files that will then be required by other targets; it does *not* download any dependencies.
+Moreover, the BUILD files generated by bazel-deps are checked in the repository.
+Conversely, Yarn does not interact with Bazel, and the retrieved packages should not be checked in the repository.
+Consequently, it should be run at least once, when checking the repository for the first time, and every subsequent time, when the NPM dependencies described in `package.json` change.
+
+## Accio libraries
+
+We differentiate between Accio's core libraries, which provide core features, and applications, which built on top of the libraries to create executables.
+The general philosophy is to include as little as possible into the applications (the infrastructure/framework layer, in terms of [hexagonal architecture](http://fideloper.com/hexagonal-architecture)), while keeping all the business logic (the domain and application layers) inside reusable libraries.
+The main libraries provided by Accio are as follows.
+
+* `api`: it contains the definition of [the Accio objects](../docs/api-objects.html).
+The main domain is described in terms of Thrift files.
+Because it is not possible to add custom methods to generated code, this package provides utilities to manipulate those domain objects.
+* `sdk`: it is the package that defines the interface to be implemented by operators.
+It is designed to be very lightweight, to avoid increasing the binary size of operators and let the developers the choice to use the tools they want.
+* `dsl`: code related to the parsing of run and workflow DSL files.
+* `reporting`: code used to generate rich reports from run results.
+* `scheduler`: interface and implementation of schedulers.
+* `storage`: interface and implementation of persistent storage.
+
+## Accio applications
+
+From the aforementioned platform, different applications (i.e., executable software) have been built.
+More information can be found on specific documentation pages for each of them.
+
+* **[Accio Agent](agent.html)**: technical information about the agent and the executor.
+* **[Accio Client](client.html)**: technical information about the CLI application.
+* **[Accio Gateway](gateway.html)**: technical information about the gateway and the Web interface.
+
+## Location privacy operators
+
+The built-in location privacy operators are technically decoupled from Accio, and made available in the `fr.cnrs.liris.locapriv` package.
+It comes with a model to represent spatio-temporal data, a library to handle parallelised operations on large datasets (Sparkle), and a library of operators implementing Accio's interfaces.
+
+You can learn more about operators and how to create a custom operator in [the dedicated page](custom-operator.html).
 
 ## Common utils
+
 We had to write some helper code, which is not coupled to Accio but is somewhat generic.
 All of this code is grouped under the `fr.cnrs.liris.common` package.
-We describe in the next sections some of them.
 
-### Package fr.cnrs.liris.common.reflect
+### fr.cnrs.liris.common.cache
+
+It provides a Scala-friendly wrapper around [Guava Cache](https://github.com/google/guava/wiki/CachesExplained).
+
+### fr.cnrs.liris.common.reflect
+
 It is a reflection API for Scala used to discover interfaces provided by case classes at runtime.
 In contrary to Scala's own reflection API, which need type information to be specified through TypeTag's, the API we define here analyses the JVM bytecode generated by the Scala compiler to infer type information.
-The main advantage we found to this approach is that we only need a class name to get such information.
+The main advantage we found to this approach is that we only need a class name to get such information, and as such allows to integrate with Java-based APIs where the only available information is the class name.
 
-### Package fr.cnrs.liris.common.flags
-It is a command-line flags parsing library for Scala.
-It consists essentially in a port of [Bazel's options library](https://github.com/bazelbuild/bazel/tree/master/src/main/java/com/google/devtools/common/options) in Scala, that uses case classes and our reflection API.
+### fr.cnrs.liris.common.geo
 
-### Package fr.cnrs.liris.common.geo
 It is our spatial library, containing everything we need to deal with locations in various forms (either as a latitude/longitude pair or projected), distances and GeoJSON.
-Internally uses [Google's S2 library](https://github.com/google/s2-geometry-library-java) for computations whenever possible.
-S2 library is copy/pasted into Accio repository, as it is otherwise not available on Maven.
+It internally uses [Google's S2 library](https://github.com/google/s2-geometry-library-java) for computations.
+The S2 library is copy/pasted into our repository, as it is otherwise not (officially at least) available on Maven Central.
 
 ## Writing tests
+
 A good practice is to write unit tests for your code.
 Tests are written using [ScalaTest](http://www.scalatest.org), a testing framework designed for Scala.
 We use the *FlatSpec* testing style, where all tests are described with sentences such as "An empty graph should have size 0".  
-You can extend the `fr.cnrs.liris.testing.UnitSpec` class to get started quickly writing your own tests.
+Every test should extend the `fr.cnrs.liris.testing.UnitSpec` class to get started quickly and provide consistency.
 
-Keep in mind that all the code is tested at each push or pull request, so you want all the tests to be green at all time!
+Keep in mind that all the code is tested at each push or pull request, so you want the tests to be green at all times!

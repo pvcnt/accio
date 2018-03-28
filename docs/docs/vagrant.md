@@ -3,12 +3,12 @@ layout: docs
 title: Local environment with Vagrant
 ---
 
-This page will get you started with a local Accio cluster running inside a virtual machine.
+This page will get you started with a local Accio environment running inside a virtual machine.
 After following these instructions, you will be able to quickly test your first commands.
 It has the advantage of being cross-platform, as everything happens inside a virtual machine.
 While this setup is great to quickly test main Accio features, it is not intended for production usage.
 
-## 1. Spin up a cluster
+## 1. Spin up a virtual machine
 First, you need to install [Virtualbox](https://www.virtualbox.org/) and [Vagrant](https://www.vagrantup.com/) on your computer.
 Vagrant is a very helpful tool to create portable and reproducible environments.
 We configured it to use Virtualbox to manage virtual machines.
@@ -44,7 +44,7 @@ This warning is not critical, but if you want to get a rid of this error, you ca
 vagrant plugin install vagrant-vbguest
 ```
 
-## 2. Login to your cluster
+## 2. Login to your virtual machine
 You can start an SSH session on the previously created virtual machine with the `vagrant ssh` command.
 You will be logged in as the `ubuntu` user.
 Local sources of Accio as mounted under the `/vagrant` directory in the virtual machine.
@@ -53,7 +53,7 @@ Once logged onto the virtual machine, you have access to the Accio client.
 Type `accio` and look at the built-in help.
 Note that the client is only configured to reach the local cluster (named `devcluster`), not external clusters.
 
-## 3. Shut down the cluster
+## 3. Shut down the virtual machine
 When you are done working with Accio, you can stop the virtual machine with `vagrant halt`.
 You can then start it again in the same state with `vagrant up`.
-If you want to irreversibly destroy your local cluster, you can user the `vagrant destroy` command which will delete the virtual machine.
+If you want to irreversibly destroy your local environment, you can user the `vagrant destroy` command which will delete the virtual machine.
