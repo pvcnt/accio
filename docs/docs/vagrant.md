@@ -20,6 +20,13 @@ vagrant box update --box ubuntu/xenial64
 ```
 
 Then, you need to download source code of [the latest Accio release](https://github.com/privamov/accio/releases/latest).
+```bash
+curl -L -O https://github.com/privamov/accio/archive/v0.7.0.tar.gz
+tar xzf v0.7.0.tar.gz && rm v0.7.0.tar.gz
+cd accio-0.6.0/
+vagrant up
+```
+
 Decompress the archive file, move to the newly created directory and run a `vagrant up` to start the virtual machine.
 Alternatively, if you like to live on the edge, you can [install Git](https://git-scm.com/downloads) and use it to download the source code of the development version.
 
