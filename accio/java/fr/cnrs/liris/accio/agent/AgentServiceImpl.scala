@@ -95,7 +95,8 @@ final class AgentServiceImpl @Inject()(
       q = req.q,
       limit = req.limit,
       offset = req.offset)
-    val workflows = storage.read(_.workflows.list(query))
+    var workflows = storage.read(_.workflows.list(query))
+    workflows = workflows.copy(results = workflows.results.map(workflow => workflow.copy(graph = workflow.graph.unsetNodes)))
     ListWorkflowsResponse(workflows.results, workflows.totalCount)
   }
 
@@ -137,7 +138,8 @@ final class AgentServiceImpl @Inject()(
       q = req.q,
       limit = req.limit,
       offset = req.offset)
-    val runs = storage.read(_.runs.list(query))
+    var runs = storage.read(_.runs.list(query))
+    runs = runs .copy(results = runs .results.map(run => run.copy(state = run.state.copy(nodes = run.state.nodes.map(_.unsetResult)))))
     ListRunsResponse(runs.results, runs.totalCount)
   }
 
@@ -149,7 +151,7 @@ final class AgentServiceImpl @Inject()(
           if (run.children.nonEmpty) {
             // It is a parent run, cancel and delete child all runs.
             run.children.foreach(scheduler.kill)
-            run.children.foreach(stores.runs.remove)
+            run.children.foreach(stores.runs.delete)
           } else if (run.parent.isDefined) {
             // It is a child run, update or delete parent run.
             stores.runs.get(run.parent.get).foreach { parent =>
@@ -158,7 +160,7 @@ final class AgentServiceImpl @Inject()(
                 stores.runs.save(parent.copy(children = parent.children.filterNot(_ == run.id)))
               } else {
                 // It was the last child of this run, delete it as it is now useless.
-                stores.runs.remove(parent.id)
+                stores.runs.delete(parent.id)
               }
             }
           } else {
@@ -166,7 +168,7 @@ final class AgentServiceImpl @Inject()(
             scheduler.kill(run.id)
           }
           // Finally, delete the run.
-          stores.runs.remove(run.id)
+          stores.runs.delete(run.id)
       }
       DeleteRunResponse()
     }

@@ -25,3 +25,13 @@ package fr.cnrs.liris.accio.api
  * @param totalCount Total number of results.
  */
 case class ResultList[T](results: Seq[T], totalCount: Int)
+
+object ResultList {
+  def slice[T](items: Seq[T], offset: Option[Int], limit: Option[Int]): ResultList[T] = {
+    val totalCount = items.size
+    var results = items
+    offset.foreach { offset => results = results.drop(offset) }
+    limit.foreach { limit => results = results.take(limit) }
+    ResultList(results, totalCount)
+  }
+}

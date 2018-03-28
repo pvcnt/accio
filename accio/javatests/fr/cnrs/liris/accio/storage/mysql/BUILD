@@ -14,16 +14,19 @@
 # You should have received a copy of the GNU General Public License
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
-scala_library(
-  name = "install",
+scala_test(
+  name = "mysql",
   srcs = glob(["*.scala"]),
   deps = [
     "//accio/java/fr/cnrs/liris/accio/storage",
-    "//accio/java/fr/cnrs/liris/accio/storage/memory",
     "//accio/java/fr/cnrs/liris/accio/storage/mysql",
+    "//accio/java/fr/cnrs/liris/accio/api",
+    "//accio/java/fr/cnrs/liris/accio/util",
+    "//accio/javatests/fr/cnrs/liris/accio/storage",
+    "//accio/javatests/fr/cnrs/liris/testing",
     "//3rdparty/jvm/com/twitter:inject_core",
-    "//3rdparty/jvm/com/twitter:util_core",
+    "//3rdparty/jvm/com/twitter:util_stats",
     "//3rdparty/jvm/com/twitter:finagle_mysql",
   ],
-  visibility = ["//visibility:public"],
+  size = "medium",
 )

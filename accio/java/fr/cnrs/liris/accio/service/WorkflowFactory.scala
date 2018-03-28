@@ -55,7 +55,6 @@ final class WorkflowFactory @Inject()(graphFactory: GraphFactory, opRegistry: Op
     Workflow(
       id = spec.id,
       version = Some(version),
-      isActive = true,
       createdAt = Some(System.currentTimeMillis()),
       name = spec.name,
       owner = Some(owner),

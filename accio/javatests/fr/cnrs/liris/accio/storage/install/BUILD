@@ -20,6 +20,7 @@ scala_test(
   deps = [
     "//accio/java/fr/cnrs/liris/accio/storage",
     "//accio/java/fr/cnrs/liris/accio/storage/memory",
+    "//accio/java/fr/cnrs/liris/accio/storage/mysql",
     "//accio/java/fr/cnrs/liris/accio/storage/install",
     "//accio/java/fr/cnrs/liris/accio/api",
     "//accio/javatests/fr/cnrs/liris/testing",
@@ -27,4 +28,5 @@ scala_test(
     "//3rdparty/jvm/com/twitter:inject_core",
     "//3rdparty/jvm/com/twitter:util_stats",
   ],
+  size = "small",
 )

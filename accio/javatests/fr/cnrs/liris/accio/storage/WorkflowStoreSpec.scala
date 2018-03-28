@@ -32,7 +32,6 @@ private[storage] abstract class WorkflowStoreSpec extends UnitSpec with BeforeAn
     id = thrift.WorkflowId("workflow1"),
     version = Some("v1"),
     owner = Some(thrift.User("me")),
-    isActive = true,
     createdAt = Some(System.currentTimeMillis()),
     graph = thrift.Graph(Set(
       thrift.Node(
@@ -51,7 +50,6 @@ private[storage] abstract class WorkflowStoreSpec extends UnitSpec with BeforeAn
     id = thrift.WorkflowId("workflow2"),
     version = Some("v1"),
     owner = Some(thrift.User("me")),
-    isActive = true,
     params = Set(thrift.ArgDef("foo", DataType(AtomicType.Integer))),
     createdAt = Some(System.currentTimeMillis() + 10),
     graph = thrift.Graph(Set(
@@ -109,15 +107,15 @@ private[storage] abstract class WorkflowStoreSpec extends UnitSpec with BeforeAn
     storage.write { stores =>
       var res = stores.workflows.list(WorkflowQuery(owner = Some("me")))
       res.totalCount shouldBe 3
-      res.results should contain theSameElementsInOrderAs Seq(workflows(4), workflows(3), workflows(1)).map(unsetNodes)
+      res.results should contain theSameElementsInOrderAs Seq(workflows(4), workflows(3), workflows(1))
 
       res = stores.workflows.list(WorkflowQuery(owner = Some("me"), limit = Some(2)))
       res.totalCount shouldBe 3
-      res.results should contain theSameElementsInOrderAs Seq(workflows(4), workflows(3)).map(unsetNodes)
+      res.results should contain theSameElementsInOrderAs Seq(workflows(4), workflows(3))
 
       res = stores.workflows.list(WorkflowQuery(owner = Some("me"), limit = Some(2), offset = Some(2)))
       res.totalCount shouldBe 3
-      res.results should contain theSameElementsInOrderAs Seq(workflows(1)).map(unsetNodes)
+      res.results should contain theSameElementsInOrderAs Seq(workflows(1))
     }
   }
 
@@ -130,13 +128,11 @@ private[storage] abstract class WorkflowStoreSpec extends UnitSpec with BeforeAn
       workflows.foreach(stores.workflows.save)
     }
     storage.read { stores =>
-      stores.workflows.get(workflow1.id, "v1") shouldBe Some(workflows(0).copy(isActive = false))
+      stores.workflows.get(workflow1.id, "v1") shouldBe Some(workflows(0))
       stores.workflows.get(workflow1.id, "v2") shouldBe Some(workflows(1))
       stores.workflows.get(workflow1.id, "v3") shouldBe None
       stores.workflows.get(workflow2.id, "v1") shouldBe Some(workflows(2))
       stores.workflows.get(workflow2.id, "v2") shouldBe None
     }
   }
-
-  private def unsetNodes(workflow: thrift.Workflow) = workflow.copy(graph = workflow.graph.unsetNodes)
 }

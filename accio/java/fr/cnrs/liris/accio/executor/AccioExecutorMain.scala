@@ -18,15 +18,12 @@
 
 package fr.cnrs.liris.accio.executor
 
-import java.io.ByteArrayInputStream
 import java.nio.file.Paths
 
-import com.twitter.util.Base64StringEncoder
 import fr.cnrs.liris.accio.api.thrift.Task
 import fr.cnrs.liris.accio.discovery.reflect.ReflectOpDiscovery
 import fr.cnrs.liris.accio.service.OpExecutor
-import org.apache.thrift.protocol.TBinaryProtocol
-import org.apache.thrift.transport.TIOStreamTransport
+import fr.cnrs.liris.common.scrooge.BinaryScroogeSerializer
 
 object AccioExecutorMain extends AccioExecutor
 
@@ -34,21 +31,13 @@ object AccioExecutorMain extends AccioExecutor
  * Accio executor.
  */
 class AccioExecutor {
-  private[this] val protocolFactory = new TBinaryProtocol.Factory
-
   def main(args: Array[String]): Unit = {
     require(args.length == 2, "There should be exactly two arguments: encoded task and result file")
-    val task = decode(args.head)
+    val task = BinaryScroogeSerializer.fromString(args.head, Task)
     com.twitter.jvm.numProcs.let(task.resource.cpu) {
       val opExecutor = new OpExecutor(new ReflectOpDiscovery)
       val taskExecutor = new TaskExecutor(opExecutor)
       taskExecutor.execute(task, Paths.get(args(1)))
     }
-  }
-
-  private def decode(str: String): Task = {
-    val bytes = Base64StringEncoder.decode(str)
-    val protocol = protocolFactory.getProtocol(new TIOStreamTransport(new ByteArrayInputStream(bytes)))
-    Task.decode(protocol)
   }
 }

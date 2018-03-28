@@ -132,7 +132,7 @@ private[storage] abstract class RunStoreSpec extends UnitSpec with BeforeAndAfte
       stores.runs.save(foobarRun)
       stores.runs.save(fooRun)
 
-      stores.runs.remove(foobarRun.id)
+      stores.runs.delete(foobarRun.id)
       stores.runs.get(fooRun.id) shouldBe Some(fooRun)
       stores.runs.get(foobarRun.id) shouldBe None
     }
@@ -145,19 +145,19 @@ private[storage] abstract class RunStoreSpec extends UnitSpec with BeforeAndAfte
     storage.read { stores =>
       var res = stores.runs.list(RunQuery(owner = Some("me")))
       res.totalCount shouldBe 3
-      res.results should contain theSameElementsInOrderAs Seq(runs(3), runs(1), runs(0)).map(unsetResult)
+      res.results should contain theSameElementsInOrderAs Seq(runs(3), runs(1), runs(0))
 
       res = stores.runs.list(RunQuery(owner = Some("me"), limit = Some(2)))
       res.totalCount shouldBe 3
-      res.results should contain theSameElementsInOrderAs Seq(runs(3), runs(1)).map(unsetResult)
+      res.results should contain theSameElementsInOrderAs Seq(runs(3), runs(1))
 
       res = stores.runs.list(RunQuery(owner = Some("me"), limit = Some(2), offset = Some(2)))
       res.totalCount shouldBe 3
-      res.results should contain theSameElementsInOrderAs Seq(runs(0)).map(unsetResult)
+      res.results should contain theSameElementsInOrderAs Seq(runs(0))
 
       res = stores.runs.list(RunQuery(owner = Some("him")))
       res.totalCount shouldBe 1
-      res.results should contain theSameElementsInOrderAs Seq(runs(2)).map(unsetResult)
+      res.results should contain theSameElementsInOrderAs Seq(runs(2))
     }
   }
 
@@ -168,10 +168,9 @@ private[storage] abstract class RunStoreSpec extends UnitSpec with BeforeAndAfte
     storage.read { stores =>
       val res = stores.runs.list(RunQuery(workflow = Some(WorkflowId("other_workflow"))))
       res.totalCount shouldBe 1
-      res.results should contain theSameElementsInOrderAs Seq(runs(3)).map(unsetResult)
+      res.results should contain theSameElementsInOrderAs Seq(runs(3))
     }
   }
-
 
   it should "search for runs by status" in {
     storage.write { stores =>
@@ -180,10 +179,9 @@ private[storage] abstract class RunStoreSpec extends UnitSpec with BeforeAndAfte
     storage.read { stores =>
       val res = stores.runs.list(RunQuery(status = Set(TaskState.Running)))
       res.totalCount shouldBe 2
-      res.results should contain theSameElementsInOrderAs Seq(runs(2), runs(1)).map(unsetResult)
+      res.results should contain theSameElementsInOrderAs Seq(runs(2), runs(1))
     }
   }
-
 
   it should "search for runs by tags" in {
     storage.write { stores =>
@@ -192,41 +190,17 @@ private[storage] abstract class RunStoreSpec extends UnitSpec with BeforeAndAfte
     storage.read { stores =>
       var res = stores.runs.list(RunQuery(tags = Set("foo", "bar")))
       res.totalCount shouldBe 2
-      res.results should contain theSameElementsInOrderAs Seq(runs(3), runs(0)).map(unsetResult)
+      res.results should contain theSameElementsInOrderAs Seq(runs(3), runs(0))
 
       res = stores.runs.list(RunQuery(tags = Set("foo")))
       res.totalCount shouldBe 3
-      res.results should contain theSameElementsInOrderAs Seq(runs(3), runs(1), runs(0)).map(unsetResult)
+      res.results should contain theSameElementsInOrderAs Seq(runs(3), runs(1), runs(0))
 
       res = stores.runs.list(RunQuery(tags = Set("foobar")))
       res.totalCount shouldBe 1
-      res.results should contain theSameElementsInOrderAs Seq(runs(2)).map(unsetResult)
+      res.results should contain theSameElementsInOrderAs Seq(runs(2))
     }
   }
-
-  private def unsetResult(run: Run) = run.copy(state = run.state.copy(nodes = run.state.nodes.map(_.unsetResult)))
 
   private def randomId: RunId = RunId(UUID.randomUUID().toString)
-}
-
-private[storage] trait RunStoreSpecWithMemoization extends RunStoreSpec {
-  private val foobarRunWithNodes = foobarRun.copy(state = foobarRun.state.copy(nodes = Set(
-    NodeStatus(name = "FooNode", status = TaskState.Success, cacheKey = Some(CacheKey("MyFooCacheKey")), result = Some(foobarResults("FooNode"))),
-    NodeStatus(name = "BarNode", status = TaskState.Success, cacheKey = Some(CacheKey("MyBarCacheKey")), result = Some(foobarResults("BarNode")))
-  )))
-  private val fooRunWithNodes = fooRun.copy(state = fooRun.state.copy(nodes = Set(
-    NodeStatus(name = "FooNode", status = TaskState.Success, cacheKey = Some(CacheKey("YourFooCacheKey")), result = Some(fooResults("FooNode"))))))
-
-  it should "memoize artifacts" in {
-    storage.write { stores =>
-      stores.runs.save(foobarRunWithNodes)
-      stores.runs.save(fooRunWithNodes)
-    }
-    storage.read { stores =>
-      stores.runs.get(CacheKey("MyFooCacheKey")) shouldBe Some(foobarResults("FooNode"))
-      stores.runs.get(CacheKey("MyBarCacheKey")) shouldBe Some(foobarResults("BarNode"))
-      stores.runs.get(CacheKey("YourFooCacheKey")) shouldBe Some(fooResults("FooNode"))
-      stores.runs.get(CacheKey("UnknownKey")) shouldBe None
-    }
-  }
 }

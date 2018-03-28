@@ -29,4 +29,5 @@ scala_test(
     "//3rdparty/jvm/com/github/nscala_time",
     "//3rdparty/jvm/com/twitter:util_slf4j_api",
   ],
+  size = "small",
 )

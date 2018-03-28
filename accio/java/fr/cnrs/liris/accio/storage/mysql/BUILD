@@ -20,7 +20,9 @@ scala_library(
   deps = [
     "//accio/java/fr/cnrs/liris/accio/api",
     "//accio/java/fr/cnrs/liris/accio/storage",
+    "//accio/java/fr/cnrs/liris/common/scrooge",
     "//3rdparty/jvm/com/twitter:finagle_mysql",
+    "//3rdparty/jvm/com/twitter:util_slf4j_api",
   ],
   visibility = ["//visibility:public"],
 )

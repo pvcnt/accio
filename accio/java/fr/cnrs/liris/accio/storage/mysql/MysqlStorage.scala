@@ -18,10 +18,71 @@
 
 package fr.cnrs.liris.accio.storage.mysql
 
-import fr.cnrs.liris.accio.storage.{Storage, StoreProvider}
+import java.util.concurrent.locks.ReentrantLock
 
-final class MysqlStorage extends Storage {
-  override def read[T](fn: StoreProvider => T): T = ???
+import com.twitter.finagle.mysql.{Client, ServerError}
+import com.twitter.finagle.stats.StatsReceiver
+import com.twitter.util.{Await, Future}
+import fr.cnrs.liris.accio.storage.{RunStore, Storage, StoreProvider, WorkflowStore}
 
-  override def write[T](fn: StoreProvider.Mutable => T): T = ???
+private[storage] final class MysqlStorage(
+  client: Client,
+  statsReceiver: StatsReceiver,
+  useNativeLocks: Boolean)
+  extends Storage {
+
+  private[this] val workflowStore = new MysqlWorkflowStore(client)
+  private[this] val runStore = new MysqlRunStore(client)
+  private[this] val storeProvider = new StoreProvider.Mutable {
+    override def runs: RunStore.Mutable = runStore
+
+    override def workflows: WorkflowStore.Mutable = workflowStore
+  }
+  private[this] val writeWaitStat = statsReceiver.stat("storage", "mysql", "write_wait_nanos")
+  private[this] val writeLock = if (useNativeLocks) new MysqlLock(client, "accio_write_lock") else new ReentrantLock
+
+  override def read[T](fn: StoreProvider => T): T = fn(storeProvider)
+
+  override def write[T](fn: StoreProvider.Mutable => T): T = {
+    val start = System.nanoTime()
+    writeLock.lock()
+    try {
+      writeWaitStat.add(System.nanoTime() - start)
+      fn(storeProvider)
+    } finally {
+      writeLock.unlock()
+    }
+  }
+
+  override def startUp(): Unit = {
+    val fs = MysqlStorage.tables.map { case (tableName, ddl) =>
+      client.query(s"select 1 from `$tableName` limit 1").rescue {
+        // Error code 1146 corresponds to a table that does not exist.
+        case ServerError(1146, _, _) => client.query(ddl).unit
+      }
+    }
+    Await.result(Future.join(fs))
+  }
+
+  override def shutDown(): Unit = Await.result(client.close())
+}
+
+object MysqlStorage {
+  private val tables = Seq(
+    "runs" -> ("create table runs(" +
+      "unused_id int not null auto_increment," +
+      "id varchar(255) not null," +
+      "content blob not null," +
+      "primary key (unused_id)," +
+      "UNIQUE KEY uix_id(id)" +
+      ") ENGINE=InnoDB DEFAULT CHARSET=utf8"),
+    "workflows" -> ("create table workflows(" +
+      "unused_id int not null auto_increment," +
+      "id varchar(255) not null," +
+      "version varchar(255) not null," +
+      "is_active tinyint(1) not null," +
+      "content blob not null," +
+      "primary key (unused_id)," +
+      "UNIQUE KEY uix_id_version(id, version)" +
+      ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
 }

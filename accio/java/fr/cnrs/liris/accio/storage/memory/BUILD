@@ -22,7 +22,6 @@ scala_library(
     "//accio/java/fr/cnrs/liris/accio/storage",
     "//accio/java/fr/cnrs/liris/accio/util",
     "//3rdparty/jvm/com/twitter:util_stats",
-    "//3rdparty/jvm/com/twitter:inject_core",
   ],
   visibility = ["//visibility:public"],
 )

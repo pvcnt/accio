@@ -16,13 +16,16 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.storage.memory
+package fr.cnrs.liris.accio.storage.mysql
 
-import com.twitter.inject.TwitterModule
-import fr.cnrs.liris.accio.storage.Storage
+import com.twitter.finagle.stats.NullStatsReceiver
+import fr.cnrs.liris.accio.storage.{Storage, WorkflowStoreSpec}
 
-object MemoryStorageModule extends TwitterModule {
-  override def configure(): Unit = {
-    bind[Storage].to[MemoryStorage]
-  }
+/**
+ * Unit tests of [[MysqlWorkflowStore]].
+ */
+class MysqlWorkflowStoreSpec extends WorkflowStoreSpec with MysqlStoreSpec {
+  behavior of "MysqlWorkflowStore"
+
+  override def createStorage: Storage = new MysqlStorage(createClient, NullStatsReceiver, useNativeLocks = false)
 }

@@ -39,7 +39,6 @@ class WorkflowFactorySpec extends UnitSpec {
     val workflow = factory.create(Workflows.workflow1, thrift.User("me"))
     workflow.id shouldBe thrift.WorkflowId("my_workflow")
     workflow.name shouldBe Some("my workflow")
-    workflow.isActive shouldBe true
     workflow.owner shouldBe Some(thrift.User("him"))
     workflow.graph shouldBe Workflows.workflow1.graph
     workflow.params should have size 0
@@ -108,7 +107,6 @@ class WorkflowFactorySpec extends UnitSpec {
 object Workflows {
   val workflow1 = thrift.Workflow(
     id = thrift.WorkflowId("my_workflow"),
-    isActive = true,
     graph = thrift.Graph(Set(
       thrift.Node(
         op = "FirstSimple",
@@ -125,7 +123,6 @@ object Workflows {
 
   val workflow2 = thrift.Workflow(
     id = thrift.WorkflowId("workflow2"),
-    isActive = true,
     params = Set(
       thrift.ArgDef("foo", thrift.DataType(thrift.AtomicType.Integer)),
       thrift.ArgDef("bar", thrift.DataType(thrift.AtomicType.Double))
@@ -144,7 +141,6 @@ object Workflows {
 
   val workflow3 = thrift.Workflow(
     id = thrift.WorkflowId("workflow3"),
-    isActive = true,
     params = Set(
       thrift.ArgDef("foo", thrift.DataType(thrift.AtomicType.Integer), defaultValue = Some(Values.encodeInteger(42))),
       thrift.ArgDef("bar", thrift.DataType(thrift.AtomicType.Double)),
@@ -165,7 +161,6 @@ object Workflows {
 
   val invalidParamNameWorkflow = thrift.Workflow(
     id = thrift.WorkflowId("invalid_workflow"),
-    isActive = true,
     params = Set(
       thrift.ArgDef("foo/foo", thrift.DataType(thrift.AtomicType.Integer))
     ),
@@ -177,7 +172,6 @@ object Workflows {
 
   val invalidParamTypeWorkflow = thrift.Workflow(
     id = thrift.WorkflowId("invalid_workflow"),
-    isActive = true,
     params = Set(thrift.ArgDef("foo", thrift.DataType(thrift.AtomicType.String))),
     graph = thrift.Graph(Set(
       thrift.Node(
@@ -187,7 +181,6 @@ object Workflows {
 
   val invalidDefaultValueWorkflow = thrift.Workflow(
     id = thrift.WorkflowId("invalid_workflow"),
-    isActive = true,
     params = Set(thrift.ArgDef("foo", thrift.DataType(thrift.AtomicType.Integer), defaultValue = Some(Values.encodeInteger(15008)))),
     graph = thrift.Graph(Set(
       thrift.Node(
@@ -197,7 +190,6 @@ object Workflows {
 
   val undeclaredParamWorkflow = thrift.Workflow(
     id = thrift.WorkflowId("invalid_workflow"),
-    isActive = true,
     graph = thrift.Graph(Set(
       thrift.Node(
         op = "FirstSimple",
@@ -206,7 +198,6 @@ object Workflows {
 
   val heterogeneousWorkflow = thrift.Workflow(
     id = thrift.WorkflowId("invalid_workflow"),
-    isActive = true,
     params = Set(thrift.ArgDef("foo", thrift.DataType(thrift.AtomicType.Integer))),
     graph = thrift.Graph(Set(
       thrift.Node(

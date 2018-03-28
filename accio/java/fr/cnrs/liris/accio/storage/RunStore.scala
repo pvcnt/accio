@@ -22,13 +22,12 @@ import fr.cnrs.liris.accio.api.ResultList
 import fr.cnrs.liris.accio.api.thrift._
 
 /**
- * Repository giving access to runs.
+ * Store providing read-only access to runs.
  */
 trait RunStore {
   /**
    * Search for runs matching a given query. Runs are returned ordered in inverse chronological
-   * order, the most recent matching run being the first result. It does *not* include the result
-   * of each node.
+   * order, the most recent matching run being the first result.
    *
    * @param query Query.
    */
@@ -53,10 +52,10 @@ trait RunStore {
 object RunStore {
 
   /**
-   * Mutable run repository.
+   * Store providing read and write access to runs.
    *
    * Mutating methods are *not* required to be thread-safe in the sense they will be wrapped inside
-   * transactions at the application-level. However, they should still take care not to leave data in
+   * transactions at the storage-level. However, they should still take care not to leave data in
    * a corrupted state, which can be hard to recover from.
    */
   trait Mutable extends RunStore {
@@ -72,7 +71,7 @@ object RunStore {
      *
      * @param id Run identifier.
      */
-    def remove(id: RunId): Unit
+    def delete(id: RunId): Unit
   }
 
 }

@@ -15,20 +15,7 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_library(
-  name = 'util',
+  name = "util",
   srcs = glob(["*.scala"]),
-  deps = [
-    '//3rdparty/jvm/com/twitter:util_core',
-    '//3rdparty/jvm/com/twitter:util_slf4j_api',
-  ],
-  visibility = ["//visibility:public"],
-)
-
-scala_library(
-  name = 'annotations',
-  srcs = glob(["*.java"]),
-  deps = [
-    '//3rdparty/jvm/com/twitter:inject_core',
-  ],
   visibility = ["//visibility:public"],
 )

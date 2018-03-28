@@ -26,4 +26,5 @@ scala_test(
     "//accio/javatests/fr/cnrs/liris/testing",
     "//3rdparty/jvm/com/twitter:inject_core",
   ],
+  size = "small",
 )

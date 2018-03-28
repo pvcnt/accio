@@ -35,23 +35,15 @@ import scala.collection.JavaConverters._
 private[memory] final class MemoryRunStore(statsReceiver: StatsReceiver)
   extends RunStore.Mutable {
 
-  private[this] val index = new ConcurrentHashMap[RunId, Run]().asScala
-  statsReceiver.provideGauge("storage", "memory", "run", "size")(index.size)
+  private[this] val index = new ConcurrentHashMap[RunId, Run].asScala
+  statsReceiver.provideGauge("storage", "memory", "run", "index_size")(index.size)
 
   override def list(query: RunQuery): ResultList[Run] = {
-    var results = index.values
+    val results = index.values
       .filter(query.matches)
       .toSeq
       .sortWith((a, b) => a.createdAt > b.createdAt)
-
-    val totalCount = results.size
-    query.offset.foreach { offset => results = results.drop(offset) }
-    query.limit.foreach { limit => results = results.take(limit) }
-
-    // Remove the result of each node, that we do not want to return.
-    results = results.map(run => run.copy(state = run.state.copy(nodes = run.state.nodes.map(_.unsetResult))))
-
-    ResultList(results, totalCount)
+    ResultList.slice(results, offset = query.offset, limit = query.limit)
   }
 
   override def get(id: RunId): Option[Run] = index.get(id)
@@ -60,5 +52,5 @@ private[memory] final class MemoryRunStore(statsReceiver: StatsReceiver)
 
   override def save(run: Run): Unit = index(run.id) = run
 
-  override def remove(id: RunId): Unit = index.remove(id)
+  override def delete(id: RunId): Unit = index.remove(id)
 }

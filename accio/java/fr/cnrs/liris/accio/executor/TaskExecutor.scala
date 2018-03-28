@@ -25,15 +25,18 @@ import com.twitter.util.logging.Logging
 import fr.cnrs.liris.accio.api.Errors
 import fr.cnrs.liris.accio.api.thrift.{OpResult, Task}
 import fr.cnrs.liris.accio.service.{OpExecutor, OpExecutorOpts}
-import org.apache.thrift.protocol.TBinaryProtocol
-import org.apache.thrift.transport.TIOStreamTransport
+import fr.cnrs.liris.common.scrooge.BinaryScroogeSerializer
 
 final class TaskExecutor(opExecutor: OpExecutor) extends Logging {
-  private[this] val protocolFactory = new TBinaryProtocol.Factory
-
-  def execute(task: Task, output: Path): Unit = {
+  def execute(task: Task, outputFile: Path): Unit = {
     val result = execute(task)
-    write(result, output)
+    Files.createDirectories(outputFile.getParent)
+    val fos = new FileOutputStream(outputFile.toFile)
+    try {
+      BinaryScroogeSerializer.write(result, fos)
+    } finally {
+      fos.close()
+    }
   }
 
   private def execute(task: Task): OpResult = {
@@ -47,17 +50,6 @@ final class TaskExecutor(opExecutor: OpExecutor) extends Logging {
         // and uncaught error here, just in case...
         logger.error(s"Operator raised an unexpected error", e)
         OpResult(-999, Some(Errors.create(e)))
-    }
-  }
-
-  private def write(result: OpResult, to: Path): Unit = {
-    Files.createDirectories(to.getParent)
-    val fos = new FileOutputStream(to.toFile)
-    try {
-      val protocol = protocolFactory.getProtocol(new TIOStreamTransport(fos))
-      result.write(protocol)
-    } finally {
-      fos.close()
     }
   }
 }

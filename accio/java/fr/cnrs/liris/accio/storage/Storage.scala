@@ -27,3 +27,19 @@ trait Storage {
 
   def shutDown(): Unit = {}
 }
+
+trait StoreProvider {
+  def runs: RunStore
+
+  def workflows: WorkflowStore
+}
+
+object StoreProvider {
+
+  trait Mutable extends StoreProvider {
+    override def runs: RunStore.Mutable
+
+    override def workflows: WorkflowStore.Mutable
+  }
+
+}

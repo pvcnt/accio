@@ -32,7 +32,6 @@ class RunParserSpec extends UnitSpec {
     id = thrift.WorkflowId("my_workflow"),
     version = Some("v1"),
     owner = Some(thrift.User("me")),
-    isActive = true,
     createdAt = Some(System.currentTimeMillis()),
     graph = thrift.Graph(Set(
       thrift.Node(

@@ -19,7 +19,6 @@
 namespace java fr.cnrs.liris.accio.api.thrift
 
 typedef i64 Timestamp
-typedef string ObjectName
 
 struct WorkflowId {
   1: string value;
@@ -372,8 +371,8 @@ struct RunSpec {
   // Seed used by unstable operators.
   6: optional i64 seed;
 
-  // Values of workflow parameters. There can possibly be many values for a single parameter, which will cause a
-  // parameter sweep to be executed.
+  // Values of workflow parameters. There can possibly be many values for a single parameter, which
+  // will cause a parameter sweep to be executed.
   7: required map<string, list<Value>> params;
 
   // Number of times to repeat each run.
@@ -400,38 +399,36 @@ struct Graph {
 }
 
 /**
- * A workflow is a basically named graph of operators. A workflow can define parameters, which are workflow-level
- * inputs allowing to override the value of some node inputs at runtime.
+ * A workflow is a basically named graph of operators. A workflow can define parameters, which are
+ * workflow-level inputs allowing to override the value of some node's inputs at runtime.
  *
- * Workflows are versioned, which allows runs to reference them even if they change afterwards. Version identifiers
- * do not have to be incrementing integers, which allows to use things such as sha1.
+ * Workflows are versioned, which allows runs to reference them even if they change afterwards.
+ * Version identifiers do not have to be incrementing integers, which allows to use things such as
+ * sha1.
  */
 struct Workflow {
-  // Workflow unique identifier. It is referenced by users creating runs, so it can be a little descriptive and not
-  // totally random.
+  // Workflow unique identifier. It is referenced by users creating runs, so it can be a little
+  // descriptive and not totally random.
   1: required WorkflowId id;
 
-  // Version identifier, unique among all version of a particular workflow. Besires this, there is no constraint on
-  // it, it is just a plain string.
+  // Version identifier, unique among all version of a particular workflow. Besires this, there is
+  // no constraint on it, it is just a plain string.
   2: optional string version;
 
-  // Whether this object represents the active (i.e., latest) version of the workflow.
-  3: required bool is_active;
-
   // Time at which this version of the workflow was created.
-  4: optional Timestamp created_at;
+  3: optional Timestamp created_at;
 
   // Human-readable name.
-  5: optional string name;
+  4: optional string name;
 
   // User owning this workflow (usually the one who created it).
-  6: optional User owner;
+  5: optional User owner;
 
   // Graph definition.
-  7: required Graph graph;
+  6: required Graph graph;
 
   // Workflow parameters.
-  8: required set<ArgDef> params;
+  7: required set<ArgDef> params;
 }
 
 struct Task {

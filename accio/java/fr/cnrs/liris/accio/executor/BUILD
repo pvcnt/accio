@@ -22,6 +22,7 @@ scala_binary(
     "//accio/java/fr/cnrs/liris/accio/service",
     "//accio/java/fr/cnrs/liris/accio/discovery",
     "//accio/java/fr/cnrs/liris/accio/discovery/reflect",
+    "//accio/java/fr/cnrs/liris/common/scrooge",
     "//3rdparty/jvm/com/twitter:util_slf4j_api",
     "//3rdparty/jvm/com/twitter:inject_app",
     "//3rdparty/jvm/com/twitter:util_codec",

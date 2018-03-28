@@ -56,7 +56,12 @@ class WorkflowParser(mapper: FinatraObjectMapper, opRegistry: OpRegistry, factor
       val defaultValue = paramDef.defaultValue.map(Values.encode(_, kind))
       thrift.ArgDef(name = paramDef.name, kind = kind, defaultValue = defaultValue)
     }.toSet
-    val spec = thrift.Workflow(thrift.WorkflowId(id), isActive = true, name = json.name, owner = owner, graph = thrift.Graph(nodes), params = params)
+    val spec = thrift.Workflow(
+      thrift.WorkflowId(id),
+      name = json.name,
+      owner = owner,
+      graph = thrift.Graph(nodes),
+      params = params)
 
     // Validate the specification would generate a valid workflow.
     val validationResult = factory.validate(spec)

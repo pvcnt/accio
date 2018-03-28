@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.scheduler.local
 
-import java.io.{ByteArrayOutputStream, FileInputStream}
+import java.io.FileInputStream
 import java.nio.file.{Files, Path}
 import java.util.concurrent.{ConcurrentHashMap, ConcurrentLinkedDeque, Executors}
 
@@ -27,14 +27,13 @@ import com.google.inject.{Inject, Singleton}
 import com.twitter.concurrent.NamedPoolThreadFactory
 import com.twitter.finagle.stats.StatsReceiver
 import com.twitter.util.logging.Logging
-import com.twitter.util.{Base64StringEncoder, Future, FuturePool}
+import com.twitter.util.{Future, FuturePool}
 import fr.cnrs.liris.accio.api.thrift._
 import fr.cnrs.liris.accio.api.{TaskCompletedEvent, TaskStartedEvent}
 import fr.cnrs.liris.accio.config._
 import fr.cnrs.liris.accio.scheduler.Scheduler
+import fr.cnrs.liris.common.scrooge.BinaryScroogeSerializer
 import fr.cnrs.liris.common.util.Platform
-import org.apache.thrift.protocol.TBinaryProtocol
-import org.apache.thrift.transport.TIOStreamTransport
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -53,7 +52,6 @@ final class LocalScheduler @Inject()(
 
   private case class Running(task: Task, future: Future[_])
 
-  private[this] val protocolFactory = new TBinaryProtocol.Factory
   private[this] val pending = new ConcurrentLinkedDeque[Task]
   private[this] val running = new ConcurrentHashMap[TaskId, Running].asScala
   private[this] val javaBinary = {
@@ -226,17 +224,10 @@ final class LocalScheduler @Inject()(
     cmd ++= Seq("-cp", executorUri)
     cmd += s"-Xmx${task.resource.ramMb}M"
     cmd += "fr.cnrs.liris.accio.executor.AccioExecutorMain"
-    cmd += encode(task)
+    cmd += BinaryScroogeSerializer.toString(task)
     cmd += outputFile.toAbsolutePath.toString
     cmd ++= executorArgs
     cmd.toList
-  }
-
-  private def encode(task: Task): String = {
-    val baos = new ByteArrayOutputStream
-    val protocol = protocolFactory.getProtocol(new TIOStreamTransport(baos))
-    task.write(protocol)
-    Base64StringEncoder.encode(baos.toByteArray)
   }
 
   private def read(file: Path): OpResult = {
@@ -245,9 +236,8 @@ final class LocalScheduler @Inject()(
       OpResult(-997)
     } else {
       val fis = new FileInputStream(file.toFile)
-      val protocol = protocolFactory.getProtocol(new TIOStreamTransport(fis))
       try {
-        OpResult.decode(protocol)
+        BinaryScroogeSerializer.fromInputStream(fis, OpResult)
       } catch {
         case e: Throwable =>
           logger.warn(s"Error while reading result file: $file", e)

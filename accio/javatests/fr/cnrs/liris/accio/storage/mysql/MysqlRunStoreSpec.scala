@@ -16,20 +16,16 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.storage
+package fr.cnrs.liris.accio.storage.mysql
 
-trait StoreProvider {
-  def runs: RunStore
+import com.twitter.finagle.stats.NullStatsReceiver
+import fr.cnrs.liris.accio.storage.{RunStoreSpec, Storage}
 
-  def workflows: WorkflowStore
-}
+/**
+ * Unit tests of [[MysqlRunStore]].
+ */
+class MysqlRunStoreSpec extends RunStoreSpec with MysqlStoreSpec {
+  behavior of "MysqlRunStore"
 
-object StoreProvider {
-
-  trait Mutable extends StoreProvider {
-    override def runs: RunStore.Mutable
-
-    override def workflows: WorkflowStore.Mutable
-  }
-
+  override def createStorage: Storage = new MysqlStorage(createClient, NullStatsReceiver, useNativeLocks = false)
 }

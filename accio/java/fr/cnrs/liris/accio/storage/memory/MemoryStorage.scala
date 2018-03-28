@@ -20,18 +20,17 @@ package fr.cnrs.liris.accio.storage.memory
 
 import java.util.concurrent.locks.ReentrantLock
 
-import com.google.inject.{Inject, Singleton}
 import com.twitter.finagle.stats.{NullStatsReceiver, StatsReceiver}
 import fr.cnrs.liris.accio.storage._
 
 /**
- * In-memory storage.
+ * In-memory storage. It is intended for development and testing purposes, as there is not
+ * persistent storage.
  *
  * @param statsReceiver Stats receiver.
  */
-@Singleton
-final class MemoryStorage @Inject()(statsReceiver: StatsReceiver) extends Storage {
-  private[this] val workflowStore = new MemoryWorkflowRepository(statsReceiver)
+private[storage] final class MemoryStorage(statsReceiver: StatsReceiver) extends Storage {
+  private[this] val workflowStore = new MemoryWorkflowStore(statsReceiver)
   private[this] val runStore = new MemoryRunStore(statsReceiver)
   private[this] val storeProvider = new StoreProvider.Mutable {
     override def runs: RunStore.Mutable = runStore

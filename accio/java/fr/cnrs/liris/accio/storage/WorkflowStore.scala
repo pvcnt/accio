@@ -29,7 +29,7 @@ trait WorkflowStore {
    * Search for workflows matching a given query. Runs are returned ordered in inverse
    * chronological order, the most recent matching workflow being the first result. It will only
    * consider the latest version of each workflow, and return the latest version of matching
-   * workflow in results. It does *not* include graph nodes of each workflow, always an empty graph.
+   * workflow in results.
    *
    * @param query Query.
    */
@@ -54,19 +54,20 @@ trait WorkflowStore {
 object WorkflowStore {
 
   /**
-   * Mutable workflow repository.
-   *
-   * For now, there is intentionally no method to remove a workflow, because it is not desirable to
-   * delete a workflow with runs referencing it.
+   * Store providing read and write access to workflows.
    *
    * Mutating methods are *not* required to be thread-safe in the sense they will be wrapped inside
-   * transactions at the application-level. However, they should still take care not to leave data in
+   * transactions at the storage-level. However, they should still take care not to leave data in
    * a corrupted state, which can be hard to recover from.
+   *
+   * Note: For now, there is intentionally no method to remove a workflow, because it is not
+   * desirable to delete a workflow with runs referencing it. This might evolve in the future if
+   * we find an elegant solution to handle this.
    */
   trait Mutable extends WorkflowStore {
     /**
-     * Save a workflow. It will either create a new workflow or a new version if there is already one
-     * with the same identifier. Workflows are never replaced.
+     * Save a workflow. It will either create a new workflow or a new version if there is already
+     * one with the same identifier. Workflows are never updated.
      *
      * @param workflow Workflow to save.
      */

@@ -15,15 +15,12 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_library(
-  name = "install",
+  name = "scrooge",
   srcs = glob(["*.scala"]),
   deps = [
-    "//accio/java/fr/cnrs/liris/accio/storage",
-    "//accio/java/fr/cnrs/liris/accio/storage/memory",
-    "//accio/java/fr/cnrs/liris/accio/storage/mysql",
-    "//3rdparty/jvm/com/twitter:inject_core",
-    "//3rdparty/jvm/com/twitter:util_core",
-    "//3rdparty/jvm/com/twitter:finagle_mysql",
+    "//3rdparty/jvm/com/twitter:util_codec",
+    "//3rdparty/jvm/com/twitter:scrooge_core",
+    "//external:io_bazel_rules_scala/dependency/thrift/libthrift",
   ],
   visibility = ["//visibility:public"],
 )

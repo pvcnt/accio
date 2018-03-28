@@ -23,6 +23,7 @@ import com.twitter.finagle.stats.{NullStatsReceiver, StatsReceiver}
 import com.twitter.inject.{CreateTwitterInjector, TwitterModule}
 import fr.cnrs.liris.accio.storage.Storage
 import fr.cnrs.liris.accio.storage.memory.MemoryStorage
+import fr.cnrs.liris.accio.storage.mysql.MysqlStorage
 import fr.cnrs.liris.testing.UnitSpec
 
 /**
@@ -33,20 +34,20 @@ class StorageModuleSpec extends UnitSpec with CreateTwitterInjector {
 
   override protected def modules: Seq[Module] = Seq(StorageModule, StatsModule)
 
-  it should "provide a memory storage" in {
-    val injector = createInjector("-storage.type", "memory")
-    injector.instance[Storage] shouldBe a[MemoryStorage]
-  }
-
   it should "provide a default memory storage" in {
     val injector = createInjector()
     injector.instance[Storage] shouldBe a[MemoryStorage]
   }
 
-  /*it should "provide a zookeeper storage" in {
+  it should "provide a memory storage" in {
+    val injector = createInjector("-storage.type", "memory")
+    injector.instance[Storage] shouldBe a[MemoryStorage]
+  }
+
+  it should "provide a MySQL storage" in {
     val injector = createInjector("-storage.type", "mysql")
     injector.instance[Storage] shouldBe a[MysqlStorage]
-  }*/
+  }
 
   private object StatsModule extends TwitterModule {
     override protected def configure(): Unit = {

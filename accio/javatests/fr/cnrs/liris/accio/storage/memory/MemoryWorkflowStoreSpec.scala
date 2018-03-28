@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.storage.memory
 import fr.cnrs.liris.accio.storage.{Storage, WorkflowStoreSpec}
 
 /**
- * Unit tests of [[MemoryWorkflowRepository]].
+ * Unit tests of [[MemoryWorkflowStore]].
  */
 class MemoryWorkflowStoreSpec extends WorkflowStoreSpec {
   behavior of "MemoryWorkflowStore"
