@@ -172,11 +172,11 @@ struct GetClusterResponse {
   2: required string version;
 }
 
+/**
+ * RPC endpoints used by clients to communicate with the agent. It contains the public interface of
+ * Accio, exposed to the outside world and available to be consumed by users.
+ */
 service AgentService {
-  /**
-   * RPC endpoints used by clients to communicate with masters. It contains the public interface of Accio, exposed
-   * to the outside world and available to be consumed by users.
-   */
   // Provide information about this cluster.
   GetClusterResponse getCluster(1: GetClusterRequest req);
 
@@ -190,8 +190,7 @@ service AgentService {
   ParseWorkflowResponse parseWorkflow(1: ParseWorkflowRequest req);
 
   // Push a new version of a workflow.
-  PushWorkflowResponse pushWorkflow(1: PushWorkflowRequest req)
-    throws (1: api.InvalidSpecException parse);
+  PushWorkflowResponse pushWorkflow(1: PushWorkflowRequest req) throws (1: api.InvalidSpecException parse);
 
   // Get a specific workflow, if it exists.
   GetWorkflowResponse getWorkflow(1: GetWorkflowRequest req);
@@ -203,8 +202,7 @@ service AgentService {
   ParseRunResponse parseRun(1: ParseRunRequest req);
 
   // Create a new run (and schedule them).
-  CreateRunResponse createRun(1: CreateRunRequest req)
-    throws (1: api.InvalidSpecException parse);
+  CreateRunResponse createRun(1: CreateRunRequest req) throws (1: api.InvalidSpecException parse);
 
   // Get a specific run.
   GetRunResponse getRun(1: GetRunRequest req);
@@ -217,12 +215,10 @@ service AgentService {
     throws (1: api.UnknownRunException unknown);
 
   // Kill a specific run.
-  KillRunResponse killRun(1: KillRunRequest req)
-    throws (1: api.UnknownRunException unknown);
+  KillRunResponse killRun(1: KillRunRequest req) throws (1: api.UnknownRunException unknown);
 
   // Update some information of a specific run.
-  UpdateRunResponse updateRun(1: UpdateRunRequest req)
-    throws (1: api.UnknownRunException unknown);
+  UpdateRunResponse updateRun(1: UpdateRunRequest req) throws (1: api.UnknownRunException unknown);
 
   // List log lines.
   ListLogsResponse listLogs(1: ListLogsRequest req);

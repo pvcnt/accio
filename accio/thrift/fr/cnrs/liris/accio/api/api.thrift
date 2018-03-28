@@ -33,28 +33,8 @@ struct TaskId {
   1: string value;
 }
 
-struct WorkerId {
-  1: string value;
-}
-
-struct ExecutorId {
-  1: string value;
-}
-
 struct CacheKey {
   1: string hash;
-}
-
-enum ObjectType {
-  RUN,
-  WORKFLOW,
-  EXPERIMENT,
-  AGENT
-}
-
-struct ObjectReference {
-  1: required ObjectType kind;
-  2: required ObjectName name;
 }
 
 enum AtomicType {
@@ -125,15 +105,6 @@ struct User {
   2: optional string email;
 }
 
-struct ObjectMetadata {
-  1: required ObjectName name;
-  2: required string version;
-  3: optional User owner;
-  4: required Timestamp created_at = 0;
-  5: optional ObjectReference parent;
-  6: required set<string> tags = [];
-}
-
 struct Reference {
   1: required string node;
   2: required string port;
@@ -158,14 +129,6 @@ struct Resource {
   3: required i64 disk_mb;
 }
 
-struct ArgConstraint {
-  1: optional double min_value;
-  2: optional bool min_inclusive;
-  3: optional double max_value;
-  4: optional bool max_inclusive;
-  5: required set<string> allowed_values = [];
-}
-
 /**
  * Definition of an operator port (either input or output).
  */
@@ -184,8 +147,6 @@ struct ArgDef {
 
   // Default value taken by this input if none is specified. It should be empty for output ports.
   5: optional Value default_value;
-
-  6: optional ArgConstraint constraint;
 }
 
 /**
@@ -504,14 +465,4 @@ exception InvalidTaskException {
 exception InvalidSpecException {
   1: required list<InvalidSpecMessage> errors;
   2: required list<InvalidSpecMessage> warnings;
-}
-
-exception InvalidExecutorException {
-  1: required ExecutorId id;
-  2: optional string message;
-}
-
-exception InvalidWorkerException {
-  1: required WorkerId id;
-  2: optional string message;
 }
