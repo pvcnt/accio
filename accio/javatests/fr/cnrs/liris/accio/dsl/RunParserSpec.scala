@@ -18,10 +18,10 @@
 
 package fr.cnrs.liris.accio.dsl
 
-import fr.cnrs.liris.accio.api.{Values, thrift}
 import fr.cnrs.liris.accio.api.thrift.{InvalidSpecException, InvalidSpecMessage}
+import fr.cnrs.liris.accio.api.{Values, thrift}
 import fr.cnrs.liris.accio.service.RunFactory
-import fr.cnrs.liris.accio.storage.memory.{MemoryLogRepository, MemoryRunRepository, MemoryStorage, MemoryWorkflowRepository}
+import fr.cnrs.liris.accio.storage.memory.MemoryStorage
 import fr.cnrs.liris.testing.UnitSpec
 
 /**
@@ -99,7 +99,7 @@ class RunParserSpec extends UnitSpec {
       InvalidSpecMessage("Invalid workflow specification: invalid:workflow:identifier"))
   }
 
-  private def assertErrors(content: String, errors: InvalidSpecMessage*) = {
+  private def assertErrors(content: String, errors: InvalidSpecMessage*): Unit = {
     val expected = intercept[InvalidSpecException] {
       parser.parse(content, Map.empty)
     }

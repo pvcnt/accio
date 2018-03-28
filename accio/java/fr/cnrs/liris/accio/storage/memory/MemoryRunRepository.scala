@@ -54,7 +54,7 @@ private[memory] final class MemoryRunRepository extends AbstractIdleService with
 
   override def get(id: RunId): Option[Run] = index.get(id)
 
-  override def get(cacheKey: CacheKey): Option[OpResult] = None
+  override def get(cacheKey: CacheKey): Option[NodeStatus] = None
 
   override def save(run: Run): Unit = locked(run.id.value) {
     index(run.id) = run

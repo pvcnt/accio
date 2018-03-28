@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.agent
 import com.google.common.eventbus.Subscribe
 import com.google.inject.{Inject, Singleton}
 import com.twitter.inject.Logging
-import fr.cnrs.liris.accio.api.{StreamLogsEvent, TaskCompletedEvent, TaskStartedEvent}
+import fr.cnrs.liris.accio.api.{TaskCompletedEvent, TaskStartedEvent}
 import fr.cnrs.liris.accio.service.RunManager
 import fr.cnrs.liris.accio.storage.Storage
 
@@ -58,10 +58,5 @@ final class SchedulerListener @Inject()(storage: Storage, runManager: RunManager
         val newRun = runManager.onStart(run, event.nodeName)
         storage.runs.save(newRun)
     }
-  }
-
-  @Subscribe
-  def onStreamLogs(event: StreamLogsEvent): Unit = {
-    storage.logs.save(event.logs)
   }
 }

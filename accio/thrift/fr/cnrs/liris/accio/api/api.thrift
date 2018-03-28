@@ -277,6 +277,9 @@ struct NodeStatus {
   // Whether it corresponds to a cache hit, i.e., the value has not been explicitly computed. If true, the `result`
   // field has to be filled.
   7: required bool cache_hit = false;
+
+  // Identifier of the task that handled the execution of this node.
+  8: optional TaskId task_id;
 }
 
 struct RunStatus {
@@ -348,14 +351,6 @@ struct Run {
 
   // Execution state.
   14: required RunStatus state;
-}
-
-struct RunLog {
-  1: required RunId run_id;
-  2: required string node_name;
-  3: required Timestamp created_at;
-  4: required string classifier;
-  5: required string message;
 }
 
 struct RunSpec {

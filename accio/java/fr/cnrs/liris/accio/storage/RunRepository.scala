@@ -42,12 +42,12 @@ trait RunRepository extends Service {
   def get(id: RunId): Option[Run]
 
   /**
-   * Retrieve the cached result of an operator, if it exists. It is not mandatory for implementations to handle this,
-   * they can simply return [[None]] if they have not easy way to manage this.
+   * Retrieve the cached result of an operator, if it exists. It is not mandatory for
+   * implementations to handle this operator.
    *
    * @param cacheKey Cache key.
    */
-  def get(cacheKey: CacheKey): Option[OpResult]
+  def get(cacheKey: CacheKey): Option[NodeStatus]
 }
 
 /**

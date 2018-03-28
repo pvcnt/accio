@@ -16,29 +16,31 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React from "react";
-import xhr from "../../../utils/xhr";
-import moment from "moment";
-import RunLogs from "./RunLogs";
-import {last, concat} from "lodash";
+import React from 'react';
+
+import xhr from '../../../utils/xhr';
+import RunLogs from './RunLogs';
 
 class RunLogsContainer extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {data: null, since: null};
+    this.state = { data: null, skip: 0 };
   }
 
   _loadData(props) {
-    const qs = this.state.since ? '&since=' + moment(this.state.since).format() : '';
-    this.xhr = xhr('/api/v1/run/' + props.runId + '/logs/' + props.nodeName + '/' + props.classifier + '?' + qs).then(data => {
-      const newData = (null == this.state.data) ? data : concat(this.state.data, data);
-      const newSince = (newData.length > 0) ? last(newData).created_at : null
-      this.setState({since: newSince, data: newData});
+    const url = `/api/v1/run/${props.runId}/logs/${props.nodeName}/${props.classifier}?skip=${this.state.skip}`;
+    this.xhr = xhr(url).then(data => {
+      this.setState((prevState) => {
+        return {
+          skip: prevState.skip + data.length,
+          data: (null === prevState.data) ? data : prevState.data.concat(data),
+        };
+      });
     });
   }
 
   componentDidMount() {
-    this._loadData(this.props)
+    this._loadData(this.props);
     if (this.props.stream) {
       this.intervalId = setInterval(() => this._loadData(this.props), 10000);
     }
@@ -46,10 +48,10 @@ class RunLogsContainer extends React.Component {
 
   componentWillReceiveProps(nextProps) {
     if (this.intervalId) {
-      clearInterval(this.intervalId)
-      this.intervalId = null
+      clearInterval(this.intervalId);
+      this.intervalId = null;
     }
-    this._loadData(nextProps)
+    this._loadData(nextProps);
     if (props.stream) {
       this.intervalId = setInterval(() => this._loadData(this.props), 10000);
     }
@@ -57,11 +59,11 @@ class RunLogsContainer extends React.Component {
 
   componentWillUnmount() {
     if (this.intervalId) {
-      clearInterval(this.intervalId)
-      this.intervalId = null
+      clearInterval(this.intervalId);
+      this.intervalId = null;
     }
     if (this.xhr) {
-      this.xhr.cancel()
+      this.xhr.cancel();
     }
   }
 

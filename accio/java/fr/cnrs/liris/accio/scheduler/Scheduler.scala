@@ -28,6 +28,8 @@ trait Scheduler {
 
   def kill(id: RunId): Set[Task]
 
+  def getLogs(id: TaskId, kind: String, skip: Option[Int] = None, tail: Option[Int] = None): Seq[String]
+
   def startUp(): Unit = {}
 
   def shutDown(): Unit = {}

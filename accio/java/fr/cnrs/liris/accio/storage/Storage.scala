@@ -29,8 +29,6 @@ import scala.collection.JavaConverters._
 trait Storage extends Service {
   def runs: MutableRunRepository
 
-  def logs: MutableLogRepository
-
   def workflows: MutableWorkflowRepository
 }
 
@@ -38,7 +36,7 @@ trait Storage extends Service {
  * Base class for storage.
  */
 private[storage] trait AbstractStorage extends AbstractIdleService with Storage {
-  private[this] val serviceManager = new ServiceManager(Set(runs, workflows, logs).asJava)
+  private[this] val serviceManager = new ServiceManager(Set(runs, workflows).asJava)
 
   override protected def shutDown(): Unit = {
     serviceManager.stopAsync().awaitStopped()

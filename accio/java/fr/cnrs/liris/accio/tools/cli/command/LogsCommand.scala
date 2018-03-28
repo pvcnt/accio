@@ -26,16 +26,12 @@ import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 
 case class LogsCommandFlags(
   @Flag(
-    name = "stdout",
-    help = "Include stdout logs")
-  stdout: Boolean = true,
-  @Flag(
     name = "stderr",
-    help = "Include stderr logs")
-  stderr: Boolean = true,
+    help = "Include stderr logs (instead of stdout)")
+  stderr: Boolean = false,
   @Flag(
     name = "n",
-    help = "Maximum number of results")
+    help = "Maximum number of log lines (taken from the end of the log)")
   n: Option[Int])
 
 @Cmd(
@@ -52,11 +48,14 @@ class LogsCommand @Inject()(clientProvider: ClusterClientProvider) extends Clien
     }
     val req = createRequest(flags.residue, flags.as[LogsCommandFlags])
     val client = createClient(flags)
-    handleResponse(client.listLogs(req), out)(_ => ExitCode.Success)
+    handleResponse(client.listLogs(req), out) { resp =>
+      resp.results.foreach(line => out.outErr.printOutLn(line))
+      ExitCode.Success
+    }
   }
 
   private def createRequest(residue: Seq[String], opts: LogsCommandFlags) = {
-    val classifier = if (opts.stderr && opts.stdout) None else if (opts.stderr) Some("stderr") else Some("stdout")
-    ListLogsRequest(RunId(residue.head), residue.last, classifier, opts.n)
+    val classifier = if (opts.stderr) "stderr" else "stdout"
+    ListLogsRequest(RunId(residue.head), residue.last, classifier, tail = opts.n)
   }
 }

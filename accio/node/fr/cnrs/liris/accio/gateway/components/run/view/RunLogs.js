@@ -16,22 +16,22 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React from 'react'
-import Spinner from 'react-spinkit'
+import React from 'react';
+import Spinner from 'react-spinkit';
 
 class RunLogs extends React.Component {
   render () {
     if (null == this.props.logs) {
       return <Spinner spinnerName="circle"/>
     } else {
-      const lines = this.props.logs.map((log, idx) => <div key={idx}>{log.message}</div>)
-      return lines.length ? <div className="accio-logs-lines">{lines}</div> : <p>No logs so far.</p>
+      const lines = this.props.logs.map((log, idx) => <div key={idx}>{log}</div>);
+      return lines.length ? <div className="accio-logs-lines">{lines}</div> : <p>No logs so far.</p>;
     }
   }
 }
 
 RunLogs.propTypes = {
   logs: React.PropTypes.array,
-}
+};
 
 export default RunLogs

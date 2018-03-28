@@ -88,7 +88,7 @@ final class LocalScheduler @Inject()(
       val future = schedule(task)
       running(task.id) = Running(task, future)
     } else {
-      if (!isEnoughResources(task.id, task.resource, totalResources)) {
+      if (!forceScheduling && !isEnoughResources(task.id, task.resource, totalResources)) {
         // TODO: We should cancel the task.
         logger.warn(s"Not enough resources to schedule task ${task.id.value}")
       }
@@ -116,8 +116,8 @@ final class LocalScheduler @Inject()(
     tasks.toSet
   }
 
-  def getLogs(id: TaskId, kind: String, tail: Option[Int] = None): Seq[String] = {
-    readLogFile(getWorkDir(id).resolve(kind), tail)
+  override def getLogs(id: TaskId, kind: String, skip: Option[Int], tail: Option[Int]): Seq[String] = {
+    readLogFile(getWorkDir(id).resolve(kind), skip, tail)
   }
 
   private def schedule(task: Task): Future[OpResult] = {
@@ -178,7 +178,6 @@ final class LocalScheduler @Inject()(
   }
 
   private def execute(task: Task): OpResult = {
-    // TODO: stream logs.
     val process = startProcess(task)
     eventBus.post(TaskStartedEvent(task.runId, task.nodeName))
     val exitCode = process.waitFor()
@@ -200,8 +199,6 @@ final class LocalScheduler @Inject()(
       .directory(outputsDir.toFile)
       .redirectOutput(workDir.resolve("stdout").toFile)
       .redirectError(workDir.resolve("stderr").toFile)
-      //.inheritIO()
-      //.redirectErrorStream(true)
       .start()
   }
 
@@ -216,12 +213,11 @@ final class LocalScheduler @Inject()(
       .resolve(taskId.value)
   }
 
-  private def readLogFile(file: Path, tail: Option[Int]): Seq[String] = {
-    val lines = Source.fromFile(file.toFile).getLines().toSeq
-    tail match {
-      case Some(n) if lines.size > n => lines.takeRight(n)
-      case _ => lines
-    }
+  private def readLogFile(file: Path, skip: Option[Int], tail: Option[Int]): Seq[String] = {
+    var lines = Source.fromFile(file.toFile).getLines().toList
+    skip.foreach(n => lines = lines.drop(n))
+    tail.foreach(n => lines = lines.takeRight(n))
+    lines
   }
 
   private def createCommandLine(task: Task, outputFile: Path): Seq[String] = {

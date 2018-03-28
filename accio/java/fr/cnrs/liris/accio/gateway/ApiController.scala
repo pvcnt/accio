@@ -187,22 +187,24 @@ final class ApiController @Inject()(client: AgentService$FinagleClient) extends 
     }
   }
 
-  get("/api/v1/run/:id/logs/:node/:classifier") { httpReq: ListLogsHttpRequest =>
+  get("/api/v1/run/:id/logs/:node/:kind") { httpReq: ListLogsHttpRequest =>
     val req = ListLogsRequest(
       runId = RunId(httpReq.id),
       nodeName = httpReq.node,
-      classifier = Some(httpReq.classifier),
-      limit = httpReq.limit,
-      since = httpReq.since.map(_.getMillis))
-    client.listLogs(req).map(_.results).map { logs =>
-      if (httpReq.download) {
-        response
-          .ok(logs.map(_.message).mkString("\n"))
-          .header("Content-Disposition", s"attachment; filename=${req.runId.value}-${req.nodeName}-${httpReq.classifier}.txt")
-      } else {
-        logs
+      kind = httpReq.kind,
+      skip = httpReq.skip)
+    client
+      .listLogs(req)
+      .map(_.results)
+      .map { logs =>
+        if (httpReq.download) {
+          response
+            .ok(logs.mkString("\n"))
+            .header("Content-Disposition", s"attachment; filename=logs-${req.runId.value}-${req.nodeName}-${httpReq.kind}.txt")
+        } else {
+          logs
+        }
       }
-    }
   }
 
   private def readBody(httpReq: Request): Future[String] = {
@@ -273,9 +275,8 @@ case class DeleteWorkflowHttpRequest(@RouteParam id: String)
 case class ListLogsHttpRequest(
   @RouteParam id: String,
   @RouteParam node: String,
-  @RouteParam classifier: String,
-  @QueryParam @Min(0) limit: Option[Int],
-  @QueryParam since: Option[DateTime],
+  @RouteParam kind: String,
+  @QueryParam @Min(0) skip: Option[Int],
   @QueryParam download: Boolean = false)
 
 case class ResultListResponse[T](results: Seq[T], totalCount: Int)

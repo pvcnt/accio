@@ -22,7 +22,7 @@ Description=Accio agent
 [Service]
 ExecStartPre=/bin/mkdir -p /var/lib/accio-agent
 ExecStart=/usr/bin/java \
-  -Xmx2G \
+  -Xmx3G \
   -server \
   -agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=n \
   -jar /usr/local/bin/accio-agent.jar \

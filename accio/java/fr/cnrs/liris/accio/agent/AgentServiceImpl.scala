@@ -21,14 +21,14 @@ package fr.cnrs.liris.accio.agent
 import com.google.common.eventbus.EventBus
 import com.google.inject.{Inject, Singleton}
 import com.twitter.inject.Logging
-import com.twitter.util.{Future, Time}
+import com.twitter.util.Future
 import fr.cnrs.liris.accio.api.RunCreatedEvent
 import fr.cnrs.liris.accio.api.thrift.{InvalidSpecException, InvalidSpecMessage, UnknownRunException}
 import fr.cnrs.liris.accio.config.ClusterName
 import fr.cnrs.liris.accio.dsl.{RunParser, WorkflowParser}
 import fr.cnrs.liris.accio.scheduler.Scheduler
 import fr.cnrs.liris.accio.service.{OpRegistry, RunFactory, RunManager, WorkflowFactory}
-import fr.cnrs.liris.accio.storage.{LogsQuery, RunQuery, Storage, WorkflowQuery}
+import fr.cnrs.liris.accio.storage.{RunQuery, Storage, WorkflowQuery}
 import fr.cnrs.liris.accio.util.Version
 
 import scala.collection.mutable
@@ -149,7 +149,6 @@ final class AgentServiceImpl @Inject()(
           run.children.foreach(scheduler.kill)
           run.children.foreach { runId =>
             storage.runs.remove(runId)
-            storage.logs.remove(runId)
           }
         } else if (run.parent.isDefined) {
           // It is a child run, update or delete parent run.
@@ -168,7 +167,6 @@ final class AgentServiceImpl @Inject()(
         }
         // Finally, delete the run.
         storage.runs.remove(run.id)
-        storage.logs.remove(run.id)
     }
     DeleteRunResponse()
   }
@@ -235,12 +233,12 @@ final class AgentServiceImpl @Inject()(
   }
 
   override def listLogs(req: ListLogsRequest): Future[ListLogsResponse] = Future {
-    val query = LogsQuery(
-      runId = req.runId,
-      nodeName = req.nodeName,
-      classifier = req.classifier,
-      limit = req.limit,
-      since = req.since.map(Time.fromMilliseconds))
-    ListLogsResponse(storage.logs.find(query))
+    val results = storage.runs
+      .get(req.runId)
+      .flatMap(_.state.nodes.find(_.name == req.nodeName))
+      .flatMap(_.taskId)
+      .map(taskId => scheduler.getLogs(taskId, req.kind, skip = req.skip, tail = req.tail))
+      .getOrElse(Seq.empty)
+    ListLogsResponse(results)
   }
 }

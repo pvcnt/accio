@@ -26,16 +26,14 @@ import fr.cnrs.liris.accio.storage.{AbstractStorage, Storage}
  *
  * @param runs      In-memory run repository.
  * @param workflows In-memory workflow repository.
- * @param logs      In-memory log repository.
  */
 @Singleton
 private[storage] final class MemoryStorage @Inject()(
   override val runs: MemoryRunRepository,
-  override val logs: MemoryLogRepository,
   override val workflows: MemoryWorkflowRepository)
   extends AbstractStorage
 
 object MemoryStorage {
   // Mainly present for testing purposes.
-  def create: Storage = new MemoryStorage(new MemoryRunRepository, new MemoryLogRepository, new MemoryWorkflowRepository)
+  def create: Storage = new MemoryStorage(new MemoryRunRepository, new MemoryWorkflowRepository)
 }

@@ -132,13 +132,13 @@ struct UpdateRunResponse {
 struct ListLogsRequest {
   1: required api.RunId run_id;
   2: required string node_name;
-  3: optional string classifier;
-  4: optional i32 limit;
-  5: optional api.Timestamp since;
+  3: required string kind;
+  4: optional i32 tail;
+  5: optional i32 skip;
 }
 
 struct ListLogsResponse {
-  1: required list<api.RunLog> results;
+  1: required list<string> results;
 }
 
 struct ParseRunRequest {

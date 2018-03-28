@@ -48,23 +48,53 @@ final class SchedulerService @Inject()(scheduler: Scheduler, opRegistry: OpRegis
    * @param run       Run. Must contain the latest execution state, to allow the node to fetch its dependencies.
    * @param node      Node to execute, as part of the run.
    * @param readCache Whether to allow to fetch a cached result from the cache.
-   * @return Node result and cache key, if available.
+   * @return Updated run.
    */
-  def submit(run: Run, node: api.Node, readCache: Boolean = true): Option[(CacheKey, OpResult)] = {
+  def submit(run: Run, node: api.Node, readCache: Boolean = true): Run = {
+    val nodeStatus = run.state.nodes.find(_.name == node.name).get
     val opDef = opRegistry(node.op)
     val payload = createPayload(run, node, opDef)
+    val now = System.currentTimeMillis()
     val maybeResult = if (readCache) storage.runs.get(payload.cacheKey) else None
     maybeResult match {
-      case Some(result) =>
+      case Some(cachedNodeStatus) =>
         logger.debug(s"Cache hit. Run: ${run.id.value}, node: ${node.name}.")
-        Some(payload.cacheKey -> result)
+        val newNodeStatus = nodeStatus.copy(
+          startedAt = Some(now),
+          completedAt = Some(now),
+          status = cachedNodeStatus.status,
+          cacheKey = cachedNodeStatus.cacheKey,
+          cacheHit = true,
+          result = cachedNodeStatus.result,
+          taskId = cachedNodeStatus.taskId)
+        run.copy(state = run.state.copy(nodes = run.state.nodes - nodeStatus + newNodeStatus))
       case None =>
         val taskId = TaskId(UUID.randomUUID().toString)
         val task = Task(taskId, run.id, node.name, payload, System.currentTimeMillis(), TaskState.Waiting, opDef.resource)
         scheduler.submit(task)
         logger.debug(s"Scheduled task ${task.id.value}. Run: ${run.id.value}, node: ${node.name}, op: ${payload.op}")
-        None
+        val newNodeStatus = nodeStatus.copy(status = TaskState.Scheduled, taskId = Some(taskId))
+        run.copy(state = run.state.copy(nodes = run.state.nodes - nodeStatus + newNodeStatus))
     }
+  }
+
+  /**
+   * Generate a unique cache key for the outputs of a node. It is based on operator definition, inputs and seed.
+   *
+   * @param opDef  Operator definition.
+   * @param inputs Node inputs.
+   * @param seed   Seed for unstable operators.
+   */
+  def generateCacheKey(opDef: OpDef, inputs: Map[String, Value], seed: Long): CacheKey = {
+    val hasher = Hashing.sha1().newHasher()
+    hasher.putString(opDef.name, Charsets.UTF_8)
+    hasher.putLong(if (opDef.unstable) seed else 0L)
+    opDef.inputs.map { argDef =>
+      hasher.putString(argDef.name, Charsets.UTF_8)
+      val value = inputs.get(argDef.name).orElse(argDef.defaultValue)
+      hasher.putInt(value.hashCode)
+    }
+    CacheKey(hasher.hash().toString)
   }
 
   /**
@@ -88,24 +118,5 @@ final class SchedulerService @Inject()(scheduler: Scheduler, opRegistry: OpRegis
     }
     val cacheKey = generateCacheKey(opDef, inputs, run.seed)
     OpPayload(opDef.className, run.seed, inputs, cacheKey)
-  }
-
-  /**
-   * Generate a unique cache key for the outputs of a node. It is based on operator definition, inputs and seed.
-   *
-   * @param opDef  Operator definition.
-   * @param inputs Node inputs.
-   * @param seed   Seed for unstable operators.
-   */
-  def generateCacheKey(opDef: OpDef, inputs: Map[String, Value], seed: Long): CacheKey = {
-    val hasher = Hashing.sha1().newHasher()
-    hasher.putString(opDef.name, Charsets.UTF_8)
-    hasher.putLong(if (opDef.unstable) seed else 0L)
-    opDef.inputs.map { argDef =>
-      hasher.putString(argDef.name, Charsets.UTF_8)
-      val value = inputs.get(argDef.name).orElse(argDef.defaultValue)
-      hasher.putInt(value.hashCode)
-    }
-    CacheKey(hasher.hash().toString)
   }
 }
