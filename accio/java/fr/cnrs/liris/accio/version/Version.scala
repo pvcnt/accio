@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.util
+package fr.cnrs.liris.accio.version
 
 /**
  * Describes a version using semantic versioning.

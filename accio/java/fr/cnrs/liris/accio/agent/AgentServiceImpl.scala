@@ -29,7 +29,7 @@ import fr.cnrs.liris.accio.dsl.{RunParser, WorkflowParser}
 import fr.cnrs.liris.accio.scheduler.Scheduler
 import fr.cnrs.liris.accio.service.{OpRegistry, RunFactory, RunManager, WorkflowFactory}
 import fr.cnrs.liris.accio.storage.{RunQuery, Storage, WorkflowQuery}
-import fr.cnrs.liris.accio.util.Version
+import fr.cnrs.liris.accio.version.Version
 
 import scala.collection.mutable
 

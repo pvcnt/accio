@@ -21,7 +21,6 @@ scala_test(
     "//accio/java/fr/cnrs/liris/accio/storage",
     "//accio/java/fr/cnrs/liris/accio/storage/memory",
     "//accio/java/fr/cnrs/liris/accio/api",
-    "//accio/java/fr/cnrs/liris/accio/util",
     "//accio/javatests/fr/cnrs/liris/accio/storage",
     "//accio/javatests/fr/cnrs/liris/testing",
     "//3rdparty/jvm/com/twitter:inject_core",

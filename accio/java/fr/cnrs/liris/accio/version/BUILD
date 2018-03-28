@@ -15,7 +15,7 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_library(
-  name = "util",
+  name = "version",
   srcs = glob(["*.scala"]),
   visibility = ["//visibility:public"],
 )

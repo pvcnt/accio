@@ -21,7 +21,6 @@ scala_library(
     "//accio/java/fr/cnrs/liris/accio/scheduler",
     "//accio/java/fr/cnrs/liris/accio/api",
     "//accio/java/fr/cnrs/liris/accio/config:annotations",
-    "//accio/java/fr/cnrs/liris/accio/util",
     "//accio/java/fr/cnrs/liris/common/util",
     "//accio/java/fr/cnrs/liris/common/scrooge",
     "//accio/thrift/fr/cnrs/liris/accio/api",

@@ -28,7 +28,7 @@ scala_binary(
     "//accio/java/fr/cnrs/liris/accio/dsl",
     "//accio/java/fr/cnrs/liris/accio/service",
     "//accio/java/fr/cnrs/liris/accio/scheduler",
-    "//accio/java/fr/cnrs/liris/accio/util",
+    "//accio/java/fr/cnrs/liris/accio/version",
     "//accio/java/fr/cnrs/liris/accio/logging",
     "//accio/java/fr/cnrs/liris/common/util",
     "//accio/thrift/fr/cnrs/liris/accio/agent",

@@ -24,7 +24,7 @@ scala_library(
     '//accio/java/fr/cnrs/liris/accio/tools/cli/event',
     '//accio/java/fr/cnrs/liris/accio/api',
     '//accio/java/fr/cnrs/liris/accio/reporting',
-    '//accio/java/fr/cnrs/liris/accio/util',
+    '//accio/java/fr/cnrs/liris/accio/version',
     '//accio/java/fr/cnrs/liris/common/io',
     '//accio/java/fr/cnrs/liris/common/util',
     '//accio/java/fr/cnrs/liris/common/flags',

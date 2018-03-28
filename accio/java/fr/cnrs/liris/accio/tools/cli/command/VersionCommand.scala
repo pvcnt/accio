@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.tools.cli.command
 import com.google.inject.Inject
 import fr.cnrs.liris.accio.agent.GetClusterRequest
 import fr.cnrs.liris.accio.tools.cli.event.Reporter
-import fr.cnrs.liris.accio.util.Version
+import fr.cnrs.liris.accio.version.Version
 import fr.cnrs.liris.common.flags.{Flag, FlagsProvider}
 
 case class VersionCommandFlags(

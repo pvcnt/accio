@@ -24,7 +24,6 @@ scala_test(
     "//accio/java/fr/cnrs/liris/accio/storage",
     "//accio/java/fr/cnrs/liris/accio/storage/memory",
     "//accio/java/fr/cnrs/liris/accio/service",
-    "//accio/java/fr/cnrs/liris/accio/util",
     "//accio/java/fr/cnrs/liris/common/util",
     "//accio/javatests/fr/cnrs/liris/testing",
   ],
