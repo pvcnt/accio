@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.storage.mysql
 
 import java.util.concurrent.locks.ReentrantLock
 
-import com.twitter.finagle.mysql.{Client, ServerError}
+import com.twitter.finagle.mysql.Client
 import com.twitter.finagle.stats.StatsReceiver
 import com.twitter.util.{Await, Future}
 import fr.cnrs.liris.accio.storage.{RunStore, Storage, StoreProvider, WorkflowStore}
@@ -55,12 +55,7 @@ private[storage] final class MysqlStorage(
   }
 
   override def startUp(): Unit = {
-    val fs = MysqlStorage.tables.map { case (tableName, ddl) =>
-      client.query(s"select 1 from `$tableName` limit 1").rescue {
-        // Error code 1146 corresponds to a table that does not exist.
-        case ServerError(1146, _, _) => client.query(ddl).unit
-      }
-    }
+    val fs = MysqlStorage.Ddl.map(ddl => client.query(ddl).unit)
     Await.result(Future.join(fs))
   }
 
@@ -68,15 +63,15 @@ private[storage] final class MysqlStorage(
 }
 
 object MysqlStorage {
-  private val tables = Seq(
-    "runs" -> ("create table runs(" +
+  private val Ddl = Seq(
+    "create table if not exists runs(" +
       "unused_id int not null auto_increment," +
       "id varchar(255) not null," +
       "content blob not null," +
       "primary key (unused_id)," +
       "UNIQUE KEY uix_id(id)" +
-      ") ENGINE=InnoDB DEFAULT CHARSET=utf8"),
-    "workflows" -> ("create table workflows(" +
+      ") ENGINE=InnoDB DEFAULT CHARSET=utf8",
+    "create table if not exists workflows(" +
       "unused_id int not null auto_increment," +
       "id varchar(255) not null," +
       "version varchar(255) not null," +
@@ -84,5 +79,5 @@ object MysqlStorage {
       "content blob not null," +
       "primary key (unused_id)," +
       "UNIQUE KEY uix_id_version(id, version)" +
-      ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
+      ") ENGINE=InnoDB DEFAULT CHARSET=utf8")
 }

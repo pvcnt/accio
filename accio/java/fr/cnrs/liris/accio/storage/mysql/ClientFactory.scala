@@ -21,15 +21,13 @@ package fr.cnrs.liris.accio.storage.mysql
 import com.twitter.conversions.time._
 import com.twitter.finagle.Mysql
 import com.twitter.finagle.client.DefaultPool
-import com.twitter.finagle.mysql.{Client, ServerError}
-import com.twitter.util.Monitor
+import com.twitter.finagle.mysql.Client
 
 private[storage] object ClientFactory {
   def apply(server: String, user: String, password: String, database: String): Client = {
     Mysql.client
       .withCredentials(user, password)
       .withDatabase(database)
-      .withMonitor(MysqlMonitor)
       .configured(DefaultPool.Param(
         low = 0,
         high = 10,
@@ -38,17 +36,4 @@ private[storage] object ClientFactory {
         maxWaiters = Int.MaxValue))
       .newRichClient(server)
   }
-
-  object MysqlMonitor extends Monitor {
-    private[this] val whitelist = Set(
-      1146 /* Table does not exist */)
-
-    override def handle(exc: Throwable): Boolean = {
-      exc match {
-        case s: ServerError => whitelist.contains(s.code)
-        case _ => false
-      }
-    }
-  }
-
 }
