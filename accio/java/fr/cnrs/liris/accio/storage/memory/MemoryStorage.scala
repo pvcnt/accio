@@ -18,13 +18,46 @@
 
 package fr.cnrs.liris.accio.storage.memory
 
+import java.util.concurrent.locks.ReentrantLock
+
+import com.google.inject.{Inject, Singleton}
+import com.twitter.finagle.stats.{NullStatsReceiver, StatsReceiver}
 import fr.cnrs.liris.accio.storage._
 
 /**
  * In-memory storage.
+ *
+ * @param statsReceiver Stats receiver.
  */
-final class MemoryStorage extends Storage {
-  override val workflows: MutableWorkflowRepository = new MemoryWorkflowRepository
+@Singleton
+final class MemoryStorage @Inject()(statsReceiver: StatsReceiver) extends Storage {
+  private[this] val workflowStore = new MemoryWorkflowRepository(statsReceiver)
+  private[this] val runStore = new MemoryRunStore(statsReceiver)
+  private[this] val storeProvider = new StoreProvider.Mutable {
+    override def runs: RunStore.Mutable = runStore
 
-  override val runs: MutableRunRepository = new MemoryRunRepository
+    override def workflows: WorkflowStore.Mutable = workflowStore
+  }
+  private[this] val writeWaitStat = statsReceiver.stat("storage", "memory", "write_wait_nanos")
+  private[this] val writeLock = new ReentrantLock
+
+  override def read[T](fn: StoreProvider => T): T = fn(storeProvider)
+
+  override def write[T](fn: StoreProvider.Mutable => T): T = {
+    val start = System.nanoTime()
+    writeLock.lock()
+    try {
+      writeWaitStat.add(System.nanoTime() - start)
+      fn(storeProvider)
+    } finally {
+      writeLock.unlock()
+    }
+  }
+}
+
+object MemoryStorage {
+  /**
+   * Creates a new empty in-memory storage for use in testing.
+   */
+  def empty: Storage = new MemoryStorage(NullStatsReceiver)
 }

@@ -18,12 +18,18 @@
 
 package fr.cnrs.liris.accio.storage
 
-trait Storage {
-  def read[T](fn: StoreProvider => T): T
+trait StoreProvider {
+  def runs: RunStore
 
-  def write[T](fn: StoreProvider.Mutable => T): T
+  def workflows: WorkflowStore
+}
 
-  def startUp(): Unit = {}
+object StoreProvider {
 
-  def shutDown(): Unit = {}
+  trait Mutable extends StoreProvider {
+    override def runs: RunStore.Mutable
+
+    override def workflows: WorkflowStore.Mutable
+  }
+
 }

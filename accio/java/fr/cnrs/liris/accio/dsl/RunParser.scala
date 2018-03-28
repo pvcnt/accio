@@ -81,8 +81,8 @@ class RunParser(mapper: FinatraObjectMapper, storage: Storage, factory: RunFacto
 
   private def findWorkflow(str: String, warnings: mutable.Set[InvalidSpecMessage]): Workflow = {
     val maybeWorkflow = str.split(":") match {
-      case Array(id) => storage.workflows.get(WorkflowId(id))
-      case Array(id, version) => storage.workflows.get(WorkflowId(id), version)
+      case Array(id) => storage.read(_.workflows.get(WorkflowId(id)))
+      case Array(id, version) => storage.read(_.workflows.get(WorkflowId(id), version))
       case _ => throw newError(s"Invalid workflow specification: $str", warnings)
     }
     maybeWorkflow match {

@@ -16,15 +16,12 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.storage.memory
-
-import fr.cnrs.liris.accio.storage.RunRepositorySpec
+package fr.cnrs.liris.accio.api
 
 /**
- * Unit tests of [[MemoryRunRepository]].
+ * Results and total number of results.
+ *
+ * @param results    List of objects.
+ * @param totalCount Total number of results.
  */
-class MemoryRunRepositorySpec extends RunRepositorySpec {
-  behavior of "MemoryRunRepository"
-
-  override def createStorage = new MemoryStorage
-}
+case class ResultList[T](results: Seq[T], totalCount: Int)

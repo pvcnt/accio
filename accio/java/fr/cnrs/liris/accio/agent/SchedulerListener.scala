@@ -34,29 +34,31 @@ import fr.cnrs.liris.accio.storage.Storage
 final class SchedulerListener @Inject()(storage: Storage, runManager: RunManager) extends Logging {
   @Subscribe
   def onTaskCompleted(event: TaskCompletedEvent): Unit = {
-    storage.runs.transactional(event.runId) {
-      case None => logger.warn(s"Completed task is associated with unknown run ${event.runId.value}")
-      case Some(run) =>
-        storage.runs.transactional(run.parent) { parent =>
-          val (newRun, newParent) =
-            if (event.result.exitCode == 0) {
-              runManager.onSuccess(run, event.nodeName, event.result, Some(event.cacheKey), parent)
-            } else {
-              runManager.onFailed(run, event.nodeName, event.result, parent)
-            }
-          storage.runs.save(newRun)
-          newParent.foreach(storage.runs.save)
-        }
+    storage.write { stores =>
+      stores.runs.get(event.runId) match {
+        case None => logger.warn(s"Completed task is associated with unknown run ${event.runId.value}")
+        case Some(run) =>
+          val parent = run.parent.flatMap(stores.runs.get)
+          val (newRun, newParent) = if (event.result.exitCode == 0) {
+            runManager.onSuccess(run, event.nodeName, event.result, Some(event.cacheKey), parent)
+          } else {
+            runManager.onFailed(run, event.nodeName, event.result, parent)
+          }
+          stores.runs.save(newRun)
+          newParent.foreach(stores.runs.save)
+      }
     }
   }
 
   @Subscribe
   def onTaskStarted(event: TaskStartedEvent): Unit = {
-    storage.runs.transactional(event.runId) {
-      case None => logger.warn(s"Started task is associated with unknown run ${event.runId.value}")
-      case Some(run) =>
-        val newRun = runManager.onStart(run, event.nodeName)
-        storage.runs.save(newRun)
+    storage.write { stores =>
+      stores.runs.get(event.runId) match {
+        case None => logger.warn(s"Started task is associated with unknown run ${event.runId.value}")
+        case Some(run) =>
+          val newRun = runManager.onStart(run, event.nodeName)
+          stores.runs.save(newRun)
+      }
     }
   }
 }

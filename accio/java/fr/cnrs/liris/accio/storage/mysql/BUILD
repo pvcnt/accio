@@ -18,7 +18,7 @@ scala_library(
   name = "mysql",
   srcs = glob(["*.scala"]),
   deps = [
-    "//accio/thrift/fr/cnrs/liris/accio/api",
+    "//accio/java/fr/cnrs/liris/accio/api",
     "//accio/java/fr/cnrs/liris/accio/storage",
     "//3rdparty/jvm/com/twitter:finagle_mysql",
   ],

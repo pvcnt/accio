@@ -28,9 +28,10 @@ import org.scalatest.BeforeAndAfterEach
 import scala.collection.Map
 
 /**
- * Common unit tests for all [[MutableRunRepository]] implementations, ensuring they all have consistent behavior.
+ * Common unit tests for all [[RunStore.Mutable]] implementations, ensuring they all have
+ * a consistent behavior.
  */
-private[storage] abstract class RunRepositorySpec extends UnitSpec with BeforeAndAfterEach {
+private[storage] abstract class RunStoreSpec extends UnitSpec with BeforeAndAfterEach {
   protected val foobarRun = Run(
     id = RunId("foobar"),
     pkg = Package(WorkflowId("my_workflow"), "v1"),
@@ -100,93 +101,107 @@ private[storage] abstract class RunRepositorySpec extends UnitSpec with BeforeAn
   protected def createStorage: Storage
 
   protected var storage: Storage = _
-  protected var repo: MutableRunRepository = _
 
   override def beforeEach(): Unit = {
     storage = createStorage
     storage.startUp()
-    repo = storage.runs
     super.beforeEach()
   }
 
   override def afterEach(): Unit = {
     super.afterEach()
-    repo = null
     storage.shutDown()
+    storage = null
   }
 
   it should "save and retrieve runs" in {
-    repo.get(foobarRun.id) shouldBe None
-    repo.get(fooRun.id) shouldBe None
+    storage.write { stores =>
+      stores.runs.get(foobarRun.id) shouldBe None
+      stores.runs.get(fooRun.id) shouldBe None
 
-    repo.save(foobarRun)
-    repo.get(foobarRun.id) shouldBe Some(foobarRun)
+      stores.runs.save(foobarRun)
+      stores.runs.get(foobarRun.id) shouldBe Some(foobarRun)
 
-    repo.save(fooRun)
-    repo.get(fooRun.id) shouldBe Some(fooRun)
+      stores.runs.save(fooRun)
+      stores.runs.get(fooRun.id) shouldBe Some(fooRun)
+    }
   }
 
   it should "delete runs" in {
-    repo.save(foobarRun)
-    repo.save(fooRun)
+    storage.write { stores =>
+      stores.runs.save(foobarRun)
+      stores.runs.save(fooRun)
 
-    repo.remove(foobarRun.id)
-    repo.get(fooRun.id) shouldBe Some(fooRun)
-    repo.get(foobarRun.id) shouldBe None
+      stores.runs.remove(foobarRun.id)
+      stores.runs.get(fooRun.id) shouldBe Some(fooRun)
+      stores.runs.get(foobarRun.id) shouldBe None
+    }
   }
 
   it should "search for runs by owner" in {
-    runs.foreach(repo.save)
+    storage.write { stores =>
+      runs.foreach(stores.runs.save)
+    }
+    storage.read { stores =>
+      var res = stores.runs.list(RunQuery(owner = Some("me")))
+      res.totalCount shouldBe 3
+      res.results should contain theSameElementsInOrderAs Seq(runs(3), runs(1), runs(0)).map(unsetResult)
 
-    var res = repo.find(RunQuery(owner = Some("me")))
-    res.totalCount shouldBe 3
-    res.results should contain theSameElementsInOrderAs Seq(runs(3), runs(1), runs(0)).map(unsetResult)
+      res = stores.runs.list(RunQuery(owner = Some("me"), limit = Some(2)))
+      res.totalCount shouldBe 3
+      res.results should contain theSameElementsInOrderAs Seq(runs(3), runs(1)).map(unsetResult)
 
-    res = repo.find(RunQuery(owner = Some("me"), limit = Some(2)))
-    res.totalCount shouldBe 3
-    res.results should contain theSameElementsInOrderAs Seq(runs(3), runs(1)).map(unsetResult)
+      res = stores.runs.list(RunQuery(owner = Some("me"), limit = Some(2), offset = Some(2)))
+      res.totalCount shouldBe 3
+      res.results should contain theSameElementsInOrderAs Seq(runs(0)).map(unsetResult)
 
-    res = repo.find(RunQuery(owner = Some("me"), limit = Some(2), offset = Some(2)))
-    res.totalCount shouldBe 3
-    res.results should contain theSameElementsInOrderAs Seq(runs(0)).map(unsetResult)
-
-    res = repo.find(RunQuery(owner = Some("him")))
-    res.totalCount shouldBe 1
-    res.results should contain theSameElementsInOrderAs Seq(runs(2)).map(unsetResult)
+      res = stores.runs.list(RunQuery(owner = Some("him")))
+      res.totalCount shouldBe 1
+      res.results should contain theSameElementsInOrderAs Seq(runs(2)).map(unsetResult)
+    }
   }
 
   it should "search for runs by workflow" in {
-    runs.foreach(repo.save)
-
-    val res = repo.find(RunQuery(workflow = Some(WorkflowId("other_workflow"))))
-    res.totalCount shouldBe 1
-    res.results should contain theSameElementsInOrderAs Seq(runs(3)).map(unsetResult)
+    storage.write { stores =>
+      runs.foreach(stores.runs.save)
+    }
+    storage.read { stores =>
+      val res = stores.runs.list(RunQuery(workflow = Some(WorkflowId("other_workflow"))))
+      res.totalCount shouldBe 1
+      res.results should contain theSameElementsInOrderAs Seq(runs(3)).map(unsetResult)
+    }
   }
 
 
   it should "search for runs by status" in {
-    runs.foreach(repo.save)
-
-    val res = repo.find(RunQuery(status = Set(TaskState.Running)))
-    res.totalCount shouldBe 2
-    res.results should contain theSameElementsInOrderAs Seq(runs(2), runs(1)).map(unsetResult)
+    storage.write { stores =>
+      runs.foreach(stores.runs.save)
+    }
+    storage.read { stores =>
+      val res = stores.runs.list(RunQuery(status = Set(TaskState.Running)))
+      res.totalCount shouldBe 2
+      res.results should contain theSameElementsInOrderAs Seq(runs(2), runs(1)).map(unsetResult)
+    }
   }
 
 
   it should "search for runs by tags" in {
-    runs.foreach(repo.save)
+    storage.write { stores =>
+      runs.foreach(stores.runs.save)
+    }
+    storage.read { stores =>
+      var res = stores.runs.list(RunQuery(tags = Set("foo", "bar")))
+      res.totalCount shouldBe 2
+      res.results should contain theSameElementsInOrderAs Seq(runs(3), runs(0)).map(unsetResult)
 
-    var res = repo.find(RunQuery(tags = Set("foo", "bar")))
-    res.totalCount shouldBe 2
-    res.results should contain theSameElementsInOrderAs Seq(runs(3), runs(0)).map(unsetResult)
+      res = stores.runs.list(RunQuery(tags = Set("foo")))
+      res.totalCount shouldBe 3
+      res.results should contain theSameElementsInOrderAs Seq(runs(3), runs(1), runs(0)).map(unsetResult)
 
-    res = repo.find(RunQuery(tags = Set("foo")))
-    res.totalCount shouldBe 3
-    res.results should contain theSameElementsInOrderAs Seq(runs(3), runs(1), runs(0)).map(unsetResult)
-
-    res = repo.find(RunQuery(tags = Set("foobar")))
-    res.totalCount shouldBe 1
-    res.results should contain theSameElementsInOrderAs Seq(runs(2)).map(unsetResult)
+      res = stores.runs.list(RunQuery(tags = Set("foobar")))
+      res.totalCount shouldBe 1
+      res.results should contain theSameElementsInOrderAs Seq(runs(2)).map(unsetResult)
+    }
   }
 
   private def unsetResult(run: Run) = run.copy(state = run.state.copy(nodes = run.state.nodes.map(_.unsetResult)))
@@ -194,7 +209,7 @@ private[storage] abstract class RunRepositorySpec extends UnitSpec with BeforeAn
   private def randomId: RunId = RunId(UUID.randomUUID().toString)
 }
 
-private[storage] trait RunRepositorySpecWithMemoization extends RunRepositorySpec {
+private[storage] trait RunStoreSpecWithMemoization extends RunStoreSpec {
   private val foobarRunWithNodes = foobarRun.copy(state = foobarRun.state.copy(nodes = Set(
     NodeStatus(name = "FooNode", status = TaskState.Success, cacheKey = Some(CacheKey("MyFooCacheKey")), result = Some(foobarResults("FooNode"))),
     NodeStatus(name = "BarNode", status = TaskState.Success, cacheKey = Some(CacheKey("MyBarCacheKey")), result = Some(foobarResults("BarNode")))
@@ -203,12 +218,15 @@ private[storage] trait RunRepositorySpecWithMemoization extends RunRepositorySpe
     NodeStatus(name = "FooNode", status = TaskState.Success, cacheKey = Some(CacheKey("YourFooCacheKey")), result = Some(fooResults("FooNode"))))))
 
   it should "memoize artifacts" in {
-    repo.save(foobarRunWithNodes)
-    repo.save(fooRunWithNodes)
-
-    repo.get(CacheKey("MyFooCacheKey")) shouldBe Some(foobarResults("FooNode"))
-    repo.get(CacheKey("MyBarCacheKey")) shouldBe Some(foobarResults("BarNode"))
-    repo.get(CacheKey("YourFooCacheKey")) shouldBe Some(fooResults("FooNode"))
-    repo.get(CacheKey("UnknownKey")) shouldBe None
+    storage.write { stores =>
+      stores.runs.save(foobarRunWithNodes)
+      stores.runs.save(fooRunWithNodes)
+    }
+    storage.read { stores =>
+      stores.runs.get(CacheKey("MyFooCacheKey")) shouldBe Some(foobarResults("FooNode"))
+      stores.runs.get(CacheKey("MyBarCacheKey")) shouldBe Some(foobarResults("BarNode"))
+      stores.runs.get(CacheKey("YourFooCacheKey")) shouldBe Some(fooResults("FooNode"))
+      stores.runs.get(CacheKey("UnknownKey")) shouldBe None
+    }
   }
 }

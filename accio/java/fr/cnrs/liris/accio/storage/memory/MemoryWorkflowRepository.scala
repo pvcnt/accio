@@ -20,20 +20,26 @@ package fr.cnrs.liris.accio.storage.memory
 
 import java.util.concurrent.ConcurrentHashMap
 
+import com.twitter.finagle.stats.StatsReceiver
+import fr.cnrs.liris.accio.api.ResultList
 import fr.cnrs.liris.accio.api.thrift.{Workflow, WorkflowId}
-import fr.cnrs.liris.accio.storage.{MutableWorkflowRepository, WorkflowList, WorkflowQuery}
-import fr.cnrs.liris.accio.util.Lockable
+import fr.cnrs.liris.accio.storage.{WorkflowQuery, WorkflowStore}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
 /**
- * Run repository storing data in memory. It has no persistence mechanism. Intended for testing only.
+ * Run repository storing data in memory. Intended for testing only.
+ *
+ * @param statsReceiver Stats receiver.
  */
-private[memory] final class MemoryWorkflowRepository extends MutableWorkflowRepository with Lockable[String] {
-  private[this] val index = new ConcurrentHashMap[WorkflowId, mutable.Map[String, Workflow]]().asScala
+private[memory] final class MemoryWorkflowRepository(statsReceiver: StatsReceiver)
+  extends WorkflowStore.Mutable {
 
-  override def find(query: WorkflowQuery): WorkflowList = {
+  private[this] val index = new ConcurrentHashMap[WorkflowId, mutable.Map[String, Workflow]]().asScala
+  statsReceiver.provideGauge("storage", "memory", "workflow", "size")(index.values.map(_.size).sum)
+
+  override def list(query: WorkflowQuery): ResultList[Workflow] = {
     var results = index.values
       .flatMap(_.values.find(_.isActive))
       .filter(query.matches)
@@ -47,7 +53,7 @@ private[memory] final class MemoryWorkflowRepository extends MutableWorkflowRepo
     // Remove the graph of each workflow, that we do not want to return.
     results = results.map(workflow => workflow.copy(graph = workflow.graph.unsetNodes))
 
-    WorkflowList(results, totalCount)
+    ResultList(results, totalCount)
   }
 
   override def get(id: WorkflowId): Option[Workflow] = {
@@ -58,7 +64,7 @@ private[memory] final class MemoryWorkflowRepository extends MutableWorkflowRepo
     index.get(id).flatMap(_.get(version))
   }
 
-  override def save(workflow: Workflow): Unit = locked(workflow.id.value) {
+  override def save(workflow: Workflow): Unit = {
     val workflows = index.getOrElseUpdate(workflow.id, new ConcurrentHashMap[String, Workflow]().asScala)
     if (workflow.isActive) {
       workflows.foreach { case (version, oldWorkflow) =>
@@ -66,9 +72,5 @@ private[memory] final class MemoryWorkflowRepository extends MutableWorkflowRepo
       }
     }
     workflows(workflow.version.get) = workflow
-  }
-
-  override def transactional[T](id: WorkflowId)(fn: Option[Workflow] => T): T = locked(id.value) {
-    fn(get(id))
   }
 }

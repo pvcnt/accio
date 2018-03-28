@@ -16,14 +16,15 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.storage
+package fr.cnrs.liris.accio.storage.memory
 
-trait Storage {
-  def read[T](fn: StoreProvider => T): T
+import fr.cnrs.liris.accio.storage.{Storage, WorkflowStoreSpec}
 
-  def write[T](fn: StoreProvider.Mutable => T): T
+/**
+ * Unit tests of [[MemoryWorkflowRepository]].
+ */
+class MemoryWorkflowStoreSpec extends WorkflowStoreSpec {
+  behavior of "MemoryWorkflowStore"
 
-  def startUp(): Unit = {}
-
-  def shutDown(): Unit = {}
+  override def createStorage: Storage = MemoryStorage.empty
 }

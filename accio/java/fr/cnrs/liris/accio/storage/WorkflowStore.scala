@@ -18,12 +18,13 @@
 
 package fr.cnrs.liris.accio.storage
 
+import fr.cnrs.liris.accio.api.ResultList
 import fr.cnrs.liris.accio.api.thrift.{Workflow, WorkflowId}
 
 /**
  * Repository giving access to workflows.
  */
-trait WorkflowRepository {
+trait WorkflowStore {
   /**
    * Search for workflows matching a given query. Runs are returned ordered in inverse
    * chronological order, the most recent matching workflow being the first result. It will only
@@ -32,7 +33,7 @@ trait WorkflowRepository {
    *
    * @param query Query.
    */
-  def find(query: WorkflowQuery): WorkflowList
+  def list(query: WorkflowQuery): ResultList[Workflow]
 
   /**
    * Retrieve a specific workflow at its latest version, if it exists.
@@ -50,32 +51,26 @@ trait WorkflowRepository {
   def get(id: WorkflowId, version: String): Option[Workflow]
 }
 
-/**
- * Mutable workflow repository.
- *
- * For now, there is intentionally no method to remove a workflow, because it is not desirable to
- * delete a workflow with runs referencing it.
- *
- * Mutating methods are *not* required to be thread-safe in the sense they will be wrapped inside
- * transactions at the application-level. However, they should still take care not to leave data in
- * a corrupted state, which can be hard to recover from.
- */
-trait MutableWorkflowRepository extends WorkflowRepository {
+object WorkflowStore {
+
   /**
-   * Save a workflow. It will either create a new workflow or a new version if there is already one
-   * with the same identifier. Workflows are never replaced.
+   * Mutable workflow repository.
    *
-   * @param workflow Workflow to save.
+   * For now, there is intentionally no method to remove a workflow, because it is not desirable to
+   * delete a workflow with runs referencing it.
+   *
+   * Mutating methods are *not* required to be thread-safe in the sense they will be wrapped inside
+   * transactions at the application-level. However, they should still take care not to leave data in
+   * a corrupted state, which can be hard to recover from.
    */
-  def save(workflow: Workflow): Unit
+  trait Mutable extends WorkflowStore {
+    /**
+     * Save a workflow. It will either create a new workflow or a new version if there is already one
+     * with the same identifier. Workflows are never replaced.
+     *
+     * @param workflow Workflow to save.
+     */
+    def save(workflow: Workflow): Unit
+  }
 
-  def transactional[T](id: WorkflowId)(fn: Option[Workflow] => T): T
 }
-
-/**
- * List of workflows and total number of results.
- *
- * @param results    List of workflows.
- * @param totalCount Total number of results.
- */
-case class WorkflowList(results: Seq[Workflow], totalCount: Int)

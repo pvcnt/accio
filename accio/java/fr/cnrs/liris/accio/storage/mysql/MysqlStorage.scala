@@ -18,10 +18,10 @@
 
 package fr.cnrs.liris.accio.storage.mysql
 
-import fr.cnrs.liris.accio.storage.{MutableRunRepository, MutableWorkflowRepository, Storage}
+import fr.cnrs.liris.accio.storage.{Storage, StoreProvider}
 
 final class MysqlStorage extends Storage {
-  override def runs: MutableRunRepository = ???
+  override def read[T](fn: StoreProvider => T): T = ???
 
-  override def workflows: MutableWorkflowRepository = ???
+  override def write[T](fn: StoreProvider.Mutable => T): T = ???
 }

@@ -20,8 +20,8 @@ package fr.cnrs.liris.accio.agent
 
 import com.google.common.eventbus.EventBus
 import com.google.inject.{Inject, Singleton}
-import com.twitter.util.logging.Logging
 import com.twitter.util.Future
+import com.twitter.util.logging.Logging
 import fr.cnrs.liris.accio.api.RunCreatedEvent
 import fr.cnrs.liris.accio.api.thrift.{InvalidSpecException, InvalidSpecMessage, UnknownRunException}
 import fr.cnrs.liris.accio.config.ClusterName
@@ -76,16 +76,16 @@ final class AgentServiceImpl @Inject()(
   override def pushWorkflow(req: PushWorkflowRequest): Future[PushWorkflowResponse] = Future {
     val warnings = mutable.Set.empty[InvalidSpecMessage]
     val workflow = workflowFactory.create(req.spec, req.user, warnings)
-    storage.workflows.save(workflow)
+    storage.write(_.workflows.save(workflow))
     PushWorkflowResponse(workflow, warnings.toSeq)
   }
 
   override def getWorkflow(req: GetWorkflowRequest): Future[GetWorkflowResponse] = Future {
-    val maybeWorkflow = req.version match {
-      case Some(version) => storage.workflows.get(req.id, version)
-      case None => storage.workflows.get(req.id)
+    val workflow = req.version match {
+      case Some(version) => storage.read(_.workflows.get(req.id, version))
+      case None => storage.read(_.workflows.get(req.id))
     }
-    GetWorkflowResponse(maybeWorkflow)
+    GetWorkflowResponse(workflow)
   }
 
   override def listWorkflows(req: ListWorkflowsRequest): Future[ListWorkflowsResponse] = Future {
@@ -95,8 +95,8 @@ final class AgentServiceImpl @Inject()(
       q = req.q,
       limit = req.limit,
       offset = req.offset)
-    val res = storage.workflows.find(query)
-    ListWorkflowsResponse(res.results, res.totalCount)
+    val workflows = storage.read(_.workflows.list(query))
+    ListWorkflowsResponse(workflows.results, workflows.totalCount)
   }
 
   override def parseRun(req: ParseRunRequest): Future[ParseRunResponse] = Future {
@@ -112,7 +112,7 @@ final class AgentServiceImpl @Inject()(
   override def createRun(req: CreateRunRequest): Future[CreateRunResponse] = Future {
     val warnings = mutable.Set.empty[InvalidSpecMessage]
     val runs = runFactory.create(req.spec, req.user, warnings)
-    runs.foreach(storage.runs.save)
+    storage.write(stores => runs.foreach(stores.runs.save))
     if (runs.nonEmpty) {
       // Maybe it could happen that an unfortunate parameter sweep generate no run...
       eventBus.post(RunCreatedEvent(runs.head.id, runs.tail.map(_.id)))
@@ -121,7 +121,8 @@ final class AgentServiceImpl @Inject()(
   }
 
   override def getRun(req: GetRunRequest): Future[GetRunResponse] = Future {
-    GetRunResponse(storage.runs.get(req.id))
+    val run = storage.read(_.runs.get(req.id))
+    GetRunResponse(run)
   }
 
   override def listRuns(req: ListRunsRequest): Future[ListRunsResponse] = Future {
@@ -136,105 +137,102 @@ final class AgentServiceImpl @Inject()(
       q = req.q,
       limit = req.limit,
       offset = req.offset)
-    val res = storage.runs.find(query)
-    ListRunsResponse(res.results, res.totalCount)
+    val runs = storage.read(_.runs.list(query))
+    ListRunsResponse(runs.results, runs.totalCount)
   }
 
   override def deleteRun(req: DeleteRunRequest): Future[DeleteRunResponse] = Future {
-    storage.runs.transactional(req.id) {
-      case None => throw UnknownRunException(req.id)
-      case Some(run) =>
-        if (run.children.nonEmpty) {
-          // It is a parent run, cancel and delete child all runs.
-          run.children.foreach(scheduler.kill)
-          run.children.foreach { runId =>
-            storage.runs.remove(runId)
-          }
-        } else if (run.parent.isDefined) {
-          // It is a child run, update or delete parent run.
-          storage.runs.foreach(run.parent.get) { parent =>
-            if (parent.children.size > 1) {
-              // There are several child runs left, remove current one from the list.
-              storage.runs.save(parent.copy(children = parent.children.filterNot(_ == run.id)))
-            } else {
-              // It was the last child of this run, delete it as it is now useless.
-              storage.runs.remove(parent.id)
+    storage.write { stores =>
+      stores.runs.get(req.id) match {
+        case None => throw UnknownRunException(req.id)
+        case Some(run) =>
+          if (run.children.nonEmpty) {
+            // It is a parent run, cancel and delete child all runs.
+            run.children.foreach(scheduler.kill)
+            run.children.foreach(stores.runs.remove)
+          } else if (run.parent.isDefined) {
+            // It is a child run, update or delete parent run.
+            stores.runs.get(run.parent.get).foreach { parent =>
+              if (parent.children.size > 1) {
+                // There are several child runs left, remove current one from the list.
+                stores.runs.save(parent.copy(children = parent.children.filterNot(_ == run.id)))
+              } else {
+                // It was the last child of this run, delete it as it is now useless.
+                stores.runs.remove(parent.id)
+              }
             }
+          } else {
+            // It is a single run, cancel it.
+            scheduler.kill(run.id)
           }
-        } else {
-          // It is a single run, cancel it.
-          scheduler.kill(run.id)
-        }
-        // Finally, delete the run.
-        storage.runs.remove(run.id)
+          // Finally, delete the run.
+          stores.runs.remove(run.id)
+      }
+      DeleteRunResponse()
     }
-    DeleteRunResponse()
   }
 
   override def killRun(req: KillRunRequest): Future[KillRunResponse] = Future {
-    val newRun = storage.runs.transactional(req.id) {
-      case None => throw UnknownRunException(req.id)
-      case Some(run) =>
-        if (run.children.nonEmpty) {
-          var newParent = run
-          // If is a parent run, kill child all runs.
-          run.children.foreach { childId =>
-            storage.runs.foreach(childId) { child =>
-              val killedTasks = scheduler.kill(child.id)
-              val res = runManager.onKill(child, killedTasks.map(_.nodeName), Some(run))
-              storage.runs.save(res._1)
-              res._2.foreach(p => newParent = p)
+    storage.write { stores =>
+      val newRun = stores.runs.get(req.id) match {
+        case None => throw UnknownRunException(req.id)
+        case Some(run) =>
+          if (run.children.nonEmpty) {
+            var newParent = run
+            // If is a parent run, kill child all runs.
+            run.children.foreach { childId =>
+              stores.runs.get(childId).foreach { child =>
+                val killedTasks = scheduler.kill(child.id)
+                val res = runManager.onKill(child, killedTasks.map(_.nodeName), Some(run))
+                stores.runs.save(res._1)
+                res._2.foreach(p => newParent = p)
+              }
+            }
+            stores.runs.save(newParent)
+            newParent
+          } else {
+            run.parent match {
+              case None =>
+                val killedTasks = scheduler.kill(run.id)
+                val (newRun, _) = runManager.onKill(run, killedTasks.map(_.nodeName), None)
+                stores.runs.save(newRun)
+                newRun
+              case Some(parentId) =>
+                var newRun = run
+                stores.runs.get(parentId).foreach { parent =>
+                  val killedTasks = scheduler.kill(run.id)
+                  val res = runManager.onKill(run, killedTasks.map(_.nodeName), Some(parent))
+                  newRun = res._1
+                  stores.runs.save(newRun)
+                  res._2.foreach(stores.runs.save)
+                }
+                newRun
             }
           }
-          storage.runs.save(newParent)
-          newParent
-        } else {
-          run.parent match {
-            case None =>
-              val killedTasks = scheduler.kill(run.id)
-              val (newRun, _) = runManager.onKill(run, killedTasks.map(_.nodeName), None)
-              storage.runs.save(newRun)
-              newRun
-            case Some(parentId) =>
-              var newRun = run
-              storage.runs.foreach(parentId) { parent =>
-                val killedTasks = scheduler.kill(run.id)
-                val res = runManager.onKill(run, killedTasks.map(_.nodeName), Some(parent))
-                newRun = res._1
-                storage.runs.save(newRun)
-                res._2.foreach(storage.runs.save)
-              }
-              newRun
-          }
-        }
+      }
+      KillRunResponse(newRun)
     }
-    KillRunResponse(newRun)
   }
 
   override def updateRun(req: UpdateRunRequest): Future[UpdateRunResponse] = Future {
-    storage.runs.transactional(req.id) {
-      case None => throw UnknownRunException(req.id)
-      case Some(run) =>
-        val actualRun = run.parent match {
-          case None => Some(run)
-          case Some(parentId) => storage.runs.get(parentId)
-        }
-        actualRun.foreach { run =>
-          var newRun = run
+    storage.write { stores =>
+      stores.runs.get(req.id) match {
+        case None => throw UnknownRunException(req.id)
+        case Some(run) =>
+          var newRun = run.parent.flatMap(stores.runs.get).getOrElse(run)
           req.name.foreach(name => newRun = newRun.copy(name = Some(name)))
           req.notes.foreach(notes => newRun = newRun.copy(notes = Some(notes)))
           if (req.tags.nonEmpty) {
             newRun = newRun.copy(tags = req.tags)
           }
-          storage.runs.save(newRun)
-        }
+          stores.runs.save(newRun)
+          UpdateRunResponse(newRun)
+      }
     }
-    UpdateRunResponse()
   }
 
   override def listLogs(req: ListLogsRequest): Future[ListLogsResponse] = Future {
-    val results = storage.runs
-      .get(req.runId)
+    val results = storage.read(_.runs.get(req.runId))
       .flatMap(_.state.nodes.find(_.name == req.nodeName))
       .flatMap(_.taskId)
       .map(taskId => scheduler.getLogs(taskId, req.kind, skip = req.skip, tail = req.tail))

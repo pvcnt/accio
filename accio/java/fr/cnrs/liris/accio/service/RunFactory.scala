@@ -32,7 +32,7 @@ import scala.util.Random
 /**
  * Factory for [[Run]].
  *
- * @param storage        Storage.
+ * @param storage Storage.
  */
 final class RunFactory @Inject()(storage: Storage) extends BaseFactory {
   /**
@@ -238,11 +238,9 @@ final class RunFactory @Inject()(storage: Storage) extends BaseFactory {
    * @param warnings Mutable list collecting warnings.
    */
   private def getWorkflow(pkg: Package, warnings: mutable.Set[InvalidSpecMessage]) = {
-    val maybeWorkflow = storage.workflows.get(pkg.workflowId, pkg.workflowVersion)
-    maybeWorkflow match {
-      case None => throw newError(s"Workflow not found: ${pkg.workflowId.value}@${pkg.workflowVersion}", "pkg", warnings)
-      case Some(workflow) => workflow
-    }
+    storage
+      .read(_.workflows.get(pkg.workflowId, pkg.workflowVersion))
+      .getOrElse(throw newError(s"Workflow not found: ${pkg.workflowId.value}@${pkg.workflowVersion}", "pkg", warnings))
   }
 
   /**

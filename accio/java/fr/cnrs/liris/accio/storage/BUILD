@@ -18,7 +18,7 @@ scala_library(
   name = "storage",
   srcs = glob(["*.scala"]),
   deps = [
-    "//accio/thrift/fr/cnrs/liris/accio/api",
+    "//accio/java/fr/cnrs/liris/accio/api",
   ],
   visibility = ["//visibility:public"],
 )

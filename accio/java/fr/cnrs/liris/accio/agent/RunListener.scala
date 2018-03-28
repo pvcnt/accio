@@ -28,26 +28,26 @@ import fr.cnrs.liris.accio.storage.Storage
 final class RunListener @Inject()(storage: Storage, runManager: RunManager) {
   @Subscribe
   def onRunCreated(event: RunCreatedEvent): Unit = {
-    // TODO: we still have a too long lock here. If we have thousand child runs, we could hold the
-    // lock for too much time.
-    storage.runs.foreach(event.runId) { parent =>
-      // We are guaranteed there will be at least one run. It is either a single run or the parent
-      // run, we may launch it safely.
-      var (newParent, _) = runManager.launch(parent, None)
+    // TODO: we have a too long lock here. If we have thousand child runs, we could hold
+    // the lock for too much time.
+    storage.write { stores =>
+      stores.runs.get(event.runId).foreach { parent =>
+        // We are guaranteed there will be at least one run. It is either a single run or the
+        // parent run, we may launch it safely.
+        var (newParent, _) = runManager.launch(parent, None)
 
-      // Sequentially launch the children runs.
-      event.children.foreach { childId =>
-        storage.runs.foreach(childId) { run =>
-          val res = runManager.launch(run, Some(newParent))
-          storage.runs.save(res._1)
-          res._2.foreach { nextParent =>
-            newParent = nextParent
+        // Sequentially launch the children runs.
+        event.children.foreach { childId =>
+          stores.runs.get(childId).foreach { run =>
+            val res = runManager.launch(run, Some(newParent))
+            stores.runs.save(res._1)
+            res._2.foreach(nextParent => newParent = nextParent)
           }
         }
+        // We finally save the parent run.
+        // TODO: maybe we should save it after each child run started.
+        stores.runs.save(newParent)
       }
-      // We finally save the parent run.
-      // TODO: maybe we should save it after each child run started.
-      storage.runs.save(newParent)
     }
   }
 }

@@ -18,13 +18,11 @@
 
 package fr.cnrs.liris.accio.storage.memory
 
-import fr.cnrs.liris.accio.storage.WorkflowRepositorySpec
+import com.twitter.inject.TwitterModule
+import fr.cnrs.liris.accio.storage.Storage
 
-/**
- * Unit tests of [[MemoryWorkflowRepository]].
- */
-class MemoryWorkflowRepositorySpec extends WorkflowRepositorySpec {
-  behavior of "MemoryWorkflowRepository"
-
-  override def createStorage = new MemoryStorage
+object MemoryStorageModule extends TwitterModule {
+  override def configure(): Unit = {
+    bind[Storage].to[MemoryStorage]
+  }
 }

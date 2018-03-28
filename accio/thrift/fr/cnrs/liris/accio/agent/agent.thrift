@@ -127,6 +127,7 @@ struct UpdateRunRequest {
 }
 
 struct UpdateRunResponse {
+  1: required api.Run run;
 }
 
 struct ListLogsRequest {

@@ -18,12 +18,13 @@
 
 package fr.cnrs.liris.accio.storage
 
+import fr.cnrs.liris.accio.api.ResultList
 import fr.cnrs.liris.accio.api.thrift._
 
 /**
  * Repository giving access to runs.
  */
-trait RunRepository {
+trait RunStore {
   /**
    * Search for runs matching a given query. Runs are returned ordered in inverse chronological
    * order, the most recent matching run being the first result. It does *not* include the result
@@ -31,7 +32,7 @@ trait RunRepository {
    *
    * @param query Query.
    */
-  def find(query: RunQuery): RunList
+  def list(query: RunQuery): ResultList[Run]
 
   /**
    * Retrieve a specific run, if it exists.
@@ -49,43 +50,29 @@ trait RunRepository {
   def get(cacheKey: CacheKey): Option[NodeStatus]
 }
 
-/**
- * Mutable run repository.
- *
- * Mutating methods are *not* required to be thread-safe in the sense they will be wrapped inside
- * transactions at the application-level. However, they should still take care not to leave data in
- * a corrupted state, which can be hard to recover from.
- */
-trait MutableRunRepository extends RunRepository {
-  /**
-   * Save a run. It will either create a new run or replace an existing one with the same identifier.
-   *
-   * @param run Run to save.
-   */
-  def save(run: Run): Unit
+object RunStore {
 
   /**
-   * Delete a run, if it exists. It does *not* remove child runs, it is up to client code to do this.
+   * Mutable run repository.
    *
-   * @param id Run identifier.
+   * Mutating methods are *not* required to be thread-safe in the sense they will be wrapped inside
+   * transactions at the application-level. However, they should still take care not to leave data in
+   * a corrupted state, which can be hard to recover from.
    */
-  def remove(id: RunId): Unit
+  trait Mutable extends RunStore {
+    /**
+     * Save a run. It will either create a new run or replace an existing one with the same identifier.
+     *
+     * @param run Run to save.
+     */
+    def save(run: Run): Unit
 
-  def transactional[T](id: Option[RunId])(fn: Option[Run] => T): T = id match {
-    case Some(i) => transactional(i)(fn)
-    case None => fn(None)
+    /**
+     * Delete a run, if it exists. It does *not* remove child runs, it is up to client code to do this.
+     *
+     * @param id Run identifier.
+     */
+    def remove(id: RunId): Unit
   }
 
-  def transactional[T](id: RunId)(fn: Option[Run] => T): T
-
-  final def foreach[T](id: RunId)(fn: Run => Unit): Unit = transactional(id)(_.foreach(fn))
 }
-
-
-/**
- * List of runs and total number of results.
- *
- * @param results    List of runs.
- * @param totalCount Total number of results.
- */
-case class RunList(results: Seq[Run], totalCount: Int)

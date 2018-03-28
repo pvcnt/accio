@@ -55,7 +55,7 @@ final class SchedulerService @Inject()(scheduler: Scheduler, opRegistry: OpRegis
     val opDef = opRegistry(node.op)
     val payload = createPayload(run, node, opDef)
     val now = System.currentTimeMillis()
-    val maybeResult = if (readCache) storage.runs.get(payload.cacheKey) else None
+    val maybeResult = if (readCache) storage.read(_.runs.get(payload.cacheKey)) else None
     maybeResult match {
       case Some(cachedNodeStatus) =>
         logger.debug(s"Cache hit. Run: ${run.id.value}, node: ${node.name}.")

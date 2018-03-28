@@ -18,10 +18,10 @@
 
 package fr.cnrs.liris.accio.storage.inject
 
-import com.google.inject.{Provider, Singleton}
+import com.google.inject.Module
 import com.twitter.inject.{Injector, TwitterModule}
 import fr.cnrs.liris.accio.storage.Storage
-import fr.cnrs.liris.accio.storage.memory.MemoryStorage
+import fr.cnrs.liris.accio.storage.memory.MemoryStorageModule
 
 /**
  * Guice module provisioning storage services.
@@ -29,12 +29,15 @@ import fr.cnrs.liris.accio.storage.memory.MemoryStorage
 object StorageModule extends TwitterModule {
   private[this] val typeFlag = flag("storage.type", "memory", "Storage type")
 
-  override def configure(): Unit = {
-    typeFlag() match {
-      case "memory" => bind[Storage].toProvider[MemoryStorageProvider]
-      case unknown => throw new IllegalArgumentException(s"Unknown storage type: $unknown")
+  override def modules: Seq[Module] = {
+    if (typeFlag.isDefined) {
+      typeFlag() match {
+        case "memory" => Seq(MemoryStorageModule)
+        case unknown => throw new IllegalArgumentException(s"Unknown storage type: $unknown")
+      }
+    } else {
+      Seq(MemoryStorageModule)
     }
-    bind[Storage].in[Singleton]
   }
 
   override def singletonStartup(injector: Injector): Unit = {
@@ -44,9 +47,4 @@ object StorageModule extends TwitterModule {
   override def singletonShutdown(injector: Injector): Unit = {
     injector.instance[Storage].shutDown()
   }
-
-  private class MemoryStorageProvider extends Provider[Storage] {
-    override def get(): Storage = new MemoryStorage
-  }
-
 }

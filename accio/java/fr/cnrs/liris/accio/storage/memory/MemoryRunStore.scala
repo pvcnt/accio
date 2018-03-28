@@ -20,19 +20,25 @@ package fr.cnrs.liris.accio.storage.memory
 
 import java.util.concurrent.ConcurrentHashMap
 
+import com.twitter.finagle.stats.StatsReceiver
+import fr.cnrs.liris.accio.api.ResultList
 import fr.cnrs.liris.accio.api.thrift._
-import fr.cnrs.liris.accio.storage.{MutableRunRepository, RunList, RunQuery}
-import fr.cnrs.liris.accio.util.Lockable
+import fr.cnrs.liris.accio.storage.{RunQuery, RunStore}
 
 import scala.collection.JavaConverters._
 
 /**
- * Run repository storing data in memory. It has no persistence mechanism. Intended for testing only.
+ * Run repository storing data in memory. Intended for testing only.
+ *
+ * @param statsReceiver Stats receiver.
  */
-private[memory] final class MemoryRunRepository extends MutableRunRepository with Lockable[String] {
-  private[this] val index = new ConcurrentHashMap[RunId, Run]().asScala
+private[memory] final class MemoryRunStore(statsReceiver: StatsReceiver)
+  extends RunStore.Mutable {
 
-  override def find(query: RunQuery): RunList = {
+  private[this] val index = new ConcurrentHashMap[RunId, Run]().asScala
+  statsReceiver.provideGauge("storage", "memory", "run", "size")(index.size)
+
+  override def list(query: RunQuery): ResultList[Run] = {
     var results = index.values
       .filter(query.matches)
       .toSeq
@@ -45,22 +51,14 @@ private[memory] final class MemoryRunRepository extends MutableRunRepository wit
     // Remove the result of each node, that we do not want to return.
     results = results.map(run => run.copy(state = run.state.copy(nodes = run.state.nodes.map(_.unsetResult))))
 
-    RunList(results, totalCount)
+    ResultList(results, totalCount)
   }
 
   override def get(id: RunId): Option[Run] = index.get(id)
 
   override def get(cacheKey: CacheKey): Option[NodeStatus] = None
 
-  override def save(run: Run): Unit = locked(run.id.value) {
-    index(run.id) = run
-  }
+  override def save(run: Run): Unit = index(run.id) = run
 
-  override def remove(id: RunId): Unit = locked(id.value) {
-    index.remove(id)
-  }
-
-  override def transactional[T](id: RunId)(fn: Option[Run] => T): T = locked(id.value) {
-    fn(get(id))
-  }
+  override def remove(id: RunId): Unit = index.remove(id)
 }
