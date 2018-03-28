@@ -16,26 +16,12 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.storage
+package fr.cnrs.liris.accio.storage.mysql
 
-import com.google.common.util.concurrent.Service
-import fr.cnrs.liris.testing.UnitSpec
-import org.scalatest.BeforeAndAfterEach
+import fr.cnrs.liris.accio.storage.{MutableRunRepository, MutableWorkflowRepository, Storage}
 
-private[storage] abstract class RepositorySpec[T <: Service] extends UnitSpec with BeforeAndAfterEach {
-  protected def createRepository: T
+final class MysqlStorage extends Storage {
+  override def runs: MutableRunRepository = ???
 
-  protected[this] var repo: T = null.asInstanceOf[T]
-
-  override protected def beforeEach(): Unit = {
-    super.beforeEach()
-    repo = createRepository
-    repo.startAsync().awaitRunning()
-  }
-
-  override protected def afterEach(): Unit = {
-    super.afterEach()
-    repo.stopAsync().awaitTerminated()
-    repo = null.asInstanceOf[T]
-  }
+  override def workflows: MutableWorkflowRepository = ???
 }

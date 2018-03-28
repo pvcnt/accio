@@ -18,31 +18,18 @@
 
 package fr.cnrs.liris.accio.storage
 
-import com.google.common.util.concurrent.{AbstractIdleService, Service, ServiceManager}
-import scala.collection.JavaConverters._
-
 /**
- * A storage service is an interface to access repositories. Repositories should never be accessed directly (e.g.,
- * they should not be available through Guice injection), but instead used through their storage. It gives a higher
- * level control over repositories, notably including support for transactions.
+ * A storage service is an interface to access repositories. Repositories should never be accessed
+ * directly (e.g., they should not be available through Guice injection), but instead used through
+ * their storage. It gives a higher level control over repositories, notably including support for
+ * transactions.
  */
-trait Storage extends Service {
+trait Storage {
   def runs: MutableRunRepository
 
   def workflows: MutableWorkflowRepository
-}
 
-/**
- * Base class for storage.
- */
-private[storage] trait AbstractStorage extends AbstractIdleService with Storage {
-  private[this] val serviceManager = new ServiceManager(Set(runs, workflows).asJava)
+  def startUp(): Unit = {}
 
-  override protected def shutDown(): Unit = {
-    serviceManager.stopAsync().awaitStopped()
-  }
-
-  override protected def startUp(): Unit = {
-    serviceManager.startAsync().awaitHealthy()
-  }
+  def shutDown(): Unit = {}
 }

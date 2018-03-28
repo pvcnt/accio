@@ -20,10 +20,7 @@ package fr.cnrs.liris.accio.storage.memory
 
 import java.util.concurrent.ConcurrentHashMap
 
-import com.google.common.annotations.VisibleForTesting
-import com.google.common.util.concurrent.AbstractIdleService
-import com.google.inject.Singleton
-import fr.cnrs.liris.accio.api.thrift.{Run, RunId, Workflow, WorkflowId}
+import fr.cnrs.liris.accio.api.thrift.{Workflow, WorkflowId}
 import fr.cnrs.liris.accio.storage.{MutableWorkflowRepository, WorkflowList, WorkflowQuery}
 import fr.cnrs.liris.accio.util.Lockable
 
@@ -33,10 +30,7 @@ import scala.collection.mutable
 /**
  * Run repository storing data in memory. It has no persistence mechanism. Intended for testing only.
  */
-@Singleton
-private[memory] final class MemoryWorkflowRepository
-  extends AbstractIdleService with MutableWorkflowRepository with Lockable[String] {
-
+private[memory] final class MemoryWorkflowRepository extends MutableWorkflowRepository with Lockable[String] {
   private[this] val index = new ConcurrentHashMap[WorkflowId, mutable.Map[String, Workflow]]().asScala
 
   override def find(query: WorkflowQuery): WorkflowList = {
@@ -77,8 +71,4 @@ private[memory] final class MemoryWorkflowRepository
   override def transactional[T](id: WorkflowId)(fn: Option[Workflow] => T): T = locked(id.value) {
     fn(get(id))
   }
-
-  override protected def shutDown(): Unit = {}
-
-  override protected def startUp(): Unit = {}
 }

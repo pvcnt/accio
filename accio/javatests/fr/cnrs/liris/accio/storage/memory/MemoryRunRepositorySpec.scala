@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.storage.memory
 
-import fr.cnrs.liris.accio.storage.{MutableRunRepository, RunRepositorySpec}
+import fr.cnrs.liris.accio.storage.RunRepositorySpec
 
 /**
  * Unit tests of [[MemoryRunRepository]].
@@ -26,5 +26,5 @@ import fr.cnrs.liris.accio.storage.{MutableRunRepository, RunRepositorySpec}
 class MemoryRunRepositorySpec extends RunRepositorySpec {
   behavior of "MemoryRunRepository"
 
-  override protected def createRepository: MutableRunRepository = new MemoryRunRepository
+  override def createStorage = new MemoryStorage
 }

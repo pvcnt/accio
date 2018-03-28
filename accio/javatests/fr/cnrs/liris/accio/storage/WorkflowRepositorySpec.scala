@@ -20,12 +20,15 @@ package fr.cnrs.liris.accio.storage
 
 import fr.cnrs.liris.accio.api.thrift.{AtomicType, DataType}
 import fr.cnrs.liris.accio.api.{Values, thrift}
+import fr.cnrs.liris.testing.UnitSpec
+import org.scalatest.BeforeAndAfterEach
 
 /**
- * Common unit tests for all [[MutableWorkflowRepository]] implementations, ensuring they all have consistent behavior.
+ * Common unit tests for all [[MutableWorkflowRepository]] implementations, ensuring they all have
+ * consistent behavior.
  */
-private[storage] abstract class WorkflowRepositorySpec extends RepositorySpec[MutableWorkflowRepository] {
-  private[this] val workflow1 = thrift.Workflow(
+private[storage] abstract class WorkflowRepositorySpec extends UnitSpec with BeforeAndAfterEach {
+  private val workflow1 = thrift.Workflow(
     id = thrift.WorkflowId("workflow1"),
     version = Some("v1"),
     owner = Some(thrift.User("me")),
@@ -44,7 +47,7 @@ private[storage] abstract class WorkflowRepositorySpec extends RepositorySpec[Mu
           "data" -> thrift.Input.Reference(thrift.Reference("FirstSimple", "data")))))),
     name = Some("my workflow"))
 
-  private[this] val workflow2 = thrift.Workflow(
+  private val workflow2 = thrift.Workflow(
     id = thrift.WorkflowId("workflow2"),
     version = Some("v1"),
     owner = Some(thrift.User("me")),
@@ -63,18 +66,32 @@ private[storage] abstract class WorkflowRepositorySpec extends RepositorySpec[Mu
           "dbl" -> thrift.Input.Param("bar"),
           "data" -> thrift.Input.Reference(thrift.Reference("FirstSimple", "data")))))))
 
-  protected def refreshBeforeSearch(): Unit = {}
+  protected def createStorage: Storage
+
+  protected var storage: Storage = _
+  protected var repo: MutableWorkflowRepository = _
+
+  override def beforeEach(): Unit = {
+    storage = createStorage
+    storage.startUp()
+    repo = storage.workflows
+    super.beforeEach()
+  }
+
+  override def afterEach(): Unit = {
+    super.afterEach()
+    repo = null
+    storage.shutDown()
+  }
 
   it should "save and retrieve workflows" in {
     repo.get(workflow1.id) shouldBe None
     repo.get(workflow2.id) shouldBe None
 
     repo.save(workflow1)
-    refreshBeforeSearch()
     repo.get(workflow1.id) shouldBe Some(workflow1)
 
     repo.save(workflow2)
-    refreshBeforeSearch()
     repo.get(workflow2.id) shouldBe Some(workflow2)
   }
 
@@ -87,7 +104,6 @@ private[storage] abstract class WorkflowRepositorySpec extends RepositorySpec[Mu
       workflow1.copy(id = thrift.WorkflowId("other_workflow"), createdAt = Some(System.currentTimeMillis() + 20)),
       workflow1.copy(id = thrift.WorkflowId("another_workflow"), createdAt = Some(System.currentTimeMillis() + 30), owner = Some(thrift.User("him"))))
     workflows.foreach(repo.save)
-    refreshBeforeSearch()
 
     var res = repo.find(WorkflowQuery(owner = Some("me")))
     res.totalCount shouldBe 3
@@ -108,7 +124,6 @@ private[storage] abstract class WorkflowRepositorySpec extends RepositorySpec[Mu
       workflow1.copy(version = Some("v2")),
       workflow2)
     workflows.foreach(repo.save)
-    refreshBeforeSearch()
 
     repo.get(workflow1.id, "v1") shouldBe Some(workflows(0).copy(isActive = false))
     repo.get(workflow1.id, "v2") shouldBe Some(workflows(1))

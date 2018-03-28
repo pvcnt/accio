@@ -15,12 +15,12 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_library(
-  name = "memory",
+  name = "mysql",
   srcs = glob(["*.scala"]),
   deps = [
     "//accio/thrift/fr/cnrs/liris/accio/api",
     "//accio/java/fr/cnrs/liris/accio/storage",
-    "//accio/java/fr/cnrs/liris/accio/util",
+    "//3rdparty/jvm/com/twitter:finagle_mysql",
   ],
   visibility = ["//visibility:public"],
 )

@@ -18,22 +18,13 @@
 
 package fr.cnrs.liris.accio.storage.memory
 
-import com.google.inject.{Inject, Singleton}
-import fr.cnrs.liris.accio.storage.{AbstractStorage, Storage}
+import fr.cnrs.liris.accio.storage._
 
 /**
- * Storage giving access in-memory repositories.
- *
- * @param runs      In-memory run repository.
- * @param workflows In-memory workflow repository.
+ * In-memory storage.
  */
-@Singleton
-private[storage] final class MemoryStorage @Inject()(
-  override val runs: MemoryRunRepository,
-  override val workflows: MemoryWorkflowRepository)
-  extends AbstractStorage
+final class MemoryStorage extends Storage {
+  override val workflows: MutableWorkflowRepository = new MemoryWorkflowRepository
 
-object MemoryStorage {
-  // Mainly present for testing purposes.
-  def create: Storage = new MemoryStorage(new MemoryRunRepository, new MemoryWorkflowRepository)
+  override val runs: MutableRunRepository = new MemoryRunRepository
 }

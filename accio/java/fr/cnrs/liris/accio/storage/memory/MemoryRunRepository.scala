@@ -20,9 +20,6 @@ package fr.cnrs.liris.accio.storage.memory
 
 import java.util.concurrent.ConcurrentHashMap
 
-import com.google.common.annotations.VisibleForTesting
-import com.google.common.util.concurrent.AbstractIdleService
-import com.google.inject.Singleton
 import fr.cnrs.liris.accio.api.thrift._
 import fr.cnrs.liris.accio.storage.{MutableRunRepository, RunList, RunQuery}
 import fr.cnrs.liris.accio.util.Lockable
@@ -32,8 +29,7 @@ import scala.collection.JavaConverters._
 /**
  * Run repository storing data in memory. It has no persistence mechanism. Intended for testing only.
  */
-@Singleton
-private[memory] final class MemoryRunRepository extends AbstractIdleService with MutableRunRepository with Lockable[String] {
+private[memory] final class MemoryRunRepository extends MutableRunRepository with Lockable[String] {
   private[this] val index = new ConcurrentHashMap[RunId, Run]().asScala
 
   override def find(query: RunQuery): RunList = {
@@ -67,8 +63,4 @@ private[memory] final class MemoryRunRepository extends AbstractIdleService with
   override def transactional[T](id: RunId)(fn: Option[Run] => T): T = locked(id.value) {
     fn(get(id))
   }
-
-  override protected def shutDown(): Unit = {}
-
-  override protected def startUp(): Unit = {}
 }

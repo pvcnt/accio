@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.storage.memory
 
-import fr.cnrs.liris.accio.storage.{MutableWorkflowRepository, WorkflowRepositorySpec}
+import fr.cnrs.liris.accio.storage.WorkflowRepositorySpec
 
 /**
  * Unit tests of [[MemoryWorkflowRepository]].
@@ -26,5 +26,5 @@ import fr.cnrs.liris.accio.storage.{MutableWorkflowRepository, WorkflowRepositor
 class MemoryWorkflowRepositorySpec extends WorkflowRepositorySpec {
   behavior of "MemoryWorkflowRepository"
 
-  override protected def createRepository: MutableWorkflowRepository = new MemoryWorkflowRepository
+  override def createStorage = new MemoryStorage
 }

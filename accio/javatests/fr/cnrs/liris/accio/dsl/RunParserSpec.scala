@@ -49,7 +49,7 @@ class RunParserSpec extends UnitSpec {
 
   private[this] val parser = {
     val mapper = new ObjectMapperFactory().create()
-    val storage = MemoryStorage.create
+    val storage = new MemoryStorage
     storage.workflows.save(myWorkflow)
     new RunParser(mapper, storage, new RunFactory(storage))
   }

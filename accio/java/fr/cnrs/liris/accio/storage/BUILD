@@ -15,11 +15,10 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_library(
-  name = 'storage',
+  name = "storage",
   srcs = glob(["*.scala"]),
   deps = [
-    '//accio/thrift/fr/cnrs/liris/accio/api',
-    '//3rdparty/jvm/com/google/guava',
+    "//accio/thrift/fr/cnrs/liris/accio/api",
   ],
   visibility = ["//visibility:public"],
 )

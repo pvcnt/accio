@@ -22,13 +22,15 @@ import java.util.UUID
 
 import fr.cnrs.liris.accio.api.Values
 import fr.cnrs.liris.accio.api.thrift._
+import fr.cnrs.liris.testing.UnitSpec
+import org.scalatest.BeforeAndAfterEach
 
 import scala.collection.Map
 
 /**
  * Common unit tests for all [[MutableRunRepository]] implementations, ensuring they all have consistent behavior.
  */
-private[storage] abstract class RunRepositorySpec extends RepositorySpec[MutableRunRepository] {
+private[storage] abstract class RunRepositorySpec extends UnitSpec with BeforeAndAfterEach {
   protected val foobarRun = Run(
     id = RunId("foobar"),
     pkg = Package(WorkflowId("my_workflow"), "v1"),
@@ -95,35 +97,46 @@ private[storage] abstract class RunRepositorySpec extends RepositorySpec[Mutable
     Set(Artifact("myint", Values.encodeInteger(44)), Artifact("mystr", Values.encodeString("str"))),
     Set(Metric("a", 3), Metric("b", 4))))
 
-  protected def refreshBeforeSearch(): Unit = {}
+  protected def createStorage: Storage
+
+  protected var storage: Storage = _
+  protected var repo: MutableRunRepository = _
+
+  override def beforeEach(): Unit = {
+    storage = createStorage
+    storage.startUp()
+    repo = storage.runs
+    super.beforeEach()
+  }
+
+  override def afterEach(): Unit = {
+    super.afterEach()
+    repo = null
+    storage.shutDown()
+  }
 
   it should "save and retrieve runs" in {
     repo.get(foobarRun.id) shouldBe None
     repo.get(fooRun.id) shouldBe None
 
     repo.save(foobarRun)
-    refreshBeforeSearch()
     repo.get(foobarRun.id) shouldBe Some(foobarRun)
 
     repo.save(fooRun)
-    refreshBeforeSearch()
     repo.get(fooRun.id) shouldBe Some(fooRun)
   }
 
   it should "delete runs" in {
     repo.save(foobarRun)
     repo.save(fooRun)
-    refreshBeforeSearch()
 
     repo.remove(foobarRun.id)
-    refreshBeforeSearch()
     repo.get(fooRun.id) shouldBe Some(fooRun)
     repo.get(foobarRun.id) shouldBe None
   }
 
   it should "search for runs by owner" in {
     runs.foreach(repo.save)
-    refreshBeforeSearch()
 
     var res = repo.find(RunQuery(owner = Some("me")))
     res.totalCount shouldBe 3
@@ -144,7 +157,6 @@ private[storage] abstract class RunRepositorySpec extends RepositorySpec[Mutable
 
   it should "search for runs by workflow" in {
     runs.foreach(repo.save)
-    refreshBeforeSearch()
 
     val res = repo.find(RunQuery(workflow = Some(WorkflowId("other_workflow"))))
     res.totalCount shouldBe 1
@@ -154,7 +166,6 @@ private[storage] abstract class RunRepositorySpec extends RepositorySpec[Mutable
 
   it should "search for runs by status" in {
     runs.foreach(repo.save)
-    refreshBeforeSearch()
 
     val res = repo.find(RunQuery(status = Set(TaskState.Running)))
     res.totalCount shouldBe 2
@@ -164,7 +175,6 @@ private[storage] abstract class RunRepositorySpec extends RepositorySpec[Mutable
 
   it should "search for runs by tags" in {
     runs.foreach(repo.save)
-    refreshBeforeSearch()
 
     var res = repo.find(RunQuery(tags = Set("foo", "bar")))
     res.totalCount shouldBe 2
@@ -195,7 +205,6 @@ private[storage] trait RunRepositorySpecWithMemoization extends RunRepositorySpe
   it should "memoize artifacts" in {
     repo.save(foobarRunWithNodes)
     repo.save(fooRunWithNodes)
-    refreshBeforeSearch()
 
     repo.get(CacheKey("MyFooCacheKey")) shouldBe Some(foobarResults("FooNode"))
     repo.get(CacheKey("MyBarCacheKey")) shouldBe Some(foobarResults("BarNode"))

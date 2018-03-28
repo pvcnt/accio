@@ -18,28 +18,35 @@
 
 package fr.cnrs.liris.accio.storage.inject
 
+import com.google.inject.{Provider, Singleton}
 import com.twitter.inject.{Injector, TwitterModule}
 import fr.cnrs.liris.accio.storage.Storage
 import fr.cnrs.liris.accio.storage.memory.MemoryStorage
 
 /**
- * Guice module provisioning storage-related services.
+ * Guice module provisioning storage services.
  */
 object StorageModule extends TwitterModule {
   private[this] val typeFlag = flag("storage.type", "memory", "Storage type")
 
   override def configure(): Unit = {
     typeFlag() match {
-      case "memory" => bind[Storage].to[MemoryStorage]
+      case "memory" => bind[Storage].toProvider[MemoryStorageProvider]
       case unknown => throw new IllegalArgumentException(s"Unknown storage type: $unknown")
     }
+    bind[Storage].in[Singleton]
   }
 
   override def singletonStartup(injector: Injector): Unit = {
-    injector.instance[Storage].startAsync().awaitRunning()
+    injector.instance[Storage].startUp()
   }
 
   override def singletonShutdown(injector: Injector): Unit = {
-    injector.instance[Storage].stopAsync().awaitTerminated()
+    injector.instance[Storage].shutDown()
   }
+
+  private class MemoryStorageProvider extends Provider[Storage] {
+    override def get(): Storage = new MemoryStorage
+  }
+
 }
