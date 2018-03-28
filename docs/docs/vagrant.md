@@ -4,14 +4,14 @@ title: Local environment with Vagrant
 ---
 
 This page will get you started with a local Accio cluster running inside a virtual machine.
-Just after, you will be able to quickly test your first commands.
-It has the advantage to be cross-platform, as everything happens inside a virtual machine.
+After following these instructions, you will be able to quickly test your first commands.
+It has the advantage of being cross-platform, as everything happens inside a virtual machine.
 While this setup is great to quickly test main Accio features, it is not intended for production usage.
 
 ## 1. Spin up a cluster
 First, you need to install [Virtualbox](https://www.virtualbox.org/) and [Vagrant](https://www.vagrantup.com/) on your computer.
 Vagrant is a very helpful tool to create portable and reproducible environments.
-We configure it to use Virtualbox to manage virtual machines.
+We configured it to use Virtualbox to manage virtual machines.
 Both are available on Linux, Mac OS and Windows.
 If Vagrant was already installed on your system, make sure to update the box to its latest version:
 
@@ -30,15 +30,15 @@ vagrant up
 ```
 
 The first launch may take some time, as Vagrant has to download a base OS image and provision it.
-In includes downloading all needed dependencies, building various Accio components from source and finally starting them.
-Once the machine has booted, you may be able to access to following web interfaces:
+All of the needed dependencies are downloaded, and various Accio components are built from source and then started.
+Once the machine boots, you will be able to access the following web interfaces:
 
   * Gateway: [http://192.168.50.4](http://192.168.50.4)
   * Gateway admin: [http://192.168.50.4:8880](http://192.168.50.4:8880)
   * Agent admin: [http://192.168.50.4:9990](http://192.168.50.4:9990)
 
 When using Vagrant, you may notice a warning about guest additions not being installed.
-This is not critical, but if you want to get a rid of this error, you can install a plugin that will take care of this:
+This warning is not critical, but if you want to get a rid of this error, you can install a plugin that will take care of this:
 
 ```bash
 vagrant plugin install vagrant-vbguest
