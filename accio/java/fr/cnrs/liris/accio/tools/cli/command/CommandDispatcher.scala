@@ -23,7 +23,7 @@ import java.io.PrintStream
 import ch.qos.logback.classic.{Level, Logger}
 import com.google.common.io.Flushables
 import com.google.inject.{Inject, Injector}
-import com.twitter.inject.Logging
+import com.twitter.util.logging.Logging
 import com.twitter.util.Duration
 import fr.cnrs.liris.accio.tools.cli.event.{Event, EventHandler, Reporter}
 import fr.cnrs.liris.common.flags.{Flag, FlagsParser, FlagsParsingException, Priority}

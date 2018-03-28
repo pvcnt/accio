@@ -2,7 +2,7 @@
 
 package fr.cnrs.liris.accio.tools.cli.event
 
-import com.twitter.inject.Logging
+import com.twitter.util.logging.Logging
 import fr.cnrs.liris.common.io.OutErr
 
 final class Reporter(handlers: Seq[EventHandler], outputFilter: OutputFilter = OutputFilter.Everything)

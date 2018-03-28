@@ -19,7 +19,7 @@
 package fr.cnrs.liris.accio.service
 
 import com.google.inject.{Inject, Singleton}
-import com.twitter.inject.Logging
+import com.twitter.util.logging.Logging
 import fr.cnrs.liris.accio.api
 import fr.cnrs.liris.accio.api.Utils
 import fr.cnrs.liris.accio.api.thrift._

@@ -20,7 +20,7 @@ scala_library(
   deps = [
     '//accio/java/fr/cnrs/liris/common/random',
     '//accio/java/fr/cnrs/liris/common/util',
-    '//3rdparty/jvm/com/twitter:inject_slf4j',
+    '//3rdparty/jvm/com/twitter:util_slf4j_api',
     '//3rdparty/jvm/com/google/guava',
     '//3rdparty/jvm/org/scalanlp:breeze',
   ],

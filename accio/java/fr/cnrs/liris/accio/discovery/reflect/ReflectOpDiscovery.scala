@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.discovery.reflect
 import java.io.IOException
 
 import com.twitter.util.StorageUnit
-import com.twitter.inject.Logging
+import com.twitter.util.logging.Logging
 import fr.cnrs.liris.accio.api.{Utils, Values}
 import fr.cnrs.liris.accio.api.thrift._
 import fr.cnrs.liris.accio.discovery.{InvalidOpDefException, OpMeta, OpDiscovery}

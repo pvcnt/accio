@@ -26,7 +26,7 @@ scala_library(
     '//accio/java/fr/cnrs/liris/common/io',
     '//3rdparty/jvm/org/ocpsoft/prettytime',
     '//3rdparty/jvm/com/github/nscala_time',
-    '//3rdparty/jvm/com/twitter:inject_slf4j',
+    '//3rdparty/jvm/com/twitter:util_slf4j_api',
     '//3rdparty/jvm/com/google/guava',
   ],
   visibility = ["//visibility:public"],

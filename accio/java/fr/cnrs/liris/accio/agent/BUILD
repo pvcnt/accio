@@ -34,7 +34,7 @@ scala_binary(
     "//accio/thrift/fr/cnrs/liris/accio/agent",
     "//accio/thrift/fr/cnrs/liris/accio/api",
     "//3rdparty/jvm/com/twitter:inject_core",
-    "//3rdparty/jvm/com/twitter:inject_slf4j",
+    "//3rdparty/jvm/com/twitter:util_slf4j_api",
     "//3rdparty/jvm/com/twitter:inject_server",
     "//3rdparty/jvm/com/twitter:inject_modules",
     "//3rdparty/jvm/com/twitter:finagle_thrift",

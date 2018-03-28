@@ -19,7 +19,7 @@
 package fr.cnrs.liris.locapriv.sparkle
 
 import com.google.common.base.MoreObjects
-import com.twitter.inject.Logging
+import com.twitter.util.logging.Logging
 import fr.cnrs.liris.common.random._
 import fr.cnrs.liris.common.util.Identified
 

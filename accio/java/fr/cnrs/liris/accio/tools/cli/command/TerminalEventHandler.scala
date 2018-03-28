@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.tools.cli.command
 import java.io.{IOException, OutputStream, PrintStream}
 
 import com.twitter.util.Duration
-import com.twitter.inject.Logging
+import com.twitter.util.logging.Logging
 import fr.cnrs.liris.accio.tools.cli.event.{Event, EventHandler, EventKind}
 import fr.cnrs.liris.common.flags.Flag
 import fr.cnrs.liris.common.io.OutErr

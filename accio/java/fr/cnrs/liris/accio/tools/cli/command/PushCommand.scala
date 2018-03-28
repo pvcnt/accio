@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.tools.cli.command
 import java.nio.file.Files
 
 import com.google.inject.Inject
-import com.twitter.inject.Logging
+import com.twitter.util.logging.Logging
 import fr.cnrs.liris.accio.agent.{AgentService$FinagleClient, ParseWorkflowRequest, PushWorkflowRequest}
 import fr.cnrs.liris.accio.api.Utils
 import fr.cnrs.liris.accio.api.thrift.Workflow

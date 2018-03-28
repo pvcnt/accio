@@ -92,7 +92,7 @@ def list_dependencies():
     {"artifact": "com.twitter:util-logging_2.11:18.3.0", "lang": "java", "sha1": "1862b9c6836be72ebfb27b9772714c663a7d4f0a", "repository": "http://central.maven.org/maven2/", "name": "com_twitter_util_logging_2_11", "actual": "@com_twitter_util_logging_2_11//jar", "bind": "jar/com/twitter/util_logging_2_11"},
     {"artifact": "com.twitter:util-registry_2.11:18.3.0", "lang": "java", "sha1": "d9d0c83f4a964f45f806dd79ec69a91a43221e26", "repository": "http://central.maven.org/maven2/", "name": "com_twitter_util_registry_2_11", "actual": "@com_twitter_util_registry_2_11//jar", "bind": "jar/com/twitter/util_registry_2_11"},
     {"artifact": "com.twitter:util-security_2.11:18.3.0", "lang": "java", "sha1": "8c3f093b9ce92f9a1bc866102d42c3d0e6e3ab05", "repository": "http://central.maven.org/maven2/", "name": "com_twitter_util_security_2_11", "actual": "@com_twitter_util_security_2_11//jar", "bind": "jar/com/twitter/util_security_2_11"},
-    {"artifact": "com.twitter:util-slf4j-api_2.11:18.3.0", "lang": "java", "sha1": "f4f0f7c46142f1b8fc066f78f5e76a027e7d246d", "repository": "http://central.maven.org/maven2/", "name": "com_twitter_util_slf4j_api_2_11", "actual": "@com_twitter_util_slf4j_api_2_11//jar", "bind": "jar/com/twitter/util_slf4j_api_2_11"},
+    {"artifact": "com.twitter:util-slf4j-api_2.11:18.3.0", "lang": "scala", "sha1": "f4f0f7c46142f1b8fc066f78f5e76a027e7d246d", "repository": "http://central.maven.org/maven2/", "name": "com_twitter_util_slf4j_api_2_11", "actual": "@com_twitter_util_slf4j_api_2_11//jar:file", "bind": "jar/com/twitter/util_slf4j_api_2_11"},
     {"artifact": "com.twitter:util-slf4j-jul-bridge_2.11:18.3.0", "lang": "scala", "sha1": "0190501aca94dbfe7d874d14703736971228ea89", "repository": "http://central.maven.org/maven2/", "name": "com_twitter_util_slf4j_jul_bridge_2_11", "actual": "@com_twitter_util_slf4j_jul_bridge_2_11//jar:file", "bind": "jar/com/twitter/util_slf4j_jul_bridge_2_11"},
     {"artifact": "com.twitter:util-stats_2.11:18.3.0", "lang": "scala", "sha1": "78475e0cdc5416c6bcdb1c28f90370ce23fb3fdc", "repository": "http://central.maven.org/maven2/", "name": "com_twitter_util_stats_2_11", "actual": "@com_twitter_util_stats_2_11//jar:file", "bind": "jar/com/twitter/util_stats_2_11"},
     {"artifact": "com.twitter:util-tunable_2.11:18.3.0", "lang": "java", "sha1": "419cfe097b9846b7a715e01c6902f7c814dc8ccb", "repository": "http://central.maven.org/maven2/", "name": "com_twitter_util_tunable_2_11", "actual": "@com_twitter_util_tunable_2_11//jar", "bind": "jar/com/twitter/util_tunable_2_11"},
@@ -164,13 +164,13 @@ def list_dependencies():
 # - com.twitter:inject-core_2.11:18.3.0 wanted version 2.11.11
 # - com.twitter:inject-modules_2.11:18.3.0 wanted version 2.11.11
 # - com.twitter:inject-server_2.11:18.3.0 wanted version 2.11.11
-# - com.twitter:inject-slf4j_2.11:18.3.0 wanted version 2.11.11
 # - com.twitter:scrooge-core_2.11:18.3.0 wanted version 2.11.11
 # - com.twitter:scrooge-generator_2.11:18.3.0 wanted version 2.11.11
 # - com.twitter:util-app_2.11:18.3.0 wanted version 2.11.11
 # - com.twitter:util-codec_2.11:18.3.0 wanted version 2.11.11
 # - com.twitter:util-core_2.11:18.3.0 wanted version 2.11.11
 # - com.twitter:util-jvm_2.11:18.3.0 wanted version 2.11.11
+# - com.twitter:util-slf4j-api_2.11:18.3.0 wanted version 2.11.11
 # - com.twitter:util-slf4j-jul-bridge_2.11:18.3.0 wanted version 2.11.11
 # - com.twitter:util-stats_2.11:18.3.0 wanted version 2.11.11
 # - org.scala-lang:scala-compiler:2.11.12 wanted version 2.11.12
@@ -192,6 +192,7 @@ def list_dependencies():
 # - ch.qos.logback:logback-classic:1.2.3 wanted version 1.7.25
 # - com.twitter:inject-slf4j_2.11:18.3.0 wanted version 1.7.21
 # - com.twitter:libthrift:0.5.0-7 wanted version 1.7.7
+# - com.twitter:util-slf4j-api_2.11:18.3.0 wanted version 1.7.21
 # - com.twitter:util-slf4j-jul-bridge_2.11:18.3.0 wanted version 1.7.21
 # - org.scalanlp:breeze_2.11:0.12 wanted version 1.7.5
     {"artifact": "org.slf4j:slf4j-api:1.7.25", "lang": "java", "sha1": "da76ca59f6a57ee3102f8f9bd9cee742973efa8a", "repository": "http://central.maven.org/maven2/", "name": "org_slf4j_slf4j_api", "actual": "@org_slf4j_slf4j_api//jar", "bind": "jar/org/slf4j/slf4j_api"},

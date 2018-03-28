@@ -19,7 +19,7 @@ scala_library(
   srcs = glob(["*.scala"]),
   deps = [
     '//3rdparty/jvm/com/twitter:util_core',
-    '//3rdparty/jvm/com/twitter:inject_slf4j',
+    '//3rdparty/jvm/com/twitter:util_slf4j_api',
   ],
   visibility = ["//visibility:public"],
 )

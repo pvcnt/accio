@@ -23,7 +23,7 @@ import java.util.UUID
 import com.google.common.base.Charsets
 import com.google.common.hash.Hashing
 import com.google.inject.Inject
-import com.twitter.inject.Logging
+import com.twitter.util.logging.Logging
 import fr.cnrs.liris.accio.api
 import fr.cnrs.liris.accio.api.Input
 import fr.cnrs.liris.accio.api.thrift._

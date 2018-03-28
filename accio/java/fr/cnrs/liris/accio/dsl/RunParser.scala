@@ -22,7 +22,7 @@ import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.JsonMappingException
 import com.twitter.finatra.json.FinatraObjectMapper
 import com.twitter.finatra.validation.Min
-import com.twitter.inject.Logging
+import com.twitter.util.logging.Logging
 import fr.cnrs.liris.accio.api.{DataTypes, Values}
 import fr.cnrs.liris.accio.api.thrift._
 import fr.cnrs.liris.accio.service.{BaseFactory, RunFactory}

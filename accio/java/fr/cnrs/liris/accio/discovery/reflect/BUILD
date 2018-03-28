@@ -25,7 +25,7 @@ scala_library(
     '//accio/java/fr/cnrs/liris/common/reflect',
     '//accio/java/fr/cnrs/liris/common/util',
     '//3rdparty/jvm/com/twitter:inject_core',
-    '//3rdparty/jvm/com/twitter:inject_slf4j',
+    '//3rdparty/jvm/com/twitter:util_slf4j_api',
     '//3rdparty/jvm/io/github/lukehutch:fast_classpath_scanner',
   ],
   exports = [

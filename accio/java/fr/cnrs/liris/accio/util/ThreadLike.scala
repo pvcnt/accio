@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.util
 import java.util.concurrent.atomic.AtomicBoolean
 
 import com.twitter.util.Duration
-import com.twitter.inject.Logging
+import com.twitter.util.logging.Logging
 
 trait ThreadLike[T] {
   def run(): T

@@ -47,11 +47,11 @@ dependencies:
     inject:
       version: "18.3.0"
       lang: scala
-      modules: [core, app, modules, server, slf4j]
+      modules: [core, app, modules, server]
     util:
       version: "18.3.0"
       lang: scala
-      modules: [app, core, jvm, codec, stats, slf4j-jul-bridge]
+      modules: [app, core, jvm, codec, stats, slf4j-api, slf4j-jul-bridge]
   ch.qos.logback:
     logback-classic:
       version: "1.2.3"

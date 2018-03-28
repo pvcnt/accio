@@ -17,7 +17,7 @@ package fr.cnrs.liris.accio.tools.cli.command
 import java.io.IOException
 
 import com.google.common.base.Splitter
-import com.twitter.inject.Logging
+import com.twitter.util.logging.Logging
 import fr.cnrs.liris.accio.tools.cli.event.{Event, EventKind}
 import fr.cnrs.liris.common.io._
 

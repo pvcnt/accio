@@ -27,6 +27,6 @@ scala_test(
     "//accio/java/fr/cnrs/liris/common/geo",
     "//accio/javatests/fr/cnrs/liris/testing",
     "//3rdparty/jvm/com/github/nscala_time",
-    "//3rdparty/jvm/com/twitter:inject_slf4j",
+    "//3rdparty/jvm/com/twitter:util_slf4j_api",
   ],
 )

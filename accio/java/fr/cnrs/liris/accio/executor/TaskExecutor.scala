@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.executor
 import java.io.FileOutputStream
 import java.nio.file.{Files, Path}
 
-import com.twitter.inject.Logging
+import com.twitter.util.logging.Logging
 import fr.cnrs.liris.accio.api.Errors
 import fr.cnrs.liris.accio.api.thrift.{OpResult, Task}
 import fr.cnrs.liris.accio.service.{OpExecutor, OpExecutorOpts}

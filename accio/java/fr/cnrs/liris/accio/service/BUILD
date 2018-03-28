@@ -27,7 +27,7 @@ scala_library(
     '//accio/java/fr/cnrs/liris/common/cache',
     '//accio/java/fr/cnrs/liris/common/util',
     '//3rdparty/jvm/com/twitter:inject_core',
-    '//3rdparty/jvm/com/twitter:inject_slf4j',
+    '//3rdparty/jvm/com/twitter:util_slf4j_api',
   ],
   visibility = ["//visibility:public"],
 )

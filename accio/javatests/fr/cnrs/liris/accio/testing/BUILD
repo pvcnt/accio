@@ -23,7 +23,7 @@ scala_library(
     '//accio/thrift/fr/cnrs/liris/accio/api',
     '//accio/javatests/fr/cnrs/liris/testing',
     '//accio/java/fr/cnrs/liris/common/util',
-    '//3rdparty/jvm/com/twitter:inject_slf4j',
+    '//3rdparty/jvm/com/twitter:util_slf4j_api',
     '//3rdparty/jvm/com/github/nscala_time',
     "@scalatest//jar:jar",
   ],

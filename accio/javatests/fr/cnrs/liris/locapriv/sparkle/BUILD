@@ -20,6 +20,6 @@ scala_test(
   deps = [
     "//accio/java/fr/cnrs/liris/locapriv/sparkle",
     "//accio/javatests/fr/cnrs/liris/testing",
-    "//3rdparty/jvm/com/twitter:inject_slf4j",
+    "//3rdparty/jvm/com/twitter:util_slf4j_api",
   ],
 )

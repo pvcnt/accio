@@ -33,7 +33,7 @@ scala_library(
     '//3rdparty/jvm/com/google/guava',
     '//3rdparty/jvm/org/scalanlp:breeze',
     '//3rdparty/jvm/com/twitter:util_jvm',
-    '//3rdparty/jvm/com/twitter:inject_slf4j',
+    '//3rdparty/jvm/com/twitter:util_slf4j_api',
   ],
   resources = [
     'linux_w4m_LST',

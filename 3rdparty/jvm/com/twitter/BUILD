@@ -484,13 +484,12 @@ scala_import(
     name = "inject_slf4j",
     exports = [
         "//3rdparty/jvm/com/fasterxml/jackson/core:jackson_annotations",
-        "//3rdparty/jvm/org/scala_lang:scala_library",
         "//3rdparty/jvm/org/slf4j:jcl_over_slf4j",
         "//3rdparty/jvm/org/slf4j:jul_to_slf4j",
         "//3rdparty/jvm/org/slf4j:log4j_over_slf4j",
         "//3rdparty/jvm/org/slf4j:slf4j_api",
         ":util_core",
-        ":util_slf4j_api_2_11"
+        ":util_slf4j_api"
     ],
     jars = [
         "//external:jar/com/twitter/inject_slf4j_2_11"
@@ -753,9 +752,13 @@ java_library(
 
 
 
-java_library(
-    name = "util_slf4j_api_2_11",
+scala_import(
+    name = "util_slf4j_api",
     exports = [
+        "//3rdparty/jvm/org/scala_lang:scala_library",
+        "//3rdparty/jvm/org/slf4j:slf4j_api"
+    ],
+    jars = [
         "//external:jar/com/twitter/util_slf4j_api_2_11"
     ],
     visibility = [
@@ -772,7 +775,7 @@ scala_import(
         "//3rdparty/jvm/org/slf4j:jul_to_slf4j",
         "//3rdparty/jvm/org/slf4j:slf4j_api",
         ":util_core",
-        ":util_slf4j_api_2_11"
+        ":util_slf4j_api"
     ],
     jars = [
         "//external:jar/com/twitter/util_slf4j_jul_bridge_2_11"

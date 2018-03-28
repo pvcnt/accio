@@ -21,7 +21,7 @@ package fr.cnrs.liris.locapriv.io
 import java.nio.file.{Files, Paths}
 
 import com.google.common.base.MoreObjects
-import com.twitter.inject.Logging
+import com.twitter.util.logging.Logging
 import fr.cnrs.liris.locapriv.sparkle.DataSink
 
 import scala.reflect._

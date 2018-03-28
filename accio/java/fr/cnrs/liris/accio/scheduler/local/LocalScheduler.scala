@@ -26,7 +26,7 @@ import com.google.common.eventbus.EventBus
 import com.google.inject.{Inject, Singleton}
 import com.twitter.concurrent.NamedPoolThreadFactory
 import com.twitter.finagle.stats.StatsReceiver
-import com.twitter.inject.Logging
+import com.twitter.util.logging.Logging
 import com.twitter.util.{Base64StringEncoder, Future, FuturePool}
 import fr.cnrs.liris.accio.api.thrift._
 import fr.cnrs.liris.accio.api.{TaskCompletedEvent, TaskStartedEvent}

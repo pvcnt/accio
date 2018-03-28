@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.agent
 
 import com.google.common.eventbus.EventBus
 import com.google.inject.{Inject, Singleton}
-import com.twitter.inject.Logging
+import com.twitter.util.logging.Logging
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.api.RunCreatedEvent
 import fr.cnrs.liris.accio.api.thrift.{InvalidSpecException, InvalidSpecMessage, UnknownRunException}

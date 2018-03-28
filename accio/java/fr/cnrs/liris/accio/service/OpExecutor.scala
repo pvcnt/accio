@@ -23,7 +23,7 @@ import java.util.UUID
 
 import com.google.common.annotations.VisibleForTesting
 import com.google.inject.Inject
-import com.twitter.inject.Logging
+import com.twitter.util.logging.Logging
 import fr.cnrs.liris.accio.api.thrift._
 import fr.cnrs.liris.accio.api.{Errors, Values}
 import fr.cnrs.liris.accio.discovery.{OpDiscovery, OpMeta}

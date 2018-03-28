@@ -32,7 +32,7 @@ scala_library(
     '//accio/java/fr/cnrs/liris/common/reflect',
     '//accio/thrift/fr/cnrs/liris/accio/agent',
     '//3rdparty/jvm/com/twitter:inject_core',
-    '//3rdparty/jvm/com/twitter:inject_slf4j',
+    '//3rdparty/jvm/com/twitter:util_slf4j_api',
     '//3rdparty/jvm/com/twitter:finatra_jackson',
     '//3rdparty/jvm/ch/qos/logback:logback_core',
     '//3rdparty/jvm/ch/qos/logback:logback_classic',

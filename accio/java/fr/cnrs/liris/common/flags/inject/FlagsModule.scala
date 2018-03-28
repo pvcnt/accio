@@ -19,7 +19,7 @@
 package fr.cnrs.liris.common.flags.inject
 
 import com.google.inject.{AbstractModule, Key}
-import com.twitter.inject.Logging
+import com.twitter.util.logging.Logging
 import fr.cnrs.liris.common.flags.FlagsProvider
 
 /**

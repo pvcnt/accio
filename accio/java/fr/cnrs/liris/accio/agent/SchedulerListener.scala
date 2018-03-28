@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.agent
 
 import com.google.common.eventbus.Subscribe
 import com.google.inject.{Inject, Singleton}
-import com.twitter.inject.Logging
+import com.twitter.util.logging.Logging
 import fr.cnrs.liris.accio.api.{TaskCompletedEvent, TaskStartedEvent}
 import fr.cnrs.liris.accio.service.RunManager
 import fr.cnrs.liris.accio.storage.Storage

@@ -20,7 +20,7 @@ package fr.cnrs.liris.locapriv.sparkle
 
 import java.util.concurrent.{Executors, TimeUnit}
 
-import com.twitter.inject.Logging
+import com.twitter.util.logging.Logging
 
 import scala.collection.immutable.ListMap
 import scala.concurrent.duration.Duration

@@ -19,7 +19,7 @@
 package fr.cnrs.liris.accio.dsl
 
 import com.fasterxml.jackson.annotation.{JsonIgnoreProperties, JsonSubTypes}
-import com.twitter.inject.Logging
+import com.twitter.util.logging.Logging
 import fr.cnrs.liris.accio.api.{DataTypes, Values}
 import fr.cnrs.liris.accio.api.thrift._
 import fr.cnrs.liris.common.geo.Distance

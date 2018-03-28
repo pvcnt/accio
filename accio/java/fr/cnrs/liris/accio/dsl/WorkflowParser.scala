@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.{JsonIgnoreProperties, JsonProperty, Jso
 import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.JsonMappingException
 import com.twitter.finatra.json.FinatraObjectMapper
-import com.twitter.inject.Logging
+import com.twitter.util.logging.Logging
 import fr.cnrs.liris.accio.api.thrift.{InvalidSpecException, InvalidSpecMessage}
 import fr.cnrs.liris.accio.api._
 import fr.cnrs.liris.accio.service.{BaseFactory, OpRegistry, WorkflowFactory}
