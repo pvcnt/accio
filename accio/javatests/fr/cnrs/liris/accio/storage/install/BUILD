@@ -14,17 +14,17 @@
 # You should have received a copy of the GNU General Public License
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
-scala_library(
-  name = "storage",
+scala_test(
+  name = "install",
   srcs = glob(["*.scala"]),
   deps = [
-    "//accio/java/fr/cnrs/liris/accio/api",
-    "//accio/thrift/fr/cnrs/liris/accio/api",
     "//accio/java/fr/cnrs/liris/accio/storage",
-    "//accio/java/fr/cnrs/liris/common/util",
+    "//accio/java/fr/cnrs/liris/accio/storage/memory",
+    "//accio/java/fr/cnrs/liris/accio/storage/install",
+    "//accio/java/fr/cnrs/liris/accio/api",
     "//accio/javatests/fr/cnrs/liris/testing",
-    "//3rdparty/jvm/com/github/nscala_time",
-    "@scalatest//jar:jar",
+    "//accio/javatests/com/twitter/inject",
+    "//3rdparty/jvm/com/twitter:inject_core",
+    "//3rdparty/jvm/com/twitter:util_stats",
   ],
-  visibility = ["//accio/javatests:__subpackages__"],
 )

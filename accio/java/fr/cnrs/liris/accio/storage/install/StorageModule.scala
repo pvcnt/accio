@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.storage.inject
+package fr.cnrs.liris.accio.storage.install
 
 import com.google.inject.Module
 import com.twitter.inject.{Injector, TwitterModule}

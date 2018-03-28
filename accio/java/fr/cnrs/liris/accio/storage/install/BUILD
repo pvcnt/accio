@@ -15,7 +15,7 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_library(
-  name = "inject",
+  name = "install",
   srcs = glob(["*.scala"]),
   deps = [
     "//accio/java/fr/cnrs/liris/accio/storage",

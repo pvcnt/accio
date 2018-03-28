@@ -18,7 +18,7 @@ scala_binary(
   name = "agent",
   srcs = glob(["*.scala"]),
   deps = [
-    "//accio/java/fr/cnrs/liris/accio/storage/inject",
+    "//accio/java/fr/cnrs/liris/accio/storage/install",
     "//accio/java/fr/cnrs/liris/accio/scheduler/inject",
     "//accio/java/fr/cnrs/liris/accio/discovery/inject",
     "//accio/java/fr/cnrs/liris/accio/config",

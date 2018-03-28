@@ -29,7 +29,7 @@ import fr.cnrs.liris.accio.discovery.inject.DiscoveryModule
 import fr.cnrs.liris.accio.dsl.DslModule
 import fr.cnrs.liris.accio.scheduler.inject.SchedulerModule
 import fr.cnrs.liris.accio.service.{OpRegistry, RuntimeOpRegistry}
-import fr.cnrs.liris.accio.storage.inject.StorageModule
+import fr.cnrs.liris.accio.storage.install.StorageModule
 
 object AgentServerModule extends TwitterModule {
   override def modules = Seq(

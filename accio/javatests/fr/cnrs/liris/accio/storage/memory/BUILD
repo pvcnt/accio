@@ -24,7 +24,6 @@ scala_test(
     "//accio/java/fr/cnrs/liris/accio/util",
     "//accio/javatests/fr/cnrs/liris/accio/storage",
     "//accio/javatests/fr/cnrs/liris/testing",
-    "//3rdparty/jvm/com/google/guava",
     "//3rdparty/jvm/com/twitter:inject_core",
   ],
 )
