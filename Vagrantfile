@@ -17,6 +17,7 @@
 Vagrant.configure(2) do |config|
   # Ubuntu 16.04 LTS.
   config.vm.box = "ubuntu/xenial64"
+  config.vm.box_version = "20180323.0.0"
 
   # Create a private network.
   config.vm.network "private_network", ip: "192.168.50.4"
