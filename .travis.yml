@@ -30,8 +30,8 @@ services:
 
 env:
   global:
-  - MYSQL_HOST="127.0.0.1"
-  - MYSQL_USER="root"
+  - MYSQL_HOST=127.0.0.1
+  - MYSQL_USER=root
   - MYSQL_PASSWORD=""
   matrix:
   - BAZEL_VERSION=0.11.0
@@ -63,6 +63,9 @@ script:
     --host_jvm_args=-Xms500m \
     test \
     --config=ci \
+    --action_env MYSQL_HOST \
+    --action_env MYSQL_USER \
+    --action_env MYSQL_PASSWORD \
     --experimental_repository_cache="$HOME/.bazel_repository_cache" \
     --local_resources=400,1,1.0 \
     //accio/...
