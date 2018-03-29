@@ -30,12 +30,9 @@ case class Version private(major: Int, minor: Int, patch: Int, label: Option[Str
   override def toString: String = s"$major.$minor.$patch${label.map(str => s"-$str").getOrElse("")}"
 }
 
-/**
- * Factory for [[Version]].
- */
 object Version {
   /**
    * Return the current version of Accio.
    */
-  val Current = Version(0, 6, 1, None)
+  val Current = Version(0, 7, 0, Some("devel"))
 }
