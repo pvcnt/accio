@@ -100,105 +100,113 @@ private[storage] abstract class RunStoreSpec extends UnitSpec with BeforeAndAfte
 
   protected def createStorage: Storage
 
+  protected def disabled: Boolean = false
+
   protected var storage: Storage = _
 
   override def beforeEach(): Unit = {
-    storage = createStorage
-    storage.startUp()
+    if (!disabled) {
+      storage = createStorage
+      storage.startUp()
+    }
     super.beforeEach()
   }
 
   override def afterEach(): Unit = {
     super.afterEach()
-    storage.shutDown()
-    storage = null
-  }
-
-  it should "save and retrieve runs" in {
-    storage.write { stores =>
-      stores.runs.get(foobarRun.id) shouldBe None
-      stores.runs.get(fooRun.id) shouldBe None
-
-      stores.runs.save(foobarRun)
-      stores.runs.get(foobarRun.id) shouldBe Some(foobarRun)
-
-      stores.runs.save(fooRun)
-      stores.runs.get(fooRun.id) shouldBe Some(fooRun)
+    if (!disabled) {
+      storage.shutDown()
+      storage = null
     }
   }
 
-  it should "delete runs" in {
-    storage.write { stores =>
-      stores.runs.save(foobarRun)
-      stores.runs.save(fooRun)
+  if (!disabled) {
+    it should "save and retrieve runs" in {
+      storage.write { stores =>
+        stores.runs.get(foobarRun.id) shouldBe None
+        stores.runs.get(fooRun.id) shouldBe None
 
-      stores.runs.delete(foobarRun.id)
-      stores.runs.get(fooRun.id) shouldBe Some(fooRun)
-      stores.runs.get(foobarRun.id) shouldBe None
+        stores.runs.save(foobarRun)
+        stores.runs.get(foobarRun.id) shouldBe Some(foobarRun)
+
+        stores.runs.save(fooRun)
+        stores.runs.get(fooRun.id) shouldBe Some(fooRun)
+      }
     }
-  }
 
-  it should "search for runs by owner" in {
-    storage.write { stores =>
-      runs.foreach(stores.runs.save)
+    it should "delete runs" in {
+      storage.write { stores =>
+        stores.runs.save(foobarRun)
+        stores.runs.save(fooRun)
+
+        stores.runs.delete(foobarRun.id)
+        stores.runs.get(fooRun.id) shouldBe Some(fooRun)
+        stores.runs.get(foobarRun.id) shouldBe None
+      }
     }
-    storage.read { stores =>
-      var res = stores.runs.list(RunQuery(owner = Some("me")))
-      res.totalCount shouldBe 3
-      res.results should contain theSameElementsInOrderAs Seq(runs(3), runs(1), runs(0))
 
-      res = stores.runs.list(RunQuery(owner = Some("me"), limit = Some(2)))
-      res.totalCount shouldBe 3
-      res.results should contain theSameElementsInOrderAs Seq(runs(3), runs(1))
+    it should "search for runs by owner" in {
+      storage.write { stores =>
+        runs.foreach(stores.runs.save)
+      }
+      storage.read { stores =>
+        var res = stores.runs.list(RunQuery(owner = Some("me")))
+        res.totalCount shouldBe 3
+        res.results should contain theSameElementsInOrderAs Seq(runs(3), runs(1), runs(0))
 
-      res = stores.runs.list(RunQuery(owner = Some("me"), limit = Some(2), offset = Some(2)))
-      res.totalCount shouldBe 3
-      res.results should contain theSameElementsInOrderAs Seq(runs(0))
+        res = stores.runs.list(RunQuery(owner = Some("me"), limit = Some(2)))
+        res.totalCount shouldBe 3
+        res.results should contain theSameElementsInOrderAs Seq(runs(3), runs(1))
 
-      res = stores.runs.list(RunQuery(owner = Some("him")))
-      res.totalCount shouldBe 1
-      res.results should contain theSameElementsInOrderAs Seq(runs(2))
+        res = stores.runs.list(RunQuery(owner = Some("me"), limit = Some(2), offset = Some(2)))
+        res.totalCount shouldBe 3
+        res.results should contain theSameElementsInOrderAs Seq(runs(0))
+
+        res = stores.runs.list(RunQuery(owner = Some("him")))
+        res.totalCount shouldBe 1
+        res.results should contain theSameElementsInOrderAs Seq(runs(2))
+      }
     }
-  }
 
-  it should "search for runs by workflow" in {
-    storage.write { stores =>
-      runs.foreach(stores.runs.save)
+    it should "search for runs by workflow" in {
+      storage.write { stores =>
+        runs.foreach(stores.runs.save)
+      }
+      storage.read { stores =>
+        val res = stores.runs.list(RunQuery(workflow = Some(WorkflowId("other_workflow"))))
+        res.totalCount shouldBe 1
+        res.results should contain theSameElementsInOrderAs Seq(runs(3))
+      }
     }
-    storage.read { stores =>
-      val res = stores.runs.list(RunQuery(workflow = Some(WorkflowId("other_workflow"))))
-      res.totalCount shouldBe 1
-      res.results should contain theSameElementsInOrderAs Seq(runs(3))
-    }
-  }
 
-  it should "search for runs by status" in {
-    storage.write { stores =>
-      runs.foreach(stores.runs.save)
+    it should "search for runs by status" in {
+      storage.write { stores =>
+        runs.foreach(stores.runs.save)
+      }
+      storage.read { stores =>
+        val res = stores.runs.list(RunQuery(status = Set(TaskState.Running)))
+        res.totalCount shouldBe 2
+        res.results should contain theSameElementsInOrderAs Seq(runs(2), runs(1))
+      }
     }
-    storage.read { stores =>
-      val res = stores.runs.list(RunQuery(status = Set(TaskState.Running)))
-      res.totalCount shouldBe 2
-      res.results should contain theSameElementsInOrderAs Seq(runs(2), runs(1))
-    }
-  }
 
-  it should "search for runs by tags" in {
-    storage.write { stores =>
-      runs.foreach(stores.runs.save)
-    }
-    storage.read { stores =>
-      var res = stores.runs.list(RunQuery(tags = Set("foo", "bar")))
-      res.totalCount shouldBe 2
-      res.results should contain theSameElementsInOrderAs Seq(runs(3), runs(0))
+    it should "search for runs by tags" in {
+      storage.write { stores =>
+        runs.foreach(stores.runs.save)
+      }
+      storage.read { stores =>
+        var res = stores.runs.list(RunQuery(tags = Set("foo", "bar")))
+        res.totalCount shouldBe 2
+        res.results should contain theSameElementsInOrderAs Seq(runs(3), runs(0))
 
-      res = stores.runs.list(RunQuery(tags = Set("foo")))
-      res.totalCount shouldBe 3
-      res.results should contain theSameElementsInOrderAs Seq(runs(3), runs(1), runs(0))
+        res = stores.runs.list(RunQuery(tags = Set("foo")))
+        res.totalCount shouldBe 3
+        res.results should contain theSameElementsInOrderAs Seq(runs(3), runs(1), runs(0))
 
-      res = stores.runs.list(RunQuery(tags = Set("foobar")))
-      res.totalCount shouldBe 1
-      res.results should contain theSameElementsInOrderAs Seq(runs(2))
+        res = stores.runs.list(RunQuery(tags = Set("foobar")))
+        res.totalCount shouldBe 1
+        res.results should contain theSameElementsInOrderAs Seq(runs(2))
+      }
     }
   }
 

@@ -27,5 +27,7 @@ import fr.cnrs.liris.accio.storage.{Storage, WorkflowStoreSpec}
 class MysqlWorkflowStoreSpec extends WorkflowStoreSpec with MysqlStoreSpec {
   behavior of "MysqlWorkflowStore"
 
+  override def disabled: Boolean = sys.env.get("MYSQL_DISABLED").contains("yes")
+
   override def createStorage: Storage = new MysqlStorage(createClient, NullStatsReceiver, useNativeLocks = false)
 }

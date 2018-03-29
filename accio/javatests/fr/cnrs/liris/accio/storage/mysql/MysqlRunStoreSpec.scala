@@ -27,5 +27,7 @@ import fr.cnrs.liris.accio.storage.{RunStoreSpec, Storage}
 class MysqlRunStoreSpec extends RunStoreSpec with MysqlStoreSpec {
   behavior of "MysqlRunStore"
 
+  override def disabled: Boolean = sys.env.get("MYSQL_DISABLED").contains("yes")
+
   override def createStorage: Storage = new MysqlStorage(createClient, NullStatsReceiver, useNativeLocks = false)
 }

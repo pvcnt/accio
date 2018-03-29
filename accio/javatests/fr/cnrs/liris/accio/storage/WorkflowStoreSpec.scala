@@ -66,73 +66,81 @@ private[storage] abstract class WorkflowStoreSpec extends UnitSpec with BeforeAn
 
   protected def createStorage: Storage
 
+  protected def disabled: Boolean = false
+
   protected var storage: Storage = _
 
   override def beforeEach(): Unit = {
-    storage = createStorage
-    storage.startUp()
+    if (!disabled) {
+      storage = createStorage
+      storage.startUp()
+    }
     super.beforeEach()
   }
 
   override def afterEach(): Unit = {
     super.afterEach()
-    storage.shutDown()
-    storage = null
-  }
-
-  it should "save and retrieve workflows" in {
-    storage.write { stores =>
-      stores.workflows.get(workflow1.id) shouldBe None
-      stores.workflows.get(workflow2.id) shouldBe None
-
-      stores.workflows.save(workflow1)
-      stores.workflows.get(workflow1.id) shouldBe Some(workflow1)
-
-      stores.workflows.save(workflow2)
-      stores.workflows.get(workflow2.id) shouldBe Some(workflow2)
+    if (!disabled) {
+      storage.shutDown()
+      storage = null
     }
   }
 
-  it should "search for workflows" in {
-    val workflows = Seq(
-      workflow1,
-      workflow1.copy(version = Some("v2")),
-      workflow2,
-      workflow2.copy(version = Some("v2")),
-      workflow1.copy(id = thrift.WorkflowId("other_workflow"), createdAt = Some(System.currentTimeMillis() + 20)),
-      workflow1.copy(id = thrift.WorkflowId("another_workflow"), createdAt = Some(System.currentTimeMillis() + 30), owner = Some(thrift.User("him"))))
-    storage.write { stores =>
-      workflows.foreach(stores.workflows.save)
-    }
-    storage.write { stores =>
-      var res = stores.workflows.list(WorkflowQuery(owner = Some("me")))
-      res.totalCount shouldBe 3
-      res.results should contain theSameElementsInOrderAs Seq(workflows(4), workflows(3), workflows(1))
+  if (!disabled) {
+    it should "save and retrieve workflows" in {
+      storage.write { stores =>
+        stores.workflows.get(workflow1.id) shouldBe None
+        stores.workflows.get(workflow2.id) shouldBe None
 
-      res = stores.workflows.list(WorkflowQuery(owner = Some("me"), limit = Some(2)))
-      res.totalCount shouldBe 3
-      res.results should contain theSameElementsInOrderAs Seq(workflows(4), workflows(3))
+        stores.workflows.save(workflow1)
+        stores.workflows.get(workflow1.id) shouldBe Some(workflow1)
 
-      res = stores.workflows.list(WorkflowQuery(owner = Some("me"), limit = Some(2), offset = Some(2)))
-      res.totalCount shouldBe 3
-      res.results should contain theSameElementsInOrderAs Seq(workflows(1))
+        stores.workflows.save(workflow2)
+        stores.workflows.get(workflow2.id) shouldBe Some(workflow2)
+      }
     }
-  }
 
-  it should "retrieve a workflow at a specific version" in {
-    val workflows = Seq(
-      workflow1,
-      workflow1.copy(version = Some("v2")),
-      workflow2)
-    storage.write { stores =>
-      workflows.foreach(stores.workflows.save)
+    it should "search for workflows" in {
+      val workflows = Seq(
+        workflow1,
+        workflow1.copy(version = Some("v2")),
+        workflow2,
+        workflow2.copy(version = Some("v2")),
+        workflow1.copy(id = thrift.WorkflowId("other_workflow"), createdAt = Some(System.currentTimeMillis() + 20)),
+        workflow1.copy(id = thrift.WorkflowId("another_workflow"), createdAt = Some(System.currentTimeMillis() + 30), owner = Some(thrift.User("him"))))
+      storage.write { stores =>
+        workflows.foreach(stores.workflows.save)
+      }
+      storage.write { stores =>
+        var res = stores.workflows.list(WorkflowQuery(owner = Some("me")))
+        res.totalCount shouldBe 3
+        res.results should contain theSameElementsInOrderAs Seq(workflows(4), workflows(3), workflows(1))
+
+        res = stores.workflows.list(WorkflowQuery(owner = Some("me"), limit = Some(2)))
+        res.totalCount shouldBe 3
+        res.results should contain theSameElementsInOrderAs Seq(workflows(4), workflows(3))
+
+        res = stores.workflows.list(WorkflowQuery(owner = Some("me"), limit = Some(2), offset = Some(2)))
+        res.totalCount shouldBe 3
+        res.results should contain theSameElementsInOrderAs Seq(workflows(1))
+      }
     }
-    storage.read { stores =>
-      stores.workflows.get(workflow1.id, "v1") shouldBe Some(workflows(0))
-      stores.workflows.get(workflow1.id, "v2") shouldBe Some(workflows(1))
-      stores.workflows.get(workflow1.id, "v3") shouldBe None
-      stores.workflows.get(workflow2.id, "v1") shouldBe Some(workflows(2))
-      stores.workflows.get(workflow2.id, "v2") shouldBe None
+
+    it should "retrieve a workflow at a specific version" in {
+      val workflows = Seq(
+        workflow1,
+        workflow1.copy(version = Some("v2")),
+        workflow2)
+      storage.write { stores =>
+        workflows.foreach(stores.workflows.save)
+      }
+      storage.read { stores =>
+        stores.workflows.get(workflow1.id, "v1") shouldBe Some(workflows(0))
+        stores.workflows.get(workflow1.id, "v2") shouldBe Some(workflows(1))
+        stores.workflows.get(workflow1.id, "v3") shouldBe None
+        stores.workflows.get(workflow2.id, "v1") shouldBe Some(workflows(2))
+        stores.workflows.get(workflow2.id, "v2") shouldBe None
+      }
     }
   }
 }
