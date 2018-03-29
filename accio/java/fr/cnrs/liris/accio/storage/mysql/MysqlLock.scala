@@ -19,14 +19,20 @@
 package fr.cnrs.liris.accio.storage.mysql
 
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.locks.{Condition, Lock}
+import java.util.concurrent.locks.{Condition, Lock, ReentrantLock}
 
 import com.twitter.finagle.mysql._
 import com.twitter.util.Await
 import com.twitter.util.logging.Logging
 
 private[mysql] final class MysqlLock(client: Client, lockName: String) extends Lock with Logging {
+  // Native MySQL locks are held per session. Finagle has a connection pooling feature, which means
+  // that a session may potentially be shared and re-used. This is why we further add a reentrant
+  // lock, to prevent multiple threads from acquiring the same lock.
+  private[this] val reentrantLock = new ReentrantLock
+
   def lock(): Unit = {
+    reentrantLock.lock()
     val f = client
       .prepare("select get_lock(?, -1)")
       .select(lockName)(decodeBoolean)
@@ -43,27 +49,16 @@ private[mysql] final class MysqlLock(client: Client, lockName: String) extends L
         case ResultSet(_, _) => // Do nothing
         case err => logger.error(s"Failed to release lock: $err")
       }
+      .ensure(reentrantLock.unlock())
       .unit
     Await.result(f)
   }
 
   override def newCondition(): Condition = ???
 
-  override def tryLock(): Boolean = {
-    val f = client
-      .prepare("select get_lock(?, 0)")
-      .select(lockName)(decodeBoolean)
-      .map(_.head)
-    Await.result(f)
-  }
+  override def tryLock(): Boolean = ???
 
-  override def tryLock(time: Long, unit: TimeUnit): Boolean = {
-    val f = client
-      .prepare("select get_lock(?, ?)")
-      .select(lockName, unit.toMillis(time).toDouble / 1000)(decodeBoolean)
-      .map(_.head)
-    Await.result(f)
-  }
+  override def tryLock(time: Long, unit: TimeUnit): Boolean = ???
 
   override def lockInterruptibly(): Unit = ???
 
