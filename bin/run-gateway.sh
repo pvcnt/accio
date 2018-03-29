@@ -20,5 +20,5 @@ bazel build accio/java/fr/cnrs/liris/accio/gateway
   -admin.port=":9991" \
   -http.port=":8888" \
   -ui \
-  -addr=localhost:9999 \
+  -agent.server=localhost:9999 \
   "$@"

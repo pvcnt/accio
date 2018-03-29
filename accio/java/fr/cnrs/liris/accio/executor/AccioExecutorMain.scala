@@ -32,7 +32,7 @@ object AccioExecutorMain extends AccioExecutor
  */
 class AccioExecutor {
   def main(args: Array[String]): Unit = {
-    require(args.length == 2, "There should be exactly two arguments: encoded task and result file")
+    require(args.length >= 2, "There should be at least two arguments")
     val task = BinaryScroogeSerializer.fromString(args.head, Task)
     com.twitter.jvm.numProcs.let(task.resource.cpu) {
       val opExecutor = new OpExecutor(new ReflectOpDiscovery)

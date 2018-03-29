@@ -15,15 +15,16 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_library(
-  name = 'inject',
+  name = "inject",
   srcs = glob(["*.scala"]),
   deps = [
-    '//accio/java/fr/cnrs/liris/accio/scheduler',
-    '//accio/java/fr/cnrs/liris/accio/scheduler/local',
-    '//accio/java/fr/cnrs/liris/accio/config:annotations',
-    '//accio/thrift/fr/cnrs/liris/accio/api',
-    '//3rdparty/jvm/com/twitter:inject_core',
-    '//3rdparty/jvm/com/twitter:util_stats',
+    "//accio/java/fr/cnrs/liris/accio/scheduler",
+    "//accio/java/fr/cnrs/liris/accio/scheduler/local",
+    "//accio/java/fr/cnrs/liris/accio/config:annotations",
+    "//accio/thrift/fr/cnrs/liris/accio/api",
+    "//3rdparty/jvm/com/twitter:util_core",
+    "//3rdparty/jvm/com/twitter:util_stats",
+    "//3rdparty/jvm/com/twitter:inject_core",
   ],
   visibility = ["//visibility:public"],
 )

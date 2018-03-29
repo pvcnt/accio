@@ -1,9 +1,9 @@
 ---
-title: Local environment with Vagrant
+title: Local cluster with Vagrant
 order: 40
 ---
 
-This page will get you started with a local Accio environment running inside a virtual machine.
+This page will get you started with a local Accio cluster running inside a virtual machine.
 After following these instructions, you will be able to quickly test your first commands.
 It has the advantage of being cross-platform, as everything happens inside a virtual machine.
 While this setup is great to quickly test main Accio features, it is not intended for production usage.
@@ -58,4 +58,4 @@ Note that the client is only configured to reach the local cluster (named `devcl
 ## 3. Shut down the virtual machine
 When you are done working with Accio, you can stop the virtual machine with `vagrant halt`.
 You can then start it again in the same state with `vagrant up`.
-If you want to irreversibly destroy your local environment, you can user the `vagrant destroy` command which will delete the virtual machine.
+If you want to irreversibly destroy your local cluster, you can user the `vagrant destroy` command which will delete the virtual machine.

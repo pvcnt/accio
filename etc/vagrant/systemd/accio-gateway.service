@@ -27,7 +27,7 @@ ExecStart=/usr/bin/java \
   -agentlib:jdwp=transport=dt_socket,server=y,address=8001,suspend=n \
   -jar /usr/local/bin/accio-gateway.jar \
     -ui \
-    -addr=localhost:9999 \
+    -agent.server=localhost:9999 \
     -admin.port=":8880" \
     -http.port=":80"
 Restart=on-failure

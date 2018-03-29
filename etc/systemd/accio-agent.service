@@ -1,0 +1,23 @@
+[Unit]
+Description=Accio agent
+
+[Service]
+ExecStartPre=/bin/mkdir -p /var/lib/accio-agent
+ExecStart=/usr/bin/java \
+  -Xms3G \
+  -Xmx3G \
+  -server \
+  -jar /opt/accio-agent.jar \
+    -executor_uri=/opt/accio-executor.jar \
+    -datadir=/var/lib/accio-agent \
+    -thrift.port="":9999" \
+    -admin.port=":9990" \
+    -storage.type=mysql \
+    -storage.mysql.server=localhost:3306 \
+    -storage.mysql.user=accio \
+    -storage.mysql.password=secret \
+    -storage.mysql.database=accio
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

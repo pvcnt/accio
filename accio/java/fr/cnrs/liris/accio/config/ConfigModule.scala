@@ -20,27 +20,14 @@ package fr.cnrs.liris.accio.config
 
 import java.nio.file.{Path, Paths}
 
-import com.google.inject.TypeLiteral
 import com.twitter.inject.TwitterModule
-import fr.cnrs.liris.accio.api.thrift.Resource
 
 object ConfigModule extends TwitterModule {
   private[this] val clusterNameFlag = flag("cluster_name", "default", "Cluster name")
-  private[this] val datadirFlag = flag("datadir", "/var/lib/accio-agent", "Directory where to store local files")
-  private[this] val executorUriFlag = flag[String]("executor_uri", "URI to the executor")
-  private[this] val executorArgsFlag = flag("executor_args", "", "Additional arguments to the executor")
-  private[this] val forceSchedulingFlag = flag("force_scheduling", false, "Whether to force the scheduling of too large tasks")
+  private[this] val datadirFlag = flag[String]("datadir", "Directory where to store data files")
 
   override def configure(): Unit = {
     bind[String].annotatedWith[ClusterName].toInstance(clusterNameFlag())
-    bind(new TypeLiteral[Seq[String]] {}).annotatedWith(classOf[ExecutorArgs]).toInstance {
-      executorArgsFlag.get
-        .map(_.split(" ").map(_.trim).filter(_.nonEmpty).toSeq)
-        .getOrElse(Seq.empty)
-    }
     bind[Path].annotatedWith[DataDir].toInstance(Paths.get(datadirFlag()))
-    bind[String].annotatedWith[ExecutorUri].toInstance(executorUriFlag())
-    bind[Boolean].annotatedWith[ForceScheduling].toInstance(forceSchedulingFlag())
-    bind[Resource].annotatedWith[ReservedResource].toInstance(Resource(0, 0, 0))
   }
 }

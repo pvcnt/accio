@@ -23,14 +23,12 @@ import java.nio.file.{Files, Path}
 import java.util.concurrent.{ConcurrentHashMap, ConcurrentLinkedDeque, Executors}
 
 import com.google.common.eventbus.EventBus
-import com.google.inject.{Inject, Singleton}
 import com.twitter.concurrent.NamedPoolThreadFactory
 import com.twitter.finagle.stats.StatsReceiver
 import com.twitter.util.logging.Logging
 import com.twitter.util.{Future, FuturePool}
 import fr.cnrs.liris.accio.api.thrift._
 import fr.cnrs.liris.accio.api.{TaskCompletedEvent, TaskStartedEvent}
-import fr.cnrs.liris.accio.config._
 import fr.cnrs.liris.accio.scheduler.Scheduler
 import fr.cnrs.liris.common.scrooge.BinaryScroogeSerializer
 import fr.cnrs.liris.common.util.Platform
@@ -39,15 +37,14 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.io.Source
 
-@Singleton
-final class LocalScheduler @Inject()(
+final class LocalScheduler(
   statsReceiver: StatsReceiver,
   eventBus: EventBus,
-  @ReservedResource reservedResources: Resource,
-  @ExecutorUri executorUri: String,
-  @ExecutorArgs executorArgs: Seq[String],
-  @ForceScheduling forceScheduling: Boolean,
-  @DataDir dataDir: Path)
+  reservedResources: Resource,
+  executorUri: String,
+  executorArgs: Seq[String],
+  forceScheduling: Boolean,
+  dataDir: Path)
   extends Scheduler with Logging {
 
   private case class Running(task: Task, future: Future[_])
