@@ -13,11 +13,6 @@ First, you need to install [Virtualbox](https://www.virtualbox.org/) and [Vagran
 Vagrant is a very helpful tool to create portable and reproducible environments.
 We configured it to use Virtualbox to manage virtual machines.
 Both are available on Linux, Mac OS and Windows.
-If Vagrant was already installed on your system, make sure to update the box to its latest version:
-
-```bash
-vagrant box update --box ubuntu/xenial64
-```
 
 Then, you need to download source code of [the latest Accio release](https://github.com/privamov/accio/releases/latest).
 ```bash
