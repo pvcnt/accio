@@ -1,6 +1,7 @@
 ---
-layout: docs
 title: Client commands
+category: Reference
+order: 40
 ---
 
 Accio comes with a command-line interface that can be used to perform most of the tasks.

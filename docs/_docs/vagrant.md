@@ -1,6 +1,6 @@
 ---
-layout: docs
 title: Local environment with Vagrant
+order: 40
 ---
 
 This page will get you started with a local Accio environment running inside a virtual machine.

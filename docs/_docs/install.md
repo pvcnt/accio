@@ -1,7 +1,6 @@
 ---
-layout: docs
-weight: 20
 title: Installing Accio
+order: 30
 ---
 
 The most common case is that you have an Accio cluster already installed by your system administrator on some machines, that you want to interact with.

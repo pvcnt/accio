@@ -1,7 +1,7 @@
 ---
-layout: docs
-weight: 70
 title: Analysing results
+category: User guide
+order: 50
 ---
 
 When running experiments, Accio generates a lot of information.

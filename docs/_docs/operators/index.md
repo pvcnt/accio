@@ -1,6 +1,7 @@
 ---
-layout: docs
 title: Operators
+category: Reference
+order: 30
 ---
 
 Although the Accio framework is agnostic to the underlying operators, the way they are implemented and data they manipulate, Accio has been historically built to study location privacy.

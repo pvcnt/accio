@@ -1,7 +1,7 @@
 ---
-layout: docs
-weight: 60
 title: Monitoring progress
+category: User guide
+order: 40
 ---
 
 Runs can take some time to complete, especially if you launched a complex parameter sweep.

@@ -1,6 +1,7 @@
 ---
-layout: docs
 title: Authoring workflows
+category: User guide
+order: 10
 ---
 
 This page presents the concept of workflows, which are templates of experiments, and how to work with them.

@@ -1,7 +1,7 @@
 ---
-layout: docs
-weight: 35
 title: Mobility datasets
+category: Reference
+order: 60
 ---
 
 While Accio does not provide for now an integrated datasets support, we provide here for convenience a list of well-known mobility datasets that have been used in numerous papers.

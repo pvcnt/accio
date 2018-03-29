@@ -1,6 +1,7 @@
 ---
-layout: docs
 title: API objects
+category: Concepts
+order: 20
 ---
 
 * TOC

@@ -21,12 +21,37 @@ description: >
   Accio is a location privacy framework.
 baseurl: "/accio"
 url: "https://privamov.github.io"
-nav: index
+
+collections:
+  docs:
+    output: true
+  contribute:
+    output: true
+  deploy:
+    output: true
+
+defaults:
+- scope:
+    path: ""
+    type: docs
+  values:
+    layout: docs
+- scope:
+    path: ""
+    type: contribute
+  values:
+    layout: contribute
+- scope:
+    path: ""
+    type: deploy
+  values:
+    layout: deploy
 
 # Build settings.
 markdown: kramdown
 plugins:
-  - jekyll-sitemap
+- jekyll-sitemap
 exclude:
-  - Gemfile
-  - Gemfile.lock
+- Gemfile
+- Gemfile.lock
+- BUILD

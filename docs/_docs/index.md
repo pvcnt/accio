@@ -1,6 +1,6 @@
 ---
-layout: docs
 title: Overview
+order: 10
 ---
 
 Welcome to the Accio documentation!

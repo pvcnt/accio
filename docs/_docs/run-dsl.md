@@ -1,7 +1,7 @@
 ---
-layout: docs
-weight: 30
 title: Run definition DSL
+category: Reference
+order: 10
 ---
 
 This page provides the full specification of the JSON-based DSL used to define runs.

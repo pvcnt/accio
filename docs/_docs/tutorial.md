@@ -1,7 +1,6 @@
 ---
-layout: docs
-weight: 40
 title: Hello World tutorial
+order: 20
 ---
 
 This tutorial is intended to feature Accio main capabilities.
@@ -12,7 +11,7 @@ Type `accio` and look at the built-in help.
 ## Launching an experiment
 
 We will use examples provided with Accio to quickly create a first experiment.
-Examples of workflow and run definitions ready to be launched can be found `etc/examples`. 
+Examples of workflow and run definitions ready to be launched can be found `etc/examples`.
 
 First, push a workflow to the cluster:
 ```bash

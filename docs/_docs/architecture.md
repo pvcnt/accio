@@ -1,7 +1,7 @@
 ---
-layout: docs
 title: Architecture
-weight: 10
+category: Concepts
+order: 10
 ---
 
 This section provides a system-oriented view over the Accio architecture.
@@ -24,7 +24,7 @@ The **scheduler** is in charge of handling the actual execution of those operato
 Accio comes with a basic local scheduler, executing the operators as sub-processes, but it is possible to integrate external computing clusters such as Kubernetes or Grid Engine.
 We rely on existing and battle-proofed technology to launch and monitor operators, allowing Accio to focus on its specificity: workflows management.
 The **storage** is responsible for persisting information about workflows and runs.
-It can be an SQL database such as MySQL or PostgreSQL, or a distributed NoSQL store such as Cassandra or Elasticsearch. 
+It can be an SQL database such as MySQL or PostgreSQL, or a distributed NoSQL store such as Cassandra or Elasticsearch.
 
 The **gateway** is a simple server that speak the HTTP protocol.
 It basically make the translation between Thrift and HTTP.

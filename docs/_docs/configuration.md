@@ -1,6 +1,7 @@
 ---
-layout: docs
 title: Cluster configuration
+category: Reference
+order: 50
 ---
 
 For now, you can only use a very restricted set of commands, because we have not yet configured our client how to communicate with the Accio cluster.

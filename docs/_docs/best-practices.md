@@ -1,7 +1,7 @@
 ---
-layout: docs
-weight: 40
 title: Best practices
+category: User guide
+order: 70
 ---
 
 This page surveys some best practices that have been outlined by our sustained usage of Accio.

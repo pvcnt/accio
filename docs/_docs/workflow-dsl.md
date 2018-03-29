@@ -1,7 +1,7 @@
 ---
-layout: docs
-weight: 20
 title: Workflow definition DSL
+category: Reference
+order: 20
 ---
 
 This page provides the full specification of the JSON-based DSL used to define workflows.

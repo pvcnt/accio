@@ -1,7 +1,7 @@
 ---
-layout: docs
-weight: 20
 title: Launching runs
+category: User guide
+order: 20
 ---
 
 This page presents the concept of runs, which are instances of workflows, and how to work with them.

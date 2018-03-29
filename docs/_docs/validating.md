@@ -1,7 +1,7 @@
 ---
-layout: docs
-weight: 30
 title: Validating definition files
+category: User guide
+order: 30
 ---
 
 Workflow and run definitions can grow pretty big, especially for complex experiments.
@@ -29,7 +29,7 @@ However, it is recommended to take into account warnings (e.g., using a deprecat
 Writing workflows and runs involves referencing existing objects by their names.
 The [`accio get` command](commands/get.html) can be of a great help to find relevant resources, whether it is a workflow or an operator.
 For example, `accio get operators` returns a list of all known operators.
-While there is a [reference list of operators](operators/), the cluster you are interacting with can provide a slightly different version of operators, or contain custom operators installed by your system administrator. 
+While there is a [reference list of operators](operators/), the cluster you are interacting with can provide a slightly different version of operators, or contain custom operators installed by your system administrator.
 In case of disagreement between the documentation and the command-line result, the command-line is assumed to provide the most accurate information for your particular Accio installation.
 
 The [`accio describe` command](commands/describe.html) is used to more details about a specific resource.
