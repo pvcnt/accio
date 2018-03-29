@@ -15,14 +15,10 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_library(
-  name = "event",
+  name = "terminal",
   srcs = glob(["*.scala"]),
   deps = [
-    "//accio/java/fr/cnrs/liris/accio/tools/cli/terminal",
-    "//3rdparty/jvm/com/twitter:util_core",
-    "//3rdparty/jvm/com/twitter:util_slf4j_api",
     "//3rdparty/jvm/com/google/guava",
-    "//3rdparty/jvm/com/github/nscala_time",
   ],
   visibility = ["//visibility:public"],
 )

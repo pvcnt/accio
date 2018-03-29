@@ -33,7 +33,7 @@ import scala.collection.JavaConverters._
  * @param aggregate Whether to aggregate artifact values across multiple runs into a single value.
  * @param append    Whether to allow appending data to existing files if they already exists
  */
-case class CsvReportOpts(separator: String, split: Boolean, aggregate: Boolean, append: Boolean)
+case class CsvReportOptions(separator: String, split: Boolean, aggregate: Boolean, append: Boolean)
 
 /**
  * Create CSV reports from results of previous runs.
@@ -46,7 +46,7 @@ class CsvReportCreator {
    * @param workDir   Directory where to write CSV reports (doesn't have to exist).
    * @param opts      Report options.
    */
-  def write(artifacts: ArtifactList, workDir: Path, opts: CsvReportOpts): Unit = {
+  def write(artifacts: ArtifactList, workDir: Path, opts: CsvReportOptions): Unit = {
     if (opts.split) {
       // When splitting, one sub-directory is created per combination of workflow parameters.
       artifacts.split.foreach { list =>
@@ -66,7 +66,7 @@ class CsvReportCreator {
    * @param workDir Directory where to write CSV reports (doesn't have to exist).
    * @param opts    Report options.
    */
-  def write(metrics: MetricList, workDir: Path, opts: CsvReportOpts): Unit = {
+  def write(metrics: MetricList, workDir: Path, opts: CsvReportOptions): Unit = {
     if (opts.split) {
       // When splitting, one sub-directory is created per combination of workflow parameters.
       metrics.split.foreach { list =>
@@ -79,7 +79,7 @@ class CsvReportCreator {
     }
   }
 
-  private def doWrite(list: ArtifactList, workDir: Path, opts: CsvReportOpts): Unit = {
+  private def doWrite(list: ArtifactList, workDir: Path, opts: CsvReportOptions): Unit = {
     Files.createDirectories(workDir)
     list.groups.foreach { group =>
       val header = asHeader(group.kind)
@@ -91,7 +91,7 @@ class CsvReportCreator {
     }
   }
 
-  private def doWrite(list: MetricList, workDir: Path, opts: CsvReportOpts): Unit = {
+  private def doWrite(list: MetricList, workDir: Path, opts: CsvReportOptions): Unit = {
     Files.createDirectories(workDir)
     list.groups.groupBy(_.nodeName).foreach { case (nodeName, groups) =>
       val header = Seq("metric_name", "value")
@@ -103,7 +103,7 @@ class CsvReportCreator {
     }
   }
 
-  private def doWrite(lines: Seq[String], workDir: Path, filename: String, opts: CsvReportOpts): Unit = {
+  private def doWrite(lines: Seq[String], workDir: Path, filename: String, opts: CsvReportOptions): Unit = {
     if (opts.append) {
       val file = workDir.resolve(s"$filename.csv")
       Files.write(file, lines.asJava, StandardOpenOption.CREATE, StandardOpenOption.APPEND, StandardOpenOption.WRITE)

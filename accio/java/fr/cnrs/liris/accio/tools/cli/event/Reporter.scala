@@ -2,11 +2,10 @@
 
 package fr.cnrs.liris.accio.tools.cli.event
 
-import com.twitter.util.logging.Logging
-import fr.cnrs.liris.common.io.OutErr
+import fr.cnrs.liris.accio.tools.cli.terminal.OutErr
 
 final class Reporter(handlers: Seq[EventHandler], outputFilter: OutputFilter = OutputFilter.Everything)
-  extends EventHandler with ExceptionListener with Logging {
+  extends EventHandler with ExceptionListener {
 
   /**
    * An OutErr that sends all of its output to this Reporter.

@@ -21,12 +21,9 @@ package fr.cnrs.liris.accio.tools.cli
 import ch.qos.logback.classic.LoggerContext
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.helpers.NOPAppender
-import com.google.inject.Guice
-import com.twitter.app.App
 import com.twitter.util.logging.Slf4jBridgeUtility
-import fr.cnrs.liris.accio.tools.cli.command.{CommandDispatcher, CommandModule}
-import fr.cnrs.liris.accio.tools.cli.config.ConfigModule
-import fr.cnrs.liris.common.io.OutErr
+import fr.cnrs.liris.accio.tools.cli.commands.{CommandDispatcher, CommandRegistry}
+import fr.cnrs.liris.accio.tools.cli.terminal.OutErr
 import org.slf4j.{Logger, LoggerFactory}
 
 object AccioClientMain extends AccioClient
@@ -34,15 +31,8 @@ object AccioClientMain extends AccioClient
 /**
  * Entry point of the Accio command line application.
  */
-class AccioClient extends App {
-  def main(): Unit = {
-    val injector = Guice.createInjector(CommandModule, ConfigModule)
-    val dispatcher = injector.getInstance(classOf[CommandDispatcher])
-    val exitCode = dispatcher.exec(args, OutErr.System)
-    sys.exit(exitCode.code)
-  }
-
-  init {
+class AccioClient {
+  def main(args: Array[String]): Unit = {
     // Prevent from displaying any logs.
     val ctx = LoggerFactory.getILoggerFactory.asInstanceOf[LoggerContext]
     ctx.reset()
@@ -53,5 +43,9 @@ class AccioClient extends App {
     rootLogger.addAppender(noopAppender)
 
     Slf4jBridgeUtility.attemptSlf4jBridgeHandlerInstallation()
+
+    val dispatcher = new CommandDispatcher(CommandRegistry.default)
+    val exitCode = dispatcher.exec(args, OutErr.System)
+    sys.exit(exitCode.code)
   }
 }

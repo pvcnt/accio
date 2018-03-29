@@ -26,20 +26,11 @@ import com.fasterxml.jackson.databind.JsonMappingException
 import com.twitter.finatra.json.FinatraObjectMapper
 
 /**
- * Exception thrown when a configuration is invalid, either syntaxically or semantically.
- *
- * @param uri     Configuration file this exception is about.
- * @param message Error message.
- * @param cause   Possible root cause.
- */
-class InvalidConfigException(uri: String, message: String, cause: Throwable = null) extends RuntimeException(message, cause)
-
-/**
  * Parser for client configuration.
  *
  * @param mapper Finatra object mapper.
  */
-class ConfigParser(mapper: FinatraObjectMapper) {
+final class ConfigParser(mapper: FinatraObjectMapper) {
   /**
    * Parse a file into a client configuration.
    *
@@ -63,4 +54,8 @@ class ConfigParser(mapper: FinatraObjectMapper) {
     }
     config
   }
+}
+
+object ConfigParser {
+  def default: ConfigParser = new ConfigParser(ObjectMapperFactory.create())
 }

@@ -15,11 +15,13 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_library(
-  name = 'config',
+  name = "config",
   srcs = glob(["*.scala"]),
   deps = [
-    '//3rdparty/jvm/com/twitter:finatra_jackson',
-    '//3rdparty/jvm/com/twitter:inject_core',
+    "//3rdparty/jvm/com/twitter:finatra_jackson",
+  ],
+  exports = [
+    "//3rdparty/jvm/com/twitter:finatra_jackson",
   ],
   visibility = ["//visibility:public"],
 )

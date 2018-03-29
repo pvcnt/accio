@@ -15,14 +15,20 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_library(
-  name = "event",
+  name = "commands",
   srcs = glob(["*.scala"]),
   deps = [
+    "//accio/java/fr/cnrs/liris/accio/tools/cli/config",
+    "//accio/java/fr/cnrs/liris/accio/tools/cli/controller",
+    "//accio/java/fr/cnrs/liris/accio/tools/cli/event",
     "//accio/java/fr/cnrs/liris/accio/tools/cli/terminal",
-    "//3rdparty/jvm/com/twitter:util_core",
-    "//3rdparty/jvm/com/twitter:util_slf4j_api",
-    "//3rdparty/jvm/com/google/guava",
-    "//3rdparty/jvm/com/github/nscala_time",
+    "//accio/java/fr/cnrs/liris/accio/api",
+    "//accio/java/fr/cnrs/liris/accio/reporting",
+    "//accio/java/fr/cnrs/liris/accio/version",
+    "//accio/java/fr/cnrs/liris/common/util",
+    "//accio/thrift/fr/cnrs/liris/accio/agent",
+    "//3rdparty/jvm/com/twitter:util_app",
+    "//3rdparty/jvm/org/ocpsoft/prettytime",
   ],
   visibility = ["//visibility:public"],
 )
