@@ -63,7 +63,7 @@ The first command is used to retrieve NPM dependencies (it is otherwise not done
 ## Compile using Vagrant
 
 If you have [Vagrant](https://www.vagrantup.com) and [VirtualBox](https://www.virtualbox.org) installed on your machine, you can launch a fully configured development environment via `vagrant up`.
-More on this is described in the [dedicated section](../docs/vagrant.html).
+More on this is described in the [dedicated page](../docs/vagrant.html).
 The virtual machine that is created comes with all the needed tools to develop Accio.
 
 The virtual machine is configured to the agent and the gateway processes as services.
@@ -94,18 +94,6 @@ acciobuild agent executor
 ```
 
 Once the components are built, they are installed on the system, and the associated services are restarted (in the case of the agent and the gateway).
-
-## Running tests
-
-The following command is used to run all unit tests.
-
-```bash
-bazel test ...
-```
-
-The latter will compile all modules, independently on whether there are actually some tests associated with them, and then run all tests.
-It means that all committed code must at least compile, even if not actually used by the system.
-The test suit is launched automatically after each push by [Travis CI](https://travis-ci.org/privamov/accio).
 
 ## IDE integration
 
