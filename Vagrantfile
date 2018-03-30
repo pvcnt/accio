@@ -30,5 +30,8 @@ Vagrant.configure(2) do |config|
     end
 
   # Initial provisioning.
-  config.vm.provision "shell", path: "etc/vagrant/provision-dev-cluster.sh"
+  config.vm.provision "shell" do |s|
+    s.path = "etc/vagrant/provision-dev-cluster.sh"
+    s.binary = true
+  end
 end
