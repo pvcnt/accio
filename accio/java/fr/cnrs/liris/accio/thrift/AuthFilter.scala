@@ -28,13 +28,10 @@ import fr.cnrs.liris.accio.auth.AuthChain
 @Singleton
 final class AuthFilter @Inject()(chain: AuthChain) extends ThriftFilter {
   override def apply[T, Rep](request: ThriftRequest[T], service: Service[ThriftRequest[T], Rep]): Future[Rep] = {
-    val clientId = request.clientId.map(_.name)
-    chain.authenticate(clientId).flatMap {
-      case None => Future.exception(WrongCredentialsException(clientId))
-      case Some(userInfo) =>
-        UserInfo.let(userInfo) {
-          service(request)
-        }
+    val credentials = request.clientId.map(_.name)
+    chain.authenticate(credentials).flatMap {
+      case None => Future.exception(WrongCredentialsException(credentials))
+      case Some(userInfo) => UserInfo.let(userInfo)(service(request))
     }
   }
 }

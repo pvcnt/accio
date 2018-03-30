@@ -80,7 +80,7 @@ final class ClientFactory(parser: ConfigParser) {
     clients.getOrElseUpdate(config.name, {
       val params = RichClientParam()
       var builder = Thrift.client
-      config.accessToken.foreach(accessToken => builder = builder.withClientId(ClientId(accessToken)))
+      config.credentials.foreach(credentials => builder = builder.withClientId(ClientId(credentials)))
       new AgentService.FinagledClient(builder.newService(config.server), params)
     })
   }

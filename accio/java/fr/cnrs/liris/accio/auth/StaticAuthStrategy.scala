@@ -28,10 +28,10 @@ import fr.cnrs.liris.common.util.StringUtils.maybe
 import scala.io.Source
 
 final class StaticAuthStrategy(users: Set[StaticAuthStrategy.AuthInfo]) extends AuthStrategy {
-  private[this] val index = users.map(user => user.clientId -> user).toMap
+  private[this] val index = users.map(user => user.credentials -> user).toMap
 
-  override def authenticate(clientId: String): Future[Option[UserInfo]] = Future {
-    index.get(clientId) match {
+  override def authenticate(credentials: String): Future[Option[UserInfo]] = Future {
+    index.get(credentials) match {
       case Some(authInfo) => Some(authInfo.user)
       case None => None
     }
@@ -40,7 +40,7 @@ final class StaticAuthStrategy(users: Set[StaticAuthStrategy.AuthInfo]) extends 
 
 object StaticAuthStrategy extends Logging {
 
-  private case class AuthInfo(clientId: String, user: UserInfo)
+  private case class AuthInfo(credentials: String, user: UserInfo)
 
   /**
    * Create a [[StaticAuthStrategy]] from a configuration file.
@@ -59,11 +59,11 @@ object StaticAuthStrategy extends Logging {
 
   private def parse(idx: Int, line: String): Option[AuthInfo] = {
     line.split(':') match {
-      case Array(clientId, name) => Some(AuthInfo(clientId, UserInfo(name)))
-      case Array(clientId, name, email) =>
-        Some(AuthInfo(clientId, UserInfo(name, maybe(email))))
-      case Array(clientId, name, email, groups) =>
-        Some(AuthInfo(clientId, UserInfo(name, maybe(email), groups.split(',').filter(_.nonEmpty).toSet)))
+      case Array(credentials, name) => Some(AuthInfo(credentials, UserInfo(name)))
+      case Array(credentials, name, email) =>
+        Some(AuthInfo(credentials, UserInfo(name, maybe(email))))
+      case Array(credentials, name, email, groups) =>
+        Some(AuthInfo(credentials, UserInfo(name, maybe(email), groups.split(',').filter(_.nonEmpty).toSet)))
       case _ =>
         logger.warn(s"Ignored weird line $idx: $line")
         None

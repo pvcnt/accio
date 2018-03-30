@@ -22,7 +22,7 @@ import com.twitter.util.Future
 import fr.cnrs.liris.accio.api.UserInfo
 
 object TrustAuthStrategy extends AuthStrategy {
-  override def authenticate(clientId: String): Future[Option[UserInfo]] = {
-    Future(Some(UserInfo.parse(clientId)))
+  override def authenticate(credentials: String): Future[Option[UserInfo]] = {
+    Future(Some(UserInfo.parse(credentials)))
   }
 }

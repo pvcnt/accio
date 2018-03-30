@@ -23,6 +23,6 @@ package fr.cnrs.liris.accio.tools.cli.config
  *
  * @param name        Name of the cluster (used by the client to reference it).
  * @param server      Address to the agent server (specified as a Finagle name).
- * @param accessToken An access token used to authenticate against the server.
+ * @param credentials Credentials used to authenticate against the server.
  */
-case class Cluster(name: String, server: String, accessToken: Option[String] = None)
+case class Cluster(name: String, server: String, credentials: Option[String] = None)

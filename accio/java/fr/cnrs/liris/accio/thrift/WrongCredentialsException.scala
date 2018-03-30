@@ -18,5 +18,5 @@
 
 package fr.cnrs.liris.accio.thrift
 
-case class WrongCredentialsException(clientId: Option[String])
-  extends RuntimeException(s"Wrong credentials were provided: ${clientId.getOrElse("<none>")}")
+case class WrongCredentialsException(credentials: Option[String])
+  extends RuntimeException(s"Wrong credentials were provided: ${credentials.getOrElse("<none>")}")

@@ -32,22 +32,22 @@ final class WebhookAuthStrategy(webhook: Webhook[ReviewResponse], cacheTtl: Dura
 
   private[this] val cache = CacheBuilder().expireAfterWrite(cacheTtl).build[String, Option[UserInfo]]
 
-  override def authenticate(clientId: String): Future[Option[UserInfo]] = {
-    cache.get(clientId) match {
+  override def authenticate(credentials: String): Future[Option[UserInfo]] = {
+    cache.get(credentials) match {
       case Some(res) => Future.value(res)
       case None =>
         webhook
-          .execute(ReviewRequest(clientId))
+          .execute(ReviewRequest(credentials))
           .map { review =>
             if (review.authenticated) {
-              Some(review.user.getOrElse(UserInfo.parse(clientId)))
+              Some(review.user.getOrElse(UserInfo.parse(credentials)))
             } else {
               None
             }
           }
           .onSuccess { userInfo =>
             // We only cache successful responses.
-            cache.put(clientId, userInfo)
+            cache.put(credentials, userInfo)
           }
           .handle { case e: Throwable =>
             logger.error(s"Error in webhook: ${e.getMessage}")
@@ -59,7 +59,7 @@ final class WebhookAuthStrategy(webhook: Webhook[ReviewResponse], cacheTtl: Dura
 
 object WebhookAuthStrategy {
 
-  case class ReviewRequest(accessToken: String)
+  case class ReviewRequest(credentials: String)
 
   case class ReviewResponse(authenticated: Boolean, user: Option[UserInfo])
 

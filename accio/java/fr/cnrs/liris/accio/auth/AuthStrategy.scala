@@ -23,9 +23,9 @@ import fr.cnrs.liris.accio.api.UserInfo
 
 trait AuthStrategy {
   /**
-   * Try to authenticate a user, given a client identifier.
+   * Try to authenticate a user, given some credentials.
    *
-   * @param clientId Client identifier.
+   * @param credentials Credentials provided by the client.
    */
-  def authenticate(clientId: String): Future[Option[UserInfo]]
+  def authenticate(credentials: String): Future[Option[UserInfo]]
 }

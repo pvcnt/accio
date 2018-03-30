@@ -23,33 +23,33 @@ import fr.cnrs.liris.accio.api.UserInfo
 
 /**
  * Tries to determine whether a given client identifier is allowed by using a sequence of
- * authentication strategies, with optional support for anonymous users. It will try all strategies
- * in order, and use the result of the first one that is positive. If at the end no decision has
- * been made, the user will be authenticated as anonymous if anonymous users are allowed, or
- * rejected otherwise.
+ * authentication strategies, with optional support for anonymous users.
  *
  * @param strategies     List of authentication strategies to try.
  * @param allowAnonymous Whether anonymous users are allowed.
  */
 final class AuthChain(strategies: Seq[AuthStrategy], allowAnonymous: Boolean) {
   /**
-   * Try to authenticate a user, given a client identifier.
+   * Try to authenticate a user, given some credentials.  It will try all strategies in order, and
+   * use the result of the first one that is positive. If at the end no decision has been made,
+   * the user will be authenticated as anonymous if anonymous users are allowed, or rejected
+   * otherwise.
    *
-   * @param credentials Client identifier.
+   * @param credentials Credentials provided by the client.
    */
   def authenticate(credentials: Option[String]): Future[Option[UserInfo]] = {
     credentials match {
-      case Some(clientId) => authenticate(strategies.iterator, clientId)
+      case Some(cred) => authenticate(strategies.iterator, cred)
       case None => Future.value(if (allowAnonymous) Some(UserInfo.Anonymous) else None)
     }
   }
 
-  private def authenticate(it: Iterator[AuthStrategy], clientId: String): Future[Option[UserInfo]] = {
+  private def authenticate(it: Iterator[AuthStrategy], credentials: String): Future[Option[UserInfo]] = {
     if (it.hasNext) {
-      it.next.authenticate(clientId).flatMap {
+      it.next.authenticate(credentials).flatMap {
         case Some(userInfo) =>
           Future.value(Some(userInfo.copy(groups = userInfo.groups + "system:authenticated")))
-        case None => authenticate(it, clientId)
+        case None => authenticate(it, credentials)
       }
     } else if (allowAnonymous) {
       Future.value(Some(UserInfo.Anonymous))

@@ -50,8 +50,8 @@ class AuthenticatorChainSpec extends UnitSpec {
 }
 
 private object FakeAuthenticator extends AuthStrategy {
-  override def authenticate(clientId: String): Future[Option[UserInfo]] = {
-    if (clientId == "backdoor") {
+  override def authenticate(credentials: String): Future[Option[UserInfo]] = {
+    if (credentials == "backdoor") {
       Future.value(Some(UserInfo("john")))
     } else {
       Future.value(None)
@@ -60,9 +60,9 @@ private object FakeAuthenticator extends AuthStrategy {
 }
 
 private object AllowAuthenticator extends AuthStrategy {
-  override def authenticate(clientId: String): Future[Option[UserInfo]] = Future.value(Some(UserInfo("john")))
+  override def authenticate(credentials: String): Future[Option[UserInfo]] = Future.value(Some(UserInfo("john")))
 }
 
 private object DenyAuthenticator extends AuthStrategy {
-  override def authenticate(clientId: String): Future[Option[UserInfo]] = Future.value(None)
+  override def authenticate(credentials: String): Future[Option[UserInfo]] = Future.value(None)
 }
