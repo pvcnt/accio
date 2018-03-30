@@ -19,9 +19,10 @@
 package fr.cnrs.liris.accio.tools.cli.config
 
 /**
- * Configuration of a single Accio cluster. It specifies how the client should contact it.
+ * Configuration of a single Accio cluster.
  *
- * @param name   Cluster name.
- * @param server Cluster address (as a Finagle name).
+ * @param name        Name of the cluster (used by the client to reference it).
+ * @param server      Address to the agent server (specified as a Finagle name).
+ * @param accessToken An access token used to authenticate against the server.
  */
-case class Cluster(name: String, server: String)
+case class Cluster(name: String, server: String, accessToken: Option[String] = None)

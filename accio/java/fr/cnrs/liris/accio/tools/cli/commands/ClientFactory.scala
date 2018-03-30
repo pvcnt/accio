@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.tools.cli.commands
 import java.nio.file.Paths
 
 import com.twitter.finagle.Thrift
-import com.twitter.finagle.thrift.RichClientParam
+import com.twitter.finagle.thrift.{ClientId, RichClientParam}
 import fr.cnrs.liris.accio.agent.{AgentService, AgentService$FinagleClient}
 import fr.cnrs.liris.accio.tools.cli.config.{Cluster, ClusterConfig, ConfigParser}
 import fr.cnrs.liris.common.util.FileUtils
@@ -37,7 +37,7 @@ import scala.collection.mutable
  *
  * @param parser Cluster configuration parser.
  */
-final class ClusterClientProvider(parser: ConfigParser) {
+final class ClientFactory(parser: ConfigParser) {
   private[this] val clients = mutable.Map.empty[String, AgentService$FinagleClient]
   private[this] lazy val config = parseConfig
 
@@ -79,8 +79,9 @@ final class ClusterClientProvider(parser: ConfigParser) {
   private def getOrCreate(config: Cluster) = {
     clients.getOrElseUpdate(config.name, {
       val params = RichClientParam()
-      val service = Thrift.newService(config.server)
-      new AgentService.FinagledClient(service, params)
+      var builder = Thrift.client
+      config.accessToken.foreach(accessToken => builder = builder.withClientId(ClientId(accessToken)))
+      new AgentService.FinagledClient(builder.newService(config.server), params)
     })
   }
 

@@ -26,36 +26,30 @@ import fr.cnrs.liris.accio.api.{Utils, Values}
 import scala.collection.JavaConverters._
 
 /**
- * Options when creating CSV reports.
+ * Create CSV reports from results of previous runs.
  *
  * @param separator Separator to use in CSV files.
  * @param split     Whether to split the reports per combination of workflow parameters.
  * @param aggregate Whether to aggregate artifact values across multiple runs into a single value.
  * @param append    Whether to allow appending data to existing files if they already exists
  */
-case class CsvReportOptions(separator: String, split: Boolean, aggregate: Boolean, append: Boolean)
-
-/**
- * Create CSV reports from results of previous runs.
- */
-class CsvReportCreator {
+final class CsvReportWriter(separator: String, split: Boolean, aggregate: Boolean, append: Boolean) {
   /**
    * Write the values of artifacts in CSV format inside the given directory.
    *
    * @param artifacts Artifacts to create a report for.
    * @param workDir   Directory where to write CSV reports (doesn't have to exist).
-   * @param opts      Report options.
    */
-  def write(artifacts: ArtifactList, workDir: Path, opts: CsvReportOptions): Unit = {
-    if (opts.split) {
+  def write(artifacts: ArtifactList, workDir: Path): Unit = {
+    if (split) {
       // When splitting, one sub-directory is created per combination of workflow parameters.
       artifacts.split.foreach { list =>
         val filename = Utils.label(list.params).replace(" ", ",")
-        doWrite(list, workDir.resolve(filename), opts)
+        doWrite(list, workDir.resolve(filename))
       }
     } else {
       // When not splitting, we write report directory inside the working directory.
-      doWrite(artifacts, workDir, opts)
+      doWrite(artifacts, workDir)
     }
   }
 
@@ -64,47 +58,46 @@ class CsvReportCreator {
    *
    * @param metrics Metrics to create a report for.
    * @param workDir Directory where to write CSV reports (doesn't have to exist).
-   * @param opts    Report options.
    */
-  def write(metrics: MetricList, workDir: Path, opts: CsvReportOptions): Unit = {
-    if (opts.split) {
+  def write(metrics: MetricList, workDir: Path): Unit = {
+    if (split) {
       // When splitting, one sub-directory is created per combination of workflow parameters.
       metrics.split.foreach { list =>
         val filename = Utils.label(list.params).replace(" ", ",")
-        doWrite(list, workDir.resolve(filename), opts)
+        doWrite(list, workDir.resolve(filename))
       }
     } else {
       // When not splitting, we write report directory inside the working directory.
-      doWrite(metrics, workDir, opts)
+      doWrite(metrics, workDir)
     }
   }
 
-  private def doWrite(list: ArtifactList, workDir: Path, opts: CsvReportOptions): Unit = {
+  private def doWrite(list: ArtifactList, workDir: Path): Unit = {
     Files.createDirectories(workDir)
     list.groups.foreach { group =>
       val header = asHeader(group.kind)
-      val artifacts = if (opts.aggregate) Seq(group.aggregated) else group.toSeq
+      val artifacts = if (aggregate) Seq(group.aggregated) else group.toSeq
       val rows = artifacts.flatMap(artifact => asString(artifact.value))
-      val lines = (Seq(header) ++ rows).map(_.mkString(opts.separator))
+      val lines = (Seq(header) ++ rows).map(_.mkString(separator))
       val filename = group.name.replace("/", "-")
-      doWrite(lines, workDir, filename, opts)
+      doWrite(lines, workDir, filename)
     }
   }
 
-  private def doWrite(list: MetricList, workDir: Path, opts: CsvReportOptions): Unit = {
+  private def doWrite(list: MetricList, workDir: Path): Unit = {
     Files.createDirectories(workDir)
     list.groups.groupBy(_.nodeName).foreach { case (nodeName, groups) =>
       val header = Seq("metric_name", "value")
-      val rows = groups.flatMap { group =>
-        if (opts.aggregate) Seq(group.aggregated) else group.toSeq
-      }.map(metric => Seq(metric.name, metric.value.toString))
-      val lines = (Seq(header) ++ rows).map(_.mkString(opts.separator))
-      doWrite(lines, workDir, nodeName, opts)
+      val rows = groups
+        .flatMap(group => if (aggregate) Seq(group.aggregated) else group.toSeq)
+        .map(metric => Seq(metric.name, metric.value.toString))
+      val lines = (Seq(header) ++ rows).map(_.mkString(separator))
+      doWrite(lines, workDir, nodeName)
     }
   }
 
-  private def doWrite(lines: Seq[String], workDir: Path, filename: String, opts: CsvReportOptions): Unit = {
-    if (opts.append) {
+  private def doWrite(lines: Seq[String], workDir: Path, filename: String): Unit = {
+    if (append) {
       val file = workDir.resolve(s"$filename.csv")
       Files.write(file, lines.asJava, StandardOpenOption.CREATE, StandardOpenOption.APPEND, StandardOpenOption.WRITE)
     } else {

@@ -45,7 +45,7 @@ final class ExportCommand extends Command with ClientCommand {
 
   override def execute(residue: Seq[String], env: CommandEnvironment): ExitCode = {
     if (residue.isEmpty) {
-      env.reporter.outErr.printOutLn("<error>[ERROR]</error> You must specify at least one run as argument.")
+      env.reporter.handle(Event.error("You must specify at least one run as argument."))
       ExitCode.CommandLineError
     } else {
       val workDir = getWorkDir
@@ -56,14 +56,13 @@ final class ExportCommand extends Command with ClientCommand {
 
       val artifacts = getArtifacts(runs)
       val metrics = getMetrics(runs)
-      val reportCreator = new CsvReportCreator
-      val reportCreatorOpts = CsvReportOptions(
+      val writer = new CsvReportWriter(
         separator = separatorFlag(),
         split = splitFlag(),
         aggregate = aggregateFlag(),
         append = appendFlag())
-      reportCreator.write(artifacts, workDir, reportCreatorOpts)
-      reportCreator.write(metrics, workDir, reportCreatorOpts)
+      writer.write(artifacts, workDir)
+      writer.write(metrics, workDir)
       ExitCode.Success
     }
   }

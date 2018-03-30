@@ -41,8 +41,8 @@ final class ConfigParser(mapper: FinatraObjectMapper) {
   def parse(path: Path): ClusterConfig = {
     val fis = new FileInputStream(path.toFile)
     val config = try {
-      // It did not go well when trying to deserialized directly as ClusterConfig, despite it being a WrappedValue.
-      // So we fall back to deserializing clusters directly.
+      // It did not go well when trying to deserialized directly as ClusterConfig, even if it is
+      // defined as aa WrappedValue. So we fall back to deserializing clusters directly.
       ClusterConfig(mapper.parse[Seq[Cluster]](fis))
     } catch {
       case e@(_: IOException | _: JsonParseException | _: JsonMappingException) =>

@@ -18,15 +18,13 @@
 
 package fr.cnrs.liris.accio.tools.cli.config
 
-import com.twitter.inject.domain.WrappedValue
-
 /**
  * Configuration specifying how to contact multiple Accio clusters.
  *
  * @param clusters Configuration of individual clusters.
  * @throws IllegalArgumentException If clusters configuration is invalid.
  */
-case class ClusterConfig(clusters: Seq[Cluster]) extends WrappedValue[Seq[Cluster]] {
+case class ClusterConfig(clusters: Seq[Cluster]) {
   {
     // Validate that cluster definitions are valid.
     require(clusters.nonEmpty, "You must define at least one cluster")
@@ -71,4 +69,8 @@ case class ClusterConfig(clusters: Seq[Cluster]) extends WrappedValue[Seq[Cluste
     }
     ClusterConfig(mergedClusters)
   }
+}
+
+object ClusterConfig {
+  def default = ClusterConfig(Seq(Cluster("default", "localhost:9999")))
 }

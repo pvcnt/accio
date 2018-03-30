@@ -59,7 +59,7 @@ final class WebhookAuthStrategy(webhook: Webhook[ReviewResponse], cacheTtl: Dura
 
 object WebhookAuthStrategy {
 
-  case class ReviewRequest(clientId: String)
+  case class ReviewRequest(accessToken: String)
 
   case class ReviewResponse(authenticated: Boolean, user: Option[UserInfo])
 

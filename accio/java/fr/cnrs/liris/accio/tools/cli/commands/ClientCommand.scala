@@ -29,7 +29,7 @@ private[commands] trait ClientCommand {
   this: Command =>
 
   private[this] val clusterFlag = flag[String]("cluster", "Name of the cluster to use")
-  private[this] val clientProvider = new ClusterClientProvider(ConfigParser.default)
+  private[this] val clientProvider = new ClientFactory(ConfigParser.default)
 
   protected final def client: AgentService$FinagleClient = {
     clusterFlag.get.map(clientProvider.apply).getOrElse(clientProvider.default)
