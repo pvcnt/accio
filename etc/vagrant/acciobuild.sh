@@ -47,8 +47,8 @@ function build_executor {
 
 function build_gateway {
   bazel run @yarn//:yarn
-  bazel build accio/java/fr/cnrs/liris/accio/gateway:gateway_deploy.jar
-  sudo cp bazel-bin/accio/java/fr/cnrs/liris/accio/gateway/gateway_deploy.jar /usr/local/bin/accio-gateway.jar
+  bazel build accio/java/fr/cnrs/liris/accio/tools/gateway:gateway_deploy.jar
+  sudo cp bazel-bin/accio/java/fr/cnrs/liris/accio/tools/gateway/gateway_deploy.jar /usr/local/bin/accio-gateway.jar
   upstart_update accio-gateway
 }
 

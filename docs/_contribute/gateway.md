@@ -6,7 +6,7 @@ title: Developing the gateway
 ## Server
 
 The gateway is an HTTP interface to Accio, providing a REST API and a Web interface.
-Source code for the gateway is located under the `fr.cnrs.liris.accio.gateway` package.
+Source code for the gateway is located under the `fr.cnrs.liris.accio.tools.gateway` package.
 
 Finatra is used for the REST API and Web UI serving.
 This time, we use its HTTP version designed to build HTTP servers.

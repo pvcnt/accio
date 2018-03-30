@@ -27,9 +27,9 @@ scala_binary(
     "//3rdparty/jvm/com/twitter:finatra_httpclient",
   ],
   resources = [
-    "//accio/node/fr/cnrs/liris/accio/gateway:index.bundle.js",
-    "//accio/node/fr/cnrs/liris/accio/gateway:assets",
+    "//accio/node/fr/cnrs/liris/accio/tools/gateway:index.bundle.js",
+    "//accio/node/fr/cnrs/liris/accio/tools/gateway:assets",
   ],
-  resource_strip_prefix = "accio/node/fr/cnrs/liris/accio/gateway",
-  main_class = "fr.cnrs.liris.accio.gateway.GatewayServerMain",
+  resource_strip_prefix = "accio/node/fr/cnrs/liris/accio/tools/gateway",
+  main_class = "fr.cnrs.liris.accio.tools.gateway.GatewayServerMain",
 )

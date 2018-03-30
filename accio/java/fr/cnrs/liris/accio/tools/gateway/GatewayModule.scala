@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.gateway
+package fr.cnrs.liris.accio.tools.gateway
 
 import com.google.inject.{Provides, Singleton}
 import com.twitter.finagle.Thrift
