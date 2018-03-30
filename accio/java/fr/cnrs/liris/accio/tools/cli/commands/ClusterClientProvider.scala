@@ -29,8 +29,9 @@ import fr.cnrs.liris.common.util.FileUtils
 import scala.collection.mutable
 
 /**
- * Provide Finagle clients to communicate with Accio clusters. It behaves as a clients pool, clients being reused
- * between several calls. It reads on-the-fly cluster configurations files when needed (and only when needed).
+ * Provide Finagle clients to communicate with Accio clusters. It behaves as a clients pool,
+ * clients being reused between several calls. It reads on-the-fly cluster configurations files
+ * when needed (and only when needed).
  *
  * The `ACCIO_CONFIG_ROOT` environment variable is used to locate a system-wide configuration file.
  *

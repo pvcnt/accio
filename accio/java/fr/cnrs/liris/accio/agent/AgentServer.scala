@@ -18,55 +18,26 @@
 
 package fr.cnrs.liris.accio.agent
 
-import java.net.InetSocketAddress
-
-import com.twitter.conversions.time._
-import com.twitter.finagle.stats.StatsReceiver
-import com.twitter.finagle.thrift.RichServerParam
-import com.twitter.finagle.{ListeningServer, Service, Thrift}
-import com.twitter.inject.annotations.Lifecycle
-import com.twitter.inject.modules.{LoggerModule, StatsReceiverModule}
-import com.twitter.inject.server.TwitterServer
-import com.twitter.util.Await
+import com.twitter.finatra.thrift.ThriftServer
+import com.twitter.finatra.thrift.exceptions.FinatraThriftExceptionMapper
+import com.twitter.finatra.thrift.filters._
+import com.twitter.finatra.thrift.routing.ThriftRouter
 import fr.cnrs.liris.accio.logging.LogbackConfigurator
 
 object AgentServerMain extends AgentServer
 
-class AgentServer extends TwitterServer with LogbackConfigurator {
-  private[this] val addrFlag = flag("thrift.port", new InetSocketAddress(9999), "Thrift server port")
-  private[this] val announceFlag = flag[String]("thrift.announce", "Address for announcing the Thrift server")
+class AgentServer extends ThriftServer with LogbackConfigurator {
+  override def modules = Seq(AgentServerModule)
 
-  override def failfastOnFlagsNotParsed = true
-
-  override def modules = Seq(AgentServerModule, StatsReceiverModule, LoggerModule)
-
-  override def thriftPort: Option[Int] = addrFlag.getWithDefault.map(_.getPort)
-
-  @Lifecycle
-  override final def postWarmup() {
-    super.postWarmup()
-    val httpServer = startServer()
-    await(httpServer)
-    info(s"Thrift server started on port ${thriftPort.get}")
-
-    // Announce the HTTP server if required.
-    announceFlag.get.foreach(httpServer.announce)
-  }
-
-  private def startServer(): ListeningServer = {
-    val params = RichServerParam(serverStats = injector.instance[StatsReceiver])
-    var service: Service[Array[Byte], Array[Byte]] = new AgentService$FinagleService(injector.instance[AgentServiceImpl], params)
-    // TODO: add filters (at least stats, access logging and exception mapping).
-    // service = injector.instance[StatsFilter[Array[Byte], Array[Byte]]].andThen(service)
-
-    val server = Thrift.server
-      .withStatsReceiver(injector.instance[StatsReceiver])
-      .withLabel("thrift")
-      .serve(addrFlag(), service)
-
-    onExit {
-      Await.result(server.close(60.seconds.fromNow))
-    }
-    server
+  override def configureThrift(router: ThriftRouter): Unit = {
+    router
+      .filter[LoggingMDCFilter]
+      .filter[TraceIdMDCFilter]
+      .filter[ThriftMDCFilter]
+      .filter[AccessLoggingFilter]
+      .filter[StatsFilter]
+      .filter[ExceptionMappingFilter]
+      .exceptionMapper[FinatraThriftExceptionMapper]
+      .add[AgentServiceController]
   }
 }

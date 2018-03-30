@@ -33,11 +33,8 @@ scala_binary(
     "//accio/java/fr/cnrs/liris/common/util",
     "//accio/thrift/fr/cnrs/liris/accio/agent",
     "//accio/thrift/fr/cnrs/liris/accio/api",
-    "//3rdparty/jvm/com/twitter:inject_core",
     "//3rdparty/jvm/com/twitter:util_slf4j_api",
-    "//3rdparty/jvm/com/twitter:inject_server",
-    "//3rdparty/jvm/com/twitter:inject_modules",
-    "//3rdparty/jvm/com/twitter:finagle_thrift",
+    "//3rdparty/jvm/com/twitter:finatra_thrift",
     "//3rdparty/jvm/com/google/guava",
   ],
   runtime_deps = [

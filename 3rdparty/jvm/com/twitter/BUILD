@@ -284,6 +284,19 @@ scala_import(
 
 
 java_library(
+    name = "finagle_thriftmux_2_11",
+    exports = [
+        "//3rdparty/jvm/commons_lang:commons_lang",
+        "//external:jar/com/twitter/finagle_thriftmux_2_11"
+    ],
+    visibility = [
+        "//visibility:public"
+    ]
+)
+
+
+
+java_library(
     name = "finagle_toggle_2_11",
     exports = [
         "//3rdparty/jvm/com/fasterxml/jackson/core:jackson_core",
@@ -379,12 +392,39 @@ scala_import(
 
 
 scala_import(
+    name = "finatra_thrift",
+    exports = [
+        "//3rdparty/jvm/javax/inject:javax_inject",
+        "//3rdparty/jvm/org/scala_lang:scala_library",
+        "//3rdparty/jvm/org/yaml:snakeyaml",
+        ":finagle_core",
+        ":finagle_exp",
+        ":finagle_thrift",
+        ":finagle_thriftmux_2_11",
+        ":finatra_utils",
+        ":inject_server",
+        ":inject_slf4j",
+        ":inject_thrift",
+        ":util_core"
+    ],
+    jars = [
+        "//external:jar/com/twitter/finatra_thrift_2_11"
+    ],
+    visibility = [
+        "//visibility:public"
+    ]
+)
+
+
+
+scala_import(
     name = "finatra_utils",
     exports = [
         "//3rdparty/jvm/com/github/nscala_time:nscala_time",
         "//3rdparty/jvm/com/google/inject:guice",
         "//3rdparty/jvm/commons_io:commons_io",
-        "//3rdparty/jvm/joda_time:joda_time"
+        "//3rdparty/jvm/joda_time:joda_time",
+        ":finagle_http"
     ],
     jars = [
         "//external:jar/com/twitter/finatra_utils_2_11"
@@ -493,6 +533,23 @@ scala_import(
     ],
     jars = [
         "//external:jar/com/twitter/inject_slf4j_2_11"
+    ],
+    visibility = [
+        "//visibility:public"
+    ]
+)
+
+
+
+scala_import(
+    name = "inject_thrift",
+    exports = [
+        ":finagle_mux",
+        ":libthrift",
+        ":scrooge_core"
+    ],
+    jars = [
+        "//external:jar/com/twitter/inject_thrift_2_11"
     ],
     visibility = [
         "//visibility:public"

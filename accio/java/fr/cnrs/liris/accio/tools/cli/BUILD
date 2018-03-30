@@ -21,11 +21,9 @@ scala_binary(
     "//accio/java/fr/cnrs/liris/accio/tools/cli/config",
     "//accio/java/fr/cnrs/liris/accio/tools/cli/commands",
     "//accio/java/fr/cnrs/liris/accio/tools/cli/terminal",
-    "//3rdparty/jvm/com/twitter:util_app",
     "//3rdparty/jvm/ch/qos/logback:logback_core",
     "//3rdparty/jvm/ch/qos/logback:logback_classic",
     "//3rdparty/jvm/com/twitter:util_slf4j_jul_bridge",
   ],
-  resource_strip_prefix = "accio/java",
   main_class = "fr.cnrs.liris.accio.tools.cli.AccioClientMain",
 )

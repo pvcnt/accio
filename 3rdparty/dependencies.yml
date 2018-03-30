@@ -39,7 +39,7 @@ dependencies:
     finatra:
       version: "18.3.0"
       lang: scala
-      modules: [http, httpclient, jackson]
+      modules: [http, httpclient, jackson, thrift]
     bijection:
       version: "0.9.6"
       lang: scala
