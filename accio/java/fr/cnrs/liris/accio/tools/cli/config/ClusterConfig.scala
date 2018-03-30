@@ -72,11 +72,3 @@ case class ClusterConfig(clusters: Seq[Cluster]) extends WrappedValue[Seq[Cluste
     ClusterConfig(mergedClusters)
   }
 }
-
-/**
- * Configuration of a single Accio cluster. It specifies how the client should contact it.
- *
- * @param name Cluster name.
- * @param addr Cluster address (as a Finagle name).
- */
-case class Cluster(name: String, addr: String)

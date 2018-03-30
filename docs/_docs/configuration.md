@@ -19,7 +19,7 @@ A simple configuration file looks like this:
 ```json
 [{
   "name": "default",
-  "addr": "192.168.50.4:9999"
+  "server": "192.168.50.4:9999"
 }]
 ```
 
@@ -28,5 +28,5 @@ Each cluster is a JSON object formed of the following fields.
 | Name | Type | Description |
 |:-----|:-----|:------------|
 | name | string; required | Cluster name, that will be referenced later in commands. |
-| addr | string; required | Address to contact one of the masters of this cluster, specified as a [Finagle name](https://twitter.github.io/finagle/guide/Names.html). |
-{: class="table table-striped"}
+| server | string; required | Address to contact one of the masters of this cluster, specified as a [Finagle name](https://twitter.github.io/finagle/guide/Names.html). |
+{: .table .table-striped}

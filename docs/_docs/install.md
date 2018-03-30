@@ -90,7 +90,7 @@ A simple configuration file looks like this:
 ```json
 [{
   "name": "default",
-  "addr": "192.168.50.4:9999"
+  "server": "192.168.50.4:9999"
 }]
 ```
 

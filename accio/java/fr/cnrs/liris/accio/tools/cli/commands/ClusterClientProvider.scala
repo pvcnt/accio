@@ -79,7 +79,7 @@ final class ClusterClientProvider(parser: ConfigParser) {
   private def getOrCreate(config: Cluster) = {
     clients.getOrElseUpdate(config.name, {
       val params = RichClientParam()
-      val service = Thrift.newService(config.addr)
+      val service = Thrift.newService(config.server)
       new AgentService.FinagledClient(service, params)
     })
   }
