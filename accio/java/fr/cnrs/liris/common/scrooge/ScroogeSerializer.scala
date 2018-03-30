@@ -30,9 +30,9 @@ trait ScroogeSerializer {
     fromBytes(Base64StringEncoder.decode(str), codec)
 
   def fromBytes[T <: ThriftStruct](bytes: Array[Byte], codec: ThriftStructCodec[T]): T =
-    fromInputStream(new ByteArrayInputStream(bytes), codec)
+    read(new ByteArrayInputStream(bytes), codec)
 
-  def fromInputStream[T <: ThriftStruct](is: InputStream, codec: ThriftStructCodec[T]): T = {
+  def read[T <: ThriftStruct](is: InputStream, codec: ThriftStructCodec[T]): T = {
     val protocol = protocolFactory.getProtocol(new TIOStreamTransport(is))
     codec.decode(protocol)
   }

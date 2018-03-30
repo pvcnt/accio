@@ -19,10 +19,10 @@ scala_binary(
   srcs = glob(["*.scala"]),
   deps = [
     "//accio/java/fr/cnrs/liris/accio/api",
-    "//accio/java/fr/cnrs/liris/accio/logging",
     "//accio/java/fr/cnrs/liris/common/util",
     "//accio/java/fr/cnrs/liris/common/geo",
     "//accio/thrift/fr/cnrs/liris/accio/agent",
+    "//3rdparty/jvm/ch/qos/logback:logback_classic",
     "//3rdparty/jvm/com/twitter:finatra_http",
     "//3rdparty/jvm/com/twitter:finatra_httpclient",
   ],

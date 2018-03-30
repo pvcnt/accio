@@ -15,16 +15,21 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_library(
-  name = "testing",
+  name = "thrift",
   srcs = glob(["*.scala"]),
   deps = [
-    "//accio/java/fr/cnrs/liris/common/util",
-    "//3rdparty/jvm/com/twitter:util_app",
-    "//3rdparty/jvm/com/google/guava",
-    "@scalatest//jar:jar",
+    "//accio/java/fr/cnrs/liris/accio/config:annotations",
+    "//accio/java/fr/cnrs/liris/accio/api",
+    "//accio/java/fr/cnrs/liris/accio/auth",
+    "//accio/java/fr/cnrs/liris/accio/storage",
+    "//accio/java/fr/cnrs/liris/accio/dsl",
+    "//accio/java/fr/cnrs/liris/accio/service",
+    "//accio/java/fr/cnrs/liris/accio/scheduler",
+    "//accio/java/fr/cnrs/liris/accio/version",
+    "//accio/thrift/fr/cnrs/liris/accio/agent",
+    "//3rdparty/jvm/com/twitter:finatra_thrift",
+    "//3rdparty/jvm/com/twitter:util_slf4j_api",
+    "//3rdparty/jvm/com/twitter:inject_core",
   ],
-  runtime_deps = [
-    "//3rdparty/jvm/ch/qos/logback:logback_classic",
-  ],
-  visibility = ["//accio/javatests:__subpackages__"],
+  visibility = ["//visibility:public"],
 )

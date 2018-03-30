@@ -14,17 +14,21 @@
 # You should have received a copy of the GNU General Public License
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
-scala_library(
-  name = "testing",
+scala_test(
+  name = "auth",
   srcs = glob(["*.scala"]),
+  size = "small",
   deps = [
-    "//accio/java/fr/cnrs/liris/common/util",
-    "//3rdparty/jvm/com/twitter:util_app",
-    "//3rdparty/jvm/com/google/guava",
-    "@scalatest//jar:jar",
+    "//accio/java/fr/cnrs/liris/accio/auth",
+    "//accio/java/fr/cnrs/liris/accio/api",
+    "//accio/java/fr/cnrs/liris/accio/webhook",
+    "//accio/javatests/fr/cnrs/liris/testing",
+    "//accio/javatests/com/twitter/inject",
+    "//3rdparty/jvm/com/twitter:util_core",
+    "//3rdparty/jvm/com/twitter:inject_core",
+    "//3rdparty/jvm/com/twitter:finagle_http",
+    "//3rdparty/jvm/com/twitter:util_slf4j_api",
   ],
-  runtime_deps = [
-    "//3rdparty/jvm/ch/qos/logback:logback_classic",
-  ],
-  visibility = ["//accio/javatests:__subpackages__"],
+  resources = ["static_file.txt"],
+  resource_strip_prefix = "accio/javatests",
 )

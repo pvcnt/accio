@@ -15,16 +15,17 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_library(
-  name = "testing",
+  name = "auth",
   srcs = glob(["*.scala"]),
   deps = [
+    "//accio/java/fr/cnrs/liris/accio/api",
+    "//accio/java/fr/cnrs/liris/accio/webhook",
+    "//accio/java/fr/cnrs/liris/common/cache",
     "//accio/java/fr/cnrs/liris/common/util",
-    "//3rdparty/jvm/com/twitter:util_app",
-    "//3rdparty/jvm/com/google/guava",
-    "@scalatest//jar:jar",
+    "//3rdparty/jvm/com/twitter:finatra_jackson",
+    "//3rdparty/jvm/com/twitter:util_slf4j_api",
+    "//3rdparty/jvm/com/twitter:inject_core",
+    "//3rdparty/jvm/com/twitter:util_core",
   ],
-  runtime_deps = [
-    "//3rdparty/jvm/ch/qos/logback:logback_classic",
-  ],
-  visibility = ["//accio/javatests:__subpackages__"],
+  visibility = ["//visibility:public"],
 )

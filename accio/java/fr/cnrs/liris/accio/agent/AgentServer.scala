@@ -22,11 +22,11 @@ import com.twitter.finatra.thrift.ThriftServer
 import com.twitter.finatra.thrift.exceptions.FinatraThriftExceptionMapper
 import com.twitter.finatra.thrift.filters._
 import com.twitter.finatra.thrift.routing.ThriftRouter
-import fr.cnrs.liris.accio.logging.LogbackConfigurator
+import fr.cnrs.liris.accio.thrift.{AgentServiceController, AuthFilter}
 
 object AgentServerMain extends AgentServer
 
-class AgentServer extends ThriftServer with LogbackConfigurator {
+class AgentServer extends ThriftServer {
   override def modules = Seq(AgentServerModule)
 
   override def configureThrift(router: ThriftRouter): Unit = {
@@ -36,6 +36,7 @@ class AgentServer extends ThriftServer with LogbackConfigurator {
       .filter[ThriftMDCFilter]
       .filter[AccessLoggingFilter]
       .filter[StatsFilter]
+      .filter[AuthFilter]
       .filter[ExceptionMappingFilter]
       .exceptionMapper[FinatraThriftExceptionMapper]
       .add[AgentServiceController]

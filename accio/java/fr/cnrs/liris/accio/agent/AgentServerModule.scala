@@ -24,6 +24,7 @@ import com.google.common.eventbus.{AsyncEventBus, EventBus}
 import com.google.inject.{Provides, Singleton}
 import com.twitter.concurrent.NamedPoolThreadFactory
 import com.twitter.inject.{Injector, TwitterModule}
+import fr.cnrs.liris.accio.auth.AuthModule
 import fr.cnrs.liris.accio.config.ConfigModule
 import fr.cnrs.liris.accio.discovery.inject.DiscoveryModule
 import fr.cnrs.liris.accio.dsl.DslModule
@@ -33,6 +34,7 @@ import fr.cnrs.liris.accio.storage.install.StorageModule
 
 object AgentServerModule extends TwitterModule {
   override def modules = Seq(
+    AuthModule,
     DiscoveryModule,
     ConfigModule,
     DslModule,

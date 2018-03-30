@@ -15,17 +15,20 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_library(
-  name = 'api',
+  name = "api",
   srcs = glob(["*.scala"]),
   deps = [
-    '//accio/java/fr/cnrs/liris/accio/sdk',
-    '//accio/java/fr/cnrs/liris/common/util',
-    '//accio/java/fr/cnrs/liris/common/geo',
-    '//accio/thrift/fr/cnrs/liris/accio/api',
-    '//3rdparty/jvm/com/github/nscala_time',
+    "//accio/java/fr/cnrs/liris/accio/sdk",
+    "//accio/java/fr/cnrs/liris/common/util",
+    "//accio/java/fr/cnrs/liris/common/geo",
+    "//accio/thrift/fr/cnrs/liris/accio/api",
+    "//3rdparty/jvm/com/github/nscala_time",
+    "//3rdparty/jvm/com/twitter:finagle_core",
   ],
   exports = [
-    '//accio/thrift/fr/cnrs/liris/accio/api',
+    "//accio/java/fr/cnrs/liris/common/geo",
+    "//accio/thrift/fr/cnrs/liris/accio/api",
+    "//3rdparty/jvm/com/twitter:finagle_core",
   ],
   visibility = ["//visibility:public"],
 )

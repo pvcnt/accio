@@ -22,11 +22,10 @@ import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finatra.http.HttpServer
 import com.twitter.finatra.http.filters.{CommonFilters, LoggingMDCFilter, TraceIdMDCFilter}
 import com.twitter.finatra.http.routing.HttpRouter
-import fr.cnrs.liris.accio.logging.LogbackConfigurator
 
 object GatewayServerMain extends GatewayServer
 
-class GatewayServer extends HttpServer with LogbackConfigurator {
+class GatewayServer extends HttpServer {
   private[this] val uiFlag = flag("ui", false, "Whether to enable the web-based user interface")
 
   override protected def modules = Seq(GatewayModule)

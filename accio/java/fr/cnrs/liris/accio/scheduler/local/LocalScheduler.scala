@@ -234,7 +234,7 @@ final class LocalScheduler(
     } else {
       val fis = new FileInputStream(file.toFile)
       try {
-        BinaryScroogeSerializer.fromInputStream(fis, OpResult)
+        BinaryScroogeSerializer.read(fis, OpResult)
       } catch {
         case e: Throwable =>
           logger.warn(s"Error while reading result file: $file", e)

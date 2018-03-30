@@ -1,0 +1,5 @@
+sometoken:john
+token:jess:jess@email.com
+othertoken:mark:mark@email.com:foogroup
+atoken:anna:anna@email.com:foogroup,bargroup
+anothertoken:jack::bargroup

@@ -16,14 +16,14 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.agent
+package fr.cnrs.liris.accio.thrift
 
 import com.google.common.eventbus.EventBus
 import com.google.inject.{Inject, Singleton}
 import com.twitter.finatra.thrift.Controller
 import com.twitter.util.Future
-import com.twitter.util.logging.Logging
 import fr.cnrs.liris.accio.agent.AgentService._
+import fr.cnrs.liris.accio.agent._
 import fr.cnrs.liris.accio.api.RunCreatedEvent
 import fr.cnrs.liris.accio.api.thrift.{InvalidSpecException, InvalidSpecMessage, UnknownRunException}
 import fr.cnrs.liris.accio.config.ClusterName
@@ -47,7 +47,7 @@ final class AgentServiceController @Inject()(
   opRegistry: OpRegistry,
   eventBus: EventBus,
   @ClusterName clusterName: String)
-  extends Controller with AgentService.ServicePerEndpoint with Logging {
+  extends Controller with AgentService.ServicePerEndpoint {
 
   override val getCluster = handle(GetCluster) { args: GetCluster.Args =>
     Future {

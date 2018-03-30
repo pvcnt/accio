@@ -18,8 +18,10 @@
 
 package fr.cnrs.liris.testing
 
+import java.io.{BufferedOutputStream, FileOutputStream}
 import java.nio.file.{Files, Path}
 
+import com.google.common.io.{ByteStreams, Resources}
 import fr.cnrs.liris.common.util.FileUtils
 import org.scalatest.{BeforeAndAfterEach, Suite}
 
@@ -42,5 +44,21 @@ trait CreateTmpDirectory extends BeforeAndAfterEach {
     super.afterEach()
     FileUtils.safeDelete(tmpDir)
     _tmpDir = null
+  }
+
+  protected def copyResource(resourceName: String): Path = {
+    val dst = tmpDir.resolve(resourceName.split("/").last)
+    val in = Resources.asByteSource(Resources.getResource(resourceName)).openBufferedStream()
+    val out = new BufferedOutputStream(new FileOutputStream(dst.toFile))
+    try {
+      ByteStreams.copy(in, out)
+      dst
+    } finally {
+      try {
+        in.close()
+      } finally {
+        out.close()
+      }
+    }
   }
 }
