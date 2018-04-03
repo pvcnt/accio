@@ -20,6 +20,7 @@ package fr.cnrs.liris.accio.scheduler.local
 
 import java.io.FileInputStream
 import java.nio.file.{Files, Path}
+import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.{ConcurrentHashMap, ConcurrentLinkedDeque, Executors}
 
 import com.google.common.eventbus.EventBus
@@ -64,16 +65,20 @@ final class LocalScheduler(
       ramMb = Platform.totalMemory.map(ram => ram.inMegabytes - reservedResources.ramMb).getOrElse(0),
       diskMb = Platform.totalDiskSpace.map(disk => disk.inMegabytes - reservedResources.diskMb).getOrElse(0))
   }
-  private[this] var availableResources = totalResources
+  // Although the reserve/release code is synchronized, we register available resources as an
+  // AtomicReference because it is accessed by the gauges code, which can occur at any time.
+  private[this] val availableResources = new AtomicReference(totalResources)
 
   // Register gauges.
-  /*totalResources.foreach { case (key, value) =>
-    // Total resources are registered as gauges, even though values are not expected to vary.
-    statsReceiver.provideGauge("scheduler", "total", key)(value.toFloat)
-  }
-  availableResources.keySet.foreach { key =>
-    statsReceiver.provideGauge("scheduler", "available", key)(availableResources(key).toFloat)
-  }*/
+  // Total resources are registered as gauges, even though values are not expected to vary.
+  statsReceiver.provideGauge("scheduler", "total", "cpu")(totalResources.cpu.toFloat)
+  statsReceiver.provideGauge("scheduler", "total", "ram_mb")(totalResources.ramMb.toFloat)
+  statsReceiver.provideGauge("scheduler", "total", "disk_mb")(totalResources.diskMb.toFloat)
+
+  statsReceiver.provideGauge("scheduler", "free", "cpu")(availableResources.get.cpu.toFloat)
+  statsReceiver.provideGauge("scheduler", "free", "ram_mb")(availableResources.get.ramMb.toFloat)
+  statsReceiver.provideGauge("scheduler", "free", "disk_mb")(availableResources.get.diskMb.toFloat)
+
   statsReceiver.provideGauge("scheduler", "pending")(pending.size.toFloat)
   statsReceiver.provideGauge("scheduler", "running")(running.size.toFloat)
 
@@ -137,22 +142,24 @@ final class LocalScheduler(
   }
 
   private def reserveResources(id: String, requests: Resource): Boolean = synchronized {
-    if (!isEnoughResources(id, requests, availableResources)) {
+    val available = availableResources.get
+    if (!isEnoughResources(id, requests, available)) {
       false
     } else {
-      availableResources = Resource(
-        cpu = availableResources.cpu - requests.cpu,
-        ramMb = availableResources.ramMb - requests.ramMb,
-        diskMb = availableResources.diskMb - requests.diskMb)
+      availableResources.set(Resource(
+        cpu = available.cpu - requests.cpu,
+        ramMb = available.ramMb - requests.ramMb,
+        diskMb = available.diskMb - requests.diskMb))
       true
     }
   }
 
   private def releaseResources(requests: Resource): Unit = synchronized {
-    availableResources = Resource(
-      cpu = availableResources.cpu + requests.cpu,
-      ramMb = availableResources.ramMb + requests.ramMb,
-      diskMb = availableResources.diskMb + requests.diskMb)
+    val available = availableResources.get
+    availableResources.set(Resource(
+      cpu = available.cpu + requests.cpu,
+      ramMb = available.ramMb + requests.ramMb,
+      diskMb = available.diskMb + requests.diskMb))
 
     pending.asScala.foreach { task =>
       if (reserveResources(task.id, task.resource)) {
