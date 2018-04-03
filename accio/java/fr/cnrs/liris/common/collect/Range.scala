@@ -98,7 +98,6 @@ case class Range[T: Ordering] private(getLowerEndpoint: Option[T], lowerBoundTyp
     } else {
       (None, BoundType.Open)
     }
-    println(s"intersect: $lower, $lowerType, $upper, $upperType")
     (lower, lowerType, upper, upperType)
   }
 
