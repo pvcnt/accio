@@ -26,7 +26,7 @@ import fr.cnrs.liris.common.util.StringUtils.padTo
 case class GetQuery(all: Boolean, tags: Set[String], owner: Option[String], limit: Option[Int])
 
 trait GetController[Res] {
-  def retrieve(opts: GetQuery, client: AgentService$FinagleClient): Future[Res]
+  def retrieve(opts: GetQuery, client: AgentService.MethodPerEndpoint): Future[Res]
 
   def print(reporter: Reporter, resp: Res): Unit
 }

@@ -18,24 +18,28 @@
 
 package fr.cnrs.liris.accio.tools.cli.commands
 
-import com.twitter.util.Future
+import com.twitter.util.{Future, Stopwatch}
 import fr.cnrs.liris.accio.agent.GetClusterRequest
 import fr.cnrs.liris.accio.version.Version
 
 final class VersionCommand extends Command with ClientCommand {
-  private[this] val clientFlag = flag("client", false, "Show only version of the client (no server needed)")
+  private[this] val onlyClient = flag("client", false, "Show only version of the client (no server needed)")
 
   override def name = "version"
 
   override def help = "Display client and server version information."
 
   override def execute(residue: Seq[String], env: CommandEnvironment): Future[ExitCode] = {
-    val f = if (clientFlag()) {
+    val f = if (onlyClient()) {
       Future.Done
     } else {
-      client
-        .getCluster(GetClusterRequest())
-        .foreach(resp => env.reporter.outErr.printOutLn(s"Server version: ${resp.version}"))
+      val c = client
+      val w = Stopwatch.start()
+        c.getCluster(GetClusterRequest())
+        .foreach { resp =>
+          println("query time " + w())
+          env.reporter.outErr.printOutLn(s"Server version: ${resp.version}")
+        }
     }
     f.map { _ =>
       env.reporter.outErr.printOutLn(s"Client version: ${Version.Current.toString}")

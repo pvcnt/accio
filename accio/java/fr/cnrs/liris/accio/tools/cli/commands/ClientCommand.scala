@@ -18,7 +18,8 @@
 
 package fr.cnrs.liris.accio.tools.cli.commands
 
-import fr.cnrs.liris.accio.agent.AgentService$FinagleClient
+import com.twitter.util.Stopwatch
+import fr.cnrs.liris.accio.agent.AgentService
 import fr.cnrs.liris.accio.tools.cli.config.ConfigParser
 
 private[commands] trait ClientCommand {
@@ -27,7 +28,10 @@ private[commands] trait ClientCommand {
   private[this] val clusterFlag = flag[String]("cluster", "Name of the cluster to use")
   private[this] val clientProvider = new ClientFactory(ConfigParser.default)
 
-  protected final def client: AgentService$FinagleClient = {
-    clusterFlag.get.map(clientProvider.apply).getOrElse(clientProvider.default)
+  protected final def client: AgentService.MethodPerEndpoint = {
+    val w = Stopwatch.start()
+    val r = clusterFlag.get.map(clientProvider.apply).getOrElse(clientProvider.default)
+    println("created client in " + w())
+    r
   }
 }

@@ -19,13 +19,13 @@
 package fr.cnrs.liris.accio.tools.cli.controller
 
 import com.twitter.util.Future
-import fr.cnrs.liris.accio.agent.AgentService$FinagleClient
+import fr.cnrs.liris.accio.agent.AgentService
 import fr.cnrs.liris.accio.tools.cli.event.Reporter
 
 case class NoResultException() extends Exception
 
 trait DescribeController[Res] {
-  def retrieve(id: String, client: AgentService$FinagleClient): Future[Res]
+  def retrieve(id: String, client: AgentService.MethodPerEndpoint): Future[Res]
 
   def print(out: Reporter, resp: Res): Unit
 }

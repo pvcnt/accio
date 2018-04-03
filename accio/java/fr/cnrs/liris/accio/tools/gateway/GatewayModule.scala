@@ -31,11 +31,11 @@ object GatewayModule extends TwitterModule {
 
   @Singleton
   @Provides
-  def providesClient: AgentService$FinagleClient = {
+  def providesClient: AgentService.MethodPerEndpoint = {
     val service = Thrift.client
       .withRequestTimeout(timeoutFlag())
       .newService(serverFlag())
     val params = RichClientParam()
-    new AgentService.FinagledClient(service, params)
+    AgentService.MethodPerEndpoint(AgentService.ServicePerEndpointBuilder.servicePerEndpoint(service, params))
   }
 }

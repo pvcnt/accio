@@ -108,7 +108,7 @@ final class CommandDispatcher(registry: CommandRegistry) {
     val f = command.execute(residue, env).handle {
       case e: ServerException =>
         e.message.foreach { message =>
-          env.reporter.handle(Event.error(s"Server error: $message"))
+          env.reporter.handle(Event.error(message))
         }
         e.details.foreach { details =>
           details.warnings.foreach { violation =>
@@ -125,7 +125,7 @@ final class CommandDispatcher(registry: CommandRegistry) {
           case _ => ExitCode.InternalError
         }
       case NonFatal(e) =>
-        env.reporter.handle(Event.warn(e.getMessage))
+        env.reporter.handle(Event.warn(s"Server error: ${e.getMessage}"))
         ExitCode.InternalError
     }
     Await.result(f)

@@ -19,14 +19,14 @@
 package fr.cnrs.liris.accio.tools.cli.controller
 
 import com.twitter.util.Future
-import fr.cnrs.liris.accio.agent.{AgentService$FinagleClient, GetOperatorRequest}
+import fr.cnrs.liris.accio.agent.{AgentService, GetOperatorRequest}
 import fr.cnrs.liris.accio.api.thrift._
 import fr.cnrs.liris.accio.api.{DataTypes, Values}
 import fr.cnrs.liris.accio.tools.cli.event.Reporter
 import fr.cnrs.liris.common.util.StringUtils
 
 class DescribeOperatorController extends DescribeController[OpDef] {
-  override def retrieve(id: String, client: AgentService$FinagleClient): Future[OpDef] = {
+  override def retrieve(id: String, client: AgentService.MethodPerEndpoint): Future[OpDef] = {
     client
       .getOperator(GetOperatorRequest(id))
       .map(_.operator)
@@ -46,31 +46,31 @@ class DescribeOperatorController extends DescribeController[OpDef] {
     printOutputs(out, opDef)
   }
 
-  private def printInputs(out: Reporter, opDef: OpDef) = {
+  private def printInputs(out: Reporter, opDef: OpDef): Unit = {
     out.outErr.printOutLn()
     out.outErr.printOutLn(s"Available inputs")
     opDef.inputs.foreach { argDef =>
-      out.outErr.printOut(s"  ${argDef.name} (${DataTypes.stringify(argDef.kind)}")
+      out.outErr.printOut(s"  - ${argDef.name} [${DataTypes.stringify(argDef.kind)}")
       if (argDef.defaultValue.isDefined) {
         out.outErr.printOut(s"; default: ${Values.stringify(argDef.defaultValue.get)}")
       }
-      if (argDef.isOptional) {
+      if (argDef.isOptional || argDef.defaultValue.isDefined) {
         out.outErr.printOut("; optional")
       }
-      out.outErr.printOut(")")
+      out.outErr.printOut("]")
       argDef.help.foreach(help => out.outErr.printOut(": " + help))
       out.outErr.printOutLn()
     }
   }
 
-  private def printOutputs(out: Reporter, opDef: OpDef) = {
+  private def printOutputs(out: Reporter, opDef: OpDef): Unit = {
     out.outErr.printOutLn()
     if (opDef.outputs.nonEmpty) {
       out.outErr.printOutLn("Available outputs")
-      opDef.outputs.foreach { outputDef =>
-        out.outErr.printOut(s"  - ${outputDef.name} (${DataTypes.stringify(outputDef.kind)})")
+      opDef.outputs.foreach { argDef =>
+        out.outErr.printOut(s"  - ${argDef.name} [${DataTypes.stringify(argDef.kind)}]")
+        argDef.help.foreach(help => out.outErr.printOut(": " + help))
         out.outErr.printOutLn()
-        outputDef.help.foreach(help => out.outErr.printOutLn(StringUtils.paragraphFill(help, 80, 4)))
       }
     }
   }

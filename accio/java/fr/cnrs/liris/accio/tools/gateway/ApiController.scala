@@ -28,7 +28,7 @@ import fr.cnrs.liris.accio.api.thrift._
 import fr.cnrs.liris.common.util.StringUtils.{explode, maybe}
 
 @Singleton
-final class ApiController @Inject()(client: AgentService$FinagleClient) extends Controller {
+final class ApiController @Inject()(client: AgentService.MethodPerEndpoint) extends Controller {
   get("/api/v1") { _: Request =>
     client.getCluster(GetClusterRequest()).map { resp =>
       IndexResponse(resp.clusterName, resp.version)

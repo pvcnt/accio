@@ -22,7 +22,7 @@ import com.twitter.util.{Future, Time}
 import fr.cnrs.liris.accio.agent._
 
 class GetWorkflowController extends AbstractGetController[ListWorkflowsResponse] with FormatHelper {
-  override def retrieve(opts: GetQuery, client: AgentService$FinagleClient): Future[ListWorkflowsResponse] = {
+  override def retrieve(opts: GetQuery, client: AgentService.MethodPerEndpoint): Future[ListWorkflowsResponse] = {
     client.listWorkflows(ListWorkflowsRequest(owner = opts.owner, limit = opts.limit))
   }
 

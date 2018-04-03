@@ -22,7 +22,8 @@ import java.nio.file.Paths
 
 import com.twitter.finagle.Thrift
 import com.twitter.finagle.thrift.{ClientId, RichClientParam}
-import fr.cnrs.liris.accio.agent.{AgentService, AgentService$FinagleClient}
+import com.twitter.util.{Duration, Stopwatch}
+import fr.cnrs.liris.accio.agent.AgentService
 import fr.cnrs.liris.accio.tools.cli.config.{Cluster, ClusterConfig, ConfigParser}
 import fr.cnrs.liris.common.util.FileUtils
 
@@ -38,7 +39,7 @@ import scala.collection.mutable
  * @param parser Cluster configuration parser.
  */
 final class ClientFactory(parser: ConfigParser) {
-  private[this] val clients = mutable.Map.empty[String, AgentService$FinagleClient]
+  private[this] val clients = mutable.Map.empty[String, AgentService.MethodPerEndpoint]
   private[this] lazy val config = parseConfig
 
   /**
@@ -47,7 +48,7 @@ final class ClientFactory(parser: ConfigParser) {
    * @param clusterName Cluster name.
    * @throws IllegalArgumentException If given cluster does not exists.
    */
-  def apply(clusterName: Option[String]): AgentService$FinagleClient =
+  def apply(clusterName: Option[String]): AgentService.MethodPerEndpoint =
     clusterName match {
       case None => getOrCreate(config.defaultCluster)
       case Some(name) => getOrCreate(config(name))
@@ -56,7 +57,7 @@ final class ClientFactory(parser: ConfigParser) {
   /**
    * Return a Finagle client for the default cluster.
    */
-  def default: AgentService$FinagleClient = apply(None)
+  def default: AgentService.MethodPerEndpoint = apply(None)
 
   /**
    * Return a Finagle client for a given cluster.
@@ -64,12 +65,7 @@ final class ClientFactory(parser: ConfigParser) {
    * @param clusterName Cluster name.
    * @throws IllegalArgumentException If given cluster does not exists.
    */
-  def apply(clusterName: String): AgentService$FinagleClient = apply(Some(clusterName))
-
-  /**
-   * Close all clients.
-   */
-  def close(): Unit = clients.values.foreach(_.service.close())
+  def apply(clusterName: String): AgentService.MethodPerEndpoint = apply(Some(clusterName))
 
   /**
    * Return an existing client for a given cluster, if any, or create a new one and memoize it.
@@ -78,10 +74,11 @@ final class ClientFactory(parser: ConfigParser) {
    */
   private def getOrCreate(config: Cluster) = {
     clients.getOrElseUpdate(config.name, {
-      val params = RichClientParam()
       var builder = Thrift.client
       config.credentials.foreach(credentials => builder = builder.withClientId(ClientId(credentials)))
-      new AgentService.FinagledClient(builder.newService(config.server), params)
+      val service = builder.newService(config.server)
+      val params = RichClientParam()
+      AgentService.MethodPerEndpoint(AgentService.ServicePerEndpointBuilder.servicePerEndpoint(service, params))
     })
   }
 

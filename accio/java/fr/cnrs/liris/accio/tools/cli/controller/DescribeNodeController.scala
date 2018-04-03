@@ -19,7 +19,7 @@
 package fr.cnrs.liris.accio.tools.cli.controller
 
 import com.twitter.util.{Duration, Future, Time}
-import fr.cnrs.liris.accio.agent.{AgentService$FinagleClient, GetRunRequest}
+import fr.cnrs.liris.accio.agent.{AgentService, GetRunRequest}
 import fr.cnrs.liris.accio.api.thrift._
 import fr.cnrs.liris.accio.api.{Errors, Values}
 import fr.cnrs.liris.accio.tools.cli.event.Reporter
@@ -28,7 +28,7 @@ import fr.cnrs.liris.common.util.StringUtils.padTo
 class DescribeNodeController extends DescribeController[NodeStatus] with FormatHelper {
   private[this] val colWidth = 15
 
-  override def retrieve(id: String, client: AgentService$FinagleClient): Future[NodeStatus] = {
+  override def retrieve(id: String, client: AgentService.MethodPerEndpoint): Future[NodeStatus] = {
     val parts = id.split("/")
     client
       .getRun(GetRunRequest(parts.head))

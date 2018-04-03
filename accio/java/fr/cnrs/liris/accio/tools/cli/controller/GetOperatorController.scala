@@ -23,7 +23,7 @@ import fr.cnrs.liris.accio.agent._
 import fr.cnrs.liris.accio.tools.cli.event.Reporter
 
 class GetOperatorController extends GetController[ListOperatorsResponse] {
-  override def retrieve(opts: GetQuery, client: AgentService$FinagleClient): Future[ListOperatorsResponse] = {
+  override def retrieve(opts: GetQuery, client: AgentService.MethodPerEndpoint): Future[ListOperatorsResponse] = {
     client.listOperators(ListOperatorsRequest(includeDeprecated = opts.all))
   }
 
