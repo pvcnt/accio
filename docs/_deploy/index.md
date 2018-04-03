@@ -86,7 +86,7 @@ The administrative server is not intended to be publicly exposed, but should sta
 The previous command launches the agent in the foreground.
 We recommend to run each agent under supervision, whether it is via systemd, [Supervisor](http://supervisord.org/) or [Monit](https://mmonit.com/monit/).
 Those systems allow to automatically start and restart the agent, ensuring it is always running and healthy.
-Examples of such configuration files may be found in the [`etc/` directory](https://github.com/privamov/accio/tree/master/etc).
+Examples of such configuration files may be found in the [`etc/conf` directory](https://github.com/privamov/accio/tree/master/etc/conf).
 
 Now, you should be interested in [configuring the agent](configuration.html), because the default options may not be suited for production use.
 For example, an in-memory storage is used by default, which means that all data will be list when the agent stops.
