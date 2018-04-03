@@ -85,7 +85,7 @@ final class GraphValidator @Inject()(opRegistry: OpRegistry) {
     }
 
     opDef.inputs.foreach { argDef =>
-      if (argDef.defaultValue.isEmpty && !node.inputs.contains(argDef.name)) {
+      if (!argDef.isOptional && argDef.defaultValue.isEmpty && !node.inputs.contains(argDef.name)) {
         builder.error(FieldViolation(
           s"Required input is missing: ${argDef.name}",
           s"graph.$idx.inputs"))
