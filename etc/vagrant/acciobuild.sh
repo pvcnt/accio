@@ -29,9 +29,8 @@ function upstart_update {
 }
 
 function build_client {
-  bazel build accio/java/fr/cnrs/liris/accio/tools/cli:cli_deploy.jar
-  sudo touch /usr/local/bin/accio && sudo chown vagrant: /usr/local/bin/accio && chmod +x /usr/local/bin/accio
-  cat etc/vagrant/stub.sh bazel-bin/accio/java/fr/cnrs/liris/accio/tools/cli/cli_deploy.jar > /usr/local/bin/accio
+  bazel build accio/java/fr/cnrs/liris/accio/tools/cli:binary
+  sudo cp bazel-genfiles/accio/java/fr/cnrs/liris/accio/tools/cli/cli_binary /usr/local/bin/accio
 }
 
 function build_agent {

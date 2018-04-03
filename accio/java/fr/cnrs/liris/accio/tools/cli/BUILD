@@ -27,3 +27,11 @@ scala_binary(
   ],
   main_class = "fr.cnrs.liris.accio.tools.cli.AccioClientMain",
 )
+
+genrule(
+  name = "binary",
+  srcs = ["cli_deploy.jar"],
+  outs = ["cli_binary"],
+  cmd = "cat $(location stub.sh) $(location cli_deploy.jar)> $@",
+  tools = ["stub.sh"],
+)
