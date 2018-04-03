@@ -38,7 +38,6 @@ class AgentServer extends ThriftServer {
       .filter[StatsFilter]
       .filter[AuthFilter]
       .filter[ExceptionMappingFilter]
-      .exceptionMapper[FinatraThriftExceptionMapper]
       .add[AgentServiceController]
   }
 }
