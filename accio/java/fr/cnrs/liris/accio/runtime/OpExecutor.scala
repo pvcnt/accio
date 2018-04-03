@@ -24,8 +24,8 @@ import java.util.UUID
 import com.google.common.annotations.VisibleForTesting
 import com.google.inject.Inject
 import com.twitter.util.logging.Logging
-import fr.cnrs.liris.accio.api.Values
 import fr.cnrs.liris.accio.api.thrift._
+import fr.cnrs.liris.accio.api.{DataTypes, Values}
 import fr.cnrs.liris.accio.sdk.{OpContext, Operator}
 
 import scala.util.control.NonFatal
@@ -37,24 +37,6 @@ import scala.util.control.NonFatal
  * @param cleanSandbox Whether to clean sandbox immediately after operator completion.
  */
 case class OpExecutorOpts(useProfiler: Boolean, cleanSandbox: Boolean = true)
-
-/**
- * Exception thrown when an input is missing for an operator.
- *
- * @param op  Operator name.
- * @param arg Input port name.
- */
-class MissingOpInputException(val op: String, val arg: String)
-  extends Exception(s"Missing required input of $op operator: $arg")
-
-/**
- * Exception thrown when an operator is unknown.
- *
- * @param op    Operator name.
- * @param cause Cause exception.
- */
-class InvalidOpException(val op: String, cause: Throwable = null)
-  extends RuntimeException(s"Invalid operator: $op", cause)
 
 /**
  * Entry point for executing an operator from a payload. It manages the whole lifecycle of
@@ -84,20 +66,14 @@ final class OpExecutor @Inject()(operators: Set[OpMeta]) extends Logging {
    *
    * @param payload Operator payload.
    * @param opts    Executor options.
-   * @throws InvalidOpException      If the operator is unknown.
-   * @throws MissingOpInputException If an input is missing.
    * @return Result of the operator execution.
    */
-  @throws[InvalidOpException]
-  @throws[MissingOpInputException]
   def execute(payload: OpPayload, opts: OpExecutorOpts): OpResult = {
     operators.find(_.defn.name == payload.op) match {
       case Some(opMeta) =>
-        opMeta.opClass.newInstance() match {
-          case operator: Operator[_, _] => execute(operator, opMeta, payload, opts)
-          case _ => throw new InvalidOpException(payload.op)
-        }
-      case None => throw new InvalidOpException(payload.op)
+        val operator = opMeta.opClass.newInstance()
+        execute(operator, opMeta, payload, opts)
+      case None => throw new IllegalArgumentException(s"Unknown operator: ${payload.op}")
     }
   }
 
@@ -170,13 +146,16 @@ final class OpExecutor @Inject()(operators: Set[OpMeta]) extends Logging {
                   Values.decode(defaultValue, argDef.kind)
                 case None =>
                   if (!argDef.isOptional) {
-                    throw new MissingOpInputException(opMeta.defn.name, argDef.name)
+                    throw new IllegalArgumentException(s"Missing required input ${argDef.name}")
                   }
                   // An optional argument always accept None as value.
                   None
               }
             case Some(v) =>
-              val value = Values.decode(v, argDef.kind)
+              val normalizedValue = Values
+                .as(v, argDef.kind)
+                .getOrElse(throw new IllegalArgumentException(s"Invalid input type for ${argDef.name}: ${DataTypes.stringify(v.kind)}"))
+              val value = Values.decode(normalizedValue, argDef.kind)
               if (argDef.isOptional) Some(value) else value
           }
         }
@@ -194,12 +173,17 @@ final class OpExecutor @Inject()(operators: Set[OpMeta]) extends Logging {
     opMeta.outClass match {
       case None => Set.empty
       case Some(outClass) =>
-        opMeta.defn.outputs.flatMap { argDef =>
+        opMeta.defn.outputs.map { argDef =>
           val rawValue = outClass.getMethod(argDef.name).invoke(out)
-          // TODO: handle failures.
-          Values.encode(rawValue, argDef.kind).map { value =>
-            Artifact(argDef.name, value)
-          }
+          // The exception should never be thrown, if everything else is in place. It seems indeed
+          // extremely difficult for the client to return something over the wrong type, because it
+          // is checked by the JVM (unless he does some dangerous type cast).
+          // If this exception is thrown, it is likely there is an error somewhere else, while
+          // inferring the various types.
+          Values
+            .encode(rawValue, argDef.kind)
+            .map(value => Artifact(argDef.name, value))
+            .getOrElse(throw new RuntimeException(s"Invalid output for ${argDef.name}: $rawValue"))
         }.toSet
     }
   }

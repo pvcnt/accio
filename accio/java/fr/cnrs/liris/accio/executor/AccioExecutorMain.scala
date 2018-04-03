@@ -38,8 +38,15 @@ class AccioExecutor {
     val executor = injector.instance[TaskExecutor]
 
     val task = BinaryScroogeSerializer.fromString(args.head, Task)
-    com.twitter.jvm.numProcs.let(task.resource.cpu) {
+    // The following line is here to trick the Sparkle executor in thinking there is less cores
+    // than effectively available. This is used as a poor-man isolation system, when nothing more
+    // sophisticated is in place, to prevent Sparkle from using all available cores.
+    val exitCode = com.twitter.jvm.numProcs.let(task.resource.cpu) {
       executor.execute(task, Paths.get(args(1)))
     }
+    
+    // The exit code is returned by the executor, because it will be captured by the scheduler
+    // later on.
+    sys.exit(exitCode)
   }
 }

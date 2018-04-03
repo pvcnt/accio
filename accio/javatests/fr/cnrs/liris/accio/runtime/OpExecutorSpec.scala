@@ -20,6 +20,7 @@ package fr.cnrs.liris.accio.runtime
 
 import fr.cnrs.liris.accio.api.Values
 import fr.cnrs.liris.accio.api.thrift._
+import fr.cnrs.liris.common.geo.Distance
 import fr.cnrs.liris.common.util.FileUtils
 import fr.cnrs.liris.testing.{CreateTmpDirectory, UnitSpec}
 import org.scalatest.BeforeAndAfterEach
@@ -66,6 +67,23 @@ class OpExecutorSpec extends UnitSpec with CreateTmpDirectory with BeforeAndAfte
     res.artifacts should contain(Artifact("b", Values.encodeBoolean(true)))
   }
 
+  it should "coerce input values when possible" in {
+    val payload = OpPayload("Simple", 123, Map("str" -> Values.encodeInteger(2), "i" -> Values.encodeString("3")), "MyCacheKey")
+    val res = executor.execute(payload, OpExecutorOpts(useProfiler = false))
+    res.artifacts should have size 2
+    res.exitCode shouldBe 0
+    res.artifacts should contain(Artifact("str", Values.encodeString("2+3")))
+    res.artifacts should contain(Artifact("b", Values.encodeBoolean(true)))
+  }
+
+  it should "reject invalid inputs" in {
+    val payload = OpPayload("Simple", 123, Map("str" -> Values.encodeString("foo"), "i" -> Values.encodeDistance(Distance.meters(2))), "MyCacheKey")
+    val e = intercept[IllegalArgumentException] {
+      executor.execute(payload, OpExecutorOpts(useProfiler = false))
+    }
+    e.getMessage shouldBe "Invalid input type for i: distance"
+  }
+
   it should "execute operators with no input" in {
     val payload = OpPayload("NoInput", 123, Map.empty, "MyCacheKey")
     val res = executor.execute(payload, OpExecutorOpts(useProfiler = false))
@@ -83,19 +101,18 @@ class OpExecutorSpec extends UnitSpec with CreateTmpDirectory with BeforeAndAfte
 
   it should "detect a missing input" in {
     val payload = OpPayload("Simple", 123, Map.empty, "MyCacheKey")
-    val e = intercept[MissingOpInputException] {
+    val e = intercept[IllegalArgumentException] {
       executor.execute(payload, OpExecutorOpts(useProfiler = false))
     }
-    e.op shouldBe "Simple"
-    e.arg shouldBe "str"
+    e.getMessage shouldBe "Missing required input str"
   }
 
   it should "detect an unknown operator" in {
     val payload = OpPayload("Unknown", 123, Map.empty, "MyCacheKey")
-    val e = intercept[InvalidOpException] {
+    val e = intercept[IllegalArgumentException] {
       executor.execute(payload, OpExecutorOpts(useProfiler = false))
     }
-    e.op shouldBe "Unknown"
+    e.getMessage shouldBe "Unknown operator: Unknown"
   }
 
   it should "catch exceptions thrown by the operator" in {
