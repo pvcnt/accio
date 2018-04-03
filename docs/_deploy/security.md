@@ -81,7 +81,7 @@ The object can have the following fields.
 
 The service receives a POST request with a JSON-encoded body with the following format:
 
-```
+```json
 {
   "credentials": "USER-PROVIDED CREDENTIALS"
 }
@@ -90,7 +90,7 @@ The service receives a POST request with a JSON-encoded body with the following 
 The service is expected to reply with a JSON-encoded body.
 An successful authentication would return a response similar to the following:
 
-```
+```json
 {
   "authenticated": true,
   "user": {
@@ -105,9 +105,9 @@ The `user.email` and `user.groups` fields may be left out if they are not releva
 The `user.name` field should always be specified.
 In the case it is left out, the credentials will be used as a user name, but this is not likely what you want.
 
-An rejected authentication would return the following response:
+A rejected authentication would return the following response:
 
-```
+```json
 {
   "authenticated": false
 }
