@@ -32,7 +32,7 @@ final class WorkflowParser {
   def parse(file: File): Future[thrift.Workflow] = {
     Reader
       .readAll(Reader.fromFile(file))
-      .map { case Buf.Utf8(content) => parse(content, Some(file.getAbsolutePath)) }
+      .map { case Buf.Utf8(content) => parse(content, Some(file.getName)) }
   }
 
   /**
