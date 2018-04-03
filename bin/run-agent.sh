@@ -23,9 +23,9 @@ bazel build accio/java/fr/cnrs/liris/accio/agent
   -cluster_name=devcluster \
   -admin.port=":9990" \
   -thrift.port=":9999" \
-  -scheduler.type=local \
-  -scheduler.local.force_scheduling \
+  -scheduler=local \
+  -force_scheduling \
   -executor_uri=$(pwd)/bazel-bin/accio/java/fr/cnrs/liris/accio/executor/executor_deploy.jar \
   -datadir=/tmp/accio-agent \
-  -storage.type=memory \
+  -storage=memory \
   "$@"

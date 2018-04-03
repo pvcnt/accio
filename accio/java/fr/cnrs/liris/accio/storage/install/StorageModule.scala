@@ -29,14 +29,14 @@ import fr.cnrs.liris.accio.storage.mysql.{ClientFactory, MysqlStorage}
  * Guice module provisioning storage.
  */
 object StorageModule extends TwitterModule {
-  private[this] val typeFlag = flag("storage.type", "memory", "Storage type")
+  private[this] val typeFlag = flag("storage", "memory", "Storage type")
 
   // MySQL storage configuration.
-  private[this] val myServerFlag = flag("storage.mysql.server", "localhost:3306", "MySQL server address")
-  private[this] val myUserFlag = flag("storage.mysql.user", "root", "MySQL username")
-  private[this] val myPasswordFlag = flag[String]("storage.mysql.password", "MySQL password")
-  private[this] val myDatabaseFlag = flag[String]("storage.mysql.database", "accio", "MySQL database name")
-  private[this] val myUseNativeLocksFlag = flag("storage.mysql.native_locks", false, "Whether to use native MySQL locking (it is required if you want to deploy multiple agents)")
+  private[this] val myServerFlag = flag("storage.mysql_server", "localhost:3306", "MySQL server address")
+  private[this] val myUserFlag = flag("storage.mysql_user", "root", "MySQL username")
+  private[this] val myPasswordFlag = flag[String]("storage.mysql_password", "MySQL password")
+  private[this] val myDatabaseFlag = flag[String]("storage.mysql_database", "accio", "MySQL database name")
+  private[this] val myUseNativeLocksFlag = flag("storage.mysql_native_locks", false, "Whether to use native MySQL locking (it is required if you want to deploy multiple agents)")
 
   override def configure(): Unit = {
     typeFlag() match {

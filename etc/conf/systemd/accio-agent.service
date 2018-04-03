@@ -32,11 +32,11 @@ ExecStart=/usr/bin/java \
     -datadir=/var/lib/accio-agent \
     -thrift.port="":9999" \
     -admin.port=":9990" \
-    -storage.type=mysql \
-    -storage.mysql.server=localhost:3306 \
-    -storage.mysql.user=accio \
-    -storage.mysql.password=secret \
-    -storage.mysql.database=accio
+    -storage=mysql \
+    -storage.mysql_server=localhost:3306 \
+    -storage.mysql_user=accio \
+    -storage.mysql_password=secret \
+    -storage.mysql_database=accio
 Restart=on-failure
 
 [Install]

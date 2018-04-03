@@ -34,17 +34,17 @@ import fr.cnrs.liris.accio.scheduler.local.LocalScheduler
  * Guice module provisioning the scheduler service.
  */
 object SchedulerModule extends TwitterModule {
-  private[this] val typeFlag = flag("scheduler.type", "local", "Scheduler type")
+  private[this] val typeFlag = flag("scheduler", "local", "Scheduler type")
 
   // Common configuration.
   private[this] val executorUriFlag = flag[String]("executor_uri", "URI to the executor")
   private[this] val executorArgsFlag = flag("executor_args", "", "Additional arguments to the executor")
 
   // Local scheduler configuration.
-  private[this] val forceSchedulingFlag = flag("scheduler.local.force_scheduling", false, "Whether to force the scheduling of too large tasks")
-  private[this] val reservedCpuFlag = flag("scheduler.local.reserved_cpu", 0d, "Amount of CPU that is not available for scheduling")
-  private[this] val reservedRamFlag = flag("scheduler.local.reserved_ram", StorageUnit.zero, "Amount of RAM that is not available for scheduling")
-  private[this] val reservedDiskFlag = flag("scheduler.local.reserved_disk", StorageUnit.zero, "Disk space that is not available for scheduling")
+  private[this] val forceSchedulingFlag = flag("force_scheduling", false, "Whether to force the scheduling of too large tasks")
+  private[this] val reservedCpuFlag = flag("reserved_cpu", 0d, "Amount of CPU that is not available for scheduling")
+  private[this] val reservedRamFlag = flag("reserved_ram", StorageUnit.zero, "Amount of RAM that is not available for scheduling")
+  private[this] val reservedDiskFlag = flag("reserved_disk", StorageUnit.zero, "Disk space that is not available for scheduling")
 
   override def configure(): Unit = {
     typeFlag() match {
@@ -79,7 +79,7 @@ object SchedulerModule extends TwitterModule {
         executorUriFlag(),
         executorArgs,
         forceSchedulingFlag(),
-        dataDir)
+        dataDir.resolve("local-scheduler"))
     }
   }
 

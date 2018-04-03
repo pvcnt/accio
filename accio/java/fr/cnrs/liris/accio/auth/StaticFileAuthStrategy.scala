@@ -27,7 +27,7 @@ import fr.cnrs.liris.common.util.StringUtils.maybe
 
 import scala.io.Source
 
-final class StaticAuthStrategy(users: Set[StaticAuthStrategy.AuthInfo]) extends AuthStrategy {
+final class StaticFileAuthStrategy(users: Set[StaticFileAuthStrategy.AuthInfo]) extends AuthStrategy {
   private[this] val index = users.map(user => user.credentials -> user).toMap
 
   override def authenticate(credentials: String): Future[Option[UserInfo]] = Future {
@@ -38,23 +38,23 @@ final class StaticAuthStrategy(users: Set[StaticAuthStrategy.AuthInfo]) extends 
   }
 }
 
-object StaticAuthStrategy extends Logging {
+object StaticFileAuthStrategy extends Logging {
 
   private case class AuthInfo(credentials: String, user: UserInfo)
 
   /**
-   * Create a [[StaticAuthStrategy]] from a configuration file.
+   * Create a [[StaticFileAuthStrategy]] from a configuration file.
    *
    * @param path Path to the users' database.
    * @throws IllegalArgumentException If the provided path is not a readable file.
    */
-  def fromFile(path: Path): StaticAuthStrategy = {
+  def fromFile(path: Path): StaticFileAuthStrategy = {
     if (!path.toFile.isFile || !path.toFile.canRead) {
       throw new IllegalArgumentException(s"$path must be a readable file")
     }
     val lines = Source.fromFile(path.toFile).getLines()
     val users = lines.zipWithIndex.flatMap { case (line, idx) => parse(idx, line) }.toSet
-    new StaticAuthStrategy(users)
+    new StaticFileAuthStrategy(users)
   }
 
   private def parse(idx: Int, line: String): Option[AuthInfo] = {

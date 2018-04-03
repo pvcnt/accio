@@ -23,14 +23,14 @@ import fr.cnrs.liris.accio.api.UserInfo
 import fr.cnrs.liris.testing.{CreateTmpDirectory, UnitSpec}
 
 /**
- * Unit tests for [[StaticAuthStrategy]].
+ * Unit tests for [[StaticFileAuthStrategy]].
  */
-class StaticAuthStrategySpec extends UnitSpec with CreateTmpDirectory {
+class StaticFileAuthStrategySpec extends UnitSpec with CreateTmpDirectory {
   behavior of "StaticAuthStrategy"
 
   private lazy val authenticator = {
     val path = copyResource("fr/cnrs/liris/accio/auth/static_file.txt")
-    StaticAuthStrategy.fromFile(path)
+    StaticFileAuthStrategy.fromFile(path)
   }
 
   it should "allow a valid client identifier" in {

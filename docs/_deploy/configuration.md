@@ -45,7 +45,7 @@ For example, to bind the admin interface on localhost, and make the agent listen
 
 The runtime information about workflows and runs is persisted inside a storage.
 Accio comes with several implementations for the storage, among which only one can be active.
-The storage type is configured with the `-storage.type` flag.
+The storage type is configured with the `-storage` flag.
 By default, an in-memory storage is used, which means that the data is lost once the server stops.
 You may certainly want to switch to a more durable alternative, such as a MySQL database.
 The description of all available storages and their respective configuration is available on [the dedicated page](storage.html).
@@ -70,5 +70,5 @@ Normally, it should point to the official Accio executor, e.g.:
 ```
 
 Accio comes with several implementation for the scheduler, among which only one can be active.
-The scheduler type is configured with the `-scheduler.type` flag.
+The scheduler type is configured with the `-scheduler` flag.
 The description of all available storages and their respective configuration is available on [the dedicated page](scheduler.html).

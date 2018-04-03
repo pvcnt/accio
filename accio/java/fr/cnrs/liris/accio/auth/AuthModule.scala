@@ -28,14 +28,14 @@ import scala.collection.mutable
 
 object AuthModule extends TwitterModule {
   private[this] val staticConfigFileFlag = flag[String](
-    "auth.static.config_file",
+    "auth.static_file",
     "File that contains the mapping between client identifiers and users.")
   private[this] val webhookConfigFileFlag = flag[String](
-    "auth.webhook.config_file",
+    "auth.webhook_config_file",
     "File that contains webhook configuration. The agent will query the remote service to " +
       "determine if authentication is allowed.")
   private[this] val webhookCacheTtlFlag = flag(
-    "auth.webhook.cache_ttl",
+    "auth.webhook_cache_ttl",
     120.seconds,
     "The duration to cache responses from the webhook token strategy.")
   private[this] val trustFlag = flag(
@@ -60,7 +60,7 @@ object AuthModule extends TwitterModule {
       strategies += TrustAuthStrategy
     }
     staticConfigFileFlag.get.foreach { tokenFile =>
-      strategies += StaticAuthStrategy.fromFile(Paths.get(tokenFile))
+      strategies += StaticFileAuthStrategy.fromFile(Paths.get(tokenFile))
     }
     webhookConfigFileFlag.get.foreach { configFile =>
       strategies += WebhookAuthStrategy.fromFile(Paths.get(configFile), webhookCacheTtlFlag())

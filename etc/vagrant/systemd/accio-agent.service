@@ -30,11 +30,11 @@ ExecStart=/usr/bin/java \
     -admin.port=":9990" \
     -thrift.port=":9999" \
     -log.level=DEBUG \
-    -scheduler.type=local \
-    -scheduler.local.force_scheduling \
+    -scheduler=local \
+    -force_scheduling \
     -executor_uri=/usr/local/bin/accio-executor.jar \
     -datadir=/var/lib/accio-agent \
-    -storage.type=memory
+    -storage=memory
 Restart=on-failure
 
 [Install]

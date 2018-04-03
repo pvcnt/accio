@@ -40,12 +40,12 @@ class StorageModuleSpec extends UnitSpec with CreateTwitterInjector {
   }
 
   it should "provide a memory storage" in {
-    val injector = createInjector("-storage.type", "memory")
+    val injector = createInjector("-storage", "memory")
     injector.instance[Storage] shouldBe a[MemoryStorage]
   }
 
   it should "provide a MySQL storage" in {
-    val injector = createInjector("-storage.type", "mysql")
+    val injector = createInjector("-storage", "mysql")
     injector.instance[Storage] shouldBe a[MysqlStorage]
   }
 
