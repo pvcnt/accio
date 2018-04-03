@@ -8,6 +8,9 @@ However, it is possible to restrict the access to only authorised users.
 There are usually two components when it comes to securing a server: authentication, i.e., who can access the server, and authorization, i.e., what actions an authenticated user can perform.
 For now, Accio only supports authentication, which means authenticated users can always access all API methods.
 
+* TOC
+{:toc}
+
 ## Accio users
 
 Accio does not manage users by itself, and assume they are externally managed.
