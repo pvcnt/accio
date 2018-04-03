@@ -1,6 +1,6 @@
 ---
-layout: docs
 title: "Category: Lppm"
+order: 50
 ---
 
 * TOC

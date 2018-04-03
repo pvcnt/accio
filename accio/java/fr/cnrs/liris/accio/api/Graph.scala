@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.api
 
-import fr.cnrs.liris.common.util.{Named, Seqs}
+import fr.cnrs.liris.common.util.Seqs
 
 import scala.util.matching.Regex
 
@@ -27,7 +27,7 @@ import scala.util.matching.Regex
  *
  * @param nodes Nodes forming this graph.
  */
-case class Graph private[accio](nodes: Set[Node]) {
+case class Graph private[accio](nodes: Seq[Node] = Seq.empty) {
   private[this] val index = nodes.map(n => n.name -> n).toMap
 
   /**
@@ -38,12 +38,12 @@ case class Graph private[accio](nodes: Set[Node]) {
   /**
    * Return the set of root nodes.
    */
-  def roots: Set[Node] = nodes.filter(_.isRoot)
+  def roots: Set[Node] = nodes.filter(_.isRoot).toSet
 
   /**
    * Return the set of leaf nodes.
    */
-  def leaves: Set[Node] = nodes.filter(_.isLeaf)
+  def leaves: Set[Node] = nodes.filter(_.isLeaf).toSet
 
   /**
    * Return a node by its name, if it exists.
@@ -78,11 +78,11 @@ object Graph {
    */
   def fromThrift(struct: thrift.Graph): Graph = {
     // First create the nodes without specifying any output.
-    val nodes = struct.nodes.map(nodeDef => nodeDef.name -> Node.fromThrift(nodeDef)).toMap
+    val nodes = struct.nodes.map(nodeDef => nodeDef.name -> Node.fromThrift(nodeDef))
 
     // We now connect nodes together. Input dependencies are already defined when creating the node, we only have to
     // wire output dependencies correctly.
-    Graph(nodes.values.map(wireNode(_, nodes)).toSet)
+    Graph(nodes.map(_._2).map(wireNode(_, nodes.toMap)))
   }
 
   /**
@@ -120,7 +120,7 @@ case class Node private[accio](
   name: String,
   op: String,
   inputs: Map[String, Input],
-  outputs: Map[String, Set[thrift.Reference]]) extends Named {
+  outputs: Map[String, Set[thrift.Reference]]) {
 
   /**
    * Check whether this node is a root node, i.e., it does not depend on any other node.
@@ -235,4 +235,5 @@ object Input {
    * @param param Workflow parameter name.
    */
   case class Param(param: String) extends Input
+
 }

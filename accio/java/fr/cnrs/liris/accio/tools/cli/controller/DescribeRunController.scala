@@ -20,8 +20,8 @@ package fr.cnrs.liris.accio.tools.cli.controller
 
 import com.twitter.util.{Duration, Future, Time}
 import fr.cnrs.liris.accio.agent.{AgentService$FinagleClient, GetRunRequest, ListRunsRequest}
-import fr.cnrs.liris.accio.api.{Utils, Values}
 import fr.cnrs.liris.accio.api.thrift._
+import fr.cnrs.liris.accio.api.{Utils, Values}
 import fr.cnrs.liris.accio.tools.cli.event.Reporter
 import fr.cnrs.liris.common.util.StringUtils.padTo
 
@@ -29,31 +29,28 @@ class DescribeRunController extends DescribeController[(Run, Seq[Run])] with For
   private[this] val colWidth = 15
 
   override def retrieve(id: String, client: AgentService$FinagleClient): Future[(Run, Seq[Run])] = {
-    client.getRun(GetRunRequest(RunId(id)))
+    client
+      .getRun(GetRunRequest(id))
       .flatMap { resp =>
-        resp.result match {
-          case None => throw new NoResultException
-          case Some(run) =>
-            if (run.children.nonEmpty) {
-              client
-                .listRuns(ListRunsRequest(parent = Some(run.id)))
-                .map(resp2 => (run, resp2.results.sortBy(_.createdAt)))
-            } else {
-              Future.value((run, Seq.empty))
-            }
+        if (resp.run.children.nonEmpty) {
+          client
+            .listRuns(ListRunsRequest(parent = Some(resp.run.id)))
+            .map(resp2 => (resp.run, resp2.runs.sortBy(_.createdAt)))
+        } else {
+          Future.value((resp.run, Seq.empty))
         }
       }
   }
 
   override def print(out: Reporter, resp: (Run, Seq[Run])): Unit = {
     val (run, children) = resp
-    out.outErr.printOutLn(s"${padTo("Id", colWidth)} ${run.id.value}")
+    out.outErr.printOutLn(s"${padTo("Id", colWidth)} ${run.id}")
     run.parent.foreach { parentId =>
-      out.outErr.printOutLn(s"${padTo("Parent Id", colWidth)} ${parentId.value}")
+      out.outErr.printOutLn(s"${padTo("Parent Id", colWidth)} $parentId")
     }
-    out.outErr.printOutLn(s"${padTo("Workflow", colWidth)} ${run.pkg.workflowId.value}:${run.pkg.workflowVersion}")
+    out.outErr.printOutLn(s"${padTo("Workflow", colWidth)} ${run.pkg.workflowId}:${run.pkg.workflowVersion}")
     out.outErr.printOutLn(s"${padTo("Created", colWidth)} ${format(Time.fromMilliseconds(run.createdAt))}")
-    out.outErr.printOutLn(s"${padTo("Owner", colWidth)} ${Utils.toString(run.owner)}")
+    out.outErr.printOutLn(s"${padTo("Owner", colWidth)} ${run.owner.map(Utils.toString).getOrElse("<none>")}")
     out.outErr.printOutLn(s"${padTo("Name", colWidth)} ${run.name.getOrElse("<no name>")}")
     out.outErr.printOutLn(s"${padTo("Tags", colWidth)} ${if (run.tags.nonEmpty) run.tags.mkString(", ") else "<none>"}")
     out.outErr.printOutLn(s"${padTo("Seed", colWidth)} ${run.seed}")
@@ -76,7 +73,7 @@ class DescribeRunController extends DescribeController[(Run, Seq[Run])] with For
       out.outErr.printOutLn("Parameters")
       val maxLength = run.params.keySet.map(_.length).max
       run.params.foreach { case (name, value) =>
-        out.outErr.printOutLn(s"  ${padTo(name, maxLength)} ${Values.toString(value)}")
+        out.outErr.printOutLn(s"  ${padTo(name, maxLength)} ${Values.stringify(value)}")
       }
     }
 
@@ -99,7 +96,7 @@ class DescribeRunController extends DescribeController[(Run, Seq[Run])] with For
       out.outErr.printOutLn(s"  ${padTo("ID", 32)}  ${padTo("CREATED", 15)}  ${padTo("NAME", 15)}  STATUS")
       children.foreach { run =>
         val name = run.name.getOrElse("<no name>")
-        out.outErr.printOutLn(s"  ${run.id.value}  ${padTo(format(Time.fromMilliseconds(run.createdAt)), 15)}  ${padTo(name, 15)}  ${run.state.status.name}")
+        out.outErr.printOutLn(s"  ${run.id}  ${padTo(format(Time.fromMilliseconds(run.createdAt)), 15)}  ${padTo(name, 15)}  ${run.state.status.name}")
       }
     }
   }

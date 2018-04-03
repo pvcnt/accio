@@ -18,6 +18,6 @@
 
 package fr.cnrs.liris.accio.api
 
-import fr.cnrs.liris.accio.api.thrift.{CacheKey, OpResult, RunId}
+import fr.cnrs.liris.accio.api.thrift.OpResult
 
-case class TaskCompletedEvent(runId: RunId, nodeName: String, result: OpResult, cacheKey: CacheKey)
+case class TaskCompletedEvent(runId: String, nodeName: String, result: OpResult, cacheKey: String)

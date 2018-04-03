@@ -18,8 +18,8 @@
 
 package fr.cnrs.liris.accio.tools.cli.commands
 
+import com.twitter.util.Future
 import fr.cnrs.liris.accio.agent.KillRunRequest
-import fr.cnrs.liris.accio.api.thrift._
 import fr.cnrs.liris.accio.tools.cli.event.Event
 
 final class KillCommand extends Command with ClientCommand {
@@ -29,18 +29,18 @@ final class KillCommand extends Command with ClientCommand {
 
   override def allowResidue = true
 
-  override def execute(residue: Seq[String], env: CommandEnvironment): ExitCode = {
+  override def execute(residue: Seq[String], env: CommandEnvironment): Future[ExitCode] = {
     if (residue.isEmpty) {
       env.reporter.handle(Event.error("You must provide at least one run identifier."))
-      return ExitCode.CommandLineError
+      return Future.value(ExitCode.CommandLineError)
     }
-    val outcomes = residue.map { id =>
-      val req = KillRunRequest(RunId(id))
-      respond(client.killRun(req), env.reporter) { _ =>
+    val fs = residue.map { id =>
+      val req = KillRunRequest(id)
+      client.killRun(req).map { _ =>
         env.reporter.handle(Event.info(s"Killed run $id"))
         ExitCode.Success
       }
     }
-    ExitCode.select(outcomes)
+    Future.collect(fs).map(ExitCode.select)
   }
 }

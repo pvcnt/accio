@@ -18,6 +18,7 @@
 
 package fr.cnrs.liris.accio.tools.cli.commands
 
+import com.twitter.util.Future
 import fr.cnrs.liris.accio.tools.cli.event.{Event, Reporter}
 
 final class HelpCommand extends Command {
@@ -27,26 +28,26 @@ final class HelpCommand extends Command {
 
   override def allowResidue = true
 
-  override def execute(residue: Seq[String], env: CommandEnvironment): ExitCode = {
+  override def execute(residue: Seq[String], env: CommandEnvironment): Future[ExitCode] = {
     residue match {
       case Seq() =>
         printHelpSummary(env.registry, env.reporter)
-        ExitCode.Success
+        Future.value(ExitCode.Success)
       case Seq(helpTopic) =>
         // Help topic.
         env.registry.get(helpTopic) match {
           case Some(command) =>
             printCommand(env.reporter, command)
-            ExitCode.Success
+            Future.value(ExitCode.Success)
           case None =>
             // Unknown help topic.
             env.reporter.handle(Event.error(s"Unknown command: $helpTopic"))
-            ExitCode.CommandLineError
+            Future.value(ExitCode.CommandLineError)
         }
       case _ =>
         // Too much arguments.
         env.reporter.handle(Event.error("You must specify only one help topic"))
-        ExitCode.CommandLineError
+        Future.value(ExitCode.CommandLineError)
     }
   }
 

@@ -18,14 +18,34 @@
 
 package fr.cnrs.liris.accio.service
 
-import fr.cnrs.liris.accio.api.thrift.{InvalidSpecException, InvalidSpecMessage}
+import fr.cnrs.liris.accio.api.thrift.FieldViolation
 
-case class ValidationResult(errors: Seq[InvalidSpecMessage], warnings: Seq[InvalidSpecMessage]) {
-  def valid: Boolean = errors.isEmpty
+import scala.collection.mutable
 
-  def maybeThrowException(): Unit = {
-    if (!valid) {
-      throw new InvalidSpecException(errors, warnings)
+case class ValidationResult(errors: Seq[FieldViolation], warnings: Seq[FieldViolation]) {
+  def isValid: Boolean = errors.isEmpty
+
+  def +(other: ValidationResult): ValidationResult =
+    ValidationResult(errors ++ other.errors, warnings ++ other.warnings)
+}
+
+object ValidationResult {
+
+  class Builder {
+    private[this] val errors = mutable.ListBuffer.empty[FieldViolation]
+    private[this] val warnings = mutable.ListBuffer.empty[FieldViolation]
+
+    def error(violation: FieldViolation): Builder = {
+      errors += violation
+      this
     }
+
+    def warn(violation: FieldViolation): Builder = {
+      warnings += violation
+      this
+    }
+
+    def build: ValidationResult = ValidationResult(errors.toList, warnings.toList)
   }
+
 }

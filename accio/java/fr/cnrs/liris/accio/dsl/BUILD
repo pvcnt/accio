@@ -15,19 +15,17 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_library(
-  name = 'dsl',
+  name = "dsl",
   srcs = glob(["*.scala"]),
   deps = [
-    '//accio/java/fr/cnrs/liris/accio/api',
-    '//accio/java/fr/cnrs/liris/accio/service',
-    '//accio/java/fr/cnrs/liris/accio/storage',
-    '//accio/java/fr/cnrs/liris/common/geo',
-    '//3rdparty/jvm/com/twitter:finatra_jackson',
-    '//3rdparty/jvm/com/twitter:inject_core',
-    '//3rdparty/jvm/com/twitter:util_slf4j_api',
+    "//accio/java/fr/cnrs/liris/accio/api",
+    "//accio/java/fr/cnrs/liris/common/geo",
+    "//accio/java/fr/cnrs/liris/common/util",
+    "//3rdparty/jvm/com/twitter:finatra_jackson",
+    "//3rdparty/jvm/com/twitter:util_core",
   ],
   exports = [
-    '//3rdparty/jvm/com/twitter:finatra_jackson',
+    "//3rdparty/jvm/com/twitter:finatra_jackson",
   ],
   visibility = ["//visibility:public"],
 )

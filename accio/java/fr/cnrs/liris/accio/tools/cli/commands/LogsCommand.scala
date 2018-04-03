@@ -18,8 +18,8 @@
 
 package fr.cnrs.liris.accio.tools.cli.commands
 
+import com.twitter.util.Future
 import fr.cnrs.liris.accio.agent.ListLogsRequest
-import fr.cnrs.liris.accio.api.thrift.RunId
 import fr.cnrs.liris.accio.tools.cli.event.Event
 
 final class LogsCommand extends Command with ClientCommand {
@@ -32,20 +32,16 @@ final class LogsCommand extends Command with ClientCommand {
 
   override def allowResidue = true
 
-  override def execute(residue: Seq[String], env: CommandEnvironment): ExitCode = {
+  override def execute(residue: Seq[String], env: CommandEnvironment): Future[ExitCode] = {
     if (residue.size != 2) {
       env.reporter.handle(Event.error("You must provide a run identifier and a node name as arguments."))
-      return ExitCode.CommandLineError
+      return Future.value(ExitCode.CommandLineError)
     }
-    val req = createRequest(residue)
-    respond(client.listLogs(req), env.reporter) { resp =>
+    val classifier = if (stderrFlag()) "stderr" else "stdout"
+    val req = ListLogsRequest(residue.head, residue.last, classifier, tail = tailFlag.get)
+    client.listLogs(req).map { resp =>
       resp.results.foreach(line => env.reporter.outErr.printOutLn(line))
       ExitCode.Success
     }
-  }
-
-  private def createRequest(residue: Seq[String]) = {
-    val classifier = if (stderrFlag()) "stderr" else "stdout"
-    ListLogsRequest(RunId(residue.head), residue.last, classifier, tail = tailFlag.get)
   }
 }

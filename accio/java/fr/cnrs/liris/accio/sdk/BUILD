@@ -15,13 +15,13 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_library(
-  name = 'sdk',
+  name = "sdk",
   srcs = glob(["*.scala"]),
   visibility = ["//visibility:public"],
 )
 
 java_library(
-  name = 'annotations',
+  name = "annotations",
   srcs = glob(["*.java"]),
   visibility = ["//visibility:public"],
 )

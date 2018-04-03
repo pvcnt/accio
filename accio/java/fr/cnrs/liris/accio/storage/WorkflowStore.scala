@@ -19,7 +19,7 @@
 package fr.cnrs.liris.accio.storage
 
 import fr.cnrs.liris.accio.api.ResultList
-import fr.cnrs.liris.accio.api.thrift.{Workflow, WorkflowId}
+import fr.cnrs.liris.accio.api.thrift.Workflow
 
 /**
  * Repository giving access to workflows.
@@ -40,15 +40,7 @@ trait WorkflowStore {
    *
    * @param id Workflow identifier.
    */
-  def get(id: WorkflowId): Option[Workflow]
-
-  /**
-   * Retrieve a specific workflow at a specific version, if it exists.
-   *
-   * @param id      Workflow identifier.
-   * @param version Version identifier.
-   */
-  def get(id: WorkflowId, version: String): Option[Workflow]
+  def get(id: String, version: Option[String] = None): Option[Workflow]
 }
 
 object WorkflowStore {

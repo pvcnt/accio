@@ -25,14 +25,8 @@ import RunLogsContainer from "./RunLogsContainer";
 let TaskStateRow = React.createClass({
   getDefaultProps: function() {
     return {
-      onErrorShow: noop,
       onLogsShow: noop,
     };
-  },
-
-  _handleErrorModalShow: function (e) {
-    e.nativeEvent.preventDefault();
-    this.props.onErrorShow(this.props.node.name, this.props.node.result.error);
   },
 
   _handleLogsToggle: function (e, classifier) {
@@ -100,13 +94,6 @@ let TaskStateRow = React.createClass({
                 </Button> : null}
               </div>
             : null}
-          {(node.result && node.result.error)
-          ? <Button
-              bsSize="xsmall"
-              onClick={e => this._handleErrorModalShow(e)}
-              bsStyle="danger">
-              error
-            </Button> : null}
         </Col>
       </Row>
       {(null != this.props.logs)
@@ -125,7 +112,6 @@ TaskStateRow.propTypes = {
   node: React.PropTypes.object.isRequired,
   logs: React.PropTypes.string,
   onLogsShow: React.PropTypes.func.isRequired,
-  onErrorShow: React.PropTypes.func.isRequired,
 };
 
 export default TaskStateRow;

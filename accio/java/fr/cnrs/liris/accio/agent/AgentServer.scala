@@ -22,12 +22,12 @@ import com.twitter.finatra.thrift.ThriftServer
 import com.twitter.finatra.thrift.exceptions.FinatraThriftExceptionMapper
 import com.twitter.finatra.thrift.filters._
 import com.twitter.finatra.thrift.routing.ThriftRouter
-import fr.cnrs.liris.accio.thrift.{AgentServiceController, AuthFilter}
+import fr.cnrs.liris.locapriv.install.OpsModule
 
 object AgentServerMain extends AgentServer
 
 class AgentServer extends ThriftServer {
-  override def modules = Seq(AgentServerModule)
+  override def modules = Seq(AgentServerModule, OpsModule)
 
   override def configureThrift(router: ThriftRouter): Unit = {
     router

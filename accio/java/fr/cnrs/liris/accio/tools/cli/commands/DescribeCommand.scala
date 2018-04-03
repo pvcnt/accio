@@ -29,39 +29,34 @@ final class DescribeCommand extends Command with ClientCommand {
 
   override def allowResidue = true
 
-  override def execute(residue: Seq[String], env: CommandEnvironment): ExitCode = {
+  override def execute(residue: Seq[String], env: CommandEnvironment): Future[ExitCode] = {
     if (residue.size < 2) {
-      env.reporter.handle(Event.error("You must specify a resource type and identifier"))
-      return ExitCode.CommandLineError
+      env.reporter.handle(Event.error("You must specify a resource type and identifier.\n" +
+        "Valid resource types are: workflow, run, node, operator."))
+      return Future.value(ExitCode.CommandLineError)
     }
-    val maybeController: Option[DescribeController[_]] = residue.head match {
-      case "run" | "runs" => Some(new DescribeRunController)
-      case "node" | "nodes" => Some(new DescribeNodeController)
-      case "workflow" | "workflows" => Some(new DescribeWorkflowController)
-      case "operator" | "operators" | "op" | "ops" => Some(new DescribeOperatorController)
-      case _ => None
+    val controller: DescribeController[_] = residue.head match {
+      case "run" | "runs" => new DescribeRunController
+      case "node" | "nodes" => new DescribeNodeController
+      case "workflow" | "workflows" => new DescribeWorkflowController
+      case "operator" | "operators" | "op" | "ops" => new DescribeOperatorController
+      case _ =>
+        env.reporter.handle(Event.error(s"Invalid resource type: ${residue.head}.\n" +
+          s"Valid resource types are: workflow, run, node, operator."))
+        return Future.value(ExitCode.CommandLineError)
     }
-    maybeController match {
-      case None =>
-        env.reporter.handle(Event.error(s"Invalid resource type: ${residue.head}"))
-        ExitCode.CommandLineError
-      case Some(controller) => execute(controller, env.reporter, residue.last)
-    }
+    describe(controller, env.reporter, residue.tail)
   }
 
-  private def execute[Res](controller: DescribeController[Res], reporter: Reporter, id: String) = {
-
-    val f = controller.retrieve(id, client).liftToTry
-    Await.result(f) match {
-      case Return(resp) =>
-        controller.print(reporter, resp)
-        ExitCode.Success
-      case Throw(NoResultException()) =>
-        reporter.handle(Event.error(s"No such resource: $id"))
-        ExitCode.CommandLineError
-      case Throw(e) =>
-        reporter.error(s"Server error", e)
-        ExitCode.InternalError
+  private def describe[Res](controller: DescribeController[Res], reporter: Reporter, residue: Seq[String]) = {
+    val fs = residue.map { id =>
+      controller
+        .retrieve(id, client)
+        .map { resp =>
+          controller.print(reporter, resp)
+          ExitCode.Success
+        }
     }
+    Future.collect(fs).map(ExitCode.select)
   }
 }

@@ -65,19 +65,19 @@ class DataTypesSpec extends UnitSpec {
   }
 
   it should "return a parsable data type string representation" in {
-    DataTypes.parse(DataTypes.toString(DataType(AtomicType.Byte))) shouldBe DataType(AtomicType.Byte)
-    DataTypes.parse(DataTypes.toString(DataType(AtomicType.Integer))) shouldBe DataType(AtomicType.Integer)
-    DataTypes.parse(DataTypes.toString(DataType(AtomicType.Long))) shouldBe DataType(AtomicType.Long)
-    DataTypes.parse(DataTypes.toString(DataType(AtomicType.Double))) shouldBe DataType(AtomicType.Double)
-    DataTypes.parse(DataTypes.toString(DataType(AtomicType.String))) shouldBe DataType(AtomicType.String)
-    DataTypes.parse(DataTypes.toString(DataType(AtomicType.Boolean))) shouldBe DataType(AtomicType.Boolean)
-    DataTypes.parse(DataTypes.toString(DataType(AtomicType.Location))) shouldBe DataType(AtomicType.Location)
-    DataTypes.parse(DataTypes.toString(DataType(AtomicType.Timestamp))) shouldBe DataType(AtomicType.Timestamp)
-    DataTypes.parse(DataTypes.toString(DataType(AtomicType.Distance))) shouldBe DataType(AtomicType.Distance)
-    DataTypes.parse(DataTypes.toString(DataType(AtomicType.Duration))) shouldBe DataType(AtomicType.Duration)
-    DataTypes.parse(DataTypes.toString(DataType(AtomicType.Dataset))) shouldBe DataType(AtomicType.Dataset)
-    DataTypes.parse(DataTypes.toString(DataType(AtomicType.List, Seq(AtomicType.Distance)))) shouldBe DataType(AtomicType.List, Seq(AtomicType.Distance))
-    DataTypes.parse(DataTypes.toString(DataType(AtomicType.Set, Seq(AtomicType.Timestamp)))) shouldBe DataType(AtomicType.Set, Seq(AtomicType.Timestamp))
-    DataTypes.parse(DataTypes.toString(DataType(AtomicType.Map, Seq(AtomicType.Duration, AtomicType.String)))) shouldBe DataType(AtomicType.Map, Seq(AtomicType.Duration, AtomicType.String))
+    DataTypes.parse(DataTypes.stringify(DataType(AtomicType.Byte))) shouldBe DataType(AtomicType.Byte)
+    DataTypes.parse(DataTypes.stringify(DataType(AtomicType.Integer))) shouldBe DataType(AtomicType.Integer)
+    DataTypes.parse(DataTypes.stringify(DataType(AtomicType.Long))) shouldBe DataType(AtomicType.Long)
+    DataTypes.parse(DataTypes.stringify(DataType(AtomicType.Double))) shouldBe DataType(AtomicType.Double)
+    DataTypes.parse(DataTypes.stringify(DataType(AtomicType.String))) shouldBe DataType(AtomicType.String)
+    DataTypes.parse(DataTypes.stringify(DataType(AtomicType.Boolean))) shouldBe DataType(AtomicType.Boolean)
+    DataTypes.parse(DataTypes.stringify(DataType(AtomicType.Location))) shouldBe DataType(AtomicType.Location)
+    DataTypes.parse(DataTypes.stringify(DataType(AtomicType.Timestamp))) shouldBe DataType(AtomicType.Timestamp)
+    DataTypes.parse(DataTypes.stringify(DataType(AtomicType.Distance))) shouldBe DataType(AtomicType.Distance)
+    DataTypes.parse(DataTypes.stringify(DataType(AtomicType.Duration))) shouldBe DataType(AtomicType.Duration)
+    DataTypes.parse(DataTypes.stringify(DataType(AtomicType.Dataset))) shouldBe DataType(AtomicType.Dataset)
+    DataTypes.parse(DataTypes.stringify(DataType(AtomicType.List, Seq(AtomicType.Distance)))) shouldBe DataType(AtomicType.List, Seq(AtomicType.Distance))
+    DataTypes.parse(DataTypes.stringify(DataType(AtomicType.Set, Seq(AtomicType.Timestamp)))) shouldBe DataType(AtomicType.Set, Seq(AtomicType.Timestamp))
+    DataTypes.parse(DataTypes.stringify(DataType(AtomicType.Map, Seq(AtomicType.Duration, AtomicType.String)))) shouldBe DataType(AtomicType.Map, Seq(AtomicType.Duration, AtomicType.String))
   }
 }

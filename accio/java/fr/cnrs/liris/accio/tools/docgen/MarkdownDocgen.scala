@@ -19,26 +19,25 @@
 package fr.cnrs.liris.accio.tools.docgen
 
 import java.io.{BufferedOutputStream, FileOutputStream, PrintStream}
-import java.nio.file.{Files, Path}
+import java.nio.file.Files
 
+import com.google.inject.Inject
 import fr.cnrs.liris.accio.api.thrift.OpDef
-import fr.cnrs.liris.accio.api.{DataTypes, Values}
-
-case class DocgenOpts(out: Path, toc: Boolean, layout: String)
+import fr.cnrs.liris.accio.api.{DataTypes, OpRegistry, Values}
 
 /**
  * Generate documentation for all operators known to a registry in Markdown format.
  */
-class MarkdownDocgen {
+final class MarkdownDocgen @Inject()(opRegistry: OpRegistry) {
   /**
    * Generate documentation w.r.t. given options.
    *
-   * @param ops   Operator definitions.
    * @param flags Generator options.
    */
-  def generate(ops: Set[OpDef], flags: DocgenOpts): Unit = {
+  def generate(flags: DocgenOpts): Unit = {
     Files.createDirectories(flags.out)
-    ops
+    opRegistry
+      .ops
       .groupBy(_.category)
       .toSeq
       .sortBy(_._1)
@@ -54,11 +53,10 @@ class MarkdownDocgen {
       }
   }
 
-  private def writeIntro(out: PrintStream, flags: DocgenOpts, category: String, weight: Int) = {
+  private def writeIntro(out: PrintStream, flags: DocgenOpts, category: String, order: Int): Unit = {
     out.println("---")
-    out.println(s"layout: ${flags.layout}")
-    out.println(s"""title: "Operators: ${category.capitalize}"""")
-    out.println(s"weight: $weight")
+    out.println(s"""title: "Category: ${category.capitalize}"""")
+    out.println(s"order: $order")
     out.println("---\n")
 
     if (flags.toc) {
@@ -67,11 +65,11 @@ class MarkdownDocgen {
     }
   }
 
-  private def writeOp(out: PrintStream, opDef: OpDef) = {
+  private def writeOp(out: PrintStream, opDef: OpDef): Unit = {
     out.println(s"## ${opDef.name}")
     out.println()
     opDef.deprecation.foreach { deprecation =>
-      out.println(s"""<div class="alert alert-warning" markdown="1"> :broken_heart: **Deprecated:** $deprecation</div>""")
+      out.println(s"""<div class="alert alert-warning" markdown="1">**Deprecated:** $deprecation</div>""")
       out.println()
     }
     opDef.description.foreach { description =>
@@ -82,9 +80,9 @@ class MarkdownDocgen {
       out.println("| Input name | Type | Description |")
       out.println("|:-----------|:-----|:------------|")
       opDef.inputs.foreach { argDef =>
-        out.print(s"| `${argDef.name}` | ${DataTypes.toString(argDef.kind)}")
+        out.print(s"| `${argDef.name}` | ${DataTypes.stringify(argDef.kind)}")
         if (argDef.defaultValue.isDefined) {
-          out.print(s"; optional; default: ${Values.toString(argDef.defaultValue.get)}")
+          out.print(s"; optional; default: ${Values.stringify(argDef.defaultValue.get)}")
         } else if (argDef.isOptional) {
           out.print("; optional")
         } else {
@@ -99,7 +97,7 @@ class MarkdownDocgen {
       out.println("| Output name | Type | Description |")
       out.println("|:------------|:-----|:------------|")
       opDef.outputs.foreach { argDef =>
-        out.println(s"| `${argDef.name}` | ${DataTypes.toString(argDef.kind)} | ${argDef.help.getOrElse("-")} |")
+        out.println(s"| `${argDef.name}` | ${DataTypes.stringify(argDef.kind)} | ${argDef.help.getOrElse("-")} |")
       }
       out.println("{: class=\"table table-striped\"}\n")
     }

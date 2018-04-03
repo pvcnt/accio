@@ -20,10 +20,11 @@ package fr.cnrs.liris.accio.executor
 
 import java.nio.file.Paths
 
+import com.google.inject.Guice
+import com.twitter.inject.Injector
 import fr.cnrs.liris.accio.api.thrift.Task
-import fr.cnrs.liris.accio.discovery.reflect.ReflectOpDiscovery
-import fr.cnrs.liris.accio.service.OpExecutor
 import fr.cnrs.liris.common.scrooge.BinaryScroogeSerializer
+import fr.cnrs.liris.locapriv.install.OpsModule
 
 object AccioExecutorMain extends AccioExecutor
 
@@ -33,11 +34,12 @@ object AccioExecutorMain extends AccioExecutor
 class AccioExecutor {
   def main(args: Array[String]): Unit = {
     require(args.length >= 2, "There should be at least two arguments")
+    val injector = Injector(Guice.createInjector(OpsModule))
+    val executor = injector.instance[TaskExecutor]
+
     val task = BinaryScroogeSerializer.fromString(args.head, Task)
     com.twitter.jvm.numProcs.let(task.resource.cpu) {
-      val opExecutor = new OpExecutor(new ReflectOpDiscovery)
-      val taskExecutor = new TaskExecutor(opExecutor)
-      taskExecutor.execute(task, Paths.get(args(1)))
+      executor.execute(task, Paths.get(args(1)))
     }
   }
 }

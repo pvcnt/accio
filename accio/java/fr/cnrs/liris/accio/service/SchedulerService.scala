@@ -25,8 +25,8 @@ import com.google.common.hash.Hashing
 import com.google.inject.Inject
 import com.twitter.util.logging.Logging
 import fr.cnrs.liris.accio.api
-import fr.cnrs.liris.accio.api.Input
 import fr.cnrs.liris.accio.api.thrift._
+import fr.cnrs.liris.accio.api.{Input, OpRegistry, Utils}
 import fr.cnrs.liris.accio.scheduler.Scheduler
 import fr.cnrs.liris.accio.storage.Storage
 
@@ -55,10 +55,10 @@ final class SchedulerService @Inject()(scheduler: Scheduler, opRegistry: OpRegis
     val opDef = opRegistry(node.op)
     val payload = createPayload(run, node, opDef)
     val now = System.currentTimeMillis()
-    val maybeResult = if (readCache) storage.read(_.runs.get(payload.cacheKey)) else None
+    val maybeResult = if (readCache) storage.read(_.runs.fetch(payload.cacheKey)) else None
     maybeResult match {
       case Some(cachedNodeStatus) =>
-        logger.debug(s"Cache hit. Run: ${run.id.value}, node: ${node.name}.")
+        logger.debug(s"Cache hit. Run: ${run.id}, node: ${node.name}.")
         val newNodeStatus = nodeStatus.copy(
           startedAt = Some(now),
           completedAt = Some(now),
@@ -69,13 +69,27 @@ final class SchedulerService @Inject()(scheduler: Scheduler, opRegistry: OpRegis
           taskId = cachedNodeStatus.taskId)
         run.copy(state = run.state.copy(nodes = run.state.nodes - nodeStatus + newNodeStatus))
       case None =>
-        val taskId = TaskId(UUID.randomUUID().toString)
+        val taskId = UUID.randomUUID().toString
         val task = Task(taskId, run.id, node.name, payload, System.currentTimeMillis(), TaskState.Waiting, opDef.resource)
         scheduler.submit(task)
-        logger.debug(s"Scheduled task ${task.id.value}. Run: ${run.id.value}, node: ${node.name}, op: ${payload.op}")
+        logger.debug(s"Scheduled task ${task.id}. Run: ${run.id}, node: ${node.name}, op: ${payload.op}")
         val newNodeStatus = nodeStatus.copy(status = TaskState.Scheduled, taskId = Some(taskId))
         run.copy(state = run.state.copy(nodes = run.state.nodes - nodeStatus + newNodeStatus))
     }
+  }
+
+  def kill(run: Run): Run = {
+    var newRun = run
+    newRun.state
+      .nodes
+      .filter(node => !Utils.isCompleted(node.status) && node.taskId.isDefined)
+      .foreach { node =>
+        if (scheduler.kill(node.taskId.get)) {
+          val newNodeStatus = node.copy(completedAt = Some(System.currentTimeMillis()), status = TaskState.Killed)
+          newRun = newRun.copy(state = newRun.state.copy(nodes = newRun.state.nodes - node + newNodeStatus))
+        }
+      }
+    newRun
   }
 
   /**
@@ -85,7 +99,7 @@ final class SchedulerService @Inject()(scheduler: Scheduler, opRegistry: OpRegis
    * @param inputs Node inputs.
    * @param seed   Seed for unstable operators.
    */
-  def generateCacheKey(opDef: OpDef, inputs: Map[String, Value], seed: Long): CacheKey = {
+  def generateCacheKey(opDef: OpDef, inputs: Map[String, Value], seed: Long): String = {
     val hasher = Hashing.sha1().newHasher()
     hasher.putString(opDef.name, Charsets.UTF_8)
     hasher.putLong(if (opDef.unstable) seed else 0L)
@@ -94,7 +108,7 @@ final class SchedulerService @Inject()(scheduler: Scheduler, opRegistry: OpRegis
       val value = inputs.get(argDef.name).orElse(argDef.defaultValue)
       hasher.putInt(value.hashCode)
     }
-    CacheKey(hasher.hash().toString)
+    hasher.hash().toString
   }
 
   /**
@@ -117,6 +131,6 @@ final class SchedulerService @Inject()(scheduler: Scheduler, opRegistry: OpRegis
       maybeValue.map(value => portName -> value)
     }
     val cacheKey = generateCacheKey(opDef, inputs, run.seed)
-    OpPayload(opDef.className, run.seed, inputs, cacheKey)
+    OpPayload(opDef.name, run.seed, inputs, cacheKey)
   }
 }

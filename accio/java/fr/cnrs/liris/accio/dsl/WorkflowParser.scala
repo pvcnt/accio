@@ -18,115 +18,60 @@
 
 package fr.cnrs.liris.accio.dsl
 
-import com.fasterxml.jackson.annotation.{JsonIgnoreProperties, JsonProperty, JsonSubTypes}
-import com.fasterxml.jackson.core.JsonParseException
-import com.fasterxml.jackson.databind.JsonMappingException
-import com.twitter.finatra.json.FinatraObjectMapper
-import com.twitter.util.logging.Logging
-import fr.cnrs.liris.accio.api.thrift.{InvalidSpecException, InvalidSpecMessage}
-import fr.cnrs.liris.accio.api._
-import fr.cnrs.liris.accio.service.{BaseFactory, OpRegistry, WorkflowFactory}
+import java.io.File
 
-import scala.collection.mutable
-import scala.util.control.NonFatal
+import com.twitter.io.{Buf, Reader}
+import com.twitter.util.Future
+import fr.cnrs.liris.accio.api._
+import fr.cnrs.liris.common.util.HashUtils
 
 /**
  * Parse workflow specification DSL.
- *
- * @param mapper     Finatra object mapper.
- * @param opRegistry Operator registry.
  */
-class WorkflowParser(mapper: FinatraObjectMapper, opRegistry: OpRegistry, factory: WorkflowFactory)
-  extends BaseFactory with Logging {
+final class WorkflowParser {
+  def parse(file: File): Future[thrift.Workflow] = {
+    Reader
+      .readAll(Reader.fromFile(file))
+      .map { case Buf.Utf8(content) => parse(content, Some(file.getAbsolutePath)) }
+  }
+
   /**
+   * Parse a string into a workflow.
    *
    * @param content  Workflow DSL, as string.
    * @param filename Name of the file from which the DSL is extracted.
-   * @param warnings Mutable list collecting warnings.
-   * @throws InvalidSpecException If the workflow specification is invalid.
    */
-  @throws[InvalidSpecException]
-  def parse(content: String, filename: Option[String], warnings: mutable.Set[InvalidSpecMessage] = mutable.Set.empty[InvalidSpecMessage]): thrift.Workflow = {
-    val json = parse(content, warnings)
-    val id = json.id.orElse(filename.map(defaultId)).getOrElse(throw newError("No workflow identifier", warnings))
+  def parse(content: String, filename: Option[String]): thrift.Workflow = {
+    val json = mapper.parse[WorkflowDsl](content)
+    val id = json.id.orElse(filename.map(defaultId)).getOrElse(HashUtils.sha1(content))
     val owner = json.owner.map(Utils.parseUser)
-    val nodes = json.graph.map(getNode(_, opRegistry, warnings)).toSet
+    val nodes = json.graph.map(getNode)
     val params = json.params.map { paramDef =>
       val kind = DataTypes.parse(paramDef.kind)
-      val defaultValue = paramDef.defaultValue.map(Values.encode(_, kind))
-      thrift.ArgDef(name = paramDef.name, kind = kind, defaultValue = defaultValue)
-    }.toSet
-    val spec = thrift.Workflow(
-      thrift.WorkflowId(id),
+      val defaultValue = paramDef.defaultValue.flatMap(Values.as(_, kind))
+      thrift.ArgDef(name = paramDef.name, kind = kind, defaultValue = defaultValue, help = paramDef.help)
+    }
+    thrift.Workflow(
+      id = id,
       name = json.name,
       owner = owner,
       graph = thrift.Graph(nodes),
       params = params)
-
-    // Validate the specification would generate a valid workflow.
-    val validationResult = factory.validate(spec)
-    validationResult.maybeThrowException()
-    warnings ++= validationResult.warnings
-
-    spec
   }
-
-  private def parse(content: String, warnings: mutable.Set[InvalidSpecMessage]): JsonWorkflowDef =
-    try {
-      mapper.parse[JsonWorkflowDef](content)
-    } catch {
-      case e: JsonParseException => throw newError(s"Parse error: ${e.getMessage}", warnings)
-      case e: JsonMappingException => throw newError(s"Mapping error: ${e.getMessage}", e.getPathReference, warnings)
-      case NonFatal(e) =>
-        // This is not an exception that was supposed to be thrown by the object mapper.
-        logger.error("Unexpected parse error", e)
-        throw newError(s"Unexpected error: ${e.getMessage}", warnings)
-    }
 
   private def defaultId(filename: String) = filename.substring(0, filename.lastIndexOf("."))
 
-  private def getNode(node: JsonNodeDef, opRegistry: OpRegistry, warnings: mutable.Set[InvalidSpecMessage]) = {
-    val inputs = node.inputs.flatMap {
-      case (argName, JsonValueInputDef(rawValue)) =>
-        opRegistry.get(node.op) match {
-          case Some(opDef) =>
-            opDef.inputs.find(_.name == argName) match {
-              case Some(argDef) => Some(argName -> thrift.Input.Value(Values.encode(rawValue, argDef.kind)))
-              case None =>
-                warnings += InvalidSpecMessage("Unknown input port", Some(s"graph.${node.name}.inputs.$argName"))
-                None
-            }
-          case None => throw newError(s"Unknown operator: ${node.op}", s"graph.${node.name}.op", warnings)
-        }
-      case (argName, JsonReferenceInputDef(ref)) => Some(argName -> thrift.Input.Reference(References.parse(ref)))
-      case (argName, JsonParamInputDef(paramName)) => Some(argName -> thrift.Input.Param(paramName))
+  private def getNode(node: NodeDsl): thrift.Node = {
+    val inputs = node.inputs.map { case (name, value) =>
+      val input = value match {
+        case InputDsl.Value(rawValue) => thrift.Input.Value(rawValue)
+        case InputDsl.Reference(ref) => thrift.Input.Reference(References.parse(ref))
+        case InputDsl.Param(paramName) => thrift.Input.Param(paramName)
+      }
+      name -> input
     }
     thrift.Node(node.op, node.name, inputs)
   }
+
+  private[this] def mapper = ObjectMapperFactory.default
 }
-
-private case class JsonWorkflowDef(
-  graph: Seq[JsonNodeDef],
-  id: Option[String],
-  owner: Option[String],
-  name: Option[String],
-  params: Seq[JsonArgDef] = Seq.empty)
-
-private case class JsonArgDef(name: String, kind: String, defaultValue: Option[Any])
-
-private case class JsonNodeDef(op: String, @JsonProperty("name") customName: Option[String], inputs: Map[String, JsonInputDef] = Map.empty) {
-  def name: String = customName.getOrElse(op)
-}
-
-@JsonSubTypes(Array(
-  new JsonSubTypes.Type(value = classOf[JsonValueInputDef], name = "value"),
-  new JsonSubTypes.Type(value = classOf[JsonReferenceInputDef], name = "reference"),
-  new JsonSubTypes.Type(value = classOf[JsonParamInputDef], name = "param")))
-@JsonIgnoreProperties(ignoreUnknown = true)
-private sealed trait JsonInputDef
-
-private case class JsonValueInputDef(value: Any) extends JsonInputDef
-
-private case class JsonReferenceInputDef(reference: String) extends JsonInputDef
-
-private case class JsonParamInputDef(param: String) extends JsonInputDef

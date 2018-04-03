@@ -29,11 +29,11 @@ import org.scalatest.BeforeAndAfterEach
  */
 private[storage] abstract class WorkflowStoreSpec extends UnitSpec with BeforeAndAfterEach {
   private val workflow1 = thrift.Workflow(
-    id = thrift.WorkflowId("workflow1"),
+    id = "workflow1",
     version = Some("v1"),
     owner = Some(thrift.User("me")),
     createdAt = Some(System.currentTimeMillis()),
-    graph = thrift.Graph(Set(
+    graph = thrift.Graph(Seq(
       thrift.Node(
         op = "FirstSimple",
         name = "FirstSimple",
@@ -47,12 +47,12 @@ private[storage] abstract class WorkflowStoreSpec extends UnitSpec with BeforeAn
     name = Some("my workflow"))
 
   private val workflow2 = thrift.Workflow(
-    id = thrift.WorkflowId("workflow2"),
+    id = "workflow2",
     version = Some("v1"),
     owner = Some(thrift.User("me")),
-    params = Set(thrift.ArgDef("foo", DataType(AtomicType.Integer))),
+    params = Seq(thrift.ArgDef("foo", DataType(AtomicType.Integer))),
     createdAt = Some(System.currentTimeMillis() + 10),
-    graph = thrift.Graph(Set(
+    graph = thrift.Graph(Seq(
       thrift.Node(
         op = "FirstSimple",
         name = "FirstSimple",
@@ -106,8 +106,8 @@ private[storage] abstract class WorkflowStoreSpec extends UnitSpec with BeforeAn
         workflow1.copy(version = Some("v2")),
         workflow2,
         workflow2.copy(version = Some("v2")),
-        workflow1.copy(id = thrift.WorkflowId("other_workflow"), createdAt = Some(System.currentTimeMillis() + 20)),
-        workflow1.copy(id = thrift.WorkflowId("another_workflow"), createdAt = Some(System.currentTimeMillis() + 30), owner = Some(thrift.User("him"))))
+        workflow1.copy(id = "other_workflow", createdAt = Some(System.currentTimeMillis() + 20)),
+        workflow1.copy(id = "another_workflow", createdAt = Some(System.currentTimeMillis() + 30), owner = Some(thrift.User("him"))))
       storage.write { stores =>
         workflows.foreach(stores.workflows.save)
       }
@@ -135,11 +135,11 @@ private[storage] abstract class WorkflowStoreSpec extends UnitSpec with BeforeAn
         workflows.foreach(stores.workflows.save)
       }
       storage.read { stores =>
-        stores.workflows.get(workflow1.id, "v1") shouldBe Some(workflows(0))
-        stores.workflows.get(workflow1.id, "v2") shouldBe Some(workflows(1))
-        stores.workflows.get(workflow1.id, "v3") shouldBe None
-        stores.workflows.get(workflow2.id, "v1") shouldBe Some(workflows(2))
-        stores.workflows.get(workflow2.id, "v2") shouldBe None
+        stores.workflows.get(workflow1.id, Some("v1")) shouldBe Some(workflows(0))
+        stores.workflows.get(workflow1.id, Some("v2")) shouldBe Some(workflows(1))
+        stores.workflows.get(workflow1.id, Some("v3")) shouldBe None
+        stores.workflows.get(workflow2.id, Some("v1")) shouldBe Some(workflows(2))
+        stores.workflows.get(workflow2.id, Some("v2")) shouldBe None
       }
     }
   }

@@ -23,22 +23,11 @@ import autobind from 'autobind-decorator'
 import {sortBy} from 'lodash'
 import ChildrenTableContainer from './ChildrenTableContainer'
 import TaskStateRow from './TaskStateRow'
-import ErrorModal from './ErrorModal'
 
 class StatusPanel extends React.Component {
   constructor(props) {
     super(props)
-    this.state = {error: null, logs: null}
-  }
-
-  @autobind
-  _handleErrorModalClose() {
-    this.setState({error: null})
-  }
-
-  @autobind
-  _handleErrorModalShow(node, error) {
-    this.setState({error: {data: error, node: node}})
+    this.state = {logs: null}
   }
 
   @autobind
@@ -78,8 +67,7 @@ class StatusPanel extends React.Component {
                      runId={run.id}
                      node={node}
                      logs={this.state.logs && this.state.logs.node == node.name ? this.state.logs.classifier : null}
-                     onLogsShow={this._handleLogsToggle}
-                     onErrorShow={this._handleErrorModalShow}/>
+                     onLogsShow={this._handleLogsToggle}/>
     )
 
     return (
@@ -107,12 +95,6 @@ class StatusPanel extends React.Component {
               : nodeRows}
           </Col>
         </Row>
-        {(null !== this.state.error)
-          ? <ErrorModal
-              nodeName={this.state.error.node}
-              error={this.state.error.data}
-              onClose={this._handleErrorModalClose}/>
-          : null}
       </Panel>
     )
   }

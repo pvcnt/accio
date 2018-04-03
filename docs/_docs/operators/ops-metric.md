@@ -1,6 +1,6 @@
 ---
-layout: docs
 title: "Category: Metric"
+order: 51
 ---
 
 * TOC
@@ -100,7 +100,6 @@ title: "Category: Metric"
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `distances` | map(string, map) | Distances between users from test and train datasets |
 | `matches` | map(string, string) | Matches between users from test and train datasets |
 | `rate` | double | Correct re-identifications rate |
 {: class="table table-striped"}

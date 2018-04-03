@@ -21,19 +21,14 @@ package fr.cnrs.liris.accio.tools.gateway
 import com.google.inject.{Inject, Singleton}
 import com.twitter.finagle.http.Request
 import com.twitter.finatra.http.Controller
-import com.twitter.finatra.request.{JsonIgnoreBody, QueryParam, RouteParam}
+import com.twitter.finatra.request.{QueryParam, RouteParam}
 import com.twitter.finatra.validation.{Max, Min}
-import com.twitter.io.Reader
-import com.twitter.util.{Future, Return, Throw}
-import fr.cnrs.liris.accio.agent.{ListOperatorsRequest, _}
+import fr.cnrs.liris.accio.agent._
 import fr.cnrs.liris.accio.api.thrift._
-import fr.cnrs.liris.common.util.StringUtils.explode
-import org.joda.time.DateTime
+import fr.cnrs.liris.common.util.StringUtils.{explode, maybe}
 
 @Singleton
 final class ApiController @Inject()(client: AgentService$FinagleClient) extends Controller {
-  private[this] val user = User("vprimault")
-
   get("/api/v1") { _: Request =>
     client.getCluster(GetClusterRequest()).map { resp =>
       IndexResponse(resp.clusterName, resp.version)
@@ -43,13 +38,13 @@ final class ApiController @Inject()(client: AgentService$FinagleClient) extends 
   get("/api/v1/operator") { httpReq: ListOperatorsHttpRequest =>
     val req = ListOperatorsRequest(httpReq.includeDeprecated)
     client.listOperators(req).map { resp =>
-      ResultListResponse(resp.results, resp.results.size)
+      ResultListResponse(resp.operators, resp.operators.size)
     }
   }
 
   get("/api/v1/operator/:name") { httpReq: GetOperatorHttpRequest =>
     val req = GetOperatorRequest(httpReq.name)
-    client.getOperator(req).map(_.result)
+    client.getOperator(req).map(_.operator)
   }
 
   get("/api/v1/workflow") { httpReq: ListWorkflowsHttpRequest =>
@@ -60,40 +55,24 @@ final class ApiController @Inject()(client: AgentService$FinagleClient) extends 
       q = httpReq.q,
       limit = Some(httpReq.perPage),
       offset = Some(offset))
-    client.listWorkflows(req).map { resp =>
-      ResultListResponse(resp.results, resp.totalCount)
-    }
-  }
-
-  post("/api/v1/workflow/:id") { httpReq: UpdateWorkflowHttpRequest =>
-    readBody(httpReq.request).flatMap { content =>
-      val req = ParseWorkflowRequest(new String(content), None)
-      client.parseWorkflow(req)
-    }.flatMap { resp =>
-      resp.workflow match {
-        case None =>
-          val res = ParseErrorResponse(resp.warnings.map(_.message), resp.errors.map(_.message))
-          Future.value(response.badRequest(res))
-        case Some(workflow) =>
-          val req = PushWorkflowRequest(workflow, user)
-          client.pushWorkflow(req).map { resp =>
-            UpdateWorkflowResponse(resp.workflow.version.get)
-          }
-      }
-    }
+    client
+      .listWorkflows(req)
+      .map(resp => ResultListResponse(resp.workflows, resp.totalCount))
   }
 
   get("/api/v1/workflow/:id") { httpReq: GetWorkflowHttpRequest =>
-    val req = GetWorkflowRequest(WorkflowId(httpReq.id), httpReq.version)
-    client.getWorkflow(req).map(_.result).map {
-      case Some(workflow) =>
+    val req = GetWorkflowRequest(httpReq.id, httpReq.version.flatMap(maybe))
+    client
+      .getWorkflow(req)
+      .map { resp =>
         if (httpReq.download) {
-          response.ok(workflow).header("Content-Disposition", s"attachment; filename=${workflow.id.value}.json")
+          response
+            .ok(resp.workflow)
+            .header("Content-Disposition", s"attachment; filename=${resp.workflow.id}.json")
         } else {
-          workflow
+          response.ok(resp.workflow)
         }
-      case None => response.notFound
-    }
+      }
   }
 
   get("/api/v1/run") { httpReq: ListRunsHttpRequest =>
@@ -101,95 +80,71 @@ final class ApiController @Inject()(client: AgentService$FinagleClient) extends 
     val req = ListRunsRequest(
       name = httpReq.name,
       owner = httpReq.owner,
-      workflowId = httpReq.workflow.map(WorkflowId.apply),
-      parent = httpReq.parent.map(RunId.apply),
-      clonedFrom = httpReq.clonedFrom.map(RunId.apply),
+      workflowId = httpReq.workflow,
+      parent = httpReq.parent,
+      clonedFrom = httpReq.clonedFrom,
       status = httpReq.status.flatMap(v => TaskState.valueOf(v)).toSet,
       tags = explode(httpReq.tags, ","),
       q = httpReq.q,
       limit = Some(httpReq.perPage),
       offset = Some(offset))
-    client.listRuns(req).map { resp =>
-      ResultListResponse(resp.results, resp.totalCount)
-    }
+    client
+      .listRuns(req)
+      .map(resp => ResultListResponse(resp.runs, resp.totalCount))
   }
 
-  post("/api/v1/run") { httpReq: CreateRunHttpRequest =>
-    readBody(httpReq.request).flatMap { content =>
-      val req = ParseRunRequest(content, httpReq.request.params, None)
-      client.parseRun(req)
-    }.flatMap { resp =>
-      resp.run match {
-        case None =>
-          val res = ParseErrorResponse(resp.warnings.map(_.message), resp.errors.map(_.message))
-          Future.value(response.badRequest(res))
-        case Some(run) =>
-          val req = CreateRunRequest(run, user)
-          client.createRun(req).map(_.ids)
+  get("/api/v1/run/:id") { httpReq: GetRunHttpRequest =>
+    val req = GetRunRequest(httpReq.id)
+    client.getRun(req).map { resp =>
+      if (httpReq.download) {
+        // We download the entirety of the run, including artifacts and metrics.
+        response
+          .ok(resp.run)
+          .header("Content-Disposition", s"attachment; filename=run-${resp.run.id}.json")
+      } else {
+        // In other cases, we do not transmit node result.
+        resp.run.copy(state = resp.run.state.copy(nodes = resp.run.state.nodes.map(_.unsetResult)))
       }
     }
   }
 
-  get("/api/v1/run/:id") { httpReq: GetRunHttpRequest =>
-    val req = GetRunRequest(RunId(httpReq.id))
-    client.getRun(req).map(_.result).map {
-      case Some(run) =>
-        if (httpReq.download) {
-          // We download the entirety of the run, including artifacts and metrics.
-          response
-            .ok(run)
-            .header("Content-Disposition", s"attachment; filename=run-${run.id.value}.json")
-        } else {
-          // In other cases, we do not transmit node result.
-          run.copy(state = run.state.copy(nodes = run.state.nodes.map(_.unsetResult)))
-        }
-      case None => response.notFound
-    }
-  }
-
   get("/api/v1/run/:id/artifacts/:node") { httpReq: ListArtifactsHttpRequest =>
-    val req = GetRunRequest(RunId(httpReq.id))
-    client.getRun(req).map(_.result).map {
-      case Some(run) => run.state.nodes.find(_.name == httpReq.node).flatMap(_.result).map(_.artifacts)
-      case None => response.notFound
-    }
+    client
+      .getRun(GetRunRequest(httpReq.id))
+      .map { resp =>
+        resp.run.state.nodes.find(_.name == httpReq.node).flatMap(_.result).map(_.artifacts)
+      }
   }
 
   post("/api/v1/run/:id/kill") { httpReq: KillRunHttpRequest =>
-    val req = KillRunRequest(RunId(httpReq.id))
-    client.killRun(req).liftToTry.map {
-      case Return(_) => response.ok
-      case Throw(e: UnknownRunException) => response.notFound
-    }
+    client
+      .killRun(KillRunRequest(httpReq.id))
+      .map(_ => response.ok)
   }
 
   post("/api/v1/run/:id") { httpReq: UpdateRunHttpRequest =>
-    val req = UpdateRunRequest(RunId(httpReq.id), httpReq.name, httpReq.notes, httpReq.tags)
-    client.updateRun(req).liftToTry.map {
-      case Return(_) => response.ok
-      case Throw(e: UnknownRunException) => response.notFound
-    }
+    client
+      .updateRun(UpdateRunRequest(httpReq.id, httpReq.name, httpReq.notes, httpReq.tags))
+      .map(resp => response.ok(resp.run))
   }
 
   delete("/api/v1/run/:id") { httpReq: DeleteRunHttpRequest =>
-    val req = DeleteRunRequest(RunId(httpReq.id))
-    client.deleteRun(req).liftToTry.map {
-      case Return(_) => response.ok
-      case Throw(e: UnknownRunException) => response.notFound
-    }
+    client
+      .deleteRun(DeleteRunRequest(httpReq.id))
+      .map(_ => response.ok)
   }
 
   get("/api/v1/run/:id/metrics/:node") { httpReq: ListMetricsHttpRequest =>
-    val req = GetRunRequest(RunId(httpReq.id))
-    client.getRun(req).map(_.result).map {
-      case Some(run) => run.state.nodes.find(_.name == httpReq.node).flatMap(_.result).map(_.metrics)
-      case None => response.notFound
-    }
+    client
+      .getRun(GetRunRequest(httpReq.id))
+      .map { resp =>
+        resp.run.state.nodes.find(_.name == httpReq.node).flatMap(_.result).map(_.metrics)
+      }
   }
 
   get("/api/v1/run/:id/logs/:node/:kind") { httpReq: ListLogsHttpRequest =>
     val req = ListLogsRequest(
-      runId = RunId(httpReq.id),
+      runId = httpReq.id,
       nodeName = httpReq.node,
       kind = httpReq.kind,
       skip = httpReq.skip)
@@ -200,19 +155,11 @@ final class ApiController @Inject()(client: AgentService$FinagleClient) extends 
         if (httpReq.download) {
           response
             .ok(logs.mkString("\n"))
-            .header("Content-Disposition", s"attachment; filename=logs-${req.runId.value}-${req.nodeName}-${httpReq.kind}.txt")
+            .header("Content-Disposition", s"attachment; filename=logs-${req.runId}-${req.nodeName}-${httpReq.kind}.txt")
         } else {
           logs
         }
       }
-  }
-
-  private def readBody(httpReq: Request): Future[String] = {
-    Reader.readAll(httpReq.reader).map { buf =>
-      val bytes = Array.ofDim[Byte](buf.length)
-      buf.write(bytes, 0)
-      new String(bytes)
-    }
   }
 }
 
@@ -221,9 +168,6 @@ case class IndexResponse(clusterName: String, version: String)
 case class ListOperatorsHttpRequest(@QueryParam includeDeprecated: Boolean = false)
 
 case class GetOperatorHttpRequest(@RouteParam name: String)
-
-@JsonIgnoreBody
-case class CreateRunHttpRequest(request: Request)
 
 case class ListRunsHttpRequest(
   @QueryParam owner: Option[String],
@@ -253,11 +197,6 @@ case class DeleteRunHttpRequest(@RouteParam id: String)
 
 case class KillRunHttpRequest(@RouteParam id: String)
 
-@JsonIgnoreBody
-case class UpdateWorkflowHttpRequest(@RouteParam id: String, request: Request)
-
-case class UpdateWorkflowResponse(version: String)
-
 case class ListWorkflowsHttpRequest(
   @QueryParam owner: Option[String],
   @QueryParam name: Option[String],
@@ -269,8 +208,6 @@ case class GetWorkflowHttpRequest(
   @RouteParam id: String,
   @RouteParam version: Option[String],
   @QueryParam download: Boolean = false)
-
-case class DeleteWorkflowHttpRequest(@RouteParam id: String)
 
 case class ListLogsHttpRequest(
   @RouteParam id: String,

@@ -18,12 +18,8 @@
 
 package fr.cnrs.liris.accio.tools.cli.commands
 
-import com.twitter.scrooge.ThriftException
-import com.twitter.util.{Await, Future, Return, Throw}
 import fr.cnrs.liris.accio.agent.AgentService$FinagleClient
-import fr.cnrs.liris.accio.api.thrift.{InvalidSpecException, InvalidSpecMessage, UnknownRunException}
 import fr.cnrs.liris.accio.tools.cli.config.ConfigParser
-import fr.cnrs.liris.accio.tools.cli.event.{Event, EventKind, Reporter}
 
 private[commands] trait ClientCommand {
   this: Command =>
@@ -33,31 +29,5 @@ private[commands] trait ClientCommand {
 
   protected final def client: AgentService$FinagleClient = {
     clusterFlag.get.map(clientProvider.apply).getOrElse(clientProvider.default)
-  }
-
-  protected final def respond[T](f: Future[T], reporter: Reporter)(fn: T => ExitCode): ExitCode = {
-    Await.result(f.liftToTry) match {
-      case Return(resp) => fn(resp)
-      case Throw(e: InvalidSpecException) =>
-        printErrors(e.warnings, reporter, EventKind.Warning)
-        printErrors(e.errors, reporter, EventKind.Error)
-        ExitCode.DefinitionError
-      case Throw(e: UnknownRunException) =>
-        reporter.handle(Event.error(s"Unknown run: ${e.id.value}"))
-        ExitCode.CommandLineError
-      case Throw(e: ThriftException) =>
-        reporter.handle(Event.warn(e.getMessage))
-        ExitCode.RuntimeError
-      case Throw(e) =>
-        reporter.handle(Event.error(s"Server error: ${e.getMessage}"))
-        ExitCode.InternalError
-    }
-  }
-
-  protected def printErrors(errors: Seq[InvalidSpecMessage], out: Reporter, eventKind: EventKind): Unit = {
-    errors.foreach { error =>
-      val explanation = error.message + error.path.map(path => s" (at $path)").getOrElse("")
-      out.handle(Event(eventKind, explanation))
-    }
   }
 }

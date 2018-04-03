@@ -25,7 +25,7 @@ struct GetOperatorRequest {
 }
 
 struct GetOperatorResponse {
-  1: optional api.OpDef result;
+  1: required api.OpDef operator;
 }
 
 struct ListOperatorsRequest {
@@ -33,17 +33,16 @@ struct ListOperatorsRequest {
 }
 
 struct ListOperatorsResponse {
-  1: required list<api.OpDef> results;
+  1: required list<api.OpDef> operators;
 }
 
 struct PushWorkflowRequest {
-  1: required api.Workflow spec;
-  2: required api.User user;
+  1: required api.Workflow workflow;
 }
 
 struct PushWorkflowResponse {
   1: required api.Workflow workflow;
-  2: required list<api.InvalidSpecMessage> warnings;
+  2: required list<api.FieldViolation> warnings;
 }
 
 struct GetWorkflowRequest {
@@ -52,7 +51,7 @@ struct GetWorkflowRequest {
 }
 
 struct GetWorkflowResponse {
-  1: optional api.Workflow result;
+  1: required api.Workflow workflow;
 }
 
 struct ListWorkflowsRequest {
@@ -64,18 +63,17 @@ struct ListWorkflowsRequest {
 }
 
 struct ListWorkflowsResponse {
-  1: required list<api.Workflow> results;
+  1: required list<api.Workflow> workflows;
   2: required i32 total_count;
 }
 
 struct CreateRunRequest {
-  1: required api.RunSpec spec;
-  2: required api.User user;
+  1: required api.Experiment run;
 }
 
 struct CreateRunResponse {
   1: required list<api.RunId> ids;
-  2: required list<api.InvalidSpecMessage> warnings;
+  2: required list<api.FieldViolation> warnings;
 }
 
 struct GetRunRequest {
@@ -83,7 +81,7 @@ struct GetRunRequest {
 }
 
 struct GetRunResponse {
-  1: optional api.Run result;
+  1: required api.Run run;
 }
 
 struct ListRunsRequest {
@@ -100,7 +98,7 @@ struct ListRunsRequest {
 }
 
 struct ListRunsResponse {
-  1: required list<api.Run> results;
+  1: required list<api.Run> runs;
   2: required i32 total_count;
 }
 
@@ -142,27 +140,22 @@ struct ListLogsResponse {
   1: required list<string> results;
 }
 
-struct ParseRunRequest {
-  1: required string content;
-  2: required map<string, string> params;
-  3: optional string filename;
+struct ValidateRunRequest {
+  1: required api.Experiment run;
 }
 
-struct ParseRunResponse {
-  1: optional api.RunSpec run;
-  2: required list<api.InvalidSpecMessage> warnings;
-  3: required list<api.InvalidSpecMessage> errors;
+struct ValidateRunResponse {
+  1: required list<api.FieldViolation> warnings;
+  2: required list<api.FieldViolation> errors;
 }
 
-struct ParseWorkflowRequest {
-  1: required string content;
-  2: optional string filename;
+struct ValidateWorkflowRequest {
+  1: required api.Workflow workflow;
 }
 
-struct ParseWorkflowResponse {
-  1: optional api.Workflow workflow;
-  2: required list<api.InvalidSpecMessage> warnings;
-  3: required list<api.InvalidSpecMessage> errors;
+struct ValidateWorkflowResponse {
+  1: required list<api.FieldViolation> warnings;
+  2: required list<api.FieldViolation> errors;
 }
 
 struct GetClusterRequest {
@@ -179,48 +172,47 @@ struct GetClusterResponse {
  */
 service AgentService {
   // Provide information about this cluster.
-  GetClusterResponse getCluster(1: GetClusterRequest req);
+  GetClusterResponse getCluster(1: GetClusterRequest req) throws (1: api.ServerException e);
 
   // Get a specific operator, if it exists.
-  GetOperatorResponse getOperator(1: GetOperatorRequest req);
+  GetOperatorResponse getOperator(1: GetOperatorRequest req) throws (1: api.ServerException e);
 
   // List all known operators.
-  ListOperatorsResponse listOperators(1: ListOperatorsRequest req);
+  ListOperatorsResponse listOperators(1: ListOperatorsRequest req) throws (1: api.ServerException e);
 
-  // Parse a string, written using the workflow DSL, into a (hopefully) valid workflow specification.
-  ParseWorkflowResponse parseWorkflow(1: ParseWorkflowRequest req);
+  // Validate that a workflow is valid, and would be accepted by the server.
+  ValidateWorkflowResponse validateWorkflow(1: ValidateWorkflowRequest req) throws (1: api.ServerException e);
 
   // Push a new version of a workflow.
-  PushWorkflowResponse pushWorkflow(1: PushWorkflowRequest req) throws (1: api.InvalidSpecException parse);
+  PushWorkflowResponse pushWorkflow(1: PushWorkflowRequest req) throws (1: api.ServerException e);
 
   // Get a specific workflow, if it exists.
-  GetWorkflowResponse getWorkflow(1: GetWorkflowRequest req);
+  GetWorkflowResponse getWorkflow(1: GetWorkflowRequest req) throws (1: api.ServerException e);
 
   // List all workflows matching some criteria.
-  ListWorkflowsResponse listWorkflows(1: ListWorkflowsRequest req);
+  ListWorkflowsResponse listWorkflows(1: ListWorkflowsRequest req) throws (1: api.ServerException e);
 
-  // Parse a string, written using the run DSL, into a (hopefully) valid run specification.
-  ParseRunResponse parseRun(1: ParseRunRequest req);
+  // Validate that a run is valid, and would be accepted by the server.
+  ValidateRunResponse validateRun(1: ValidateRunRequest req) throws (1: api.ServerException e);
 
   // Create a new run (and schedule them).
-  CreateRunResponse createRun(1: CreateRunRequest req) throws (1: api.InvalidSpecException parse);
+  CreateRunResponse createRun(1: CreateRunRequest req) throws (1: api.ServerException e);
 
   // Get a specific run.
-  GetRunResponse getRun(1: GetRunRequest req);
+  GetRunResponse getRun(1: GetRunRequest req) throws (1: api.ServerException e);
 
   // Retrieve all runs matching some criteria.
-  ListRunsResponse listRuns(1: ListRunsRequest req);
+  ListRunsResponse listRuns(1: ListRunsRequest req) throws (1: api.ServerException e);
 
   // Delete a specific run.
-  DeleteRunResponse deleteRun(1: DeleteRunRequest req)
-    throws (1: api.UnknownRunException unknown);
+  DeleteRunResponse deleteRun(1: DeleteRunRequest req) throws (1: api.ServerException e);
 
   // Kill a specific run.
-  KillRunResponse killRun(1: KillRunRequest req) throws (1: api.UnknownRunException unknown);
+  KillRunResponse killRun(1: KillRunRequest req) throws (1: api.ServerException e)
 
   // Update some information of a specific run.
-  UpdateRunResponse updateRun(1: UpdateRunRequest req) throws (1: api.UnknownRunException unknown);
+  UpdateRunResponse updateRun(1: UpdateRunRequest req) throws (1: api.ServerException e)
 
   // List log lines.
-  ListLogsResponse listLogs(1: ListLogsRequest req);
+  ListLogsResponse listLogs(1: ListLogsRequest req) throws (1: api.ServerException e)
 }

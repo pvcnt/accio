@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.storage
 
-import fr.cnrs.liris.accio.api.thrift.{Run, RunId, TaskState, WorkflowId}
+import fr.cnrs.liris.accio.api.thrift.{Run, TaskState}
 
 /**
  * Query to search for runs.
@@ -36,12 +36,12 @@ import fr.cnrs.liris.accio.api.thrift.{Run, RunId, TaskState, WorkflowId}
  * @param offset     Number of matching runs to skip.
  */
 case class RunQuery(
-  workflow: Option[WorkflowId] = None,
+  workflow: Option[String] = None,
   owner: Option[String] = None,
   name: Option[String] = None,
   status: Set[TaskState] = Set.empty,
-  parent: Option[RunId] = None,
-  clonedFrom: Option[RunId] = None,
+  parent: Option[String] = None,
+  clonedFrom: Option[String] = None,
   tags: Set[String] = Set.empty,
   q: Option[String] = None,
   limit: Option[Int] = None,
@@ -54,11 +54,12 @@ case class RunQuery(
    */
   def matches(run: Run): Boolean = {
     q match {
+      //TODO: tokenize string.
       case Some(str) =>
         str.split(' ').map(_.trim).forall { s =>
           name.contains(s) ||
-            run.owner.name == s ||
-            run.pkg.workflowId.value == s ||
+            run.owner.exists(_.name == s) ||
+            run.pkg.workflowId == s ||
             run.tags.contains(s)
         }
       case None =>
@@ -66,7 +67,7 @@ case class RunQuery(
           false
         } else if (name.isDefined && !run.name.contains(name.get)) {
           false
-        } else if (owner.isDefined && owner.get != run.owner.name) {
+        } else if (owner.isDefined && !run.owner.exists(_.name == owner.get)) {
           false
         } else if (status.nonEmpty && !status.contains(run.state.status)) {
           false

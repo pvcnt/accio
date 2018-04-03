@@ -18,15 +18,12 @@
 
 package fr.cnrs.liris.accio.tools.cli.commands
 
-import java.nio.file.Files
-
-import fr.cnrs.liris.accio.agent.{AgentService$FinagleClient, ParseWorkflowRequest, PushWorkflowRequest}
-import fr.cnrs.liris.accio.api.Utils
+import com.twitter.util.Future
+import fr.cnrs.liris.accio.agent.PushWorkflowRequest
 import fr.cnrs.liris.accio.api.thrift.Workflow
+import fr.cnrs.liris.accio.dsl.WorkflowParser
 import fr.cnrs.liris.accio.tools.cli.event.{Event, EventKind, Reporter}
 import fr.cnrs.liris.common.util.FileUtils
-
-import scala.collection.JavaConverters._
 
 final class PushCommand extends Command with ClientCommand {
   override def name = "push"
@@ -35,41 +32,33 @@ final class PushCommand extends Command with ClientCommand {
 
   override def allowResidue = true
 
-  override def execute(residue: Seq[String], env: CommandEnvironment): ExitCode = {
+  override def execute(residue: Seq[String], env: CommandEnvironment): Future[ExitCode] = {
     if (residue.isEmpty) {
       env.reporter.handle(Event.error("You must provide exactly at least one workflow definition file."))
-      return ExitCode.CommandLineError
+      return Future.value(ExitCode.CommandLineError)
     }
-    val outcomes = residue.map(uri => parseAndPush(uri, env.reporter))
-    ExitCode.select(outcomes)
+    val fs = residue.map(path => parseAndPush(path, env.reporter))
+    Future.collect(fs).map(ExitCode.select)
   }
 
-  private def parseAndPush(uri: String, reporter: Reporter): ExitCode = {
-    val path = FileUtils.expandPath(uri)
-    val file = path.toFile
+  private def parseAndPush(uri: String, reporter: Reporter): Future[ExitCode] = {
+    val file = FileUtils.expandPath(uri).toFile
     if (!file.exists || !file.canRead) {
-      reporter.handle(Event.error(s"Cannot read workflow definition file: ${path.toAbsolutePath}"))
-      ExitCode.DefinitionError
-    } else {
-      val content = Files.readAllLines(path).asScala.mkString
-      val req = ParseWorkflowRequest(content, Some(path.getFileName.toString))
-      respond(client.parseWorkflow(req), reporter) { resp =>
-        printErrors(resp.warnings, reporter, EventKind.Warning)
-        printErrors(resp.errors, reporter, EventKind.Error)
-        resp.workflow match {
-          case Some(spec) => push(spec, client, reporter)
-          case None =>
-            reporter.handle(Event.error("Some errors where found in the workflow definition"))
-            ExitCode.DefinitionError
-        }
-      }
+      reporter.handle(Event.error(s"Cannot read workflow definition file: ${file.getAbsolutePath}"))
+      return Future.value(ExitCode.DefinitionError)
     }
+    val parser = new WorkflowParser
+    parser
+      .parse(file)
+      .flatMap(push(_, reporter))
   }
 
-  private def push(spec: Workflow, client: AgentService$FinagleClient, out: Reporter): ExitCode = {
-    val req = PushWorkflowRequest(spec, Utils.DefaultUser)
-    respond(client.pushWorkflow(req), out) { _ =>
-      out.handle(Event.info(s"Pushed workflow: ${spec.id.value}"))
+  private def push(workflow: Workflow, reporter: Reporter) = {
+    client.pushWorkflow(PushWorkflowRequest(workflow)).map { resp =>
+      resp.warnings.foreach { violation =>
+        reporter.handle(Event(EventKind.Warning, s"${violation.message} (at ${violation.field})"))
+      }
+      reporter.handle(Event.info(s"Pushed workflow: ${resp.workflow.id}"))
       ExitCode.Success
     }
   }

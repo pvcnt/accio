@@ -18,17 +18,14 @@
 
 package fr.cnrs.liris.accio.scheduler
 
-import fr.cnrs.liris.accio.api.thrift._
+import fr.cnrs.liris.accio.api.thrift.Task
 
 trait Scheduler {
   def submit(task: Task): Unit
 
-  @throws[InvalidTaskException]
-  def kill(id: TaskId): Boolean
+  def kill(id: String): Boolean
 
-  def kill(id: RunId): Set[Task]
-
-  def getLogs(id: TaskId, kind: String, skip: Option[Int] = None, tail: Option[Int] = None): Seq[String]
+  def getLogs(id: String, kind: String, skip: Option[Int] = None, tail: Option[Int] = None): Seq[String]
 
   def startUp(): Unit = {}
 

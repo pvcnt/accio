@@ -38,7 +38,7 @@ trait RunStore {
    *
    * @param id Run identifier.
    */
-  def get(id: RunId): Option[Run]
+  def get(id: String): Option[Run]
 
   /**
    * Retrieve the cached result of an operator, if it exists. It is not mandatory for
@@ -46,7 +46,7 @@ trait RunStore {
    *
    * @param cacheKey Cache key.
    */
-  def get(cacheKey: CacheKey): Option[NodeStatus]
+  def fetch(cacheKey: String): Option[NodeStatus]
 }
 
 object RunStore {
@@ -71,7 +71,7 @@ object RunStore {
      *
      * @param id Run identifier.
      */
-    def delete(id: RunId): Unit
+    def delete(id: String): Unit
   }
 
 }

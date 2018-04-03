@@ -23,40 +23,33 @@ import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.databind.{DeserializationContext, JsonNode, ObjectMapper}
-import com.google.common.annotations.VisibleForTesting
+import fr.cnrs.liris.accio.api.Values
+import fr.cnrs.liris.accio.api.thrift.{AtomicType, Value}
 
 import scala.collection.JavaConverters._
 
 object DslJacksonModule extends SimpleModule {
-  addDeserializer(classOf[JsonInputDef], new InputDeserializer)
-  addDeserializer(classOf[Exploration], new ExplorationDeserializer)
+  addDeserializer(classOf[InputDsl], new InputDeserializer)
+  addDeserializer(classOf[Value], new ValueDeserializer)
 }
 
-@VisibleForTesting
-private[dsl] class InputDeserializer extends StdDeserializer[JsonInputDef](classOf[JsonInputDef]) {
+private class InputDeserializer extends StdDeserializer[InputDsl](classOf[InputDsl]) {
   private[this] val subTypes = _valueClass.getAnnotation(classOf[JsonSubTypes]).value
 
-  override def deserialize(jsonParser: JsonParser, ctx: DeserializationContext): JsonInputDef = {
+  override def deserialize(jsonParser: JsonParser, ctx: DeserializationContext): InputDsl = {
     val tree = jsonParser.readValueAsTree[JsonNode]
     if (tree.isObject) {
-      JacksonUtils.deserialize[JsonInputDef](tree, subTypes, ctx, jsonParser.getCodec.asInstanceOf[ObjectMapper])
+      JacksonUtils.deserialize[InputDsl](tree, subTypes, ctx, jsonParser.getCodec.asInstanceOf[ObjectMapper])
     } else {
-      JsonValueInputDef(JacksonUtils.toPojo(tree, ctx))
+      InputDsl.Value(JacksonUtils.toValue(tree, ctx))
     }
   }
 }
 
-@VisibleForTesting
-private[dsl] class ExplorationDeserializer extends StdDeserializer[Exploration](classOf[Exploration]) {
-  private[this] val subTypes = _valueClass.getAnnotation(classOf[JsonSubTypes]).value
-
-  override def deserialize(jsonParser: JsonParser, ctx: DeserializationContext): Exploration = {
+private class ValueDeserializer extends StdDeserializer[Value](classOf[Value]) {
+  override def deserialize(jsonParser: JsonParser, ctx: DeserializationContext): Value = {
     val tree = jsonParser.readValueAsTree[JsonNode]
-    if (tree.isObject) {
-      JacksonUtils.deserialize[Exploration](tree, subTypes, ctx, jsonParser.getCodec.asInstanceOf[ObjectMapper])
-    } else {
-      SingletonExploration(JacksonUtils.toPojo(tree, ctx))
-    }
+    JacksonUtils.toValue(tree, ctx)
   }
 }
 
@@ -85,6 +78,42 @@ private object JacksonUtils {
       tree.fields.asScala.map(kv => kv.getKey -> toPojo(kv.getValue, ctx)).toMap
     } else {
       ctx.mappingException(s"Invalid node type for an input: ${tree.getNodeType}")
+    }
+  }
+
+  def toValue(tree: JsonNode, ctx: DeserializationContext): Value = {
+    if (tree.isBoolean) {
+      Values.encodeBoolean(tree.asBoolean)
+    } else if (tree.isDouble) {
+      Values.encodeDouble(tree.asDouble)
+    } else if (tree.isInt) {
+      Values.encodeInteger(tree.asInt)
+    } else if (tree.isLong) {
+      Values.encodeLong(tree.asLong)
+    } else if (tree.isTextual) {
+      Values.encodeString(tree.asText)
+    } else if (tree.isArray) {
+      val items = tree.elements.asScala.toSeq
+      if (items.isEmpty) {
+        Values.emptyList
+      } else {
+        val of = toValue(items.head, ctx).kind.base
+        Values
+          .encodeList(items.map(toPojo(_, ctx)), of)
+          .getOrElse(throw ctx.mappingException("Heterogeneous value types"))
+      }
+    } else if (tree.isObject) {
+      val items = tree.fields.asScala.map(kv => kv.getKey -> kv.getValue).toMap
+      if (items.isEmpty) {
+        Values.emptyMap
+      } else {
+        val of = toValue(items.values.head, ctx).kind.base
+        Values
+          .encodeMap(items.map { case (k, v) => k -> toPojo(v, ctx) }, AtomicType.String, of)
+          .getOrElse(throw ctx.mappingException("Heterogeneous value types"))
+      }
+    } else {
+      throw ctx.mappingException(s"Invalid node type: ${tree.getNodeType}")
     }
   }
 }

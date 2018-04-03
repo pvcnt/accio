@@ -29,17 +29,13 @@ class DescribeWorkflowController extends DescribeController[Workflow] with Forma
   private[this] val colWidth = 15
 
   override def retrieve(id: String, client: AgentService$FinagleClient): Future[Workflow] = {
-    client.getWorkflow(GetWorkflowRequest(WorkflowId(id)))
-      .map { resp =>
-        resp.result match {
-          case None => throw new NoResultException
-          case Some(workflow) => workflow
-        }
-      }
+    client
+      .getWorkflow(GetWorkflowRequest(id))
+      .map(_.workflow)
   }
 
   override def print(out: Reporter, workflow: Workflow): Unit = {
-    out.outErr.printOutLn(s"${padTo("Id", colWidth)} ${workflow.id.value}")
+    out.outErr.printOutLn(s"${padTo("Id", colWidth)} ${workflow.id}")
     out.outErr.printOutLn(s"${padTo("Last version", colWidth)} ${workflow.version}")
     out.outErr.printOutLn(s"${padTo("Created", colWidth)} ${format(Time.fromMilliseconds(workflow.createdAt.get))}")
     out.outErr.printOutLn(s"${padTo("Owner", colWidth)} ${workflow.owner.map(_.name).getOrElse("<anonymous>")}")
@@ -47,7 +43,7 @@ class DescribeWorkflowController extends DescribeController[Workflow] with Forma
     out.outErr.printOutLn("Parameters")
     val maxLength = workflow.params.map(_.name.length).max
     workflow.params.foreach { argDef =>
-      out.outErr.printOutLn(s"  ${padTo(argDef.name, maxLength)} ${argDef.help} (${DataTypes.toString(argDef.kind)})")
+      out.outErr.printOutLn(s"  ${padTo(argDef.name, maxLength)} ${argDef.help} (${DataTypes.stringify(argDef.kind)})")
     }
   }
 }

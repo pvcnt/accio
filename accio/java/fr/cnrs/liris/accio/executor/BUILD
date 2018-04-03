@@ -19,20 +19,16 @@ scala_binary(
   srcs = glob(["*.scala"]),
   deps = [
     "//accio/java/fr/cnrs/liris/accio/api",
-    "//accio/java/fr/cnrs/liris/accio/service",
-    "//accio/java/fr/cnrs/liris/accio/discovery",
-    "//accio/java/fr/cnrs/liris/accio/discovery/reflect",
+    "//accio/java/fr/cnrs/liris/accio/runtime",
     "//accio/java/fr/cnrs/liris/common/scrooge",
+    "//accio/java/fr/cnrs/liris/locapriv/install",
     "//3rdparty/jvm/com/twitter:util_slf4j_api",
-    "//3rdparty/jvm/com/twitter:inject_app",
+    "//3rdparty/jvm/com/twitter:inject_core",
     "//3rdparty/jvm/com/twitter:util_codec",
     "//3rdparty/jvm/com/twitter:util_jvm",
     "//3rdparty/jvm/com/google/guava",
     "//3rdparty/jvm/ch/qos/logback:logback_core",
     "//3rdparty/jvm/ch/qos/logback:logback_classic",
-  ],
-  runtime_deps = [
-    "//accio/java/fr/cnrs/liris/locapriv/ops",
   ],
   main_class = "fr.cnrs.liris.accio.executor.AccioExecutorMain",
 )

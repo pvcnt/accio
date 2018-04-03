@@ -21,85 +21,59 @@ package fr.cnrs.liris.accio.service
 import java.util.UUID
 
 import com.google.inject.Inject
-import fr.cnrs.liris.accio.api.Utils
 import fr.cnrs.liris.accio.api.thrift._
+import fr.cnrs.liris.accio.api.{UserInfo, Utils}
+import fr.cnrs.liris.accio.config.ClusterName
 import fr.cnrs.liris.accio.storage.Storage
 import fr.cnrs.liris.common.util.Seqs
 
-import scala.collection.mutable
 import scala.util.Random
 
 /**
  * Factory for [[Run]].
  *
- * @param storage Storage.
+ * @param storage     Storage.
+ * @param clusterName Cluster name.
  */
-final class RunFactory @Inject()(storage: Storage) extends BaseFactory {
+final class RunFactory @Inject()(storage: Storage, @ClusterName clusterName: String) {
   /**
    * Create one or several runs from a run specification.
    *
    * Run templates can trigger a parameter sweep if one the following conditions is met:
-   * (1) `repeat` field is set to a value greater than 1 OR
+   * (1) `repeat` field is set to a value greater than 1; OR
    * (2) `params` field contains at least one parameter with more than one value to take.
-   * When a parameter sweep is launched, several runs will be returned, the first one being the parent run, which will
-   * not be actually executed, and the other the children, which will be executed in parallel.
-   *
-   * @param spec     Run specification.
-   * @param user     User creating the runs.
-   * @param warnings Mutable list collecting warnings.
-   * @throws InvalidSpecException If the run specification is invalid.
-   * @return List of runs.
-   */
-  @throws[InvalidSpecException]
-  def create(spec: RunSpec, user: User, warnings: mutable.Set[InvalidSpecMessage] = mutable.Set.empty[InvalidSpecMessage]): Seq[Run] = {
-    // Extract the workflow.
-    val workflow = getWorkflow(spec.pkg, warnings)
-
-    // Check that workflow parameters referenced actually exist.
-    val unknownParams = spec.params.keySet.diff(workflow.params.map(_.name))
-    if (unknownParams.nonEmpty) {
-      throw newError("Unknown", unknownParams.map(paramName => s"params.$paramName"), warnings)
-    }
-
-    // Check that all non-optional workflow parameters are defined.
-    val missingParams = workflow.params.filterNot(_.isOptional).map(_.name).diff(spec.params.keySet)
-    if (missingParams.nonEmpty) {
-      throw newError("Required param is missing", missingParams.map(paramName => s"params.$paramName"), warnings)
-    }
-
-    val defaultParams = workflow.params.filterNot(p => spec.params.contains(p.name)).flatMap { argDef =>
-      argDef.defaultValue.map(defaultValue => argDef.name -> defaultValue)
-    }.toMap
-
-    // Check the repeat parameter is correct.
-    val repeat = spec.repeat.getOrElse(1)
-    if (repeat <= 0) {
-      throw newError(s"Number of times must be >= 1", warnings)
-    }
-
-    // Expand parameters w.r.t. to parameter sweep and repeat.
-    val expandedParams = expandForSweep(spec.params.toMap).flatMap(expandForRepeat(repeat, _))
-
-    // Create all runs.
-    val owner = spec.owner.getOrElse(user)
-    if (expandedParams.size == 1) {
-      Seq(createSingle(workflow, owner, spec.name, spec.notes,
-        spec.tags.toSet, spec.seed, defaultParams ++ expandedParams.head, spec.clonedFrom))
-    } else {
-      val fixedParams = spec.params.filter(_._2.size <= 1).keySet
-      createSweep(workflow, owner, spec.name, spec.notes, spec.tags.toSet,
-        spec.seed, defaultParams, fixedParams.toSet, expandedParams, repeat, spec.clonedFrom)
-    }
-  }
-
-  /**
-   * Validate that a run specification would create valid run(s). It does not throw any exception if the specification
-   * is invalid, errors are returned.
+   * When a parameter sweep is launched, several runs will be returned, the first one being the
+   * parent run, which will not be actually executed, and the other the children, which will be
+   * executed in parallel.
    *
    * @param spec Run specification.
+   * @param user User creating the runs.
+   * @return List of runs.
    */
-  def validate(spec: RunSpec): ValidationResult = {
-    doValidate(warnings => create(spec, User("dummy user"), warnings))
+  def create(spec: Experiment, user: Option[UserInfo]): Seq[Run] = {
+    storage
+      .read(_.workflows.get(spec.pkg.workflowId, spec.pkg.workflowVersion))
+      .toSeq
+      .flatMap { workflow =>
+        val repeat = spec.repeat.getOrElse(1)
+        val defaultParams = workflow.params.filterNot(p => spec.params.contains(p.name)).flatMap { argDef =>
+          argDef.defaultValue.map(defaultValue => argDef.name -> defaultValue)
+        }.toMap
+
+        // Expand parameters w.r.t. to parameter sweep and repeat.
+        val expandedParams = expandForSweep(spec.params.toMap).flatMap(expandForRepeat(repeat, _))
+
+        // Create all runs.
+        val owner = user.map(_.toThrift).orElse(spec.owner)
+        if (expandedParams.size == 1) {
+          Seq(createSingle(workflow, owner, spec.name, spec.notes,
+            spec.tags.toSet, spec.seed, defaultParams ++ expandedParams.head, spec.clonedFrom))
+        } else {
+          val fixedParams = spec.params.filter(_._2.size <= 1).keySet
+          createSweep(workflow, owner, spec.name, spec.notes, spec.tags.toSet,
+            spec.seed, defaultParams, fixedParams.toSet, expandedParams, repeat, spec.clonedFrom)
+        }
+      }
   }
 
   /**
@@ -116,21 +90,21 @@ final class RunFactory @Inject()(storage: Storage) extends BaseFactory {
    */
   private def createSingle(
     workflow: Workflow,
-    owner: User,
+    owner: Option[User],
     name: Option[String] = None,
     notes: Option[String] = None,
     tags: Set[String] = Set.empty,
     seed: Option[Long] = None,
     params: Map[String, Value] = Map.empty,
-    clonedFrom: Option[RunId] = None): Run = {
+    clonedFrom: Option[String] = None): Run = {
 
     Run(
       id = randomId,
-      pkg = Package(workflow.id, workflow.version.get),
+      pkg = Package(workflow.id, workflow.version),
       owner = owner,
       name = name,
-      cluster = "default",
       notes = notes,
+      cluster = clusterName,
       tags = tags,
       seed = seed.getOrElse(Random.nextLong()),
       params = params,
@@ -157,7 +131,7 @@ final class RunFactory @Inject()(storage: Storage) extends BaseFactory {
    */
   private def createSweep(
     workflow: Workflow,
-    owner: User,
+    owner: Option[User],
     name: Option[String],
     notes: Option[String],
     tags: Set[String],
@@ -166,9 +140,9 @@ final class RunFactory @Inject()(storage: Storage) extends BaseFactory {
     fixedParams: Set[String],
     expandedParams: Seq[Map[String, Value]],
     repeat: Int,
-    clonedFrom: Option[RunId]): Seq[Run] = {
+    clonedFrom: Option[String]): Seq[Run] = {
 
-    val pkg = Package(workflow.id, workflow.version.get)
+    val pkg = Package(workflow.id, workflow.version)
     val actualSeed = seed.getOrElse(Random.nextLong())
     val now = System.currentTimeMillis()
     val random = new Random(actualSeed)
@@ -178,7 +152,7 @@ final class RunFactory @Inject()(storage: Storage) extends BaseFactory {
     // If I don't force it, I get the strangest compiler error (head lines follow):
     // java.lang.AssertionError: assertion failed:
     //   Some(children.<map: error>(((x$2) => x$2.id)).<toSet: error>)
-    //     while compiling: /path/to/code/src/jvm/fr/cnrs/liris/accio/api/RunFactory.scala
+    //     while compiling: /path/to/code/accio/java/fr/cnrs/liris/accio/service/RunFactory.scala
     //       during phase: superaccessors
     val children: Seq[Run] = expandedParams.map { params =>
       val discriminantParams = params.filter { case (key, _) => !fixedParams.contains(key) }
@@ -188,7 +162,7 @@ final class RunFactory @Inject()(storage: Storage) extends BaseFactory {
         pkg = pkg,
         owner = owner,
         name = maybeName,
-        cluster = "default",
+        cluster = clusterName,
         seed = random.nextLong(),
         params = defaultParams ++ params,
         parent = Some(parentId),
@@ -200,7 +174,7 @@ final class RunFactory @Inject()(storage: Storage) extends BaseFactory {
       id = parentId,
       pkg = pkg,
       owner = owner,
-      cluster = "default",
+      cluster = clusterName,
       name = name,
       notes = notes,
       tags = tags,
@@ -217,7 +191,7 @@ final class RunFactory @Inject()(storage: Storage) extends BaseFactory {
   /**
    * Return a random and unique run identifier.
    */
-  private def randomId = RunId(UUID.randomUUID().toString.replace("-", ""))
+  private def randomId = UUID.randomUUID().toString.replace("-", "")
 
   /**
    * Return initial run state.
@@ -227,20 +201,8 @@ final class RunFactory @Inject()(storage: Storage) extends BaseFactory {
   private def initialState(graph: Graph) = {
     val nodes = graph.nodes.map { node =>
       NodeStatus(name = node.name, status = TaskState.Waiting)
-    }
+    }.toSet
     RunStatus(progress = 0, status = TaskState.Scheduled, nodes = nodes)
-  }
-
-  /**
-   * Return the workflow defined by a package.
-   *
-   * @param pkg      Package.
-   * @param warnings Mutable list collecting warnings.
-   */
-  private def getWorkflow(pkg: Package, warnings: mutable.Set[InvalidSpecMessage]) = {
-    storage
-      .read(_.workflows.get(pkg.workflowId, pkg.workflowVersion))
-      .getOrElse(throw newError(s"Workflow not found: ${pkg.workflowId.value}@${pkg.workflowVersion}", "pkg", warnings))
   }
 
   /**

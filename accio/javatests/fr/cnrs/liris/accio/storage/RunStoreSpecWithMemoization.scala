@@ -18,7 +18,10 @@
 
 package fr.cnrs.liris.accio.storage
 
+import fr.cnrs.liris.accio.api.Values
 import fr.cnrs.liris.accio.api.thrift._
+
+import scala.collection.Map
 
 /**
  * Common unit tests for all [[RunStore.Mutable]] implementations providing memoization
@@ -27,12 +30,25 @@ import fr.cnrs.liris.accio.api.thrift._
 private[storage] trait RunStoreSpecWithMemoization {
   this: RunStoreSpec =>
 
+  private val foobarResults = Map(
+    "FooNode" -> OpResult(
+      0,
+      Set(Artifact("myint", Values.encodeInteger(42)), Artifact("mystr", Values.encodeString("foo str"))),
+      Set(Metric("a", 1), Metric("b", 2))),
+    "BarNode" -> OpResult(
+      0,
+      Set(Artifact("dbl", Values.encodeDouble(3.14))),
+      Set(Metric("a", 12))))
+  private val fooResults = Map("FooNode" -> OpResult(
+    0,
+    Set(Artifact("myint", Values.encodeInteger(44)), Artifact("mystr", Values.encodeString("str"))),
+    Set(Metric("a", 3), Metric("b", 4))))
   private val foobarRunWithNodes = foobarRun.copy(state = foobarRun.state.copy(nodes = Set(
-    NodeStatus(name = "FooNode", status = TaskState.Success, cacheKey = Some(CacheKey("MyFooCacheKey")), result = Some(foobarResults("FooNode"))),
-    NodeStatus(name = "BarNode", status = TaskState.Success, cacheKey = Some(CacheKey("MyBarCacheKey")), result = Some(foobarResults("BarNode")))
+    NodeStatus(name = "FooNode", status = TaskState.Success, cacheKey = Some("MyFooCacheKey"), result = Some(foobarResults("FooNode"))),
+    NodeStatus(name = "BarNode", status = TaskState.Success, cacheKey = Some("MyBarCacheKey"), result = Some(foobarResults("BarNode")))
   )))
   private val fooRunWithNodes = fooRun.copy(state = fooRun.state.copy(nodes = Set(
-    NodeStatus(name = "FooNode", status = TaskState.Success, cacheKey = Some(CacheKey("YourFooCacheKey")), result = Some(fooResults("FooNode"))))))
+    NodeStatus(name = "FooNode", status = TaskState.Success, cacheKey = Some("YourFooCacheKey"), result = Some(fooResults("FooNode"))))))
 
   it should "memoize artifacts" in {
     storage.write { stores =>
@@ -40,10 +56,10 @@ private[storage] trait RunStoreSpecWithMemoization {
       stores.runs.save(fooRunWithNodes)
     }
     storage.read { stores =>
-      stores.runs.get(CacheKey("MyFooCacheKey")) shouldBe Some(foobarResults("FooNode"))
-      stores.runs.get(CacheKey("MyBarCacheKey")) shouldBe Some(foobarResults("BarNode"))
-      stores.runs.get(CacheKey("YourFooCacheKey")) shouldBe Some(fooResults("FooNode"))
-      stores.runs.get(CacheKey("UnknownKey")) shouldBe None
+      stores.runs.fetch("MyFooCacheKey") shouldBe Some(foobarResults("FooNode"))
+      stores.runs.fetch("MyBarCacheKey") shouldBe Some(foobarResults("BarNode"))
+      stores.runs.fetch("YourFooCacheKey") shouldBe Some(fooResults("FooNode"))
+      stores.runs.fetch("UnknownKey") shouldBe None
     }
   }
 }

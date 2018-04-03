@@ -67,10 +67,6 @@ dependencies:
     commons-math3:
       version: "3.6.1"
       lang: java
-  io.github.lukehutch:
-    fast-classpath-scanner:
-      version: "2.0.19"
-      lang: java
   org.scalanlp:
     breeze:
       version: "0.12"

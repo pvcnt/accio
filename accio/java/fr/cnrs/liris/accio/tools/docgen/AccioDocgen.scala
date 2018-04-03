@@ -22,9 +22,8 @@ import java.nio.file.Paths
 
 import com.twitter.inject.app.App
 import com.twitter.util.Stopwatch
-import fr.cnrs.liris.accio.discovery.OpDiscovery
-import fr.cnrs.liris.accio.discovery.inject.DiscoveryModule
 import fr.cnrs.liris.accio.logging.LogbackConfigurator
+import fr.cnrs.liris.locapriv.install.OpsModule
 
 object AccioDocgenMain extends AccioDocgen
 
@@ -34,17 +33,13 @@ object AccioDocgenMain extends AccioDocgen
 class AccioDocgen extends App with LogbackConfigurator {
   private[this] val outFlag = flag[String]("out", "File where to write generated documentation")
   private[this] val tocFlag = flag("toc", true, "Whether to include a table of contents")
-  private[this] val layoutFlag = flag("layout", "docs", "Layout name")
 
-  override def modules = Seq(DiscoveryModule)
+  override def modules = Seq(DocgenModule, OpsModule)
 
   override def run(): Unit = {
     val elapsed = Stopwatch.start()
-    val reader = injector.instance[OpDiscovery]
-    val ops = reader.discover.map(reader.read(_).defn)
-    println(s"Discovered ${ops.size} operators")
     val docgen = injector.instance[MarkdownDocgen]
-    docgen.generate(ops, DocgenOpts(Paths.get(outFlag()), tocFlag(), layoutFlag()))
+    docgen.generate(DocgenOpts(Paths.get(outFlag()), tocFlag()))
     println(s"Done in ${elapsed().inSeconds} seconds.")
   }
 }

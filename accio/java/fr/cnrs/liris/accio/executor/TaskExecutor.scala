@@ -21,13 +21,14 @@ package fr.cnrs.liris.accio.executor
 import java.io.FileOutputStream
 import java.nio.file.{Files, Path}
 
+import com.google.inject.{Inject, Singleton}
 import com.twitter.util.logging.Logging
-import fr.cnrs.liris.accio.api.Errors
 import fr.cnrs.liris.accio.api.thrift.{OpResult, Task}
-import fr.cnrs.liris.accio.service.{OpExecutor, OpExecutorOpts}
+import fr.cnrs.liris.accio.runtime.{OpExecutor, OpExecutorOpts}
 import fr.cnrs.liris.common.scrooge.BinaryScroogeSerializer
 
-final class TaskExecutor(opExecutor: OpExecutor) extends Logging {
+@Singleton
+final class TaskExecutor @Inject()(opExecutor: OpExecutor) extends Logging {
   def execute(task: Task, outputFile: Path): Unit = {
     val result = execute(task)
     Files.createDirectories(outputFile.getParent)
@@ -40,7 +41,7 @@ final class TaskExecutor(opExecutor: OpExecutor) extends Logging {
   }
 
   private def execute(task: Task): OpResult = {
-    logger.info(s"Starting execution of task ${task.id.value}")
+    logger.info(s"Starting execution of task ${task.id}")
     try {
       val opts = OpExecutorOpts(useProfiler = true)
       opExecutor.execute(task.payload, opts)
@@ -49,7 +50,7 @@ final class TaskExecutor(opExecutor: OpExecutor) extends Logging {
         // Normally, operator executor is supposed to be robust enough to catch all errors. But we still handle
         // and uncaught error here, just in case...
         logger.error(s"Operator raised an unexpected error", e)
-        OpResult(-999, Some(Errors.create(e)))
+        OpResult(1)
     }
   }
 }

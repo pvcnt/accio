@@ -39,8 +39,6 @@ object AccioJacksonModule extends SimpleModule {
   addSerializer(new ScroogeStructSerializer[NodeStatus](NodeStatus))
   addSerializer(new ScroogeStructSerializer[Artifact](Artifact))
   addSerializer(new ScroogeStructSerializer[Metric](Metric))
-  addSerializer(new ScroogeStructSerializer[ErrorData](ErrorData))
-  addSerializer(new ScroogeStructSerializer[Error](Error))
   addSerializer(new ScroogeStructSerializer[OpResult](OpResult))
   addSerializer(new ScroogeStructSerializer[Workflow](Workflow))
   addSerializer(new ScroogeStructSerializer[Node](Node))
@@ -51,10 +49,6 @@ object AccioJacksonModule extends SimpleModule {
   addSerializer(new ScroogeStructSerializer[ArgDef](ArgDef))
   addSerializer(new ScroogeStructSerializer[OpDef](OpDef))
   addSerializer(new ScroogeStructSerializer[Resource](Resource))
-
-  addSerializer(new ScroogeWrappedStructSerializer[WorkflowId](WorkflowId))
-  addSerializer(new ScroogeWrappedStructSerializer[RunId](RunId))
-  addSerializer(new ScroogeWrappedStructSerializer[CacheKey](CacheKey))
   addSerializer(new ScroogeWrappedStructSerializer[Graph](Graph))
 
   addSerializer(new ScroogeUnionSerializer[Input](Input))

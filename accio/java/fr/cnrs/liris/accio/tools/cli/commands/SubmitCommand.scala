@@ -18,15 +18,13 @@
 
 package fr.cnrs.liris.accio.tools.cli.commands
 
-import java.nio.file.Files
-
-import fr.cnrs.liris.accio.agent.{CreateRunRequest, ParseRunRequest}
-import fr.cnrs.liris.accio.api.Utils
-import fr.cnrs.liris.accio.api.thrift.RunSpec
+import com.twitter.util.Future
+import fr.cnrs.liris.accio.agent.CreateRunRequest
+import fr.cnrs.liris.accio.api.Values
+import fr.cnrs.liris.accio.api.thrift.{Experiment, Package, Value}
+import fr.cnrs.liris.accio.dsl.ExperimentParser
 import fr.cnrs.liris.accio.tools.cli.event.{Event, EventKind, Reporter}
-import fr.cnrs.liris.common.util.{FileUtils, StringUtils}
-
-import scala.collection.JavaConverters._
+import fr.cnrs.liris.common.util.{FileUtils, Seqs, StringUtils}
 
 final class SubmitCommand extends Command with ClientCommand {
   private[this] val nameFlag = flag[String]("name", "Run name")
@@ -41,74 +39,61 @@ final class SubmitCommand extends Command with ClientCommand {
 
   override def allowResidue = true
 
-  override def execute(residue: Seq[String], env: CommandEnvironment): ExitCode = {
+  override def execute(residue: Seq[String], env: CommandEnvironment): Future[ExitCode] = {
     if (residue.isEmpty) {
       env.reporter.handle(Event.error("You must provide a run file or package specification."))
-      ExitCode.CommandLineError
-    } else {
-      val params = try {
-        parseParams(residue.tail)
-      } catch {
-        case e: IllegalArgumentException =>
-          env.reporter.handle(Event.error(s"Params argument parse error: ${e.getMessage}"))
-          return ExitCode.CommandLineError
-      }
-      parseAndSubmit(residue.head, params, env.reporter)
+      return Future.value(ExitCode.CommandLineError)
     }
+    val params = try {
+      parseParams(residue.tail)
+    } catch {
+      case e: IllegalArgumentException =>
+        env.reporter.handle(Event.error(s"Params argument parse error: ${e.getMessage}"))
+        return Future.value(ExitCode.CommandLineError)
+    }
+    parseAndSubmit(residue.head, params, env.reporter)
   }
 
-  private def parseAndSubmit(uri: String, params: Map[String, String], reporter: Reporter): ExitCode = {
-    val path = FileUtils.expandPath(uri)
-    val file = path.toFile
-    val content = if (file.exists) {
+  private def parseAndSubmit(uri: String, params: Map[String, Seq[Value]], reporter: Reporter): Future[ExitCode] = {
+    val file = FileUtils.expandPath(uri).toFile
+    val future = if (file.exists) {
       if (!file.canRead) {
-        reporter.handle(Event.error(s"Cannot read workflow definition file: ${path.toAbsolutePath}"))
-        return ExitCode.DefinitionError
+        reporter.handle(Event.error(s"Cannot read workflow definition file: ${file.getAbsolutePath}"))
+        return Future.value(ExitCode.DefinitionError)
       }
-      Files.readAllLines(path).asScala.mkString
+      val parser = new ExperimentParser
+      parser.parse(file)
     } else {
-      uri
+      Future.value(Experiment(pkg = Package(uri)))
     }
-
-    val req = ParseRunRequest(content, params, Some(path.getFileName.toString))
-    respond(client.parseRun(req), reporter) { resp =>
-      printErrors(resp.warnings, reporter, EventKind.Warning)
-      printErrors(resp.errors, reporter, EventKind.Error)
-      resp.run match {
-        case Some(spec) =>
-          val mergedSpec = merge(spec)
-          submit(mergedSpec, reporter)
-        case None =>
-          reporter.handle(Event.error("Some errors where found in the run definition"))
-          ExitCode.DefinitionError
+    future
+      .map(experiment => merge(experiment.copy(params = experiment.params ++ params)))
+      .flatMap { experiment =>
+        client
+          .createRun(CreateRunRequest(experiment))
+          .map { resp =>
+            resp.warnings.foreach { violation =>
+              reporter.handle(Event(EventKind.Warning, s"${violation.message} (at ${violation.field})"))
+            }
+            resp.ids.foreach(id => reporter.handle(Event.info(s"Created run $id")))
+            if (resp.ids.size > 1) {
+              reporter.handle(Event.info(s"Created ${resp.ids.size} runs successfully"))
+            }
+            ExitCode.Success
+          }
       }
-    }
-  }
-
-  private def submit(spec: RunSpec, reporter: Reporter) = {
-    val req = CreateRunRequest(spec, Utils.DefaultUser)
-    respond(client.createRun(req), reporter) { resp =>
-      resp.ids.foreach {
-        runId =>
-          reporter.handle(Event.info(s"Created run ${runId.value}"))
-      }
-      if (resp.ids.size > 1) {
-        reporter.handle(Event.info(s"Created ${resp.ids.size} runs successfully"))
-      }
-      ExitCode.Success
-    }
   }
 
   private[this] val ParamRegex = "([^=]+)=(.+)".r
 
-  private def parseParams(params: Seq[String]): Map[String, String] = {
-    params.map {
-      case ParamRegex(paramName, value) => paramName -> value
+  private def parseParams(params: Seq[String]): Map[String, Seq[Value]] = {
+    Seqs.index(params.map {
+      case ParamRegex(paramName, value) => paramName -> Values.encodeString(value)
       case str => throw new IllegalArgumentException(s"Invalid param (expected key=value): $str")
-    }.toMap
+    })
   }
 
-  private def merge(spec: RunSpec) = {
+  private def merge(spec: Experiment) = {
     var newSpec = spec
     nameFlag.get.foreach(name => newSpec = newSpec.copy(name = Some(name)))
     notesFlag.get.foreach(notes => newSpec = newSpec.copy(notes = Some(notes)))

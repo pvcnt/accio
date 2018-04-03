@@ -18,6 +18,7 @@
 
 package fr.cnrs.liris.accio.tools.cli.commands
 
+import com.twitter.util.Future
 import fr.cnrs.liris.accio.tools.cli.controller._
 import fr.cnrs.liris.accio.tools.cli.event.{Event, Reporter}
 import fr.cnrs.liris.common.util.StringUtils.explode
@@ -34,34 +35,31 @@ final class GetCommand extends Command with ClientCommand {
 
   override def allowResidue = true
 
-  override def execute(residue: Seq[String], env: CommandEnvironment): ExitCode = {
+  override def execute(residue: Seq[String], env: CommandEnvironment): Future[ExitCode] = {
     if (residue.isEmpty) {
       env.reporter.handle(Event.error("You must specify a resource type.\n" +
         "Valid resource types are: workflow, run, operator"))
-      return ExitCode.CommandLineError
+      return Future.value(ExitCode.CommandLineError)
     }
-    val maybeController: Option[GetController[_]] = residue.head match {
-      case "workflow" | "workflows" => Some(new GetWorkflowController)
-      case "run" | "runs" => Some(new GetRunController)
-      case "operator" | "operators" | "op" | "ops" => Some(new GetOperatorController)
-      case _ => None
-    }
-    maybeController match {
-      case None =>
+    val controller: GetController[_] = residue.head match {
+      case "workflow" | "workflows" => new GetWorkflowController
+      case "run" | "runs" => new GetRunController
+      case "operator" | "operators" | "op" | "ops" => new GetOperatorController
+      case _ =>
         env.reporter.handle(Event.error(s"Invalid resource type: ${residue.head}.\n" +
-          s"Valid resource types are: workflow, run, operator"))
-        ExitCode.CommandLineError
-      case Some(controller) => execute(controller, env.reporter)
+          s"Valid resource types are: workflow, run, operator."))
+        return Future.value(ExitCode.CommandLineError)
     }
+    list(controller, env.reporter)
   }
 
-  private def execute[Res](controller: GetController[Res], reporter: Reporter) = {
+  private def list[Res](controller: GetController[Res], reporter: Reporter) = {
     val query = GetQuery(
       all = allFlag(),
       owner = ownerFlag.get,
       tags = explode(tagsFlag.get, ","),
       limit = limitFlag.get)
-    respond(controller.retrieve(query, client), reporter) { resp =>
+    controller.retrieve(query, client).map { resp =>
       controller.print(reporter, resp)
       ExitCode.Success
     }

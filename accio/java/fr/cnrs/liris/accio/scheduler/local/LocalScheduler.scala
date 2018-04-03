@@ -50,7 +50,7 @@ final class LocalScheduler(
   private case class Running(task: Task, future: Future[_])
 
   private[this] val pending = new ConcurrentLinkedDeque[Task]
-  private[this] val running = new ConcurrentHashMap[TaskId, Running].asScala
+  private[this] val running = new ConcurrentHashMap[String, Running].asScala
   private[this] val javaBinary = {
     sys.env.get("JAVA_HOME").map(home => s"$home/bin/java").getOrElse("/usr/bin/java")
   }
@@ -85,14 +85,14 @@ final class LocalScheduler(
     } else {
       if (!forceScheduling && !isEnoughResources(task.id, task.resource, totalResources)) {
         // TODO: We should cancel the task.
-        logger.warn(s"Not enough resources to schedule task ${task.id.value}")
+        logger.warn(s"Not enough resources to schedule task ${task.id}")
       }
-      logger.info(s"Queued task ${task.id.value}")
+      logger.info(s"Queued task ${task.id}")
       pending.add(task)
     }
   }
 
-  override def kill(id: TaskId): Boolean = {
+  override def kill(id: String): Boolean = {
     running.remove(id) match {
       case None => false
       case Some(item) =>
@@ -102,27 +102,18 @@ final class LocalScheduler(
     }
   }
 
-  override def kill(id: RunId): Set[Task] = {
-    val tasks = mutable.Set.empty[Task]
-    val pendingTasks = pending.asScala.filter(_.runId == id)
-    tasks ++= pendingTasks.flatMap(task => if (pending.remove(task)) Some(task) else None)
-    val runningTasks = running.values.filter(_.task.runId == id).map(_.task)
-    tasks ++= runningTasks.flatMap(task => if (kill(task.id)) Some(task) else None)
-    tasks.toSet
-  }
-
-  override def getLogs(id: TaskId, kind: String, skip: Option[Int], tail: Option[Int]): Seq[String] = {
+  override def getLogs(id: String, kind: String, skip: Option[Int], tail: Option[Int]): Seq[String] = {
     readLogFile(getWorkDir(id).resolve(kind), skip, tail)
   }
 
   private def schedule(task: Task): Future[OpResult] = {
-    logger.info(s"Starting execution of task ${task.id.value}")
+    logger.info(s"Starting execution of task ${task.id}")
     pool(execute(task))
       .onSuccess { result =>
         eventBus.post(TaskCompletedEvent(task.runId, task.nodeName, result, task.payload.cacheKey))
       }
       .onFailure { e =>
-        logger.error(s"Unexpected error while executing task ${task.id.value}", e)
+        logger.error(s"Unexpected error while executing task ${task.id}", e)
         eventBus.post(TaskCompletedEvent(task.runId, task.nodeName, OpResult(-998), task.payload.cacheKey))
       }
       .ensure {
@@ -131,21 +122,21 @@ final class LocalScheduler(
       }
   }
 
-  private def isEnoughResources(id: TaskId, requests: Resource, resources: Resource): Boolean = {
+  private def isEnoughResources(id: String, requests: Resource, resources: Resource): Boolean = {
     val ok = requests.cpu <= resources.cpu &&
       requests.ramMb <= resources.ramMb &&
       requests.diskMb <= resources.diskMb
     if (ok) {
       true
     } else if (running.isEmpty && forceScheduling) {
-      logger.warn(s"Forcing scheduling of task ${id.value}")
+      logger.warn(s"Forcing scheduling of task $id")
       true
     } else {
       false
     }
   }
 
-  private def reserveResources(id: TaskId, requests: Resource): Boolean = synchronized {
+  private def reserveResources(id: String, requests: Resource): Boolean = synchronized {
     if (!isEnoughResources(id, requests, availableResources)) {
       false
     } else {
@@ -176,7 +167,7 @@ final class LocalScheduler(
     val process = startProcess(task)
     eventBus.post(TaskStartedEvent(task.runId, task.nodeName))
     val exitCode = process.waitFor()
-    logger.info(s"Completed execution of task ${task.id.value} (exit code: $exitCode)")
+    logger.info(s"Completed execution of task ${task.id} (exit code: $exitCode)")
     read(getResultFile(getWorkDir(task.id))).copy(exitCode = exitCode)
   }
 
@@ -187,7 +178,7 @@ final class LocalScheduler(
     val outputsDir = getOutputsDir(workDir)
     Files.createDirectories(outputsDir)
     val command = createCommandLine(task, getResultFile(workDir))
-    logger.debug(s"Command-line for task ${task.id.value}: ${command.mkString(" ")}")
+    logger.debug(s"Command-line for task ${task.id}: ${command.mkString(" ")}")
 
     new ProcessBuilder()
       .command(command: _*)
@@ -201,11 +192,11 @@ final class LocalScheduler(
 
   private def getResultFile(workDir: Path) = workDir.resolve("result")
 
-  private def getWorkDir(taskId: TaskId): Path = {
+  private def getWorkDir(taskId: String): Path = {
     dataDir
-      .resolve(taskId.value(0).toString)
-      .resolve(taskId.value(1).toString)
-      .resolve(taskId.value)
+      .resolve(taskId(0).toString)
+      .resolve(taskId(1).toString)
+      .resolve(taskId)
   }
 
   private def readLogFile(file: Path, skip: Option[Int], tail: Option[Int]): Seq[String] = {

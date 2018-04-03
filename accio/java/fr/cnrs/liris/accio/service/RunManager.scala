@@ -20,9 +20,8 @@ package fr.cnrs.liris.accio.service
 
 import com.google.inject.{Inject, Singleton}
 import com.twitter.util.logging.Logging
-import fr.cnrs.liris.accio.api
-import fr.cnrs.liris.accio.api.Utils
-import fr.cnrs.liris.accio.api.thrift._
+import fr.cnrs.liris.accio.api.thrift.{Run, TaskState}
+import fr.cnrs.liris.accio.api.{Graph, Node, Utils, thrift}
 import fr.cnrs.liris.accio.storage.{RunQuery, Storage}
 import fr.cnrs.liris.common.util.cache.CacheBuilder
 
@@ -34,14 +33,14 @@ import fr.cnrs.liris.common.util.cache.CacheBuilder
  * @param storage          Storage.
  */
 @Singleton
-final class RunManager @Inject()(schedulerService: SchedulerService, graphFactory: GraphFactory, storage: Storage)
+final class RunManager @Inject()(schedulerService: SchedulerService, graphFactory: GraphValidator, storage: Storage)
   extends Logging {
 
-  private[this] val graphs = CacheBuilder().maximumSize(25).build((pkg: Package) => {
+  private[this] val graphs = CacheBuilder().maximumSize(25).build((pkg: thrift.Package) => {
     // Workflow does exist, because it has been validated when creating the runs, and workflows
     // cannot be deleted (via the public API at least...).
     val workflow = storage.read(_.workflows.get(pkg.workflowId, pkg.workflowVersion)).get
-    graphFactory.create(workflow.graph)
+    Graph.fromThrift(workflow.graph)
   })
 
   /**
@@ -66,23 +65,12 @@ final class RunManager @Inject()(schedulerService: SchedulerService, graphFactor
   /**
    * Mark a list of nodes as killed.
    *
-   * @param run       Run.
-   * @param nodeNames Nodes that have been killed, as part of the run.
-   * @param parent    Parent run, if any.
+   * @param run    Run.
+   * @param parent Parent run, if any.
    * @return Updated run and parent run.
    */
-  def onKill(run: Run, nodeNames: Set[String], parent: Option[Run]): (Run, Option[Run]) = {
+  def onKill(run: Run, parent: Option[Run]): (Run, Option[Run]) = {
     var newRun = run
-    nodeNames.foreach { nodeName =>
-      val nodeStatus = run.state.nodes.find(_.name == nodeName).get
-      if (nodeStatus.completedAt.isDefined) {
-        // On race requests, node state could be already marked as completed.
-        (run, parent)
-      } else {
-        val newNodeStatus = nodeStatus.copy(completedAt = Some(System.currentTimeMillis()), status = TaskState.Killed)
-        newRun = replace(run, nodeStatus, newNodeStatus)
-      }
-    }
     newRun = cancelAllNodes(newRun)
     updateProgress(newRun, parent)
   }
@@ -121,7 +109,7 @@ final class RunManager @Inject()(schedulerService: SchedulerService, graphFactor
    * @param parent   Parent run, if any.
    * @return Updated run and parent run.
    */
-  def onFailed(run: Run, nodeName: String, result: OpResult, parent: Option[Run]): (Run, Option[Run]) = {
+  def onFailed(run: Run, nodeName: String, result: thrift.OpResult, parent: Option[Run]): (Run, Option[Run]) = {
     val nodeStatus = run.state.nodes.find(_.name == nodeName).get
     if (nodeStatus.completedAt.isDefined) {
       // On race requests, node state could be already marked as completed.
@@ -147,7 +135,7 @@ final class RunManager @Inject()(schedulerService: SchedulerService, graphFactor
    * @param parent   Parent run, if any.
    * @return Updated run and parent run.
    */
-  def onSuccess(run: Run, nodeName: String, result: OpResult, cacheKey: Option[CacheKey], parent: Option[Run]): (Run, Option[Run]) = {
+  def onSuccess(run: Run, nodeName: String, result: thrift.OpResult, cacheKey: Option[String], parent: Option[Run]): (Run, Option[Run]) = {
     val NodeStatus = run.state.nodes.find(_.name == nodeName).get
     if (NodeStatus.completedAt.isDefined) {
       // On race requests, node state could be already marked as completed.
@@ -164,17 +152,17 @@ final class RunManager @Inject()(schedulerService: SchedulerService, graphFactor
     }
   }
 
-  private def replace(run: Run, nodeStatus: NodeStatus, newNodeStatus: NodeStatus) = {
+  private def replace(run: Run, nodeStatus: thrift.NodeStatus, newNodeStatus: thrift.NodeStatus) = {
     run.copy(state = run.state.copy(nodes = run.state.nodes - nodeStatus + newNodeStatus))
   }
 
-  private def schedule(run: Run, nodes: Set[api.Node]): Run = {
+  private def schedule(run: Run, nodes: Set[Node]): Run = {
     var newRun = run
     nodes.foreach(node => newRun = schedule(newRun, node))
     newRun
   }
 
-  private def schedule(run: Run, node: api.Node): Run = {
+  private def schedule(run: Run, node: Node): Run = {
     var newRun = schedulerService.submit(run, node)
     val newNodeStatus = newRun.state.nodes.find(_.name == node.name).get
     if (newNodeStatus.result.isDefined) {
@@ -268,7 +256,7 @@ final class RunManager @Inject()(schedulerService: SchedulerService, graphFactor
     newRun
   }
 
-  private def getNextNodes(run: Run, graph: api.Graph, nodeName: String): Set[api.Node] = {
+  private def getNextNodes(run: Run, graph: Graph, nodeName: String): Set[Node] = {
     graph(nodeName).successors
       .map(graph.apply)
       .filter { nextNode =>

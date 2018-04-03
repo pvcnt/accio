@@ -20,8 +20,8 @@ package fr.cnrs.liris.accio.tools.cli.controller
 
 import com.twitter.util.{Duration, Future, Time}
 import fr.cnrs.liris.accio.agent.{AgentService$FinagleClient, GetRunRequest}
-import fr.cnrs.liris.accio.api.Values
 import fr.cnrs.liris.accio.api.thrift._
+import fr.cnrs.liris.accio.api.{Errors, Values}
 import fr.cnrs.liris.accio.tools.cli.event.Reporter
 import fr.cnrs.liris.common.util.StringUtils.padTo
 
@@ -30,15 +30,12 @@ class DescribeNodeController extends DescribeController[NodeStatus] with FormatH
 
   override def retrieve(id: String, client: AgentService$FinagleClient): Future[NodeStatus] = {
     val parts = id.split("/")
-    client.getRun(GetRunRequest(RunId(parts.head)))
+    client
+      .getRun(GetRunRequest(parts.head))
       .map { resp =>
-        resp.result match {
-          case None => throw new NoResultException
-          case Some(run) =>
-            run.state.nodes.find(_.name == parts.last) match {
-              case None => throw new NoResultException
-              case Some(node) => node
-            }
+        resp.run.state.nodes.find(_.name == parts.last) match {
+          case None => throw Errors.notFound("node", id)
+          case Some(node) => node
         }
       }
   }
@@ -63,22 +60,15 @@ class DescribeNodeController extends DescribeController[NodeStatus] with FormatH
 
     node.result.foreach { result =>
       out.outErr.printOutLn(s"${padTo("Exit code", colWidth)} ${result.exitCode}")
-      result.error.foreach { error =>
-        out.outErr.printOutLn(s"${padTo("Error class", colWidth)} <error>${error.root.classifier}</error>")
-        out.outErr.printOutLn(s"<error>${padTo("Error message", colWidth)} <error>${error.root.message}</error>")
-        out.outErr.printOutLn(s"${padTo("Error stack", colWidth)} " +
-          error.root.stacktrace.headOption.getOrElse("") + "\n" +
-          error.root.stacktrace.tail.map(s => (" " * (colWidth + 1)) + s).mkString("\n"))
-      }
       if (result.artifacts.nonEmpty) {
         out.outErr.printOutLn("Artifacts")
         out.outErr.printOutLn(s"  ${padTo("Name", 25)}  Value (preview)")
         result.artifacts.foreach { artifact =>
-          out.outErr.printOutLn(s"  ${padTo(artifact.name, 25)}  ${Values.toString(artifact.value)}")
+          out.outErr.printOutLn(s"  ${padTo(artifact.name, 25)}  ${Values.stringify(artifact.value)}")
         }
       }
       if (result.metrics.nonEmpty) {
-         out.outErr.printOutLn("Metrics")
+        out.outErr.printOutLn("Metrics")
         out.outErr.printOutLn(s"  ${padTo("Name", 25)}  Value")
         result.metrics.foreach { metric =>
           out.outErr.printOutLn(s"  ${padTo(metric.name, 25)}  ${metric.value}")

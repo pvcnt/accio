@@ -57,19 +57,13 @@ object Utils {
   val ArgRegex: Regex = ("^" + ArgPattern + "$").r
 
   /**
-   * Return the default user, inferred from the environment of the shell user login. It is of course only
-   * valid in a client context.
-   */
-  val DefaultUser: thrift.User = sys.env.get("ACCIO_USER").map(parseUser).getOrElse(thrift.User(sys.props("user.name")))
-
-  /**
    * Generate a human-readable label for a list of parameters.
    *
    * @param params List of parameters.
    */
   def label(params: Seq[(String, Value)]): String = {
     params.map { case (k, v) =>
-      var vStr = Values.toString(v)
+      var vStr = Values.stringify(v)
       if (vStr.contains('/')) {
         // Remove any slash that would be polluting directory name.
         vStr = vStr.substring(vStr.lastIndexOf('/') + 1)

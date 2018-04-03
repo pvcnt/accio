@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.storage.mysql
 import com.twitter.finagle.mysql.{Client, RawValue, Row}
 import com.twitter.util.{Await, Future}
 import fr.cnrs.liris.accio.api.ResultList
-import fr.cnrs.liris.accio.api.thrift.{Workflow, WorkflowId}
+import fr.cnrs.liris.accio.api.thrift.Workflow
 import fr.cnrs.liris.accio.storage.{WorkflowQuery, WorkflowStore}
 import fr.cnrs.liris.common.scrooge.BinaryScroogeSerializer
 
@@ -39,30 +39,28 @@ private[this] final class MysqlWorkflowStore(client: Client) extends WorkflowSto
     Await.result(f)
   }
 
-  override def get(id: WorkflowId): Option[Workflow] = {
-    val f = client
-      .prepare("select content from workflows where id = ? and is_active = 1")
-      .select(id.value)(decode)
-      .map(_.headOption)
-    Await.result(f)
-  }
-
-  override def get(id: WorkflowId, version: String): Option[Workflow] = {
-    val f = client
-      .prepare("select content from workflows where id = ? and version = ?")
-      .select(id.value, version)(decode)
-      .map(_.headOption)
-    Await.result(f)
+  override def get(id: String, version: Option[String]): Option[Workflow] = {
+    val f = version match {
+      case None =>
+        client
+          .prepare("select content from workflows where id = ? and is_active = 1")
+          .select(id)(decode)
+      case Some(v) =>
+        client
+          .prepare("select content from workflows where id = ? and version = ?")
+          .select(id, v)(decode)
+    }
+    Await.result(f.map(_.headOption))
   }
 
   override def save(workflow: Workflow): Unit = {
     val content = BinaryScroogeSerializer.toBytes(workflow)
     val f1 = client
       .prepare("update workflows set is_active = 0 where id = ? and version <> ?")
-      .apply(workflow.id.value, workflow.version.get)
+      .apply(workflow.id, workflow.version.get)
     val f2 = client
       .prepare("insert into workflows(id, version, is_active, content) values(?, ?, 1, ?)")
-      .apply(workflow.id.value, workflow.version.get, content)
+      .apply(workflow.id, workflow.version.get, content)
     Await.result(Future.join(f1, f2))
   }
 

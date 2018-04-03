@@ -22,7 +22,8 @@ import java.io.PrintStream
 
 import com.google.common.io.Flushables
 import com.twitter.app.Flags
-import com.twitter.util.{Duration, Stopwatch}
+import com.twitter.util.{Event => _, _}
+import fr.cnrs.liris.accio.api.thrift.{ErrorCode, ServerException}
 import fr.cnrs.liris.accio.tools.cli.event._
 import fr.cnrs.liris.accio.tools.cli.terminal.OutErr
 import fr.cnrs.liris.common.util.TimeUtils
@@ -80,7 +81,7 @@ final class CommandDispatcher(registry: CommandRegistry) {
       System.setErr(new PrintStream(reporter.outErr.err, true))
 
       try {
-        val exitCode = command.execute(residue, env)
+        val exitCode = tryExec(command, residue, env)
         reporter.handle(Event.info(s"Elapsed: ${TimeUtils.prettyTime(elapsed())}"))
         exitCode
       } catch {
@@ -101,6 +102,33 @@ final class CommandDispatcher(registry: CommandRegistry) {
       System.setErr(savedErr)
       releaseEventHandler(handler)
     }
+  }
+
+  private def tryExec(command: Command, residue: Seq[String], env: CommandEnvironment): ExitCode = {
+    val f = command.execute(residue, env).handle {
+      case e: ServerException =>
+        e.message.foreach { message =>
+          env.reporter.handle(Event.error(s"Server error: $message"))
+        }
+        e.details.foreach { details =>
+          details.warnings.foreach { violation =>
+            env.reporter.handle(Event(EventKind.Warning, s"${violation.message} (at ${violation.field})"))
+          }
+          details.errors.foreach { violation =>
+            env.reporter.handle(Event(EventKind.Error, s"${violation.message} (at ${violation.field})"))
+          }
+        }
+        e.code match {
+          case ErrorCode.InvalidArgument => ExitCode.DefinitionError
+          case ErrorCode.NotFound => ExitCode.CommandLineError
+          case ErrorCode.FailedPrecondition => ExitCode.CommandLineError
+          case _ => ExitCode.InternalError
+        }
+      case NonFatal(e) =>
+        env.reporter.handle(Event.warn(e.getMessage))
+        ExitCode.InternalError
+    }
+    Await.result(f)
   }
 
   private def createEnvironment(reporter: Reporter): CommandEnvironment = {

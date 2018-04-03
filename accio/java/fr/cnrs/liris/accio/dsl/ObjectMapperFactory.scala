@@ -23,10 +23,12 @@ import com.twitter.finatra.json.FinatraObjectMapper
 /**
  * Factory to create a Finatra object mapper suitable to be used when parsing DSLs.
  */
-class ObjectMapperFactory {
+object ObjectMapperFactory {
   def create(): FinatraObjectMapper = {
-   val mapper = FinatraObjectMapper.create()
+    val mapper = FinatraObjectMapper.create()
     mapper.registerModule(DslJacksonModule)
     mapper
   }
+
+  lazy val default: FinatraObjectMapper = create()
 }

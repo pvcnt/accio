@@ -21,21 +21,40 @@ package fr.cnrs.liris.accio.tools.cli.commands
 import java.nio.file.{Path, Paths}
 import java.util.UUID
 
-import com.twitter.util.Await
+import com.twitter.util.Future
 import fr.cnrs.liris.accio.agent.GetRunRequest
-import fr.cnrs.liris.accio.api.thrift.RunId
 import fr.cnrs.liris.accio.reporting._
 import fr.cnrs.liris.accio.tools.cli.event.{Event, Reporter}
 import fr.cnrs.liris.common.util.{FileUtils, HashUtils, StringUtils}
 
 final class ExportCommand extends Command with ClientCommand {
-  private[this] val outFlag = flag[String]("out", "Directory where to write the export")
-  private[this] val separatorFlag = flag("separator", " ", "Separator to use in generated files")
-  private[this] val artifactsFlag = flag("artifacts", "NUMERIC", "Comma-separated list of artifacts to take into account. Special values: ALL, NUMERIC (for only those of a numeric type), NONE.")
-  private[this] val metricsFlag = flag("metrics", "NONE", "Comma-separated list of metrics to export. Special values: ALL, NONE.")
-  private[this] val splitFlag = flag("split", false, "Whether to split the export by workflow parameters")
-  private[this] val aggregateFlag = flag("aggregate", false, "Whether to aggregate artifact values across multiple runs into a single value")
-  private[this] val appendFlag = flag("append", false, "Whether to allow appending data to existing files if they already exists")
+  private[this] val outFlag = flag[String](
+    "out",
+    "Directory where to write the export")
+  private[this] val separatorFlag = flag(
+    "separator",
+    " ",
+    "Separator to use in generated files")
+  private[this] val artifactsFlag = flag(
+    "artifacts",
+    "NUMERIC",
+    "Comma-separated list of artifacts to take into account. Special values: ALL, NUMERIC (for only those of a numeric type), NONE.")
+  private[this] val metricsFlag = flag(
+    "metrics",
+    "NONE",
+    "Comma-separated list of metrics to export. Special values: ALL, NONE.")
+  private[this] val splitFlag = flag(
+    "split",
+    false,
+    "Whether to split the export by workflow parameters")
+  private[this] val aggregateFlag = flag(
+    "aggregate",
+    false,
+    "Whether to aggregate artifact values across multiple runs into a single value")
+  private[this] val appendFlag = flag(
+    "append",
+    false,
+    "Whether to allow appending data to existing files if they already exists")
 
   override def name = "export"
 
@@ -43,17 +62,16 @@ final class ExportCommand extends Command with ClientCommand {
 
   override def allowResidue = true
 
-  override def execute(residue: Seq[String], env: CommandEnvironment): ExitCode = {
+  override def execute(residue: Seq[String], env: CommandEnvironment): Future[ExitCode] = {
     if (residue.isEmpty) {
       env.reporter.handle(Event.error("You must specify at least one run as argument."))
-      ExitCode.CommandLineError
-    } else {
-      val workDir = getWorkDir
-      env.reporter.handle(Event.info(s"Writing export to ${workDir.toAbsolutePath}"))
+      return Future.value(ExitCode.CommandLineError)
+    }
+    val workDir = getWorkDir
+    env.reporter.handle(Event.info(s"Writing export to ${workDir.toAbsolutePath}"))
 
-      val runs = getRuns(residue, env.reporter)
+    getRuns(residue, env.reporter).map { runs =>
       env.reporter.handle(Event.info(s"Found ${runs.size} matching runs"))
-
       val artifacts = getArtifacts(runs)
       val metrics = getMetrics(runs)
       val writer = new CsvReportWriter(
@@ -75,22 +93,19 @@ final class ExportCommand extends Command with ClientCommand {
         Paths.get(s"accio-export-$uid")
     }
 
-  private def getRuns(residue: Seq[String], reporter: Reporter): AggregatedRuns = {
-    val runs = residue.flatMap { id =>
-      val maybeRun = Await.result(client.getRun(GetRunRequest(RunId(id)))).result
-      maybeRun match {
-        case None =>
-          reporter.handle(Event.warn(s"Unknown run: $id"))
-          Seq.empty
-        case Some(run) =>
-          if (run.children.nonEmpty) {
-            run.children.flatMap(childId => Await.result(client.getRun(GetRunRequest(childId))).result)
+  private def getRuns(residue: Seq[String], reporter: Reporter) = {
+    val fs = residue.map { id =>
+      client
+        .getRun(GetRunRequest(id))
+        .flatMap { resp =>
+          if (resp.run.children.nonEmpty) {
+            Future.collect(resp.run.children.map(childId => client.getRun(GetRunRequest(childId)).map(_.run)))
           } else {
-            Seq(run)
+            Future.value(Seq(resp.run))
           }
-      }
+        }
     }
-    new AggregatedRuns(runs)
+    Future.collect(fs).map(runs => new AggregatedRuns(runs.flatten))
   }
 
   private def getArtifacts(runs: AggregatedRuns): ArtifactList =

@@ -18,6 +18,4 @@
 
 package fr.cnrs.liris.accio.api
 
-import fr.cnrs.liris.accio.api.thrift.RunId
-
-case class TaskStartedEvent(runId: RunId, nodeName: String)
+case class TaskStartedEvent(runId: String, nodeName: String)

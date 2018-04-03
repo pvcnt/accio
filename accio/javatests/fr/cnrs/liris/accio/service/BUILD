@@ -23,8 +23,6 @@ scala_test(
     "//accio/thrift/fr/cnrs/liris/accio/api",
     "//accio/java/fr/cnrs/liris/accio/sdk",
     "//accio/java/fr/cnrs/liris/accio/sdk:annotations",
-    "//accio/java/fr/cnrs/liris/accio/discovery",
-    "//accio/java/fr/cnrs/liris/accio/discovery/reflect",
     "//accio/java/fr/cnrs/liris/common/util",
     "//accio/javatests/fr/cnrs/liris/testing",
     "//accio/javatests/fr/cnrs/liris/accio/testing",

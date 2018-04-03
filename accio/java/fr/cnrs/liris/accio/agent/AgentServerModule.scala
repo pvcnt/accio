@@ -24,31 +24,28 @@ import com.google.common.eventbus.{AsyncEventBus, EventBus}
 import com.google.inject.{Provides, Singleton}
 import com.twitter.concurrent.NamedPoolThreadFactory
 import com.twitter.inject.{Injector, TwitterModule}
+import fr.cnrs.liris.accio.api.OpRegistry
 import fr.cnrs.liris.accio.auth.AuthModule
 import fr.cnrs.liris.accio.config.ConfigModule
-import fr.cnrs.liris.accio.discovery.inject.DiscoveryModule
-import fr.cnrs.liris.accio.dsl.DslModule
+import fr.cnrs.liris.accio.runtime.OpMeta
 import fr.cnrs.liris.accio.scheduler.inject.SchedulerModule
-import fr.cnrs.liris.accio.service.{OpRegistry, RuntimeOpRegistry}
 import fr.cnrs.liris.accio.storage.install.StorageModule
 
 object AgentServerModule extends TwitterModule {
   override def modules = Seq(
     AuthModule,
-    DiscoveryModule,
     ConfigModule,
-    DslModule,
     SchedulerModule,
     StorageModule)
 
-  override def configure(): Unit = {
-    bind[OpRegistry].to[RuntimeOpRegistry]
-  }
+  @Provides
+  @Singleton
+  def providesOpRegistry(ops: Set[OpMeta]): OpRegistry = new OpRegistry(ops.map(_.defn))
 
   @Provides
   @Singleton
   def providesEventBus(): EventBus = {
-    val executor = Executors.newCachedThreadPool(new NamedPoolThreadFactory("event-bus"))
+    val executor = Executors.newCachedThreadPool(new NamedPoolThreadFactory("eventbus"))
     new AsyncEventBus(executor)
   }
 

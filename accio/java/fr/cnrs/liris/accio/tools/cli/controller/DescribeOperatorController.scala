@@ -20,19 +20,16 @@ package fr.cnrs.liris.accio.tools.cli.controller
 
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.agent.{AgentService$FinagleClient, GetOperatorRequest}
-import fr.cnrs.liris.accio.api.{DataTypes, Values}
 import fr.cnrs.liris.accio.api.thrift._
+import fr.cnrs.liris.accio.api.{DataTypes, Values}
 import fr.cnrs.liris.accio.tools.cli.event.Reporter
 import fr.cnrs.liris.common.util.StringUtils
 
 class DescribeOperatorController extends DescribeController[OpDef] {
   override def retrieve(id: String, client: AgentService$FinagleClient): Future[OpDef] = {
-    client.getOperator(GetOperatorRequest(id)).map { resp =>
-      resp.result match {
-        case None => throw new NoResultException
-        case Some(opDef) => opDef
-      }
-    }
+    client
+      .getOperator(GetOperatorRequest(id))
+      .map(_.operator)
   }
 
   override def print(out: Reporter, opDef: OpDef): Unit = {
@@ -53,9 +50,9 @@ class DescribeOperatorController extends DescribeController[OpDef] {
     out.outErr.printOutLn()
     out.outErr.printOutLn(s"Available inputs")
     opDef.inputs.foreach { argDef =>
-      out.outErr.printOut(s"  ${argDef.name} (${DataTypes.toString(argDef.kind)}")
+      out.outErr.printOut(s"  ${argDef.name} (${DataTypes.stringify(argDef.kind)}")
       if (argDef.defaultValue.isDefined) {
-        out.outErr.printOut(s"; default: ${Values.toString(argDef.defaultValue.get)}")
+        out.outErr.printOut(s"; default: ${Values.stringify(argDef.defaultValue.get)}")
       }
       if (argDef.isOptional) {
         out.outErr.printOut("; optional")
@@ -71,7 +68,7 @@ class DescribeOperatorController extends DescribeController[OpDef] {
     if (opDef.outputs.nonEmpty) {
       out.outErr.printOutLn("Available outputs")
       opDef.outputs.foreach { outputDef =>
-        out.outErr.printOut(s"  - ${outputDef.name} (${DataTypes.toString(outputDef.kind)})")
+        out.outErr.printOut(s"  - ${outputDef.name} (${DataTypes.stringify(outputDef.kind)})")
         out.outErr.printOutLn()
         outputDef.help.foreach(help => out.outErr.printOutLn(StringUtils.paragraphFill(help, 80, 4)))
       }

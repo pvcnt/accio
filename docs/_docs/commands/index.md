@@ -30,5 +30,3 @@ Defaults to true.
 * `-[no]quiet`: Suppress all output.
 You can still use the exit code to determine the outcome of the command.
 Defaults to false.
-
-The `ACCIO_USER` environment variable can be used to specify the actual user's name, which defaults to the current user's shell login.

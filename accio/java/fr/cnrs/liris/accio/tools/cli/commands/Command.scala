@@ -20,6 +20,7 @@ package fr.cnrs.liris.accio.tools.cli.commands
 
 import com.twitter.app.Flags
 import com.twitter.conversions.time._
+import com.twitter.util.Future
 import fr.cnrs.liris.accio.tools.cli.event.{Reporter, TerminalEventHandlerOptions}
 
 /**
@@ -68,5 +69,5 @@ trait Command {
     progressInTermTitleFlag(),
     showTimestampFlag())
 
-  def execute(residue: Seq[String], env: CommandEnvironment): ExitCode
+  def execute(residue: Seq[String], env: CommandEnvironment): Future[ExitCode]
 }

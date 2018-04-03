@@ -18,6 +18,7 @@
 
 package fr.cnrs.liris.accio.tools.cli.commands
 
+import com.twitter.util.Future
 import fr.cnrs.liris.accio.agent.GetClusterRequest
 import fr.cnrs.liris.accio.version.Version
 
@@ -28,14 +29,17 @@ final class VersionCommand extends Command with ClientCommand {
 
   override def help = "Display client and server version information."
 
-  override def execute(residue: Seq[String], env: CommandEnvironment): ExitCode = {
-    if (!clientFlag()) {
-      respond(client.getCluster(GetClusterRequest()), env.reporter) { resp =>
-        env.reporter.outErr.printOutLn(s"Server version: ${resp.version}")
-        ExitCode.Success
-      }
+  override def execute(residue: Seq[String], env: CommandEnvironment): Future[ExitCode] = {
+    val f = if (clientFlag()) {
+      Future.Done
+    } else {
+      client
+        .getCluster(GetClusterRequest())
+        .foreach(resp => env.reporter.outErr.printOutLn(s"Server version: ${resp.version}"))
     }
-    env.reporter.outErr.printOutLn(s"Client version: ${Version.Current.toString}")
-    ExitCode.Success
+    f.map { _ =>
+      env.reporter.outErr.printOutLn(s"Client version: ${Version.Current.toString}")
+      ExitCode.Success
+    }
   }
 }

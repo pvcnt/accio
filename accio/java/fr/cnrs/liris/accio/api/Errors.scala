@@ -18,31 +18,41 @@
 
 package fr.cnrs.liris.accio.api
 
-import scala.collection.mutable
+import fr.cnrs.liris.accio.api.thrift.{ErrorCode, ErrorDetails, FieldViolation, ServerException}
 
-/**
- * Factory for [[Error]].
- */
 object Errors {
-  /**
-   * Create a new error from a throwable.
-   *
-   * @param e Throwable.
-   */
-  def create(e: Throwable): thrift.Error = {
-    val causes = mutable.ListBuffer.empty[thrift.ErrorData]
-    var maybeException = Option(e.getCause)
-    while (maybeException.isDefined) {
-      causes += createData(maybeException.get)
-      maybeException = Option(maybeException.get.getCause)
-    }
-    thrift.Error(createData(e), causes)
+  def notFound(resourceType: String, resourceName: String): ServerException = {
+    ServerException(
+      code = ErrorCode.NotFound,
+      message = Some(s"The $resourceType was not found: $resourceName"),
+      details = Some(ErrorDetails(resourceType = Some(resourceType), resourceName = Some(resourceName))))
   }
 
-  private def createData(e: Throwable) = {
-    thrift.ErrorData(
-      classifier = e.getClass.getName,
-      message = Some(e.getMessage),
-      stacktrace = e.getStackTrace.map(_.toString))
+  def unauthenticated: ServerException = ServerException(code = ErrorCode.Unauthenticated)
+
+  def badRequest(resourceType: String, message: String, errors: Seq[FieldViolation]): ServerException =
+    badRequest(resourceType, message, errors, Seq.empty)
+
+  def badRequest(resourceType: String, errors: Seq[FieldViolation]): ServerException =
+    badRequest(resourceType, errors, Seq.empty)
+
+  def badRequest(resourceType: String, message: String): ServerException =
+    badRequest(resourceType, message, Seq.empty, Seq.empty)
+
+  def badRequest(resourceType: String): ServerException =
+    badRequest(resourceType, Seq.empty, Seq.empty)
+
+  def badRequest(resourceType: String, message: String, errors: Seq[FieldViolation], warnings: Seq[FieldViolation]): ServerException = {
+    ServerException(
+      code = ErrorCode.InvalidArgument,
+      message = Some(message),
+      details = Some(ErrorDetails(resourceType = Some(resourceType), errors = errors, warnings = warnings)))
+  }
+
+  def badRequest(resourceType: String, errors: Seq[FieldViolation], warnings: Seq[FieldViolation]): ServerException = {
+    ServerException(
+      code = ErrorCode.InvalidArgument,
+      message = Some(s"The provided $resourceType is invalid"),
+      details = Some(ErrorDetails(resourceType = Some(resourceType), errors = errors, warnings = warnings)))
   }
 }

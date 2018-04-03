@@ -18,6 +18,4 @@
 
 package fr.cnrs.liris.accio.api
 
-import fr.cnrs.liris.accio.api.thrift.RunId
-
-case class RunCreatedEvent(runId: RunId, children: Seq[RunId])
+case class RunCreatedEvent(runId: String, children: Seq[String])

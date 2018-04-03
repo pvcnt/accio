@@ -19,22 +19,9 @@
 namespace java fr.cnrs.liris.accio.api.thrift
 
 typedef i64 Timestamp
-
-struct WorkflowId {
-  1: string value;
-}
-
-struct RunId {
-  1: string value;
-}
-
-struct TaskId {
-  1: string value;
-}
-
-struct CacheKey {
-  1: string hash;
-}
+typedef string WorkflowId
+typedef string RunId
+typedef string TaskId
 
 enum AtomicType {
   BYTE,
@@ -85,33 +72,19 @@ struct Metric {
   2: required double value;
 }
 
-struct ErrorData {
-  1: required string classifier;
-  2: optional string message;
-  3: required list<string> stacktrace;
-}
-
-struct Error {
-  1: required ErrorData root;
-  2: required list<ErrorData> causes;
-}
-
 struct User {
   // User name.
   1: required string name;
 
   // Email address.
   2: optional string email;
+
+  3: set<string> groups;
 }
 
 struct Reference {
   1: required string node;
   2: required string port;
-}
-
-struct InvalidSpecMessage {
-  1: required string message;
-  2: optional string path;
 }
 
 /**
@@ -141,11 +114,10 @@ struct ArgDef {
   // One-line help text.
   3: optional string help;
 
-  // Whether this parameter is optional and does not have to be specified. It should be false for output ports.
-  4: required bool is_optional = false;
-
   // Default value taken by this input if none is specified. It should be empty for output ports.
-  5: optional Value default_value;
+  4: optional Value default_value;
+
+  5: required bool is_optional = false;
 }
 
 /**
@@ -201,7 +173,7 @@ struct OpPayload {
   3: required map<string, Value> inputs;
 
   // Cache key associated with this payload, used for further memoization.
-  4: required CacheKey cache_key;
+  4: required string cache_key;
 }
 
 /**
@@ -215,18 +187,14 @@ struct OpResult {
   // a failed execution.
   1: required i32 exit_code;
 
-  // Error captured during the operator execution. This should only be set of the exit code indicates a failure, but
-  // it does not have to (e.g., if an operator cannot get structure exception information).
-  2: optional Error error;
-
   // Arfifacts produced by the operator execution. This should be left empty if the exit code indicates a failure.
   // If filled, there should be an artifact per output port of the operator, no more and no less.
-  3: required set<Artifact> artifacts;
+  2: required set<Artifact> artifacts;
 
   // Metrics produced by the operator execution. This can always be filled, whether or not the execution is successful.
   // There is no definition of metrics produced by an operator, so any relevant metrics can be included here and will
   // be exposed thereafter.
-  4: required set<Metric> metrics;
+  3: required set<Metric> metrics;
 }
 
 /**
@@ -271,7 +239,7 @@ struct NodeStatus {
   5: optional OpResult result;
 
   // Cache key used for result memoization. If filled, the `result` field has to be filled too.
-  6: optional CacheKey cache_key;
+  6: optional string cache_key;
 
   // Whether it corresponds to a cache hit, i.e., the value has not been explicitly computed. If true, the `result`
   // field has to be filled.
@@ -291,7 +259,7 @@ struct RunStatus {
 
 struct Package {
   1: required WorkflowId workflow_id;
-  2: required string workflow_version;
+  2: optional string workflow_version;
 }
 
 /**
@@ -316,7 +284,7 @@ struct Run {
   2: required Package pkg;
 
   // User initiating the run.
-  3: required User owner;
+  3: optional User owner;
 
   // Time at which this run has been created.
   4: required Timestamp created_at;
@@ -352,7 +320,7 @@ struct Run {
   14: required RunStatus state;
 }
 
-struct RunSpec {
+struct Experiment {
   // Specification of the associated workflow.
   1: required Package pkg;
 
@@ -395,7 +363,7 @@ struct Node {
 }
 
 struct Graph {
-  1: required set<Node> nodes;
+  1: required list<Node> nodes;
 }
 
 /**
@@ -428,7 +396,7 @@ struct Workflow {
   6: required Graph graph;
 
   // Workflow parameters.
-  7: required set<ArgDef> params;
+  7: required list<ArgDef> params;
 }
 
 struct Task {
@@ -444,17 +412,52 @@ struct Task {
 /**
  * Exceptions.
  */
-exception UnknownRunException {
-  1: required RunId id;
-  2: optional string message;
+struct FieldViolation {
+  // A description of why the value for the field is bad.
+  1: required string message;
+
+  // A path leading to a field in the request body, as a dot-separated sequence of field names.
+  2: required string field;
+}
+enum ErrorCode {
+  UNKNONWN = 1;
+  NOT_FOUND = 2;
+  ALREADY_EXISTS = 3;
+  UNAUTHENTICATED = 4;
+  UNIMPLEMENTED = 5;
+  INVALID_ARGUMENT = 6;
+  FAILED_PRECONDITION = 7;
 }
 
-exception InvalidTaskException {
-  1: required TaskId id;
-  2: optional string message;
+// Describes a URL link.
+struct Link {
+  // Describes what the link offers.
+  1: required string title;
+
+  // The URL of the link.
+  2: required string url;
 }
 
-exception InvalidSpecException {
-  1: required list<InvalidSpecMessage> errors;
-  2: required list<InvalidSpecMessage> warnings;
+struct ErrorDetails {
+  // A name for the type of resource being accessed.
+  1: optional string resource_type;
+
+  // The name of the resource being accessed.
+  2: optional string resource_name;
+
+  // A list of errors on the request's fields. These indicate fatal errors that have to be fixed.
+  3: list<FieldViolation> errors;
+
+  // A list of warnings on the request's fields. These do not indicate fatal errors, but rather
+  // suggestions (e.g., deprecated stuff).
+  4: list<FieldViolation> warnings;
+
+  // URL(s) pointing to additional information on handling the current error.
+  5: list<Link> links;
+}
+
+exception ServerException {
+  1: required ErrorCode code;
+  2: optional string message;
+  3: optional ErrorDetails details;
 }

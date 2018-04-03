@@ -38,11 +38,11 @@ class GetRunController extends AbstractGetController[ListRunsResponse] with Form
     ("status", 9))
 
   override protected def rows(resp: ListRunsResponse): Seq[Seq[Any]] = {
-    resp.results.map { run =>
+    resp.runs.map { run =>
       val name = (if (run.children.nonEmpty) s"(${run.children.size}) " else "") + run.name.getOrElse("<no name>")
       Seq(
-        run.id.value,
-        run.pkg.workflowId.value,
+        run.id,
+        run.pkg.workflowId,
         format(Time.fromMilliseconds(run.createdAt)),
         name,
         run.state.status.name)
@@ -50,6 +50,6 @@ class GetRunController extends AbstractGetController[ListRunsResponse] with Form
   }
 
   override protected def moreRows(resp: ListRunsResponse): Int = {
-    if (resp.totalCount > resp.results.size) resp.totalCount - resp.results.size else 0
+    if (resp.totalCount > resp.runs.size) resp.totalCount - resp.runs.size else 0
   }
 }

@@ -145,7 +145,7 @@ case class ArtifactList(runs: Seq[Run], params: Map[String, Value], groups: Seq[
  * @param kind   Artifact data type.
  * @param values Artifact values, keyed by run id.
  */
-case class ArtifactGroup(name: String, kind: DataType, values: Map[RunId, Value]) {
+case class ArtifactGroup(name: String, kind: DataType, values: Map[String, Value]) {
   def toSeq: Seq[Artifact] = values.values.map(v => Artifact(name, v)).toSeq
 
   def aggregated: Artifact = Artifact(name, aggregate(kind, values.values.toSeq))
@@ -161,17 +161,19 @@ case class ArtifactGroup(name: String, kind: DataType, values: Map[RunId, Value]
       Values.encodeDuration(Duration.millis(mean(values.map(Values.decodeDuration(_).getMillis.toDouble)).round))
     case AtomicType.List =>
       val of = DataType(kind.args.head)
-      aggregate(of, values.flatMap(Values.decodeList).map(Values.encode(_, of)))
+      aggregate(of, values.flatMap(Values.decodeList).flatMap(Values.encode(_, of)))
     case AtomicType.Set =>
       val of = DataType(kind.args.head)
-      aggregate(of, values.flatMap(Values.decodeSet).map(Values.encode(_, of)))
+      aggregate(of, values.flatMap(Values.decodeSet).flatMap(Values.encode(_, of)))
     case AtomicType.Map =>
       val ofValues = DataType(kind.args.last)
       val valuesByKey = Seqs.index(values.flatMap(Values.decodeMap))
       val mergedMap = valuesByKey.map { case (k, vs) =>
-        k -> Values.decode(aggregate(ofValues, vs.map(Values.encode(_, ofValues))), ofValues)
+        k -> Values.decode(aggregate(ofValues, vs.flatMap(Values.encode(_, ofValues))), ofValues)
       }
-      Values.encodeMap(mergedMap, kind)
+      Values
+        .encodeMap(mergedMap, kind)
+        .getOrElse(throw new IllegalArgumentException(s"Cannot aggregate $kind values"))
     case _ => throw new IllegalArgumentException(s"Cannot aggregate $kind values")
   }
 }
@@ -225,7 +227,7 @@ case class MetricList(runs: Seq[Run], params: Map[String, Value], groups: Seq[Me
  * @param name   Metric name.
  * @param values Metric values, keyed by run id.
  */
-case class MetricGroup(name: String, values: Map[RunId, Double]) {
+case class MetricGroup(name: String, values: Map[String, Double]) {
   val nodeName: String = name.take(name.indexOf("/"))
 
   val metricName: String = name.drop(name.indexOf("/") + 1)

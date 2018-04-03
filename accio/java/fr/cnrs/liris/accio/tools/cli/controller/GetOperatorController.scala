@@ -28,8 +28,8 @@ class GetOperatorController extends GetController[ListOperatorsResponse] {
   }
 
   override def print(reporter: Reporter, resp: ListOperatorsResponse): Unit = {
-    val maxLength = resp.results.map(_.name.length).max
-    resp.results.sortBy(_.name).groupBy(_.category).foreach { case (category, categoryOps) =>
+    val maxLength = resp.operators.map(_.name.length).max
+    resp.operators.sortBy(_.name).groupBy(_.category).foreach { case (category, categoryOps) =>
       reporter.outErr.printOutLn(s"Operators in $category category")
       categoryOps.foreach { op =>
         val padding = " " * (maxLength - op.name.length)

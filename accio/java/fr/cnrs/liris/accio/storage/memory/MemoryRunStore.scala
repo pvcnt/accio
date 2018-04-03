@@ -35,7 +35,7 @@ import scala.collection.JavaConverters._
 private[memory] final class MemoryRunStore(statsReceiver: StatsReceiver)
   extends RunStore.Mutable {
 
-  private[this] val index = new ConcurrentHashMap[RunId, Run].asScala
+  private[this] val index = new ConcurrentHashMap[String, Run].asScala
   statsReceiver.provideGauge("storage", "memory", "run", "index_size")(index.size)
 
   override def list(query: RunQuery): ResultList[Run] = {
@@ -46,11 +46,11 @@ private[memory] final class MemoryRunStore(statsReceiver: StatsReceiver)
     ResultList.slice(results, offset = query.offset, limit = query.limit)
   }
 
-  override def get(id: RunId): Option[Run] = index.get(id)
+  override def get(id: String): Option[Run] = index.get(id)
 
-  override def get(cacheKey: CacheKey): Option[NodeStatus] = None
+  override def fetch(cacheKey: String): Option[NodeStatus] = None
 
   override def save(run: Run): Unit = index(run.id) = run
 
-  override def delete(id: RunId): Unit = index.remove(id)
+  override def delete(id: String): Unit = index.remove(id)
 }

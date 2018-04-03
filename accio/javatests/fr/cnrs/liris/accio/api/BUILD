@@ -22,6 +22,7 @@ scala_test(
     "//accio/java/fr/cnrs/liris/accio/sdk",
     "//accio/java/fr/cnrs/liris/common/geo",
     "//accio/javatests/fr/cnrs/liris/testing",
+    "//accio/javatests/fr/cnrs/liris/accio/testing",
     "//3rdparty/jvm/com/github/nscala_time",
   ],
   size = "small",

@@ -33,9 +33,9 @@ class GetWorkflowController extends AbstractGetController[ListWorkflowsResponse]
     ("name", 30))
 
   override protected def rows(resp: ListWorkflowsResponse): Seq[Seq[Any]] = {
-    resp.results.map { workflow =>
+    resp.workflows.map { workflow =>
       Seq(
-        workflow.id.value,
+        workflow.id,
         workflow.owner.map(_.name).getOrElse("<anonymous>"),
         format(Time.fromMilliseconds(workflow.createdAt.get)),
         workflow.name.getOrElse("<no name>"))
@@ -43,6 +43,6 @@ class GetWorkflowController extends AbstractGetController[ListWorkflowsResponse]
   }
 
   override protected def moreRows(resp: ListWorkflowsResponse): Int = {
-    if (resp.totalCount > resp.results.size) resp.totalCount - resp.results.size else 0
+    if (resp.totalCount > resp.workflows.size) resp.totalCount - resp.workflows.size else 0
   }
 }

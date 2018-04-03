@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.storage.mysql
 import com.twitter.finagle.mysql._
 import com.twitter.util.Await
 import fr.cnrs.liris.accio.api.ResultList
-import fr.cnrs.liris.accio.api.thrift.{CacheKey, NodeStatus, Run, RunId}
+import fr.cnrs.liris.accio.api.thrift.{NodeStatus, Run}
 import fr.cnrs.liris.accio.storage.{RunQuery, RunStore}
 import fr.cnrs.liris.common.scrooge.BinaryScroogeSerializer
 
@@ -30,14 +30,14 @@ private[mysql] final class MysqlRunStore(client: Client) extends RunStore.Mutabl
     val content = BinaryScroogeSerializer.toBytes(run)
     val f = client
       .prepare("insert into runs(id, content) values(?, ?) on duplicate key update content = ?")
-      .apply(run.id.value, content, content)
+      .apply(run.id, content, content)
     Await.result(f)
   }
 
-  override def delete(id: RunId): Unit = {
+  override def delete(id: String): Unit = {
     val f = client
       .prepare("delete from runs where id = ?")
-      .apply(id.value)
+      .apply(id)
     Await.result(f)
   }
 
@@ -54,15 +54,15 @@ private[mysql] final class MysqlRunStore(client: Client) extends RunStore.Mutabl
     Await.result(f)
   }
 
-  override def get(id: RunId): Option[Run] = {
+  override def get(id: String): Option[Run] = {
     val f = client
       .prepare("select content from runs where id = ?")
-      .select(id.value)(decode)
+      .select(id)(decode)
       .map(_.headOption)
     Await.result(f)
   }
 
-  override def get(cacheKey: CacheKey): Option[NodeStatus] = None
+  override def fetch(cacheKey: String): Option[NodeStatus] = None
 
   private def decode(row: Row): Run =
     row("content").get match {

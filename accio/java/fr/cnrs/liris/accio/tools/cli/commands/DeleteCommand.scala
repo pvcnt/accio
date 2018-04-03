@@ -18,8 +18,8 @@
 
 package fr.cnrs.liris.accio.tools.cli.commands
 
+import com.twitter.util.Future
 import fr.cnrs.liris.accio.agent.DeleteRunRequest
-import fr.cnrs.liris.accio.api.thrift._
 import fr.cnrs.liris.accio.tools.cli.event.{Event, Reporter}
 
 final class DeleteCommand extends Command with ClientCommand {
@@ -29,27 +29,28 @@ final class DeleteCommand extends Command with ClientCommand {
 
   override def allowResidue = true
 
-  override def execute(residue: Seq[String], env: CommandEnvironment): ExitCode = {
+  override def execute(residue: Seq[String], env: CommandEnvironment): Future[ExitCode] = {
     if (residue.isEmpty) {
       env.reporter.handle(Event.error("You must specify identifiers of resources to delete"))
-      ExitCode.CommandLineError
+      return Future.value(ExitCode.CommandLineError)
     }
     residue.head match {
       case "run" | "runs" => deleteRuns(residue.tail, env.reporter)
       case unknown =>
         env.reporter.handle(Event.error(s"Invalid resource type: $unknown"))
-        ExitCode.CommandLineError
+        Future.value(ExitCode.CommandLineError)
     }
   }
 
-  private def deleteRuns(args: Seq[String], reporter: Reporter): ExitCode = {
-    val outcomes = args.map { id =>
-      val req = DeleteRunRequest(RunId(id))
-      respond(client.deleteRun(req), reporter) { _ =>
-        reporter.handle(Event.info(s"Deleted run $id"))
-        ExitCode.Success
-      }
+  private def deleteRuns(args: Seq[String], reporter: Reporter): Future[ExitCode] = {
+    val fs = args.map { id =>
+      client
+        .deleteRun(DeleteRunRequest(id))
+        .map { _ =>
+          reporter.handle(Event.info(s"Deleted run $id"))
+          ExitCode.Success
+        }
     }
-    ExitCode.select(outcomes)
+    Future.collect(fs).map(ExitCode.select)
   }
 }

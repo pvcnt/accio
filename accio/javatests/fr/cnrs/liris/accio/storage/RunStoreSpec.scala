@@ -20,7 +20,6 @@ package fr.cnrs.liris.accio.storage
 
 import java.util.UUID
 
-import fr.cnrs.liris.accio.api.Values
 import fr.cnrs.liris.accio.api.thrift._
 import fr.cnrs.liris.testing.UnitSpec
 import org.scalatest.BeforeAndAfterEach
@@ -33,10 +32,10 @@ import scala.collection.Map
  */
 private[storage] abstract class RunStoreSpec extends UnitSpec with BeforeAndAfterEach {
   protected val foobarRun = Run(
-    id = RunId("foobar"),
-    pkg = Package(WorkflowId("my_workflow"), "v1"),
+    id = "foobar",
+    pkg = Package("my_workflow", Some("v1")),
     cluster = "default",
-    owner = User("me"),
+    owner = Some(User("me")),
     name = Some("foo bar workflow"),
     notes = Some("awesome workflow!"),
     tags = Set("foo", "bar"),
@@ -46,10 +45,10 @@ private[storage] abstract class RunStoreSpec extends UnitSpec with BeforeAndAfte
     state = RunStatus(status = TaskState.Scheduled, progress = 0))
 
   protected val fooRun = Run(
-    id = RunId("foo"),
-    pkg = Package(WorkflowId("my_workflow"), "v1"),
+    id = "foo",
+    pkg = Package("my_workflow", Some("v1")),
     cluster = "default",
-    owner = User("me"),
+    owner = Some(User("me")),
     name = Some("foo bar workflow"),
     tags = Set("foo"),
     seed = 54321,
@@ -68,35 +67,17 @@ private[storage] abstract class RunStoreSpec extends UnitSpec with BeforeAndAfte
       id = randomId,
       createdAt = System.currentTimeMillis() + 40,
       state = foobarRun.state.copy(status = TaskState.Running),
-      owner = User("him"),
+      owner = Some(User("him")),
       tags = Set("foobar")),
     foobarRun.copy(
       id = randomId,
       createdAt = System.currentTimeMillis() + 50,
-      pkg = Package(WorkflowId("other_workflow"), "v1")),
+      pkg = Package("other_workflow", Some("v1"))),
     foobarRun.copy(
       id = randomId,
       createdAt = System.currentTimeMillis() + 60,
       parent = Some(foobarRun.id),
       tags = Set.empty))
-
-  protected val foobarResults = Map(
-    "FooNode" -> OpResult(
-      0,
-      None,
-      Set(Artifact("myint", Values.encodeInteger(42)), Artifact("mystr", Values.encodeString("foo str"))),
-      Set(Metric("a", 1), Metric("b", 2))),
-    "BarNode" -> OpResult(
-      0,
-      None,
-      Set(Artifact("dbl", Values.encodeDouble(3.14))),
-      Set(Metric("a", 12))))
-
-  protected val fooResults = Map("FooNode" -> OpResult(
-    0,
-    None,
-    Set(Artifact("myint", Values.encodeInteger(44)), Artifact("mystr", Values.encodeString("str"))),
-    Set(Metric("a", 3), Metric("b", 4))))
 
   protected def createStorage: Storage
 
@@ -173,7 +154,7 @@ private[storage] abstract class RunStoreSpec extends UnitSpec with BeforeAndAfte
         runs.foreach(stores.runs.save)
       }
       storage.read { stores =>
-        val res = stores.runs.list(RunQuery(workflow = Some(WorkflowId("other_workflow"))))
+        val res = stores.runs.list(RunQuery(workflow = Some("other_workflow")))
         res.totalCount shouldBe 1
         res.results should contain theSameElementsInOrderAs Seq(runs(3))
       }
@@ -210,5 +191,5 @@ private[storage] abstract class RunStoreSpec extends UnitSpec with BeforeAndAfte
     }
   }
 
-  private def randomId: RunId = RunId(UUID.randomUUID().toString)
+  private def randomId = UUID.randomUUID().toString
 }

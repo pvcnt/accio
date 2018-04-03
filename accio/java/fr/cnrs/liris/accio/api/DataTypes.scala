@@ -72,13 +72,133 @@ object DataTypes {
       case _ => false
     }
 
-  def toString(dataType: DataType): String =
+  def stringify(dataType: DataType): String =
     dataType.base match {
-      case AtomicType.List => s"list(${toString(dataType.args.head)})"
-      case AtomicType.Set => s"set(${toString(dataType.args.head)})"
-      case AtomicType.Map => s"map(${toString(dataType.args.head)}, ${toString(dataType.args.last)})"
-      case base => toString(base)
+      case AtomicType.List => s"list(${stringify(dataType.args.head)})"
+      case AtomicType.Set => s"set(${stringify(dataType.args.head)})"
+      case AtomicType.Map => s"map(${stringify(dataType.args.head)}, ${stringify(dataType.args.last)})"
+      case base => stringify(base)
     }
 
-  def toString(atomicType: AtomicType): String = atomicType.getClass.getSimpleName.stripSuffix("$").toLowerCase
+  def stringify(atomicType: AtomicType): String = atomicType.getClass.getSimpleName.stripSuffix("$").toLowerCase
+
+  def isMaybe(from: DataType, to: DataType): Boolean = {
+    to.base match {
+      case AtomicType.Byte => maybeByte(from)
+      case AtomicType.Integer => maybeInteger(from)
+      case AtomicType.Long => maybeLong(from)
+      case AtomicType.Double => maybeDouble(from)
+      case AtomicType.Boolean => maybeBoolean(from)
+      case AtomicType.String => maybeString(from)
+      case AtomicType.Location => maybeLocation(from)
+      case AtomicType.Timestamp => maybeTimestamp(from)
+      case AtomicType.Duration => maybeDuration(from)
+      case AtomicType.Distance => maybeDistance(from)
+      case AtomicType.Dataset => maybeDataset(from)
+      case AtomicType.Map => maybeMap(from, to.args.head, to.args.last)
+      case AtomicType.List => maybeList(from, to.args.head)
+      case AtomicType.Set => maybeSet(from, to.args.head)
+      case AtomicType.EnumUnknownAtomicType(_) => throw new IllegalArgumentException(s"Unknown type: $to")
+    }
+  }
+
+  def maybeBoolean(kind: DataType): Boolean =
+    kind.base match {
+      case AtomicType.Boolean => true
+      case AtomicType.String => true
+      case _ => false
+    }
+
+  def maybeByte(kind: DataType): Boolean =
+    kind.base match {
+      case AtomicType.Byte => true
+      case AtomicType.String => true
+      case _ => false
+    }
+
+  def maybeInteger(kind: DataType): Boolean =
+    kind.base match {
+      case AtomicType.Byte | AtomicType.Integer => true
+      case AtomicType.String => true
+      case _ => false
+    }
+
+  def maybeLong(kind: DataType): Boolean =
+    kind.base match {
+      case AtomicType.Byte | AtomicType.Integer | AtomicType.Long => true
+      case AtomicType.String => true
+      case _ => false
+    }
+
+  def maybeDouble(kind: DataType): Boolean =
+    kind.base match {
+      case AtomicType.Byte | AtomicType.Integer | AtomicType.Long => true
+      case AtomicType.Double => true
+      case AtomicType.String => true
+      case _ => false
+    }
+
+  def maybeLocation(kind: DataType): Boolean =
+    kind match {
+      case DataType(AtomicType.Location, _) => true
+      case DataType(AtomicType.String, _) => true
+      case DataType(AtomicType.List, Seq(AtomicType.Double)) => true
+      case _ => false
+    }
+
+  def maybeString(kind: DataType): Boolean = true
+
+  def maybeTimestamp(kind: DataType): Boolean =
+    kind.base match {
+      case AtomicType.Byte | AtomicType.Integer | AtomicType.Long => true
+      case AtomicType.Timestamp => true
+      case AtomicType.String => true
+      case _ => false
+    }
+
+  def maybeDuration(kind: DataType): Boolean =
+    kind.base match {
+      case AtomicType.Byte | AtomicType.Integer | AtomicType.Long => true
+      case AtomicType.Duration => true
+      case AtomicType.String => true
+      case _ => false
+    }
+
+  def maybeDistance(kind: DataType): Boolean =
+    kind.base match {
+      case AtomicType.Distance => true
+      case AtomicType.String => true
+      case _ => false
+    }
+
+  def maybeDataset(kind: DataType): Boolean =
+    kind.base match {
+      case AtomicType.Dataset => true
+      case AtomicType.String => true
+      case _ => false
+    }
+
+  def maybeMap(kind: DataType, ofKeys: AtomicType, ofValues: AtomicType): Boolean =
+    kind match {
+      case DataType(AtomicType.Map, Seq(k, v)) =>
+        isMaybe(DataType(k), DataType(ofKeys)) && isMaybe(DataType(v), DataType(ofValues))
+      case DataType(AtomicType.String, _) => true
+      case _ => false
+    }
+
+  def maybeList(kind: DataType, of: AtomicType): Boolean =
+    kind match {
+      case DataType(AtomicType.List, Seq(v)) => isMaybe(DataType(v), DataType(of))
+      case DataType(AtomicType.Set, Seq(v)) => isMaybe(DataType(v), DataType(of))
+      case DataType(AtomicType.String, _) => true
+      case _ => false
+    }
+
+  def maybeSet(kind: DataType, of: AtomicType): Boolean =
+    kind match {
+      case DataType(AtomicType.Set, Seq(v)) => isMaybe(DataType(v), DataType(of))
+      case DataType(AtomicType.List, Seq(v)) => isMaybe(DataType(v), DataType(of))
+      case DataType(AtomicType.String, _) => true
+      case _ => false
+    }
 }

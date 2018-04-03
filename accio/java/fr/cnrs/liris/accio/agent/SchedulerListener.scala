@@ -36,7 +36,7 @@ final class SchedulerListener @Inject()(storage: Storage, runManager: RunManager
   def onTaskCompleted(event: TaskCompletedEvent): Unit = {
     storage.write { stores =>
       stores.runs.get(event.runId) match {
-        case None => logger.warn(s"Completed task is associated with unknown run ${event.runId.value}")
+        case None => logger.warn(s"Completed task is associated with unknown run ${event.runId}")
         case Some(run) =>
           val parent = run.parent.flatMap(stores.runs.get)
           val (newRun, newParent) = if (event.result.exitCode == 0) {
@@ -54,7 +54,7 @@ final class SchedulerListener @Inject()(storage: Storage, runManager: RunManager
   def onTaskStarted(event: TaskStartedEvent): Unit = {
     storage.write { stores =>
       stores.runs.get(event.runId) match {
-        case None => logger.warn(s"Started task is associated with unknown run ${event.runId.value}")
+        case None => logger.warn(s"Started task is associated with unknown run ${event.runId}")
         case Some(run) =>
           val newRun = runManager.onStart(run, event.nodeName)
           stores.runs.save(newRun)

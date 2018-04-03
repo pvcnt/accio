@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 import com.twitter.finagle.stats.StatsReceiver
 import fr.cnrs.liris.accio.api.ResultList
-import fr.cnrs.liris.accio.api.thrift.{Workflow, WorkflowId}
+import fr.cnrs.liris.accio.api.thrift.Workflow
 import fr.cnrs.liris.accio.storage.{WorkflowQuery, WorkflowStore}
 
 import scala.collection.JavaConverters._
@@ -36,8 +36,8 @@ import scala.collection.concurrent
 private[memory] final class MemoryWorkflowStore(statsReceiver: StatsReceiver)
   extends WorkflowStore.Mutable {
 
-  private[this] val index = new ConcurrentHashMap[WorkflowId, Workflow].asScala
-  private[this] val history = new ConcurrentHashMap[WorkflowId, concurrent.Map[String, Workflow]].asScala
+  private[this] val index = new ConcurrentHashMap[String, Workflow].asScala
+  private[this] val history = new ConcurrentHashMap[String, concurrent.Map[String, Workflow]].asScala
   statsReceiver.provideGauge("storage", "memory", "workflow", "index_size")(index.size)
   statsReceiver.provideGauge("storage", "memory", "workflow", "history_size")(history.values.map(_.size).sum)
 
@@ -49,11 +49,11 @@ private[memory] final class MemoryWorkflowStore(statsReceiver: StatsReceiver)
     ResultList.slice(results, offset = query.offset, limit = query.limit)
   }
 
-  override def get(id: WorkflowId): Option[Workflow] = index.get(id)
-
-  override def get(id: WorkflowId, version: String): Option[Workflow] = {
-    history.get(id).flatMap(_.get(version))
-  }
+  override def get(id: String, version: Option[String]): Option[Workflow] =
+    version match {
+      case None => index.get(id)
+      case Some(v) => history.get(id).flatMap(_.get(v))
+    }
 
   override def save(workflow: Workflow): Unit = {
     history.putIfAbsent(workflow.id, new ConcurrentHashMap[String, Workflow].asScala)

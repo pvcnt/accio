@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.api
 
-import com.twitter.util.{Duration => TwitterDuration}
+import com.twitter.util.{Try, Duration => TwitterDuration}
 import fr.cnrs.liris.accio.api.thrift.{AtomicType, DataType, Value}
 import fr.cnrs.liris.accio.sdk.Dataset
 import fr.cnrs.liris.common.geo.{Distance, LatLng, Location}
@@ -32,252 +32,270 @@ import scala.collection.JavaConverters._
 object Values {
   private val AbbreviateThreshold = 3
 
-  implicit val instantOrdering = new Ordering[Instant] {
+  implicit val instantOrdering: Ordering[Instant] = new Ordering[Instant] {
     override def compare(x: Instant, y: Instant): Int = x.compareTo(y)
   }
 
-  implicit val durationOrdering = new Ordering[JodaDuration] {
+  implicit val durationOrdering: Ordering[JodaDuration] = new Ordering[JodaDuration] {
     override def compare(x: JodaDuration, y: JodaDuration): Int = x.compareTo(y)
   }
 
   /**
-   * Correct a raw value to match a data type.
+   * Correct a value into another data type.
    *
-   * Note: This method produce [[Any]] from [[Any]], so in appearance we do nothing. In reality the output
-   * value is of the correct Scala type and can be used later safely.
-   *
-   * @param rawValue Raw value.
-   * @param kind     Data type.
-   * @throws IllegalArgumentException If the raw value is incorrect w.r.t. the data type.
-   * @return Corrected value.
+   * @param value Value.
+   * @param kind  Target data type.
+   * @return Corrected value, if the two data types were compatible.
    */
-  @throws[IllegalArgumentException]
-  def as(rawValue: Any, kind: DataType): Any = kind.base match {
-    case AtomicType.Boolean => asBoolean(rawValue)
-    case AtomicType.Byte => asByte(rawValue)
-    case AtomicType.Integer => asInteger(rawValue)
-    case AtomicType.Long => asLong(rawValue)
-    case AtomicType.Double => asDouble(rawValue)
-    case AtomicType.String => asString(rawValue)
-    case AtomicType.Location => asLocation(rawValue)
-    case AtomicType.Timestamp => asTimestamp(rawValue)
-    case AtomicType.Duration => asDuration(rawValue)
-    case AtomicType.Distance => asDistance(rawValue)
-    case AtomicType.Dataset => asDataset(rawValue)
-    case AtomicType.List => asList(rawValue, kind.args.head)
-    case AtomicType.Set => asSet(rawValue, kind.args.head)
-    case AtomicType.Map => asMap(rawValue, kind.args.head, kind.args.last)
-    case AtomicType.EnumUnknownAtomicType(_) => throw new IllegalArgumentException(s"Unknown type: $kind")
-  }
+  def as(value: Value, kind: DataType): Option[Value] = encode(decode(value), kind)
 
-  def asByte(rawValue: Any): Byte = rawValue match {
-    case s: String => parseByte(s)
-    case n: java.lang.Number => n.byteValue
-    case b: Byte => b
-    case _ => throwInvalidTypeException(DataType(AtomicType.Byte), rawValue)
-  }
-
-  def asInteger(rawValue: Any): Int = rawValue match {
-    case s: String => parseInteger(s)
-    case n: java.lang.Number => n.intValue
-    case b: Byte => b
-    case s: Short => s
-    case i: Int => i
-    case _ => throwInvalidTypeException(DataType(AtomicType.Integer), rawValue)
-  }
-
-  def asLong(rawValue: Any): Long = rawValue match {
-    case s: String => parseLong(s)
-    case n: java.lang.Number => n.longValue
-    case b: Byte => b
-    case s: Short => s
-    case i: Int => i
-    case l: Long => l
-    case _ => throwInvalidTypeException(DataType(AtomicType.Long), rawValue)
-  }
-
-  def asDouble(rawValue: Any): Double = rawValue match {
-    case s: String => parseDouble(s)
-    case n: java.lang.Number => n.doubleValue
-    case b: Byte => b
-    case s: Short => s
-    case i: Int => i
-    case l: Long => l
-    case d: Double => d
-    case _ => throwInvalidTypeException(DataType(AtomicType.Double), rawValue)
-  }
-
-  def asBoolean(rawValue: Any): Boolean = rawValue match {
-    case s: String => parseBoolean(s)
-    case b: java.lang.Boolean => b.asInstanceOf[Boolean]
-    case b: Boolean => b
-    case _ => throwInvalidTypeException(DataType(AtomicType.Boolean), rawValue)
-  }
-
-  def asString(rawValue: Any): String = rawValue match {
-    case s: String => s
-    case _ => throwInvalidTypeException(DataType(AtomicType.String), rawValue)
-  }
-
-  def asLocation(rawValue: Any): Location = rawValue match {
-    case s: String => parseLocation(s)
-    case l: Location => l
-    case _ => throwInvalidTypeException(DataType(AtomicType.Location), rawValue)
-  }
-
-  def asTimestamp(rawValue: Any): Instant = rawValue match {
-    case s: String => parseTimestamp(s)
-    case i: Instant => i
-    case n: Number => new Instant(n.longValue)
-    case l: Long => new Instant(l)
-    case _ => throwInvalidTypeException(DataType(AtomicType.Timestamp), rawValue)
-  }
-
-  def asDistance(rawValue: Any): Distance = rawValue match {
-    case s: String => parseDistance(s)
-    case d: Distance => d
-    case _ => throwInvalidTypeException(DataType(AtomicType.Distance), rawValue)
-  }
-
-  def asDuration(rawValue: Any): JodaDuration = rawValue match {
-    case s: String => parseDuration(s)
-    case d: JodaDuration => d
-    case n: Number => new JodaDuration(n.longValue)
-    case l: Long => new JodaDuration(l)
-    case _ => throwInvalidTypeException(DataType(AtomicType.Duration), rawValue)
-  }
-
-  def asDataset(rawValue: Any): Dataset = rawValue match {
-    case s: String => parseDataset(s)
-    case d: Dataset => d
-    case _ => throwInvalidTypeException(DataType(AtomicType.Dataset), rawValue)
-  }
-
-  def asList(rawValue: Any, of: AtomicType): Seq[Any] = rawValue match {
-    case arr: Array[_] => arr.map(as(_, DataType(of))).toSeq
-    case seq: Seq[_] => seq.map(as(_, DataType(of)))
-    case list: java.util.List[_] => list.asScala.map(as(_, DataType(of)))
-    case _ => throwInvalidTypeException(DataType(AtomicType.List, Seq(of)), rawValue)
-  }
-
-  def asSet(rawValue: Any, of: AtomicType): Set[Any] = rawValue match {
-    case arr: Array[_] => arr.map(as(_, DataType(of))).toSet
-    case set: Set[_] => set.map(as(_, DataType(of)))
-    case set: java.util.Set[_] => set.asScala.toSet[Any].map(as(_, DataType(of)))
-    case _ => throwInvalidTypeException(DataType(AtomicType.Set, Seq(of)), rawValue)
-  }
-
-  def asMap(rawValue: Any, ofKeys: AtomicType, ofValues: AtomicType): Map[Any, Any] = rawValue match {
-    case map: Map[_, _] =>
-      map.map { case (k, v) =>
-        as(k, DataType(ofKeys)) -> as(v, DataType(ofValues))
-      }
-    case map: java.util.Map[_, _] =>
-      map.asScala.toMap.map { case (k, v) =>
-        as(k, DataType(ofKeys)) -> as(v, DataType(ofValues))
-      }
-    case _ => throwInvalidTypeException(DataType(AtomicType.Map, Seq(ofKeys, ofValues)), rawValue)
-  }
-
-  def encode(v: Any, kind: DataType): Value =
+  def encode(v: Any, kind: DataType): Option[Value] =
     kind.base match {
-      case AtomicType.Byte => encodeByte(asByte(v))
-      case AtomicType.Integer => encodeInteger(asInteger(v))
-      case AtomicType.Long => encodeLong(asLong(v))
-      case AtomicType.Double => encodeDouble(asDouble(v))
-      case AtomicType.Boolean => encodeBoolean(asBoolean(v))
-      case AtomicType.String => encodeString(asString(v))
-      case AtomicType.Location => encodeLocation(asLocation(v))
-      case AtomicType.Timestamp => encodeTimestamp(asTimestamp(v))
-      case AtomicType.Duration => encodeDuration(asDuration(v))
-      case AtomicType.Distance => encodeDistance(asDistance(v))
-      case AtomicType.Dataset => encodeDataset(asDataset(v))
-      case AtomicType.Map => encodeMap(asMap(v, kind.args.head, kind.args.last), kind)
-      case AtomicType.List => encodeList(asList(v, kind.args.head), kind)
-      case AtomicType.Set => encodeSet(asSet(v, kind.args.head), kind)
+      case AtomicType.Byte => encodeByte(v)
+      case AtomicType.Integer => encodeInteger(v)
+      case AtomicType.Long => encodeLong(v)
+      case AtomicType.Double => encodeDouble(v)
+      case AtomicType.Boolean => encodeBoolean(v)
+      case AtomicType.String => encodeString(v)
+      case AtomicType.Location => encodeLocation(v)
+      case AtomicType.Timestamp => encodeTimestamp(v)
+      case AtomicType.Duration => encodeDuration(v)
+      case AtomicType.Distance => encodeDistance(v)
+      case AtomicType.Dataset => encodeDataset(v)
+      case AtomicType.Map => encodeMap(v, kind.args.head, kind.args.last)
+      case AtomicType.List => encodeList(v, kind.args.head)
+      case AtomicType.Set => encodeSet(v, kind.args.head)
       case AtomicType.EnumUnknownAtomicType(_) => throw new IllegalArgumentException(s"Unknown type: $kind")
     }
 
   def encodeByte(v: Byte): Value = Value(DataType(AtomicType.Byte), bytes = Seq(v))
 
+  def encodeByte(rawValue: Any): Option[Value] =
+    rawValue match {
+      case s: String => parseByte(s)
+      case n: Number => Some(encodeByte(n.byteValue))
+      case b: Byte => Some(encodeByte(b))
+      case _ => None
+    }
+
   def encodeInteger(v: Int): Value = Value(DataType(AtomicType.Integer), integers = Seq(v))
+
+  def encodeInteger(rawValue: Any): Option[Value] = rawValue match {
+    case s: String => parseInteger(s)
+    case n: Number => Some(encodeInteger(n.intValue))
+    case b: Byte => Some(encodeInteger(b))
+    case s: Short => Some(encodeInteger(s))
+    case i: Int => Some(encodeInteger(i))
+    case _ => None
+  }
 
   def encodeLong(v: Long): Value = Value(DataType(AtomicType.Long), longs = Seq(v))
 
+  def encodeLong(rawValue: Any): Option[Value] =
+    rawValue match {
+      case s: String => parseLong(s)
+      case n: Number => Some(encodeLong(n.longValue))
+      case b: Byte => Some(encodeLong(b))
+      case s: Short => Some(encodeLong(s))
+      case i: Int => Some(encodeLong(i))
+      case l: Long => Some(encodeLong(l))
+      case _ => None
+    }
+
   def encodeDouble(v: Double): Value = Value(DataType(AtomicType.Double), doubles = Seq(v))
+
+  def encodeDouble(rawValue: Any): Option[Value] =
+    rawValue match {
+      case s: String => parseDouble(s)
+      case n: Number => Some(encodeDouble(n.doubleValue))
+      case b: Byte => Some(encodeDouble(b))
+      case s: Short => Some(encodeDouble(s))
+      case i: Int => Some(encodeDouble(i))
+      case l: Long => Some(encodeDouble(l))
+      case d: Double => Some(encodeDouble(d))
+      case _ => None
+    }
 
   def encodeString(v: String): Value = Value(DataType(AtomicType.String), strings = Seq(v))
 
+  def encodeString(rawValue: Any): Option[Value] =
+    rawValue match {
+      case s: String => Some(encodeString(s))
+      case o => Some(encodeString(o.toString))
+    }
+
   def encodeBoolean(v: Boolean): Value = Value(DataType(AtomicType.Boolean), booleans = Seq(v))
+
+  def encodeBoolean(rawValue: Any): Option[Value] =
+    rawValue match {
+      case s: String => parseBoolean(s)
+      case b: java.lang.Boolean => Some(encodeBoolean(b))
+      case b: Boolean => Some(encodeBoolean(b))
+      case _ => None
+    }
 
   def encodeLocation(v: Location): Value = {
     val latLng = v.asInstanceOf[Location].toLatLng
     Value(DataType(AtomicType.Location), doubles = Seq(latLng.lat.radians, latLng.lng.radians))
   }
 
+  def encodeLocation(rawValue: Any): Option[Value] =
+    rawValue match {
+      case s: String => parseLocation(s)
+      case l: Location => Some(encodeLocation(l))
+      case Seq(x, y) => (x, y) match {
+        case (lng: Double, lat: Double) => Some(encodeLocation(LatLng.degrees(lat, lng)))
+        case _ => None
+      }
+      case Array(x, y) => (x, y) match {
+        case (lng: Double, lat: Double) => Some(encodeLocation(LatLng.degrees(lat, lng)))
+        case _ => None
+      }
+      case _ => None
+    }
+
   def encodeTimestamp(v: Instant): Value = Value(DataType(AtomicType.Timestamp), longs = Seq(v.getMillis))
+
+  def encodeTimestamp(rawValue: Any): Option[Value] =
+    rawValue match {
+      case s: String => parseTimestamp(s)
+      case i: Instant => Some(encodeTimestamp(i))
+      case n: Number => Some(encodeTimestamp(new Instant(n.longValue)))
+      case b: Byte => Some(encodeTimestamp(new Instant(b)))
+      case s: Short => Some(encodeTimestamp(new Instant(s)))
+      case i: Int => Some(encodeTimestamp(new Instant(i)))
+      case l: Long => Some(encodeTimestamp(new Instant(l)))
+      case _ => None
+    }
 
   def encodeDuration(v: JodaDuration): Value = Value(DataType(AtomicType.Duration), longs = Seq(v.getMillis))
 
+  def encodeDuration(rawValue: Any): Option[Value] = rawValue match {
+    case s: String => parseDuration(s)
+    case d: JodaDuration => Some(encodeDuration(d))
+    case n: Number => Some(encodeDuration(new JodaDuration(n.longValue)))
+    case b: Byte => Some(encodeDuration(new JodaDuration(b)))
+    case s: Short => Some(encodeDuration(new JodaDuration(s)))
+    case i: Int => Some(encodeDuration(new JodaDuration(i)))
+    case l: Long => Some(encodeDuration(new JodaDuration(l)))
+    case _ => None
+  }
+
   def encodeDistance(v: Distance): Value = Value(DataType(AtomicType.Distance), doubles = Seq(v.meters))
+
+  def encodeDistance(rawValue: Any): Option[Value] =
+    rawValue match {
+      case s: String => parseDistance(s)
+      case d: Distance => Some(encodeDistance(d))
+      case _ => None
+    }
 
   def encodeDataset(v: Dataset): Value = Value(DataType(AtomicType.Dataset), strings = Seq(v.uri))
 
-  def encodeList(v: Seq[_], kind: DataType): Value = {
+  def encodeDataset(rawValue: Any): Option[Value] =
+    rawValue match {
+      case s: String => parseDataset(s)
+      case d: Dataset => Some(encodeDataset(d))
+      case _ => None
+    }
+
+  def encodeList(v: Seq[_], kind: DataType): Option[Value] = {
     require(kind.base == AtomicType.List, s"${kind.base} is not a List")
     encodeList(v, kind.args.head)
   }
 
-  def encodeList(v: Seq[_], of: AtomicType): Value = {
-    val values = v.map(encode(_, DataType(of)))
-    merge(values.size, values, DataType(AtomicType.List, Seq(of)))
+  def emptyList: Value = encodeList(Seq.empty, AtomicType.String).get
+
+  def encodeList(v: Seq[_], of: AtomicType): Option[Value] = {
+    val values = v.flatMap(encode(_, DataType(of)))
+    if (values.size == v.size) {
+      Some(merge(values.size, values, DataType(AtomicType.List, Seq(of))))
+    } else {
+      None
+    }
   }
 
-  def encodeSet(v: Set[_], kind: DataType): Value = {
+  def encodeList(rawValue: Any, of: AtomicType): Option[Value] = rawValue match {
+    case arr: Array[_] => encodeList(arr.toSeq, of)
+    case seq: Seq[_] => encodeList(seq, of)
+    case list: java.util.List[_] => encodeList(list.asScala, of)
+    case set: Set[_] => encodeList(set.toSeq, of)
+    case set: java.util.Set[_] => encodeList(set.asScala.toSeq, of)
+    case _ => None
+  }
+
+  def encodeSet(v: Set[_], kind: DataType): Option[Value] = {
     require(kind.base == AtomicType.Set, s"${kind.base} is not a Set")
     encodeSet(v, kind.args.head)
   }
 
-  def encodeSet(v: Set[_], of: AtomicType): Value = {
-    val values = v.toSeq.map(encode(_, DataType(of)))
-    merge(values.size, values, DataType(AtomicType.Set, Seq(of)))
+  def encodeSet(v: Set[_], of: AtomicType): Option[Value] = {
+    val values = v.toSeq.flatMap(encode(_, DataType(of)))
+    if (values.size == v.size) {
+      Some(merge(values.size, values, DataType(AtomicType.Set, Seq(of))))
+    } else {
+      None
+    }
   }
 
-  def encodeMap(v: Map[_, _], kind: DataType): Value = {
+  def encodeSet(rawValue: Any, of: AtomicType): Option[Value] =
+    rawValue match {
+      case arr: Array[_] => encodeSet(arr.toSet, of)
+      case set: Set[_] => encodeSet(set, of)
+      case set: java.util.Set[_] => encodeSet(set.asScala.toSet, of)
+      case seq: Seq[_] => encodeSet(seq.toSet, of)
+      case list: java.util.List[_] => encodeSet(list.asScala.toSet, of)
+      case _ => None
+    }
+
+  def emptyMap: Value = encodeMap(Map.empty, AtomicType.String, AtomicType.String).get
+
+  def encodeMap(v: Map[_, _], kind: DataType): Option[Value] = {
     require(kind.base == AtomicType.Map, s"${kind.base} is not a Map")
     encodeMap(v, kind.args.head, kind.args.last)
   }
 
-  def encodeMap(v: Map[_, _], ofKeys: AtomicType, ofValues: AtomicType): Value = {
-    val keys = v.keys.toSeq.map(encode(_, DataType(ofKeys)))
-    val values = v.values.toSeq.map(encode(_, DataType(ofValues)))
-    merge(keys.size, keys ++ values, DataType(AtomicType.Map, Seq(ofKeys, ofValues)))
+  def encodeMap(v: Map[_, _], ofKeys: AtomicType, ofValues: AtomicType): Option[Value] = {
+    val keys = v.keys.toSeq.flatMap(encode(_, DataType(ofKeys)))
+    val values = v.values.toSeq.flatMap(encode(_, DataType(ofValues)))
+    if (keys.size == v.size && values.size == v.size) {
+      Some(merge(keys.size, keys ++ values, DataType(AtomicType.Map, Seq(ofKeys, ofValues))))
+    } else {
+      None
+    }
   }
 
-  def toString(value: Value, abbreviate: Boolean = true): String =
+  def encodeMap(rawValue: Any, ofKeys: AtomicType, ofValues: AtomicType): Option[Value] =
+    rawValue match {
+      case map: Map[_, _] => encodeMap(map, ofKeys, ofValues)
+      case map: java.util.Map[_, _] => encodeMap(map.asScala.toMap, ofKeys, ofValues)
+      case _ => None
+    }
+
+  def stringify(value: Value, abbreviate: Boolean = true): String =
     value.kind.base match {
-      case AtomicType.List => toString(decodeList(value), abbreviate)
-      case AtomicType.Set => toString(decodeSet(value).toSeq, abbreviate)
+      case AtomicType.List => stringify(decodeList(value), abbreviate)
+      case AtomicType.Set => stringify(decodeSet(value).toSeq, abbreviate)
       case AtomicType.Map =>
         val seq = decodeMap(value).toSeq
           .map {
-            case (k, v) => s"${toString(k)}=${toString(v)}"
+            case (k, v) => s"${stringify(k)}=${stringify(v)}"
             case s => s // For the last <xx more>
           }
-        toString(seq, abbreviate)
+        stringify(seq, abbreviate)
       case AtomicType.Dataset => decodeDataset(value).uri
       case AtomicType.Duration => TwitterDuration.fromMilliseconds(decodeDuration(value).getMillis).toString
-      case _ => toString(decode(value))
+      case _ => stringify(decode(value))
     }
 
-  private def toString(seq: Seq[_], abbreviate: Boolean): String = {
+  private def stringify(seq: Seq[_], abbreviate: Boolean): String = {
     val abbreviated = if (seq.size > AbbreviateThreshold) {
       seq.take(AbbreviateThreshold - 1) ++ Seq(s"<${seq.size - AbbreviateThreshold + 1} more>")
     } else seq
-    abbreviated.map(toString).mkString(", ")
+    abbreviated.map(stringify).mkString(", ")
   }
 
-  private def toString(obj: Any): String =
+  private def stringify(obj: Any): String =
     obj match {
       case d: Double => roundAt6(d).toString
       case d: Distance => Distance.meters(roundAt2(d.meters)).toString
@@ -306,7 +324,7 @@ object Values {
       case AtomicType.List => decodeList(value)
       case AtomicType.Set => decodeSet(value)
       case AtomicType.Map => decodeMap(value)
-      case AtomicType.EnumUnknownAtomicType(_) => throw new IllegalArgumentException(s"Unknown type: ${toString(value.kind)}")
+      case AtomicType.EnumUnknownAtomicType(_) => throw new IllegalArgumentException(s"Unknown type: ${stringify(value.kind)}")
     }
 
   def decodeByte(value: Value): Byte = checkType(AtomicType.Byte, value).bytes.head
@@ -358,7 +376,7 @@ object Values {
    * @param str  String to parse.
    * @param kind Data type.
    */
-  def parse(str: String, kind: DataType): Any =
+  def parse(str: String, kind: DataType): Option[Value] =
     kind.base match {
       case AtomicType.Boolean => parseBoolean(str)
       case AtomicType.Byte => parseByte(str)
@@ -375,68 +393,57 @@ object Values {
     }
 
   /**
-   * Parse a string into a byte.
+   * Parse a string into a byte value.
    *
    * @param str String to parse.
    */
-  def parseByte(str: String): Byte = str.toByte
+  def parseByte(str: String): Option[Value] = Try(str.toByte).toOption.map(encodeByte)
 
   /**
-   * Parse a string into a short.
+   * Parse a string into an integer value.
    *
    * @param str String to parse.
    */
-  def parseShort(str: String): Short = str.toShort
+  def parseInteger(str: String): Option[Value] = Try(str.toInt).toOption.map(encodeInteger)
 
   /**
-   * Parse a string into an integer.
+   * Parse a string into a long value.
    *
    * @param str String to parse.
    */
-  def parseInteger(str: String): Int = str.toInt
+  def parseLong(str: String): Option[Value] = Try(str.toLong).toOption.map(encodeLong)
 
   /**
-   * Parse a string into a long.
+   * Parse a string into a double value.
    *
    * @param str String to parse.
    */
-  def parseLong(str: String): Long = str.toLong
+  def parseDouble(str: String): Option[Value] = Try(str.toDouble).toOption.map(encodeDouble)
 
   /**
-   * Parse a string into a double.
+   * Parse a string into a boolean value.
    *
    * @param str String to parse.
+   * @return A value representing a boolean, if the string was a valid boolean, [[None]] otherwise.
    */
-  def parseDouble(str: String): Double = str.toDouble
+  def parseBoolean(str: String): Option[Value] =
+    str match {
+      case "true" | "t" | "yes" | "y" => Some(encodeBoolean(true))
+      case "false" | "f" | "no" | "n" => Some(encodeBoolean(false))
+      case _ => None
+    }
 
-  /**
-   * Parse a string into a boolean.
-   *
-   * @param str String to parse.
-   */
-  def parseBoolean(str: String): Boolean = str match {
-    case "true" => true
-    case "t" => true
-    case "yes" => true
-    case "y" => true
-    case "false" => false
-    case "f" => false
-    case "no" => false
-    case "n" => false
-    case _ => throw new IllegalArgumentException(s"Invalid boolean: $str")
-  }
+  def parseString(str: String): Option[Value] = Some(encodeString(str))
 
-  def parseString(str: String): String = str
+  def parseLocation(str: String): Option[Value] = Try(LatLng.parse(str)).toOption.map(encodeLocation)
 
-  def parseLocation(str: String): Location = LatLng.parse(str)
+  def parseTimestamp(str: String): Option[Value] = Try(Instant.parse(str)).toOption.map(encodeTimestamp)
 
-  def parseTimestamp(str: String): Instant = Instant.parse(str)
+  def parseDuration(str: String): Option[Value] = Try(new JodaDuration(TwitterDuration.parse(str).inMillis)).toOption.map(encodeDuration)
 
-  def parseDuration(str: String): JodaDuration = new JodaDuration(TwitterDuration.parse(str).inMillis)
+  def parseDistance(str: String): Option[Value] = Try(Distance.parse(str)).toOption.map(encodeDistance)
 
-  def parseDistance(str: String): Distance = Distance.parse(str)
-
-  def parseDataset(str: String): Dataset = Dataset.parse(str)
+  def parseDataset(str: String): Option[Value] = Some(encodeDataset(Dataset(str)))
 
   def getAtomicType(clazz: Class[_]): AtomicType = {
     clazz match {
@@ -534,19 +541,16 @@ object Values {
     }
   }
 
-  private def throwInvalidTypeException(kind: DataType, rawValue: Any) =
-    throw new IllegalArgumentException(s"${rawValue.getClass.getName} is not a $kind")
-
   private def checkType(kind: AtomicType, value: Value) = {
     if (value.kind.base != kind) {
-      throw new IllegalArgumentException(s"${toString(value.kind.base)} is not a ${toString(kind)}")
+      throw new IllegalArgumentException(s"${stringify(value.kind.base)} is not a ${stringify(kind)}")
     }
     value
   }
 
   private def checkType(kind: DataType, value: Value) = {
     if (value.kind != kind) {
-      throw new IllegalArgumentException(s"${toString(value.kind)} is not a ${toString(kind)}")
+      throw new IllegalArgumentException(s"${stringify(value.kind)} is not a ${stringify(kind)}")
     }
     value
   }
