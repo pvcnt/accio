@@ -13,3 +13,17 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
+
+scala_test(
+  name = "local",
+  srcs = glob(["*.scala"]),
+  deps = [
+    "//accio/java/fr/cnrs/liris/accio/scheduler/local",
+    "//accio/java/fr/cnrs/liris/accio/scheduler",
+    "//accio/java/fr/cnrs/liris/accio/api",
+    "//accio/javatests/fr/cnrs/liris/testing",
+    "//3rdparty/jvm/com/google/guava",
+    "//3rdparty/jvm/com/twitter:util_slf4j_api",
+  ],
+  size = "small",
+)
