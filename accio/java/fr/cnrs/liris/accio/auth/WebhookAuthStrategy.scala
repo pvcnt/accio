@@ -40,7 +40,7 @@ final class WebhookAuthStrategy(webhook: Webhook[ReviewResponse], cacheTtl: Dura
           .execute(ReviewRequest(credentials))
           .map { review =>
             if (review.authenticated) {
-              Some(review.user.getOrElse(UserInfo.parse(credentials)))
+              Some(review.user.getOrElse(UserInfo(credentials)))
             } else {
               None
             }

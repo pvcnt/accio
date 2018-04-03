@@ -27,6 +27,7 @@ Each cluster is a JSON object formed of the following fields.
 
 | Name | Type | Description |
 |:-----|:-----|:------------|
-| name | string; required | Cluster name, that will be referenced later in commands. |
-| server | string; required | Address to contact one of the masters of this cluster, specified as a [Finagle name](https://twitter.github.io/finagle/guide/Names.html). |
+| name | string | Cluster name, that will be referenced later in commands. |
+| server | string | Address to contact one of the masters of this cluster, specified as a [Finagle name](https://twitter.github.io/finagle/guide/Names.html). |
+| credentials | string; optional | Credentials to use when communicating with this server. The format of this string depends on the configured [authentication strategies](../_deploy/security.html). |
 {: .table .table-striped}

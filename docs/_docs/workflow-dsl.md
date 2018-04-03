@@ -20,8 +20,8 @@ A workflow file should contain a single JSON object formed of the following fiel
 | params[].name | string; required | Parameter name. Must match `[a-z][a-zA-Z0-9_]+`. |
 | params[].kind | string; required | Parameter data type (see below). |
 | params[].default_value | any; optional | Default value. |
-| graph | object[]; required | Nodes composing the workflow graph. The order in which they are defined does not matter. |
-| graph[].op | string; required | Operator name. |
+| graph | object[] | Nodes composing the workflow graph. The order in which they are defined does not matter. |
+| graph[].op | string | Operator name. |
 | graph[].name | string; optional | Node name. By default it will be the operator's name. Must match `[A-Z][a-zA-Z0-9_]+`. |
 | graph[].inputs | object; optional | Mapping between input names and their values. All parameters without a default value should be specified. |
 {: .table .table-striped}

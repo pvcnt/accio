@@ -64,7 +64,7 @@ final class SubmitCommand extends Command with ClientCommand {
       val parser = new ExperimentParser
       parser.parse(file)
     } else {
-      Future.value(Experiment(pkg = Package(uri)))
+      Future.value(Experiment(pkg = parsePackage(uri)))
     }
     future
       .map(experiment => merge(experiment.copy(params = experiment.params ++ params)))
@@ -83,6 +83,12 @@ final class SubmitCommand extends Command with ClientCommand {
           }
       }
   }
+
+  private def parsePackage(spec: String) =
+    spec.split(':').toSeq match {
+      case name :: version :: Nil => Package(name, Some(version))
+      case _ => Package(spec)
+    }
 
   private[this] val ParamRegex = "([^=]+)=(.+)".r
 

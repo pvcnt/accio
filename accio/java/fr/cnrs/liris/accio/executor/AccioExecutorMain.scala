@@ -44,7 +44,7 @@ class AccioExecutor {
     val exitCode = com.twitter.jvm.numProcs.let(task.resource.cpu) {
       executor.execute(task, Paths.get(args(1)))
     }
-    
+
     // The exit code is returned by the executor, because it will be captured by the scheduler
     // later on.
     sys.exit(exitCode)
