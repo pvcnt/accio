@@ -23,7 +23,7 @@ import com.twitter.finagle.stats.StatsReceiver
 import com.twitter.inject.{Injector, TwitterModule}
 import fr.cnrs.liris.accio.storage.Storage
 import fr.cnrs.liris.accio.storage.memory.MemoryStorage
-import fr.cnrs.liris.accio.storage.mysql.{ClientFactory, MysqlStorage}
+import fr.cnrs.liris.accio.storage.mysql.{MysqlClientFactory, MysqlStorage}
 
 /**
  * Guice module provisioning storage.
@@ -64,7 +64,7 @@ object StorageModule extends TwitterModule {
     extends Provider[Storage] {
 
     override def get(): Storage = {
-      val client = ClientFactory(myServerFlag(), myUserFlag(), myPasswordFlag.get.orNull, myDatabaseFlag())
+      val client = MysqlClientFactory(myServerFlag(), myUserFlag(), myPasswordFlag.get.orNull, myDatabaseFlag())
       new MysqlStorage(client, statsReceiver, myUseNativeLocksFlag())
     }
   }

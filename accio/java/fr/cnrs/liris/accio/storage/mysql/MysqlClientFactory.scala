@@ -22,22 +22,27 @@ import com.twitter.conversions.time._
 import com.twitter.finagle.client.DefaultPool
 import com.twitter.finagle.mysql.Client
 import com.twitter.finagle.service.{ReqRep, ResponseClass, ResponseClassifier}
-import com.twitter.finagle.{ChannelClosedException, Failure, Mysql, TimeoutException}
+import com.twitter.finagle._
 import com.twitter.util.{Throw, TimeoutException => UtilTimeoutException}
 
-private[storage] object ClientFactory {
+private[storage] object MysqlClientFactory {
+  val responseClassifier: ResponseClassifier = ResponseClassifier.named("MysqlResponseClassifier") {
+    case ReqRep(_, Throw(Failure(Some(_: TimeoutException)))) => ResponseClass.RetryableFailure
+    case ReqRep(_, Throw(Failure(Some(_: UtilTimeoutException)))) => ResponseClass.RetryableFailure
+    case ReqRep(_, Throw(_: TimeoutException)) => ResponseClass.RetryableFailure
+    case ReqRep(_, Throw(_: UtilTimeoutException)) => ResponseClass.RetryableFailure
+    case ReqRep(_, Throw(_: ChannelClosedException)) => ResponseClass.RetryableFailure
+    case ReqRep(_, Throw(ChannelWriteException(Some(_: TimeoutException)))) => ResponseClass.RetryableFailure
+    case ReqRep(_, Throw(ChannelWriteException(Some(_: UtilTimeoutException)))) => ResponseClass.RetryableFailure
+    case ReqRep(_, Throw(ChannelWriteException(Some(_: ChannelClosedException)))) => ResponseClass.RetryableFailure
+  }
+
   def apply(server: String, user: String, password: String, database: String): Client = {
-    val responseClassifier = ResponseClassifier.named("MysqlResponseClassifier") {
-      case ReqRep(_, Throw(Failure(Some(_: TimeoutException)))) => ResponseClass.RetryableFailure
-      case ReqRep(_, Throw(Failure(Some(_: UtilTimeoutException)))) => ResponseClass.RetryableFailure
-      case ReqRep(_, Throw(_: TimeoutException)) => ResponseClass.RetryableFailure
-      case ReqRep(_, Throw(_: UtilTimeoutException)) => ResponseClass.RetryableFailure
-      case ReqRep(_, Throw(_: ChannelClosedException)) => ResponseClass.RetryableFailure
-    }
     Mysql.client
       .withCredentials(user, password)
       .withDatabase(database)
       .withSessionQualifier.noFailFast
+      .withSessionQualifier.noFailureAccrual
       .withResponseClassifier(responseClassifier)
       .configured(DefaultPool.Param(
         low = 0,

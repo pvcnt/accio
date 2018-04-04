@@ -45,7 +45,7 @@ private[mysql] trait MysqlStoreSpec extends UnitSpec with BeforeAndAfterEach {
     database = null
   }
 
-  protected final def createClient = ClientFactory(s"$host:3306", user, password, database)
+  protected final def createClient = MysqlClientFactory(s"$host:3306", user, password, database)
 
   private final def host = sys.env.getOrElse("MYSQL_HOST", "0.0.0.0")
 
