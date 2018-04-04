@@ -19,13 +19,18 @@
 package fr.cnrs.liris.accio.storage.mysql
 
 import com.twitter.finagle.mysql.{Client, RawValue, Row}
-import com.twitter.util.{Await, Future}
+import com.twitter.finagle.stats.StatsReceiver
+import com.twitter.util.{Await, Future, StorageUnit}
 import fr.cnrs.liris.accio.api.ResultList
 import fr.cnrs.liris.accio.api.thrift.Workflow
 import fr.cnrs.liris.accio.storage.{WorkflowQuery, WorkflowStore}
 import fr.cnrs.liris.common.scrooge.BinaryScroogeSerializer
 
-private[this] final class MysqlWorkflowStore(client: Client) extends WorkflowStore.Mutable {
+private[this] final class MysqlWorkflowStore(client: Client, statsReceiver: StatsReceiver)
+  extends WorkflowStore.Mutable {
+
+  private[this] val sizeStat = statsReceiver.stat("storage", "mysql", "run", "content_size_kb")
+
   override def list(query: WorkflowQuery): ResultList[Workflow] = {
     val f = client
       .prepare(s"select content from workflows where is_active = 1")
@@ -55,6 +60,7 @@ private[this] final class MysqlWorkflowStore(client: Client) extends WorkflowSto
 
   override def save(workflow: Workflow): Unit = {
     val content = BinaryScroogeSerializer.toBytes(workflow)
+    sizeStat.add(StorageUnit.fromBytes(content.length).inKilobytes)
     val f1 = client
       .prepare("update workflows set is_active = 0 where id = ? and version <> ?")
       .apply(workflow.id, workflow.version.get)

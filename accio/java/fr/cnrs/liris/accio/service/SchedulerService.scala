@@ -72,7 +72,7 @@ final class SchedulerService @Inject()(scheduler: Scheduler, opRegistry: OpRegis
         val taskId = UUID.randomUUID().toString
         val task = Task(taskId, run.id, node.name, payload, System.currentTimeMillis(), TaskState.Waiting, opDef.resource)
         scheduler.submit(task)
-        logger.debug(s"Scheduled task ${task.id}. Run: ${run.id}, node: ${node.name}, op: ${payload.op}")
+        logger.debug(s"Submitted task ${task.id}. Run: ${run.id}, node: ${node.name}, op: ${payload.op}")
         val newNodeStatus = nodeStatus.copy(status = TaskState.Scheduled, taskId = Some(taskId))
         run.copy(state = run.state.copy(nodes = run.state.nodes - nodeStatus + newNodeStatus))
     }

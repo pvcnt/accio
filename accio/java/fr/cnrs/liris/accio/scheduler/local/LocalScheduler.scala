@@ -89,7 +89,7 @@ final class LocalScheduler(
     } else {
       if (!forceScheduling && !isEnoughResources(task.id, task.resource, totalResources)) {
         // TODO: We should cancel the task.
-        logger.warn(s"Not enough resources to schedule task ${task.id}")
+        logger.warn(s"Not enough resources to schedule task ${task.id} (${task.resource})")
       }
       logger.info(s"Queued task ${task.id}")
       pending.add(task)

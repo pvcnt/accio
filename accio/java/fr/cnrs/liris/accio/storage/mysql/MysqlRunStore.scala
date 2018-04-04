@@ -19,15 +19,21 @@
 package fr.cnrs.liris.accio.storage.mysql
 
 import com.twitter.finagle.mysql._
-import com.twitter.util.Await
+import com.twitter.finagle.stats.StatsReceiver
+import com.twitter.util.{Await, StorageUnit}
 import fr.cnrs.liris.accio.api.ResultList
 import fr.cnrs.liris.accio.api.thrift.{NodeStatus, Run}
 import fr.cnrs.liris.accio.storage.{RunQuery, RunStore}
 import fr.cnrs.liris.common.scrooge.BinaryScroogeSerializer
 
-private[mysql] final class MysqlRunStore(client: Client) extends RunStore.Mutable {
+private[mysql] final class MysqlRunStore(client: Client, statsReceiver: StatsReceiver)
+  extends RunStore.Mutable {
+
+  private[this] val sizeStat = statsReceiver.stat("storage", "mysql", "run", "content_size_kb")
+
   override def save(run: Run): Unit = {
     val content = BinaryScroogeSerializer.toBytes(run)
+    sizeStat.add(StorageUnit.fromBytes(content.length).inKilobytes)
     val f = client
       .prepare("insert into runs(id, content) values(?, ?) on duplicate key update content = ?")
       .apply(run.id, content, content)

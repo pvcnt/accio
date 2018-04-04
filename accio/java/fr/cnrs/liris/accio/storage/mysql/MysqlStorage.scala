@@ -31,8 +31,8 @@ private[storage] final class MysqlStorage(
   useNativeLocks: Boolean)
   extends Storage {
 
-  private[this] val workflowStore = new MysqlWorkflowStore(client)
-  private[this] val runStore = new MysqlRunStore(client)
+  private[this] val workflowStore = new MysqlWorkflowStore(client, statsReceiver)
+  private[this] val runStore = new MysqlRunStore(client, statsReceiver)
   private[this] val storeProvider = new StoreProvider.Mutable {
     override def runs: RunStore.Mutable = runStore
 
@@ -67,16 +67,20 @@ object MysqlStorage {
     "create table if not exists runs(" +
       "unused_id int not null auto_increment," +
       "id varchar(255) not null," +
-      "content blob not null," +
+      // Longblob is up to 4GB. We do not need so much space, but mediumblob is only up to 16Mb,
+      // which is not sufficient for runs with large results. The `max_allowed_packet` parameter
+      // of MySQL has to be set accordingly (but weirdly its maximum value is "only" 1GB).
+      "content longblob not null," +
       "primary key (unused_id)," +
       "UNIQUE KEY uix_id(id)" +
       ") ENGINE=InnoDB DEFAULT CHARSET=utf8",
+
     "create table if not exists workflows(" +
       "unused_id int not null auto_increment," +
       "id varchar(255) not null," +
       "version varchar(255) not null," +
       "is_active tinyint(1) not null," +
-      "content blob not null," +
+      "content mediumblob not null," + // Mediumblob is up to 16MB
       "primary key (unused_id)," +
       "UNIQUE KEY uix_id_version(id, version)" +
       ") ENGINE=InnoDB DEFAULT CHARSET=utf8")
