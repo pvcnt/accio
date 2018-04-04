@@ -82,7 +82,6 @@ final class LocalScheduler(
   statsReceiver.provideGauge("scheduler", "pending")(pending.size.toFloat)
   statsReceiver.provideGauge("scheduler", "running")(running.size.toFloat)
 
-
   override def submit(task: Task): Unit = {
     if (reserveResources(task.id, task.resource)) {
       val future = schedule(task)
@@ -128,9 +127,9 @@ final class LocalScheduler(
   }
 
   private def isEnoughResources(id: String, requests: Resource, resources: Resource): Boolean = {
-    val ok = requests.cpu <= resources.cpu &&
-      requests.ramMb <= resources.ramMb &&
-      requests.diskMb <= resources.diskMb
+    val ok = (requests.cpu == 0 || requests.cpu <= resources.cpu) &&
+      (requests.ramMb == 0 || requests.ramMb <= resources.ramMb) &&
+      (requests.diskMb == 0 || requests.diskMb <= resources.diskMb)
     if (ok) {
       true
     } else if (running.isEmpty && forceScheduling) {

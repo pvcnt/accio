@@ -33,6 +33,7 @@ scala_binary(
     "//accio/java/fr/cnrs/liris/locapriv/install",
     "//3rdparty/jvm/ch/qos/logback:logback_classic",
     "//3rdparty/jvm/com/twitter:finatra_thrift",
+    "//3rdparty/jvm/com/twitter:util_slf4j_api",
     "//3rdparty/jvm/com/google/guava",
   ],
   resource_strip_prefix = "accio/java",

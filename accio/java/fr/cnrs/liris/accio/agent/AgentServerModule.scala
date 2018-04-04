@@ -20,16 +20,18 @@ package fr.cnrs.liris.accio.agent
 
 import java.util.concurrent.Executors
 
-import com.google.common.eventbus.{AsyncEventBus, EventBus}
+import com.google.common.eventbus.{AsyncEventBus, EventBus, SubscriberExceptionContext, SubscriberExceptionHandler}
 import com.google.inject.{Provides, Singleton}
 import com.twitter.concurrent.NamedPoolThreadFactory
 import com.twitter.inject.{Injector, TwitterModule}
+import com.twitter.util.logging.Logger
 import fr.cnrs.liris.accio.api.OpRegistry
 import fr.cnrs.liris.accio.auth.AuthModule
 import fr.cnrs.liris.accio.config.ConfigModule
 import fr.cnrs.liris.accio.runtime.OpMeta
 import fr.cnrs.liris.accio.scheduler.inject.SchedulerModule
 import fr.cnrs.liris.accio.storage.install.StorageModule
+import org.slf4j.LoggerFactory
 
 object AgentServerModule extends TwitterModule {
   override def modules = Seq(
@@ -45,8 +47,19 @@ object AgentServerModule extends TwitterModule {
   @Provides
   @Singleton
   def providesEventBus(): EventBus = {
+    val logger = Logger(LoggerFactory.getLogger(classOf[EventBus].getName + ".default"))
+    val exceptionHandler = new SubscriberExceptionHandler {
+      override def handleException(exception: Throwable, context: SubscriberExceptionContext): Unit = {
+        if (logger.isErrorEnabled) {
+          val method = context.getSubscriberMethod
+          logger.error(s"Exception thrown by subscriber method " +
+            s"${context.getSubscriber.getClass.getName}::${method.getName}(${method.getParameterTypes.head.getName}) " +
+            s"when dispatching ${context.getEvent.getClass.getName}")
+        }
+      }
+    }
     val executor = Executors.newCachedThreadPool(new NamedPoolThreadFactory("eventbus"))
-    new AsyncEventBus(executor)
+    new AsyncEventBus(executor, exceptionHandler)
   }
 
   override def singletonStartup(injector: Injector): Unit = {
