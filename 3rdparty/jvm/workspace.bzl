@@ -82,6 +82,7 @@ def list_dependencies():
     {"artifact": "com.twitter:libthrift:0.5.0-7", "lang": "java", "sha1": "dc0124718b7d4baeb802fa960f51cd3f20d5fbda", "repository": "http://central.maven.org/maven2/", "name": "com_twitter_libthrift", "actual": "@com_twitter_libthrift//jar", "bind": "jar/com/twitter/libthrift"},
     {"artifact": "com.twitter:scrooge-core_2.11:18.3.0", "lang": "scala", "sha1": "d0ce18d26131187e5c60f133ab8ac8b535aa9ed1", "repository": "http://central.maven.org/maven2/", "name": "com_twitter_scrooge_core_2_11", "actual": "@com_twitter_scrooge_core_2_11//jar:file", "bind": "jar/com/twitter/scrooge_core_2_11"},
     {"artifact": "com.twitter:scrooge-generator_2.11:18.3.0", "lang": "scala", "sha1": "b767226e034d8b2761daa284b7a4ea3896ab98e8", "repository": "http://central.maven.org/maven2/", "name": "com_twitter_scrooge_generator_2_11", "actual": "@com_twitter_scrooge_generator_2_11//jar:file", "bind": "jar/com/twitter/scrooge_generator_2_11"},
+    {"artifact": "com.twitter:twitter-server-logback-classic_2.11:18.3.0", "lang": "scala", "sha1": "dffdb6ee7da17323fa191c67f6b2d45e9982294c", "repository": "http://central.maven.org/maven2/", "name": "com_twitter_twitter_server_logback_classic_2_11", "actual": "@com_twitter_twitter_server_logback_classic_2_11//jar:file", "bind": "jar/com/twitter/twitter_server_logback_classic_2_11"},
     {"artifact": "com.twitter:twitter-server_2.11:18.3.0", "lang": "scala", "sha1": "7ff3df7f193f623928440baef0415e4f31b150cd", "repository": "http://central.maven.org/maven2/", "name": "com_twitter_twitter_server_2_11", "actual": "@com_twitter_twitter_server_2_11//jar:file", "bind": "jar/com/twitter/twitter_server_2_11"},
     {"artifact": "com.twitter:util-app_2.11:18.3.0", "lang": "scala", "sha1": "a1d5807d11c5bc124379de21968ab8055adb1e67", "repository": "http://central.maven.org/maven2/", "name": "com_twitter_util_app_2_11", "actual": "@com_twitter_util_app_2_11//jar:file", "bind": "jar/com/twitter/util_app_2_11"},
     {"artifact": "com.twitter:util-cache_2.11:18.3.0", "lang": "java", "sha1": "99d645649762345752548c8b57875c672460d8d4", "repository": "http://central.maven.org/maven2/", "name": "com_twitter_util_cache_2_11", "actual": "@com_twitter_util_cache_2_11//jar", "bind": "jar/com/twitter/util_cache_2_11"},
@@ -170,6 +171,7 @@ def list_dependencies():
 # - com.twitter:inject-server_2.11:18.3.0 wanted version 2.11.11
 # - com.twitter:scrooge-core_2.11:18.3.0 wanted version 2.11.11
 # - com.twitter:scrooge-generator_2.11:18.3.0 wanted version 2.11.11
+# - com.twitter:twitter-server-logback-classic_2.11:18.3.0 wanted version 2.11.11
 # - com.twitter:util-app_2.11:18.3.0 wanted version 2.11.11
 # - com.twitter:util-codec_2.11:18.3.0 wanted version 2.11.11
 # - com.twitter:util-core_2.11:18.3.0 wanted version 2.11.11
@@ -196,6 +198,7 @@ def list_dependencies():
 # - ch.qos.logback:logback-classic:1.2.3 wanted version 1.7.25
 # - com.twitter:inject-slf4j_2.11:18.3.0 wanted version 1.7.21
 # - com.twitter:libthrift:0.5.0-7 wanted version 1.7.7
+# - com.twitter:twitter-server-logback-classic_2.11:18.3.0 wanted version 1.7.21
 # - com.twitter:util-slf4j-api_2.11:18.3.0 wanted version 1.7.21
 # - com.twitter:util-slf4j-jul-bridge_2.11:18.3.0 wanted version 1.7.21
 # - org.scalanlp:breeze_2.11:0.12 wanted version 1.7.5

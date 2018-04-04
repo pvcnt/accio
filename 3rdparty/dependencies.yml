@@ -52,6 +52,10 @@ dependencies:
       version: "18.3.0"
       lang: scala
       modules: [app, core, jvm, codec, stats, slf4j-api, slf4j-jul-bridge]
+    twitter-server:
+      version: "18.3.0"
+      lang: scala
+      modules: [logback-classic]
   ch.qos.logback:
     logback-classic:
       version: "1.2.3"

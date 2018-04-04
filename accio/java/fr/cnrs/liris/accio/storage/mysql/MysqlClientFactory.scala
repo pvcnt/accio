@@ -19,14 +19,19 @@
 package fr.cnrs.liris.accio.storage.mysql
 
 import com.twitter.conversions.time._
+import com.twitter.finagle._
 import com.twitter.finagle.client.DefaultPool
 import com.twitter.finagle.mysql.Client
 import com.twitter.finagle.service.{ReqRep, ResponseClass, ResponseClassifier}
-import com.twitter.finagle._
 import com.twitter.util.{Throw, TimeoutException => UtilTimeoutException}
 
+/**
+ * Factory for MySQL clients.
+ */
 private[storage] object MysqlClientFactory {
-  val responseClassifier: ResponseClassifier = ResponseClassifier.named("MysqlResponseClassifier") {
+  // As the MySQL database may be unreliable, we want to retry all errors that happen during reads
+  // and writes. It is safe for reads as they are idempotent, and "should" be safe for writes too.
+  private[this] val responseClassifier = ResponseClassifier.named("MysqlResponseClassifier") {
     case ReqRep(_, Throw(Failure(Some(_: TimeoutException)))) => ResponseClass.RetryableFailure
     case ReqRep(_, Throw(Failure(Some(_: UtilTimeoutException)))) => ResponseClass.RetryableFailure
     case ReqRep(_, Throw(_: TimeoutException)) => ResponseClass.RetryableFailure
@@ -37,12 +42,22 @@ private[storage] object MysqlClientFactory {
     case ReqRep(_, Throw(ChannelWriteException(Some(_: ChannelClosedException)))) => ResponseClass.RetryableFailure
   }
 
+  /**
+   * Create a new MySQL client.
+   *
+   * @param server   Address of the server.
+   * @param user     Username to authenticate with.
+   * @param password User's password (may be null if no password).
+   * @param database Name of the database to use.
+   */
   def apply(server: String, user: String, password: String, database: String): Client = {
     Mysql.client
       .withCredentials(user, password)
       .withDatabase(database)
+      // Disable fail fast and failure accrual, as we (likely) only have a single MySQL server.
       .withSessionQualifier.noFailFast
       .withSessionQualifier.noFailureAccrual
+      // Inject our custom response classifier marking some failures as retryable.
       .withResponseClassifier(responseClassifier)
       .configured(DefaultPool.Param(
         low = 0,

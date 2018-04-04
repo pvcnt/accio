@@ -40,4 +40,8 @@ class AgentServer extends ThriftServer {
       .filter[ExceptionMappingFilter]
       .add[AgentServiceController]
   }
+
+  override def warmup(): Unit = {
+    handle[AgentWarmupHandler]()
+  }
 }
