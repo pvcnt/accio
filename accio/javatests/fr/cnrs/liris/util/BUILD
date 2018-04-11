@@ -22,6 +22,7 @@ scala_test(
       "//3rdparty/jvm/com/google/guava",
   ],
   srcs = glob(["*.scala"]),
+  size = "small",
   resources = ["ResourceFileLoaderSpec.message"],
   resource_strip_prefix = "accio/javatests",
 )

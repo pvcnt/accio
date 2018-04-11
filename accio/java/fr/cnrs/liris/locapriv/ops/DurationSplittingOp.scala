@@ -25,19 +25,20 @@ import fr.cnrs.liris.locapriv.model.{Event, Trace}
 @Op(
   category = "transform",
   help = "Split traces, ensuring a maximum duration for each one.",
-  cpu = 4,
+  cpus = 4,
   ram = "2G")
-class DurationSplittingOp extends Operator[DurationSplittingIn, DurationSplittingOut] with SlidingSplitting with SparkleOperator {
-  override def execute(in: DurationSplittingIn, ctx: OpContext): DurationSplittingOut = {
-    val split = (buffer: Seq[Event], curr: Event) => (buffer.head.time to curr.time).duration >= in.duration
-    val output = read[Trace](in.data).flatMap(transform(_, split))
+case class DurationSplittingOp(
+  @Arg(help = "Maximum duration of each trace") duration: org.joda.time.Duration,
+  @Arg(help = "Input dataset") data: Dataset)
+  extends ScalaOperator[DurationSplittingOut] with SlidingSplitting with SparkleOperator {
+
+  override def execute(ctx: OpContext): DurationSplittingOut = {
+    val split = (buffer: Seq[Event], curr: Event) => (buffer.head.time to curr.time).duration >= duration
+    val output = read[Trace](data).flatMap(transform(_, split))
     DurationSplittingOut(write(output, ctx))
   }
 }
 
-case class DurationSplittingIn(
-  @Arg(help = "Maximum duration of each trace") duration: org.joda.time.Duration,
-  @Arg(help = "Input dataset") data: Dataset)
-
 case class DurationSplittingOut(
-  @Arg(help = "Output dataset") data: Dataset)
+  @Arg(help = "Output dataset")
+  data: Dataset)

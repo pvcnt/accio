@@ -59,10 +59,6 @@ dependencies:
     logback-core:
       version: "1.2.3"
       lang: java
-  org.scala-lang:
-    scalap:
-      version: "2.11.12"
-      lang: scala/unmangled
   org.apache.commons:
     commons-math3:
       version: "3.6.1"

@@ -38,7 +38,7 @@ object AccioJacksonModule extends SimpleModule {
   addSerializer(new ScroogeStructSerializer[Package](Package))
   addSerializer(new ScroogeStructSerializer[NodeStatus](NodeStatus))
   addSerializer(new ScroogeStructSerializer[Artifact](Artifact))
-  addSerializer(new ScroogeStructSerializer[Metric](Metric))
+  addSerializer(new ScroogeStructSerializer[MetricValue](MetricValue))
   addSerializer(new ScroogeStructSerializer[OpResult](OpResult))
   addSerializer(new ScroogeStructSerializer[Workflow](Workflow))
   addSerializer(new ScroogeStructSerializer[Node](Node))
@@ -49,7 +49,6 @@ object AccioJacksonModule extends SimpleModule {
   addSerializer(new ScroogeStructSerializer[ArgDef](ArgDef))
   addSerializer(new ScroogeStructSerializer[OpDef](OpDef))
   addSerializer(new ScroogeStructSerializer[Resource](Resource))
-  addSerializer(new ScroogeWrappedStructSerializer[Graph](Graph))
 
   addSerializer(new ScroogeUnionSerializer[Input](Input))
 
@@ -76,18 +75,6 @@ private class ScroogeStructSerializer[T <: ThriftStruct with Product : ClassTag]
       }
     }
     jsonGenerator.writeEndObject()
-  }
-}
-
-private class ScroogeWrappedStructSerializer[T <: ThriftStruct : ClassTag](codec: ThriftStructCodec[T]) extends StdSerializer[T](classTag[T].runtimeClass.asInstanceOf[Class[T]]) {
-  override def serialize(t: T, jsonGenerator: JsonGenerator, serializerProvider: SerializerProvider): Unit = {
-    val fieldInfo = codec.metaData.fieldInfos.head
-    val rawValue = _handledType.getMethod(fieldInfo.tfield.name).invoke(t)
-    rawValue match {
-      case None =>
-      case Some(v) => jsonGenerator.writeObject(v)
-      case _ => jsonGenerator.writeObject(rawValue)
-    }
   }
 }
 

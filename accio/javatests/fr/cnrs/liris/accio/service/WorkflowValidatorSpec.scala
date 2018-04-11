@@ -42,7 +42,7 @@ class WorkflowValidatorSpec extends UnitSpec {
         thrift.ArgDef("foo", thrift.DataType(thrift.AtomicType.Integer)),
         thrift.ArgDef("bar", thrift.DataType(thrift.AtomicType.Double))
       ),
-      graph = thrift.Graph(Seq(
+      nodes = Seq(
         thrift.Node(
           op = "FirstSimple",
           name = "FirstSimple",
@@ -52,7 +52,7 @@ class WorkflowValidatorSpec extends UnitSpec {
           name = "SecondSimple",
           inputs = Map(
             "dbl" -> thrift.Input.Param("bar"),
-            "data" -> thrift.Input.Reference(thrift.Reference("FirstSimple", "data")))))))
+            "data" -> thrift.Input.Reference(thrift.Reference("FirstSimple", "data"))))))
     val res = validator.validate(Workflow.fromThrift(struct))
     res.isValid shouldBe false
     res.errors should contain theSameElementsAs Set(FieldViolation("Invalid workflow name: workflow!id (should match [a-zA-Z][a-zA-Z0-9_.-]+)", "name"))
@@ -62,7 +62,7 @@ class WorkflowValidatorSpec extends UnitSpec {
     val struct = thrift.Workflow(
       id = "invalid_workflow",
       params = Seq(thrift.ArgDef("foo", thrift.DataType(thrift.AtomicType.Distance))),
-      graph = thrift.Graph(Seq(
+      nodes = Seq(
         thrift.Node(
           op = "FirstSimple",
           name = "FirstSimple",
@@ -72,7 +72,7 @@ class WorkflowValidatorSpec extends UnitSpec {
           name = "SecondSimple",
           inputs = Map(
             "dbl" -> thrift.Input.Param("foo"),
-            "data" -> thrift.Input.Reference(thrift.Reference("FirstSimple", "data")))))))
+            "data" -> thrift.Input.Reference(thrift.Reference("FirstSimple", "data"))))))
     val res = validator.validate(Workflow.fromThrift(struct))
     res.isValid shouldBe false
     res.errors should contain theSameElementsAs Set(
@@ -84,11 +84,11 @@ class WorkflowValidatorSpec extends UnitSpec {
     val struct = thrift.Workflow(
       id = "invalid_workflow",
       params = Seq(thrift.ArgDef("foo", thrift.DataType(thrift.AtomicType.Integer), defaultValue = Some(Values.encodeString("barbar")))),
-      graph = thrift.Graph(Seq(
+      nodes = Seq(
         thrift.Node(
           op = "FirstSimple",
           name = "FirstSimple",
-          inputs = Map("foo" -> thrift.Input.Param("foo"))))))
+          inputs = Map("foo" -> thrift.Input.Param("foo")))))
     val res = validator.validate(Workflow.fromThrift(struct))
     res.isValid shouldBe false
     res.errors should contain theSameElementsAs Set(FieldViolation("Data type mismatch: requires integer, got string", "params.0.defaultValue"))
@@ -100,11 +100,11 @@ class WorkflowValidatorSpec extends UnitSpec {
       params = Seq(
         thrift.ArgDef("foo/foo", thrift.DataType(thrift.AtomicType.Integer))
       ),
-      graph = thrift.Graph(Seq(
+      nodes = Seq(
         thrift.Node(
           op = "FirstSimple",
           name = "FirstSimple",
-          inputs = Map("foo" -> thrift.Input.Param("foo/foo"))))))
+          inputs = Map("foo" -> thrift.Input.Param("foo/foo")))))
     val res = validator.validate(Workflow.fromThrift(struct))
     res.isValid shouldBe false
     res.errors should contain theSameElementsAs Set(FieldViolation("Invalid param name: foo/foo (should match [a-z][a-zA-Z0-9_]+)", "params.0.name"))
@@ -113,11 +113,11 @@ class WorkflowValidatorSpec extends UnitSpec {
   it should "detect undeclared param" in {
     val struct = thrift.Workflow(
       id = "invalid_workflow",
-      graph = thrift.Graph(Seq(
+      nodes = Seq(
         thrift.Node(
           op = "FirstSimple",
           name = "FirstSimple",
-          inputs = Map("foo" -> thrift.Input.Param("undeclared"))))))
+          inputs = Map("foo" -> thrift.Input.Param("undeclared")))))
     val res = validator.validate(Workflow.fromThrift(struct))
     res.isValid shouldBe false
     res.errors should contain theSameElementsAs Set(FieldViolation("Unknown param: undeclared", "graph.0.inputs.foo"))

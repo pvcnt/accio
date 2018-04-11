@@ -18,4 +18,10 @@
 
 package fr.cnrs.liris.accio.api
 
-case class TaskStartedEvent(runId: String, nodeName: String)
+import fr.cnrs.liris.accio.api.thrift.OpResult
+
+case class RunCreatedEvent(runId: String, children: Seq[String])
+
+case class ProcessStartedEvent(runId: String, nodeName: String)
+
+case class ProcessCompletedEvent(runId: String, nodeName: String, result: OpResult)

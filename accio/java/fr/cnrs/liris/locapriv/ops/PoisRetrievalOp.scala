@@ -27,20 +27,29 @@ import org.joda.time.Duration
 @Op(
   category = "metric",
   help = "Compute POIs retrieval difference between two POIs datasets",
-  cpu = 2,
+  cpus = 2,
   ram = "1G")
-class PoisRetrievalOp extends Operator[PoisRetrievalIn, PoisRetrievalOut] with SparkleOperator {
-  override def execute(in: PoisRetrievalIn, ctx: OpContext): PoisRetrievalOut = {
-    val train = read[PoiSet](in.train)
-    val test = read[PoiSet](in.test)
-    val metrics = train.zip(test).map { case (ref, res) => evaluate(ref, res, in.threshold, in.overlap) }.toArray
+case class PoisRetrievalOp(
+  @Arg(help = "Maximum distance between two POIs to consider they match")
+  threshold: Distance,
+  @Arg(help = "Minimum overlap between two POIs to consider they match")
+  overlap: Option[Duration],
+  @Arg(help = "Train dataset (POIs)")
+  train: Dataset,
+  @Arg(help = "Test dataset (POIs)")
+  test: Dataset)
+  extends ScalaOperator[PoisRetrievalOut] with SparkleOperator {
+  override def execute(ctx: OpContext): PoisRetrievalOut = {
+    val trainDs = read[PoiSet](train)
+    val testDs = read[PoiSet](test)
+    val metrics = trainDs.zip(testDs).map { case (ref, res) => evaluate(ref, res) }.toArray
     PoisRetrievalOut(
       precision = metrics.map { case (k, v) => k -> v._1 }.toMap,
       recall = metrics.map { case (k, v) => k -> v._2 }.toMap,
       fscore = metrics.map { case (k, v) => k -> v._3 }.toMap)
   }
 
-  private def evaluate(ref: PoiSet, res: PoiSet, threshold: Distance, overlap: Option[Duration]) = {
+  private def evaluate(ref: PoiSet, res: PoiSet) = {
     requireState(ref.id == res.id, s"Trace mismatch: ${ref.id} / ${res.id}")
     val matched = res.pois.flatMap(resPoi => remap(resPoi, ref.pois, threshold, overlap)).distinct.size
     ref.id -> (MetricUtils.precision(res.size, matched), MetricUtils.recall(ref.size, matched), MetricUtils.fscore(ref.size, res.size, matched))
@@ -72,13 +81,10 @@ class PoisRetrievalOp extends Operator[PoisRetrievalIn, PoisRetrievalOut] with S
   }
 }
 
-case class PoisRetrievalIn(
-  @Arg(help = "Maximum distance between two POIs to consider they match") threshold: Distance,
-  @Arg(help = "Minimum overlap between two POIs to consider they match") overlap: Option[Duration],
-  @Arg(help = "Train dataset (POIs)") train: Dataset,
-  @Arg(help = "Test dataset (POIs)") test: Dataset)
-
 case class PoisRetrievalOut(
-  @Arg(help = "POIs retrieval precision") precision: Map[String, Double],
-  @Arg(help = "POIs retrieval recall") recall: Map[String, Double],
-  @Arg(help = "POIs retrieval F-Score") fscore: Map[String, Double])
+  @Arg(help = "POIs retrieval precision")
+  precision: Map[String, Double],
+  @Arg(help = "POIs retrieval recall")
+  recall: Map[String, Double],
+  @Arg(help = "POIs retrieval F-Score")
+  fscore: Map[String, Double])

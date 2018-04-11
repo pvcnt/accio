@@ -32,14 +32,23 @@ import org.joda.time.{Duration, Interval}
   category = "metric",
   help = "Evaluate count query distortion between to datasets.",
   unstable = true,
-  cpu = 2,
+  cpus = 2,
   ram = "1G")
-class CountQueriesDistortionOp extends Operator[CountQueriesDistortionIn, CountQueriesDistortionOut] with SparkleOperator {
-  override def execute(in: CountQueriesDistortionIn, ctx: OpContext): CountQueriesDistortionOut = {
-    val trainDs = read[Trace](in.train)
-    val testDs = read[Trace](in.test)
-    val generator = new CountQueryGenerator(trainDs, ctx.seed, in.minSize, in.maxSize, in.minDuration, in.maxDuration)
-    val queries = generator.generate(in.n)
+case class CountQueriesDistortionOp(
+  @Arg(help = "Number of queries to generate") n: Int = 1000,
+  @Arg(help = "Minimum size of the generated queries' geographical area") minSize: Distance = Distance.meters(500),
+  @Arg(help = "Maximum size of the generated queries' geographical area") maxSize: Distance = Distance.kilometers(2),
+  @Arg(help = "Minimum duration of the generated queries' temporal window") minDuration: Duration = Duration.standardHours(2),
+  @Arg(help = "Maximum duration of the generated queries' temporal window") maxDuration: Duration = Duration.standardHours(4),
+  @Arg(help = "Train dataset") train: Dataset,
+  @Arg(help = "Test dataset") test: Dataset)
+  extends ScalaOperator[CountQueriesDistortionOut] with SparkleOperator {
+
+  override def execute(ctx: OpContext): CountQueriesDistortionOut = {
+    val trainDs = read[Trace](train)
+    val testDs = read[Trace](test)
+    val generator = new CountQueryGenerator(trainDs, ctx.seed, minSize, maxSize, minDuration, maxDuration)
+    val queries = generator.generate(n)
     val refCounts = queries.count(trainDs)
     val resCounts = queries.count(testDs)
     val values = refCounts.indices.map(i => compute(refCounts(i), resCounts(i)))
@@ -51,15 +60,6 @@ class CountQueriesDistortionOp extends Operator[CountQueriesDistortionIn, CountQ
     else Math.abs(refCount - resCount).toDouble / refCount
   }
 }
-
-case class CountQueriesDistortionIn(
-  @Arg(help = "Number of queries to generate") n: Int = 1000,
-  @Arg(help = "Minimum size of the generated queries' geographical area") minSize: Distance = Distance.meters(500),
-  @Arg(help = "Maximum size of the generated queries' geographical area") maxSize: Distance = Distance.kilometers(2),
-  @Arg(help = "Minimum duration of the generated queries' temporal window") minDuration: Duration = Duration.standardHours(2),
-  @Arg(help = "Maximum duration of the generated queries' temporal window") maxDuration: Duration = Duration.standardHours(4),
-  @Arg(help = "Train dataset") train: Dataset,
-  @Arg(help = "Test dataset") test: Dataset)
 
 case class CountQueriesDistortionOut(
   @Arg(help = "Count query distortion") value: Seq[Double])
@@ -130,10 +130,6 @@ private class CountQueryGenerator(data: DataFrame[Trace], seed: Long, minSize: D
   private[this] val rnd = new RandomDataGenerator()
   rnd.reSeed(seed)
 
-  /**
-   *
-   * @return
-   */
   def generate(): CountQuery = generate(1).queries.head
 
   def generate(nb: Int): CountQuerySeq = {

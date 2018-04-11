@@ -55,7 +55,7 @@ final class WorkflowParser {
       id = id,
       name = json.name,
       owner = owner,
-      graph = thrift.Graph(nodes),
+      nodes = nodes,
       params = params)
   }
 

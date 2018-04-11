@@ -16,22 +16,30 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.testing
+package fr.cnrs.liris.util.reflect
 
-import fr.cnrs.liris.locapriv.sparkle.SparkleEnv
-import org.scalatest.{BeforeAndAfter, BeforeAndAfterEach, FlatSpec}
+import javax.annotation.{CheckReturnValue, Nullable}
 
-trait WithSparkleEnv extends FlatSpec with BeforeAndAfterEach {
-  protected var env: SparkleEnv = null
+class PlainClass(i: Int)
 
-  override protected def beforeEach() = {
-    super.beforeEach()
-    env = new SparkleEnv(1)
-  }
+class CaseClassContainer(str: String) {
 
-  override protected def afterEach() ={
-    super.afterEach()
-    env.stop()
-    env = null
-  }
+  case class InvalidCaseClass(i: Int)
+
 }
+
+object CaseClassContainer {
+
+  case class ValidCaseClass(i: Int)
+
+}
+
+case class MultipleConstructorCaseClass(i: Int) {
+  def this(s: String) = this(s.toInt)
+}
+
+
+@CheckReturnValue
+case class TestCaseClass(i: Option[Int], @Nullable j: Double, s: String = "foobar")
+
+case class ParametrizedType[T](obj: T)

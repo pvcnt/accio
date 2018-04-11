@@ -27,13 +27,19 @@ import org.joda.time.Instant
 @Op(
   category = "metric",
   help = "Compute temporal distortion difference between two datasets of traces",
-  cpu = 3,
+  cpus = 3,
   ram = "6G")
-class SpatioTemporalDistortionOp extends Operator[SpatioTemporalDistortionIn, SpatioTemporalDistortionOut] with SparkleOperator {
-  override def execute(in: SpatioTemporalDistortionIn, ctx: OpContext): SpatioTemporalDistortionOut = {
-    val train = read[Trace](in.train)
-    val test = read[Trace](in.test)
-    val metrics = train.zip(test).map { case (ref, res) => evaluate(ref, res) }.toArray
+case class SpatioTemporalDistortionOp(
+  @Arg(help = "Train dataset")
+  train: Dataset,
+  @Arg(help = "Test dataset")
+  test: Dataset)
+  extends ScalaOperator[SpatioTemporalDistortionOut] with SparkleOperator {
+
+  override def execute(ctx: OpContext): SpatioTemporalDistortionOut = {
+    val trainDs = read[Trace](train)
+    val testDs = read[Trace](test)
+    val metrics = trainDs.zip(testDs).map { case (ref, res) => evaluate(ref, res) }.toArray
     SpatioTemporalDistortionOut(
       min = metrics.map { case (k, v) => k -> v.min }.toMap,
       max = metrics.map { case (k, v) => k -> v.max }.toMap,
@@ -72,13 +78,14 @@ class SpatioTemporalDistortionOp extends Operator[SpatioTemporalDistortionIn, Sp
   }
 }
 
-case class SpatioTemporalDistortionIn(
-  @Arg(help = "Train dataset") train: Dataset,
-  @Arg(help = "Test dataset") test: Dataset)
-
 case class SpatioTemporalDistortionOut(
-  @Arg(help = "Temporal distortion min") min: Map[String, Double],
-  @Arg(help = "Temporal distortion max") max: Map[String, Double],
-  @Arg(help = "Temporal distortion stddev") stddev: Map[String, Double],
-  @Arg(help = "Temporal distortion avg") avg: Map[String, Double],
-  @Arg(help = "Temporal distortion median") median: Map[String, Double])
+  @Arg(help = "Temporal distortion min")
+  min: Map[String, Double],
+  @Arg(help = "Temporal distortion max")
+  max: Map[String, Double],
+  @Arg(help = "Temporal distortion stddev")
+  stddev: Map[String, Double],
+  @Arg(help = "Temporal distortion avg")
+  avg: Map[String, Double],
+  @Arg(help = "Temporal distortion median")
+  median: Map[String, Double])

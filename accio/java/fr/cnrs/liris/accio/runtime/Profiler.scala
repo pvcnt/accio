@@ -22,14 +22,12 @@ import java.lang.management.ManagementFactory
 import java.util.concurrent.atomic.AtomicLong
 
 import com.twitter.util.{Duration, StorageUnit}
-import fr.cnrs.liris.accio.api.thrift.Metric
+import fr.cnrs.liris.accio.api.thrift.MetricValue
 
 import scala.collection.JavaConverters._
 
 /**
- * Profile the execution of parts of code. These metrics will be included as part of the
- * [[fr.cnrs.liris.accio.api.thrift.OpResult]] structure. It means they should respect the reproducibility principle,
- * and not include anything that would be context-specific (such as started/completed times).
+ * Profile the execution of parts of code.
  */
 trait Profiler {
   /**
@@ -46,7 +44,7 @@ trait Profiler {
    * Return the current metrics computed during the execution of profiled sections of code. They are *not* flushed
    * when calling this method.
    */
-  def metrics: Set[Metric]
+  def metrics: Seq[MetricValue]
 }
 
 /**
@@ -55,14 +53,14 @@ trait Profiler {
 object NullProfiler extends Profiler {
   override def profile[T](f: => T): T = f
 
-  override def metrics: Set[Metric] = Set.empty
+  override def metrics: Seq[MetricValue] = Seq.empty
 }
 
 /**
  * Profiler measuring JVM-related metrics. Note: Memory-related metrics may not be entirely accurate, as there is no
  * way to isolate them on only a specific portion of code. They are computed for the entire JVM process.
  */
-class JvmProfiler extends Profiler {
+final class JvmProfiler extends Profiler {
   private[this] val _wallTime = new AtomicLong(0)
   private[this] val _cpuTime = new AtomicLong(0)
   private[this] val _userTime = new AtomicLong(0)
@@ -90,14 +88,13 @@ class JvmProfiler extends Profiler {
     }
   }
 
-  override def metrics: Set[Metric] = {
-    Set(
-      Metric("memory_used_bytes", memoryUsed.inBytes),
-      Metric("memory_reserved_bytes", memoryReserved.inBytes),
-      Metric("cpu_time_millis", cpuTime.inMillis),
-      Metric("user_time_millis", userTime.inMillis),
-      Metric("wall_time_millis", wallTime.inMillis))
-  }
+  override def metrics: Seq[MetricValue] =
+    Seq(
+      MetricValue("memoryUsed", memoryUsed.inBytes, Some("bytes")),
+      MetricValue("memoryReserved", memoryReserved.inBytes, Some("bytes")),
+      MetricValue("cpuTime", cpuTime.inMillis, Some("millis")),
+      MetricValue("userTime", userTime.inMillis, Some("millis")),
+      MetricValue("wallTime", wallTime.inMillis, Some("millis")))
 
   /**
    * Return total wall-time.

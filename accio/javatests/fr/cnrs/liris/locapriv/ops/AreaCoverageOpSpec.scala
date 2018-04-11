@@ -30,7 +30,7 @@ import scala.util.Random
 /**
  * Unit tests for [[AreaCoverageOp]].
  */
-class AreaCoverageOpSpec extends UnitSpec with WithTraceGenerator with OperatorSpec {
+class AreaCoverageOpSpec extends UnitSpec with WithTraceGenerator with ScalaOperatorSpec {
   private[this] val eps = 1E-9
 
   behavior of "AreaCoverageOp"
@@ -121,6 +121,6 @@ class AreaCoverageOpSpec extends UnitSpec with WithTraceGenerator with OperatorS
   private def execute(train: Seq[Trace], test: Seq[Trace], level: Int, bucketSize: Option[Duration]) = {
     val trainDs = writeTraces(train: _*)
     val testDs = writeTraces(test: _*)
-    new AreaCoverageOp().execute(AreaCoverageIn(train = trainDs, test = testDs, level = level, width = bucketSize), ctx)
+    AreaCoverageOp(train = trainDs, test = testDs, level = level, width = bucketSize).execute(ctx)
   }
 }

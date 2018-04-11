@@ -30,15 +30,29 @@ import scala.collection.immutable
 @Op(
   category = "metric",
   help = "Re-identification attack using mobility Markov chains.",
-  cpu = 6,
+  cpus = 6,
   ram = "3G")
-class MmcReidentOp extends Operator[MmcReidentIn, MmcReidentOut] with SparkleOperator {
-  override def execute(in: MmcReidentIn, ctx: OpContext): MmcReidentOut = {
-    val dstrain = read[Trace](in.train)
-    val dstest = read[Trace](in.test)
+case class MmcReidentOp(
+  @Arg(help = "Input train dataset")
+  train: Dataset,
+  @Arg(help = "Input test dataset")
+  test: Dataset,
+  @Arg(help = "Clustering parameter : minimum points in a cluster")
+  minPts: Int = 10,
+  @Arg(help = "Clustering parameter : maximum size cluster")
+  diameter: Distance = new Distance(3000),
+  @Arg(help = "Clustering parameter : maximum cluster duration")
+  duration: Duration = new Duration(3600),
+  @Arg(help = "Attack")
+  attack: String = "gambs")
+extends ScalaOperator[MmcReidentOut] with SparkleOperator {
+  override def execute(ctx: OpContext): MmcReidentOut = {
+    val dstrain = read[Trace](train)
+    val dstest = read[Trace](test)
 
-    val mapPOisTrain = formPOIs(dstrain, in.minPts, in.diameter, in.duration)
-    val mapPOisTest = formPOIs(dstest, in.minPts, in.diameter, in.duration)
+    val mapPOisTrain = formPOIs(dstrain)
+    val mapPOisTest = formPOIs(dstest)
+
     // form MMC transition matrices
     val mapMMCTrain = formMMCMap(dstrain, mapPOisTrain)
     val mapMMCTest = formMMCMap(dstest, mapPOisTest)
@@ -118,9 +132,9 @@ class MmcReidentOp extends Operator[MmcReidentIn, MmcReidentOut] with SparkleOpe
     if (score > 0) 1.0 / score.toDouble else 100000
   }
 
-  private def formPOIs(ds: DataFrame[Trace], minPts: Int, epsilon: Distance, duration: Duration): Map[String, Seq[Cluster]] = {
+  private def formPOIs(ds: DataFrame[Trace]): Map[String, Seq[Cluster]] = {
     var mmcMapPOisTrain = Map[String, Seq[Cluster]]()
-    val clusterMachine = new PoisClusterer(duration, epsilon, minPts)
+    val clusterMachine = new PoisClusterer(duration, diameter, minPts)
     ds.foreach { t =>
       val poiSet = clusterMachine.clusterKeepCluster(t.events)
       if (poiSet.nonEmpty) synchronized(mmcMapPOisTrain += (t.user -> poiSet))
@@ -171,22 +185,10 @@ class MmcReidentOp extends Operator[MmcReidentIn, MmcReidentOut] with SparkleOpe
   }
 }
 
-case class MmcReidentIn(
-  @Arg(help = "Input train dataset")
-  train: Dataset,
-  @Arg(help = "Input test dataset")
-  test: Dataset,
-  @Arg(help = "Clustering parameter : minimum points in a cluster")
-  minPts: Int = 10,
-  @Arg(help = "Clustering parameter : maximum size cluster")
-  diameter: Distance = new Distance(3000),
-  @Arg(help = "Clustering parameter : maximum cluster duration")
-  duration: Duration = new Duration(3600),
-  @Arg(help = "Attack")
-  attack: String = "gambs")
-
 case class MmcReidentOut(
-  @Arg(help = "Matches between users") matches: immutable.Map[String, String],
-  @Arg(help = "Re-Ident rate") rate: Double)
+  @Arg(help = "Matches between users")
+  matches: immutable.Map[String, String],
+  @Arg(help = "Re-Ident rate")
+  rate: Double)
 
 

@@ -27,7 +27,7 @@ import fr.cnrs.liris.accio.api.Values.instantOrdering
 /**
  * Unit tests for [[CollapseTemporalGapsOp]].
  */
-class CollapseTemporalGapsOpSpec extends UnitSpec with OperatorSpec with WithTraceGenerator {
+class CollapseTemporalGapsOpSpec extends UnitSpec with ScalaOperatorSpec with WithTraceGenerator {
   behavior of "CollapseTemporalGapsOp"
 
   it should "collapse temporal gaps" in {
@@ -49,7 +49,7 @@ class CollapseTemporalGapsOpSpec extends UnitSpec with OperatorSpec with WithTra
 
   private def execute(startAt: Instant, traces: Seq[Trace]) = {
     val ds = writeTraces(traces: _*)
-    val res = new CollapseTemporalGapsOp().execute(CollapseTemporalGapsIn(startAt, ds), ctx)
+    val res = CollapseTemporalGapsOp(startAt, ds).execute(ctx)
     readTraces(res.data)
   }
 }

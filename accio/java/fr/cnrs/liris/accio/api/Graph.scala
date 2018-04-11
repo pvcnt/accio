@@ -63,7 +63,7 @@ case class Graph private[accio](nodes: Seq[Node] = Seq.empty) {
   /**
    * Convert this graph into an equivalent Thrift structure.
    */
-  def toThrift: thrift.Graph = thrift.Graph(nodes.map(_.toThrift))
+  def toThrift: Seq[thrift.Node] = nodes.map(_.toThrift)
 }
 
 /**
@@ -76,9 +76,9 @@ object Graph {
    *
    * @param struct Graph, as a Thrift structure.
    */
-  def fromThrift(struct: thrift.Graph): Graph = {
+  def fromThrift(struct: Seq[thrift.Node]): Graph = {
     // First create the nodes without specifying any output.
-    val nodes = struct.nodes.map(nodeDef => nodeDef.name -> Node.fromThrift(nodeDef))
+    val nodes = struct.map(nodeDef => nodeDef.name -> Node.fromThrift(nodeDef))
 
     // We now connect nodes together. Input dependencies are already defined when creating the node, we only have to
     // wire output dependencies correctly.

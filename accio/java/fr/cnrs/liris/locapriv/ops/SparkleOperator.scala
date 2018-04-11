@@ -20,7 +20,7 @@ package fr.cnrs.liris.locapriv.ops
 
 import java.nio.file.Files
 
-import fr.cnrs.liris.accio.sdk.{Dataset, OpContext, Operator}
+import fr.cnrs.liris.accio.sdk.{Dataset, OpContext, ScalaOperator}
 import fr.cnrs.liris.util.Identified
 import fr.cnrs.liris.locapriv.io._
 import fr.cnrs.liris.locapriv.sparkle.{DataFrame, SparkleEnv}
@@ -29,7 +29,7 @@ import fr.cnrs.liris.locapriv.io.{CsvEventCodec, CsvPoiCodec, CsvPoiSetCodec, Tr
 import scala.reflect.{ClassTag, classTag}
 
 trait SparkleOperator {
-  this: Operator[_, _] =>
+  this: ScalaOperator[_] =>
 
   // Create a Sparkle environment using the numProcs' flag to limit parallelism.
   // It is a poor-man's way to isolate execution in terms of CPU usage.

@@ -27,18 +27,23 @@ import fr.cnrs.liris.locapriv.model.{Event, Trace}
   category = "transform",
   help = "Apply gaussian kernel smoothing on traces.",
   description = "Apply gaussian kernel smoothing on a trace, attenuating the impact of noisy observations.",
-  cpu = 4,
+  cpus = 4,
   ram = "2G")
-class GaussianKernelSmoothingOp extends Operator[GaussianKernelSmoothingIn, GaussianKernelSmoothingOut] with SparkleOperator {
-  override def execute(in: GaussianKernelSmoothingIn, ctx: OpContext): GaussianKernelSmoothingOut = {
-    val data = read[Trace](in.data)
-    val output = write(data.map(transform(_, in.omega)), ctx)
+case class GaussianKernelSmoothingOp(
+  @Arg(help = "Bandwidth")
+  omega: Duration,
+  @Arg(help = "Input dataset")
+  data: Dataset)
+  extends ScalaOperator[GaussianKernelSmoothingOut] with SparkleOperator {
+
+  override def execute(ctx: OpContext): GaussianKernelSmoothingOut = {
+    val output = write(read[Trace](data).map(transform), ctx)
     GaussianKernelSmoothingOut(output)
   }
 
-  private def transform(trace: Trace, omega: Duration): Trace = trace.replace(_.map(transform(_, trace, omega)))
+  private def transform(trace: Trace): Trace = trace.replace(_.map(transform(_, trace)))
 
-  private def transform(event: Event, trace: Trace, omega: Duration) = {
+  private def transform(event: Event, trace: Trace) = {
     var ks = 0d
     var x = 0d
     var y = 0d
@@ -56,9 +61,5 @@ class GaussianKernelSmoothingOp extends Operator[GaussianKernelSmoothingIn, Gaus
   private def gaussianKernel(t1: Long, t2: Long, omega: Duration): Double =
     Math.exp(-Math.pow(t1 - t2, 2) / (2 * omega.millis * omega.millis))
 }
-
-case class GaussianKernelSmoothingIn(
-  @Arg(help = "Bandwidth") omega: org.joda.time.Duration,
-  @Arg(help = "Input dataset") data: Dataset)
 
 case class GaussianKernelSmoothingOut(@Arg(help = "Output dataset") data: Dataset)

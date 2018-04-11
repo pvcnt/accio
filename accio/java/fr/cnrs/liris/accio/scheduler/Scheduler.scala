@@ -18,10 +18,8 @@
 
 package fr.cnrs.liris.accio.scheduler
 
-import fr.cnrs.liris.accio.api.thrift.Task
-
 trait Scheduler {
-  def submit(task: Task): Unit
+  def submit(process: Process): Unit
 
   def kill(id: String): Boolean
 

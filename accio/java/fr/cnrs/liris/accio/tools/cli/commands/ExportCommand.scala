@@ -23,7 +23,7 @@ import java.util.UUID
 
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.agent.GetRunRequest
-import fr.cnrs.liris.accio.reporting._
+import fr.cnrs.liris.accio.report._
 import fr.cnrs.liris.accio.tools.cli.event.{Event, Reporter}
 import fr.cnrs.liris.util.{FileUtils, HashUtils, StringUtils}
 

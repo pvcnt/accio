@@ -26,5 +26,8 @@ scala_library(
     "//3rdparty/jvm/com/twitter:inject_core",
     "//3rdparty/jvm/com/twitter:util_slf4j_api",
   ],
+  exports = [
+    "//accio/java/fr/cnrs/liris/util/reflect",
+  ],
   visibility = ["//visibility:public"],
 )

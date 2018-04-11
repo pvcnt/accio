@@ -26,7 +26,7 @@ import fr.cnrs.liris.testing.UnitSpec
 /**
  * Unit tests for [[TemporalSamplingOp]].
  */
-class TemporalSamplingOpSpec extends UnitSpec with WithTraceGenerator with OperatorSpec {
+class TemporalSamplingOpSpec extends UnitSpec with WithTraceGenerator with ScalaOperatorSpec {
   behavior of "TemporalSamplingOp"
 
   it should "downsample traces" in {
@@ -65,7 +65,7 @@ class TemporalSamplingOpSpec extends UnitSpec with WithTraceGenerator with Opera
 
   private def transform(data: Seq[Trace], duration: Duration) = {
     val ds = writeTraces(data: _*)
-    val res = new TemporalSamplingOp().execute(TemporalSamplingIn(duration = duration, data = ds), ctx)
+    val res = TemporalSamplingOp(duration = duration, data = ds).execute(ctx)
     readTraces(res.data)
   }
 }

@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.reporting
+package fr.cnrs.liris.accio.report
 
 import java.nio.file.{Files, Path, StandardOpenOption}
 

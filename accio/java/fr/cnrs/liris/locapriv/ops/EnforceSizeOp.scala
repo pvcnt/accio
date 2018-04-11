@@ -25,16 +25,22 @@ import fr.cnrs.liris.locapriv.model.Trace
   category = "transform",
   help = "Enforce a given size on each trace.",
   description = "Larger traces will be truncated, smaller traces will be discarded.",
-  cpu = 4,
+  cpus = 4,
   ram = "2G")
-class EnforceSizeOp  extends Operator[EnforceSizeIn, EnforceSizeOut] with SparkleOperator {
-  override def execute(in: EnforceSizeIn, ctx: OpContext): EnforceSizeOut = {
-    val data = read[Trace](in.data)
-    val output = write(data.flatMap(transform(_, in.minSize, in.maxSize)), ctx)
+case class EnforceSizeOp(
+  @Arg(help = "Minimum number of events in each trace")
+  minSize: Option[Int],
+  @Arg(help = "Maximum number of events in each trace")
+  maxSize: Option[Int],
+  @Arg(help = "Input dataset") data: Dataset)
+  extends ScalaOperator[EnforceSizeOut] with SparkleOperator {
+
+  override def execute(ctx: OpContext): EnforceSizeOut = {
+    val output = write(read[Trace](data).flatMap(transform), ctx)
     EnforceSizeOut(output)
   }
 
-  private def transform(trace: Trace, minSize: Option[Int], maxSize: Option[Int]): Seq[Trace] = {
+  private def transform(trace: Trace): Seq[Trace] = {
     var res = trace
     maxSize.foreach { size =>
       if (res.size > size) {
@@ -47,11 +53,6 @@ class EnforceSizeOp  extends Operator[EnforceSizeIn, EnforceSizeOut] with Sparkl
     }
   }
 }
-
-case class EnforceSizeIn(
-  @Arg(help = "Minimum number of events in each trace") minSize: Option[Int],
-  @Arg(help = "Maximum number of events in each trace") maxSize: Option[Int],
-  @Arg(help = "Input dataset") data: Dataset)
 
 case class EnforceSizeOut(
   @Arg(help = "Output dataset") data: Dataset)

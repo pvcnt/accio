@@ -27,13 +27,17 @@ import org.joda.time.Instant
   category = "transform",
   help = "Collapse temporal gaps between days.",
   description = "Removes empty days by shifting data to fill those empty days.",
-  cpu = 4,
+  cpus = 4,
   ram = "2G")
-class CollapseTemporalGapsOp extends Operator[CollapseTemporalGapsIn, CollapseTemporalGapsOut] with SparkleOperator {
-  override def execute(in: CollapseTemporalGapsIn, ctx: OpContext): CollapseTemporalGapsOut = {
-    val startAt = new Instant(in.startAt.millis).toDateTime(DateTimeZone.UTC).withTimeAtStartOfDay
-    val input = read[Trace](in.data)
-    val output = write(input.map(transform(_, startAt)), ctx)
+case class CollapseTemporalGapsOp(
+  @Arg(help = "Start date for all traces") startAt: Instant,
+  @Arg(help = "Input dataset") data: Dataset)
+  extends ScalaOperator[CollapseTemporalGapsOut] with SparkleOperator {
+
+  override def execute(ctx: OpContext): CollapseTemporalGapsOut = {
+    val startAtDate = new Instant(startAt.millis).toDateTime(DateTimeZone.UTC).withTimeAtStartOfDay
+    val input = read[Trace](data)
+    val output = write(input.map(transform(_, startAtDate)), ctx)
     CollapseTemporalGapsOut(output)
   }
 
@@ -60,10 +64,6 @@ class CollapseTemporalGapsOp extends Operator[CollapseTemporalGapsIn, CollapseTe
     }
   }
 }
-
-case class CollapseTemporalGapsIn(
-  @Arg(help = "Start date for all traces") startAt: Instant,
-  @Arg(help = "Input dataset") data: Dataset)
 
 case class CollapseTemporalGapsOut(
   @Arg(help = "Output dataset") data: Dataset)

@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.accio.sdk.{Dataset, _}
+import fr.cnrs.liris.accio.sdk._
 import fr.cnrs.liris.util.geo.Distance
 import fr.cnrs.liris.locapriv.lppm.SpeedSmoothing
 import fr.cnrs.liris.locapriv.model.Trace
@@ -26,18 +26,20 @@ import fr.cnrs.liris.locapriv.model.Trace
 @Op(
   category = "lppm",
   help = "Enforce speed smoothing guarantees on traces.",
-  cpu = 4,
+  cpus = 4,
   ram = "2G")
-class PromesseOp extends Operator[PromesseIn, PromesseOut] with SparkleOperator {
-  override def execute(in: PromesseIn, ctx: OpContext): PromesseOut = {
-    val lppm = new SpeedSmoothing(in.epsilon)
-    val output = read[Trace](in.data).map(lppm.transform)
+case class PromesseOp(
+  @Arg(help = "Distance to enforce between two consecutive points")
+  epsilon: Distance,
+  @Arg(help = "Input dataset")
+  data: Dataset)
+  extends ScalaOperator[PromesseOut] with SparkleOperator {
+
+  override def execute(ctx: OpContext): PromesseOut = {
+    val lppm = new SpeedSmoothing(epsilon)
+    val output = read[Trace](data).map(lppm.transform)
     PromesseOut(write(output, ctx))
   }
 }
-
-case class PromesseIn(
-  @Arg(help = "Distance to enforce between two consecutive points") epsilon: Distance,
-  @Arg(help = "Input dataset") data: Dataset)
 
 case class PromesseOut(@Arg(help = "Output dataset") data: Dataset)

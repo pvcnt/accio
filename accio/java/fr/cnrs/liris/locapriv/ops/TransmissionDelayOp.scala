@@ -19,21 +19,24 @@
 package fr.cnrs.liris.locapriv.ops
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.sdk.{Dataset, _}
+import fr.cnrs.liris.accio.sdk._
 import fr.cnrs.liris.util.Requirements._
 import fr.cnrs.liris.locapriv.model.Trace
 
 @Op(
   category = "metric",
   help = "Compute transmission delay between two datasets of traces",
-  cpu = 4,
+  cpus = 4,
   ram = "2G")
-class TransmissionDelayOp extends Operator[TransmissionDelayIn, TransmissionDelayOut] with SparkleOperator {
+case class TransmissionDelayOp(
+  @Arg(help = "Train dataset") train: Dataset,
+  @Arg(help = "Test dataset") test: Dataset)
+  extends ScalaOperator[TransmissionDelayOut] with SparkleOperator {
 
-  override def execute(in: TransmissionDelayIn, ctx: OpContext): TransmissionDelayOut = {
-    val train = read[Trace](in.train)
-    val test = read[Trace](in.test)
-    val values = train.zip(test).map { case (ref, res) => evaluate(ref, res) }.toArray
+  override def execute(ctx: OpContext): TransmissionDelayOut = {
+    val trainDs = read[Trace](train)
+    val testDs = read[Trace](test)
+    val values = trainDs.zip(testDs).map { case (ref, res) => evaluate(ref, res) }.toArray
     TransmissionDelayOut(values.toMap)
   }
 
@@ -43,9 +46,6 @@ class TransmissionDelayOp extends Operator[TransmissionDelayIn, TransmissionDela
   }
 }
 
-case class TransmissionDelayIn(
-  @Arg(help = "Train dataset") train: Dataset,
-  @Arg(help = "Test dataset") test: Dataset)
-
 case class TransmissionDelayOut(
-  @Arg(help = "Transmission delay") value: Map[String, Long])
+  @Arg(help = "Transmission delay")
+  value: Map[String, Long])

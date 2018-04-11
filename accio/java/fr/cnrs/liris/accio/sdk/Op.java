@@ -64,7 +64,7 @@ public @interface Op {
     /**
      * Number of CPU cores required to execute this operator. It will be allocated at least this number of cores.
      */
-    float cpu() default 1;
+    float cpus() default 1;
 
     /**
      * Amount of RAM required to execute this operator. It will be allocated at least this amount of RAM.

@@ -40,7 +40,7 @@ final class RunManager @Inject()(schedulerService: SchedulerService, graphFactor
     // Workflow does exist, because it has been validated when creating the runs, and workflows
     // cannot be deleted (via the public API at least...).
     val workflow = storage.read(_.workflows.get(pkg.workflowId, pkg.workflowVersion)).get
-    Graph.fromThrift(workflow.graph)
+    Graph.fromThrift(workflow.nodes)
   })
 
   /**
@@ -135,7 +135,7 @@ final class RunManager @Inject()(schedulerService: SchedulerService, graphFactor
    * @param parent   Parent run, if any.
    * @return Updated run and parent run.
    */
-  def onSuccess(run: Run, nodeName: String, result: thrift.OpResult, cacheKey: Option[String], parent: Option[Run]): (Run, Option[Run]) = {
+  def onSuccess(run: Run, nodeName: String, result: thrift.OpResult, parent: Option[Run]): (Run, Option[Run]) = {
     val NodeStatus = run.state.nodes.find(_.name == nodeName).get
     if (NodeStatus.completedAt.isDefined) {
       // On race requests, node state could be already marked as completed.
@@ -144,8 +144,7 @@ final class RunManager @Inject()(schedulerService: SchedulerService, graphFactor
       val newNodeStatus = NodeStatus.copy(
         completedAt = Some(System.currentTimeMillis()),
         status = TaskState.Success,
-        result = Some(result),
-        cacheKey = cacheKey)
+        result = Some(result))
       var newRun = replace(run, NodeStatus, newNodeStatus)
       newRun = scheduleNextNodes(newRun, nodeName)
       updateProgress(newRun, parent)

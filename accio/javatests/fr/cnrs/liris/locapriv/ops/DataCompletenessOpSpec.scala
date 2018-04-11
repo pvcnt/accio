@@ -25,7 +25,7 @@ import fr.cnrs.liris.testing.UnitSpec
 /**
  * Unit tests for [[DataCompletenessOp]].
  */
-class DataCompletenessOpSpec extends UnitSpec with WithTraceGenerator with OperatorSpec {
+class DataCompletenessOpSpec extends UnitSpec with WithTraceGenerator with ScalaOperatorSpec {
   behavior of "DataCompleteness"
 
   it should "compute the data completeness" in {
@@ -51,6 +51,6 @@ class DataCompletenessOpSpec extends UnitSpec with WithTraceGenerator with Opera
   private def execute(train: Seq[Trace], test: Seq[Trace]) = {
     val trainDs = writeTraces(train: _*)
     val testDs = writeTraces(test: _*)
-    new DataCompletenessOp().execute(DataCompletenessIn(trainDs, testDs), ctx)
+    DataCompletenessOp(trainDs, testDs).execute(ctx)
   }
 }

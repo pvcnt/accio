@@ -20,14 +20,12 @@ package fr.cnrs.liris.accio.service
 
 import java.util.UUID
 
-import com.google.common.base.Charsets
-import com.google.common.hash.Hashing
 import com.google.inject.Inject
 import com.twitter.util.logging.Logging
 import fr.cnrs.liris.accio.api
 import fr.cnrs.liris.accio.api.thrift._
 import fr.cnrs.liris.accio.api.{Input, OpRegistry, Utils}
-import fr.cnrs.liris.accio.scheduler.Scheduler
+import fr.cnrs.liris.accio.scheduler.{Process, Scheduler}
 import fr.cnrs.liris.accio.storage.Storage
 
 /**
@@ -54,28 +52,13 @@ final class SchedulerService @Inject()(scheduler: Scheduler, opRegistry: OpRegis
     val nodeStatus = run.state.nodes.find(_.name == node.name).get
     val opDef = opRegistry(node.op)
     val payload = createPayload(run, node, opDef)
-    val now = System.currentTimeMillis()
-    val maybeResult = if (readCache) storage.read(_.runs.fetch(payload.cacheKey)) else None
-    maybeResult match {
-      case Some(cachedNodeStatus) =>
-        logger.debug(s"Cache hit. Run: ${run.id}, node: ${node.name}.")
-        val newNodeStatus = nodeStatus.copy(
-          startedAt = Some(now),
-          completedAt = Some(now),
-          status = cachedNodeStatus.status,
-          cacheKey = cachedNodeStatus.cacheKey,
-          cacheHit = true,
-          result = cachedNodeStatus.result,
-          taskId = cachedNodeStatus.taskId)
-        run.copy(state = run.state.copy(nodes = run.state.nodes - nodeStatus + newNodeStatus))
-      case None =>
-        val taskId = UUID.randomUUID().toString
-        val task = Task(taskId, run.id, node.name, payload, System.currentTimeMillis(), TaskState.Waiting, opDef.resource)
-        scheduler.submit(task)
-        logger.debug(s"Submitted task ${task.id}. Run: ${run.id}, node: ${node.name}, op: ${payload.op}")
-        val newNodeStatus = nodeStatus.copy(status = TaskState.Scheduled, taskId = Some(taskId))
-        run.copy(state = run.state.copy(nodes = run.state.nodes - nodeStatus + newNodeStatus))
-    }
+    val taskId = UUID.randomUUID().toString
+    val process = Process(taskId, run.id, node.name, payload)
+    scheduler.submit(process)
+
+    logger.debug(s"Submitted process ${process.id}. Run: ${run.id}, node: ${node.name}, op: ${payload.op}")
+    val newNodeStatus = nodeStatus.copy(status = TaskState.Scheduled, taskId = Some(taskId))
+    run.copy(state = run.state.copy(nodes = run.state.nodes - nodeStatus + newNodeStatus))
   }
 
   def kill(run: Run): Run = {
@@ -93,25 +76,6 @@ final class SchedulerService @Inject()(scheduler: Scheduler, opRegistry: OpRegis
   }
 
   /**
-   * Generate a unique cache key for the outputs of a node. It is based on operator definition, inputs and seed.
-   *
-   * @param opDef  Operator definition.
-   * @param inputs Node inputs.
-   * @param seed   Seed for unstable operators.
-   */
-  def generateCacheKey(opDef: OpDef, inputs: Map[String, Value], seed: Long): String = {
-    val hasher = Hashing.sha1().newHasher()
-    hasher.putString(opDef.name, Charsets.UTF_8)
-    hasher.putLong(if (opDef.unstable) seed else 0L)
-    opDef.inputs.map { argDef =>
-      hasher.putString(argDef.name, Charsets.UTF_8)
-      val value = inputs.get(argDef.name).orElse(argDef.defaultValue)
-      hasher.putInt(value.hashCode)
-    }
-    hasher.hash().toString
-  }
-
-  /**
    * Create the payload for a given node, by resolving the inputs.
    *
    * @param run   Run.
@@ -119,7 +83,7 @@ final class SchedulerService @Inject()(scheduler: Scheduler, opRegistry: OpRegis
    * @param opDef Operator definition for the node.
    */
   private def createPayload(run: Run, node: api.Node, opDef: OpDef): OpPayload = {
-    val inputs = node.inputs.flatMap { case (portName, input) =>
+    val inputs = node.inputs.toSeq.flatMap { case (portName, input) =>
       val maybeValue = input match {
         case Input.Param(paramName) => run.params.get(paramName)
         case Input.Reference(ref) =>
@@ -128,9 +92,8 @@ final class SchedulerService @Inject()(scheduler: Scheduler, opRegistry: OpRegis
             .map(_.value)
         case Input.Constant(v) => Some(v)
       }
-      maybeValue.map(value => portName -> value)
+      maybeValue.map(value => Artifact(portName, value))
     }
-    val cacheKey = generateCacheKey(opDef, inputs, run.seed)
-    OpPayload(opDef.name, run.seed, inputs, cacheKey)
+    OpPayload(opDef.name, run.seed, inputs, opDef.resource)
   }
 }

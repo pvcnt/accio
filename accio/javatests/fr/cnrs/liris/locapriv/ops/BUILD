@@ -26,10 +26,10 @@ scala_test(
     "//accio/java/fr/cnrs/liris/accio/sdk",
     "//accio/java/fr/cnrs/liris/util/geo",
     "//accio/javatests/fr/cnrs/liris/locapriv/testing",
-    "//accio/javatests/fr/cnrs/liris/accio/testing",
     "//accio/javatests/fr/cnrs/liris/testing",
     "//3rdparty/jvm/com/github/nscala_time",
     "//3rdparty/jvm/org/scalanlp:breeze",
     "//3rdparty/jvm/com/twitter:util_slf4j_api",
   ],
+  size = "small",
 )

@@ -28,7 +28,7 @@ import scala.util.Random
 /**
  * Unit tests for [[DurationSplittingOp]].
  */
-class DurationSplittingOpSpec extends UnitSpec with WithTraceGenerator with OperatorSpec {
+class DurationSplittingOpSpec extends UnitSpec with WithTraceGenerator with ScalaOperatorSpec {
   behavior of "DurationSplittingOp"
 
   it should "split by duration" in {
@@ -51,7 +51,7 @@ class DurationSplittingOpSpec extends UnitSpec with WithTraceGenerator with Oper
 
   private def transform(data: Seq[Trace], duration: Duration) = {
     val ds = writeTraces(data: _*)
-    val res = new DurationSplittingOp().execute(DurationSplittingIn(duration = duration, data = ds), ctx)
+    val res = DurationSplittingOp(duration = duration, data = ds).execute( ctx)
     readTraces(res.data)
   }
 }

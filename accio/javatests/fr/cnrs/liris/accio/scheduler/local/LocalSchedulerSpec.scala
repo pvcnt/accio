@@ -20,8 +20,9 @@ package fr.cnrs.liris.accio.scheduler.local
 
 import com.google.common.eventbus.{EventBus, Subscribe}
 import com.twitter.finagle.stats.NullStatsReceiver
-import fr.cnrs.liris.accio.api.{TaskCompletedEvent, TaskStartedEvent}
 import fr.cnrs.liris.accio.api.thrift._
+import fr.cnrs.liris.accio.api.{ProcessCompletedEvent, ProcessStartedEvent}
+import fr.cnrs.liris.accio.scheduler.Process
 import fr.cnrs.liris.testing.{CreateTmpDirectory, UnitSpec}
 import org.scalatest.BeforeAndAfterEach
 
@@ -51,24 +52,23 @@ class LocalSchedulerSpec extends UnitSpec with CreateTmpDirectory with BeforeAnd
   it should "launch tasks" in {
     var started = false
     var completed = false
-    eventBus.register (new {
+    eventBus.register(new {
       @Subscribe
-      def onTaskStart(e: TaskStartedEvent): Unit = {
+      def onTaskStart(e: ProcessStartedEvent): Unit = {
         e.runId shouldBe "foo-run"
         e.nodeName shouldBe "node"
         started = true
       }
 
       @Subscribe
-      def onTaskComplete(e: TaskCompletedEvent): Unit = {
+      def onTaskComplete(e: ProcessCompletedEvent): Unit = {
         e.runId shouldBe "foo-run"
         e.nodeName shouldBe "node"
-        e.cacheKey shouldBe "cache-key"
         completed = true
       }
     })
-    val task = Task("foo-task", "foo-run", "node",  OpPayload("op", 0, Map.empty, "cache-key"), 0, TaskState.Waiting, Resource(0, 0, 0))
-    scheduler.submit(task)
+    val process = Process("foo-process", "foo-run", "node", OpPayload("op", 0, Seq.empty, Resource(0, 0, 0)))
+    scheduler.submit(process)
     Thread.sleep(2000)
     started shouldBe true
     completed shouldBe true

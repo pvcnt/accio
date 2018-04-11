@@ -45,11 +45,6 @@ class RunTable extends React.Component {
         const failedNode = find(run.state.nodes, node => node.status === 'failed')
         if (failedNode) {
           label = 'Failed in ' + failedNode.name
-        } else {
-          const lostNode = find(run.state.nodes, node => node.status === 'lost')
-          if (lostNode) {
-            label = 'Lost ' + lostNode.name
-          }
         }
       }
       const startedAt = run.state.started_at

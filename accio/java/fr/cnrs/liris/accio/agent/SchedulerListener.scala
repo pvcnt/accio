@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.agent
 import com.google.common.eventbus.Subscribe
 import com.google.inject.{Inject, Singleton}
 import com.twitter.util.logging.Logging
-import fr.cnrs.liris.accio.api.{TaskCompletedEvent, TaskStartedEvent}
+import fr.cnrs.liris.accio.api.{ProcessCompletedEvent, ProcessStartedEvent}
 import fr.cnrs.liris.accio.service.RunManager
 import fr.cnrs.liris.accio.storage.Storage
 
@@ -33,14 +33,14 @@ import fr.cnrs.liris.accio.storage.Storage
 @Singleton
 final class SchedulerListener @Inject()(storage: Storage, runManager: RunManager) extends Logging {
   @Subscribe
-  def onTaskCompleted(event: TaskCompletedEvent): Unit = {
+  def onTaskCompleted(event: ProcessCompletedEvent): Unit = {
     storage.write { stores =>
       stores.runs.get(event.runId) match {
         case None => logger.warn(s"Completed task is associated with unknown run ${event.runId}")
         case Some(run) =>
           val parent = run.parent.flatMap(stores.runs.get)
           val (newRun, newParent) = if (event.result.exitCode == 0) {
-            runManager.onSuccess(run, event.nodeName, event.result, Some(event.cacheKey), parent)
+            runManager.onSuccess(run, event.nodeName, event.result, parent)
           } else {
             runManager.onFailed(run, event.nodeName, event.result, parent)
           }
@@ -51,7 +51,7 @@ final class SchedulerListener @Inject()(storage: Storage, runManager: RunManager
   }
 
   @Subscribe
-  def onTaskStarted(event: TaskStartedEvent): Unit = {
+  def onTaskStarted(event: ProcessStartedEvent): Unit = {
     storage.write { stores =>
       stores.runs.get(event.runId) match {
         case None => logger.warn(s"Started task is associated with unknown run ${event.runId}")

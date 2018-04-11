@@ -15,16 +15,15 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_library(
-  name = 'testing',
+  name = "testing",
   srcs = glob(["*.scala"]),
   deps = [
-    '//accio/java/fr/cnrs/liris/accio/api',
-    '//accio/java/fr/cnrs/liris/locapriv/sparkle',
-    '//accio/thrift/fr/cnrs/liris/accio/api',
-    '//accio/javatests/fr/cnrs/liris/testing',
-    '//accio/java/fr/cnrs/liris/util',
-    '//3rdparty/jvm/com/twitter:util_slf4j_api',
-    '//3rdparty/jvm/com/github/nscala_time',
+    "//accio/java/fr/cnrs/liris/accio/api",
+    "//accio/thrift/fr/cnrs/liris/accio/api",
+    "//accio/javatests/fr/cnrs/liris/testing",
+    "//accio/java/fr/cnrs/liris/util",
+    "//3rdparty/jvm/com/twitter:util_slf4j_api",
+    "//3rdparty/jvm/com/github/nscala_time",
     "@scalatest//jar:jar",
   ],
   visibility = ["//accio/javatests:__subpackages__"],

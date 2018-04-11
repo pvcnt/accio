@@ -46,7 +46,7 @@ struct PushWorkflowResponse {
 }
 
 struct GetWorkflowRequest {
-  1: required api.WorkflowId id;
+  1: required string id;
   2: optional string version;
 }
 
@@ -72,12 +72,12 @@ struct CreateRunRequest {
 }
 
 struct CreateRunResponse {
-  1: required list<api.RunId> ids;
+  1: required list<string> ids;
   2: required list<api.FieldViolation> warnings;
 }
 
 struct GetRunRequest {
-  1: required api.RunId id;
+  1: required string id;
 }
 
 struct GetRunResponse {
@@ -87,11 +87,11 @@ struct GetRunResponse {
 struct ListRunsRequest {
   1: optional string owner;
   2: optional string name;
-  3: optional api.WorkflowId workflow_id;
+  3: optional string workflow_id;
   5: required set<api.TaskState> status = [];
   6: required set<string> tags = [];
-  7: optional api.RunId parent;
-  8: optional api.RunId cloned_from;
+  7: optional string parent;
+  8: optional string cloned_from;
   9: optional string q;
   10: optional i32 limit;
   11: optional i32 offset;
@@ -103,14 +103,14 @@ struct ListRunsResponse {
 }
 
 struct DeleteRunRequest {
-  1: required api.RunId id;
+  1: required string id;
 }
 
 struct DeleteRunResponse {
 }
 
 struct KillRunRequest {
-  1: required api.RunId id;
+  1: required string id;
 }
 
 struct KillRunResponse {
@@ -118,7 +118,7 @@ struct KillRunResponse {
 }
 
 struct UpdateRunRequest {
-  1: required api.RunId id;
+  1: required string id;
   2: optional string name;
   3: optional string notes;
   4: required set<string> tags = [];
@@ -129,7 +129,7 @@ struct UpdateRunResponse {
 }
 
 struct ListLogsRequest {
-  1: required api.RunId run_id;
+  1: required string run_id;
   2: required string node_name;
   3: required string kind;
   4: optional i32 tail;

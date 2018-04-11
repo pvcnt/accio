@@ -82,9 +82,7 @@ class DescribeRunController extends DescribeController[(Run, Seq[Run])] with For
       out.outErr.printOutLn("Nodes")
       out.outErr.printOutLn(s"  ${padTo("Node name", 30)}  ${padTo("Status", 9)}  Duration")
       run.state.nodes.toSeq.sortBy(_.startedAt.getOrElse(Long.MaxValue)).foreach { node =>
-        val duration = if (node.cacheHit) {
-          "<cache hit>"
-        } else if (node.startedAt.isDefined && node.completedAt.isDefined) {
+        val duration = if (node.startedAt.isDefined && node.completedAt.isDefined) {
           format(Duration.fromMilliseconds(node.completedAt.get - node.startedAt.get))
         } else {
           "-"

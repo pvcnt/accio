@@ -16,15 +16,25 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.runtime
-
-import fr.cnrs.liris.accio.sdk.Operator
+package fr.cnrs.liris.util.reflect
 
 /**
- * Exception thrown when the definition of an operator is invalid.
+ * A high-level interface to manipulate case classes fields with the Scala reflection API.
  *
- * @param clazz   Operator class.
- * @param message Error message.
+ * @param name         Field name.
+ * @param defaultValue A default value for this field, if any.
+ * @param annotations  A list of runtime annotations applied on this field.
+ * @param scalaType    Type of this field.
  */
-class InvalidOpDefException(val clazz: Class[_ <: Operator[_, _]], message: String, cause: Throwable = null)
-  extends Exception(s"Illegal definition of operator ${clazz.getName}: $message", cause)
+final class CaseClassField private[reflect](
+  val name: String,
+  val index: Int,
+  val defaultValue: Option[_],
+  val annotations: AnnotationList,
+  val scalaType: ScalaType) {
+
+  /**
+   * Return the associated JVM runtime class.
+   */
+  def runtimeClass: Class[_] = scalaType.runtimeClass
+}

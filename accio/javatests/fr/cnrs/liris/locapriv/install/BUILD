@@ -14,17 +14,16 @@
 # You should have received a copy of the GNU General Public License
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
-scala_library(
-  name = "inject",
+scala_test(
+  name = "install",
   srcs = glob(["*.scala"]),
   deps = [
-    "//accio/java/fr/cnrs/liris/accio/scheduler",
-    "//accio/java/fr/cnrs/liris/accio/scheduler/local",
-    "//accio/java/fr/cnrs/liris/accio/config:annotations",
-    "//accio/thrift/fr/cnrs/liris/accio/api",
-    "//3rdparty/jvm/com/twitter:util_core",
-    "//3rdparty/jvm/com/twitter:util_stats",
+    "//accio/java/fr/cnrs/liris/locapriv/install",
+    "//accio/java/fr/cnrs/liris/accio/api",
+    "//accio/java/fr/cnrs/liris/accio/runtime",
+    "//accio/javatests/fr/cnrs/liris/testing",
+    "//accio/javatests/com/twitter/inject",
     "//3rdparty/jvm/com/twitter:inject_core",
   ],
-  visibility = ["//visibility:public"],
+  size = "small",
 )

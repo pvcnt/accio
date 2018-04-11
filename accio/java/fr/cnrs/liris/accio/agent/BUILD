@@ -19,7 +19,7 @@ scala_binary(
   srcs = glob(["*.scala"]),
   deps = [
     "//accio/java/fr/cnrs/liris/accio/storage/install",
-    "//accio/java/fr/cnrs/liris/accio/scheduler/inject",
+    "//accio/java/fr/cnrs/liris/accio/scheduler/install",
     "//accio/java/fr/cnrs/liris/accio/api",
     "//accio/java/fr/cnrs/liris/accio/auth",
     "//accio/java/fr/cnrs/liris/accio/config",

@@ -101,7 +101,6 @@ object Utils {
     case thrift.TaskState.Failed => true
     case thrift.TaskState.Killed => true
     case thrift.TaskState.Cancelled => true
-    case thrift.TaskState.Lost => true
     case _ => false
   }
 }

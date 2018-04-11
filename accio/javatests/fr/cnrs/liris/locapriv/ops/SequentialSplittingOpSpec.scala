@@ -25,7 +25,7 @@ import fr.cnrs.liris.testing.UnitSpec
 /**
  * Unit tests for [[SequentialSplittingOp]].
  */
-class SequentialSplittingOpSpec extends UnitSpec with WithTraceGenerator with OperatorSpec {
+class SequentialSplittingOpSpec extends UnitSpec with WithTraceGenerator with ScalaOperatorSpec {
   behavior of "SequentialSplittingOp"
 
   it should "split a trace with an even number of events without losing any of them" in {
@@ -86,8 +86,8 @@ class SequentialSplittingOpSpec extends UnitSpec with WithTraceGenerator with Op
 
   private def transform(data: Seq[Trace], percent: Double): (Seq[Trace], Seq[Trace]) = {
     val ds = writeTraces(data: _*)
-    val res1 = new SequentialSplittingOp().execute(SequentialSplittingIn(percentBegin = 0, percentEnd = percent, complement = false, data = ds), ctx)
-    val res2 = new SequentialSplittingOp().execute(SequentialSplittingIn(percentBegin = 0, percentEnd = percent, complement = true, data = ds), ctx)
+    val res1 = SequentialSplittingOp(percentBegin = 0, percentEnd = percent, complement = false, data = ds).execute(ctx)
+    val res2 = SequentialSplittingOp(percentBegin = 0, percentEnd = percent, complement = true, data = ds).execute(ctx)
     (readTraces(res1.data), readTraces(res2.data))
   }
 

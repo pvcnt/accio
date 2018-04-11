@@ -19,6 +19,7 @@
 package fr.cnrs.liris.accio.scheduler.local
 
 import java.io.FileInputStream
+import java.lang.{Process => JavaProcess}
 import java.nio.file.{Files, Path}
 import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.{ConcurrentHashMap, ConcurrentLinkedDeque, Executors}
@@ -29,10 +30,10 @@ import com.twitter.finagle.stats.StatsReceiver
 import com.twitter.util.logging.Logging
 import com.twitter.util.{Future, FuturePool}
 import fr.cnrs.liris.accio.api.thrift._
-import fr.cnrs.liris.accio.api.{TaskCompletedEvent, TaskStartedEvent}
-import fr.cnrs.liris.accio.scheduler.Scheduler
-import fr.cnrs.liris.util.scrooge.BinaryScroogeSerializer
+import fr.cnrs.liris.accio.api.{ProcessCompletedEvent, ProcessStartedEvent}
+import fr.cnrs.liris.accio.scheduler.{Process, Scheduler}
 import fr.cnrs.liris.util.Platform
+import fr.cnrs.liris.util.scrooge.BinaryScroogeSerializer
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -48,9 +49,9 @@ final class LocalScheduler(
   dataDir: Path)
   extends Scheduler with Logging {
 
-  private case class Running(task: Task, future: Future[_])
+  private case class Running(process: Process, future: Future[_])
 
-  private[this] val pending = new ConcurrentLinkedDeque[Task]
+  private[this] val pending = new ConcurrentLinkedDeque[Process]
   private[this] val running = new ConcurrentHashMap[String, Running].asScala
   private[this] val javaBinary = {
     sys.env.get("JAVA_HOME").map(home => s"$home/bin/java").getOrElse("/usr/bin/java")
@@ -61,9 +62,9 @@ final class LocalScheduler(
   }
   private[this] val totalResources = {
     Resource(
-      cpu = sys.runtime.availableProcessors - reservedResources.cpu,
+      cpus = sys.runtime.availableProcessors - reservedResources.cpus,
       ramMb = Platform.totalMemory.map(ram => ram.inMegabytes - reservedResources.ramMb).getOrElse(0),
-      diskMb = Platform.totalDiskSpace.map(disk => disk.inMegabytes - reservedResources.diskMb).getOrElse(0))
+      diskGb = Platform.totalDiskSpace.map(disk => disk.inGigabytes - reservedResources.diskGb).getOrElse(0))
   }
   // Although the reserve/release code is synchronized, we register available resources as an
   // AtomicReference because it is accessed by the gauges code, which can occur at any time.
@@ -71,28 +72,28 @@ final class LocalScheduler(
 
   // Register gauges.
   // Total resources are registered as gauges, even though values are not expected to vary.
-  statsReceiver.provideGauge("scheduler", "total", "cpu")(totalResources.cpu.toFloat)
+  statsReceiver.provideGauge("scheduler", "total", "cpus")(totalResources.cpus.toFloat)
   statsReceiver.provideGauge("scheduler", "total", "ram_mb")(totalResources.ramMb.toFloat)
-  statsReceiver.provideGauge("scheduler", "total", "disk_mb")(totalResources.diskMb.toFloat)
+  statsReceiver.provideGauge("scheduler", "total", "disk_gb")(totalResources.diskGb.toFloat)
 
-  statsReceiver.provideGauge("scheduler", "free", "cpu")(availableResources.get.cpu.toFloat)
+  statsReceiver.provideGauge("scheduler", "free", "cpus")(availableResources.get.cpus.toFloat)
   statsReceiver.provideGauge("scheduler", "free", "ram_mb")(availableResources.get.ramMb.toFloat)
-  statsReceiver.provideGauge("scheduler", "free", "disk_mb")(availableResources.get.diskMb.toFloat)
+  statsReceiver.provideGauge("scheduler", "free", "disk_gb")(availableResources.get.diskGb.toFloat)
 
   statsReceiver.provideGauge("scheduler", "pending")(pending.size.toFloat)
   statsReceiver.provideGauge("scheduler", "running")(running.size.toFloat)
 
-  override def submit(task: Task): Unit = {
-    if (reserveResources(task.id, task.resource)) {
-      val future = schedule(task)
-      running(task.id) = Running(task, future)
+  override def submit(process: Process): Unit = {
+    if (reserveResources(process.id, process.payload.resources)) {
+      val future = schedule(process)
+      running(process.id) = Running(process, future)
     } else {
-      if (!forceScheduling && !isEnoughResources(task.id, task.resource, totalResources)) {
+      if (!forceScheduling && !isEnoughResources(process.id, process.payload.resources, totalResources)) {
         // TODO: We should cancel the task.
-        logger.warn(s"Not enough resources to schedule task ${task.id} (${task.resource})")
+        logger.warn(s"Not enough resources to schedule task ${process.id} (${process.payload.resources})")
       }
-      logger.info(s"Queued task ${task.id}")
-      pending.add(task)
+      logger.info(s"Queued process ${process.id}")
+      pending.add(process)
     }
   }
 
@@ -101,7 +102,7 @@ final class LocalScheduler(
       case None => false
       case Some(item) =>
         item.future.raise(new RuntimeException)
-        releaseResources(item.task.resource)
+        releaseResources(item.process.payload.resources)
         true
     }
   }
@@ -110,26 +111,25 @@ final class LocalScheduler(
     readLogFile(getWorkDir(id).resolve(kind), skip, tail)
   }
 
-  private def schedule(task: Task): Future[OpResult] = {
-    logger.info(s"Starting execution of task ${task.id}")
-    pool(execute(task))
+  private def schedule(process: Process): Future[OpResult] = {
+    pool(execute(process))
       .onSuccess { result =>
-        eventBus.post(TaskCompletedEvent(task.runId, task.nodeName, result, task.payload.cacheKey))
+        eventBus.post(ProcessCompletedEvent(process.runId, process.nodeName, result))
       }
       .onFailure { e =>
-        logger.error(s"Unexpected error while executing task ${task.id}", e)
-        eventBus.post(TaskCompletedEvent(task.runId, task.nodeName, OpResult(-998), task.payload.cacheKey))
+        logger.error(s"Unexpected error while executing process ${process.id}", e)
+        eventBus.post(ProcessCompletedEvent(process.runId, process.nodeName, OpResult(-998)))
       }
       .ensure {
-        running.remove(task.id)
-        releaseResources(task.resource)
+        running.remove(process.id)
+        releaseResources(process.payload.resources)
       }
   }
 
   private def isEnoughResources(id: String, requests: Resource, resources: Resource): Boolean = {
-    val ok = (requests.cpu == 0 || requests.cpu <= resources.cpu) &&
+    val ok = (requests.cpus == 0 || requests.cpus <= resources.cpus) &&
       (requests.ramMb == 0 || requests.ramMb <= resources.ramMb) &&
-      (requests.diskMb == 0 || requests.diskMb <= resources.diskMb)
+      (requests.diskGb == 0 || requests.diskGb <= resources.diskGb)
     if (ok) {
       true
     } else if (running.isEmpty && forceScheduling) {
@@ -146,9 +146,9 @@ final class LocalScheduler(
       false
     } else {
       availableResources.set(Resource(
-        cpu = available.cpu - requests.cpu,
+        cpus = available.cpus - requests.cpus,
         ramMb = available.ramMb - requests.ramMb,
-        diskMb = available.diskMb - requests.diskMb))
+        diskGb = available.diskGb - requests.diskGb))
       true
     }
   }
@@ -156,35 +156,35 @@ final class LocalScheduler(
   private def releaseResources(requests: Resource): Unit = synchronized {
     val available = availableResources.get
     availableResources.set(Resource(
-      cpu = available.cpu + requests.cpu,
+      cpus = available.cpus + requests.cpus,
       ramMb = available.ramMb + requests.ramMb,
-      diskMb = available.diskMb + requests.diskMb))
+      diskGb = available.diskGb + requests.diskGb))
 
-    pending.asScala.foreach { task =>
-      if (reserveResources(task.id, task.resource)) {
-        pending.remove(task)
-        val future = schedule(task)
-        running(task.id) = Running(task, future)
+    pending.asScala.foreach { process =>
+      if (reserveResources(process.id, process.payload.resources)) {
+        pending.remove(process)
+        val future = schedule(process)
+        running(process.id) = Running(process, future)
       }
     }
   }
 
-  private def execute(task: Task): OpResult = {
-    val process = startProcess(task)
-    eventBus.post(TaskStartedEvent(task.runId, task.nodeName))
-    val exitCode = process.waitFor()
-    logger.info(s"Completed execution of task ${task.id} (exit code: $exitCode)")
-    read(getResultFile(getWorkDir(task.id))).copy(exitCode = exitCode)
+  private def execute(process: Process): OpResult = {
+    val javaProcess = startProcess(process)
+    eventBus.post(ProcessStartedEvent(process.runId, process.nodeName))
+    val exitCode = javaProcess.waitFor()
+    logger.info(s"Completed execution of process ${process.id} (exit code: $exitCode)")
+    read(getResultFile(getWorkDir(process.id))).copy(exitCode = exitCode)
   }
 
-  private def startProcess(task: Task): Process = {
-    val workDir = getWorkDir(task.id)
+  private def startProcess(process: Process): JavaProcess = {
+    val workDir = getWorkDir(process.id)
     Files.createDirectories(workDir)
 
     val outputsDir = getOutputsDir(workDir)
     Files.createDirectories(outputsDir)
-    val command = createCommandLine(task, getResultFile(workDir))
-    logger.debug(s"Command-line for task ${task.id}: ${command.mkString(" ")}")
+    val command = createCommandLine(process, getResultFile(workDir))
+    logger.debug(s"Command-line for process ${process.id}: ${command.mkString(" ")}")
 
     new ProcessBuilder()
       .command(command: _*)
@@ -212,13 +212,13 @@ final class LocalScheduler(
     lines
   }
 
-  private def createCommandLine(task: Task, outputFile: Path): Seq[String] = {
+  private def createCommandLine(process: Process, outputFile: Path): Seq[String] = {
     val cmd = mutable.ListBuffer.empty[String]
     cmd += javaBinary
     cmd ++= Seq("-cp", executorUri)
-    cmd += s"-Xmx${task.resource.ramMb}M"
+    cmd += s"-Xmx${process.payload.resources.ramMb}M"
     cmd += "fr.cnrs.liris.accio.executor.AccioExecutorMain"
-    cmd += BinaryScroogeSerializer.toString(task)
+    cmd += BinaryScroogeSerializer.toString(process.payload)
     cmd += outputFile.toAbsolutePath.toString
     cmd ++= executorArgs
     cmd.toList

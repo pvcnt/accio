@@ -24,15 +24,28 @@ import fr.cnrs.liris.locapriv.model.Trace
 @Op(
   category = "transform",
   help = "Split traces sequentially, according to chronological order.",
-  cpu = 4,
+  cpus = 4,
   ram = "2G")
-class SequentialSplittingOp extends Operator[SequentialSplittingIn, SequentialSplittingOut] with SparkleOperator {
-  override def execute(in: SequentialSplittingIn, ctx: OpContext): SequentialSplittingOut = {
-    val output = read[Trace](in.data).map(transform(_, in.percentBegin, in.percentEnd, in.complement))
+case class SequentialSplittingOp(
+  @Arg(help = "Percentage of events at which a trace begins")
+  percentBegin: Double,
+  @Arg(help = "Percentage of events at which a trace ends")
+  percentEnd: Double,
+  @Arg(help = "Whether to take the complement trace")
+  complement: Boolean = false,
+  @Arg(help = "Input dataset")
+  data: Dataset)
+  extends ScalaOperator[SequentialSplittingOut] with SparkleOperator {
+  require(percentBegin >= 0 && percentBegin <= 100, s"Begin percentage must be in [0,100] (got $percentBegin)")
+  require(percentEnd >= 0 && percentEnd <= 100, s"End percentage must be in [0,100] (got $percentEnd)")
+  require(percentBegin <= percentEnd, s"End percentage must be greater than begin percentage")
+
+  override def execute(ctx: OpContext): SequentialSplittingOut = {
+    val output = read[Trace](data).map(transform)
     SequentialSplittingOut(write(output, ctx))
   }
 
-  private def transform(trace: Trace, percentBegin: Double, percentEnd: Double, complement: Boolean): Trace = {
+  private def transform(trace: Trace): Trace = {
     val from = math.max(0, (percentBegin * trace.size / 100).floor.toInt)
     val until = math.min(trace.size, (percentEnd * trace.size / 100).ceil.toInt)
     if (complement) {
@@ -43,15 +56,6 @@ class SequentialSplittingOp extends Operator[SequentialSplittingIn, SequentialSp
   }
 }
 
-case class SequentialSplittingIn(
-  @Arg(help = "Percentage of events at which a trace begins") percentBegin: Double,
-  @Arg(help = "Percentage of events at which a trace ends") percentEnd: Double,
-  @Arg(help = "Whether to take the complement trace") complement: Boolean = false,
-  @Arg(help = "Input dataset") data: Dataset) {
-  require(percentBegin >= 0 && percentBegin <= 100, s"Begin percentage must be in [0,100] (got $percentBegin)")
-  require(percentEnd >= 0 && percentEnd <= 100, s"End percentage must be in [0,100] (got $percentEnd)")
-  require(percentBegin <= percentEnd, s"End percentage must be greater than begin percentage")
-}
-
 case class SequentialSplittingOut(
-  @Arg(help = "Output dataset") data: Dataset)
+  @Arg(help = "Output dataset")
+  data: Dataset)

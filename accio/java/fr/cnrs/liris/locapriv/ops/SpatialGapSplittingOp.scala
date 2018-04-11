@@ -25,19 +25,20 @@ import fr.cnrs.liris.locapriv.model.{Event, Trace}
 @Op(
   category = "transform",
   help = "Split traces, when there is a too huge distance between consecutive events.",
-  cpu = 4,
+  cpus = 4,
   ram = "2G")
-class SpatialGapSplittingOp extends Operator[SpatialGapSplittingIn, SpatialGapSplittingOut] with SlidingSplitting with SparkleOperator {
-  override def execute(in: SpatialGapSplittingIn, ctx: OpContext): SpatialGapSplittingOut = {
-    val split = (buffer: Seq[Event], curr: Event) => buffer.last.point.distance(curr.point) >= in.distance
-    val output = read[Trace](in.data).flatMap(transform(_, split))
+case class SpatialGapSplittingOp(
+  @Arg(help = "Maximum distance between two consecutive events") distance: Distance,
+  @Arg(help = "Input dataset") data: Dataset)
+  extends ScalaOperator[SpatialGapSplittingOut] with SlidingSplitting with SparkleOperator {
+
+  override def execute(ctx: OpContext): SpatialGapSplittingOut = {
+    val split = (buffer: Seq[Event], curr: Event) => buffer.last.point.distance(curr.point) >= distance
+    val output = read[Trace](data).flatMap(transform(_, split))
     SpatialGapSplittingOut(write(output, ctx))
   }
 }
 
-case class SpatialGapSplittingIn(
-  @Arg(help = "Maximum distance between two consecutive events") distance: Distance,
-  @Arg(help = "Input dataset") data: Dataset)
-
 case class SpatialGapSplittingOut(
-  @Arg(help = "Output dataset") data: Dataset)
+  @Arg(help = "Output dataset")
+  data: Dataset)

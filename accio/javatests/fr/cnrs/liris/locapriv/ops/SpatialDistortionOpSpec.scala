@@ -32,7 +32,7 @@ import scala.util.Random
 /**
  * Unit tests for [[SpatialDistortionOp]].
  */
-class SpatialDistortionOpSpec extends UnitSpec with WithTraceGenerator with OperatorSpec {
+class SpatialDistortionOpSpec extends UnitSpec with WithTraceGenerator with ScalaOperatorSpec {
   val eps = 1e-7
 
   behavior of "SpatialDistortion"
@@ -84,6 +84,6 @@ class SpatialDistortionOpSpec extends UnitSpec with WithTraceGenerator with Oper
   private def execute(train: Seq[Trace], test: Seq[Trace], interpolate: Boolean) = {
     val trainDs = writeTraces(train: _*)
     val testDs = writeTraces(test: _*)
-    new SpatialDistortionOp().execute(SpatialDistortionIn(train = trainDs, test = testDs, interpolate = interpolate), ctx)
+    SpatialDistortionOp(train = trainDs, test = testDs, interpolate = interpolate).execute(ctx)
   }
 }

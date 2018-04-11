@@ -23,10 +23,9 @@ package fr.cnrs.liris.accio.sdk
  * output types must be case classes, whose fields are one of the allowed types. All operators should be annotated
  * with the [[Op]] annotation.
  *
- * @tparam In  Input type
- * @tparam Out Output type
+ * @tparam T Output type
  */
-trait Operator[In, Out] {
+trait ScalaOperator[T] {
   /**
    * Execute this operator. With given input and context, it should produce a deterministic output.
    *
@@ -35,8 +34,7 @@ trait Operator[In, Out] {
    * somewhere. This directory is only valid for the operator's life, it can be deleted at any point once
    * the operator completed.
    *
-   * @param in  Input.
    * @param ctx Execution context.
    */
-  def execute(in: In, ctx: OpContext): Out
+  def execute(ctx: OpContext): T
 }

@@ -32,12 +32,18 @@ import fr.cnrs.liris.locapriv.model.PoiSet
 @Op(
   category = "metric",
   help = "Re-identification attack using POIs a the discriminating information.",
-  cpu = 6,
+  cpus = 6,
   ram = "3G")
-class PoisReidentOp extends Operator[ReidentificationIn, ReidentificationOut] with SparkleOperator {
-  override def execute(in: ReidentificationIn, ctx: OpContext): ReidentificationOut = {
-    val trainPois = read[PoiSet](in.train).toArray
-    val testPois = read[PoiSet](in.test).toArray
+case class PoisReidentOp(
+  @Arg(help = "Train dataset (POIs)")
+  train: Dataset,
+  @Arg(help = "Test dataset (POIs)")
+  test: Dataset)
+  extends ScalaOperator[ReidentificationOut] with SparkleOperator {
+
+  override def execute(ctx: OpContext): ReidentificationOut = {
+    val trainPois = read[PoiSet](train).toArray
+    val testPois = read[PoiSet](test).toArray
 
     val distances = computeDistances(trainPois, testPois)
     val matches = computeMatches(distances)
@@ -78,12 +84,6 @@ class PoisReidentOp extends Operator[ReidentificationIn, ReidentificationOut] wi
     matches.map { case (testUser, trainUser) => if (testUser == trainUser) 1 else 0 }.sum / trainUsers.length.toDouble
   }
 }
-
-case class ReidentificationIn(
-  @Arg(help = "Train dataset (POIs)")
-  train: Dataset,
-  @Arg(help = "Test dataset (POIs)")
-  test: Dataset)
 
 case class ReidentificationOut(
   //@Arg(help = "Distances between users from test and train datasets")

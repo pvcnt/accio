@@ -39,13 +39,13 @@ case class Workflow(
       createdAt = Some(createdAt.getMillis),
       name = title,
       owner = owner.map(_.toThrift),
-      graph = graph.toThrift,
+      nodes = graph.toThrift,
       params = params)
 }
 
 object Workflow {
   def fromThrift(struct: thrift.Workflow, user: Option[UserInfo] = None): Workflow = {
-    val graph = Graph.fromThrift(struct.graph)
+    val graph = Graph.fromThrift(struct.nodes)
     val owner = user.orElse(struct.owner.map(UserInfo.fromThrift))
     val version = struct.version.getOrElse(HashUtils.sha1(UUID.randomUUID().toString))
     Workflow(

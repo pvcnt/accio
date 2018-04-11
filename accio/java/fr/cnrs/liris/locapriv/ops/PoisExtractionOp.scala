@@ -18,7 +18,8 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.accio.sdk.{Dataset, _}
+import com.github.nscala_time.time.Imports._
+import fr.cnrs.liris.accio.sdk._
 import fr.cnrs.liris.util.geo.Distance
 import fr.cnrs.liris.locapriv.clustering.{DTClusterer, PoisClusterer}
 import fr.cnrs.liris.locapriv.model.{Poi, PoiSet, Trace}
@@ -26,20 +27,29 @@ import fr.cnrs.liris.locapriv.model.{Poi, PoiSet, Trace}
 @Op(
   category = "transform",
   help = "Compute POIs retrieval difference between two datasets of traces",
-  cpu = 4,
+  cpus = 4,
   ram = "3G")
-class PoisExtractionOp extends Operator[PoisExtractionIn, PoisExtractionOut] with SparkleOperator {
+case class PoisExtractionOp(
+  @Arg(help = "Clustering maximum diameter")
+  diameter: Distance,
+  @Arg(help = "Clustering minimum duration")
+  duration: Duration,
+  @Arg(help = "Minimum number of times a cluster should appear to consider it")
+  minPoints: Int = 0,
+  @Arg(help = "Input traces dataset")
+  data: Dataset)
+  extends ScalaOperator[PoisExtractionOut] with SparkleOperator {
 
-  override def execute(in: PoisExtractionIn, ctx: OpContext): PoisExtractionOut = {
-    val input = read[Trace](in.data)
-    val output =  if (in.minPoints == 0) {
-      val clusterer = new DTClusterer(in.duration, in.diameter)
+  override def execute(ctx: OpContext): PoisExtractionOut = {
+    val input = read[Trace](data)
+    val output = if (minPoints == 0) {
+      val clusterer = new DTClusterer(duration, diameter)
       input.map { trace =>
         val pois = clusterer.cluster(trace).map(cluster => Poi(cluster.events))
         PoiSet(trace.id, pois)
       }
     } else {
-      val clusterer = new PoisClusterer(in.duration, in.diameter, in.minPoints)
+      val clusterer = new PoisClusterer(duration, diameter, minPoints)
       input.map { trace =>
         val pois = clusterer.cluster(trace.events)
         PoiSet(trace.id, pois)
@@ -49,11 +59,6 @@ class PoisExtractionOp extends Operator[PoisExtractionIn, PoisExtractionOut] wit
   }
 }
 
-case class PoisExtractionIn(
-  @Arg(help = "Clustering maximum diameter") diameter: Distance,
-  @Arg(help = "Clustering minimum duration") duration: org.joda.time.Duration,
-  @Arg(help = "Minimum number of times a cluster should appear to consider it") minPoints: Int = 0,
-  @Arg(help = "Input traces dataset") data: Dataset)
-
 case class PoisExtractionOut(
-  @Arg(help = "Output POIs dataset") data: Dataset)
+  @Arg(help = "Output POIs dataset")
+  data: Dataset)

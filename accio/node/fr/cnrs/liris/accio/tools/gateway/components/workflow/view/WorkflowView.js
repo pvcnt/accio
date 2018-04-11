@@ -37,7 +37,7 @@ class WorkflowView extends React.Component {
                    className="accio-view-panel accio-view-panel-graph"
                    collapsible={true}
                    defaultExpanded={false}>
-          <GraphView graph={this.props.workflow.graph} height={500}/>
+          <GraphView graph={this.props.workflow.nodes} height={500}/>
         </LazyPanel>
       </Grid>
     )

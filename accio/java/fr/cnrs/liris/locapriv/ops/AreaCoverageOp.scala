@@ -28,23 +28,29 @@ import org.joda.time.{Duration, Instant}
 @Op(
   category = "metric",
   help = "Compute area coverage difference between two datasets of traces",
-  cpu = 4,
+  cpus = 4,
   ram = "2G")
-class AreaCoverageOp extends Operator[AreaCoverageIn, AreaCoverageOut] with SparkleOperator {
-  override def execute(in: AreaCoverageIn, ctx: OpContext): AreaCoverageOut = {
-    val train = read[Trace](in.train)
-    val test = read[Trace](in.test)
-    val metrics = train.zip(test).map { case (ref, res) => evaluate(ref, res, in.level, in.width) }.toArray
+case class AreaCoverageOp(
+  @Arg(help = "S2 cells levels") level: Int,
+  @Arg(help = "Width of time buckets") width: Option[Duration],
+  @Arg(help = "Train dataset") train: Dataset,
+  @Arg(help = "Test dataset") test: Dataset)
+  extends ScalaOperator[AreaCoverageOut] with SparkleOperator {
+
+  override def execute(ctx: OpContext): AreaCoverageOut = {
+    val trainDs = read[Trace](train)
+    val testDs = read[Trace](test)
+    val metrics = trainDs.zip(testDs).map { case (ref, res) => evaluate(ref, res) }.toArray
     AreaCoverageOut(
       precision = metrics.map { case (k, v) => k -> v._1 }.toMap,
       recall = metrics.map { case (k, v) => k -> v._2 }.toMap,
       fscore = metrics.map { case (k, v) => k -> v._3 }.toMap)
   }
 
-  private def evaluate(ref: Trace, res: Trace, level: Int, bucketSize: Option[Duration]) = {
+  private def evaluate(ref: Trace, res: Trace) = {
     requireState(ref.id == res.id, s"Trace mismatch: ${ref.id} / ${res.id}")
-    val refCells = getCells(ref, level, bucketSize)
-    val resCells = getCells(res, level, bucketSize)
+    val refCells = getCells(ref, level)
+    val resCells = getCells(res, level)
     val matched = resCells.intersect(refCells).size
     val metrics = (
       MetricUtils.precision(resCells.size, matched),
@@ -53,11 +59,11 @@ class AreaCoverageOp extends Operator[AreaCoverageIn, AreaCoverageOut] with Spar
     (ref.id, metrics)
   }
 
-  private def getCells(trace: Trace, level: Int, bucketSize: Option[Duration]) = {
+  private def getCells(trace: Trace, level: Int) = {
     trace.events.map { rec =>
-      bucketSize match {
+      width match {
         case None => truncate(rec.point.toLatLng, level).toString
-        case Some(precision) => truncate(rec.point.toLatLng, level) + "|" + truncate(rec.time, precision)
+        case Some(w) => truncate(rec.point.toLatLng, level) + "|" + truncate(rec.time, w)
       }
     }.toSet
   }
@@ -66,12 +72,6 @@ class AreaCoverageOp extends Operator[AreaCoverageIn, AreaCoverageOut] with Spar
 
   private def truncate(instant: Instant, precision: Duration): Long = instant.getMillis / precision.getMillis
 }
-
-case class AreaCoverageIn(
-  @Arg(help = "S2 cells levels") level: Int,
-  @Arg(help = "Width of time buckets") width: Option[Duration],
-  @Arg(help = "Train dataset") train: Dataset,
-  @Arg(help = "Test dataset") test: Dataset)
 
 case class AreaCoverageOut(
   @Arg(help = "Area coverage precision") precision: Map[String, Double],

@@ -26,13 +26,21 @@ import fr.cnrs.liris.locapriv.model.Trace
 @Op(
   category = "metric",
   help = "Compute spatial distortion between two datasets of traces",
-  cpu = 3,
+  cpus = 3,
   ram = "3G")
-class SpatialDistortionOp extends Operator[SpatialDistortionIn, SpatialDistortionOut] with SparkleOperator {
-  override def execute(in: SpatialDistortionIn, ctx: OpContext): SpatialDistortionOut = {
-    val train = read[Trace](in.train)
-    val test = read[Trace](in.test)
-    val metrics = train.zip(test).map { case (ref, res) => evaluate(ref, res, in.interpolate) }.toArray
+case class SpatialDistortionOp(
+  @Arg(help = "Train dataset")
+  train: Dataset,
+  @Arg(help = "Test dataset")
+  test: Dataset,
+  @Arg(help = "Whether to interpolate between points")
+  interpolate: Boolean = true)
+  extends ScalaOperator[SpatialDistortionOut] with SparkleOperator {
+
+  override def execute(ctx: OpContext): SpatialDistortionOut = {
+    val trainDs = read[Trace](train)
+    val testDs = read[Trace](test)
+    val metrics = trainDs.zip(testDs).map { case (ref, res) => evaluate(ref, res) }.toArray
     SpatialDistortionOut(
       min = metrics.map { case (k, v) => k -> v.min }.toMap,
       max = metrics.map { case (k, v) => k -> v.max }.toMap,
@@ -41,7 +49,7 @@ class SpatialDistortionOp extends Operator[SpatialDistortionIn, SpatialDistortio
       median = metrics.map { case (k, v) => k -> v.median }.toMap)
   }
 
-  private def evaluate(ref: Trace, res: Trace, interpolate: Boolean) = {
+  private def evaluate(ref: Trace, res: Trace) = {
     requireState(ref.id == res.id, s"Trace mismatch: ${ref.id} / ${res.id}")
     require(res.isEmpty || ref.size >= 1, s"Cannot evaluate spatial distortion with empty reference trace ${ref.id}")
     val points = ref.events.map(_.point)
@@ -101,14 +109,14 @@ class SpatialDistortionOp extends Operator[SpatialDistortionIn, SpatialDistortio
   }
 }
 
-case class SpatialDistortionIn(
-  @Arg(help = "Whether to interpolate between points") interpolate: Boolean = true,
-  @Arg(help = "Train dataset") train: Dataset,
-  @Arg(help = "Test dataset") test: Dataset)
-
 case class SpatialDistortionOut(
-  @Arg(help = "Spatial distortion min") min: Map[String, Double],
-  @Arg(help = "Spatial distortion max") max: Map[String, Double],
-  @Arg(help = "Spatial distortion stddev") stddev: Map[String, Double],
-  @Arg(help = "Spatial distortion avg") avg: Map[String, Double],
-  @Arg(help = "Spatial distortion median") median: Map[String, Double])
+  @Arg(help = "Spatial distortion min")
+  min: Map[String, Double],
+  @Arg(help = "Spatial distortion max")
+  max: Map[String, Double],
+  @Arg(help = "Spatial distortion stddev")
+  stddev: Map[String, Double],
+  @Arg(help = "Spatial distortion avg")
+  avg: Map[String, Double],
+  @Arg(help = "Spatial distortion median")
+  median: Map[String, Double])

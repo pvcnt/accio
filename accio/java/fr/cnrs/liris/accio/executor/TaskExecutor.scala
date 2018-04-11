@@ -23,14 +23,14 @@ import java.nio.file.{Files, Path}
 
 import com.google.inject.{Inject, Singleton}
 import com.twitter.util.logging.Logging
-import fr.cnrs.liris.accio.api.thrift.{OpResult, Task}
-import fr.cnrs.liris.accio.runtime.{OpExecutor, OpExecutorOpts}
+import fr.cnrs.liris.accio.api.thrift.{OpPayload, OpResult}
+import fr.cnrs.liris.accio.runtime.OpExecutor
 import fr.cnrs.liris.util.scrooge.BinaryScroogeSerializer
 
 @Singleton
 final class TaskExecutor @Inject()(opExecutor: OpExecutor) extends Logging {
-  def execute(task: Task, outputFile: Path): Int = {
-    val result = execute(task)
+  def execute(payload: OpPayload, outputFile: Path): Int = {
+    val result = execute(payload)
     Files.createDirectories(outputFile.getParent)
     val fos = new FileOutputStream(outputFile.toFile)
     try {
@@ -41,11 +41,10 @@ final class TaskExecutor @Inject()(opExecutor: OpExecutor) extends Logging {
     result.exitCode
   }
 
-  private def execute(task: Task): OpResult = {
-    logger.info(s"Starting execution of task ${task.id}")
+  private def execute(payload: OpPayload): OpResult = {
+    logger.info(s"Starting execution of operator ${payload.op}")
     try {
-      val opts = OpExecutorOpts(useProfiler = true)
-      opExecutor.execute(task.payload, opts)
+      opExecutor.execute(payload)
     } catch {
       case e: Throwable =>
         // Normally, operator executor is supposed to be robust enough to catch all errors. But we

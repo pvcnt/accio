@@ -26,7 +26,7 @@ import fr.cnrs.liris.testing.UnitSpec
 /**
  * Unit tests for [[PoisReidentOp]].
  */
-class PoisReidentOpSpec extends UnitSpec with OperatorSpec with WithTraceGenerator {
+class PoisReidentOpSpec extends UnitSpec with ScalaOperatorSpec with WithTraceGenerator {
   behavior of "PoisReidentOp"
 
   private[this] lazy val trainDs = {
@@ -43,7 +43,7 @@ class PoisReidentOpSpec extends UnitSpec with OperatorSpec with WithTraceGenerat
   }
 
   it should "identify all users when ran on the same data" in {
-    val res = new PoisReidentOp().execute(ReidentificationIn(trainDs, trainDs), ctx)
+    val res = PoisReidentOp(trainDs, trainDs).execute(ctx)
     res.rate shouldBe 1
     res.matches("user1") shouldBe "user1"
     res.matches("user2") shouldBe "user2"
@@ -64,7 +64,7 @@ class PoisReidentOpSpec extends UnitSpec with OperatorSpec with WithTraceGenerat
     ))
     val testDs = writePois(resPois1, resPois2, resPois3)
 
-    val res = new PoisReidentOp().execute(ReidentificationIn(trainDs, testDs), ctx)
+    val res = PoisReidentOp(trainDs, testDs).execute(ctx)
     res.rate shouldBe closeTo(1d / 3, 0.001)
     res.matches("user1") shouldBe "user1"
     res.matches("user2") shouldBe "user3"

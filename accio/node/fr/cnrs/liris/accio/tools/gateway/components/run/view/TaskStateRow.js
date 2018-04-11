@@ -38,7 +38,7 @@ let TaskStateRow = React.createClass({
     const {node, runId} = this.props;
     const isStarted = (node.started_at != null);
     const isCompleted = (node.completed_at != null);
-    const isSuccessful = (node.status == 'success');
+    const isSuccessful = (node.status === 'success');
 
     const duration = isCompleted
       ? node.completed_at - node.started_at
@@ -46,13 +46,11 @@ let TaskStateRow = React.createClass({
       ? moment().valueOf() - node.started_at
       : null
     const glyph = isCompleted
-      ? (isSuccessful ? 'ok' : node.status == 'lost' ? 'time' : node.status == 'killed' ? 'exclamation-sign' : 'remove')
+      ? (isSuccessful ? 'ok' : node.status === 'killed' ? 'exclamation-sign' : 'remove')
       : isStarted
       ? 'refresh'
       : 'upload'
-    const label = node.cache_hit
-      ? <Label>Cache hit</Label>
-      : node.status == 'cancelled'
+    const label = node.status === 'cancelled'
       ? <Label bsStyle="danger">Cancelled</Label>
       : isCompleted
       ? <Label bsStyle={isSuccessful ? 'success' : 'danger'}>
@@ -65,7 +63,7 @@ let TaskStateRow = React.createClass({
       : node.status === 'waiting'
       ? <Label>Waiting</Label>
       : <Label>Scheduled</Label>
-    const hasLogs = !node.cache_hit && node.status !== 'waiting' && node.status !== 'scheduled'
+    const hasLogs = node.status !== 'waiting' && node.status !== 'scheduled'
 
     return (<div>
       <Row>

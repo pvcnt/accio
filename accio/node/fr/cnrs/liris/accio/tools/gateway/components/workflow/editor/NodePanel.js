@@ -72,11 +72,11 @@ class NodePanel extends React.Component {
   handleSubmit(e) {
     e.nativeEvent.preventDefault();
     const workflow = cloneDeep(this.props.workflow);
-    const idx = findIndex(workflow.graph, node => node.name === this.props.node.name);
-    workflow.graph[idx].inputs = this.state.inputs;
+    const idx = findIndex(workflow.nodes, node => node.name === this.props.node.name);
+    workflow.nodes[idx].inputs = this.state.inputs;
     if (this.state.name !== this.props.node.name) {
-      workflow.graph[idx].name = this.state.name;
-      workflow.graph.forEach((node) => {
+      workflow.nodes[idx].name = this.state.name;
+      workflow.nodes.forEach((node) => {
         forEach(node.inputs, (v, k) => {
           if (v.reference && v.reference.node === this.props.node.name) {
             node.inputs[k].reference.node = this.state.name;
@@ -90,8 +90,8 @@ class NodePanel extends React.Component {
   @autobind
   handleDelete() {
     const workflow = cloneDeep(this.props.workflow);
-    const idx = findIndex(workflow.graph, node => node.name === this.props.node.name);
-    delete workflow.graph[idx];
+    const idx = findIndex(workflow.nodes, node => node.name === this.props.node.name);
+    delete workflow.nodes[idx];
     this.props.onChange(workflow);
   }
 
@@ -127,7 +127,7 @@ class NodePanel extends React.Component {
             value = {param: value};
           } else {
             const reference = {node: value.substring(0, pos), port: value.substring(pos + 1)};
-            const targetNode = find(this.props.workflow.graph, node => node.name === reference.node);
+            const targetNode = find(this.props.workflow.nodes, node => node.name === reference.node);
             if (!targetNode) {
               help = 'Unknown node name';
               status = 'error';

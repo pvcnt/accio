@@ -32,7 +32,7 @@ class GraphValidatorSpec extends UnitSpec {
   private val validator = new GraphValidator(new OpRegistry(Operators.ops))
 
   it should "validate a legitimate graph" in {
-    val struct = thrift.Graph(Seq(
+    val struct = Seq(
       thrift.Node(
         op = "FirstSimple",
         name = "FirstSimple",
@@ -52,8 +52,7 @@ class GraphValidatorSpec extends UnitSpec {
         name = "SecondSimple",
         inputs = Map(
           "dbl" -> thrift.Input.Value(Values.encodeDouble(3.14)),
-          "data" -> thrift.Input.Reference(thrift.Reference("FirstSimple", "data"))))
-    ))
+          "data" -> thrift.Input.Reference(thrift.Reference("FirstSimple", "data")))))
     val res = validator.validate(Graph.fromThrift(struct))
     res.isValid shouldBe true
     res.errors should have size 0
@@ -61,7 +60,7 @@ class GraphValidatorSpec extends UnitSpec {
   }
 
   it should "detect duplicate node name" in {
-    val struct = thrift.Graph(Seq(
+    val struct = Seq(
       thrift.Node(
         op = "FirstSimple",
         name = "FirstSimple",
@@ -71,48 +70,45 @@ class GraphValidatorSpec extends UnitSpec {
         name = "FirstSimple",
         inputs = Map(
           "dbl" -> thrift.Input.Value(Values.encodeDouble(3.14)),
-          "data" -> thrift.Input.Reference(thrift.Reference("FirstSimple", "data"))))
-    ))
+          "data" -> thrift.Input.Reference(thrift.Reference("FirstSimple", "data")))))
     val res = validator.validate(Graph.fromThrift(struct))
     res.isValid shouldBe false
     res.errors should contain(FieldViolation("Duplicate node name: FirstSimple", "graph"))
   }
 
   it should "detect unknown operator" in {
-    val struct = thrift.Graph(Seq(thrift.Node(op = "InvalidOp", name = "MyOp")))
+    val struct = Seq(thrift.Node(op = "InvalidOp", name = "MyOp"))
     val res = validator.validate(Graph.fromThrift(struct))
     res.isValid shouldBe false
     res.errors should contain theSameElementsAs Set(FieldViolation("Unknown operator: InvalidOp", "graph.0.op"))
   }
 
   it should "detect unknown input name" in {
-    val struct = thrift.Graph(Seq(
+    val struct = Seq(
       thrift.Node(
         op = "FirstSimple",
         name = "FirstSimple",
         inputs = Map(
           "foo" -> thrift.Input.Value(Values.encodeInteger(42)),
-          "bar" -> thrift.Input.Value(Values.encodeInteger(43))))
-    ))
+          "bar" -> thrift.Input.Value(Values.encodeInteger(43)))))
     val res = validator.validate(Graph.fromThrift(struct))
     res.isValid shouldBe false
     res.errors should contain theSameElementsAs Set(FieldViolation("Unknown input for operator FirstSimple", "graph.0.inputs.bar"))
   }
 
   it should "detect invalid input type" in {
-    val struct = thrift.Graph(Seq(
+    val struct = Seq(
       thrift.Node(
         op = "FirstSimple",
         name = "FirstSimple",
-        inputs = Map("foo" -> thrift.Input.Value(Values.encodeString("bar"))))
-    ))
+        inputs = Map("foo" -> thrift.Input.Value(Values.encodeString("bar")))))
     val res = validator.validate(Graph.fromThrift(struct))
     res.isValid shouldBe false
     res.errors should contain theSameElementsAs Set(FieldViolation("Data type mismatch: requires integer, got string", "graph.0.inputs.foo"))
   }
 
   it should "detect unknown input predecessor name" in {
-    val struct = thrift.Graph(Seq(
+    val struct = Seq(
       thrift.Node(
         op = "FirstSimple",
         name = "FirstSimple",
@@ -122,14 +118,14 @@ class GraphValidatorSpec extends UnitSpec {
         name = "SecondSimple",
         inputs = Map(
           "dbl" -> thrift.Input.Value(Values.encodeDouble(3.14)),
-          "data" -> thrift.Input.Reference(thrift.Reference("UnknownTesting", "data"))))))
+          "data" -> thrift.Input.Reference(thrift.Reference("UnknownTesting", "data")))))
     val res = validator.validate(Graph.fromThrift(struct))
     res.isValid shouldBe false
     res.errors should contain theSameElementsAs Set(FieldViolation("Reference to unknown node: UnknownTesting", "graph.1.inputs.data"))
   }
 
   it should "detect unknown input predecessor port" in {
-    val struct = thrift.Graph(Seq(
+    val struct = Seq(
       thrift.Node(
         op = "FirstSimple",
         name = "FirstSimple",
@@ -139,14 +135,14 @@ class GraphValidatorSpec extends UnitSpec {
         name = "SecondSimple",
         inputs = Map(
           "dbl" -> thrift.Input.Value(Values.encodeDouble(3.14)),
-          "data" -> thrift.Input.Reference(thrift.Reference("FirstSimple", "unknown"))))))
+          "data" -> thrift.Input.Reference(thrift.Reference("FirstSimple", "unknown")))))
     val res = validator.validate(Graph.fromThrift(struct))
     res.isValid shouldBe false
     res.errors should contain theSameElementsAs Set(FieldViolation("Unknown output port for operator FirstSimple: FirstSimple/unknown", "graph.1.inputs.data"))
   }
 
   it should "detect missing roots" in {
-    val struct = thrift.Graph(Seq(
+    val struct = Seq(
       thrift.Node(
         op = "SecondSimple",
         name = "First",
@@ -158,14 +154,14 @@ class GraphValidatorSpec extends UnitSpec {
         name = "Second",
         inputs = Map(
           "dbl" -> thrift.Input.Value(Values.encodeDouble(3.14)),
-          "data" -> thrift.Input.Reference(thrift.Reference("First", "data"))))))
+          "data" -> thrift.Input.Reference(thrift.Reference("First", "data")))))
     val res = validator.validate(Graph.fromThrift(struct))
     res.isValid shouldBe false
     res.errors should contain theSameElementsAs Set(FieldViolation("No root node", "graph"))
   }
 
   it should "detect inconsistent data type" in {
-    val struct = thrift.Graph(Seq(
+    val struct = Seq(
       thrift.Node(
         op = "FirstSimple",
         name = "First",
@@ -173,32 +169,32 @@ class GraphValidatorSpec extends UnitSpec {
       thrift.Node(
         op = "FirstSimple",
         name = "Second",
-        inputs = Map("foo" -> thrift.Input.Reference(thrift.Reference("First", "data"))))))
+        inputs = Map("foo" -> thrift.Input.Reference(thrift.Reference("First", "data")))))
     val res = validator.validate(Graph.fromThrift(struct))
     res.isValid shouldBe false
     res.errors should contain theSameElementsAs Set(FieldViolation("Data type mismatch: requires integer, got dataset", "graph.1.inputs.foo"))
   }
 
   it should "detect missing input" in {
-    val struct = thrift.Graph(Seq(thrift.Node(op = "FirstSimple", name = "FirstSimple")))
+    val struct = Seq(thrift.Node(op = "FirstSimple", name = "FirstSimple"))
     val res = validator.validate(Graph.fromThrift(struct))
     res.isValid shouldBe false
     res.errors should contain theSameElementsAs Set(FieldViolation("Required input is missing: foo", "graph.0.inputs"))
   }
 
   it should "detect invalid node name" in {
-    val struct = thrift.Graph(Seq(
+    val struct = Seq(
       thrift.Node(
         op = "FirstSimple",
         name = "First/Simple",
-        inputs = Map("foo" -> thrift.Input.Value(Values.encodeInteger(42))))))
+        inputs = Map("foo" -> thrift.Input.Value(Values.encodeInteger(42)))))
     val res = validator.validate(Graph.fromThrift(struct))
     res.isValid shouldBe false
     res.errors should contain theSameElementsAs Set(FieldViolation("Invalid node name: First/Simple (should match [A-Z][a-zA-Z0-9_]+)", "graph.0"))
   }
 
   it should "detect cycles" in {
-    val struct = thrift.Graph(Seq(
+    val struct = Seq(
       thrift.Node(
         op = "FirstSimple",
         name = "FirstSimple",
@@ -214,18 +210,18 @@ class GraphValidatorSpec extends UnitSpec {
         name = "SecondSimple",
         inputs = Map(
           "dbl" -> thrift.Input.Value(Values.encodeDouble(3.14)),
-          "data" -> thrift.Input.Reference(thrift.Reference("ThirdSimple", "data"))))))
+          "data" -> thrift.Input.Reference(thrift.Reference("ThirdSimple", "data")))))
     val res = validator.validate(Graph.fromThrift(struct))
     res.isValid shouldBe false
     res.errors should contain theSameElementsAs Set(FieldViolation("Cycle detected: ThirdSimple -> SecondSimple -> ThirdSimple", "graph"))
   }
 
   it should "detect deprecated operators" in {
-    val struct = thrift.Graph(Seq(
+    val struct = Seq(
       thrift.Node(
         op = "Deprecated",
         name = "Deprecated",
-        inputs = Map("foo" -> thrift.Input.Value(Values.encodeInteger(42))))))
+        inputs = Map("foo" -> thrift.Input.Value(Values.encodeInteger(42)))))
     val res = validator.validate(Graph.fromThrift(struct))
     res.warnings should contain(FieldViolation("Operator is deprecated: Do not use it!", "graph.0.op"))
   }

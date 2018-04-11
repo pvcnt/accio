@@ -14,14 +14,16 @@
 # You should have received a copy of the GNU General Public License
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
+package(default_visibility = ["//visibility:public"])
+
 scala_library(
-  name = 'reflect',
+  name = "reflect",
   srcs = glob(["*.scala"]),
   deps = [
-    '//3rdparty/jvm/org/scala_lang:scalap',
+    "//accio/java/fr/cnrs/liris/util/cache",
+    "@scala//:scala-reflect",
   ],
   exports = [
-    '//3rdparty/jvm/org/scala_lang:scalap',
+    "//accio/java/fr/cnrs/liris/util/cache",
   ],
-  visibility = ["//visibility:public"],
 )

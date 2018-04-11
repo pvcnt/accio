@@ -110,7 +110,7 @@ final class RunFactory @Inject()(storage: Storage, @ClusterName clusterName: Str
       params = params,
       clonedFrom = clonedFrom,
       createdAt = System.currentTimeMillis(),
-      state = initialState(workflow.graph))
+      state = initialState(workflow.nodes))
   }
 
   /**
@@ -167,7 +167,7 @@ final class RunFactory @Inject()(storage: Storage, @ClusterName clusterName: Str
         params = defaultParams ++ params,
         parent = Some(parentId),
         createdAt = now,
-        state = initialState(workflow.graph))
+        state = initialState(workflow.nodes))
     }
 
     val parent = Run(
@@ -198,8 +198,8 @@ final class RunFactory @Inject()(storage: Storage, @ClusterName clusterName: Str
    *
    * @param graph Graph for which to create state.
    */
-  private def initialState(graph: Graph) = {
-    val nodes = graph.nodes.map { node =>
+  private def initialState(graph: Seq[Node]) = {
+    val nodes = graph.map { node =>
       NodeStatus(name = node.name, status = TaskState.Waiting)
     }.toSet
     RunStatus(progress = 0, status = TaskState.Scheduled, nodes = nodes)

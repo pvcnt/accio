@@ -26,63 +26,74 @@ import fr.cnrs.liris.testing.UnitSpec
  * Unit tests for [[CaseClass]].
  */
 class CaseClassSpec extends UnitSpec {
-  behavior of "CaseClass"
+  behavior of "StructDescriptor"
 
   it should "provide information about case class" in {
-    val reflClass = CaseClass[SomeCaseClass]
+    val refl = CaseClass.apply[TestCaseClass]
 
-    reflClass.runtimeClass shouldEqual classOf[SomeCaseClass]
-    reflClass.isAnnotated[Nullable] shouldBe false
-    reflClass.isAnnotated[CheckReturnValue] shouldBe true
+    refl.runtimeClass shouldEqual classOf[TestCaseClass]
+    refl.annotations.contains[Nullable] shouldBe false
+    refl.annotations.contains[CheckReturnValue] shouldBe true
   }
 
   it should "provide information about fields" in {
-    val reflClass = CaseClass[SomeCaseClass]
+    val refl = CaseClass.apply[TestCaseClass]
 
-    reflClass.fields.size shouldBe 3
+    refl.fields should have size 3
 
-    reflClass.fields(0).name shouldBe "i"
-    reflClass.fields(0).scalaType.runtimeClass shouldBe classOf[Option[_]]
-    reflClass.fields(0).scalaType.typeArguments.head.runtimeClass shouldBe classOf[java.lang.Integer]
-    reflClass.fields(0).defaultValue shouldBe Some(None)
-    reflClass.fields(0).isAnnotated[CheckReturnValue] shouldBe false
+    refl.fields(0).name shouldBe "i"
+    refl.fields(0).runtimeClass shouldBe classOf[Option[_]]
+    refl.fields(0).scalaType.isA[Option[Int]] shouldBe true
+    refl.fields(0).scalaType.isOption shouldBe true
+    refl.fields(0).defaultValue shouldBe Some(None)
+    refl.fields(0).annotations.contains[CheckReturnValue] shouldBe false
 
-    reflClass.fields(1).name shouldBe "j"
-    reflClass.fields(1).scalaType.runtimeClass shouldBe classOf[java.lang.Double]
-    reflClass.fields(1).defaultValue shouldBe None
-    reflClass.fields(1).annotation[Nullable] shouldBe a[Nullable]
-    reflClass.fields(1).isAnnotated[CheckReturnValue] shouldBe false
+    refl.fields(1).name shouldBe "j"
+    refl.fields(1).runtimeClass shouldBe classOf[Double]
+    refl.fields(1).scalaType.isA[Double] shouldBe true
+    refl.fields(1).scalaType.isOption shouldBe false
+    refl.fields(1).defaultValue shouldBe None
+    refl.fields(1).annotations.get[Nullable].get shouldBe a[Nullable]
+    refl.fields(1).annotations.contains[CheckReturnValue] shouldBe false
 
-    reflClass.fields(2).name shouldBe "s"
-    reflClass.fields(2).scalaType.runtimeClass shouldBe classOf[String]
-    reflClass.fields(2).defaultValue shouldBe Some("foobar")
-    reflClass.fields(2).isAnnotated[CheckReturnValue] shouldBe false
+    refl.fields(2).name shouldBe "s"
+    refl.fields(2).runtimeClass shouldBe classOf[String]
+    refl.fields(2).scalaType.isA[String] shouldBe true
+    refl.fields(2).scalaType.isOption shouldBe false
+    refl.fields(2).defaultValue shouldBe Some("foobar")
+    refl.fields(2).annotations.contains[CheckReturnValue] shouldBe false
   }
 
-  it should "not support multiple constructors case classes" in {
-    val expected = intercept[IllegalArgumentException] {
-      CaseClass[MultipleConstructorCaseClass]
-    }
-    expected.getMessage shouldBe "requirement failed: Multiple constructors case classes are not supported"
+  it should "reject non case classes" in {
+    val expected = intercept[IllegalArgumentException](CaseClass[PlainClass])
+    expected.getMessage shouldBe "Not a case class: fr.cnrs.liris.util.reflect.PlainClass"
   }
 
-  it should "not support non-static inner case classes" in {
-    val expected = intercept[IllegalArgumentException] {
-      CaseClass[CaseClassContainer#ContainedCaseClass]
-    }
-    expected.getMessage shouldBe "requirement failed: Non-static inner case classes are not supported"
+  it should "reject classes with multiple constructors" in {
+    val expected = intercept[IllegalArgumentException](CaseClass[MultipleConstructorCaseClass])
+    expected.getMessage shouldBe "Case class with multiple constructors is not supported: fr.cnrs.liris.util.reflect.MultipleConstructorCaseClass"
   }
-}
 
-@CheckReturnValue
-case class SomeCaseClass(i: Option[Int], @Nullable j: Double, s: String = "foobar")
+  it should "support static inner case classes" in {
+    val refl = CaseClass[CaseClassContainer.ValidCaseClass]
+    refl.fields should have size 1
+    refl.fields(0).name shouldBe "i"
+    refl.fields(0).scalaType.isA[Int] shouldBe true
+  }
 
-class CaseClassContainer(str: String) {
+  it should "support parametrized types" in {
+    val refl = CaseClass[ParametrizedType[Int]]
+    refl.fields should have size 1
+    refl.fields.head.scalaType.isA[Int] shouldBe true
+  }
 
-  case class ContainedCaseClass(i: Int)
+  it should "create new instances" in {
+    val refl = CaseClass.apply[TestCaseClass]
+    refl.newInstance(Seq(Some(3), 3.14, "bar")) shouldBe TestCaseClass(Some(3), 3.14, "bar")
+  }
 
-}
-
-case class MultipleConstructorCaseClass(i: Int) {
-  def this(s: String) = this(s.toInt)
+  it should "reject non-static inner case classes" in {
+    val expected = intercept[IllegalArgumentException](CaseClass.apply[CaseClassContainer#InvalidCaseClass])
+    expected.getMessage shouldBe "Non-static inner class is not supported: fr.cnrs.liris.util.reflect.CaseClassContainer#InvalidCaseClass"
+  }
 }

@@ -16,8 +16,8 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.api
+package fr.cnrs.liris.accio.scheduler
 
-import fr.cnrs.liris.accio.api.thrift.OpResult
+import fr.cnrs.liris.accio.api.thrift.OpPayload
 
-case class TaskCompletedEvent(runId: String, nodeName: String, result: OpResult, cacheKey: String)
+case class Process(id: String, runId: String, nodeName: String, payload: OpPayload)

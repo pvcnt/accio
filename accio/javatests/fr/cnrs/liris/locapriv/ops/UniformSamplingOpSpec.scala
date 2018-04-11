@@ -26,7 +26,7 @@ import fr.cnrs.liris.testing.UnitSpec
 /**
  * Unit tests for [[UniformSamplingOp]].
  */
-class UniformSamplingOpSpec extends UnitSpec with WithTraceGenerator with OperatorSpec {
+class UniformSamplingOpSpec extends UnitSpec with WithTraceGenerator with ScalaOperatorSpec {
   behavior of "UniformSamplingOp"
 
   it should "downsample traces" in {
@@ -65,7 +65,7 @@ class UniformSamplingOpSpec extends UnitSpec with WithTraceGenerator with Operat
 
   private def transform(data: Seq[Trace], probability: Double) = {
     val ds = writeTraces(data: _*)
-    val res = new UniformSamplingOp().execute(UniformSamplingIn(probability = probability, data = ds), ctx)
+    val res = UniformSamplingOp(probability = probability, data = ds).execute(ctx)
     readTraces(res.data)
   }
 }

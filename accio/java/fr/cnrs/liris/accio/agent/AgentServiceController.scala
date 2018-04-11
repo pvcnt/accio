@@ -108,7 +108,7 @@ final class AgentServiceController @Inject()(
         limit = args.req.limit,
         offset = args.req.offset)
       var workflows = storage.read(_.workflows.list(query))
-      workflows = workflows.copy(results = workflows.results.map(workflow => workflow.copy(graph = workflow.graph.unsetNodes)))
+      workflows = workflows.copy(results = workflows.results.map(workflow => workflow.copy(nodes = Seq.empty)))
       ListWorkflowsResponse(workflows.results, workflows.totalCount)
     }
   }

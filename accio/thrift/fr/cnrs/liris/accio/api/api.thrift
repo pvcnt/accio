@@ -19,9 +19,6 @@
 namespace java fr.cnrs.liris.accio.api.thrift
 
 typedef i64 Timestamp
-typedef string WorkflowId
-typedef string RunId
-typedef string TaskId
 
 enum AtomicType {
   BYTE,
@@ -64,12 +61,15 @@ struct Artifact {
   2: required Value value;
 }
 
-struct Metric {
+struct MetricValue {
   // Metric name.
-  1: required string name;
+  1: string name;
 
   // Value.
-  2: required double value;
+  2: double value;
+
+  // Unit in which the metric is expressed.
+  3: optional string unit;
 }
 
 struct User {
@@ -92,13 +92,13 @@ struct Reference {
  */
 struct Resource {
   // Fractional number of CPUs.
-  1: required double cpu;
+  1: required double cpus;
 
   // Quantity of free memory, in MB.
   2: required i64 ram_mb;
 
-  // Quantity of free disk space, in MB.
-  3: required i64 disk_mb;
+  // Quantity of free disk space, in GB.
+  3: required i64 disk_gb;
 }
 
 /**
@@ -130,9 +130,6 @@ struct OpDef {
   // Category. Only used for presentational purposes.
   2: required string category;
 
-  // Name of the class implementing this operator.
-  10: required string class_name;
-
   // One-line help text.
   3: optional string help;
 
@@ -154,26 +151,26 @@ struct OpDef {
   // Whether this operator is unstable, will produce deterministic outputs given the some inputs. Unstable operators
   // need a random seed specified to produce deterministic outputs.
   9: required bool unstable;
+
+  // Path to the executable implementing this operator.
+  10: required string executable;
 }
 
 /**
- * Payload containing everything needed to execute an operator. This structure embeds only the strict minimum of
- * information to ensure reproducibility of executions. For example, it means it cannot include information such
- * as the node name (the execution of an operator should not depend on the actual node name, only on the operator
- * name). This structure is used to compute a cache key for the result (among other things).
+ * Payload containing everything needed to execute an operator.
  */
 struct OpPayload {
   // Name of the operator to execute.
-  1: required string op;
+  1: string op;
 
   // Seed used by unstable operators (included even if the operator is not unstable);
-  2: required i64 seed;
+  2: i64 seed;
 
   // Mapping between a port name and its value. It should contain at least required inputs.
-  3: required map<string, Value> inputs;
+  3: list<Artifact> inputs;
 
-  // Cache key associated with this payload, used for further memoization.
-  4: required string cache_key;
+  // Resources required.
+  4: Resource resources;
 }
 
 /**
@@ -185,16 +182,16 @@ struct OpResult {
   // Exit code. It is particularly useful for operators launching external executables and monitoring their execution.
   // For built-in operators, it should still be included. 0 means a successful execution, any other value represents
   // a failed execution.
-  1: required i32 exit_code;
+  1: i32 exit_code;
 
   // Arfifacts produced by the operator execution. This should be left empty if the exit code indicates a failure.
   // If filled, there should be an artifact per output port of the operator, no more and no less.
-  2: required set<Artifact> artifacts;
+  2: list<Artifact> artifacts;
 
   // Metrics produced by the operator execution. This can always be filled, whether or not the execution is successful.
   // There is no definition of metrics produced by an operator, so any relevant metrics can be included here and will
   // be exposed thereafter.
-  3: required set<Metric> metrics;
+  3: list<MetricValue> metrics;
 }
 
 /**
@@ -215,8 +212,6 @@ enum TaskState {
   KILLED,
   // Cancelled, because a dependency resulted in a failure.
   CANCELLED,
-  // Lost, got no heartbeat from the task executing this node.
-  LOST,
 }
 
 /**
@@ -238,15 +233,8 @@ struct NodeStatus {
   // Result of the node execution, either success or failed. Should be filled when the node is completed.
   5: optional OpResult result;
 
-  // Cache key used for result memoization. If filled, the `result` field has to be filled too.
-  6: optional string cache_key;
-
-  // Whether it corresponds to a cache hit, i.e., the value has not been explicitly computed. If true, the `result`
-  // field has to be filled.
-  7: required bool cache_hit = false;
-
   // Identifier of the task that handled the execution of this node.
-  8: optional TaskId task_id;
+  8: optional string task_id;
 }
 
 struct RunStatus {
@@ -258,7 +246,7 @@ struct RunStatus {
 }
 
 struct Package {
-  1: required WorkflowId workflow_id;
+  1: required string workflow_id;
   2: optional string workflow_version;
 }
 
@@ -278,7 +266,7 @@ struct Package {
  */
 struct Run {
   // Run unique identifier.
-  1: required RunId id;
+  1: required string id;
 
   // Specification of the associated workflow.
   2: required Package pkg;
@@ -308,13 +296,13 @@ struct Run {
   10: required map<string, Value> params;
 
   // Identifier of the run this instance is a child of.
-  11: optional RunId parent;
+  11: optional string parent;
 
   // Identifiers of children that are parent of this run.
-  12: required list<RunId> children;
+  12: required list<string> children;
 
   // Identifier of the run this instance has been cloned from.
-  13: optional RunId cloned_from;
+  13: optional string cloned_from;
 
   // Execution state.
   14: required RunStatus state;
@@ -347,7 +335,7 @@ struct Experiment {
   8: optional i32 repeat;
 
   // Identifier of the run this instance has been cloned from.
-  9: optional RunId cloned_from;
+  9: optional string cloned_from;
 }
 
 union Input {
@@ -362,10 +350,6 @@ struct Node {
   3: required map<string, Input> inputs;
 }
 
-struct Graph {
-  1: required list<Node> nodes;
-}
-
 /**
  * A workflow is a basically named graph of operators. A workflow can define parameters, which are
  * workflow-level inputs allowing to override the value of some node's inputs at runtime.
@@ -377,7 +361,7 @@ struct Graph {
 struct Workflow {
   // Workflow unique identifier. It is referenced by users creating runs, so it can be a little
   // descriptive and not totally random.
-  1: required WorkflowId id;
+  1: required string id;
 
   // Version identifier, unique among all version of a particular workflow. Besires this, there is
   // no constraint on it, it is just a plain string.
@@ -393,20 +377,10 @@ struct Workflow {
   5: optional User owner;
 
   // Graph definition.
-  6: required Graph graph;
+  6: required list<Node> nodes;
 
   // Workflow parameters.
   7: required list<ArgDef> params;
-}
-
-struct Task {
-  1: required TaskId id;
-  2: required RunId run_id;
-  3: required string node_name;
-  4: required OpPayload payload;
-  6: required Timestamp created_at;
-  7: required TaskState status;
-  8: required Resource resource;
 }
 
 /**
@@ -429,15 +403,6 @@ enum ErrorCode {
   FAILED_PRECONDITION = 7;
 }
 
-// Describes a URL link.
-struct Link {
-  // Describes what the link offers.
-  1: required string title;
-
-  // The URL of the link.
-  2: required string url;
-}
-
 struct ErrorDetails {
   // A name for the type of resource being accessed.
   1: optional string resource_type;
@@ -451,9 +416,6 @@ struct ErrorDetails {
   // A list of warnings on the request's fields. These do not indicate fatal errors, but rather
   // suggestions (e.g., deprecated stuff).
   4: list<FieldViolation> warnings;
-
-  // URL(s) pointing to additional information on handling the current error.
-  5: list<Link> links;
 }
 
 exception ServerException {

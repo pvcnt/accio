@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.scheduler.inject
+package fr.cnrs.liris.accio.scheduler.install
 
 import java.nio.file.Path
 
@@ -42,7 +42,7 @@ object SchedulerModule extends TwitterModule {
 
   // Local scheduler configuration.
   private[this] val forceSchedulingFlag = flag("force_scheduling", false, "Whether to force the scheduling of too large tasks")
-  private[this] val reservedCpuFlag = flag("reserved_cpu", 0d, "Amount of CPU that is not available for scheduling")
+  private[this] val reservedCpusFlag = flag("reserved_cpus", 0, "Number of cores that are not available for scheduling")
   private[this] val reservedRamFlag = flag("reserved_ram", StorageUnit.zero, "Amount of RAM that is not available for scheduling")
   private[this] val reservedDiskFlag = flag("reserved_disk", StorageUnit.zero, "Disk space that is not available for scheduling")
 
@@ -69,9 +69,9 @@ object SchedulerModule extends TwitterModule {
 
     override def get(): Scheduler = {
       val reservedResources = Resource(
-        cpu = reservedCpuFlag(),
+        cpus = reservedCpusFlag(),
         ramMb = reservedRamFlag().inMegabytes,
-        diskMb = reservedDiskFlag().inMegabytes)
+        diskGb = reservedDiskFlag().inGigabytes)
       new LocalScheduler(
         statsReceiver,
         eventBus,

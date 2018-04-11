@@ -50,11 +50,7 @@ class DescribeNodeController extends DescribeController[NodeStatus] with FormatH
       out.outErr.printOutLn(s"${padTo("Completed", colWidth)} ${format(Time.fromMilliseconds(completedAt))}")
       if (node.startedAt.isDefined) {
         out.outErr.printOut(s"${padTo("Duration", colWidth)} ")
-        if (node.cacheHit) {
-          out.outErr.printOutLn("<cache hit>")
-        } else {
-          out.outErr.printOutLn(format(Duration.fromMilliseconds(completedAt - node.startedAt.get)))
-        }
+        out.outErr.printOutLn(format(Duration.fromMilliseconds(completedAt - node.startedAt.get)))
       }
     }
 

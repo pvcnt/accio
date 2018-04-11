@@ -22,9 +22,9 @@ import java.nio.file.Paths
 
 import com.google.inject.Guice
 import com.twitter.inject.Injector
-import fr.cnrs.liris.accio.api.thrift.Task
-import fr.cnrs.liris.util.scrooge.BinaryScroogeSerializer
+import fr.cnrs.liris.accio.api.thrift.OpPayload
 import fr.cnrs.liris.locapriv.install.OpsModule
+import fr.cnrs.liris.util.scrooge.BinaryScroogeSerializer
 
 object AccioExecutorMain extends AccioExecutor
 
@@ -37,12 +37,12 @@ class AccioExecutor {
     val injector = Injector(Guice.createInjector(OpsModule))
     val executor = injector.instance[TaskExecutor]
 
-    val task = BinaryScroogeSerializer.fromString(args.head, Task)
+    val payload = BinaryScroogeSerializer.fromString(args.head, OpPayload)
     // The following line is here to trick the Sparkle executor in thinking there is less cores
     // than effectively available. This is used as a poor-man isolation system, when nothing more
     // sophisticated is in place, to prevent Sparkle from using all available cores.
-    val exitCode = com.twitter.jvm.numProcs.let(task.resource.cpu) {
-      executor.execute(task, Paths.get(args(1)))
+    val exitCode = com.twitter.jvm.numProcs.let(payload.resources.cpus) {
+      executor.execute(payload, Paths.get(args(1)))
     }
 
     // The exit code is returned by the executor, because it will be captured by the scheduler

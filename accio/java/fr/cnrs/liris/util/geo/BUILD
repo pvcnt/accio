@@ -15,13 +15,13 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_library(
-  name = 'geo',
+  name = "geo",
   srcs = glob(["*.scala"]),
   deps = [
-    '//accio/java/com/google/common/geometry',
+    "//accio/java/com/google/common/geometry",
   ],
   exports = [
-    '//accio/java/com/google/common/geometry',
+    "//accio/java/com/google/common/geometry",
   ],
   visibility = ["//visibility:public"],
 )

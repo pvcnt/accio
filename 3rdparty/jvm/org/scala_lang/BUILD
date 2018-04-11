@@ -2,11 +2,8 @@ load("@io_bazel_rules_scala//scala:scala_import.bzl", "scala_import")
 java_library(
     name = "scala_compiler",
     exports = [
-        "//3rdparty/jvm/org/scala_lang/modules:scala_parser_combinators_2_11",
         "//3rdparty/jvm/org/scala_lang/modules:scala_xml_2_11",
-        "//external:jar/org/scala_lang/scala_compiler",
-        ":scala_library",
-        ":scala_reflect"
+        "//external:jar/org/scala_lang/scala_compiler"
     ],
     visibility = [
         "//visibility:public"
@@ -39,13 +36,11 @@ java_library(
 
 
 
-scala_import(
+java_library(
     name = "scalap",
     exports = [
+        "//external:jar/org/scala_lang/scalap",
         ":scala_compiler"
-    ],
-    jars = [
-        "//external:jar/org/scala_lang/scalap"
     ],
     visibility = [
         "//visibility:public"

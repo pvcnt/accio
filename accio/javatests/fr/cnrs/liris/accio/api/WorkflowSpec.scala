@@ -29,7 +29,7 @@ class WorkflowSpec extends UnitSpec {
   it should "create a workflow" in {
     val struct = thrift.Workflow(
       id = "my_workflow",
-      graph = thrift.Graph(Seq(
+      nodes = Seq(
         thrift.Node(
           op = "FirstSimple",
           name = "FirstSimple",
@@ -39,7 +39,7 @@ class WorkflowSpec extends UnitSpec {
           name = "SecondSimple",
           inputs = Map(
             "dbl" -> thrift.Input.Value(Values.encodeDouble(3.14)),
-            "data" -> thrift.Input.Reference(thrift.Reference("FirstSimple", "data")))))),
+            "data" -> thrift.Input.Reference(thrift.Reference("FirstSimple", "data"))))),
       name = Some("my workflow"),
       owner = Some(thrift.User("him")),
       params = Seq(

@@ -1,60 +1,59 @@
-// Copied from Twitter's Finatra.
 /*
- * Copyright (C) 2016-2018 Twitter
+ * Accio is a platform to launch computer science experiments.
+ * Copyright (C) 2016-2018 Vincent Primault <v.primault@ucl.ac.uk>
  *
- * Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements.  See the
- * NOTICE file distributed with this work for additional information regarding copyright ownership.  The ASF
- * licenses this file to you under the Apache License, Version 2.0 (the "License"); you may not use this file
- * except in compliance with the License.  You may obtain a copy of the License at
+ * Accio is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * Accio is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the License
- * for the specific language governing permissions and limitations under the License.
+ * You should have received a copy of the GNU General Public License
+ * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package fr.cnrs.liris.util.reflect
 
-import scala.tools.scalap.scalax.rules.scalasig.TypeRefType
+import scala.reflect.runtime.{universe => ru}
 
-case class ScalaType(typeRefType: TypeRefType) {
-  private[this] val path = typeRefType.symbol.path
+// TODO: `tpe` should ultimately be private.
+final class ScalaType(val tpe: ru.Type) {
+  /**
+   * Return the associated JVM runtime class.
+   */
+  lazy val runtimeClass: Class[_] = ReflectUtils.classForType(tpe)
 
-  val runtimeClass: Class[_] = CaseClassSigParser.loadClass(path)
+  def isA[T: ru.TypeTag]: Boolean = tpe =:= ru.typeOf[T]
 
-  def primitiveAwareErasure: Class[_] = primitiveAwareLoadClass(path)
+  def isLike[T: ru.TypeTag]: Boolean = tpe <:< ru.typeOf[T]
 
-  val typeArguments: Seq[ScalaType] = {
-    val typeArgs = typeRefType.typeArgs.asInstanceOf[Seq[TypeRefType]]
-    typeArgs.map(ScalaType.apply)
-  }
+  def args: Seq[ScalaType] = tpe.typeArgs.map(new ScalaType(_))
 
-  def isPrimitive: Boolean = runtimeClass != classOf[AnyRef]
+  def baseType[T: ru.TypeTag]: ScalaType = new ScalaType(tpe.baseType(ru.typeOf[T].typeSymbol))
 
-  def isCollection: Boolean = classOf[Iterable[Any]].isAssignableFrom(runtimeClass)
+  /**
+   * Return whether this field is an optional field.
+   */
+  def isOption: Boolean = tpe <:< ScalaType.OPTION
 
-  def isMap: Boolean = classOf[Map[Any, Any]].isAssignableFrom(runtimeClass)
+  def isUnit: Boolean = tpe =:= ScalaType.UNIT
 
-  def isArray: Boolean = path == "scala.Array"
+  override def toString: String = tpe.toString
 
-  def isUnit: Boolean = path == "scala.Unit"
+  override def hashCode: Int = tpe.hashCode()
 
-  def isEnum: Boolean = runtimeClass.isEnum
+  override def equals(obj: scala.Any): Boolean =
+    obj match {
+      case scalaType: ScalaType => scalaType.tpe =:= tpe
+      case _ => false
+    }
+}
 
-  override def toString: String =
-    runtimeClass.getName + (if (typeArguments.nonEmpty) "[" + typeArguments.map(_.toString).mkString(",") + "]" else "")
-
-  /* Needed to support Array creation (Derived from Jerkson) */
-  private def primitiveAwareLoadClass(path: String): Class[_] = path match {
-    case "scala.Boolean" => classOf[Boolean]
-    case "scala.Byte" => classOf[Byte]
-    case "scala.Char" => classOf[Char]
-    case "scala.Double" => classOf[Double]
-    case "scala.Float" => classOf[Float]
-    case "scala.Int" => classOf[Int]
-    case "scala.Long" => classOf[Long]
-    case "scala.Short" => classOf[Short]
-    case _ => CaseClassSigParser.loadClass(path)
-  }
+object ScalaType {
+  private[reflect] val OPTION = ru.typeOf[Option[_]]
+  private[reflect] val UNIT = ru.typeOf[Unit]
 }

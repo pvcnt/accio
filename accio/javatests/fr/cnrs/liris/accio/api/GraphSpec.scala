@@ -27,7 +27,7 @@ class GraphSpec extends UnitSpec {
   behavior of "Graph"
 
   it should "create a graph" in {
-    val struct = thrift.Graph(Seq(
+    val struct = Seq(
       thrift.Node(
         op = "FirstSimple",
         name = "FirstSimple",
@@ -47,8 +47,7 @@ class GraphSpec extends UnitSpec {
         name = "SecondSimple",
         inputs = Map(
           "dbl" -> thrift.Input.Value(Values.encodeDouble(3.14)),
-          "data" -> thrift.Input.Reference(thrift.Reference("FirstSimple", "data"))))
-    ))
+          "data" -> thrift.Input.Reference(thrift.Reference("FirstSimple", "data")))))
     val graph = Graph.fromThrift(struct)
     graph("FirstSimple").outputs should contain theSameElementsAs Map("data" -> Set(
       thrift.Reference("ThirdSimple", "data1"),

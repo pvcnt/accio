@@ -24,60 +24,55 @@ import com.twitter.util.StorageUnit
 import com.twitter.util.logging.Logging
 import fr.cnrs.liris.accio.api.thrift._
 import fr.cnrs.liris.accio.api.{Utils, Values}
-import fr.cnrs.liris.accio.sdk.{Arg, Op, Operator}
-import fr.cnrs.liris.util.reflect.{CaseClass, PlainClass, ScalaType}
+import fr.cnrs.liris.accio.sdk.{Arg, Dataset, Op, ScalaOperator}
 import fr.cnrs.liris.util.ResourceFileLoader
 import fr.cnrs.liris.util.StringUtils.maybe
+import fr.cnrs.liris.util.geo.{Distance, Location}
+import fr.cnrs.liris.util.reflect.{CaseClass, ScalaType}
+import org.joda.time.{Duration, Instant}
 
-import scala.reflect.{classTag, ClassTag}
+import scala.reflect.runtime.{universe => ru}
 
 /**
  * Metadata about an operator, i.e., its definition and runtime information.
  *
- * @param defn     Operator definition.
- * @param opClass  Operator class.
- * @param inClass  Operator's input arguments class.
- * @param outClass Operator's output arguments class.
+ * @param defn    Operator definition.
+ * @param opClass Operator class.
  */
-case class OpMeta(
-  defn: OpDef,
-  opClass: Class[_ <: Operator[_, _]],
-  inClass: Option[Class[_]],
-  outClass: Option[Class[_]])
+final class OpMeta(val defn: OpDef, val opClass: CaseClass)
 
 object OpMeta extends Logging {
-  def apply[T <: Operator[_, _]: ClassTag]: OpMeta = apply(classTag[T].runtimeClass.asInstanceOf[Class[T]])
+  def apply[T <: ScalaOperator[_] : ru.TypeTag]: OpMeta = apply(ru.typeOf[T])
 
-  def apply[T <: Operator[_, _]](clazz: Class[T]): OpMeta =
-    try {
-      val opRefl = PlainClass(clazz)
-      opRefl.getAnnotation[Op] match {
-        case None => throw new IllegalArgumentException(s"Operator must be annotated with @Op")
-        case Some(op) =>
-          val inRefl = getInRefl(opRefl)
-          val outRefl = getOutRefl(opRefl)
-          val name = if (op.name.nonEmpty) op.name else clazz.getSimpleName.stripSuffix("Op")
-          if (Utils.OpRegex.findFirstIn(name).isEmpty) {
-            throw new InvalidOpDefException(clazz, s"Illegal operator name: $name")
-          }
-          val resource = Resource(op.cpu, parseStorageUnit(op.ram()).inMegabytes, parseStorageUnit(op.disk()).inMegabytes)
-          val defn = OpDef(
-            name = name,
-            className = clazz.getName,
-            inputs = inRefl.map(getInputs).getOrElse(Seq.empty),
-            outputs = outRefl.map(getOutputs).getOrElse(Seq.empty),
-            help = maybe(op.help),
-            description = maybe(op.description).flatMap(loadDescription(_, clazz)),
-            category = op.category,
-            deprecation = maybe(op.deprecation),
-            unstable = op.unstable,
-            resource = resource)
-          OpMeta(defn, clazz, inRefl.map(_.runtimeClass), outRefl.map(_.runtimeClass))
-      }
-    } catch {
-      case e: IllegalArgumentException =>
-        throw new InvalidOpDefException(clazz, e.getMessage.stripPrefix("requirement failed: "))
+  def apply(tpe: ru.Type): OpMeta = {
+    val opRefl = CaseClass.apply(tpe)
+    opRefl.annotations.get[Op] match {
+      case None => throw new IllegalArgumentException(s"Operator in $tpe must be annotated with @Op")
+      case Some(op) =>
+        val clazz = opRefl.runtimeClass
+        val outRefl = getOutRefl(opRefl)
+        val name = if (op.name.nonEmpty) op.name else clazz.getSimpleName.stripSuffix("Op")
+        if (Utils.OpRegex.findFirstIn(name).isEmpty) {
+          throw new IllegalArgumentException(s"Invalid name for operator in $tpe: $name")
+        }
+        val resources = Resource(
+          cpus = op.cpus,
+          ramMb = parseStorageUnit(op.ram()).inMegabytes,
+          diskGb = parseStorageUnit(op.disk()).inGigabytes)
+        val defn = OpDef(
+          name = name,
+          category = op.category,
+          inputs = getInputs(opRefl),
+          outputs = getOutputs(outRefl),
+          help = maybe(op.help),
+          description = maybe(op.description).flatMap(loadDescription(_, clazz)),
+          deprecation = maybe(op.deprecation),
+          unstable = op.unstable,
+          resource = resources,
+          executable = ".")
+        new OpMeta(defn, opRefl)
     }
+  }
 
   private def loadDescription(description: String, clazz: Class[_]) = {
     if (description.startsWith("resource:")) {
@@ -94,20 +89,16 @@ object OpMeta extends Logging {
     }
   }
 
-  private def getInRefl(opRefl: PlainClass): Option[CaseClass] = {
-    val typ = opRefl.scalaType.baseClass(classOf[Operator[_, _]]).typeArgs.head
-    if (typ.isUnit) None else Some(CaseClass(typ.runtimeClass))
-  }
-
-  private def getOutRefl(opRefl: PlainClass): Option[CaseClass] = {
-    val typ = opRefl.scalaType.baseClass(classOf[Operator[_, _]]).typeArgs.last
-    if (typ.isUnit) None else Some(CaseClass(typ.runtimeClass))
+  private def getOutRefl(opRefl: CaseClass): CaseClass = {
+    val typ = opRefl.scalaType.baseType[ScalaOperator[_]].args.head
+    CaseClass.apply(typ.tpe)
   }
 
   private def getInputs(inRefl: CaseClass) =
     inRefl.fields.map { field =>
-      field.getAnnotation[Arg] match {
-        case None => throw new IllegalArgumentException(s"Input ${field.name} must be annotated with @Arg")
+      field.annotations.get[Arg] match {
+        case None => throw new IllegalArgumentException(
+          s"Input ${inRefl.runtimeClass.getName}.${field.name} must be annotated with @Arg")
         case Some(in) =>
           // To simplify some already too much complicated cases, we forbid to have optional inputs (i.e., of type
           // Option[_]) with a default value (i.e., Some(...)). It unnecessarily complicate things and later checks.
@@ -116,44 +107,73 @@ object OpMeta extends Logging {
           //
           // Impl. note: Option[_] fields do have a default value, which is None, hence the check that this default
           // value is defined and equals None.
-          require(!field.isOption || field.defaultValue.contains(None), s"Input ${field.name} cannot be optional with a default value")
+          if (field.scalaType.isOption && !field.defaultValue.contains(None)) {
+            throw new IllegalArgumentException(
+              s"Input ${inRefl.runtimeClass.getName}.${field.name} cannot be optional with a default value")
+          }
 
-          val kind = getDataType(if (field.isOption) field.scalaType.typeArguments.head else field.scalaType)
-          val defaultValue = if (field.isOption) None else field.defaultValue.flatMap(Values.encode(_, kind))
+          val isOptional = field.scalaType.isOption
+          val dataType = getDataType(if (isOptional) field.scalaType.args.head else field.scalaType)
+          val defaultValue = if (isOptional) {
+            None
+          } else {
+            field.defaultValue.flatMap(Values.encode(_, dataType))
+          }
           ArgDef(
             name = field.name,
-            kind = kind,
+            kind = dataType,
             help = maybe(in.help),
-            isOptional = field.isOption,
+            isOptional = isOptional,
             defaultValue = defaultValue)
       }
     }
 
   private def getOutputs(outRefl: CaseClass) = {
     outRefl.fields.flatMap { field =>
-      field.getAnnotation[Arg].map { out =>
-        ArgDef(
-          name = field.name,
-          help = maybe(out.help),
-          kind = getDataType(field.scalaType))
-      }.toSeq
+      field
+        .annotations
+        .get[Arg]
+        .map(out => ArgDef(field.name, getDataType(field.scalaType), maybe(out.help)))
+        .toSeq
     }
   }
 
   private def getDataType(scalaType: ScalaType): DataType = {
     // TODO: prevent nested types.
-    Values.getAtomicType(scalaType.runtimeClass) match {
+    getAtomicType(scalaType) match {
       case AtomicType.List =>
-        val of = Values.getAtomicType(scalaType.typeArguments.head.runtimeClass)
+        val of = getAtomicType(scalaType.args.head)
         DataType(AtomicType.List, Seq(of))
       case AtomicType.Set =>
-        val of = Values.getAtomicType(scalaType.typeArguments.head.runtimeClass)
+        val of = getAtomicType(scalaType.args.head)
         DataType(AtomicType.Set, Seq(of))
       case AtomicType.Map =>
-        val ofKeys = Values.getAtomicType(scalaType.typeArguments.head.runtimeClass)
-        val ofValues = Values.getAtomicType(scalaType.typeArguments.last.runtimeClass)
-        DataType(AtomicType.Map, Seq(ofKeys, ofValues))
+        val keys = getAtomicType(scalaType.args.head)
+        val values = getAtomicType(scalaType.args.last)
+        DataType(AtomicType.Map, Seq(keys, values))
       case atomicType => DataType(atomicType)
+    }
+  }
+
+  private def getAtomicType(scalaType: ScalaType): AtomicType = getAtomicType(scalaType.tpe)
+
+  private def getAtomicType(tpe: ru.Type): AtomicType = {
+    tpe match {
+      case c if c == ru.typeOf[Boolean] || c == ru.typeOf[java.lang.Boolean] => AtomicType.Boolean
+      case c if c == ru.typeOf[Byte] || c == ru.typeOf[java.lang.Byte] => AtomicType.Byte
+      case c if c == ru.typeOf[Int] || c == ru.typeOf[java.lang.Integer] => AtomicType.Integer
+      case c if c == ru.typeOf[Long] || c == ru.typeOf[java.lang.Long] => AtomicType.Long
+      case c if c == ru.typeOf[Double] || c == ru.typeOf[java.lang.Double] => AtomicType.Double
+      case c if c == ru.typeOf[String] => AtomicType.String
+      case c if c <:< ru.typeOf[Location] => AtomicType.Location
+      case c if c <:< ru.typeOf[Instant] => AtomicType.Timestamp
+      case c if c <:< ru.typeOf[Duration] => AtomicType.Duration
+      case c if c <:< ru.typeOf[Distance] => AtomicType.Distance
+      case c if c <:< ru.typeOf[Dataset] => AtomicType.Dataset
+      case c if c <:< ru.typeOf[Seq[_]] => AtomicType.List
+      case c if c <:< ru.typeOf[Set[_]] => AtomicType.Set
+      case c if c <:< ru.typeOf[Map[_, _]] => AtomicType.Map
+      case _ => throw new IllegalArgumentException(s"Unsupported data type: $tpe")
     }
   }
 

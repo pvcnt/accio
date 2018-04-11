@@ -19,23 +19,29 @@
 package fr.cnrs.liris.locapriv.ops
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.sdk.{Dataset, _}
+import fr.cnrs.liris.accio.sdk._
 import fr.cnrs.liris.locapriv.model.Trace
 
 @Op(
   category = "transform",
   help = "Enforce a given duration on each trace.",
   description = "Longer traces will be truncated, shorter traces will be discarded.",
-  cpu = 4,
+  cpus = 4,
   ram = "2G")
-class EnforceDurationOp extends Operator[EnforceDurationIn, EnforceDurationOut] with SparkleOperator {
-  override def execute(in: EnforceDurationIn, ctx: OpContext): EnforceDurationOut = {
-    val data = read[Trace](in.data)
-    val output = write(data.flatMap(transform(_, in.minDuration, in.maxDuration)), ctx)
+case class EnforceDurationOp(
+  @Arg(help = "Minimum duration of a trace")
+  minDuration: Option[Duration],
+  @Arg(help = "Maximum duration of a trace")
+  maxDuration: Option[Duration],
+  @Arg(help = "Input dataset") data: Dataset)
+  extends ScalaOperator[EnforceDurationOut] with SparkleOperator {
+
+  override def execute(ctx: OpContext): EnforceDurationOut = {
+    val output = write(read[Trace](data).flatMap(transform), ctx)
     EnforceDurationOut(output)
   }
 
-  private def transform(trace: Trace, minDuration: Option[Duration], maxDuration: Option[Duration]): Seq[Trace] = {
+  private def transform(trace: Trace): Seq[Trace] = {
     var res = trace
     maxDuration.foreach { duration =>
       val startAt = res.events.head.time
@@ -49,10 +55,6 @@ class EnforceDurationOp extends Operator[EnforceDurationIn, EnforceDurationOut] 
   }
 }
 
-case class EnforceDurationIn(
-  @Arg(help = "Minimum duration of a trace") minDuration: Option[org.joda.time.Duration],
-  @Arg(help = "Maximum duration of a trace") maxDuration: Option[org.joda.time.Duration],
-  @Arg(help = "Input dataset") data: Dataset)
-
 case class EnforceDurationOut(
-  @Arg(help = "Output dataset") data: Dataset)
+  @Arg(help = "Output dataset")
+  data: Dataset)

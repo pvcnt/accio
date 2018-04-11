@@ -21,8 +21,8 @@ package fr.cnrs.liris.accio.runtime
 import fr.cnrs.liris.accio.api.Values
 import fr.cnrs.liris.accio.api.thrift._
 import fr.cnrs.liris.accio.sdk._
-import fr.cnrs.liris.util.geo.{Distance, LatLng, Location}
 import fr.cnrs.liris.testing.UnitSpec
+import fr.cnrs.liris.util.geo.{Distance, LatLng}
 import org.joda.time.{Duration, Instant}
 
 /**
@@ -32,10 +32,8 @@ class OpMetaSpec extends UnitSpec {
   behavior of "OpMeta"
 
   it should "read definition of operators" in {
-    val opMeta = OpMeta.apply(classOf[DoALotOfThingsOp])
-    opMeta.opClass shouldBe classOf[DoALotOfThingsOp]
-    opMeta.inClass shouldBe Some(classOf[DoALotOfThingsIn])
-    opMeta.outClass shouldBe Some(classOf[DoALotOfThingsOut])
+    val opMeta = OpMeta.apply[DoALotOfThingsOp]
+    opMeta.opClass.runtimeClass shouldBe classOf[DoALotOfThingsOp]
 
     opMeta.defn.name shouldBe "CustomOpName"
     opMeta.defn.help shouldBe Some("help message")
@@ -61,19 +59,17 @@ class OpMetaSpec extends UnitSpec {
   }
 
   it should "support operators without output" in {
-    val meta = OpMeta.apply(classOf[NoOutputOp])
-    meta.outClass shouldBe None
+    val meta = OpMeta.apply[NoOutputOp]
     meta.defn.outputs should have size 0
   }
 
   it should "support operators without input" in {
-    val meta = OpMeta.apply(classOf[NoInputOp])
-    meta.inClass shouldBe None
+    val meta = OpMeta.apply[NoInputOp]
     meta.defn.inputs should have size 0
   }
 
   it should "have sensitive defaults" in {
-    val defn = OpMeta.apply(classOf[DefaultOp]).defn
+    val defn = OpMeta.apply[DefaultOp].defn
     defn.name shouldBe "Default"
     defn.help shouldBe None
     defn.description shouldBe None
@@ -82,145 +78,145 @@ class OpMetaSpec extends UnitSpec {
   }
 
   it should "support byte inputs" in {
-    val defn = OpMeta.apply(classOf[AllDataTypesOp]).defn
+    val defn = OpMeta.apply[AllDataTypesOp].defn
     assertMandatoryInput(defn, "byte", DataType(AtomicType.Byte))
     assertMandatoryInput(defn, "byte2", DataType(AtomicType.Byte), defaultValue = 2)
     assertOptionalInput(defn, "byte3", DataType(AtomicType.Byte))
   }
 
   it should "support integer inputs" in {
-    val defn = OpMeta.apply(classOf[AllDataTypesOp]).defn
+    val defn = OpMeta.apply[AllDataTypesOp].defn
     assertMandatoryInput(defn, "int", DataType(AtomicType.Integer))
     assertMandatoryInput(defn, "int2", DataType(AtomicType.Integer), defaultValue = 2)
     assertOptionalInput(defn, "int3", DataType(AtomicType.Integer))
   }
 
   it should "support long inputs" in {
-    val defn = OpMeta.apply(classOf[AllDataTypesOp]).defn
+    val defn = OpMeta.apply[AllDataTypesOp].defn
     assertMandatoryInput(defn, "long", DataType(AtomicType.Long))
     assertMandatoryInput(defn, "long2", DataType(AtomicType.Long), defaultValue = 2)
     assertOptionalInput(defn, "long3", DataType(AtomicType.Long))
   }
 
   it should "support double inputs" in {
-    val defn = OpMeta.apply(classOf[AllDataTypesOp]).defn
+    val defn = OpMeta.apply[AllDataTypesOp].defn
     assertMandatoryInput(defn, "dbl", DataType(AtomicType.Double))
     assertMandatoryInput(defn, "dbl2", DataType(AtomicType.Double), defaultValue = 3.14)
     assertOptionalInput(defn, "dbl3", DataType(AtomicType.Double))
   }
 
   it should "support boolean inputs" in {
-    val defn = OpMeta.apply(classOf[AllDataTypesOp]).defn
+    val defn = OpMeta.apply[AllDataTypesOp].defn
     assertMandatoryInput(defn, "bool", DataType(AtomicType.Boolean))
     assertMandatoryInput(defn, "bool2", DataType(AtomicType.Boolean), defaultValue = true)
     assertOptionalInput(defn, "bool3", DataType(AtomicType.Boolean))
   }
 
   it should "support string inputs" in {
-    val defn = OpMeta.apply(classOf[AllDataTypesOp]).defn
+    val defn = OpMeta.apply[AllDataTypesOp].defn
     assertMandatoryInput(defn, "str", DataType(AtomicType.String))
     assertMandatoryInput(defn, "str2", DataType(AtomicType.String), defaultValue = "some string")
     assertOptionalInput(defn, "str3", DataType(AtomicType.String))
   }
 
   it should "support location inputs" in {
-    val defn = OpMeta.apply(classOf[AllDataTypesOp]).defn
+    val defn = OpMeta.apply[AllDataTypesOp].defn
     assertMandatoryInput(defn, "loc", DataType(AtomicType.Location))
     assertMandatoryInput(defn, "loc2", DataType(AtomicType.Location), defaultValue = LatLng.degrees(0, 0))
     assertOptionalInput(defn, "loc3", DataType(AtomicType.Location))
   }
 
   it should "support timestamp inputs" in {
-    val defn = OpMeta.apply(classOf[AllDataTypesOp]).defn
+    val defn = OpMeta.apply[AllDataTypesOp].defn
     assertMandatoryInput(defn, "ts", DataType(AtomicType.Timestamp))
     assertMandatoryInput(defn, "ts2", DataType(AtomicType.Timestamp), defaultValue = new Instant(123456))
     assertOptionalInput(defn, "ts3", DataType(AtomicType.Timestamp))
   }
 
   it should "support duration parameters" in {
-    val defn = OpMeta.apply(classOf[AllDataTypesOp]).defn
+    val defn = OpMeta.apply[AllDataTypesOp].defn
     assertMandatoryInput(defn, "duration", DataType(AtomicType.Duration))
     assertMandatoryInput(defn, "duration2", DataType(AtomicType.Duration), defaultValue = new Duration(1000))
     assertOptionalInput(defn, "duration3", DataType(AtomicType.Duration))
   }
 
   it should "support distance parameters" in {
-    val defn = OpMeta.apply(classOf[AllDataTypesOp]).defn
+    val defn = OpMeta.apply[AllDataTypesOp].defn
     assertMandatoryInput(defn, "dist", DataType(AtomicType.Distance))
     assertMandatoryInput(defn, "dist2", DataType(AtomicType.Distance), defaultValue = Distance.meters(42))
     assertOptionalInput(defn, "dist3", DataType(AtomicType.Distance))
   }
 
   it should "support list inputs" in {
-    val defn = OpMeta.apply(classOf[AllDataTypesOp]).defn
+    val defn = OpMeta.apply[AllDataTypesOp].defn
     assertMandatoryInput(defn, "list", DataType(AtomicType.List, Seq(AtomicType.Integer)))
     assertMandatoryInput(defn, "list2", DataType(AtomicType.List, Seq(AtomicType.Integer)), defaultValue = Seq(3, 14))
   }
 
   it should "support set inputs" in {
-    val defn = OpMeta.apply(classOf[AllDataTypesOp]).defn
+    val defn = OpMeta.apply[AllDataTypesOp].defn
     assertMandatoryInput(defn, "set", DataType(AtomicType.Set, Seq(AtomicType.Integer)))
     assertMandatoryInput(defn, "set2", DataType(AtomicType.Set, Seq(AtomicType.Integer)), defaultValue = Set(3, 14))
   }
 
   it should "support map inputs" in {
-    val defn = OpMeta.apply(classOf[AllDataTypesOp]).defn
+    val defn = OpMeta.apply[AllDataTypesOp].defn
     assertMandatoryInput(defn, "map", DataType(AtomicType.Map, Seq(AtomicType.String, AtomicType.Integer)))
     assertMandatoryInput(defn, "map2", DataType(AtomicType.Map, Seq(AtomicType.String, AtomicType.Integer)), defaultValue = Map("foo" -> 3, "bar" -> 14))
   }
 
   it should "support dataset inputs" in {
-    val defn = OpMeta.apply(classOf[AllDataTypesOp]).defn
+    val defn = OpMeta.apply[AllDataTypesOp].defn
     assertMandatoryInput(defn, "data", DataType(AtomicType.Dataset))
     assertMandatoryInput(defn, "data2", DataType(AtomicType.Dataset), defaultValue = Dataset("/dev/null"))
     assertOptionalInput(defn, "data3", DataType(AtomicType.Dataset))
   }
 
   it should "detect missing @Op annotation" in {
-    val expected = intercept[InvalidOpDefException] {
-      OpMeta.apply(classOf[NonAnnotatedOp])
+    val expected = intercept[IllegalArgumentException] {
+      OpMeta.apply[NonAnnotatedOp]
     }
-    expected.getMessage should endWith(": Operator must be annotated with @Op")
+    expected.getMessage shouldBe "Operator in fr.cnrs.liris.accio.runtime.NonAnnotatedOp must be annotated with @Op"
   }
 
   it should "detect missing @Arg annotation" in {
-    val expected = intercept[InvalidOpDefException] {
-      OpMeta.apply(classOf[NonAnnotatedInOp])
+    val expected = intercept[IllegalArgumentException] {
+      OpMeta.apply[NonAnnotatedInOp]
     }
-    expected.getMessage should endWith(": Input s must be annotated with @Arg")
+    expected.getMessage shouldBe "Input fr.cnrs.liris.accio.runtime.NonAnnotatedInOp.s must be annotated with @Arg"
   }
 
-  it should "support missing @Out annotation" in {
-    OpMeta.apply(classOf[NonAnnotatedOutOp]).opClass shouldBe classOf[NonAnnotatedOutOp]
+  it should "support missing @Arg annotation on output" in {
+    OpMeta.apply[NonAnnotatedOutOp].opClass.runtimeClass shouldBe classOf[NonAnnotatedOutOp]
   }
 
   it should "detect unsupported data type" in {
-    val expected = intercept[InvalidOpDefException] {
-      OpMeta.apply(classOf[InvalidParamOp])
+    val expected = intercept[IllegalArgumentException] {
+      OpMeta.apply[InvalidParamOp]
     }
-    expected.getMessage shouldBe "Illegal definition of operator fr.cnrs.liris.accio.runtime.InvalidParamOp: Unsupported data type: scala.collection.Iterator"
+    expected.getMessage shouldBe "Unsupported data type: Iterator[Int]"
   }
 
   it should "detect optional fields to have a default value" in {
-    val expected = intercept[InvalidOpDefException] {
-      OpMeta.apply(classOf[OptionalWithDefaultValueOp])
+    val expected = intercept[IllegalArgumentException] {
+      OpMeta.apply[OptionalWithDefaultValueOp]
     }
-    expected.getMessage should endWith(": Input i cannot be optional with a default value")
+    expected.getMessage shouldBe "Input fr.cnrs.liris.accio.runtime.OptionalWithDefaultValueOp.i cannot be optional with a default value"
   }
 
-  private def assertMandatoryInput(defn: OpDef, name: String, kind: DataType): Unit =
-    doAssertInput(defn, name, kind, optional = false, None)
+  private def assertMandatoryInput(defn: OpDef, name: String, dataType: DataType): Unit =
+    doAssertInput(defn, name, dataType, optional = false, None)
 
-  private def assertMandatoryInput(defn: OpDef, name: String, kind: DataType, defaultValue: Any): Unit =
-    doAssertInput(defn, name, kind, optional = false, Some(defaultValue))
+  private def assertMandatoryInput(defn: OpDef, name: String, dataType: DataType, defaultValue: Any): Unit =
+    doAssertInput(defn, name, dataType, optional = false, Some(defaultValue))
 
-  private def assertOptionalInput(defn: OpDef, name: String, kind: DataType): Unit =
-    doAssertInput(defn, name, kind, optional = true, None)
+  private def assertOptionalInput(defn: OpDef, name: String, dataType: DataType): Unit =
+    doAssertInput(defn, name, dataType, optional = true, None)
 
-  private def doAssertInput(defn: OpDef, name: String, kind: DataType, optional: Boolean, defaultValue: Option[Any]): Unit = {
+  private def doAssertInput(defn: OpDef, name: String, dataType: DataType, optional: Boolean, defaultValue: Option[Any]): Unit = {
     val in = defn.inputs.find(_.name == name).get
-    in.kind shouldBe kind
+    in.kind shouldBe dataType
     in.isOptional shouldBe optional
-    in.defaultValue shouldBe defaultValue.map(Values.encode(_, kind).get)
+    in.defaultValue shouldBe defaultValue.map(Values.encode(_, dataType).get)
   }
 }

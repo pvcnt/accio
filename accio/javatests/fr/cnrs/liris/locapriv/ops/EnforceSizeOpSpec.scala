@@ -25,7 +25,7 @@ import fr.cnrs.liris.testing.UnitSpec
 /**
  * Unit tests for [[EnforceSizeOp]].
  */
-class EnforceSizeOpSpec extends UnitSpec with WithTraceGenerator with OperatorSpec {
+class EnforceSizeOpSpec extends UnitSpec with WithTraceGenerator with ScalaOperatorSpec {
   behavior of "EnforceSizeOp"
 
   it should "keep traces with a size greater than min threshold" in {
@@ -53,13 +53,13 @@ class EnforceSizeOpSpec extends UnitSpec with WithTraceGenerator with OperatorSp
 
   private def transformMinSize(data: Seq[Trace], size: Int) = {
     val ds = writeTraces(data: _*)
-    val res = new EnforceSizeOp().execute(EnforceSizeIn(minSize = Some(size), maxSize = None, data = ds), ctx)
+    val res = EnforceSizeOp(minSize = Some(size), maxSize = None, data = ds).execute(ctx)
     readTraces(res.data)
   }
 
   private def transformMaxSize(data: Seq[Trace], size: Int) = {
     val ds = writeTraces(data: _*)
-    val res = new EnforceSizeOp().execute(EnforceSizeIn(minSize = None, maxSize = Some(size), data = ds), ctx)
+    val res = EnforceSizeOp(minSize = None, maxSize = Some(size), data = ds).execute(ctx)
     readTraces(res.data)
   }
 }

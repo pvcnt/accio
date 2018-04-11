@@ -21,4 +21,5 @@ scala_test(
     "//accio/java/fr/cnrs/liris/util/collect",
     "//accio/javatests/fr/cnrs/liris/testing",
   ],
+  size = "small",
 )

@@ -15,11 +15,15 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_library(
-  name = 'cache',
+  name = "cache",
   srcs = glob(["*.scala"]),
   deps = [
-    '//3rdparty/jvm/com/google/guava',
-    '//3rdparty/jvm/com/twitter:util_core',
+    "//3rdparty/jvm/com/google/guava",
+    "//3rdparty/jvm/com/twitter:util_core",
+  ],
+  exports = [
+    "//3rdparty/jvm/com/google/guava",
+    "//3rdparty/jvm/com/twitter:util_core",
   ],
   visibility = ["//visibility:public"],
 )

@@ -25,19 +25,19 @@ import fr.cnrs.liris.locapriv.model.{Event, Trace}
 @Op(
   category = "transform",
   help = "Split traces, when there is a too long duration between consecutive events.",
-  cpu = 4,
+  cpus = 4,
   ram = "2G")
-class TemporalGapSplittingOp extends Operator[TemporalGapSplittingIn, TemporalGapSplittingOut] with SlidingSplitting with SparkleOperator {
-  override def execute(in: TemporalGapSplittingIn, ctx: OpContext): TemporalGapSplittingOut = {
-    val split = (buffer: Seq[Event], curr: Event) => (buffer.last.time to curr.time).duration >= in.duration
-    val output = read[Trace](in.data).flatMap(transform(_, split))
+case class TemporalGapSplittingOp(
+  @Arg(help = "Maximum duration between two consecutive events") duration: org.joda.time.Duration,
+  @Arg(help = "Input dataset") data: Dataset)
+  extends ScalaOperator[TemporalGapSplittingOut] with SlidingSplitting with SparkleOperator {
+
+  override def execute(ctx: OpContext): TemporalGapSplittingOut = {
+    val split = (buffer: Seq[Event], curr: Event) => (buffer.last.time to curr.time).duration >= duration
+    val output = read[Trace](data).flatMap(transform(_, split))
     TemporalGapSplittingOut(write(output, ctx))
   }
 }
-
-case class TemporalGapSplittingIn(
-  @Arg(help = "Maximum duration between two consecutive events") duration: org.joda.time.Duration,
-  @Arg(help = "Input dataset") data: Dataset)
 
 case class TemporalGapSplittingOut(
   @Arg(help = "Output dataset") data: Dataset)

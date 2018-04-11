@@ -62,7 +62,7 @@ const PARAMS = {
 const createGraph = (workflow) => {
   const graph = new dagreD3.graphlib.Graph(PARAMS.graph);
   graph.setGraph({});
-  workflow.graph.forEach((node) => {
+  workflow.nodes.forEach((node) => {
     forEach(node.inputs, (v) => {
       if (v.reference) {
         graph.setEdge(v.reference.node, node.name, {});

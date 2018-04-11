@@ -21,38 +21,52 @@ package fr.cnrs.liris.locapriv.ops
 import java.nio.file.Files
 
 import fr.cnrs.liris.accio.sdk.{Dataset, OpContext}
-import fr.cnrs.liris.accio.testing.WithSparkleEnv
-import fr.cnrs.liris.locapriv.io.{CsvSink, CsvSource}
-import fr.cnrs.liris.locapriv.io.{CsvPoiSetCodec, TraceCodec}
+import fr.cnrs.liris.locapriv.io.{CsvPoiSetCodec, CsvSink, CsvSource, TraceCodec}
 import fr.cnrs.liris.locapriv.model.{PoiSet, Trace}
+import fr.cnrs.liris.locapriv.sparkle.SparkleEnv
+import org.scalatest.{BeforeAndAfterEach, FlatSpec}
 
 /**
  * Trait facilitating testing operators.
  */
-private[ops] trait OperatorSpec extends WithSparkleEnv { FlatSpec =>
-  private[this] val traceCodec = new TraceCodec
-  private[this] val poiSetCodec = new CsvPoiSetCodec
+private[ops] trait ScalaOperatorSpec extends BeforeAndAfterEach {
+  this: FlatSpec =>
 
-  protected def ctx: OpContext = {
+  private val traceCodec = new TraceCodec
+  private val poiSetCodec = new CsvPoiSetCodec
+  protected var env: SparkleEnv = null
+
+  override protected def beforeEach(): Unit = {
+    super.beforeEach()
+    env = new SparkleEnv(1)
+  }
+
+  override protected def afterEach(): Unit = {
+    env.stop()
+    env = null
+    super.afterEach()
+  }
+
+  protected final def ctx: OpContext = {
     val workDir = Files.createTempDirectory(getClass.getSimpleName + "-")
     workDir.toFile.deleteOnExit()
     // This seed makes tests of unstable operators to pass for now. Be careful is you modify it!!
     new OpContext(Some(-7590331047132310476L), workDir)
   }
 
-  protected def writeTraces(data: Trace*): Dataset = {
+  protected final def writeTraces(data: Trace*): Dataset = {
     val uri = Files.createTempDirectory(getClass.getSimpleName + "-").toAbsolutePath.toString
     env.parallelize(data: _*)(_.id).write(new CsvSink(uri, traceCodec))
     Dataset(uri)
   }
 
-  protected def writePois(data: PoiSet*): Dataset = {
+  protected final def writePois(data: PoiSet*): Dataset = {
     val uri = Files.createTempDirectory(getClass.getSimpleName + "-").toAbsolutePath.toString
     env.parallelize(data: _*)(_.id).write(new CsvSink(uri, poiSetCodec))
     Dataset(uri)
   }
 
-  protected def readTraces(ds: Dataset): Seq[Trace] = {
+  protected final def readTraces(ds: Dataset): Seq[Trace] = {
     env.read(new CsvSource(ds.uri, traceCodec)).toArray.toSeq
   }
 }

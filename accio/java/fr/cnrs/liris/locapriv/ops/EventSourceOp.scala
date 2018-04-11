@@ -26,22 +26,23 @@ import fr.cnrs.liris.locapriv.io._
 @Op(
   category = "source",
   help = "Read a dataset of traces.",
-  description = "This operator can manipulate the source dataset, essentially to reduce its size, through some basic preprocessing.")
-class EventSourceOp extends Operator[EventSourceIn, EventSourceOut] with SparkleOperator {
-  override def execute(in: EventSourceIn, ctx: OpContext): EventSourceOut = {
-    val source = in.kind match {
-      case "csv" => new CsvSource(FileUtils.expand(in.url), new TraceCodec)
-      case "cabspotting" => CabspottingSource(FileUtils.expand(in.url))
-      case "geolife" => GeolifeSource(FileUtils.expand(in.url))
-      case _ => throw new IllegalArgumentException(s"Unknown kind: ${in.kind}")
+  description = "This operator can manipulate the source dataset, essentially to reduce its size, " +
+    "through some basic preprocessing.")
+case class EventSourceOp(
+  @Arg(help = "Dataset URL") url: String,
+  @Arg(help = "Kind of dataset") kind: String = "csv")
+  extends ScalaOperator[EventSourceOut] with SparkleOperator {
+
+  override def execute(ctx: OpContext): EventSourceOut = {
+    val source = kind match {
+      case "csv" => new CsvSource(FileUtils.expand(url), new TraceCodec)
+      case "cabspotting" => CabspottingSource(FileUtils.expand(url))
+      case "geolife" => GeolifeSource(FileUtils.expand(url))
+      case _ => throw new IllegalArgumentException(s"Unknown dataset kind: $kind")
     }
-    val output = if (in.kind != "csv") write(env.read(source), ctx) else Dataset(in.url)
+    val output = if (kind != "csv") write(env.read(source), ctx) else Dataset(url)
     EventSourceOut(output)
   }
 }
-
-case class EventSourceIn(
-  @Arg(help = "Dataset URL") url: String,
-  @Arg(help = "Kind of dataset") kind: String = "csv")
 
 case class EventSourceOut(@Arg(help = "Source dataset") data: Dataset)

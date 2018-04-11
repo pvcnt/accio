@@ -14,13 +14,15 @@
 # You should have received a copy of the GNU General Public License
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
-scala_test(
-  name = "reflect",
+scala_library(
+  name = "report",
   srcs = glob(["*.scala"]),
-  size = "small",
   deps = [
-    "//accio/java/fr/cnrs/liris/util/reflect",
-    "//accio/javatests/fr/cnrs/liris/testing",
-    "//3rdparty/jvm/com/google/code/findbugs:jsr305",
-  ]
+    "//accio/java/fr/cnrs/liris/accio/api",
+    "//accio/java/fr/cnrs/liris/util/geo",
+    "//accio/java/fr/cnrs/liris/util",
+    "//accio/thrift/fr/cnrs/liris/accio/api",
+    "//3rdparty/jvm/com/github/nscala_time",
+  ],
+  visibility = ["//visibility:public"],
 )

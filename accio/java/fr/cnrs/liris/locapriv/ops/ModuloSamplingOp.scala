@@ -24,17 +24,24 @@ import fr.cnrs.liris.locapriv.model.Trace
 @Op(
   category = "transform",
   help = "Regularly sample events inside traces using the modulo operator.",
-  description = "It will ensure that the final number of events is exactly (+/- 1) the one required, and that events are regularly sampled (i.e., one out of x).",
-  cpu = 4,
+  description = "It will ensure that the final number of events is exactly (+/- 1) the one " +
+    "required, and that events are regularly sampled (i.e., one out of x).",
+  cpus = 4,
   ram = "2G")
-class ModuloSamplingOp extends Operator[ModuloSamplingIn, ModuloSamplingOut] with SparkleOperator {
-  override def execute(in: ModuloSamplingIn, ctx: OpContext): ModuloSamplingOut = {
-    val input = read[Trace](in.data)
-    val output = input.map(trace => transform(trace, in.n))
+case class ModuloSamplingOp(
+  @Arg(help = "Number of events to keep")
+  n: Int,
+  @Arg(help = "Input dataset")
+  data: Dataset)
+  extends ScalaOperator[ModuloSamplingOut] with SparkleOperator {
+  require(n >= 0, s"n must be >0 = (got $n)")
+
+  override def execute(ctx: OpContext): ModuloSamplingOut = {
+    val output = read[Trace](data).map(transform)
     ModuloSamplingOut(write(output, ctx))
   }
 
-  private def transform(trace: Trace, n: Int) = {
+  private def transform(trace: Trace) = {
     if (trace.size <= n) {
       trace
     } else {
@@ -44,12 +51,6 @@ class ModuloSamplingOp extends Operator[ModuloSamplingIn, ModuloSamplingOut] wit
       trace.replace(_.zipWithIndex.filter { case (_, idx) => (idx % modulo) < 1 }.map(_._1).take(n))
     }
   }
-}
-
-case class ModuloSamplingIn(
-  @Arg(help = "Number of events to keep") n: Int,
-  @Arg(help = "Input dataset") data: Dataset) {
-  require(n >= 0, s"n must be >0 = (got $n)")
 }
 
 case class ModuloSamplingOut(

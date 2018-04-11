@@ -25,13 +25,17 @@ import fr.cnrs.liris.locapriv.model.Trace
 @Op(
   category = "metric",
   help = "Compute data completeness difference between two datasets of traces.",
-  cpu = 2,
+  cpus = 2,
   ram = "1G")
-class DataCompletenessOp extends Operator[DataCompletenessIn, DataCompletenessOut] with SparkleOperator {
-  override def execute(in: DataCompletenessIn, ctx: OpContext): DataCompletenessOut = {
-    val train = read[Trace](in.train)
-    val test = read[Trace](in.test)
-    val values = train.zip(test).map { case (ref, res) => evaluate(ref, res) }.toArray
+case class DataCompletenessOp(
+  @Arg(help = "Train dataset") train: Dataset,
+  @Arg(help = "Test dataset") test: Dataset)
+  extends ScalaOperator[DataCompletenessOut] with SparkleOperator {
+
+  override def execute(ctx: OpContext): DataCompletenessOut = {
+    val trainDs = read[Trace](train)
+    val testDs = read[Trace](test)
+    val values = trainDs.zip(testDs).map { case (ref, res) => evaluate(ref, res) }.toArray
     DataCompletenessOut(values.toMap)
   }
 
@@ -46,9 +50,6 @@ class DataCompletenessOp extends Operator[DataCompletenessIn, DataCompletenessOu
   }
 }
 
-case class DataCompletenessIn(
-  @Arg(help = "Train dataset") train: Dataset,
-  @Arg(help = "Test dataset") test: Dataset)
-
 case class DataCompletenessOut(
-  @Arg(help = "Data completeness") value: Map[String, Double])
+  @Arg(help = "Data completeness")
+  value: Map[String, Double])

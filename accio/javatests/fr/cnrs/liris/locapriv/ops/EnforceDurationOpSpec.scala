@@ -26,7 +26,7 @@ import fr.cnrs.liris.testing.UnitSpec
 /**
  * Unit tests for [[EnforceDurationOp]].
  */
-class EnforceDurationOpSpec extends UnitSpec with WithTraceGenerator with OperatorSpec {
+class EnforceDurationOpSpec extends UnitSpec with WithTraceGenerator with ScalaOperatorSpec {
   behavior of "EnforceDurationOp"
 
   it should "keep traces with a duration greater than min threshold" in {
@@ -58,20 +58,20 @@ class EnforceDurationOpSpec extends UnitSpec with WithTraceGenerator with Operat
     assertTraceIsShortened(trace, data.head, 15)
   }
 
-  private def assertTraceIsShortened(t: Trace, t1: Trace, s1: Int) = {
+  private def assertTraceIsShortened(t: Trace, t1: Trace, s1: Int): Unit = {
     t1.user shouldBe t.user
     t1.events should contain theSameElementsInOrderAs t.events.take(s1)
   }
 
   private def transformMaxDuration(data: Seq[Trace], duration: Duration) = {
     val ds = writeTraces(data: _*)
-    val res = new EnforceDurationOp().execute(EnforceDurationIn(maxDuration = Some(duration), minDuration = None, data = ds), ctx)
+    val res = EnforceDurationOp(maxDuration = Some(duration), minDuration = None, data = ds).execute(ctx)
     readTraces(res.data)
   }
 
   private def transformMinDuration(data: Seq[Trace], duration: Duration) = {
     val ds = writeTraces(data: _*)
-    val res = new EnforceDurationOp().execute(EnforceDurationIn(minDuration = Some(duration), maxDuration = None, data = ds), ctx)
+    val res = EnforceDurationOp(minDuration = Some(duration), maxDuration = None, data = ds).execute(ctx)
     readTraces(res.data)
   }
 }

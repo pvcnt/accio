@@ -25,21 +25,21 @@ import fr.cnrs.liris.locapriv.model.{Event, Trace}
 @Op(
   category = "transform",
   help = "Enforce a minimum duration between two consecutive events in traces.",
-  description = "If the duration is less than a given threshold, events will be discarded until the next point " +
-    "that fulfills the minimum duration requirement.",
-  cpu = 4,
+  description = "If the duration is less than a given threshold, events will be discarded until " +
+    "the next point that fulfills the minimum duration requirement.",
+  cpus = 4,
   ram = "2G")
-class TemporalSamplingOp extends Operator[TemporalSamplingIn, TemporalSamplingOut] with SlidingSampling with SparkleOperator {
-  override def execute(in: TemporalSamplingIn, ctx: OpContext): TemporalSamplingOut = {
-    val sample = (prev: Event, curr: Event) => (prev.time to curr.time).duration >= in.duration
-    val output = read[Trace](in.data).map(transform(_, sample))
+case class TemporalSamplingOp(
+  @Arg(help = "Minimum duration between two consecutive events") duration: org.joda.time.Duration,
+  @Arg(help = "Input dataset") data: Dataset)
+  extends ScalaOperator[TemporalSamplingOut] with SlidingSampling with SparkleOperator {
+
+  override def execute(ctx: OpContext): TemporalSamplingOut = {
+    val sample = (prev: Event, curr: Event) => (prev.time to curr.time).duration >= duration
+    val output = read[Trace](data).map(transform(_, sample))
     TemporalSamplingOut(write(output, ctx))
   }
 }
-
-case class TemporalSamplingIn(
-  @Arg(help = "Minimum duration between two consecutive events") duration: org.joda.time.Duration,
-  @Arg(help = "Input dataset") data: Dataset)
 
 case class TemporalSamplingOut(
   @Arg(help = "Output dataset") data: Dataset)

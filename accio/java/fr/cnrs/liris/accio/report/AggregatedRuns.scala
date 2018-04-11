@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.reporting
+package fr.cnrs.liris.accio.report
 
 import fr.cnrs.liris.accio.api.{DataTypes, Values}
 import fr.cnrs.liris.accio.api.thrift._
@@ -77,7 +77,7 @@ class AggregatedRuns(val runs: Seq[Run]) {
       .groupBy(_._2.name)
       .map { case (metricName, list) =>
         val values = list.map { case (runId, art) => runId -> art.value }
-        MetricGroup(metricName, values.toMap)
+        MetricGroup(metricName, list.headOption.flatMap(_._2.unit), values.toMap)
       }.toSeq
 
     // Only keep runs for which we have at least one artifact.
@@ -225,14 +225,15 @@ case class MetricList(runs: Seq[Run], params: Map[String, Value], groups: Seq[Me
  * A group of metrics.
  *
  * @param name   Metric name.
+ * @param unit   Metric unit.
  * @param values Metric values, keyed by run id.
  */
-case class MetricGroup(name: String, values: Map[String, Double]) {
+case class MetricGroup(name: String, unit: Option[String], values: Map[String, Double]) {
   val nodeName: String = name.take(name.indexOf("/"))
 
   val metricName: String = name.drop(name.indexOf("/") + 1)
 
-  def toSeq: Seq[Metric] = values.values.map(v => Metric(metricName, v)).toSeq
+  def toSeq: Seq[MetricValue] = values.values.map(v => MetricValue(metricName, v)).toSeq
 
-  def aggregated: Metric = Metric(metricName, mean(values.values.toSeq))
+  def aggregated: MetricValue = MetricValue(metricName, mean(values.values.toSeq))
 }

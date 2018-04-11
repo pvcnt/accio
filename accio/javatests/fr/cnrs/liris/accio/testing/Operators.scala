@@ -53,7 +53,7 @@ private[accio] object Operators {
   private def createOpDef(name: String, inputs: Seq[ArgDef], outputs: Seq[ArgDef]) = {
     OpDef(
       name = name,
-      className = s"fr.cnrs.liris.locapriv.${name}Op",
+      executable = ".",
       category = "misc",
       help = None,
       description = None,

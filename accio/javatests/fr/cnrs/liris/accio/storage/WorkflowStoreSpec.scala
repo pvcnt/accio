@@ -33,7 +33,7 @@ private[storage] abstract class WorkflowStoreSpec extends UnitSpec with BeforeAn
     version = Some("v1"),
     owner = Some(thrift.User("me")),
     createdAt = Some(System.currentTimeMillis()),
-    graph = thrift.Graph(Seq(
+    nodes = Seq(
       thrift.Node(
         op = "FirstSimple",
         name = "FirstSimple",
@@ -43,7 +43,7 @@ private[storage] abstract class WorkflowStoreSpec extends UnitSpec with BeforeAn
         name = "SecondSimple",
         inputs = Map(
           "dbl" -> thrift.Input.Value(Values.encodeDouble(3.14)),
-          "data" -> thrift.Input.Reference(thrift.Reference("FirstSimple", "data")))))),
+          "data" -> thrift.Input.Reference(thrift.Reference("FirstSimple", "data"))))),
     name = Some("my workflow"))
 
   private val workflow2 = thrift.Workflow(
@@ -52,7 +52,7 @@ private[storage] abstract class WorkflowStoreSpec extends UnitSpec with BeforeAn
     owner = Some(thrift.User("me")),
     params = Seq(thrift.ArgDef("foo", DataType(AtomicType.Integer))),
     createdAt = Some(System.currentTimeMillis() + 10),
-    graph = thrift.Graph(Seq(
+    nodes = Seq(
       thrift.Node(
         op = "FirstSimple",
         name = "FirstSimple",
@@ -62,7 +62,7 @@ private[storage] abstract class WorkflowStoreSpec extends UnitSpec with BeforeAn
         name = "SecondSimple",
         inputs = Map(
           "dbl" -> thrift.Input.Param("bar"),
-          "data" -> thrift.Input.Reference(thrift.Reference("FirstSimple", "data")))))))
+          "data" -> thrift.Input.Reference(thrift.Reference("FirstSimple", "data"))))))
 
   protected def createStorage: Storage
 

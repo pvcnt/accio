@@ -29,7 +29,7 @@ import fr.cnrs.liris.accio.api.OpRegistry
 import fr.cnrs.liris.accio.auth.AuthModule
 import fr.cnrs.liris.accio.config.ConfigModule
 import fr.cnrs.liris.accio.runtime.OpMeta
-import fr.cnrs.liris.accio.scheduler.inject.SchedulerModule
+import fr.cnrs.liris.accio.scheduler.install.SchedulerModule
 import fr.cnrs.liris.accio.storage.install.StorageModule
 import org.slf4j.LoggerFactory
 

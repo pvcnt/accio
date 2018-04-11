@@ -47,12 +47,26 @@ import scala.collection.mutable
   description = "Wrapper around the implementation of the Wait4Me algorithm provided by their authors.",
   category = "lppm",
   ram = "2G")
-class Wait4MeOp extends Operator[Wait4MeIn, Wait4MeOut] with SparkleOperator {
-  override def execute(in: Wait4MeIn, ctx: OpContext): Wait4MeOut = {
-    val input = read[Trace](in.data)
+case class Wait4MeOp(
+  @Arg(help = "Input dataset")
+  data: Dataset,
+  @Arg(help = "Anonymity level")
+  k: Int,
+  @Arg(help = "Uncertainty")
+  delta: Distance,
+  @Arg(help = "Initial maximum radius used in clustering")
+  radiusMax: Option[Distance],
+  @Arg(help = "Global maximum trash size, in percentage of the dataset size")
+  trashMax: Double = 0.1,
+  @Arg(help = "Whether to chunk the input dataset")
+  chunk: Boolean = false)
+  extends ScalaOperator[Wait4MeOut] with SparkleOperator {
+
+  override def execute(ctx: OpContext): Wait4MeOut = {
+    val input = read[Trace](data)
     if (input.count() == 0) {
       Wait4MeOut(
-        data = in.data,
+        data = data,
         trashSize = 0,
         trashedPoints = 0,
         discernibility = 0,
@@ -68,12 +82,12 @@ class Wait4MeOp extends Operator[Wait4MeIn, Wait4MeOut] with SparkleOperator {
         meanTemporalPointTranslation = Duration.ZERO)
     } else {
       val tmpDir = Files.createTempDirectory("accio-w4m-")
-      val localBinary = copyBinary(tmpDir, in.chunk)
+      val localBinary = copyBinary(tmpDir, chunk)
 
       // Convert the trash max from a percentage to an absolute size.
-      val trashMax = in.trashMax * input.keys.size
+      val trashMaxPercent = trashMax * input.keys.size
 
-      val radiusMax = in.radiusMax.getOrElse {
+      val radiusMaxOrDefault = radiusMax.getOrElse {
         // If not radiusMax is given, we initialize it to "0.5% of the semi-diagonal of the spatial minimum bounding
         // box of the dataset", as proposed by the authors of the paper.
         val boundingBox = input.map(_.boundingBox).reduce(_ union _)
@@ -88,10 +102,10 @@ class Wait4MeOp extends Operator[Wait4MeIn, Wait4MeOut] with SparkleOperator {
         localBinary.toAbsolutePath.toString,
         w4mInputUri,
         "out", /* output files prefix */
-        in.k.toString,
-        in.delta.meters.toString,
-        radiusMax.meters.toString,
-        trashMax.toString,
+        k.toString,
+        delta.meters.toString,
+        radiusMaxOrDefault.meters.toString,
+        trashMaxPercent.toString,
         "10" /* "if no idea enter 10" as suggested by paper's authors */)
         .directory(tmpDir.toFile)
         .redirectErrorStream(true)
@@ -105,7 +119,7 @@ class Wait4MeOp extends Operator[Wait4MeIn, Wait4MeOut] with SparkleOperator {
       }
 
       // We convert back the result into a conventional dataset format.
-      val w4mOutputPath = tmpDir.resolve(f"out_${in.k}_${"%.3f".formatLocal(Locale.ENGLISH, in.delta.meters)}.txt").toAbsolutePath
+      val w4mOutputPath = tmpDir.resolve(f"out_${k}_${"%.3f".formatLocal(Locale.ENGLISH, delta.meters)}.txt").toAbsolutePath
       val output = writeOutput(input.keys, w4mOutputPath, ctx)
 
       // We extract metrics from the captured stdout. This is quite ugly, but this works.
@@ -201,14 +215,6 @@ class Wait4MeOp extends Operator[Wait4MeIn, Wait4MeOut] with SparkleOperator {
 object Wait4MeOp {
   private val MaxTraceSize = 10000
 }
-
-case class Wait4MeIn(
-  @Arg(help = "Input dataset") data: Dataset,
-  @Arg(help = "Anonymity level") k: Int,
-  @Arg(help = "Uncertainty") delta: Distance,
-  @Arg(help = "Initial maximum radius used in clustering") radiusMax: Option[Distance],
-  @Arg(help = "Global maximum trash size, in percentage of the dataset size") trashMax: Double = 0.1,
-  @Arg(help = "Whether to chunk the input dataset") chunk: Boolean = false)
 
 case class Wait4MeOut(
   @Arg(help = "Output dataset") data: Dataset,

@@ -18,30 +18,48 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.accio.sdk.{Dataset, _}
+import fr.cnrs.liris.accio.sdk._
 import fr.cnrs.liris.util.geo._
-import fr.cnrs.liris.locapriv.sparkle.DataFrame
 import fr.cnrs.liris.locapriv.model.Trace
+import fr.cnrs.liris.locapriv.sparkle.DataFrame
 
 @Op(
   category = "metric",
   help = "Computes the HeatMaps' distortions between two datasets")
-class HeatMapDistortionOp extends Operator[HeatMapDistortionIn, HeatMapDistortionOut] with SparkleOperator {
-  override def execute(in: HeatMapDistortionIn, ctx: OpContext): HeatMapDistortionOut = {
+case class HeatMapDistortionOp(
+  @Arg(help = "Input train dataset")
+  train: Dataset,
+  @Arg(help = "Input test dataset")
+  test: Dataset,
+  @Arg(help = "Type of distance metrics between matrices")
+  distanceType: String = "topsoe",
+  @Arg(help = "Cell Size in meters")
+  cellSize: Distance,
+  @Arg(help = "Lower point")
+  lower: LatLng = LatLng.degrees(-61.0, -131.0),
+  @Arg(help = "Upper point")
+  upper: LatLng = LatLng.degrees(80, 171))
+  extends ScalaOperator[HeatMapDistortionOut] with SparkleOperator {
+
+  override def execute(ctx: OpContext): HeatMapDistortionOut = {
     // read the data
-    val dstrain = read[Trace](in.train)
-    val dstest = read[Trace](in.test)
+    val dstrain = read[Trace](train)
+    val dstest = read[Trace](test)
+
     // rectangular point
-    val (p1, p2) = initializePoint(in)
+    val (p1, p2) = initializePoint()
     val (rdstrain, _) = restrictArea(dstrain, p1, p2)
     val (rdstest, _) = restrictArea(dstest, p1, p2)
+
     // Dimension of the matrix
-    val dimensions = computeMatricesSize(p1, p2, in.cellSize)
+    val dimensions = computeMatricesSize(p1, p2)
+
     // compute HeatMaps
-    val train = formSingleMatrices(rdstrain, dimensions, in.cellSize)
-    val test = formSingleMatrices(rdstest, dimensions, in.cellSize)
+    val trainMat = formSingleMatrices(rdstrain, dimensions)
+    val testMat = formSingleMatrices(rdstest, dimensions)
+
     // Compute distortions
-    var dist = getDistortions(train, test, in.distanceType)
+    var dist = getDistortions(trainMat, testMat)
     // Add none found user in Train
     dstrain.keys.union(dstest.keys).toSet.foreach { u: String =>
       if (!dist.contains(u)) dist += u -> Double.NaN
@@ -53,7 +71,7 @@ class HeatMapDistortionOp extends Operator[HeatMapDistortionIn, HeatMapDistortio
     HeatMapDistortionOut(dist, avgDist)
   }
 
-  private def formSingleMatrices(ds: DataFrame[Trace], dimensions: (Int, Int, Point), cellSize: Distance): Map[String, SparseMatrix[Int]] = {
+  private def formSingleMatrices(ds: DataFrame[Trace], dimensions: (Int, Int, Point)): Map[String, SparseMatrix[Int]] = {
     var outputMap = scala.collection.immutable.Map.empty[String, SparseMatrix[Int]]
     ds.foreach { t =>
       synchronized(outputMap += (t.user -> new SparseMatrix[Int](dimensions._1, dimensions._2)))
@@ -79,18 +97,18 @@ class HeatMapDistortionOp extends Operator[HeatMapDistortionIn, HeatMapDistortio
     outputMap
   }
 
-  private def getDistortions(trainMats: Map[String, SparseMatrix[Int]], testMats: Map[String, SparseMatrix[Int]], n: String): Map[String, Double] = {
+  private def getDistortions(trainMats: Map[String, SparseMatrix[Int]], testMats: Map[String, SparseMatrix[Int]]): Map[String, Double] = {
     testMats.par.map {
       case (k, mat_k) =>
         if (!trainMats.contains(k)) k -> Double.NaN
         else {
           val mat_u = trainMats(k)
-          k -> DistanceUtils.d(mat_k.proportional, mat_u.proportional, n)
+          k -> DistanceUtils.d(mat_k.proportional, mat_u.proportional, distanceType)
         }
     }.seq
   }
 
-  private def computeMatricesSize(p1: Point, p2: Point, cellSize: Distance): (Int, Int, Point) = {
+  private def computeMatricesSize(p1: Point, p2: Point): (Int, Int, Point) = {
     val topCornerleft = Point(math.min(p1.x, p2.x), math.max(p1.y, p2.y))
     val bottomCornerleft = Point(math.min(p1.x, p2.x), math.min(p1.y, p2.y))
     val bottomCornerRight = Point(math.max(p1.x, p2.x), math.min(p1.y, p2.y))
@@ -104,7 +122,7 @@ class HeatMapDistortionOp extends Operator[HeatMapDistortionIn, HeatMapDistortio
   }
 
 
-  private def initializePoint(in: HeatMapDistortionIn): (Point, Point) = in.lower.toPoint -> in.upper.toPoint
+  private def initializePoint(): (Point, Point) = lower.toPoint -> upper.toPoint
 
   private def restrictArea(ds: DataFrame[Trace], p1: Point, p2: Point): (DataFrame[Trace], Double) = {
     // Prepare the restrictive box
@@ -121,20 +139,8 @@ class HeatMapDistortionOp extends Operator[HeatMapDistortionIn, HeatMapDistortio
   }
 }
 
-case class HeatMapDistortionIn(
-  @Arg(help = "Input train dataset")
-  train: Dataset,
-  @Arg(help = "Input test dataset")
-  test: Dataset,
-  @Arg(help = "Type of distance metrics between matrices")
-  distanceType: String = "topsoe",
-  @Arg(help = "Cell Size in meters")
-  cellSize: Distance,
-  @Arg(help = "Lower point")
-  lower: LatLng = LatLng.degrees(-61.0, -131.0),
-  @Arg(help = "Upper point")
-  upper: LatLng = LatLng.degrees(80, 171))
-
 case class HeatMapDistortionOut(
-  @Arg(help = "Distortions (\"-\" = missing user in train or test) ") distortions: Map[String, Double],
-  @Arg(help = "Average distortion") avgDist: Double)
+  @Arg(help = "Distortions (\"-\" = missing user in train or test) ")
+  distortions: Map[String, Double],
+  @Arg(help = "Average distortion")
+  avgDist: Double)

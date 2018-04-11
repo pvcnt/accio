@@ -15,10 +15,10 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_library(
-  name = 'collect',
+  name = "collect",
   srcs = glob(["*.scala"]),
   deps = [
-    '//3rdparty/jvm/com/google/guava',
+    "//3rdparty/jvm/com/google/guava",
   ],
   visibility = ["//visibility:public"],
 )
