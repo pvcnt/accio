@@ -19,6 +19,7 @@ scala_library(
   srcs = glob(["*.scala"]),
   deps = [
     "//accio/java/fr/cnrs/liris/accio/api",
+    "//accio/java/fr/cnrs/liris/accio/sdk",
     "//accio/java/fr/cnrs/liris/util/geo",
     "//accio/java/fr/cnrs/liris/util",
     "//accio/thrift/fr/cnrs/liris/accio/api",

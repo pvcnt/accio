@@ -25,7 +25,7 @@ import com.google.inject.{Inject, Provider, Singleton}
 import com.twitter.finagle.stats.StatsReceiver
 import com.twitter.inject.{Injector, TwitterModule}
 import com.twitter.util.StorageUnit
-import fr.cnrs.liris.accio.api.thrift.Resource
+import fr.cnrs.liris.accio.api.thrift.ComputeResources
 import fr.cnrs.liris.accio.config.DataDir
 import fr.cnrs.liris.accio.scheduler.Scheduler
 import fr.cnrs.liris.accio.scheduler.local.LocalScheduler
@@ -68,7 +68,7 @@ object SchedulerModule extends TwitterModule {
     extends Provider[Scheduler] {
 
     override def get(): Scheduler = {
-      val reservedResources = Resource(
+      val reservedResources = ComputeResources(
         cpus = reservedCpusFlag(),
         ramMb = reservedRamFlag().inMegabytes,
         diskGb = reservedDiskFlag().inGigabytes)

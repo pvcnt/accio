@@ -38,12 +38,11 @@ final class GetCommand extends Command with ClientCommand {
   override def execute(residue: Seq[String], env: CommandEnvironment): Future[ExitCode] = {
     if (residue.isEmpty) {
       env.reporter.handle(Event.error("You must specify a resource type.\n" +
-        "Valid resource types are: workflow, run, operator"))
+        "Valid resource types are: job, operator"))
       return Future.value(ExitCode.CommandLineError)
     }
     val controller: GetController[_] = residue.head match {
-      case "workflow" | "workflows" => new GetWorkflowController
-      case "run" | "runs" => new GetRunController
+      case "job" | "jobs" => new GetJobController
       case "operator" | "operators" | "op" | "ops" => new GetOperatorController
       case _ =>
         env.reporter.handle(Event.error(s"Invalid resource type: ${residue.head}.\n" +
@@ -56,7 +55,7 @@ final class GetCommand extends Command with ClientCommand {
   private def list[Res](controller: GetController[Res], reporter: Reporter) = {
     val query = GetQuery(
       all = allFlag(),
-      owner = ownerFlag.get,
+      author = ownerFlag.get,
       tags = explode(tagsFlag.get, ","),
       limit = limitFlag.get)
     controller.retrieve(query, client).map { resp =>

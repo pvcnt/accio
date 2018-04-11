@@ -52,32 +52,32 @@ class OpExecutorSpec extends UnitSpec with CreateTmpDirectory with BeforeAndAfte
   }
 
   it should "execute operators and return artifacts" in {
-    var payload = OpPayload("Simple", 123, Seq(Artifact("str", Values.encodeString("foo"))), Resource(0, 0, 0))
+    var payload = OpPayload("Simple", 123, Seq(NamedValue("str", Values.encodeString("foo"))), ComputeResources(0, 0, 0))
     var res = executor.execute(payload)
-    res.exitCode shouldBe 0
+    res.successful shouldBe true
     res.artifacts should have size 2
-    res.artifacts should contain(Artifact("str", Values.encodeString("foo+0")))
-    res.artifacts should contain(Artifact("b", Values.encodeBoolean(false)))
+    res.artifacts should contain(NamedValue("str", Values.encodeString("foo+0")))
+    res.artifacts should contain(NamedValue("b", Values.encodeBoolean(false)))
 
-    payload = OpPayload("Simple", 123, Seq(Artifact("str", Values.encodeString("bar")), Artifact("i", Values.encodeInteger(3))), Resource(0, 0, 0))
+    payload = OpPayload("Simple", 123, Seq(NamedValue("str", Values.encodeString("bar")), NamedValue("i", Values.encodeInteger(3))), ComputeResources(0, 0, 0))
     res = executor.execute(payload)
-    res.exitCode shouldBe 0
+    res.successful shouldBe true
     res.artifacts should have size 2
-    res.artifacts should contain(Artifact("str", Values.encodeString("bar+3")))
-    res.artifacts should contain(Artifact("b", Values.encodeBoolean(true)))
+    res.artifacts should contain(NamedValue("str", Values.encodeString("bar+3")))
+    res.artifacts should contain(NamedValue("b", Values.encodeBoolean(true)))
   }
 
   it should "coerce input values when possible" in {
-    val payload = OpPayload("Simple", 123, Seq(Artifact("str", Values.encodeInteger(2)), Artifact("i", Values.encodeString("3"))), Resource(0, 0, 0))
+    val payload = OpPayload("Simple", 123, Seq(NamedValue("str", Values.encodeInteger(2)), NamedValue("i", Values.encodeString("3"))), ComputeResources(0, 0, 0))
     val res = executor.execute(payload)
-    res.exitCode shouldBe 0
+    res.successful shouldBe true
     res.artifacts should have size 2
-    res.artifacts should contain(Artifact("str", Values.encodeString("2+3")))
-    res.artifacts should contain(Artifact("b", Values.encodeBoolean(true)))
+    res.artifacts should contain(NamedValue("str", Values.encodeString("2+3")))
+    res.artifacts should contain(NamedValue("b", Values.encodeBoolean(true)))
   }
 
   it should "reject invalid inputs" in {
-    val payload = OpPayload("Simple", 123, Seq(Artifact("str", Values.encodeString("foo")), Artifact("i", Values.encodeDistance(Distance.meters(2)))), Resource(0, 0, 0))
+    val payload = OpPayload("Simple", 123, Seq(NamedValue("str", Values.encodeString("foo")), NamedValue("i", Values.encodeDistance(Distance.meters(2)))), ComputeResources(0, 0, 0))
     val e = intercept[IllegalArgumentException] {
       executor.execute(payload)
     }
@@ -85,21 +85,21 @@ class OpExecutorSpec extends UnitSpec with CreateTmpDirectory with BeforeAndAfte
   }
 
   it should "execute operators with no input" in {
-    val payload = OpPayload("NoInput", 123, Seq.empty, Resource(0, 0, 0))
+    val payload = OpPayload("NoInput", 123, Seq.empty, ComputeResources(0, 0, 0))
     val res = executor.execute(payload)
-    res.exitCode shouldBe 0
-    res.artifacts should contain theSameElementsAs Seq(Artifact("s", Values.encodeString("foo")))
+    res.successful shouldBe true
+    res.artifacts should contain theSameElementsAs Seq(NamedValue("s", Values.encodeString("foo")))
   }
 
   it should "execute operators with no output" in {
-    val payload = OpPayload("NoOutput", 123, Seq(Artifact("s", Values.encodeString("foo"))), Resource(0, 0, 0))
+    val payload = OpPayload("NoOutput", 123, Seq(NamedValue("s", Values.encodeString("foo"))), ComputeResources(0, 0, 0))
     val res = executor.execute(payload)
-    res.exitCode shouldBe 0
+    res.successful shouldBe true
     res.artifacts should have size 0
   }
 
   it should "detect a missing input" in {
-    val payload = OpPayload("Simple", 123, Seq.empty, Resource(0, 0, 0))
+    val payload = OpPayload("Simple", 123, Seq.empty, ComputeResources(0, 0, 0))
     val e = intercept[IllegalArgumentException] {
       executor.execute(payload)
     }
@@ -107,7 +107,7 @@ class OpExecutorSpec extends UnitSpec with CreateTmpDirectory with BeforeAndAfte
   }
 
   it should "detect an unknown operator" in {
-    val payload = OpPayload("Unknown", 123, Seq.empty, Resource(0, 0, 0))
+    val payload = OpPayload("Unknown", 123, Seq.empty, ComputeResources(0, 0, 0))
     val e = intercept[IllegalArgumentException] {
       executor.execute(payload)
     }
@@ -115,23 +115,23 @@ class OpExecutorSpec extends UnitSpec with CreateTmpDirectory with BeforeAndAfte
   }
 
   it should "catch exceptions thrown by the operator" in {
-    val payload = OpPayload("Exceptional", 123, Seq(Artifact("str", Values.encodeString("foo"))), Resource(0, 0, 0))
+    val payload = OpPayload("Exceptional", 123, Seq(NamedValue("str", Values.encodeString("foo"))), ComputeResources(0, 0, 0))
     val res = executor.execute(payload)
-    res.exitCode shouldBe 1
+    res.successful shouldBe false
     res.artifacts should have size 0
   }
 
   it should "give a seed to unstable operators" in {
-    val payload = OpPayload("Unstable", 123, Seq.empty, Resource(0, 0, 0))
+    val payload = OpPayload("Unstable", 123, Seq.empty, ComputeResources(0, 0, 0))
     val res = executor.execute(payload)
-    res.exitCode shouldBe 0
-    res.artifacts should contain theSameElementsAs Seq(Artifact("lng", Values.encodeLong(123)))
+    res.successful shouldBe true
+    res.artifacts should contain theSameElementsAs Seq(NamedValue("lng", Values.encodeLong(123)))
   }
 
   it should "not give a seed to non-unstable operators" in {
-    val payload = OpPayload("InvalidUnstable", 123, Seq.empty, Resource(0, 0, 0))
+    val payload = OpPayload("InvalidUnstable", 123, Seq.empty, ComputeResources(0, 0, 0))
     val res = executor.execute(payload)
-    res.exitCode shouldBe 1
+    res.successful shouldBe false
     res.artifacts should have size 0
   }
 }

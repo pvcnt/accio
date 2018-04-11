@@ -34,10 +34,6 @@ Defaults to a space.
 Artifact names must be fully qualified, including node name, e.g., `AreaCoverage/fscore`.
 Special artifact names are: *NUMERIC*, to include only artifacts with a numeric type, *ALL* and *NONE*.
 Defaults to *NUMERIC*.
-* `-metrics=<string>[,...]`: Include only specified metrics in the export.
-Metric names must be fully qualified, including node name, e.g., `Promesse/wall_time_millis`.
-Special metric names are: *ALL* and *NONE*.
-Defaults to *NONE*.
 * `-[no]split`: Split the export by workflow parameters.
 If specified, you will end up with one directory per combination of workflow parameters across all runs.
 Otherwise, artifacts of all runs will be written sequentially in a single file per artifact name.

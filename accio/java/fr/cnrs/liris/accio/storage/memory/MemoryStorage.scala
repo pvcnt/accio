@@ -18,8 +18,6 @@
 
 package fr.cnrs.liris.accio.storage.memory
 
-import java.util.concurrent.locks.ReentrantLock
-
 import com.twitter.finagle.stats.{NullStatsReceiver, StatsReceiver}
 import fr.cnrs.liris.accio.storage._
 
@@ -30,28 +28,7 @@ import fr.cnrs.liris.accio.storage._
  * @param statsReceiver Stats receiver.
  */
 private[storage] final class MemoryStorage(statsReceiver: StatsReceiver) extends Storage {
-  private[this] val workflowStore = new MemoryWorkflowStore(statsReceiver)
-  private[this] val runStore = new MemoryRunStore(statsReceiver)
-  private[this] val storeProvider = new StoreProvider.Mutable {
-    override def runs: RunStore.Mutable = runStore
-
-    override def workflows: WorkflowStore.Mutable = workflowStore
-  }
-  private[this] val writeWaitStat = statsReceiver.stat("storage", "memory", "write_wait_nanos")
-  private[this] val writeLock = new ReentrantLock
-
-  override def read[T](fn: StoreProvider => T): T = fn(storeProvider)
-
-  override def write[T](fn: StoreProvider.Mutable => T): T = {
-    val start = System.nanoTime()
-    writeLock.lock()
-    try {
-      writeWaitStat.add(System.nanoTime() - start)
-      fn(storeProvider)
-    } finally {
-      writeLock.unlock()
-    }
-  }
+  override val jobs: JobStore = new MemoryJobStore(statsReceiver)
 }
 
 object MemoryStorage {

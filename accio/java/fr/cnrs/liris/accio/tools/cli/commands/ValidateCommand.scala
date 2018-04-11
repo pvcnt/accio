@@ -18,21 +18,19 @@
 
 package fr.cnrs.liris.accio.tools.cli.commands
 
-import java.nio.file.{Files, Path}
+import java.io.File
 
 import com.twitter.util.Future
-import fr.cnrs.liris.accio.agent.{ValidateRunRequest, ValidateWorkflowRequest}
+import fr.cnrs.liris.accio.agent.ValidateJobRequest
 import fr.cnrs.liris.accio.api.thrift.FieldViolation
-import fr.cnrs.liris.accio.dsl.{ExperimentParser, WorkflowParser}
+import fr.cnrs.liris.accio.dsl.json.JsonJobParser
 import fr.cnrs.liris.accio.tools.cli.event.{Event, EventKind, Reporter}
 import fr.cnrs.liris.util.FileUtils
-
-import scala.collection.JavaConverters._
 
 final class ValidateCommand extends Command with ClientCommand {
   override def name = "validate"
 
-  override def help = "Validate the syntax and semantics of Accio definition files."
+  override def help = "Validate the syntax and semantics of Accio job definition files."
 
   override def allowResidue = true
 
@@ -46,37 +44,18 @@ final class ValidateCommand extends Command with ClientCommand {
   }
 
   private def validate(uri: String, reporter: Reporter): Future[ExitCode] = {
-    val path = FileUtils.expandPath(uri)
-    if (!path.toFile.exists || !path.toFile.canRead) {
-      reporter.handle(Event.error(s"Cannot read file ${path.toAbsolutePath}"))
+    val file = FileUtils.expandPath(uri).toFile
+    if (!file.canRead) {
+      reporter.handle(Event.error(s"Cannot read file ${file.getAbsolutePath}"))
       return Future.value(ExitCode.DefinitionError)
     }
-    val content = Files.readAllLines(path).asScala.mkString
-    // Dirty detection of whether this file is a workflow or a run definition, based on JSON content.
-    if (content.contains("\"workflow\"")) {
-      validateRun(content, path, reporter)
-    } else {
-      validateWorkflow(content, path, reporter)
-    }
+    val parser = new JsonJobParser
+    parser.parse(file)
+      .flatMap(job => client.validateJob(ValidateJobRequest(job)))
+      .map(resp => handleResponse(resp.errors, resp.warnings, file, reporter))
   }
 
-  private def validateRun(content: String, path: Path, reporter: Reporter): Future[ExitCode] = {
-    val parser = new ExperimentParser
-    val run = parser.parse(content)
-    client
-      .validateRun(ValidateRunRequest(run))
-      .map(resp => handleResponse(resp.errors, resp.warnings, path: Path, reporter))
-  }
-
-  private def validateWorkflow(content: String, path: Path, reporter: Reporter): Future[ExitCode] = {
-    val parser = new WorkflowParser
-    val workflow = parser.parse(content, Some(path.toAbsolutePath.toString))
-    client
-      .validateWorkflow(ValidateWorkflowRequest(workflow))
-      .map(resp => handleResponse(resp.errors, resp.warnings, path: Path, reporter))
-  }
-
-  private def handleResponse(errors: Seq[FieldViolation], warnings: Seq[FieldViolation], path: Path, reporter: Reporter) = {
+  private def handleResponse(errors: Seq[FieldViolation], warnings: Seq[FieldViolation], file: File, reporter: Reporter) = {
     warnings.foreach { violation =>
       reporter.handle(Event(EventKind.Warning, s"${violation.message} (at ${violation.field})"))
     }
@@ -84,7 +63,7 @@ final class ValidateCommand extends Command with ClientCommand {
       reporter.handle(Event(EventKind.Error, s"${violation.message} (at ${violation.field})"))
     }
     if (errors.isEmpty) {
-      reporter.handle(Event.info(s"Validated file ${path.toAbsolutePath}"))
+      reporter.handle(Event.info(s"Validated file ${file.getAbsolutePath}"))
       ExitCode.Success
     } else {
       ExitCode.DefinitionError

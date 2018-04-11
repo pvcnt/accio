@@ -33,31 +33,26 @@ import scala.reflect.{ClassTag, classTag}
  * Jackson module providing serializers for Accio Thrift structures.
  */
 object AccioJacksonModule extends SimpleModule {
-  addSerializer(new ScroogeStructSerializer[Run](Run))
-  addSerializer(new ScroogeStructSerializer[RunStatus](RunStatus))
-  addSerializer(new ScroogeStructSerializer[Package](Package))
-  addSerializer(new ScroogeStructSerializer[NodeStatus](NodeStatus))
-  addSerializer(new ScroogeStructSerializer[Artifact](Artifact))
-  addSerializer(new ScroogeStructSerializer[MetricValue](MetricValue))
-  addSerializer(new ScroogeStructSerializer[OpResult](OpResult))
-  addSerializer(new ScroogeStructSerializer[Workflow](Workflow))
-  addSerializer(new ScroogeStructSerializer[Node](Node))
+  addSerializer(new ScroogeStructSerializer[Job](Job))
+  addSerializer(new ScroogeStructSerializer[JobStatus](JobStatus))
+  addSerializer(new ScroogeStructSerializer[Task](Task))
+  addSerializer(new ScroogeStructSerializer[NamedValue](NamedValue))
+  addSerializer(new ScroogeStructSerializer[NamedChannel](NamedChannel))
+  addSerializer(new ScroogeStructSerializer[Metric](Metric))
   addSerializer(new ScroogeStructSerializer[Reference](Reference))
+  addSerializer(new ScroogeStructSerializer[Export](Export))
   addSerializer(new ScroogeStructSerializer[User](User))
-  addSerializer(new ScroogeStructSerializer[DataType](DataType))
-  addSerializer(new ScroogeStructSerializer[Artifact](Artifact))
-  addSerializer(new ScroogeStructSerializer[ArgDef](ArgDef))
-  addSerializer(new ScroogeStructSerializer[OpDef](OpDef))
-  addSerializer(new ScroogeStructSerializer[Resource](Resource))
+  addSerializer(new ScroogeStructSerializer[Attribute](Attribute))
 
-  addSerializer(new ScroogeUnionSerializer[Input](Input))
+  addSerializer(new ScroogeUnionSerializer[Channel](Channel))
+  addSerializer(new ScroogeUnionSerializer[DataType](DataType))
 
-  addSerializer(new ScroogeValueSerializer)
-  addSerializer(new ScroogeEnumSerializer)
-  addSerializer(new ScroogeDistanceSerializer)
+  addSerializer(ScroogeValueSerializer)
+  addSerializer(ScroogeEnumSerializer)
+  addSerializer(ScroogeDistanceSerializer)
 }
 
-private class ScroogeEnumSerializer extends StdSerializer[ThriftEnum](classOf[ThriftEnum]) {
+private object ScroogeEnumSerializer extends StdSerializer[ThriftEnum](classOf[ThriftEnum]) {
   override def serialize(t: ThriftEnum, jsonGenerator: JsonGenerator, serializerProvider: SerializerProvider): Unit = {
     jsonGenerator.writeString(t.name.toLowerCase)
   }
@@ -90,16 +85,16 @@ private class ScroogeUnionSerializer[T <: ThriftStruct with ThriftUnion : ClassT
   }
 }
 
-private class ScroogeValueSerializer extends StdSerializer[Value](classOf[Value]) {
+private object ScroogeValueSerializer extends StdSerializer[Value](classOf[Value]) {
+
+  private case class JsonValue(dataType: DataType, payload: Any)
+
   override def serialize(t: Value, jsonGenerator: JsonGenerator, serializerProvider: SerializerProvider): Unit = {
-    jsonGenerator.writeStartObject()
-    jsonGenerator.writeObjectField("kind", t.kind)
-    jsonGenerator.writeObjectField("payload", Values.decode(t))
-    jsonGenerator.writeEndObject()
+    jsonGenerator.writeObject(JsonValue(t.dataType, Values.decode(t)))
   }
 }
 
-private class ScroogeDistanceSerializer extends StdSerializer[Distance](classOf[Distance]) {
+private object ScroogeDistanceSerializer extends StdSerializer[Distance](classOf[Distance]) {
   override def serialize(t: Distance, jsonGenerator: JsonGenerator, serializerProvider: SerializerProvider): Unit = {
     jsonGenerator.writeNumber(t.meters)
   }

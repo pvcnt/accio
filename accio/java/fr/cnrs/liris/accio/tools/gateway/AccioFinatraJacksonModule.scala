@@ -31,7 +31,7 @@ import com.twitter.finatra.json.modules.FinatraJacksonModule
  */
 object AccioFinatraJacksonModule extends FinatraJacksonModule {
   // We do not want to include None's inside JSON.
-  override protected val serializationInclusion = JsonInclude.Include.NON_ABSENT
+  override val serializationInclusion = JsonInclude.Include.NON_ABSENT
 
-  override protected def additionalJacksonModules: Seq[Module] = Seq(AccioJacksonModule)
+  override def additionalJacksonModules: Seq[Module] = Seq(AccioJacksonModule)
 }

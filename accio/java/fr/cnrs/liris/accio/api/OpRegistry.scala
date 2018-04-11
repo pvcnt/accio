@@ -18,17 +18,17 @@
 
 package fr.cnrs.liris.accio.api
 
-import fr.cnrs.liris.accio.api.thrift.OpDef
+import fr.cnrs.liris.accio.api.thrift.Operator
 
 /**
  * Registry providing definitions of all operators known to Accio.
  */
-final class OpRegistry(val ops: Set[OpDef]) {
+final class OpRegistry(val ops: Set[Operator]) {
   private[this] val index = ops.map(opDef => opDef.name -> opDef).toMap
 
   def contains(name: String): Boolean = index.contains(name)
 
-  def get(name: String): Option[OpDef] = index.get(name)
+  def get(name: String): Option[Operator] = index.get(name)
 
-  def apply(name: String): OpDef = index(name)
+  def apply(name: String): Operator = index(name)
 }

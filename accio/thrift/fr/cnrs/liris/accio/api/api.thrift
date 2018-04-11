@@ -21,9 +21,9 @@ namespace java fr.cnrs.liris.accio.api.thrift
 typedef i64 Timestamp
 
 enum AtomicType {
-  BYTE,
   INTEGER,
   LONG,
+  FLOAT,
   DOUBLE,
   STRING,
   BOOLEAN,
@@ -31,38 +31,44 @@ enum AtomicType {
   TIMESTAMP,
   DURATION,
   DISTANCE,
-  DATASET,
-  LIST,
-  SET,
-  MAP,
 }
 
-struct DataType {
-  1: required AtomicType base;
-  2: required list<AtomicType> args;
+struct DatasetType {
+  1: map<string, AtomicType> schema;
+}
+
+struct MapType {
+  1: AtomicType keys;
+  2: AtomicType values;
+}
+
+struct ListType {
+  1: AtomicType values;
+}
+
+union DataType {
+  1: AtomicType atomic;
+  2: MapType map_type;
+  3: ListType list_type;
+  4: DatasetType dataset;
 }
 
 struct Value {
-  1: required DataType kind;
+  1: DataType data_type;
   2: list<string> strings;
   3: list<i64> longs;
   4: list<double> doubles;
   5: list<i32> integers;
   6: list<bool> booleans;
   7: list<byte> bytes;
-  8: required i32 size = 1;
 }
 
-struct Artifact {
-  // Artifact name.
-  1: required string name;
-
-  // Value, that should be consistent with above data type.
-  2: required Value value;
+struct NamedValue {
+  1: string name;
+  2: Value value;
 }
 
-struct MetricValue {
-  // Metric name.
+struct Metric {
   1: string name;
 
   // Value.
@@ -74,7 +80,7 @@ struct MetricValue {
 
 struct User {
   // User name.
-  1: required string name;
+  1: string name;
 
   // Email address.
   2: optional string email;
@@ -82,34 +88,28 @@ struct User {
   3: set<string> groups;
 }
 
-struct Reference {
-  1: required string node;
-  2: required string port;
-}
-
 /**
  * Declaration of resources an operator required to execute.
  */
-struct Resource {
-  // Fractional number of CPUs.
-  1: required double cpus;
+struct ComputeResources {
+  // Number of CPUs.
+  1: i32 cpus = 0;
 
   // Quantity of free memory, in MB.
-  2: required i64 ram_mb;
+  2: i64 ram_mb = 0;
 
   // Quantity of free disk space, in GB.
-  3: required i64 disk_gb;
+  3: i64 disk_gb = 0;
 }
 
 /**
  * Definition of an operator port (either input or output).
  */
-struct ArgDef {
-  // Input name. Should be unique among all inputs of a given operator.
-  1: required string name;
+struct Attribute {
+  1: string name;
 
   // Data type.
-  2: required DataType kind;
+  2: DataType data_type;
 
   // One-line help text.
   3: optional string help;
@@ -117,18 +117,18 @@ struct ArgDef {
   // Default value taken by this input if none is specified. It should be empty for output ports.
   4: optional Value default_value;
 
-  5: required bool is_optional = false;
+  5: bool is_optional = false;
 }
 
 /**
  * Definition of an operator.
  */
-struct OpDef {
+struct Operator {
   // Operator name. Should be unique among all operators.
-  1: required string name;
+  1: string name;
 
   // Category. Only used for presentational purposes.
-  2: required string category;
+  2: string category;
 
   // One-line help text.
   3: optional string help;
@@ -137,75 +137,37 @@ struct OpDef {
   4: optional string description;
 
   // Definition of inputs the operator consumes.
-  5: required list<ArgDef> inputs;
+  5: list<Attribute> inputs;
 
   // Definition of outputs the operator produces.
-  6: required list<ArgDef> outputs;
+  6: list<Attribute> outputs;
 
   // Deprecation message, if this operator is actually deprecated.
   7: optional string deprecation;
 
   // Declaration of resources this operator needs to be executed.
-  8: required Resource resource;
+  8: ComputeResources resource;
 
   // Whether this operator is unstable, will produce deterministic outputs given the some inputs. Unstable operators
   // need a random seed specified to produce deterministic outputs.
-  9: required bool unstable;
+  9: bool unstable;
 
   // Path to the executable implementing this operator.
-  10: required string executable;
-}
-
-/**
- * Payload containing everything needed to execute an operator.
- */
-struct OpPayload {
-  // Name of the operator to execute.
-  1: string op;
-
-  // Seed used by unstable operators (included even if the operator is not unstable);
-  2: i64 seed;
-
-  // Mapping between a port name and its value. It should contain at least required inputs.
-  3: list<Artifact> inputs;
-
-  // Resources required.
-  4: Resource resources;
-}
-
-/**
- * Result of the execution of an operator. Once again, it includes only information that is reproducible. For
- * example, it means it cannot include information such as started/completed times (but it can include duration).
- * This structure is what can be cached and re-used for another identical operator execution.
- */
-struct OpResult {
-  // Exit code. It is particularly useful for operators launching external executables and monitoring their execution.
-  // For built-in operators, it should still be included. 0 means a successful execution, any other value represents
-  // a failed execution.
-  1: i32 exit_code;
-
-  // Arfifacts produced by the operator execution. This should be left empty if the exit code indicates a failure.
-  // If filled, there should be an artifact per output port of the operator, no more and no less.
-  2: list<Artifact> artifacts;
-
-  // Metrics produced by the operator execution. This can always be filled, whether or not the execution is successful.
-  // There is no definition of metrics produced by an operator, so any relevant metrics can be included here and will
-  // be exposed thereafter.
-  3: list<MetricValue> metrics;
+  10: string executable;
 }
 
 /**
  * Status of the execution of a task.
  **/
-enum TaskState {
+enum ExecState {
   // Waiting for all dependencies to be satisfied.
-  WAITING,
+  PENDING,
   // Submitted to the scheduler.
   SCHEDULED,
   // A task executing this node is running.
   RUNNING,
   // Completed, successfully.
-  SUCCESS,
+  SUCCESSFUL,
   // Completed, but resulted in a failure.
   FAILED,
   // Killed by the client.
@@ -217,37 +179,67 @@ enum TaskState {
 /**
  * State of a node, as part of a run. This structure is regularly updated as the execution of a node progresses.
  */
-struct NodeStatus {
-  // Name of the node this state is about.
-  1: required string name;
+struct Task {
+  1: string name;
 
   // Node execution status.
-  2: required TaskState status;
+  2: ExecState state = ExecState.PENDING;
 
   // Time at which the execution of the node started.
-  3: optional Timestamp started_at;
+  3: optional Timestamp start_time;
 
   // Time at which the execution of the node completed.
-  4: optional Timestamp completed_at;
+  4: optional Timestamp end_time;
 
-  // Result of the node execution, either success or failed. Should be filled when the node is completed.
-  5: optional OpResult result;
+  // Exit code. It is particularly useful for operators launching external executables and monitoring their execution.
+  // For built-in operators, it should still be included. 0 means a successful execution, any other value represents
+  // a failed execution.
+  5: optional i32 exit_code;
 
-  // Identifier of the task that handled the execution of this node.
-  8: optional string task_id;
+  // Metrics produced by the operator execution. This can always be filled, whether or not the execution is successful.
+  // There is no definition of metrics produced by an operator, so any relevant metrics can be included here and will
+  // be exposed thereafter.
+  6: optional list<Metric> metrics;
+
+  7: optional list<NamedValue> artifacts;
 }
 
-struct RunStatus {
-  1: optional Timestamp started_at;
-  2: optional Timestamp completed_at;
-  3: required double progress;
-  4: required TaskState status;
-  5: required set<NodeStatus> nodes;
+struct JobStatus {
+  1: optional Timestamp start_time;
+  2: optional Timestamp end_time;
+  3: double progress = 0;
+  4: ExecState state = ExecState.PENDING;
+  5: optional list<Task> tasks;
+  6: optional map<ExecState, i32> children;
+  7: optional list<NamedValue> artifacts;
 }
 
-struct Package {
-  1: required string workflow_id;
-  2: optional string workflow_version;
+struct Reference {
+  1: string step;
+  2: string output;
+}
+
+union Channel {
+  1: string param;
+  2: optional Value value;
+  3: optional Reference reference;
+}
+
+struct NamedChannel {
+  1: string name;
+  2: Channel channel;
+}
+
+struct Export {
+  1: string output;
+  2: string export_as;
+}
+
+struct Step {
+  1: string name;
+  2: string op;
+  3: list<NamedChannel> inputs;
+  4: list<Export> exports;
 }
 
 /**
@@ -264,162 +256,64 @@ struct Package {
  * Runs are mostly immutable, only the `state`, `name`, `notes` and `tags` properties are designed to be updated
  * after a run has been created.
  */
-struct Run {
-  // Run unique identifier.
-  1: required string id;
+struct Job {
+  1: string name;
 
-  // Specification of the associated workflow.
-  2: required Package pkg;
+  2: optional User author;
 
-  // User initiating the run.
-  3: optional User owner;
-
-  // Time at which this run has been created.
-  4: required Timestamp created_at;
-
-  // Cluster this run belongs to.
-  15: required string cluster;
+  // Time at which this job has been created.
+  3: Timestamp create_time = 0;
 
   // Human-readable name.
-  6: optional string name;
-
-  // Notes describing the purpose of the run.
-  7: optional string notes;
+  4: optional string title;
 
   // Arbitrary tags used when looking for runs.
-  8: required set<string> tags;
+  5: set<string> tags;
 
   // Seed used by unstable operators.
-  9: required i64 seed;
-
-  // Values of workflow parameters.
-  10: required map<string, Value> params;
-
-  // Identifier of the run this instance is a child of.
-  11: optional string parent;
-
-  // Identifiers of children that are parent of this run.
-  12: required list<string> children;
-
-  // Identifier of the run this instance has been cloned from.
-  13: optional string cloned_from;
-
-  // Execution state.
-  14: required RunStatus state;
-}
-
-struct Experiment {
-  // Specification of the associated workflow.
-  1: required Package pkg;
-
-  // User initiating the run.
-  2: optional User owner;
-
-  // Human-readable name.
-  3: optional string name;
-
-  // Notes describing the purpose of the run.
-  4: optional string notes;
-
-  // Arbitrary tags used when looking for runs.
-  5: required set<string> tags;
-
-  // Seed used by unstable operators.
-  6: optional i64 seed;
+  6: i64 seed = 0;
 
   // Values of workflow parameters. There can possibly be many values for a single parameter, which
   // will cause a parameter sweep to be executed.
-  7: required map<string, list<Value>> params;
+  7: list<NamedValue> params;
 
-  // Number of times to repeat each run.
-  8: optional i32 repeat;
+  // Identifier of the run this instance is a child of.
+  8: optional string parent;
 
   // Identifier of the run this instance has been cloned from.
   9: optional string cloned_from;
-}
 
-union Input {
-  1: string param;
-  2: Reference reference;
-  3: Value value;
-}
+  10: list<Step> steps;
 
-struct Node {
-  1: required string op;
-  2: required string name;
-  3: required map<string, Input> inputs;
+  // Execution state.
+  12: JobStatus status = {};
 }
 
 /**
- * A workflow is a basically named graph of operators. A workflow can define parameters, which are
- * workflow-level inputs allowing to override the value of some node's inputs at runtime.
- *
- * Workflows are versioned, which allows runs to reference them even if they change afterwards.
- * Version identifiers do not have to be incrementing integers, which allows to use things such as
- * sha1.
+ * Payload containing everything needed to execute an operator.
  */
-struct Workflow {
-  // Workflow unique identifier. It is referenced by users creating runs, so it can be a little
-  // descriptive and not totally random.
-  1: required string id;
+struct OpPayload {
+  // Name of the operator to execute.
+  1: string op;
 
-  // Version identifier, unique among all version of a particular workflow. Besires this, there is
-  // no constraint on it, it is just a plain string.
-  2: optional string version;
+  // Seed used by unstable operators (included even if the operator is not unstable);
+  2: i64 seed;
 
-  // Time at which this version of the workflow was created.
-  3: optional Timestamp created_at;
+  // Mapping between a port name and its value. It should contain at least required inputs.
+  3: list<NamedValue> params;
 
-  // Human-readable name.
-  4: optional string name;
-
-  // User owning this workflow (usually the one who created it).
-  5: optional User owner;
-
-  // Graph definition.
-  6: required list<Node> nodes;
-
-  // Workflow parameters.
-  7: required list<ArgDef> params;
+  // ComputeResourcess required.
+  4: ComputeResources resources;
 }
 
-/**
- * Exceptions.
- */
-struct FieldViolation {
-  // A description of why the value for the field is bad.
-  1: required string message;
+struct OpResult {
+  1: bool successful;
 
-  // A path leading to a field in the request body, as a dot-separated sequence of field names.
-  2: required string field;
-}
-enum ErrorCode {
-  UNKNONWN = 1;
-  NOT_FOUND = 2;
-  ALREADY_EXISTS = 3;
-  UNAUTHENTICATED = 4;
-  UNIMPLEMENTED = 5;
-  INVALID_ARGUMENT = 6;
-  FAILED_PRECONDITION = 7;
-}
+  // Arfifacts produced by the operator execution. This should be left empty in case of a failure.
+  // If filled, there should be exactly one an artifact per output port of the operator.
+  2: list<NamedValue> artifacts;
 
-struct ErrorDetails {
-  // A name for the type of resource being accessed.
-  1: optional string resource_type;
-
-  // The name of the resource being accessed.
-  2: optional string resource_name;
-
-  // A list of errors on the request's fields. These indicate fatal errors that have to be fixed.
-  3: list<FieldViolation> errors;
-
-  // A list of warnings on the request's fields. These do not indicate fatal errors, but rather
-  // suggestions (e.g., deprecated stuff).
-  4: list<FieldViolation> warnings;
-}
-
-exception ServerException {
-  1: required ErrorCode code;
-  2: optional string message;
-  3: optional ErrorDetails details;
+  // Metrics produced by the operator execution. This can always be filled, whether or not the
+  // execution was successful.
+  3: list<Metric> metrics;
 }

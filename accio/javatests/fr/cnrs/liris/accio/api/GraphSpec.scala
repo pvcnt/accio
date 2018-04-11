@@ -18,6 +18,7 @@
 
 package fr.cnrs.liris.accio.api
 
+import fr.cnrs.liris.accio.api.thrift.NamedChannel
 import fr.cnrs.liris.testing.UnitSpec
 
 /**
@@ -28,26 +29,27 @@ class GraphSpec extends UnitSpec {
 
   it should "create a graph" in {
     val struct = Seq(
-      thrift.Node(
+      thrift.Step(
         op = "FirstSimple",
         name = "FirstSimple",
-        inputs = Map("foo" -> thrift.Input.Value(Values.encodeInteger(42)))),
-      thrift.Node(
+        inputs = Seq(NamedChannel("foo", thrift.Channel.Value(Values.encodeInteger(42))))),
+      thrift.Step(
         op = "FirstSimple",
         name = "FirstSimple1",
-        inputs = Map("foo" -> thrift.Input.Value(Values.encodeInteger(42)))),
-      thrift.Node(
+        inputs = Seq(NamedChannel("foo", thrift.Channel.Value(Values.encodeInteger(42))))),
+      thrift.Step(
         op = "ThirdSimple",
         name = "ThirdSimple",
-        inputs = Map(
-          "data1" -> thrift.Input.Reference(thrift.Reference("FirstSimple", "data")),
-          "data2" -> thrift.Input.Reference(thrift.Reference("FirstSimple1", "data")))),
-      thrift.Node(
+        inputs = Seq(
+          NamedChannel("data1", thrift.Channel.Reference(thrift.Reference("FirstSimple", "data"))),
+          NamedChannel("data2", thrift.Channel.Reference(thrift.Reference("FirstSimple1", "data"))))),
+      thrift.Step(
         op = "SecondSimple",
         name = "SecondSimple",
-        inputs = Map(
-          "dbl" -> thrift.Input.Value(Values.encodeDouble(3.14)),
-          "data" -> thrift.Input.Reference(thrift.Reference("FirstSimple", "data")))))
+        inputs = Seq(
+          NamedChannel("dbl", thrift.Channel.Value(Values.encodeDouble(3.14))),
+          NamedChannel("data", thrift.Channel.Reference(thrift.Reference("FirstSimple", "data"))))))
+
     val graph = Graph.fromThrift(struct)
     graph("FirstSimple").outputs should contain theSameElementsAs Map("data" -> Set(
       thrift.Reference("ThirdSimple", "data1"),

@@ -40,9 +40,9 @@ case class NoInputOp() extends ScalaOperator[NoInputOut] {
 
 @Op
 case class AllDataTypesOp(
-  @Arg byte: Byte,
-  @Arg byte2: Byte = 2,
-  @Arg byte3: Option[Byte],
+  @Arg float: Float,
+  @Arg float2: Float = 2f,
+  @Arg float3: Option[Float],
   @Arg int: Int,
   @Arg int2: Int = 2,
   @Arg int3: Option[Int],
@@ -72,8 +72,6 @@ case class AllDataTypesOp(
   @Arg dist3: Option[Distance],
   @Arg list: Seq[Int],
   @Arg list2: Seq[Int] = Seq(3, 14),
-  @Arg set: Set[Int],
-  @Arg set2: Set[Int] = Set(3, 14),
   @Arg map: Map[String, Int],
   @Arg map2: Map[String, Int] = Map("foo" -> 3, "bar" -> 14),
   @Arg data: Dataset,

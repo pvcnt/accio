@@ -23,7 +23,7 @@ import fr.cnrs.liris.accio.agent._
 import fr.cnrs.liris.accio.tools.cli.event.Reporter
 import fr.cnrs.liris.util.StringUtils.padTo
 
-case class GetQuery(all: Boolean, tags: Set[String], owner: Option[String], limit: Option[Int])
+case class GetQuery(all: Boolean, tags: Set[String], author: Option[String], limit: Option[Int])
 
 trait GetController[Res] {
   def retrieve(opts: GetQuery, client: AgentService.MethodPerEndpoint): Future[Res]

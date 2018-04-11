@@ -29,7 +29,7 @@ import fr.cnrs.liris.util.scrooge.BinaryScroogeSerializer
 
 @Singleton
 final class TaskExecutor @Inject()(opExecutor: OpExecutor) extends Logging {
-  def execute(payload: OpPayload, outputFile: Path): Int = {
+  def execute(payload: OpPayload, outputFile: Path): Boolean = {
     val result = execute(payload)
     Files.createDirectories(outputFile.getParent)
     val fos = new FileOutputStream(outputFile.toFile)
@@ -38,7 +38,7 @@ final class TaskExecutor @Inject()(opExecutor: OpExecutor) extends Logging {
     } finally {
       fos.close()
     }
-    result.exitCode
+    result.successful
   }
 
   private def execute(payload: OpPayload): OpResult = {
@@ -50,7 +50,7 @@ final class TaskExecutor @Inject()(opExecutor: OpExecutor) extends Logging {
         // Normally, operator executor is supposed to be robust enough to catch all errors. But we
         // still handle and uncaught error here, just in case...
         logger.error(s"Operator raised an unexpected error", e)
-        OpResult(1)
+        OpResult(successful = false)
     }
   }
 }

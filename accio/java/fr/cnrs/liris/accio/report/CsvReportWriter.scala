@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.report
 
 import java.nio.file.{Files, Path, StandardOpenOption}
 
-import fr.cnrs.liris.accio.api.thrift.{AtomicType, DataType, Value}
+import fr.cnrs.liris.accio.api.thrift._
 import fr.cnrs.liris.accio.api.{Utils, Values}
 
 import scala.collection.JavaConverters._
@@ -53,25 +53,6 @@ final class CsvReportWriter(separator: String, split: Boolean, aggregate: Boolea
     }
   }
 
-  /**
-   * Write the values of metrics in CSV format inside the given directory.
-   *
-   * @param metrics Metrics to create a report for.
-   * @param workDir Directory where to write CSV reports (doesn't have to exist).
-   */
-  def write(metrics: MetricList, workDir: Path): Unit = {
-    if (split) {
-      // When splitting, one sub-directory is created per combination of workflow parameters.
-      metrics.split.foreach { list =>
-        val filename = Utils.label(list.params).replace(" ", ",")
-        doWrite(list, workDir.resolve(filename))
-      }
-    } else {
-      // When not splitting, we write report directory inside the working directory.
-      doWrite(metrics, workDir)
-    }
-  }
-
   private def doWrite(list: ArtifactList, workDir: Path): Unit = {
     Files.createDirectories(workDir)
     list.groups.foreach { group =>
@@ -81,18 +62,6 @@ final class CsvReportWriter(separator: String, split: Boolean, aggregate: Boolea
       val lines = (Seq(header) ++ rows).map(_.mkString(separator))
       val filename = group.name.replace("/", "-")
       doWrite(lines, workDir, filename)
-    }
-  }
-
-  private def doWrite(list: MetricList, workDir: Path): Unit = {
-    Files.createDirectories(workDir)
-    list.groups.groupBy(_.nodeName).foreach { case (nodeName, groups) =>
-      val header = Seq("metric_name", "value")
-      val rows = groups
-        .flatMap(group => if (aggregate) Seq(group.aggregated) else group.toSeq)
-        .map(metric => Seq(metric.name, metric.value.toString))
-      val lines = (Seq(header) ++ rows).map(_.mkString(separator))
-      doWrite(lines, workDir, nodeName)
     }
   }
 
@@ -117,28 +86,35 @@ final class CsvReportWriter(separator: String, split: Boolean, aggregate: Boolea
   }
 
   private def asHeader(kind: DataType): Seq[String] =
-    kind.base match {
-      case AtomicType.List => asHeader(DataType(kind.args.head))
-      case AtomicType.Set => asHeader(DataType(kind.args.head))
-      case AtomicType.Map => Seq("key", "key_index") ++ asHeader(DataType(kind.args.last))
+    kind match {
+      case DataType.ListType(ListType(values)) => asHeader(values)
+      case DataType.MapType(MapType(_, values)) => Seq("key", "key_index") ++ asHeader(values)
+      case DataType.Dataset(_) => Seq("value")
+      case DataType.Atomic(tpe) => asHeader(tpe)
+      case DataType.UnknownUnionField(_) => throw new IllegalArgumentException("Unknown data type")
+    }
+
+  private def asHeader(kind: AtomicType): Seq[String] =
+    kind match {
       case AtomicType.Distance => Seq("value_in_meters")
       case AtomicType.Duration => Seq("value_in_millis")
       case _ => Seq("value")
     }
 
   private def asString(value: Value): Seq[Seq[String]] =
-    value.kind.base match {
-      case AtomicType.List => Values.decodeList(value).map(v => Seq(v.toString))
-      case AtomicType.Set => Values.decodeSet(value).toSeq.map(v => Seq(v.toString))
-      case AtomicType.Map =>
-        val map = Values.decodeMap(value)
+    value.dataType match {
+      case DataType.ListType(tpe) => Values.decodeList(value, tpe).map(v => Seq(v.toString))
+      case DataType.MapType(tpe) =>
+        val map = Values.decodeMap(value, tpe)
         val keysIndex = map.keySet.zipWithIndex.toMap
         map.toSeq.map { case (k, v) =>
           val kIdx = keysIndex(k.asInstanceOf[Any])
           Seq(k.toString, kIdx.toString, v.toString)
         }
-      case AtomicType.Distance => Seq(Seq(Values.decodeDistance(value).meters.toString))
-      case AtomicType.Duration => Seq(Seq(Values.decodeDuration(value).getMillis.toString))
-      case _ => Seq(Seq(Values.decode(value).toString))
+      case DataType.Dataset(tpe) => Seq(Seq(Values.decodeDataset(value, tpe).uri))
+      case DataType.Atomic(AtomicType.Distance) => Seq(Seq(Values.decodeDistance(value).meters.toString))
+      case DataType.Atomic(AtomicType.Duration) => Seq(Seq(Values.decodeDuration(value).getMillis.toString))
+      case DataType.Atomic(_) => Seq(Seq(Values.decode(value).toString))
+      case DataType.UnknownUnionField(_) => throw new IllegalArgumentException("Unknown data type")
     }
 }

@@ -24,6 +24,7 @@ scala_library(
     "//accio/thrift/fr/cnrs/liris/accio/api",
     "//3rdparty/jvm/com/github/nscala_time",
     "//3rdparty/jvm/com/twitter:finagle_core",
+    "//3rdparty/jvm/com/twitter:inject_core",
   ],
   exports = [
     "//accio/java/fr/cnrs/liris/util/geo",

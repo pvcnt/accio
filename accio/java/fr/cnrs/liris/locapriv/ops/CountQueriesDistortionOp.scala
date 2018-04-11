@@ -135,7 +135,7 @@ private class CountQueryGenerator(data: DataFrame[Trace], seed: Long, minSize: D
   def generate(nb: Int): CountQuerySeq = {
     val halfSizeMeters = rnd.nextLong(minSize.meters.round, maxSize.meters.round) / 2d
     val halfDurationMillis = rnd.nextLong(minDuration.getMillis, maxDuration.getMillis) / 2
-    val traces = data.takeSample(withReplacement = true, num = nb)
+    val traces = data.takeSample(withReplacement = true, num = nb, seed = seed)
     val queries = traces.map { trace =>
       val event = RandomUtils.randomElement(trace.events, seed)
       val box = BoundingBox(Point(event.point.x - halfSizeMeters, event.point.y - halfSizeMeters), Point(event.point.x + halfSizeMeters, event.point.y + halfSizeMeters))

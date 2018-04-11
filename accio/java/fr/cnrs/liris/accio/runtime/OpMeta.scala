@@ -22,8 +22,8 @@ import java.io.IOException
 
 import com.twitter.util.StorageUnit
 import com.twitter.util.logging.Logging
+import fr.cnrs.liris.accio.api.Values
 import fr.cnrs.liris.accio.api.thrift._
-import fr.cnrs.liris.accio.api.{Utils, Values}
 import fr.cnrs.liris.accio.sdk.{Arg, Dataset, Op, ScalaOperator}
 import fr.cnrs.liris.util.ResourceFileLoader
 import fr.cnrs.liris.util.StringUtils.maybe
@@ -32,6 +32,7 @@ import fr.cnrs.liris.util.reflect.{CaseClass, ScalaType}
 import org.joda.time.{Duration, Instant}
 
 import scala.reflect.runtime.{universe => ru}
+import scala.util.matching.Regex
 
 /**
  * Metadata about an operator, i.e., its definition and runtime information.
@@ -39,9 +40,19 @@ import scala.reflect.runtime.{universe => ru}
  * @param defn    Operator definition.
  * @param opClass Operator class.
  */
-final class OpMeta(val defn: OpDef, val opClass: CaseClass)
+final class OpMeta(val defn: Operator, val opClass: CaseClass)
 
 object OpMeta extends Logging {
+  /**
+   * Pattern for valid operator names.
+   */
+  private[this] val OpPattern = "[A-Z][a-zA-Z0-9_]+"
+
+  /**
+   * Regex for valid operator names.
+   */
+  private[this] val OpRegex: Regex = ("^" + OpPattern + "$").r
+
   def apply[T <: ScalaOperator[_] : ru.TypeTag]: OpMeta = apply(ru.typeOf[T])
 
   def apply(tpe: ru.Type): OpMeta = {
@@ -52,14 +63,14 @@ object OpMeta extends Logging {
         val clazz = opRefl.runtimeClass
         val outRefl = getOutRefl(opRefl)
         val name = if (op.name.nonEmpty) op.name else clazz.getSimpleName.stripSuffix("Op")
-        if (Utils.OpRegex.findFirstIn(name).isEmpty) {
+        if (OpRegex.findFirstIn(name).isEmpty) {
           throw new IllegalArgumentException(s"Invalid name for operator in $tpe: $name")
         }
-        val resources = Resource(
+        val resources = ComputeResources(
           cpus = op.cpus,
           ramMb = parseStorageUnit(op.ram()).inMegabytes,
           diskGb = parseStorageUnit(op.disk()).inGigabytes)
-        val defn = OpDef(
+        val defn = Operator(
           name = name,
           category = op.category,
           inputs = getInputs(opRefl),
@@ -119,9 +130,9 @@ object OpMeta extends Logging {
           } else {
             field.defaultValue.flatMap(Values.encode(_, dataType))
           }
-          ArgDef(
+          Attribute(
             name = field.name,
-            kind = dataType,
+            dataType = dataType,
             help = maybe(in.help),
             isOptional = isOptional,
             defaultValue = defaultValue)
@@ -133,46 +144,38 @@ object OpMeta extends Logging {
       field
         .annotations
         .get[Arg]
-        .map(out => ArgDef(field.name, getDataType(field.scalaType), maybe(out.help)))
+        .map(out => Attribute(field.name, getDataType(field.scalaType), maybe(out.help)))
         .toSeq
     }
   }
 
-  private def getDataType(scalaType: ScalaType): DataType = {
-    // TODO: prevent nested types.
-    getAtomicType(scalaType) match {
-      case AtomicType.List =>
+  private def getDataType(scalaType: ScalaType): DataType =
+    scalaType.tpe match {
+      case c if c <:< ru.typeOf[Seq[_]] =>
         val of = getAtomicType(scalaType.args.head)
-        DataType(AtomicType.List, Seq(of))
-      case AtomicType.Set =>
-        val of = getAtomicType(scalaType.args.head)
-        DataType(AtomicType.Set, Seq(of))
-      case AtomicType.Map =>
+        DataType.ListType(ListType(of))
+      case c if c <:< ru.typeOf[Map[_, _]] =>
         val keys = getAtomicType(scalaType.args.head)
         val values = getAtomicType(scalaType.args.last)
-        DataType(AtomicType.Map, Seq(keys, values))
-      case atomicType => DataType(atomicType)
+        DataType.MapType(MapType(keys, values))
+      case c if c <:< ru.typeOf[Dataset] => DataType.Dataset(DatasetType())
+      case _ => DataType.Atomic(getAtomicType(scalaType))
     }
-  }
 
   private def getAtomicType(scalaType: ScalaType): AtomicType = getAtomicType(scalaType.tpe)
 
   private def getAtomicType(tpe: ru.Type): AtomicType = {
     tpe match {
       case c if c == ru.typeOf[Boolean] || c == ru.typeOf[java.lang.Boolean] => AtomicType.Boolean
-      case c if c == ru.typeOf[Byte] || c == ru.typeOf[java.lang.Byte] => AtomicType.Byte
       case c if c == ru.typeOf[Int] || c == ru.typeOf[java.lang.Integer] => AtomicType.Integer
       case c if c == ru.typeOf[Long] || c == ru.typeOf[java.lang.Long] => AtomicType.Long
+      case c if c == ru.typeOf[Float] || c == ru.typeOf[java.lang.Float] => AtomicType.Float
       case c if c == ru.typeOf[Double] || c == ru.typeOf[java.lang.Double] => AtomicType.Double
       case c if c == ru.typeOf[String] => AtomicType.String
       case c if c <:< ru.typeOf[Location] => AtomicType.Location
       case c if c <:< ru.typeOf[Instant] => AtomicType.Timestamp
       case c if c <:< ru.typeOf[Duration] => AtomicType.Duration
       case c if c <:< ru.typeOf[Distance] => AtomicType.Distance
-      case c if c <:< ru.typeOf[Dataset] => AtomicType.Dataset
-      case c if c <:< ru.typeOf[Seq[_]] => AtomicType.List
-      case c if c <:< ru.typeOf[Set[_]] => AtomicType.Set
-      case c if c <:< ru.typeOf[Map[_, _]] => AtomicType.Map
       case _ => throw new IllegalArgumentException(s"Unsupported data type: $tpe")
     }
   }

@@ -59,6 +59,7 @@ private[storage] object MysqlClientFactory {
       .withSessionQualifier.noFailureAccrual
       // Inject our custom response classifier marking some failures as retryable.
       .withResponseClassifier(responseClassifier)
+      .withMonitor(MysqlMonitor)
       .configured(DefaultPool.Param(
         low = 0,
         high = 10,

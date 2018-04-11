@@ -18,12 +18,14 @@
 
 package fr.cnrs.liris.accio.scheduler
 
+import com.twitter.util.Future
+
 trait Scheduler {
   def submit(process: Process): Unit
 
-  def kill(id: String): Boolean
+  def kill(name: String): Future[Boolean]
 
-  def getLogs(id: String, kind: String, skip: Option[Int] = None, tail: Option[Int] = None): Seq[String]
+  def getLogs(name: String, kind: String, skip: Option[Int] = None, tail: Option[Int] = None): Future[Seq[String]]
 
   def startUp(): Unit = {}
 

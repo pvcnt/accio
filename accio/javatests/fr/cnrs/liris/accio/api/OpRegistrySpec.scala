@@ -18,7 +18,6 @@
 
 package fr.cnrs.liris.accio.api
 
-import fr.cnrs.liris.accio.testing.Operators
 import fr.cnrs.liris.testing.UnitSpec
 
 /**

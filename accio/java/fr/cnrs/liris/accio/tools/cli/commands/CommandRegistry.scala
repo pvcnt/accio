@@ -55,7 +55,6 @@ object CommandRegistry {
       new DescribeCommand,
       new KillCommand,
       new LogsCommand,
-      new PushCommand,
       new DeleteCommand,
       new SubmitCommand,
       new ValidateCommand,

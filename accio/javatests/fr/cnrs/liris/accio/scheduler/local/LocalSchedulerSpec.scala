@@ -38,7 +38,7 @@ class LocalSchedulerSpec extends UnitSpec with CreateTmpDirectory with BeforeAnd
   override def beforeEach(): Unit = {
     super.beforeEach()
     eventBus = new EventBus()
-    scheduler = new LocalScheduler(NullStatsReceiver, eventBus, Resource(0, 0, 0), "/dev/null", Seq.empty, true, tmpDir)
+    scheduler = new LocalScheduler(NullStatsReceiver, eventBus, ComputeResources(0, 0, 0), "/dev/null", Seq.empty, true, tmpDir)
     scheduler.startUp()
   }
 
@@ -55,19 +55,19 @@ class LocalSchedulerSpec extends UnitSpec with CreateTmpDirectory with BeforeAnd
     eventBus.register(new {
       @Subscribe
       def onTaskStart(e: ProcessStartedEvent): Unit = {
-        e.runId shouldBe "foo-run"
-        e.nodeName shouldBe "node"
+        e.jobName shouldBe "foo"
+        e.taskName shouldBe "bar"
         started = true
       }
 
       @Subscribe
       def onTaskComplete(e: ProcessCompletedEvent): Unit = {
-        e.runId shouldBe "foo-run"
-        e.nodeName shouldBe "node"
+        e.jobName shouldBe "foo"
+        e.taskName shouldBe "bar"
         completed = true
       }
     })
-    val process = Process("foo-process", "foo-run", "node", OpPayload("op", 0, Seq.empty, Resource(0, 0, 0)))
+    val process = Process("accio_job_foo_bar", OpPayload("op", 0, Seq.empty, ComputeResources(0, 0, 0)))
     scheduler.submit(process)
     Thread.sleep(2000)
     started shouldBe true

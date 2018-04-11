@@ -25,14 +25,14 @@ import fr.cnrs.liris.accio.api.{DataTypes, Values}
 import fr.cnrs.liris.accio.tools.cli.event.Reporter
 import fr.cnrs.liris.util.StringUtils
 
-class DescribeOperatorController extends DescribeController[OpDef] {
-  override def retrieve(id: String, client: AgentService.MethodPerEndpoint): Future[OpDef] = {
+class DescribeOperatorController extends DescribeController[Operator] {
+  override def retrieve(id: String, client: AgentService.MethodPerEndpoint): Future[Operator] = {
     client
       .getOperator(GetOperatorRequest(id))
       .map(_.operator)
   }
 
-  override def print(out: Reporter, opDef: OpDef): Unit = {
+  override def print(out: Reporter, opDef: Operator): Unit = {
     out.outErr.printOutLn(s"Operator: ${opDef.name} (${opDef.category})")
     opDef.deprecation.foreach { deprecation =>
       out.outErr.printOutLn()
@@ -46,11 +46,11 @@ class DescribeOperatorController extends DescribeController[OpDef] {
     printOutputs(out, opDef)
   }
 
-  private def printInputs(out: Reporter, opDef: OpDef): Unit = {
+  private def printInputs(out: Reporter, opDef: Operator): Unit = {
     out.outErr.printOutLn()
     out.outErr.printOutLn(s"Available inputs")
     opDef.inputs.foreach { argDef =>
-      out.outErr.printOut(s"  - ${argDef.name} [${DataTypes.stringify(argDef.kind)}")
+      out.outErr.printOut(s"  - ${argDef.name} [${DataTypes.stringify(argDef.dataType)}")
       if (argDef.defaultValue.isDefined) {
         out.outErr.printOut(s"; default: ${Values.stringify(argDef.defaultValue.get)}")
       }
@@ -63,12 +63,12 @@ class DescribeOperatorController extends DescribeController[OpDef] {
     }
   }
 
-  private def printOutputs(out: Reporter, opDef: OpDef): Unit = {
+  private def printOutputs(out: Reporter, opDef: Operator): Unit = {
     out.outErr.printOutLn()
     if (opDef.outputs.nonEmpty) {
       out.outErr.printOutLn("Available outputs")
       opDef.outputs.foreach { argDef =>
-        out.outErr.printOut(s"  - ${argDef.name} [${DataTypes.stringify(argDef.kind)}]")
+        out.outErr.printOut(s"  - ${argDef.name} [${DataTypes.stringify(argDef.dataType)}]")
         argDef.help.foreach(help => out.outErr.printOut(": " + help))
         out.outErr.printOutLn()
       }

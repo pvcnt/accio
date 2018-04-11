@@ -18,89 +18,45 @@
 
 package fr.cnrs.liris.accio.api
 
-import fr.cnrs.liris.accio.api.thrift.Value
-
-import scala.util.matching.Regex
+import fr.cnrs.liris.accio.api.thrift.NamedValue
 
 /**
  * Various helpers.
  */
 object Utils {
   /**
-   * Pattern for valid operator names.
-   */
-  val OpPattern = "[A-Z][a-zA-Z0-9_]+"
-
-  /**
-   * Regex for valid operator names.
-   */
-  val OpRegex: Regex = ("^" + OpPattern + "$").r
-
-  /**
-   * Pattern for valid workflow identifiers.
-   */
-  val WorkflowPattern = "[a-zA-Z][a-zA-Z0-9_.-]+"
-
-  /**
-   * Regex for valid workflow identifiers.
-   */
-  val WorkflowRegex: Regex = ("^" + WorkflowPattern + "$").r
-
-  /**
-   * Pattern for valid argument names.
-   */
-  val ArgPattern = "[a-z][a-zA-Z0-9_]+"
-
-  /**
-   * Regex for valid argument names.
-   */
-  val ArgRegex: Regex = ("^" + ArgPattern + "$").r
-
-  /**
    * Generate a human-readable label for a list of parameters.
    *
    * @param params List of parameters.
    */
-  def label(params: Seq[(String, Value)]): String = {
-    params.map { case (k, v) =>
-      var vStr = Values.stringify(v)
+  def label(params: Seq[NamedValue]): String = {
+    params.map { param =>
+      var vStr = Values.stringify(param.value)
       if (vStr.contains('/')) {
         // Remove any slash that would be polluting directory name.
         vStr = vStr.substring(vStr.lastIndexOf('/') + 1)
       }
-      s"$k=$vStr"
+      s"${param.name}=$vStr"
     }.mkString(" ")
   }
 
-  /**
-   * Generate a human-readable label for a map of parameters.
-   *
-   * @param params Map of parameters.
-   */
-  def label(params: Map[String, Value]): String = label(params.toSeq)
-
-  private[this] val UserRegex = "(.+)<(.+)>".r
-
-  /**
-   * Parse a string into a user. If it includes an email address, it should have the following
-   * format: `User name <handle@domain.tld>`.
-   *
-   * @param str String to parse
-   */
-  def parseUser(str: String): thrift.User = str match {
-    case UserRegex(name, email) => thrift.User(name.trim, Some(email.trim))
-    case _ => thrift.User(str, None)
-  }
-
-  def toString(ref: thrift.Reference): String = s"${ref.node}/${ref.port}"
+  def toString(ref: thrift.Reference): String = s"${ref.step}/${ref.output}"
 
   def toString(user: thrift.User): String = s"${user.name}${user.email.map(email => s" <$email>").getOrElse("")}"
 
-  def isCompleted(status: thrift.TaskState): Boolean = status match {
-    case thrift.TaskState.Success => true
-    case thrift.TaskState.Failed => true
-    case thrift.TaskState.Killed => true
-    case thrift.TaskState.Cancelled => true
-    case _ => false
-  }
+  def isActive(state: thrift.ExecState): Boolean =
+    state match {
+      case thrift.ExecState.Scheduled => true
+      case thrift.ExecState.Running => true
+      case _ => false
+    }
+
+  def isCompleted(state: thrift.ExecState): Boolean =
+    state match {
+      case thrift.ExecState.Successful => true
+      case thrift.ExecState.Failed => true
+      case thrift.ExecState.Killed => true
+      case thrift.ExecState.Cancelled => true
+      case _ => false
+    }
 }

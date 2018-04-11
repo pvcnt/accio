@@ -22,7 +22,7 @@ import java.nio.file.{Path, Paths}
 import java.util.UUID
 
 import com.twitter.util.Future
-import fr.cnrs.liris.accio.agent.GetRunRequest
+import fr.cnrs.liris.accio.agent.{GetJobRequest, ListJobsRequest}
 import fr.cnrs.liris.accio.report._
 import fr.cnrs.liris.accio.tools.cli.event.{Event, Reporter}
 import fr.cnrs.liris.util.{FileUtils, HashUtils, StringUtils}
@@ -38,11 +38,8 @@ final class ExportCommand extends Command with ClientCommand {
   private[this] val artifactsFlag = flag(
     "artifacts",
     "NUMERIC",
-    "Comma-separated list of artifacts to take into account. Special values: ALL, NUMERIC (for only those of a numeric type), NONE.")
-  private[this] val metricsFlag = flag(
-    "metrics",
-    "NONE",
-    "Comma-separated list of metrics to export. Special values: ALL, NONE.")
+    "Comma-separated list of artifacts to take into account. Special values: ALL, NUMERIC (for " +
+      "only those of a numeric type), NONE.")
   private[this] val splitFlag = flag(
     "split",
     false,
@@ -70,17 +67,15 @@ final class ExportCommand extends Command with ClientCommand {
     val workDir = getWorkDir
     env.reporter.handle(Event.info(s"Writing export to ${workDir.toAbsolutePath}"))
 
-    getRuns(residue, env.reporter).map { runs =>
-      env.reporter.handle(Event.info(s"Found ${runs.size} matching runs"))
-      val artifacts = getArtifacts(runs)
-      val metrics = getMetrics(runs)
+    getJobs(residue, env.reporter).map { jobs =>
+      env.reporter.handle(Event.info(s"Found ${jobs.size} matching runs"))
+      val artifacts = getArtifacts(jobs)
       val writer = new CsvReportWriter(
         separator = separatorFlag(),
         split = splitFlag(),
         aggregate = aggregateFlag(),
         append = appendFlag())
       writer.write(artifacts, workDir)
-      writer.write(metrics, workDir)
       ExitCode.Success
     }
   }
@@ -93,30 +88,24 @@ final class ExportCommand extends Command with ClientCommand {
         Paths.get(s"accio-export-$uid")
     }
 
-  private def getRuns(residue: Seq[String], reporter: Reporter) = {
-    val fs = residue.map { id =>
+  private def getJobs(residue: Seq[String], reporter: Reporter) = {
+    val fs = residue.map { name =>
       client
-        .getRun(GetRunRequest(id))
+        .getJob(GetJobRequest(name))
         .flatMap { resp =>
-          if (resp.run.children.nonEmpty) {
-            Future.collect(resp.run.children.map(childId => client.getRun(GetRunRequest(childId)).map(_.run)))
+          if (resp.job.status.children.isDefined) {
+            client.listJobs(ListJobsRequest(parent = Some(resp.job.name))).map(_.jobs)
           } else {
-            Future.value(Seq(resp.run))
+            Future.value(Seq(resp.job))
           }
         }
     }
-    Future.collect(fs).map(runs => new AggregatedRuns(runs.flatten))
+    Future.collect(fs).map(jobs => new AggregatedJobs(jobs.flatten))
   }
 
-  private def getArtifacts(runs: AggregatedRuns): ArtifactList =
+  private def getArtifacts(runs: AggregatedJobs): ArtifactList =
     artifactsFlag() match {
-      case "NONE" | "" => ArtifactList(Seq.empty, Map.empty, Seq.empty)
+      case "NONE" | "" => ArtifactList(Seq.empty, Seq.empty, Seq.empty)
       case str => runs.artifacts.filter(StringUtils.explode(str, ","))
-    }
-
-  private def getMetrics(runs: AggregatedRuns): MetricList =
-    metricsFlag() match {
-      case "NONE" | "" => MetricList(Seq.empty, Map.empty, Seq.empty)
-      case str => runs.metrics.filter(StringUtils.explode(str, ","))
     }
 }

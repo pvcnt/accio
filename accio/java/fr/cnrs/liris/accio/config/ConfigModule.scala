@@ -23,11 +23,9 @@ import java.nio.file.{Path, Paths}
 import com.twitter.inject.TwitterModule
 
 object ConfigModule extends TwitterModule {
-  private[this] val clusterNameFlag = flag("cluster_name", "default", "Cluster name")
   private[this] val datadirFlag = flag[String]("datadir", "Directory where to store data files")
 
   override def configure(): Unit = {
-    bind[String].annotatedWith[ClusterName].toInstance(clusterNameFlag())
     bind[Path].annotatedWith[DataDir].toInstance(Paths.get(datadirFlag()))
   }
 }

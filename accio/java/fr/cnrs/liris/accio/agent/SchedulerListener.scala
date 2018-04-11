@@ -21,44 +21,54 @@ package fr.cnrs.liris.accio.agent
 import com.google.common.eventbus.Subscribe
 import com.google.inject.{Inject, Singleton}
 import com.twitter.util.logging.Logging
+import com.twitter.util.{Await, Future}
+import fr.cnrs.liris.accio.api.thrift.ExecState
 import fr.cnrs.liris.accio.api.{ProcessCompletedEvent, ProcessStartedEvent}
-import fr.cnrs.liris.accio.service.RunManager
+import fr.cnrs.liris.accio.state.{StateManager, TaskResult}
 import fr.cnrs.liris.accio.storage.Storage
 
 /**
  *
- * @param storage    Storage.
- * @param runManager Run lifecycle manager.
+ * @param storage      Storage.
+ * @param stateManager State manager.
  */
 @Singleton
-final class SchedulerListener @Inject()(storage: Storage, runManager: RunManager) extends Logging {
+final class SchedulerListener @Inject()(storage: Storage, stateManager: StateManager)
+  extends Logging {
+
   @Subscribe
-  def onTaskCompleted(event: ProcessCompletedEvent): Unit = {
-    storage.write { stores =>
-      stores.runs.get(event.runId) match {
-        case None => logger.warn(s"Completed task is associated with unknown run ${event.runId}")
-        case Some(run) =>
-          val parent = run.parent.flatMap(stores.runs.get)
-          val (newRun, newParent) = if (event.result.exitCode == 0) {
-            runManager.onSuccess(run, event.nodeName, event.result, parent)
-          } else {
-            runManager.onFailed(run, event.nodeName, event.result, parent)
-          }
-          stores.runs.save(newRun)
-          newParent.foreach(stores.runs.save)
-      }
-    }
+  def onProcessStarted(event: ProcessStartedEvent): Unit = {
+    Await.result(storage.jobs.get(event.jobName).flatMap {
+      case None =>
+        logger.warn(s"Started process associated with unknown job ${event.jobName}")
+        Future.Done
+      case Some(job) =>
+        job.parent match {
+          case Some(parentName) =>
+            storage.jobs.get(parentName).flatMap { parent =>
+              stateManager.transitionTo(job, parent, event.taskName, ExecState.Running)
+            }
+          case None => stateManager.transitionTo(job, None, event.taskName, ExecState.Running)
+        }
+    })
   }
 
   @Subscribe
-  def onTaskStarted(event: ProcessStartedEvent): Unit = {
-    storage.write { stores =>
-      stores.runs.get(event.runId) match {
-        case None => logger.warn(s"Started task is associated with unknown run ${event.runId}")
-        case Some(run) =>
-          val newRun = runManager.onStart(run, event.nodeName)
-          stores.runs.save(newRun)
-      }
-    }
+  def onProcessCompleted(event: ProcessCompletedEvent): Unit = {
+    Await.result(storage.jobs.get(event.jobName).flatMap {
+      case None =>
+        logger.warn(s"Completed process associated with unknown job ${event.jobName}")
+        Future.Done
+      case Some(job) =>
+        val nextState = if (event.exitCode == 0) ExecState.Successful else ExecState.Failed
+        val result = TaskResult(event.exitCode, event.metrics, event.artifacts)
+        job.parent match {
+          case Some(parentName) =>
+            storage.jobs.get(parentName).flatMap { parent =>
+              stateManager.transitionTo(job, parent, event.taskName, nextState, result)
+            }
+          case None => stateManager.transitionTo(job, None, event.taskName, nextState, result)
+        }
+    })
   }
 }

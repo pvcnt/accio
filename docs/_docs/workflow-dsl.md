@@ -17,8 +17,8 @@ A workflow file should contain a single JSON object formed of the following fiel
 | name | string; optional | Human-readable name. |
 | owner | string; optional | Person owning the workflow. It can include an email address between chevrons. |
 | params | object[]; optional | Workflow parameters. The order in which they are defined does not matter. |
-| params[].name | string; required | Parameter name. Must match `[a-z][a-zA-Z0-9_]+`. |
-| params[].kind | string; required | Parameter data type (see below). |
+| params[].name | string; required | NamedValue name. Must match `[a-z][a-zA-Z0-9_]+`. |
+| params[].kind | string; required | NamedValue data type (see below). |
 | params[].default_value | any; optional | Default value. |
 | graph | object[] | Nodes composing the workflow graph. The order in which they are defined does not matter. |
 | graph[].op | string | Operator name. |
@@ -88,11 +88,11 @@ You may reference another node by providing a JSON object with a `reference` key
 References are formed of a node name and an output port name, separated by a slash ('/').
 Please be careful to specify the node name and not the operator name when the two are different.
 
-### Parameter
+### NamedValue
 Inputs can be filled by the value of a workflow parameter.
-Parameters are useful to let the user vary some parameters are runtime, possibly affecting multiple ports at once.
+NamedValues are useful to let the user vary some parameters are runtime, possibly affecting multiple ports at once.
 You may reference a parameter by providing a JSON object with a `param` key and the name of the parameter as a value.
-Parameters must be explicitly declared under the workflow `params` field, and their data type must be consistent with those of the ports they are used in.
+NamedValues must be explicitly declared under the workflow `params` field, and their data type must be consistent with those of the ports they are used in.
 
 ```json
 {
@@ -115,9 +115,9 @@ Otherwise, you should fill it.
 
 ## Specifying workflow parameters
 Workflow parameters allow to define parametric workflows, that can be customized at runtime.
-Parameters must be explicitly declared under the workflow `params` field, they have a name, a data type and possibly a default value.
+NamedValues must be explicitly declared under the workflow `params` field, they have a name, a data type and possibly a default value.
 They can only be used in ports of the same data type (e.g., you cannot use a parameter on an integer port and then on a distance port).
-Parameter names are global to a workflow and therefore not namespaced.
+NamedValue names are global to a workflow and therefore not namespaced.
 
 Normally, all parameters should be specified when launching a workflow.
 However, under some conditions, they can be left unspecified:

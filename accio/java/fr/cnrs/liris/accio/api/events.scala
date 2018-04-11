@@ -18,10 +18,10 @@
 
 package fr.cnrs.liris.accio.api
 
-import fr.cnrs.liris.accio.api.thrift.OpResult
+import fr.cnrs.liris.accio.api.thrift.{Metric, NamedValue}
 
-case class RunCreatedEvent(runId: String, children: Seq[String])
+case class JobCreatedEvent(name: String)
 
-case class ProcessStartedEvent(runId: String, nodeName: String)
+case class ProcessStartedEvent(jobName: String, taskName: String)
 
-case class ProcessCompletedEvent(runId: String, nodeName: String, result: OpResult)
+case class ProcessCompletedEvent(jobName: String, taskName: String, exitCode: Int, artifacts: Seq[NamedValue], metrics: Seq[Metric])

@@ -22,7 +22,7 @@ import java.lang.management.ManagementFactory
 import java.util.concurrent.atomic.AtomicLong
 
 import com.twitter.util.{Duration, StorageUnit}
-import fr.cnrs.liris.accio.api.thrift.MetricValue
+import fr.cnrs.liris.accio.api.thrift.Metric
 
 import scala.collection.JavaConverters._
 
@@ -44,7 +44,7 @@ trait Profiler {
    * Return the current metrics computed during the execution of profiled sections of code. They are *not* flushed
    * when calling this method.
    */
-  def metrics: Seq[MetricValue]
+  def metrics: Seq[Metric]
 }
 
 /**
@@ -53,7 +53,7 @@ trait Profiler {
 object NullProfiler extends Profiler {
   override def profile[T](f: => T): T = f
 
-  override def metrics: Seq[MetricValue] = Seq.empty
+  override def metrics: Seq[Metric] = Seq.empty
 }
 
 /**
@@ -88,13 +88,13 @@ final class JvmProfiler extends Profiler {
     }
   }
 
-  override def metrics: Seq[MetricValue] =
+  override def metrics: Seq[Metric] =
     Seq(
-      MetricValue("memoryUsed", memoryUsed.inBytes, Some("bytes")),
-      MetricValue("memoryReserved", memoryReserved.inBytes, Some("bytes")),
-      MetricValue("cpuTime", cpuTime.inMillis, Some("millis")),
-      MetricValue("userTime", userTime.inMillis, Some("millis")),
-      MetricValue("wallTime", wallTime.inMillis, Some("millis")))
+      Metric("memoryUsed", memoryUsed.inBytes, Some("bytes")),
+      Metric("memoryReserved", memoryReserved.inBytes, Some("bytes")),
+      Metric("cpuTime", cpuTime.inMillis, Some("millis")),
+      Metric("userTime", userTime.inMillis, Some("millis")),
+      Metric("wallTime", wallTime.inMillis, Some("millis")))
 
   /**
    * Return total wall-time.

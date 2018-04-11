@@ -67,7 +67,7 @@ final class OpExecutor @Inject()(operators: Set[OpMeta]) extends Logging {
     val sandboxDir = workDir.resolve(UUID.randomUUID().toString)
     Files.createDirectories(sandboxDir.resolve("outputs"))
 
-    val operator = createOperator(opMeta, payload.inputs)
+    val operator = createOperator(opMeta, payload.params)
 
     val maybeSeed = if (opMeta.defn.unstable) Some(payload.seed) else None
     val ctx = new OpContext(maybeSeed, sandboxDir.resolve("outputs"))
@@ -95,17 +95,17 @@ final class OpExecutor @Inject()(operators: Set[OpMeta]) extends Logging {
     // TODO: clean only files that are not referenced in artifacts.
     // logger.debug(s"Cleaned sandbox")
 
-    OpResult(if (res.nonEmpty) 0 else 1, artifacts, metrics)
+    OpResult(successful = res.nonEmpty, artifacts, metrics)
   }
 
-  private def createOperator(opMeta: OpMeta, inputs: Seq[Artifact]): ScalaOperator[_] = {
+  private def createOperator(opMeta: OpMeta, inputs: Seq[NamedValue]): ScalaOperator[_] = {
     val args = opMeta.defn.inputs.map { attr =>
       inputs.find(_.name == attr.name) match {
         case None =>
           attr.defaultValue match {
             case Some(defaultValue) =>
               // Optional arguments (i.e., with a default value) are never Option[_]'s.
-              Values.decode(defaultValue, attr.kind)
+              Values.decode(defaultValue, attr.dataType)
             case None =>
               if (!attr.isOptional) {
                 throw new IllegalArgumentException(s"Missing required input ${attr.name}")
@@ -113,17 +113,17 @@ final class OpExecutor @Inject()(operators: Set[OpMeta]) extends Logging {
               // An optional argument always accept None as value.
               None
           }
-        case Some(Artifact(_, v)) =>
-          val normalizedValue = Values.as(v, attr.kind)
-            .getOrElse(throw new IllegalArgumentException(s"Invalid input type for ${attr.name}: ${DataTypes.stringify(v.kind)}"))
-          val value = Values.decode(normalizedValue, attr.kind)
+        case Some(NamedValue(_, v)) =>
+          val normalizedValue = Values.as(v, attr.dataType)
+            .getOrElse(throw new IllegalArgumentException(s"Invalid input type for ${attr.name}: ${DataTypes.stringify(v.dataType)}"))
+          val value = Values.decode(normalizedValue, attr.dataType)
           if (attr.isOptional) Some(value) else value
       }
     }
     opMeta.opClass.newInstance(args).asInstanceOf[ScalaOperator[_]]
   }
 
-  private def extractArtifacts(opMeta: OpMeta, out: Product): Seq[Artifact] = {
+  private def extractArtifacts(opMeta: OpMeta, out: Product): Seq[NamedValue] = {
     opMeta.defn.outputs.zipWithIndex.map { case (attr, idx) =>
       val rawValue = out.productElement(idx)
       // The exception should never be thrown, if everything else is in place. It seems indeed
@@ -132,8 +132,8 @@ final class OpExecutor @Inject()(operators: Set[OpMeta]) extends Logging {
       // If this exception is thrown, it is likely there is an error somewhere else, while
       // inferring the various types.
       Values
-        .encode(rawValue, attr.kind)
-        .map(value => Artifact(attr.name, value))
+        .encode(rawValue, attr.dataType)
+        .map(value => NamedValue(attr.name, value))
         .getOrElse(throw new RuntimeException(s"Invalid output for ${attr.name}: $rawValue"))
     }
   }

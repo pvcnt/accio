@@ -77,99 +77,93 @@ class OpMetaSpec extends UnitSpec {
     defn.deprecation shouldBe None
   }
 
-  it should "support byte inputs" in {
+  it should "support float inputs" in {
     val defn = OpMeta.apply[AllDataTypesOp].defn
-    assertMandatoryInput(defn, "byte", DataType(AtomicType.Byte))
-    assertMandatoryInput(defn, "byte2", DataType(AtomicType.Byte), defaultValue = 2)
-    assertOptionalInput(defn, "byte3", DataType(AtomicType.Byte))
+    assertMandatoryInput(defn, "float", DataType.Atomic(AtomicType.Float))
+    assertMandatoryInput(defn, "float2", DataType.Atomic(AtomicType.Float), defaultValue = 2f)
+    assertOptionalInput(defn, "float3", DataType.Atomic(AtomicType.Float))
   }
 
   it should "support integer inputs" in {
     val defn = OpMeta.apply[AllDataTypesOp].defn
-    assertMandatoryInput(defn, "int", DataType(AtomicType.Integer))
-    assertMandatoryInput(defn, "int2", DataType(AtomicType.Integer), defaultValue = 2)
-    assertOptionalInput(defn, "int3", DataType(AtomicType.Integer))
+    assertMandatoryInput(defn, "int", DataType.Atomic(AtomicType.Integer))
+    assertMandatoryInput(defn, "int2", DataType.Atomic(AtomicType.Integer), defaultValue = 2)
+    assertOptionalInput(defn, "int3", DataType.Atomic(AtomicType.Integer))
   }
 
   it should "support long inputs" in {
     val defn = OpMeta.apply[AllDataTypesOp].defn
-    assertMandatoryInput(defn, "long", DataType(AtomicType.Long))
-    assertMandatoryInput(defn, "long2", DataType(AtomicType.Long), defaultValue = 2)
-    assertOptionalInput(defn, "long3", DataType(AtomicType.Long))
+    assertMandatoryInput(defn, "long", DataType.Atomic(AtomicType.Long))
+    assertMandatoryInput(defn, "long2", DataType.Atomic(AtomicType.Long), defaultValue = 2)
+    assertOptionalInput(defn, "long3", DataType.Atomic(AtomicType.Long))
   }
 
   it should "support double inputs" in {
     val defn = OpMeta.apply[AllDataTypesOp].defn
-    assertMandatoryInput(defn, "dbl", DataType(AtomicType.Double))
-    assertMandatoryInput(defn, "dbl2", DataType(AtomicType.Double), defaultValue = 3.14)
-    assertOptionalInput(defn, "dbl3", DataType(AtomicType.Double))
+    assertMandatoryInput(defn, "dbl", DataType.Atomic(AtomicType.Double))
+    assertMandatoryInput(defn, "dbl2", DataType.Atomic(AtomicType.Double), defaultValue = 3.14)
+    assertOptionalInput(defn, "dbl3", DataType.Atomic(AtomicType.Double))
   }
 
   it should "support boolean inputs" in {
     val defn = OpMeta.apply[AllDataTypesOp].defn
-    assertMandatoryInput(defn, "bool", DataType(AtomicType.Boolean))
-    assertMandatoryInput(defn, "bool2", DataType(AtomicType.Boolean), defaultValue = true)
-    assertOptionalInput(defn, "bool3", DataType(AtomicType.Boolean))
+    assertMandatoryInput(defn, "bool", DataType.Atomic(AtomicType.Boolean))
+    assertMandatoryInput(defn, "bool2", DataType.Atomic(AtomicType.Boolean), defaultValue = true)
+    assertOptionalInput(defn, "bool3", DataType.Atomic(AtomicType.Boolean))
   }
 
   it should "support string inputs" in {
     val defn = OpMeta.apply[AllDataTypesOp].defn
-    assertMandatoryInput(defn, "str", DataType(AtomicType.String))
-    assertMandatoryInput(defn, "str2", DataType(AtomicType.String), defaultValue = "some string")
-    assertOptionalInput(defn, "str3", DataType(AtomicType.String))
+    assertMandatoryInput(defn, "str", DataType.Atomic(AtomicType.String))
+    assertMandatoryInput(defn, "str2", DataType.Atomic(AtomicType.String), defaultValue = "some string")
+    assertOptionalInput(defn, "str3", DataType.Atomic(AtomicType.String))
   }
 
   it should "support location inputs" in {
     val defn = OpMeta.apply[AllDataTypesOp].defn
-    assertMandatoryInput(defn, "loc", DataType(AtomicType.Location))
-    assertMandatoryInput(defn, "loc2", DataType(AtomicType.Location), defaultValue = LatLng.degrees(0, 0))
-    assertOptionalInput(defn, "loc3", DataType(AtomicType.Location))
+    assertMandatoryInput(defn, "loc", DataType.Atomic(AtomicType.Location))
+    assertMandatoryInput(defn, "loc2", DataType.Atomic(AtomicType.Location), defaultValue = LatLng.degrees(0, 0))
+    assertOptionalInput(defn, "loc3", DataType.Atomic(AtomicType.Location))
   }
 
   it should "support timestamp inputs" in {
     val defn = OpMeta.apply[AllDataTypesOp].defn
-    assertMandatoryInput(defn, "ts", DataType(AtomicType.Timestamp))
-    assertMandatoryInput(defn, "ts2", DataType(AtomicType.Timestamp), defaultValue = new Instant(123456))
-    assertOptionalInput(defn, "ts3", DataType(AtomicType.Timestamp))
+    assertMandatoryInput(defn, "ts", DataType.Atomic(AtomicType.Timestamp))
+    assertMandatoryInput(defn, "ts2", DataType.Atomic(AtomicType.Timestamp), defaultValue = new Instant(123456))
+    assertOptionalInput(defn, "ts3", DataType.Atomic(AtomicType.Timestamp))
   }
 
   it should "support duration parameters" in {
     val defn = OpMeta.apply[AllDataTypesOp].defn
-    assertMandatoryInput(defn, "duration", DataType(AtomicType.Duration))
-    assertMandatoryInput(defn, "duration2", DataType(AtomicType.Duration), defaultValue = new Duration(1000))
-    assertOptionalInput(defn, "duration3", DataType(AtomicType.Duration))
+    assertMandatoryInput(defn, "duration", DataType.Atomic(AtomicType.Duration))
+    assertMandatoryInput(defn, "duration2", DataType.Atomic(AtomicType.Duration), defaultValue = new Duration(1000))
+    assertOptionalInput(defn, "duration3", DataType.Atomic(AtomicType.Duration))
   }
 
   it should "support distance parameters" in {
     val defn = OpMeta.apply[AllDataTypesOp].defn
-    assertMandatoryInput(defn, "dist", DataType(AtomicType.Distance))
-    assertMandatoryInput(defn, "dist2", DataType(AtomicType.Distance), defaultValue = Distance.meters(42))
-    assertOptionalInput(defn, "dist3", DataType(AtomicType.Distance))
+    assertMandatoryInput(defn, "dist", DataType.Atomic(AtomicType.Distance))
+    assertMandatoryInput(defn, "dist2", DataType.Atomic(AtomicType.Distance), defaultValue = Distance.meters(42))
+    assertOptionalInput(defn, "dist3", DataType.Atomic(AtomicType.Distance))
   }
 
   it should "support list inputs" in {
     val defn = OpMeta.apply[AllDataTypesOp].defn
-    assertMandatoryInput(defn, "list", DataType(AtomicType.List, Seq(AtomicType.Integer)))
-    assertMandatoryInput(defn, "list2", DataType(AtomicType.List, Seq(AtomicType.Integer)), defaultValue = Seq(3, 14))
-  }
-
-  it should "support set inputs" in {
-    val defn = OpMeta.apply[AllDataTypesOp].defn
-    assertMandatoryInput(defn, "set", DataType(AtomicType.Set, Seq(AtomicType.Integer)))
-    assertMandatoryInput(defn, "set2", DataType(AtomicType.Set, Seq(AtomicType.Integer)), defaultValue = Set(3, 14))
+    assertMandatoryInput(defn, "list", DataType.ListType(ListType(AtomicType.Integer)))
+    assertMandatoryInput(defn, "list2", DataType.ListType(ListType(AtomicType.Integer)), defaultValue = Seq(3, 14))
   }
 
   it should "support map inputs" in {
     val defn = OpMeta.apply[AllDataTypesOp].defn
-    assertMandatoryInput(defn, "map", DataType(AtomicType.Map, Seq(AtomicType.String, AtomicType.Integer)))
-    assertMandatoryInput(defn, "map2", DataType(AtomicType.Map, Seq(AtomicType.String, AtomicType.Integer)), defaultValue = Map("foo" -> 3, "bar" -> 14))
+    assertMandatoryInput(defn, "map", DataType.MapType(MapType(AtomicType.String, AtomicType.Integer)))
+    assertMandatoryInput(defn, "map2", DataType.MapType(MapType(AtomicType.String, AtomicType.Integer)), defaultValue = Map("foo" -> 3, "bar" -> 14))
   }
 
   it should "support dataset inputs" in {
     val defn = OpMeta.apply[AllDataTypesOp].defn
-    assertMandatoryInput(defn, "data", DataType(AtomicType.Dataset))
-    assertMandatoryInput(defn, "data2", DataType(AtomicType.Dataset), defaultValue = Dataset("/dev/null"))
-    assertOptionalInput(defn, "data3", DataType(AtomicType.Dataset))
+    assertMandatoryInput(defn, "data", DataType.Dataset(DatasetType()))
+    assertMandatoryInput(defn, "data2", DataType.Dataset(DatasetType()), defaultValue = Dataset("/dev/null"))
+    assertOptionalInput(defn, "data3", DataType.Dataset(DatasetType()))
   }
 
   it should "detect missing @Op annotation" in {
@@ -204,18 +198,18 @@ class OpMetaSpec extends UnitSpec {
     expected.getMessage shouldBe "Input fr.cnrs.liris.accio.runtime.OptionalWithDefaultValueOp.i cannot be optional with a default value"
   }
 
-  private def assertMandatoryInput(defn: OpDef, name: String, dataType: DataType): Unit =
+  private def assertMandatoryInput(defn: Operator, name: String, dataType: DataType): Unit =
     doAssertInput(defn, name, dataType, optional = false, None)
 
-  private def assertMandatoryInput(defn: OpDef, name: String, dataType: DataType, defaultValue: Any): Unit =
+  private def assertMandatoryInput(defn: Operator, name: String, dataType: DataType, defaultValue: Any): Unit =
     doAssertInput(defn, name, dataType, optional = false, Some(defaultValue))
 
-  private def assertOptionalInput(defn: OpDef, name: String, dataType: DataType): Unit =
+  private def assertOptionalInput(defn: Operator, name: String, dataType: DataType): Unit =
     doAssertInput(defn, name, dataType, optional = true, None)
 
-  private def doAssertInput(defn: OpDef, name: String, dataType: DataType, optional: Boolean, defaultValue: Option[Any]): Unit = {
+  private def doAssertInput(defn: Operator, name: String, dataType: DataType, optional: Boolean, defaultValue: Option[Any]): Unit = {
     val in = defn.inputs.find(_.name == name).get
-    in.kind shouldBe dataType
+    in.dataType shouldBe dataType
     in.isOptional shouldBe optional
     in.defaultValue shouldBe defaultValue.map(Values.encode(_, dataType).get)
   }

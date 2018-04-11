@@ -19,93 +19,79 @@
 package fr.cnrs.liris.accio.tools.cli.commands
 
 import com.twitter.util.Future
-import fr.cnrs.liris.accio.agent.CreateRunRequest
+import fr.cnrs.liris.accio.agent.CreateJobRequest
 import fr.cnrs.liris.accio.api.Values
-import fr.cnrs.liris.accio.api.thrift.{Experiment, Package, Value}
-import fr.cnrs.liris.accio.dsl.ExperimentParser
+import fr.cnrs.liris.accio.api.thrift.{Job, NamedValue}
+import fr.cnrs.liris.accio.dsl.json.JsonJobParser
 import fr.cnrs.liris.accio.tools.cli.event.{Event, EventKind, Reporter}
-import fr.cnrs.liris.util.{FileUtils, Seqs, StringUtils}
+import fr.cnrs.liris.util.{FileUtils, StringUtils}
 
 final class SubmitCommand extends Command with ClientCommand {
-  private[this] val nameFlag = flag[String]("name", "Run name")
-  private[this] val tagsFlag = flag[String]("tags", "Run tags (comma-separated)")
-  private[this] val notesFlag = flag[String]("notes", "Run notes")
-  private[this] val repeatFlag = flag[Int]("repeat", "Number of times to repeat each run")
-  private[this] val seedFlag = flag[Long]("seed", "Seed to use for unstable operators")
+  private[this] val titleFlag = flag[String]("title", "Job name")
+  private[this] val tagsFlag = flag[String]("tags", "Job tags (comma-separated)")
+  private[this] val seedFlag = flag[Long]("seed", "Seed to use for controlled randomness")
 
   override def name = "submit"
 
-  override def help = "Launch an Accio workflow."
+  override def help = "Launch an Accio job."
 
   override def allowResidue = true
 
   override def execute(residue: Seq[String], env: CommandEnvironment): Future[ExitCode] = {
     if (residue.isEmpty) {
-      env.reporter.handle(Event.error("You must provide a run file or package specification."))
+      env.reporter.handle(Event.error("You must provide the path to a job file."))
       return Future.value(ExitCode.CommandLineError)
     }
-    val params = try {
-      parseParams(residue.tail)
+    try {
+      parseAndSubmit(residue.head, residue.tail, env.reporter)
     } catch {
       case e: IllegalArgumentException =>
         env.reporter.handle(Event.error(s"Params argument parse error: ${e.getMessage}"))
-        return Future.value(ExitCode.CommandLineError)
+        Future.value(ExitCode.CommandLineError)
     }
-    parseAndSubmit(residue.head, params, env.reporter)
   }
 
-  private def parseAndSubmit(uri: String, params: Map[String, Seq[Value]], reporter: Reporter): Future[ExitCode] = {
+  private def parseAndSubmit(uri: String, residue: Seq[String], reporter: Reporter): Future[ExitCode] = {
     val file = FileUtils.expandPath(uri).toFile
-    val future = if (file.exists) {
-      if (!file.canRead) {
-        reporter.handle(Event.error(s"Cannot read workflow definition file: ${file.getAbsolutePath}"))
-        return Future.value(ExitCode.DefinitionError)
-      }
-      val parser = new ExperimentParser
-      parser.parse(file)
-    } else {
-      Future.value(Experiment(pkg = parsePackage(uri)))
+    if (!file.canRead) {
+      reporter.handle(Event.error(s"Cannot read workflow definition file: ${file.getAbsolutePath}"))
+      return Future.value(ExitCode.DefinitionError)
     }
-    future
-      .map(experiment => merge(experiment.copy(params = experiment.params ++ params)))
-      .flatMap { experiment =>
-        client
-          .createRun(CreateRunRequest(experiment))
-          .map { resp =>
-            resp.warnings.foreach { violation =>
-              reporter.handle(Event(EventKind.Warning, s"${violation.message} (at ${violation.field})"))
-            }
-            resp.ids.foreach(id => reporter.handle(Event.info(s"Created run $id")))
-            if (resp.ids.size > 1) {
-              reporter.handle(Event.info(s"Created ${resp.ids.size} runs successfully"))
-            }
-            ExitCode.Success
-          }
+
+    val parser = new JsonJobParser
+    parser
+      .parse(file)
+      .map(merge(_, residue))
+      .flatMap(job => client.createJob(CreateJobRequest(job)))
+      .map { resp =>
+        resp.warnings.foreach { violation =>
+          reporter.handle(Event(EventKind.Warning, s"${violation.message} (at ${violation.field})"))
+        }
+        reporter.handle(Event.info(s"Created job ${resp.job.name}"))
+        ExitCode.Success
       }
   }
 
-  private def parsePackage(spec: String) =
-    spec.split(':').toSeq match {
-      case name :: version :: Nil => Package(name, Some(version))
-      case _ => Package(spec)
+  private def merge(job: Job, residue: Seq[String]) = {
+    var newJob = job
+    titleFlag.get.foreach(title => newJob = newJob.copy(title = Some(title)))
+    newJob = newJob.copy(tags = newJob.tags ++ StringUtils.explode(tagsFlag.get, ","))
+    seedFlag.get.foreach(seed => newJob = newJob.copy(seed = seed))
+    if (residue.nonEmpty) {
+      val params = parseParams(residue)
+      newJob = newJob.copy(params = params)
     }
-
-  private[this] val ParamRegex = "([^=]+)=(.+)".r
-
-  private def parseParams(params: Seq[String]): Map[String, Seq[Value]] = {
-    Seqs.index(params.map {
-      case ParamRegex(paramName, value) => paramName -> Values.encodeString(value)
-      case str => throw new IllegalArgumentException(s"Invalid param (expected key=value): $str")
-    })
+    newJob
   }
 
-  private def merge(spec: Experiment) = {
-    var newSpec = spec
-    nameFlag.get.foreach(name => newSpec = newSpec.copy(name = Some(name)))
-    notesFlag.get.foreach(notes => newSpec = newSpec.copy(notes = Some(notes)))
-    newSpec = newSpec.copy(tags = newSpec.tags ++ StringUtils.explode(tagsFlag.get, ","))
-    repeatFlag.get.foreach(repeat => newSpec = newSpec.copy(repeat = Some(repeat)))
-    seedFlag.get.foreach(seed => newSpec = newSpec.copy(seed = Some(seed)))
-    newSpec
+  private def parseParams(residue: Seq[String]): Seq[NamedValue] = {
+    residue.map { str =>
+      val pos = str.indexOf('=')
+      if (pos >= -1) {
+        NamedValue(str.take(pos), Values.encodeString(str.drop(pos + 1)))
+      } else {
+        throw new IllegalArgumentException(s"Invalid param (expected key=value): $str")
+      }
+    }
   }
 }

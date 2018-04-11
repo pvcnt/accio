@@ -19,27 +19,28 @@
 package fr.cnrs.liris.accio.tools.cli.commands
 
 import com.twitter.util.Future
-import fr.cnrs.liris.accio.agent.KillRunRequest
+import fr.cnrs.liris.accio.agent.KillJobRequest
 import fr.cnrs.liris.accio.tools.cli.event.Event
 
 final class KillCommand extends Command with ClientCommand {
   override def name = "kill"
 
-  override def help = "Cancel an active run."
+  override def help = "Cancel active jobs."
 
   override def allowResidue = true
 
   override def execute(residue: Seq[String], env: CommandEnvironment): Future[ExitCode] = {
     if (residue.isEmpty) {
-      env.reporter.handle(Event.error("You must provide at least one run identifier."))
+      env.reporter.handle(Event.error("You must provide at least one job name."))
       return Future.value(ExitCode.CommandLineError)
     }
-    val fs = residue.map { id =>
-      val req = KillRunRequest(id)
-      client.killRun(req).map { _ =>
-        env.reporter.handle(Event.info(s"Killed run $id"))
-        ExitCode.Success
-      }
+    val fs = residue.map { name =>
+      client
+        .killJob(KillJobRequest(name))
+        .map { _ =>
+          env.reporter.handle(Event.info(s"Killed job $name"))
+          ExitCode.Success
+        }
     }
     Future.collect(fs).map(ExitCode.select)
   }

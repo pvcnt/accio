@@ -24,29 +24,26 @@ import com.twitter.finatra.thrift.Controller
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.agent.AgentService._
 import fr.cnrs.liris.accio.api._
-import fr.cnrs.liris.accio.config.ClusterName
-import fr.cnrs.liris.accio.scheduler.Scheduler
-import fr.cnrs.liris.accio.service._
-import fr.cnrs.liris.accio.storage.{RunQuery, Storage, WorkflowQuery}
+import fr.cnrs.liris.accio.scheduler.{Process, Scheduler}
+import fr.cnrs.liris.accio.state.StateManager
+import fr.cnrs.liris.accio.storage.{JobStore, Storage}
 import fr.cnrs.liris.accio.version.Version
 
 @Singleton
 final class AgentServiceController @Inject()(
-  runFactory: RunFactory,
-  workflowValidator: WorkflowValidator,
-  experimentValidator: ExperimentValidator,
-  runManager: RunManager,
+  jobFactory: JobFactory,
+  jobPreparator: JobPreparator,
+  jobValidator: JobValidator,
+  stateManager: StateManager,
   storage: Storage,
   scheduler: Scheduler,
-  schedulerService: SchedulerService,
   opRegistry: OpRegistry,
-  eventBus: EventBus,
-  @ClusterName clusterName: String)
+  eventBus: EventBus)
   extends Controller with AgentService.ServicePerEndpoint {
 
   override val getCluster = handle(GetCluster) { args: GetCluster.Args =>
     Future {
-      GetClusterResponse(clusterName, Version.Current.toString)
+      GetClusterResponse(Version.Current.toString)
     }
   }
 
@@ -69,210 +66,123 @@ final class AgentServiceController @Inject()(
     }
   }
 
-  override val validateWorkflow = handle(ValidateWorkflow) { args: ValidateWorkflow.Args =>
+  override val validateJob = handle(ValidateJob) { args: ValidateJob.Args =>
     Future {
-      val workflow = Workflow.fromThrift(args.req.workflow)
-      val result = workflowValidator.validate(workflow)
-      ValidateWorkflowResponse(result.errors, result.warnings)
+      val job = jobPreparator.prepare(args.req.job, UserInfo.current)
+      val result = jobValidator.validate(job)
+      ValidateJobResponse(result.errors, result.warnings)
     }
   }
 
-  override val pushWorkflow = handle(PushWorkflow) { args: PushWorkflow.Args =>
-    Future {
-      val workflow = Workflow.fromThrift(args.req.workflow, UserInfo.current)
-      val result = workflowValidator.validate(workflow)
-      if (result.isValid) {
-        storage.write(_.workflows.save(workflow.toThrift))
-        PushWorkflowResponse(workflow.toThrift, warnings = result.warnings)
-      } else {
-        throw Errors.badRequest("workflow", result.errors, result.warnings)
-      }
-    }
-  }
-
-  override val getWorkflow = handle(GetWorkflow) { args: GetWorkflow.Args =>
-    Future {
-      storage.read(_.workflows.get(args.req.id, args.req.version)) match {
-        case None => throw Errors.notFound("workflow", args.req.id)
-        case Some(workflow) => GetWorkflowResponse(workflow)
-      }
-    }
-  }
-
-  override val listWorkflows = handle(ListWorkflows) { args: ListWorkflows.Args =>
-    Future {
-      val query = WorkflowQuery(
-        name = args.req.name,
-        owner = args.req.owner,
-        q = args.req.q,
-        limit = args.req.limit,
-        offset = args.req.offset)
-      var workflows = storage.read(_.workflows.list(query))
-      workflows = workflows.copy(results = workflows.results.map(workflow => workflow.copy(nodes = Seq.empty)))
-      ListWorkflowsResponse(workflows.results, workflows.totalCount)
-    }
-  }
-
-  override val validateRun = handle(ValidateRun) { args: ValidateRun.Args =>
-    Future {
-      val result = experimentValidator.validate(args.req.run)
-      ValidateRunResponse(result.errors, result.warnings)
-    }
-  }
-
-  override val createRun = handle(CreateRun) { args: CreateRun.Args =>
-    Future {
-      val result = experimentValidator.validate(args.req.run)
-      if (result.isValid) {
-        val runs = runFactory.create(args.req.run, UserInfo.current)
-        storage.write(stores => runs.foreach(stores.runs.save))
-        if (runs.nonEmpty) {
-          // Maybe it could happen that an unfortunate parameter sweep generate no run...
-          eventBus.post(RunCreatedEvent(runs.head.id, runs.tail.map(_.id)))
+  override val createJob = handle(CreateJob) { args: CreateJob.Args =>
+    val job = jobPreparator.prepare(args.req.job, UserInfo.current)
+    val result = jobValidator.validate(job)
+    if (result.isInvalid) {
+      Future.exception(Errors.badRequest("job", result.errors, result.warnings))
+    } else {
+      val jobs = jobFactory.create(args.req.job)
+      storage.jobs
+        .create(jobs.head)
+        .flatMap {
+          case true =>
+            Future.join(jobs.tail.map(storage.jobs.create))
+              .ensure(eventBus.post(JobCreatedEvent(jobs.head.name)))
+              .map(_ => CreateJobResponse(jobs.head, result.warnings))
+          case false =>
+            // It may happen if the user manually specified a job name that clashes with an
+            // existing one, or if we are unlucky when generating the random job name.
+            throw Errors.alreadyExists("job", jobs.head.name)
         }
-        CreateRunResponse(runs.map(_.id), result.warnings)
-      } else {
-        throw Errors.badRequest("run", result.errors, result.warnings)
+    }
+  }
+
+  override val getJob = handle(GetJob) { args: GetJob.Args =>
+    storage.jobs
+      .get(args.req.name)
+      .flatMap {
+        case None => Future.exception(Errors.notFound("job", args.req.name))
+        case Some(job) => Future.value(GetJobResponse(job))
       }
-    }
   }
 
-  override val getRun = handle(GetRun) { args: GetRun.Args =>
-    Future {
-      storage.read(_.runs.get(args.req.id)) match {
-        case None => throw Errors.notFound("run", args.req.id)
-        case Some(run) => GetRunResponse(run)
+  override val listJobs = handle(ListJobs) { args: ListJobs.Args =>
+    val query = JobStore.Query(
+      title = args.req.title,
+      author = args.req.author,
+      state = args.req.state.map(_.toSet),
+      parent = args.req.parent,
+      clonedFrom = args.req.clonedFrom,
+      tags = args.req.tags.toSet.flatten,
+      q = args.req.q)
+    storage.jobs
+      .list(query, limit = args.req.limit, offset = args.req.offset)
+      .map { results =>
+        val jobs = results.results.map(job => job.copy(status = job.status.copy(tasks = None)))
+        ListJobsResponse(jobs, results.totalCount)
       }
-    }
   }
 
-  override val listRuns = handle(ListRuns) { args: ListRuns.Args =>
-    Future {
-      val query = RunQuery(
-        name = args.req.name,
-        owner = args.req.owner,
-        workflow = args.req.workflowId,
-        status = args.req.status.toSet,
-        parent = args.req.parent,
-        clonedFrom = args.req.clonedFrom,
-        tags = args.req.tags.toSet,
-        q = args.req.q,
-        limit = args.req.limit,
-        offset = args.req.offset)
-      var runs = storage.read(_.runs.list(query))
-      runs = runs.copy(results = runs.results.map(run => run.copy(state = run.state.copy(nodes = run.state.nodes.map(_.unsetResult)))))
-      ListRunsResponse(runs.results, runs.totalCount)
-    }
-  }
-
-  override val deleteRun = handle(DeleteRun) { args: DeleteRun.Args =>
-    Future {
-      storage.write { stores =>
-        stores.runs.get(args.req.id) match {
-          case None => throw Errors.notFound("run", args.req.id)
-          case Some(run) =>
-            if (run.children.nonEmpty) {
-              // It is a parent run, cancel and delete child all runs.
-              run.children.flatMap(stores.runs.get).foreach(schedulerService.kill)
-              run.children.foreach(stores.runs.delete)
-            } else if (run.parent.isDefined) {
-              // It is a child run, update or delete parent run.
-              stores.runs.get(run.parent.get).foreach { parent =>
-                if (parent.children.size > 1) {
-                  // There are several child runs left, remove current one from the list.
-                  stores.runs.save(parent.copy(children = parent.children.filterNot(_ == run.id)))
-                } else {
-                  // It was the last child of this run, delete it as it is now useless.
-                  stores.runs.delete(parent.id)
-                }
+  override val deleteJob = handle(DeleteJob) { args: DeleteJob.Args =>
+    storage.jobs
+      .get(args.req.name)
+      .flatMap {
+        case None => Future.exception(Errors.notFound("job", args.req.name))
+        case Some(job) =>
+          val f = if (job.status.children.isDefined) {
+            storage.jobs
+              .list(JobStore.Query(parent = Some(job.name)))
+              .flatMap { children =>
+                Future.join(children.results.map(child => stateManager.delete(child, Some(job))))
               }
-            } else {
-              // It is a single run, cancel it.
-              schedulerService.kill(run)
-            }
-            // Finally, delete the run.
-            stores.runs.delete(run.id)
-        }
-        DeleteRunResponse()
+              .map(_ => storage.jobs.delete(job.name))
+          } else if (job.parent.isEmpty) {
+            stateManager.delete(job, None)
+          } else {
+            Future.exception(Errors.failedPrecondition("job", args.req.name, "A child job cannot be deleted"))
+          }
+          f.flatMap {
+            case true => Future.value(DeleteJobResponse())
+            case false => Future.exception(Errors.notFound("job", args.req.name))
+          }
       }
-    }
   }
 
-  override val killRun = handle(KillRun) { args: KillRun.Args =>
-    Future {
-      storage.write { stores =>
-        val newRun = stores.runs.get(args.req.id) match {
-          case None => throw Errors.notFound("run", args.req.id)
-          case Some(run) =>
-            if (run.children.nonEmpty) {
-              var newParent = run
-              // If is a parent run, kill child all runs.
-              run.children.flatMap(stores.runs.get).foreach { child =>
-                val newChild = schedulerService.kill(child)
-                val res = runManager.onKill(newChild, Some(run))
-                stores.runs.save(res._1)
-                res._2.foreach(p => newParent = p)
-              }
-              stores.runs.save(newParent)
-              newParent
-            } else {
-              run.parent match {
-                case None =>
-                  val newRun = schedulerService.kill(run)
-                  val res = runManager.onKill(run, None)
-                  stores.runs.save(res._1)
-                  res._1
-                case Some(parentId) =>
-                  var newRun = run
-                  stores.runs.get(parentId).foreach { parent =>
-                    newRun = schedulerService.kill(run)
-                    val res = runManager.onKill(newRun, Some(parent))
-                    newRun = res._1
-                    stores.runs.save(newRun)
-                    res._2.foreach(stores.runs.save)
-                  }
-                  newRun
-              }
+  override val killJob = handle(KillJob) { args: KillJob.Args =>
+    storage.jobs
+      .get(args.req.name)
+      .flatMap {
+        case None => Future.exception(Errors.notFound("job", args.req.name))
+        case Some(job) =>
+          if (job.status.children.isDefined) {
+            storage.jobs.list(JobStore.Query(parent = Some(job.name))).flatMap { children =>
+              Future.join(children.results.map(child => stateManager.kill(child, Some(job))))
             }
-        }
-        KillRunResponse(newRun)
-      }
-    }
-  }
-
-  override val updateRun = handle(UpdateRun) { args: UpdateRun.Args =>
-    Future {
-      storage.write { stores =>
-        stores.runs.get(args.req.id) match {
-          case None => throw Errors.notFound("run", args.req.id)
-          case Some(run) =>
-            var newRun = run.parent.flatMap(stores.runs.get).getOrElse(run)
-            args.req.name.foreach(name => newRun = newRun.copy(name = Some(name)))
-            args.req.notes.foreach(notes => newRun = newRun.copy(notes = Some(notes)))
-            if (args.req.tags.nonEmpty) {
-              newRun = newRun.copy(tags = args.req.tags)
+          } else {
+            job.parent match {
+              case None => stateManager.kill(job, None)
+              case Some(parentName) =>
+                storage.jobs
+                  .get(parentName)
+                  .flatMap(parent => stateManager.kill(job, parent))
             }
-            stores.runs.save(newRun)
-            UpdateRunResponse(newRun)
-        }
+          }
       }
-    }
+      .map(_ => KillJobResponse())
   }
 
   override val listLogs = handle(ListLogs) { args: ListLogs.Args =>
-    Future {
-      storage.read(_.runs.get(args.req.runId)) match {
-        case None => throw Errors.notFound("run", args.req.runId)
-        case Some(run) =>
-          run.state.nodes.find(_.name == args.req.nodeName) match {
-            case None => throw Errors.notFound("node", s"${args.req.runId}/${args.req.nodeName}")
-            case Some(node) =>
-              val results = node.taskId.toSeq.flatMap { taskId =>
-                scheduler.getLogs(taskId, args.req.kind, skip = args.req.skip, tail = args.req.tail)
-              }
-              ListLogsResponse(results)
+    storage.jobs
+      .get(args.req.job)
+      .flatMap {
+        case None => Future.exception(Errors.notFound("job", args.req.job))
+        case Some(job) =>
+          job.status.tasks.toSeq.flatten.find(_.name == args.req.step) match {
+            case None => Future.exception(Errors.notFound("task", s"${args.req.job}/${args.req.step}"))
+            case Some(task) =>
+              val processName = Process.name(args.req.job, task.name)
+              scheduler.getLogs(processName, args.req.kind, skip = args.req.skip, tail = args.req.tail)
           }
       }
-    }
+      .map(lines => ListLogsResponse(lines))
   }
 }

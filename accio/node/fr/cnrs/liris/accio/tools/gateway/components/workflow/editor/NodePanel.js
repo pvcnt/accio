@@ -132,8 +132,8 @@ class NodePanel extends React.Component {
               help = 'Unknown node name';
               status = 'error';
             } else {
-              const targetOpDef = find(this.props.operators, op => op.name === targetNode.name);
-              if (!some(targetOpDef.inputs, inDef => inDef.name === reference.port)) {
+              const targetOperator = find(this.props.operators, op => op.name === targetNode.name);
+              if (!some(targetOperator.inputs, inDef => inDef.name === reference.port)) {
                 help = 'Unknown port name';
                 status = 'error';
               }

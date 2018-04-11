@@ -22,18 +22,14 @@ import com.twitter.finatra.thrift.routing.ThriftWarmup
 import com.twitter.inject.utils.Handler
 import com.twitter.util.logging.Logging
 import com.twitter.util.{Return, Throw}
-import fr.cnrs.liris.accio.agent.AgentService.{ListRuns, ListWorkflows}
+import fr.cnrs.liris.accio.agent.AgentService.ListJobs
 import javax.inject.Inject
 
 final class AgentWarmupHandler @Inject()(warmup: ThriftWarmup) extends Handler with Logging {
   override def handle(): Unit = {
     try {
       //clientId.asCurrent {
-      warmup.send(ListRuns, ListRuns.Args(ListRunsRequest()), times = 3) {
-        case Return(_) => // Warmup request was successful.
-        case Throw(e) => logger.warn("Warmup request failed", e)
-      }
-      warmup.send(ListWorkflows, ListWorkflows.Args(ListWorkflowsRequest()), times = 3) {
+      warmup.send(ListJobs, ListJobs.Args(ListJobsRequest()), times = 3) {
         case Return(_) => // Warmup request was successful.
         case Throw(e) => logger.warn("Warmup request failed", e)
       }

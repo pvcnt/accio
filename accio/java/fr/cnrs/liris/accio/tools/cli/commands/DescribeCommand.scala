@@ -32,13 +32,12 @@ final class DescribeCommand extends Command with ClientCommand {
   override def execute(residue: Seq[String], env: CommandEnvironment): Future[ExitCode] = {
     if (residue.size < 2) {
       env.reporter.handle(Event.error("You must specify a resource type and identifier.\n" +
-        "Valid resource types are: workflow, run, node, operator."))
+        "Valid resource types are: job, task, operator."))
       return Future.value(ExitCode.CommandLineError)
     }
     val controller: DescribeController[_] = residue.head match {
-      case "run" | "runs" => new DescribeRunController
-      case "node" | "nodes" => new DescribeNodeController
-      case "workflow" | "workflows" => new DescribeWorkflowController
+      case "job" | "jobs" => new DescribeJobController
+      case "task" | "tasks" => new DescribeTaskController
       case "operator" | "operators" | "op" | "ops" => new DescribeOperatorController
       case _ =>
         env.reporter.handle(Event.error(s"Invalid resource type: ${residue.head}.\n" +

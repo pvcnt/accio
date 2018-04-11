@@ -22,7 +22,7 @@ import java.io.{BufferedOutputStream, FileOutputStream, PrintStream}
 import java.nio.file.Files
 
 import com.google.inject.Inject
-import fr.cnrs.liris.accio.api.thrift.OpDef
+import fr.cnrs.liris.accio.api.thrift.Operator
 import fr.cnrs.liris.accio.api.{DataTypes, OpRegistry, Values}
 
 /**
@@ -65,7 +65,7 @@ final class MarkdownDocgen @Inject()(opRegistry: OpRegistry) {
     }
   }
 
-  private def writeOp(out: PrintStream, opDef: OpDef): Unit = {
+  private def writeOp(out: PrintStream, opDef: Operator): Unit = {
     out.println(s"## ${opDef.name}")
     out.println()
     opDef.deprecation.foreach { deprecation =>
@@ -80,7 +80,7 @@ final class MarkdownDocgen @Inject()(opRegistry: OpRegistry) {
       out.println("| Input name | Type | Description |")
       out.println("|:-----------|:-----|:------------|")
       opDef.inputs.foreach { argDef =>
-        out.print(s"| `${argDef.name}` | ${DataTypes.stringify(argDef.kind)}")
+        out.print(s"| `${argDef.name}` | ${DataTypes.stringify(argDef.dataType)}")
         if (argDef.defaultValue.isDefined) {
           out.print(s"; optional; default: ${Values.stringify(argDef.defaultValue.get)}")
         } else if (argDef.isOptional) {
@@ -97,7 +97,7 @@ final class MarkdownDocgen @Inject()(opRegistry: OpRegistry) {
       out.println("| Output name | Type | Description |")
       out.println("|:------------|:-----|:------------|")
       opDef.outputs.foreach { argDef =>
-        out.println(s"| `${argDef.name}` | ${DataTypes.stringify(argDef.kind)} | ${argDef.help.getOrElse("-")} |")
+        out.println(s"| `${argDef.name}` | ${DataTypes.stringify(argDef.dataType)} | ${argDef.help.getOrElse("-")} |")
       }
       out.println("{: class=\"table table-striped\"}\n")
     }

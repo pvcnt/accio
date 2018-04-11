@@ -61,7 +61,7 @@ It is even required if you want to have multiple instances of the same operator 
 
 Each input must be filled with a value.
 When it is not provided by the output of another node, it can be specified either by a static constant, given when creating the workflow, or by a dynamic parameter.
-Parameters are workflow-level inputs; they are specified only at run time by the user.
+NamedValues are workflow-level inputs; they are specified only at run time by the user.
 They have a name, a type and possibly a default value.
 They allow the user to vary the value of one or several inputs that take their value from that given parameter.
 It means a given parameter can be used by multiple ports, though they obviously need to be of the same data type.

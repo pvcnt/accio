@@ -19,7 +19,7 @@
 package fr.cnrs.liris.accio.tools.cli.commands
 
 import com.twitter.util.Future
-import fr.cnrs.liris.accio.agent.DeleteRunRequest
+import fr.cnrs.liris.accio.agent.DeleteJobRequest
 import fr.cnrs.liris.accio.tools.cli.event.{Event, Reporter}
 
 final class DeleteCommand extends Command with ClientCommand {
@@ -35,19 +35,19 @@ final class DeleteCommand extends Command with ClientCommand {
       return Future.value(ExitCode.CommandLineError)
     }
     residue.head match {
-      case "run" | "runs" => deleteRuns(residue.tail, env.reporter)
+      case "job" | "jobs" => deleteJobs(residue.tail, env.reporter)
       case unknown =>
         env.reporter.handle(Event.error(s"Invalid resource type: $unknown"))
         Future.value(ExitCode.CommandLineError)
     }
   }
 
-  private def deleteRuns(args: Seq[String], reporter: Reporter): Future[ExitCode] = {
-    val fs = args.map { id =>
+  private def deleteJobs(args: Seq[String], reporter: Reporter): Future[ExitCode] = {
+    val fs = args.map { name =>
       client
-        .deleteRun(DeleteRunRequest(id))
+        .deleteJob(DeleteJobRequest(name))
         .map { _ =>
-          reporter.handle(Event.info(s"Deleted run $id"))
+          reporter.handle(Event.info(s"Deleted job $name"))
           ExitCode.Success
         }
     }

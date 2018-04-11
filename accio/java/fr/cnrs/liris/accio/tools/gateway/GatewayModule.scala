@@ -34,6 +34,8 @@ object GatewayModule extends TwitterModule {
   def providesClient: AgentService.MethodPerEndpoint = {
     val service = Thrift.client
       .withRequestTimeout(timeoutFlag())
+      .withSessionQualifier.noFailFast
+      .withSessionQualifier.noFailureAccrual
       .newService(serverFlag())
     val params = RichClientParam()
     AgentService.MethodPerEndpoint(AgentService.ServicePerEndpointBuilder.servicePerEndpoint(service, params))

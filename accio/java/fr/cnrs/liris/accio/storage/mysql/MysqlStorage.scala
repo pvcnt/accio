@@ -18,41 +18,15 @@
 
 package fr.cnrs.liris.accio.storage.mysql
 
-import java.util.concurrent.locks.ReentrantLock
-
 import com.twitter.finagle.mysql.Client
 import com.twitter.finagle.stats.StatsReceiver
 import com.twitter.util.{Await, Future}
-import fr.cnrs.liris.accio.storage.{RunStore, Storage, StoreProvider, WorkflowStore}
+import fr.cnrs.liris.accio.storage.{JobStore, Storage}
 
-private[storage] final class MysqlStorage(
-  client: Client,
-  statsReceiver: StatsReceiver,
-  useNativeLocks: Boolean)
+private[storage] final class MysqlStorage(client: Client, statsReceiver: StatsReceiver)
   extends Storage {
 
-  private[this] val workflowStore = new MysqlWorkflowStore(client, statsReceiver)
-  private[this] val runStore = new MysqlRunStore(client, statsReceiver)
-  private[this] val storeProvider = new StoreProvider.Mutable {
-    override def runs: RunStore.Mutable = runStore
-
-    override def workflows: WorkflowStore.Mutable = workflowStore
-  }
-  private[this] val writeWaitStat = statsReceiver.stat("storage", "mysql", "write_wait_nanos")
-  private[this] val writeLock = if (useNativeLocks) new MysqlLock(client, "accio_write_lock") else new ReentrantLock
-
-  override def read[T](fn: StoreProvider => T): T = fn(storeProvider)
-
-  override def write[T](fn: StoreProvider.Mutable => T): T = {
-    val start = System.nanoTime()
-    writeLock.lock()
-    try {
-      writeWaitStat.add(System.nanoTime() - start)
-      fn(storeProvider)
-    } finally {
-      writeLock.unlock()
-    }
-  }
+  override val jobs: JobStore = new MysqlJobStore(client, statsReceiver)
 
   override def startUp(): Unit = {
     val fs = MysqlStorage.Ddl.map(ddl => client.query(ddl).unit)
@@ -64,24 +38,16 @@ private[storage] final class MysqlStorage(
 
 object MysqlStorage {
   private val Ddl = Seq(
-    "create table if not exists runs(" +
+    "create table if not exists jobs(" +
       "unused_id int not null auto_increment," +
-      "id varchar(255) not null," +
+      "name varchar(255) not null," +
+      "parent varchar(255) null," +
+      "cloned_from varchar(255) null," +
       // Longblob is up to 4GB. We do not need so much space, but mediumblob is only up to 16Mb,
       // which is not sufficient for runs with large results. The `max_allowed_packet` parameter
       // of MySQL has to be set accordingly (but weirdly its maximum value is "only" 1GB).
       "content longblob not null," +
       "primary key (unused_id)," +
-      "UNIQUE KEY uix_id(id)" +
-      ") ENGINE=InnoDB DEFAULT CHARSET=utf8",
-
-    "create table if not exists workflows(" +
-      "unused_id int not null auto_increment," +
-      "id varchar(255) not null," +
-      "version varchar(255) not null," +
-      "is_active tinyint(1) not null," +
-      "content mediumblob not null," + // Mediumblob is up to 16MB
-      "primary key (unused_id)," +
-      "UNIQUE KEY uix_id_version(id, version)" +
+      "UNIQUE KEY uix_name(name)" +
       ") ENGINE=InnoDB DEFAULT CHARSET=utf8")
 }

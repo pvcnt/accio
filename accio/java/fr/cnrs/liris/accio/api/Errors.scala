@@ -28,25 +28,20 @@ object Errors {
       details = Some(ErrorDetails(resourceType = Some(resourceType), resourceName = Some(resourceName))))
   }
 
+  def alreadyExists(resourceType: String, resourceName: String): ServerException = {
+    ServerException(
+      code = ErrorCode.AlreadyExists,
+      message = Some(s"The $resourceType already exists: $resourceName"),
+      details = Some(ErrorDetails(resourceType = Some(resourceType), resourceName = Some(resourceName))))
+  }
+
   def unauthenticated: ServerException = ServerException(code = ErrorCode.Unauthenticated)
 
-  def badRequest(resourceType: String, message: String, errors: Seq[FieldViolation]): ServerException =
-    badRequest(resourceType, message, errors, Seq.empty)
-
-  def badRequest(resourceType: String, errors: Seq[FieldViolation]): ServerException =
-    badRequest(resourceType, errors, Seq.empty)
-
-  def badRequest(resourceType: String, message: String): ServerException =
-    badRequest(resourceType, message, Seq.empty, Seq.empty)
-
-  def badRequest(resourceType: String): ServerException =
-    badRequest(resourceType, Seq.empty, Seq.empty)
-
-  def badRequest(resourceType: String, message: String, errors: Seq[FieldViolation], warnings: Seq[FieldViolation]): ServerException = {
+  def failedPrecondition(resourceType: String, resourceName: String, message: String): ServerException = {
     ServerException(
-      code = ErrorCode.InvalidArgument,
+      code = ErrorCode.FailedPrecondition,
       message = Some(message),
-      details = Some(ErrorDetails(resourceType = Some(resourceType), errors = errors, warnings = warnings)))
+      details = Some(ErrorDetails(resourceType = Some(resourceType), resourceName = Some(resourceName))))
   }
 
   def badRequest(resourceType: String, errors: Seq[FieldViolation], warnings: Seq[FieldViolation]): ServerException = {

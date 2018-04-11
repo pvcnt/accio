@@ -36,7 +36,6 @@ object StorageModule extends TwitterModule {
   private[this] val myUserFlag = flag("storage.mysql_user", "root", "MySQL username")
   private[this] val myPasswordFlag = flag[String]("storage.mysql_password", "MySQL password")
   private[this] val myDatabaseFlag = flag[String]("storage.mysql_database", "accio", "MySQL database name")
-  private[this] val myUseNativeLocksFlag = flag("storage.mysql_native_locks", false, "Whether to use native MySQL locking (it is required if you want to deploy multiple agents)")
 
   override def configure(): Unit = {
     typeFlag() match {
@@ -65,7 +64,7 @@ object StorageModule extends TwitterModule {
 
     override def get(): Storage = {
       val client = MysqlClientFactory(myServerFlag(), myUserFlag(), myPasswordFlag.get.orNull, myDatabaseFlag())
-      new MysqlStorage(client, statsReceiver, myUseNativeLocksFlag())
+      new MysqlStorage(client, statsReceiver)
     }
   }
 
