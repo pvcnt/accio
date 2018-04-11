@@ -23,7 +23,7 @@ import java.nio.file.Paths
 import com.google.inject.Guice
 import com.twitter.inject.Injector
 import fr.cnrs.liris.accio.api.thrift.Task
-import fr.cnrs.liris.common.scrooge.BinaryScroogeSerializer
+import fr.cnrs.liris.util.scrooge.BinaryScroogeSerializer
 import fr.cnrs.liris.locapriv.install.OpsModule
 
 object AccioExecutorMain extends AccioExecutor

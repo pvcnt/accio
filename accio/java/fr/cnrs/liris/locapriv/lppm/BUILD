@@ -19,8 +19,8 @@ scala_library(
   srcs = glob(["*.scala"]),
   deps = [
     '//accio/java/fr/cnrs/liris/locapriv/model',
-    '//accio/java/fr/cnrs/liris/common/geo',
-    '//accio/java/fr/cnrs/liris/common/random',
+    '//accio/java/fr/cnrs/liris/util/geo',
+    '//accio/java/fr/cnrs/liris/util/random',
     '//3rdparty/jvm/com/github/nscala_time',
   ],
   visibility = ["//visibility:public"],

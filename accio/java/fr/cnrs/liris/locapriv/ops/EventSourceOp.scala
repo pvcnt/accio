@@ -19,7 +19,7 @@
 package fr.cnrs.liris.locapriv.ops
 
 import fr.cnrs.liris.accio.sdk.{Dataset, _}
-import fr.cnrs.liris.common.util.FileUtils
+import fr.cnrs.liris.util.FileUtils
 import fr.cnrs.liris.locapriv.io.CsvSource
 import fr.cnrs.liris.locapriv.io._
 

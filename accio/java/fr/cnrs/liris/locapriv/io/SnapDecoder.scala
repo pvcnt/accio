@@ -19,7 +19,7 @@
 package fr.cnrs.liris.locapriv.io
 
 import fr.cnrs.liris.locapriv.model.Poi
-import fr.cnrs.liris.common.geo.LatLng
+import fr.cnrs.liris.util.geo.LatLng
 import org.joda.time.Instant
 
 import scala.reflect._

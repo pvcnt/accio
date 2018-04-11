@@ -19,8 +19,8 @@
 package fr.cnrs.liris.locapriv.ops
 
 import fr.cnrs.liris.accio.sdk.{Dataset, _}
-import fr.cnrs.liris.common.geo.Distance
-import fr.cnrs.liris.common.util.Requirements._
+import fr.cnrs.liris.util.geo.Distance
+import fr.cnrs.liris.util.Requirements._
 import fr.cnrs.liris.locapriv.model.{Poi, PoiSet}
 import org.joda.time.Duration
 

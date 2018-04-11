@@ -24,7 +24,7 @@ import com.twitter.util.{Await, Future, StorageUnit}
 import fr.cnrs.liris.accio.api.ResultList
 import fr.cnrs.liris.accio.api.thrift.Workflow
 import fr.cnrs.liris.accio.storage.{WorkflowQuery, WorkflowStore}
-import fr.cnrs.liris.common.scrooge.BinaryScroogeSerializer
+import fr.cnrs.liris.util.scrooge.BinaryScroogeSerializer
 
 private[this] final class MysqlWorkflowStore(client: Client, statsReceiver: StatsReceiver)
   extends WorkflowStore.Mutable {

@@ -18,7 +18,7 @@ scala_library(
   name = "testing",
   srcs = glob(["*.scala"]),
   deps = [
-    "//accio/java/fr/cnrs/liris/common/util",
+    "//accio/java/fr/cnrs/liris/util",
     "//3rdparty/jvm/com/twitter:util_app",
     "//3rdparty/jvm/com/google/guava",
     "@scalatest//jar:jar",

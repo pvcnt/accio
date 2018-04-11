@@ -19,7 +19,7 @@
 package fr.cnrs.liris.locapriv.ops
 
 import fr.cnrs.liris.accio.sdk.{Dataset, _}
-import fr.cnrs.liris.common.geo._
+import fr.cnrs.liris.util.geo._
 import fr.cnrs.liris.locapriv.sparkle.DataFrame
 import fr.cnrs.liris.locapriv.model.Trace
 

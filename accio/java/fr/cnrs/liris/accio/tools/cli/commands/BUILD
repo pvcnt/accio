@@ -26,7 +26,7 @@ scala_library(
     "//accio/java/fr/cnrs/liris/accio/dsl",
     "//accio/java/fr/cnrs/liris/accio/reporting",
     "//accio/java/fr/cnrs/liris/accio/version",
-    "//accio/java/fr/cnrs/liris/common/util",
+    "//accio/java/fr/cnrs/liris/util",
     "//accio/thrift/fr/cnrs/liris/accio/agent",
     "//3rdparty/jvm/com/twitter:util_app",
     "//3rdparty/jvm/org/ocpsoft/prettytime",

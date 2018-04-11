@@ -19,7 +19,7 @@
 package fr.cnrs.liris.locapriv.lppm
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.common.geo.Distance
+import fr.cnrs.liris.util.geo.Distance
 import fr.cnrs.liris.locapriv.model.{Event, Trace}
 
 import scala.collection.mutable

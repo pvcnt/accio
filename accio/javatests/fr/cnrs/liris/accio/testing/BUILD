@@ -22,7 +22,7 @@ scala_library(
     '//accio/java/fr/cnrs/liris/locapriv/sparkle',
     '//accio/thrift/fr/cnrs/liris/accio/api',
     '//accio/javatests/fr/cnrs/liris/testing',
-    '//accio/java/fr/cnrs/liris/common/util',
+    '//accio/java/fr/cnrs/liris/util',
     '//3rdparty/jvm/com/twitter:util_slf4j_api',
     '//3rdparty/jvm/com/github/nscala_time',
     "@scalatest//jar:jar",

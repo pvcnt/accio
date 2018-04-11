@@ -21,7 +21,7 @@ package fr.cnrs.liris.locapriv.ops
 import breeze.linalg.{DenseVector, max, min}
 import breeze.stats._
 import com.google.common.geometry.S1Angle
-import fr.cnrs.liris.common.geo.Distance
+import fr.cnrs.liris.util.geo.Distance
 import fr.cnrs.liris.locapriv.model.Trace
 import fr.cnrs.liris.locapriv.testing.WithTraceGenerator
 import fr.cnrs.liris.testing.UnitSpec

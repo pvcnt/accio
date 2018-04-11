@@ -23,7 +23,7 @@ scala_library(
     "//accio/thrift/fr/cnrs/liris/accio/agent",
     "//accio/java/fr/cnrs/liris/accio/tools/cli/event",
     "//accio/java/fr/cnrs/liris/accio/tools/cli/terminal",
-    "//accio/java/fr/cnrs/liris/common/util",
+    "//accio/java/fr/cnrs/liris/util",
     "//3rdparty/jvm/org/ocpsoft/prettytime",
     "//3rdparty/jvm/com/github/nscala_time",
     "//3rdparty/jvm/com/google/guava",

@@ -23,7 +23,7 @@ scala_test(
     "//accio/thrift/fr/cnrs/liris/accio/api",
     "//accio/java/fr/cnrs/liris/accio/sdk",
     "//accio/java/fr/cnrs/liris/accio/sdk:annotations",
-    "//accio/java/fr/cnrs/liris/common/util",
+    "//accio/java/fr/cnrs/liris/util",
     "//accio/javatests/fr/cnrs/liris/testing",
     "//accio/javatests/fr/cnrs/liris/accio/testing",
     "//3rdparty/jvm/com/google/guava",

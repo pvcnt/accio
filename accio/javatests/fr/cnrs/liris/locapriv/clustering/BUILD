@@ -21,7 +21,7 @@ scala_test(
     "//accio/java/fr/cnrs/liris/locapriv/clustering",
     "//accio/java/fr/cnrs/liris/locapriv/model",
     "//accio/java/fr/cnrs/liris/locapriv/io",
-    "//accio/java/fr/cnrs/liris/common/geo",
+    "//accio/java/fr/cnrs/liris/util/geo",
     "//accio/javatests/fr/cnrs/liris/locapriv/testing",
     "//accio/javatests/fr/cnrs/liris/testing",
     "//3rdparty/jvm/com/github/nscala_time",

@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.tools.cli.commands
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.tools.cli.controller._
 import fr.cnrs.liris.accio.tools.cli.event.{Event, Reporter}
-import fr.cnrs.liris.common.util.StringUtils.explode
+import fr.cnrs.liris.util.StringUtils.explode
 
 final class GetCommand extends Command with ClientCommand {
   private[this] val allFlag = flag("all", false, "Show all resources, including those inactive")

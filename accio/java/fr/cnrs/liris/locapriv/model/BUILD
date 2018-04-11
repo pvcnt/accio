@@ -18,14 +18,14 @@ scala_library(
   name = 'model',
   srcs = glob(["*.scala"]),
   deps = [
-    '//accio/java/fr/cnrs/liris/common/geo',
-    '//accio/java/fr/cnrs/liris/common/util',
+    '//accio/java/fr/cnrs/liris/util/geo',
+    '//accio/java/fr/cnrs/liris/util',
     '//3rdparty/jvm/com/google/guava',
     '//3rdparty/jvm/com/github/nscala_time',
     '//3rdparty/jvm/org/scalanlp:breeze',
   ],
   exports = [
-    '//accio/java/fr/cnrs/liris/common/util',
+    '//accio/java/fr/cnrs/liris/util',
   ],
   visibility = ["//visibility:public"],
 )

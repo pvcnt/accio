@@ -23,7 +23,7 @@ import fr.cnrs.liris.accio.agent.PushWorkflowRequest
 import fr.cnrs.liris.accio.api.thrift.Workflow
 import fr.cnrs.liris.accio.dsl.WorkflowParser
 import fr.cnrs.liris.accio.tools.cli.event.{Event, EventKind, Reporter}
-import fr.cnrs.liris.common.util.FileUtils
+import fr.cnrs.liris.util.FileUtils
 
 final class PushCommand extends Command with ClientCommand {
   override def name = "push"

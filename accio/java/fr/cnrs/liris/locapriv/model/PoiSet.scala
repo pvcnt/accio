@@ -20,9 +20,9 @@ package fr.cnrs.liris.locapriv.model
 
 import breeze.stats.DescriptiveStats
 import com.google.common.base.MoreObjects
-import fr.cnrs.liris.common.geo.Point
-import fr.cnrs.liris.common.geo.Distance
-import fr.cnrs.liris.common.util.Identified
+import fr.cnrs.liris.util.geo.Point
+import fr.cnrs.liris.util.geo.Distance
+import fr.cnrs.liris.util.Identified
 
 /**
  * A set of POIs belonging to a single user. This is essentially a wrapper around a basic set, providing some

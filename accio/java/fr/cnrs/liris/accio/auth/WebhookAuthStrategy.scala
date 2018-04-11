@@ -25,7 +25,7 @@ import com.twitter.util.{Duration, Future}
 import fr.cnrs.liris.accio.api.UserInfo
 import fr.cnrs.liris.accio.auth.WebhookAuthStrategy.{ReviewRequest, ReviewResponse}
 import fr.cnrs.liris.accio.webhook.Webhook
-import fr.cnrs.liris.common.util.cache.CacheBuilder
+import fr.cnrs.liris.util.cache.CacheBuilder
 
 final class WebhookAuthStrategy(webhook: Webhook[ReviewResponse], cacheTtl: Duration)
   extends AuthStrategy with Logging {

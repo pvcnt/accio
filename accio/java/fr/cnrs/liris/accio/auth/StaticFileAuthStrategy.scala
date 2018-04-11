@@ -23,7 +23,7 @@ import java.nio.file.Path
 import com.twitter.util.Future
 import com.twitter.util.logging.Logging
 import fr.cnrs.liris.accio.api.UserInfo
-import fr.cnrs.liris.common.util.StringUtils.maybe
+import fr.cnrs.liris.util.StringUtils.maybe
 
 import scala.io.Source
 

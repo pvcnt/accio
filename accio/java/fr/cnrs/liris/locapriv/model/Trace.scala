@@ -20,8 +20,8 @@ package fr.cnrs.liris.locapriv.model
 
 import com.github.nscala_time.time.Imports._
 import com.google.common.base.MoreObjects
-import fr.cnrs.liris.common.geo.{BoundingBox, Distance, Point}
-import fr.cnrs.liris.common.util.Identified
+import fr.cnrs.liris.util.geo.{BoundingBox, Distance, Point}
+import fr.cnrs.liris.util.Identified
 
 /**
  * A trace is a list of events belonging to a single user.

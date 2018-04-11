@@ -19,7 +19,7 @@
 package fr.cnrs.liris.locapriv.ops
 
 import fr.cnrs.liris.accio.sdk.{Dataset, _}
-import fr.cnrs.liris.common.util.Requirements._
+import fr.cnrs.liris.util.Requirements._
 import fr.cnrs.liris.locapriv.model.Trace
 
 @Op(

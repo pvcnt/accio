@@ -19,7 +19,7 @@
 package fr.cnrs.liris.locapriv.model
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.common.geo.{Location, Point}
+import fr.cnrs.liris.util.geo.{Location, Point}
 import org.joda.time.{Instant, ReadableInstant}
 
 /**

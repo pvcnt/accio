@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.runtime
 import java.nio.file.{Files, Paths}
 
 import fr.cnrs.liris.accio.sdk._
-import fr.cnrs.liris.common.geo.{Distance, LatLng, Location}
+import fr.cnrs.liris.util.geo.{Distance, LatLng, Location}
 import org.joda.time.{Duration, Instant}
 
 case class NoOutputIn(@Arg s: String)

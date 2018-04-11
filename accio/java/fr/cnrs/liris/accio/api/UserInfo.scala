@@ -19,7 +19,7 @@
 package fr.cnrs.liris.accio.api
 
 import com.twitter.finagle.context.Contexts
-import fr.cnrs.liris.common.util.StringUtils.maybe
+import fr.cnrs.liris.util.StringUtils.maybe
 
 case class UserInfo(name: String, email: Option[String] = None, groups: Set[String] = Set.empty) {
   def toThrift: thrift.User = thrift.User(name, email, groups)

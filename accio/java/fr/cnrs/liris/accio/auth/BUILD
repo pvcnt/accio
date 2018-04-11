@@ -20,8 +20,8 @@ scala_library(
   deps = [
     "//accio/java/fr/cnrs/liris/accio/api",
     "//accio/java/fr/cnrs/liris/accio/webhook",
-    "//accio/java/fr/cnrs/liris/common/cache",
-    "//accio/java/fr/cnrs/liris/common/util",
+    "//accio/java/fr/cnrs/liris/util/cache",
+    "//accio/java/fr/cnrs/liris/util",
     "//3rdparty/jvm/com/twitter:finatra_jackson",
     "//3rdparty/jvm/com/twitter:util_slf4j_api",
     "//3rdparty/jvm/com/twitter:inject_core",

@@ -25,7 +25,7 @@ import com.google.inject.{Inject, Singleton}
 import com.twitter.util.logging.Logging
 import fr.cnrs.liris.accio.api.thrift.{OpResult, Task}
 import fr.cnrs.liris.accio.runtime.{OpExecutor, OpExecutorOpts}
-import fr.cnrs.liris.common.scrooge.BinaryScroogeSerializer
+import fr.cnrs.liris.util.scrooge.BinaryScroogeSerializer
 
 @Singleton
 final class TaskExecutor @Inject()(opExecutor: OpExecutor) extends Logging {

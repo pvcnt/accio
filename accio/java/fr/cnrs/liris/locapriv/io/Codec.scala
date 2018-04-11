@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.locapriv.io
 
-import fr.cnrs.liris.common.util.ByteUtils
+import fr.cnrs.liris.util.ByteUtils
 
 import scala.reflect.ClassTag
 

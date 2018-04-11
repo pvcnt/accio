@@ -21,7 +21,7 @@ scala_test(
     "//accio/java/fr/cnrs/liris/accio/dsl",
     "//accio/java/fr/cnrs/liris/accio/api",
     "//accio/thrift/fr/cnrs/liris/accio/api",
-    "//accio/java/fr/cnrs/liris/common/util",
+    "//accio/java/fr/cnrs/liris/util",
     "//accio/javatests/fr/cnrs/liris/testing",
   ],
   size = "small",

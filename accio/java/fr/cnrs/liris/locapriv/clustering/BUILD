@@ -19,7 +19,7 @@ scala_library(
   srcs = glob(["*.scala"]),
   deps = [
     '//accio/java/fr/cnrs/liris/locapriv/model',
-    '//accio/java/fr/cnrs/liris/common/geo',
+    '//accio/java/fr/cnrs/liris/util/geo',
     '//3rdparty/jvm/com/google/guava',
     '//3rdparty/jvm/com/github/nscala_time',
   ],

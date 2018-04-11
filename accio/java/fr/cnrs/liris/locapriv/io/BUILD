@@ -20,8 +20,8 @@ scala_library(
   deps = [
     '//accio/java/fr/cnrs/liris/locapriv/model',
     '//accio/java/fr/cnrs/liris/locapriv/sparkle',
-    '//accio/java/fr/cnrs/liris/common/util',
-    '//accio/java/fr/cnrs/liris/common/geo',
+    '//accio/java/fr/cnrs/liris/util',
+    '//accio/java/fr/cnrs/liris/util/geo',
     '//3rdparty/jvm/com/twitter:inject_core',
   ],
   visibility = ["//visibility:public"],

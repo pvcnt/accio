@@ -22,7 +22,7 @@ import fr.cnrs.liris.accio.sdk._
 import fr.cnrs.liris.locapriv.clustering.{Cluster, PoisClusterer}
 import fr.cnrs.liris.locapriv.model.{Event, Trace}
 import fr.cnrs.liris.locapriv.sparkle.DataFrame
-import fr.cnrs.liris.common.geo.Distance
+import fr.cnrs.liris.util.geo.Distance
 import org.joda.time.Duration
 
 import scala.collection.immutable

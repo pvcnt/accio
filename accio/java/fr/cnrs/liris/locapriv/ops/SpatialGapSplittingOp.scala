@@ -19,7 +19,7 @@
 package fr.cnrs.liris.locapriv.ops
 
 import fr.cnrs.liris.accio.sdk.{Dataset, _}
-import fr.cnrs.liris.common.geo.Distance
+import fr.cnrs.liris.util.geo.Distance
 import fr.cnrs.liris.locapriv.model.{Event, Trace}
 
 @Op(

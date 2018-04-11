@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.common.geo.Point
+import fr.cnrs.liris.util.geo.Point
 import fr.cnrs.liris.locapriv.model.{Event, Poi, PoiSet}
 import fr.cnrs.liris.locapriv.testing.WithTraceGenerator
 import fr.cnrs.liris.testing.UnitSpec

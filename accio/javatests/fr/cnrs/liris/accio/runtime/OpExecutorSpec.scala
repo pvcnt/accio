@@ -20,8 +20,8 @@ package fr.cnrs.liris.accio.runtime
 
 import fr.cnrs.liris.accio.api.Values
 import fr.cnrs.liris.accio.api.thrift._
-import fr.cnrs.liris.common.geo.Distance
-import fr.cnrs.liris.common.util.FileUtils
+import fr.cnrs.liris.util.geo.Distance
+import fr.cnrs.liris.util.FileUtils
 import fr.cnrs.liris.testing.{CreateTmpDirectory, UnitSpec}
 import org.scalatest.BeforeAndAfterEach
 

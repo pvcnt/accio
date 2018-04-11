@@ -25,9 +25,9 @@ import com.twitter.util.logging.Logging
 import fr.cnrs.liris.accio.api.thrift._
 import fr.cnrs.liris.accio.api.{Utils, Values}
 import fr.cnrs.liris.accio.sdk.{Arg, Op, Operator}
-import fr.cnrs.liris.common.reflect.{CaseClass, PlainClass, ScalaType}
-import fr.cnrs.liris.common.util.ResourceFileLoader
-import fr.cnrs.liris.common.util.StringUtils.maybe
+import fr.cnrs.liris.util.reflect.{CaseClass, PlainClass, ScalaType}
+import fr.cnrs.liris.util.ResourceFileLoader
+import fr.cnrs.liris.util.StringUtils.maybe
 
 import scala.reflect.{classTag, ClassTag}
 

@@ -23,7 +23,7 @@ import java.io.File
 import com.twitter.io.{Buf, Reader}
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.api._
-import fr.cnrs.liris.common.util.HashUtils
+import fr.cnrs.liris.util.HashUtils
 
 /**
  * Parse workflow specification DSL.

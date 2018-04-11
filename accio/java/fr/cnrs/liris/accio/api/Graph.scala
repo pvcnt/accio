@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.api
 
-import fr.cnrs.liris.common.util.Seqs
+import fr.cnrs.liris.util.Seqs
 
 import scala.util.matching.Regex
 

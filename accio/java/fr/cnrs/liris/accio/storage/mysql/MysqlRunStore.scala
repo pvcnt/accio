@@ -24,7 +24,7 @@ import com.twitter.util.{Await, StorageUnit}
 import fr.cnrs.liris.accio.api.ResultList
 import fr.cnrs.liris.accio.api.thrift.{NodeStatus, Run}
 import fr.cnrs.liris.accio.storage.{RunQuery, RunStore}
-import fr.cnrs.liris.common.scrooge.BinaryScroogeSerializer
+import fr.cnrs.liris.util.scrooge.BinaryScroogeSerializer
 
 private[mysql] final class MysqlRunStore(client: Client, statsReceiver: StatsReceiver)
   extends RunStore.Mutable {

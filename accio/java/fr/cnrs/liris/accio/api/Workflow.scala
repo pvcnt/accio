@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.api
 
 import java.util.UUID
 
-import fr.cnrs.liris.common.util.HashUtils
+import fr.cnrs.liris.util.HashUtils
 import org.joda.time.Instant
 
 case class Workflow(

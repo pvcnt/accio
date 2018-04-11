@@ -24,7 +24,7 @@ import java.util.Locale
 
 import com.google.common.io.Resources
 import fr.cnrs.liris.accio.sdk.{Dataset, _}
-import fr.cnrs.liris.common.geo.{Distance, Point}
+import fr.cnrs.liris.util.geo.{Distance, Point}
 import fr.cnrs.liris.locapriv.io.CsvSink
 import fr.cnrs.liris.locapriv.sparkle.DataSink
 import fr.cnrs.liris.locapriv.io.TraceCodec

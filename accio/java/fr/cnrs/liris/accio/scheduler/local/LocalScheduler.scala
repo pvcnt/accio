@@ -31,8 +31,8 @@ import com.twitter.util.{Future, FuturePool}
 import fr.cnrs.liris.accio.api.thrift._
 import fr.cnrs.liris.accio.api.{TaskCompletedEvent, TaskStartedEvent}
 import fr.cnrs.liris.accio.scheduler.Scheduler
-import fr.cnrs.liris.common.scrooge.BinaryScroogeSerializer
-import fr.cnrs.liris.common.util.Platform
+import fr.cnrs.liris.util.scrooge.BinaryScroogeSerializer
+import fr.cnrs.liris.util.Platform
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable

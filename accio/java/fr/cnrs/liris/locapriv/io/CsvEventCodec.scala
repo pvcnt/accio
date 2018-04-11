@@ -22,8 +22,8 @@ import java.nio.charset.Charset
 
 import com.google.common.base.Charsets
 import fr.cnrs.liris.locapriv.model.Event
-import fr.cnrs.liris.common.geo.LatLng
-import fr.cnrs.liris.common.util.ByteUtils
+import fr.cnrs.liris.util.geo.LatLng
+import fr.cnrs.liris.util.ByteUtils
 import org.joda.time.Instant
 
 import scala.reflect.{ClassTag, classTag}

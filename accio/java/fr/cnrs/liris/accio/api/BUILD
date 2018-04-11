@@ -19,14 +19,14 @@ scala_library(
   srcs = glob(["*.scala"]),
   deps = [
     "//accio/java/fr/cnrs/liris/accio/sdk",
-    "//accio/java/fr/cnrs/liris/common/util",
-    "//accio/java/fr/cnrs/liris/common/geo",
+    "//accio/java/fr/cnrs/liris/util",
+    "//accio/java/fr/cnrs/liris/util/geo",
     "//accio/thrift/fr/cnrs/liris/accio/api",
     "//3rdparty/jvm/com/github/nscala_time",
     "//3rdparty/jvm/com/twitter:finagle_core",
   ],
   exports = [
-    "//accio/java/fr/cnrs/liris/common/geo",
+    "//accio/java/fr/cnrs/liris/util/geo",
     "//accio/thrift/fr/cnrs/liris/accio/api",
     "//3rdparty/jvm/com/twitter:finagle_core",
   ],

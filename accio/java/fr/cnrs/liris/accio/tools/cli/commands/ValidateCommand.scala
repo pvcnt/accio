@@ -25,7 +25,7 @@ import fr.cnrs.liris.accio.agent.{ValidateRunRequest, ValidateWorkflowRequest}
 import fr.cnrs.liris.accio.api.thrift.FieldViolation
 import fr.cnrs.liris.accio.dsl.{ExperimentParser, WorkflowParser}
 import fr.cnrs.liris.accio.tools.cli.event.{Event, EventKind, Reporter}
-import fr.cnrs.liris.common.util.FileUtils
+import fr.cnrs.liris.util.FileUtils
 
 import scala.collection.JavaConverters._
 

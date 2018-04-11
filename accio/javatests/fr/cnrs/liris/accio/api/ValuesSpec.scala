@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.api
 
 import fr.cnrs.liris.accio.api.thrift.{AtomicType, DataType}
 import fr.cnrs.liris.accio.sdk.Dataset
-import fr.cnrs.liris.common.geo.{Distance, LatLng}
+import fr.cnrs.liris.util.geo.{Distance, LatLng}
 import fr.cnrs.liris.testing.UnitSpec
 import org.joda.time.{Duration, Instant}
 

@@ -21,7 +21,7 @@ package fr.cnrs.liris.locapriv.model
 import java.util.Objects
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.common.geo.{Distance, Point}
+import fr.cnrs.liris.util.geo.{Distance, Point}
 import org.joda.time.Instant
 
 /**

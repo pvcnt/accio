@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.locapriv.clustering
 
-import fr.cnrs.liris.common.geo.Distance
+import fr.cnrs.liris.util.geo.Distance
 import fr.cnrs.liris.locapriv.testing.WithCabspotting
 import fr.cnrs.liris.testing.UnitSpec
 import org.joda.time.Duration

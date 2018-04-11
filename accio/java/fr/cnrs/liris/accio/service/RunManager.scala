@@ -23,7 +23,7 @@ import com.twitter.util.logging.Logging
 import fr.cnrs.liris.accio.api.thrift.{Run, TaskState}
 import fr.cnrs.liris.accio.api.{Graph, Node, Utils, thrift}
 import fr.cnrs.liris.accio.storage.{RunQuery, Storage}
-import fr.cnrs.liris.common.util.cache.CacheBuilder
+import fr.cnrs.liris.util.cache.CacheBuilder
 
 /**
  * Provider a high-level service to manage runs.

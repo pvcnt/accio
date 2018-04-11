@@ -23,7 +23,7 @@ import fr.cnrs.liris.accio.agent.{AgentService, GetOperatorRequest}
 import fr.cnrs.liris.accio.api.thrift._
 import fr.cnrs.liris.accio.api.{DataTypes, Values}
 import fr.cnrs.liris.accio.tools.cli.event.Reporter
-import fr.cnrs.liris.common.util.StringUtils
+import fr.cnrs.liris.util.StringUtils
 
 class DescribeOperatorController extends DescribeController[OpDef] {
   override def retrieve(id: String, client: AgentService.MethodPerEndpoint): Future[OpDef] = {

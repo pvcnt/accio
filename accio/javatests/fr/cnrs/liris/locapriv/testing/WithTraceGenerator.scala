@@ -19,7 +19,7 @@
 package fr.cnrs.liris.locapriv.testing
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.common.geo.{LatLng, Point}
+import fr.cnrs.liris.util.geo.{LatLng, Point}
 import fr.cnrs.liris.locapriv.model.{Event, Trace}
 import org.joda.time.Instant
 

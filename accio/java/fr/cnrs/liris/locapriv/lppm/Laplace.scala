@@ -19,9 +19,9 @@
 package fr.cnrs.liris.locapriv.lppm
 
 import com.google.common.geometry.S1Angle
-import fr.cnrs.liris.common.geo.{LatLng, Point}
-import fr.cnrs.liris.common.random.RandomUtils
-import fr.cnrs.liris.common.geo.Distance
+import fr.cnrs.liris.util.geo.{LatLng, Point}
+import fr.cnrs.liris.util.random.RandomUtils
+import fr.cnrs.liris.util.geo.Distance
 import fr.cnrs.liris.locapriv.model.Trace
 
 import scala.util.Random

@@ -24,7 +24,7 @@ import fr.cnrs.liris.accio.api.Values
 import fr.cnrs.liris.accio.api.thrift.{Experiment, Package, Value}
 import fr.cnrs.liris.accio.dsl.ExperimentParser
 import fr.cnrs.liris.accio.tools.cli.event.{Event, EventKind, Reporter}
-import fr.cnrs.liris.common.util.{FileUtils, Seqs, StringUtils}
+import fr.cnrs.liris.util.{FileUtils, Seqs, StringUtils}
 
 final class SubmitCommand extends Command with ClientCommand {
   private[this] val nameFlag = flag[String]("name", "Run name")

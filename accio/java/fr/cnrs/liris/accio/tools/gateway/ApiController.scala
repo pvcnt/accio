@@ -25,7 +25,7 @@ import com.twitter.finatra.request.{QueryParam, RouteParam}
 import com.twitter.finatra.validation.{Max, Min}
 import fr.cnrs.liris.accio.agent._
 import fr.cnrs.liris.accio.api.thrift._
-import fr.cnrs.liris.common.util.StringUtils.{explode, maybe}
+import fr.cnrs.liris.util.StringUtils.{explode, maybe}
 
 @Singleton
 final class ApiController @Inject()(client: AgentService.MethodPerEndpoint) extends Controller {

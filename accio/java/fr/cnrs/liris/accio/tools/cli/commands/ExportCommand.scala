@@ -25,7 +25,7 @@ import com.twitter.util.Future
 import fr.cnrs.liris.accio.agent.GetRunRequest
 import fr.cnrs.liris.accio.reporting._
 import fr.cnrs.liris.accio.tools.cli.event.{Event, Reporter}
-import fr.cnrs.liris.common.util.{FileUtils, HashUtils, StringUtils}
+import fr.cnrs.liris.util.{FileUtils, HashUtils, StringUtils}
 
 final class ExportCommand extends Command with ClientCommand {
   private[this] val outFlag = flag[String](

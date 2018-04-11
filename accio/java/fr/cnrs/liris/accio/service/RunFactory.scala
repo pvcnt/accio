@@ -25,7 +25,7 @@ import fr.cnrs.liris.accio.api.thrift._
 import fr.cnrs.liris.accio.api.{UserInfo, Utils}
 import fr.cnrs.liris.accio.config.ClusterName
 import fr.cnrs.liris.accio.storage.Storage
-import fr.cnrs.liris.common.util.Seqs
+import fr.cnrs.liris.util.Seqs
 
 import scala.util.Random
 

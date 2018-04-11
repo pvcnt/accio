@@ -19,7 +19,7 @@
 package fr.cnrs.liris.locapriv.clustering
 
 import com.google.common.base.MoreObjects
-import fr.cnrs.liris.common.geo.Point
+import fr.cnrs.liris.util.geo.Point
 import fr.cnrs.liris.locapriv.model.{Event, Trace}
 import org.joda.time.Duration
 

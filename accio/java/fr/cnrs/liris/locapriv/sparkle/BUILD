@@ -18,8 +18,8 @@ scala_library(
   name = 'sparkle',
   srcs = glob(["*.scala"]),
   deps = [
-    '//accio/java/fr/cnrs/liris/common/random',
-    '//accio/java/fr/cnrs/liris/common/util',
+    '//accio/java/fr/cnrs/liris/util/random',
+    '//accio/java/fr/cnrs/liris/util',
     '//3rdparty/jvm/com/twitter:util_slf4j_api',
     '//3rdparty/jvm/com/google/guava',
     '//3rdparty/jvm/org/scalanlp:breeze',

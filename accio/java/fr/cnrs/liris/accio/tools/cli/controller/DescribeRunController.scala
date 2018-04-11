@@ -23,7 +23,7 @@ import fr.cnrs.liris.accio.agent.{AgentService, GetRunRequest, ListRunsRequest}
 import fr.cnrs.liris.accio.api.thrift._
 import fr.cnrs.liris.accio.api.{Utils, Values}
 import fr.cnrs.liris.accio.tools.cli.event.Reporter
-import fr.cnrs.liris.common.util.StringUtils.padTo
+import fr.cnrs.liris.util.StringUtils.padTo
 
 class DescribeRunController extends DescribeController[(Run, Seq[Run])] with FormatHelper {
   private[this] val colWidth = 15

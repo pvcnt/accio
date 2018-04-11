@@ -25,7 +25,7 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer
 import com.twitter.scrooge.{ThriftEnum, ThriftStruct, ThriftStructCodec, ThriftUnion}
 import fr.cnrs.liris.accio.api.Values
 import fr.cnrs.liris.accio.api.thrift._
-import fr.cnrs.liris.common.geo.Distance
+import fr.cnrs.liris.util.geo.Distance
 
 import scala.reflect.{ClassTag, classTag}
 

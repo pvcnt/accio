@@ -22,7 +22,7 @@ import java.io.{BufferedOutputStream, FileOutputStream}
 import java.nio.file.{Files, Path}
 
 import com.google.common.io.{ByteStreams, Resources}
-import fr.cnrs.liris.common.util.FileUtils
+import fr.cnrs.liris.util.FileUtils
 import org.scalatest.{BeforeAndAfterEach, Suite}
 
 /**

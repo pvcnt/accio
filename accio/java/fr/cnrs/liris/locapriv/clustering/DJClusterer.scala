@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.locapriv.clustering
 
-import fr.cnrs.liris.common.geo.{Distance, Point}
+import fr.cnrs.liris.util.geo.{Distance, Point}
 import fr.cnrs.liris.locapriv.model.Event
 
 import scala.collection.mutable

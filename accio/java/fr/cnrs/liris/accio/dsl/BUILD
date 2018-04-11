@@ -19,8 +19,8 @@ scala_library(
   srcs = glob(["*.scala"]),
   deps = [
     "//accio/java/fr/cnrs/liris/accio/api",
-    "//accio/java/fr/cnrs/liris/common/geo",
-    "//accio/java/fr/cnrs/liris/common/util",
+    "//accio/java/fr/cnrs/liris/util/geo",
+    "//accio/java/fr/cnrs/liris/util",
     "//3rdparty/jvm/com/twitter:finatra_jackson",
     "//3rdparty/jvm/com/twitter:util_core",
   ],

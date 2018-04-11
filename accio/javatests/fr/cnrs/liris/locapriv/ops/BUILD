@@ -24,7 +24,7 @@ scala_test(
     "//accio/java/fr/cnrs/liris/locapriv/io",
     "//accio/java/fr/cnrs/liris/accio/api",
     "//accio/java/fr/cnrs/liris/accio/sdk",
-    "//accio/java/fr/cnrs/liris/common/geo",
+    "//accio/java/fr/cnrs/liris/util/geo",
     "//accio/javatests/fr/cnrs/liris/locapriv/testing",
     "//accio/javatests/fr/cnrs/liris/accio/testing",
     "//accio/javatests/fr/cnrs/liris/testing",
