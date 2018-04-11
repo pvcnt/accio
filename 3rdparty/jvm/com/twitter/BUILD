@@ -1,32 +1,4 @@
 load("@io_bazel_rules_scala//scala:scala_import.bzl", "scala_import")
-java_library(
-    name = "bijection_core_2_11",
-    exports = [
-        "//external:jar/com/twitter/bijection_core_2_11"
-    ],
-    visibility = [
-        "//visibility:public"
-    ]
-)
-
-
-
-scala_import(
-    name = "bijection_util",
-    exports = [
-        "//3rdparty/jvm/org/scala_lang:scala_library",
-        ":bijection_core_2_11"
-    ],
-    jars = [
-        "//external:jar/com/twitter/bijection_util_2_11"
-    ],
-    visibility = [
-        "//visibility:public"
-    ]
-)
-
-
-
 scala_import(
     name = "finagle_base_http",
     exports = [
