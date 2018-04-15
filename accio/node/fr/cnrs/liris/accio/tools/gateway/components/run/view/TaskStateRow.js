@@ -18,96 +18,95 @@
 
 import React from "react";
 import moment from "moment";
+import autobind from 'autobind-decorator';
 import {noop} from "lodash";
-import {Row, Col, Glyphicon, Label, Button} from "react-bootstrap";
+import {Button, Col, Glyphicon, Label, Row} from "react-bootstrap";
 import RunLogsContainer from "./RunLogsContainer";
 
-let TaskStateRow = React.createClass({
-  getDefaultProps: function() {
-    return {
-      onLogsShow: noop,
-    };
-  },
-
-  _handleLogsToggle: function (e, classifier) {
+class TaskStateRow extends React.Component {
+  @autobind
+  _handleLogsToggle(e, classifier) {
     e.nativeEvent.preventDefault();
-    this.props.onLogsShow(this.props.node.name, classifier);
-  },
+    this.props.onLogsShow(this.props.task.name, classifier);
+  }
 
-  render: function () {
-    const {node, runId} = this.props;
-    const isStarted = (node.started_at != null);
-    const isCompleted = (node.completed_at != null);
-    const isSuccessful = (node.status === 'success');
+  render() {
+    const {task, job} = this.props;
+    const isStarted = !!task.start_time;
+    const isCompleted = !!task.end_time;
+    const isSuccessful = task.state === 'successful';
 
     const duration = isCompleted
-      ? node.completed_at - node.started_at
+      ? task.end_time - task.start_time
       : isStarted
-      ? moment().valueOf() - node.started_at
-      : null
+        ? moment().valueOf() - task.start_time
+        : null;
     const glyph = isCompleted
-      ? (isSuccessful ? 'ok' : node.status === 'killed' ? 'exclamation-sign' : 'remove')
+      ? (isSuccessful ? 'ok' : task.state === 'killed' ? 'exclamation-sign' : 'remove')
       : isStarted
-      ? 'refresh'
-      : 'upload'
-    const label = node.status === 'cancelled'
+        ? 'refresh'
+        : 'upload';
+    const label = task.state === 'cancelled'
       ? <Label bsStyle="danger">Cancelled</Label>
       : isCompleted
-      ? <Label bsStyle={isSuccessful ? 'success' : 'danger'}>
-        Ran for {moment.duration(duration).humanize()}
-      </Label>
-      : isStarted
-      ? <Label bsStyle="info">
-        Running for {moment.duration(duration).humanize()}
-      </Label>
-      : node.status === 'waiting'
-      ? <Label>Waiting</Label>
-      : <Label>Scheduled</Label>
-    const hasLogs = node.status !== 'waiting' && node.status !== 'scheduled'
+        ? <Label bsStyle={isSuccessful ? 'success' : 'danger'}>
+          Ran for {moment.duration(duration).humanize()}
+        </Label>
+        : isStarted
+          ? <Label bsStyle="info">
+            Running for {moment.duration(duration).humanize()}
+          </Label>
+          : task.state === 'waiting'
+            ? <Label>Waiting</Label>
+            : <Label>Scheduled</Label>;
+    const hasLogs = task.state !== 'waiting' && task.state !== 'scheduled';
 
-    return (<div>
-      <Row>
-        <Col sm={5}>
-          <Glyphicon glyph={glyph}/>&nbsp;{node.name}
-        </Col>
-        <Col sm={3}>{label}</Col>
-        <Col sm={4}>
-          {hasLogs
-            ? <div>
+    return (
+      <div>
+        <Row>
+          <Col sm={5}>
+            <Glyphicon glyph={glyph}/>&nbsp;{task.name}
+          </Col>
+          <Col sm={3}>{label}</Col>
+          <Col sm={4}>
+            {hasLogs
+              ? <div>
                 <Button
-                bsSize="xsmall"
-                onClick={e => this._handleLogsToggle(e, 'stdout')}
-                bsStyle={this.props.logs == 'stdout' ? 'primary' : 'default'}>
+                  bsSize="xsmall"
+                  onClick={e => this._handleLogsToggle(e, 'stdout')}
+                  bsStyle={this.props.logs == 'stdout' ? 'primary' : 'default'}>
                   stdout
-              </Button>&nbsp;
-              <Button
-                bsSize="xsmall"
-                onClick={e => this._handleLogsToggle(e, 'stderr')}
-                bsStyle={this.props.logs == 'stderr' ? 'primary' : 'default'}>
+                </Button>&nbsp;
+                <Button
+                  bsSize="xsmall"
+                  onClick={e => this._handleLogsToggle(e, 'stderr')}
+                  bsStyle={this.props.logs == 'stderr' ? 'primary' : 'default'}>
                   stderr
-              </Button>&nbsp;
-              {this.props.logs
-                ? <Button bsSize="xsmall" href={'/api/v1/run/' + runId + '/logs/' + node.name + '/' + this.props.logs + '?download=true'}>
+                </Button>&nbsp;
+                {this.props.logs
+                  ? <Button bsSize="xsmall"
+                            href={'/api/v1/run/' + runId + '/logs/' + task.name + '/' + this.props.logs + '?download=true'}>
                     <Glyphicon glyph="save"/>
-                </Button> : null}
+                  </Button> : null}
               </div>
-            : null}
-        </Col>
-      </Row>
-      {(null != this.props.logs)
-        ? <RunLogsContainer
+              : null}
+          </Col>
+        </Row>
+        {(null != this.props.logs)
+          ? <RunLogsContainer
             runId={runId}
-            nodeName={node.name}
+            taskName={task.name}
             classifier={this.props.logs}
             stream={!isCompleted}/>
-        : null}
-    </div>);
+          : null}
+      </div>
+    );
   }
-});
+}
 
 TaskStateRow.propTypes = {
-  runId: React.PropTypes.string.isRequired,
-  node: React.PropTypes.object.isRequired,
+  job: React.PropTypes.object.isRequired,
+  task: React.PropTypes.object.isRequired,
   logs: React.PropTypes.string,
   onLogsShow: React.PropTypes.func.isRequired,
 };

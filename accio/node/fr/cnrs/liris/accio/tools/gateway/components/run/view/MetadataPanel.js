@@ -17,77 +17,34 @@
  */
 
 import React from 'react'
-import nl2br from 'react-nl2br'
-import autobind from 'autobind-decorator'
-import {Row, Col, Panel, Button, Glyphicon} from 'react-bootstrap'
-import {noop} from 'lodash'
-import EditMetadataModal from './EditMetadataModal'
+import {Col, Panel, Row} from 'react-bootstrap'
 import TagList from '../../TagList'
 
 class MetadataPanel extends React.Component {
-  constructor(props) {
-    super(props)
-    this.state = {shown: false}
-  }
-
-  @autobind
-  _handleShow(e) {
-    e.nativeEvent.preventDefault()
-    this.setState({shown: true})
-  }
-
-  @autobind
-  _handleClose() {
-    this.setState({shown: false})
-  }
-
-  @autobind
-  _handleSubmit(newRun) {
-    this.setState({shown: false})
-    this.props.onChange(newRun)
-  }
-
   render() {
-    const {run} = this.props
+    const {job} = this.props;
     return (
       <div>
-        <Button onClick={this._handleShow} style={{float: 'right', marginRight: '4px', marginTop: '4px'}} bsSize="small">
-          <Glyphicon glyph="pencil"/>&nbsp;Edit
-        </Button>
-        <Panel header={run.parent ? 'Parent run metadata' : 'Run metadata'}
+        <Panel header="Run metadata"
                className="accio-view-panel"
                collapsible={true}
                defaultExpanded={false}>
           <Row>
             <Col sm={2} className="accio-view-label">Name</Col>
-            <Col sm={10}>{run.parent ? run.parent.name : run.name}</Col>
-          </Row>
-          <Row>
-            <Col sm={2} className="accio-view-label">Notes</Col>
-            <Col sm={10}>{nl2br(run.parent ? run.parent.notes : run.notes)}</Col>
+            <Col sm={10}>{job.name}</Col>
           </Row>
           <Row>
             <Col sm={2} className="accio-view-label">Tags</Col>
-            <Col sm={10}><TagList tags={run.parent ? run.parent.tags : run.tags}/></Col>
+            <Col sm={10}><TagList tags={job.tags}/></Col>
           </Row>
         </Panel>
-        {this.state.shown
-          ? <EditMetadataModal
-            run={run.parent ? run.parent : run}
-            onSubmit={this._handleSubmit}
-            onClose={this._handleClose} />
-          : null}
       </div>
     )
   }
 }
 
 MetadataPanel.propTypes = {
-  run: React.PropTypes.object.isRequired,
-  onChange: React.PropTypes.func.isRequired,
-}
-MetadataPanel.defaultProps = {
-  onChange: noop,
-}
+  job: React.PropTypes.object.isRequired,
+};
 
-export default MetadataPanel
+export default MetadataPanel;

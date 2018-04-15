@@ -69,40 +69,24 @@ final class ApiController @Inject()(client: AgentService.MethodPerEndpoint) exte
     client
       .getJob(GetJobRequest(httpReq.name))
       .map { resp =>
+        val job = resp.job.copy(steps = Seq.empty)
         if (httpReq.download) {
-          // We download the entirety of the run, including artifacts and metrics.
           response
-            .ok(resp.job)
-            .header("Content-Disposition", s"attachment; filename=job-${resp.job.name}.json")
+            .ok(job)
+            .header("Content-Disposition", s"attachment; filename=job-${job.name}.json")
         } else {
-          resp.job.copy(status = resp.job.status.copy(tasks = None))
+          job
         }
       }
   }
 
-  get("/api/v1/job/:name/artifacts/:step") { httpReq: ListArtifactsHttpRequest =>
+  get("/api/v1/job/:name/graph") { httpReq: GetJobHttpRequest =>
     client
       .getJob(GetJobRequest(httpReq.name))
-      .map { resp =>
-        resp
-          .job.status.tasks.toSeq.flatten
-          .find(_.name == httpReq.task)
-          .flatMap(_.artifacts)
-      }
+      .map(resp => resp.job.steps)
   }
 
-  get("/api/v1/job/:name/metrics/:job") { httpReq: ListMetricsHttpRequest =>
-    client
-      .getJob(GetJobRequest(httpReq.name))
-      .map { resp =>
-        resp
-          .job.status.tasks.toSeq.flatten
-          .find(_.name == httpReq.task)
-          .flatMap(_.metrics)
-      }
-  }
-
-  get("/api/v1/job/:name/logs/:tasl/:kind") { httpReq: ListLogsHttpRequest =>
+  get("/api/v1/job/:name/logs/:task/:kind") { httpReq: ListLogsHttpRequest =>
     val req = ListLogsRequest(
       job = httpReq.name,
       step = httpReq.task,
@@ -145,10 +129,6 @@ case class ListJobsHttpResponse(jobs: Seq[Job], totalCount: Int)
 
 case class GetJobHttpRequest(@RouteParam name: String, @QueryParam download: Boolean = false)
 
-case class ListArtifactsHttpRequest(@RouteParam name: String, @RouteParam task: String)
-
-case class ListMetricsHttpRequest(@RouteParam name: String, @RouteParam task: String)
-
 case class ListLogsHttpRequest(
   @RouteParam name: String,
   @RouteParam task: String,
@@ -156,4 +136,3 @@ case class ListLogsHttpRequest(
   @QueryParam @Min(0) skip: Option[Int],
   @QueryParam download: Boolean = false)
 
-case class ParseErrorResponse(warnings: Seq[String], errors: Seq[String])

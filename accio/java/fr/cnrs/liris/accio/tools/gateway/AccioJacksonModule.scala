@@ -42,6 +42,7 @@ object AccioJacksonModule extends SimpleModule {
   addSerializer(new ScroogeStructSerializer[Reference](Reference))
   addSerializer(new ScroogeStructSerializer[Export](Export))
   addSerializer(new ScroogeStructSerializer[User](User))
+  addSerializer(new ScroogeStructSerializer[Operator](Operator))
   addSerializer(new ScroogeStructSerializer[Attribute](Attribute))
 
   addSerializer(new ScroogeUnionSerializer[Channel](Channel))

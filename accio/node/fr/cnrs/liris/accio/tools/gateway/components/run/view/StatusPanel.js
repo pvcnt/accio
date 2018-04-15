@@ -18,7 +18,7 @@
 
 import React from 'react'
 import moment from 'moment'
-import {Row, Col, Glyphicon, Panel} from 'react-bootstrap'
+import {Col, Glyphicon, Panel, Row} from 'react-bootstrap'
 import autobind from 'autobind-decorator'
 import {sortBy} from 'lodash'
 import ChildrenTableContainer from './ChildrenTableContainer'
@@ -26,49 +26,49 @@ import TaskStateRow from './TaskStateRow'
 
 class StatusPanel extends React.Component {
   constructor(props) {
-    super(props)
-    this.state = {logs: null}
+    super(props);
+    this.state = {logs: null};
   }
 
   @autobind
-  _handleLogsToggle(node, classifier) {
-    if (this.state.logs && this.state.logs.node == node && this.state.logs.classifier == classifier) {
-      this.setState({logs: null})
+  _handleLogsToggle(task, kind) {
+    if (this.state.logs && this.state.logs.task === task && this.state.logs.kind === kind) {
+      this.setState({logs: null});
     } else {
-      this.setState({logs: null}, () => this.setState({logs: {node, classifier}}))
+      this.setState({logs: null}, () => this.setState({logs: {task, kind}}));
     }
   }
 
   render() {
-    const run = this.props.run;
-    const isStarted = (run.state.started_at != null);
-    const isCompleted = (run.state.completed_at != null);
-    const isSuccessful = (run.state.status == 'success');
+    const {job} = this.props;
+    const isStarted = !!job.status.start_time;
+    const isCompleted = !!job.status.end_time;
+    const isSuccessful = job.status.state === 'successful';
 
     const duration = isCompleted
-      ? run.state.completed_at - run.state.started_at
+      ? job.status.start_time - job.status.end_time
       : isStarted
-      ? moment().valueOf() - run.state.started_at
-      : null
+        ? moment().valueOf() - job.status.start_time
+        : null;
     const statusGlyph = isCompleted
       ? (isSuccessful ? 'ok' : 'remove')
       : isStarted
-      ? 'refresh'
-      : 'upload'
+        ? 'refresh'
+        : 'upload';
     const statusText = isCompleted
       ? (isSuccessful ? 'Successful' : 'Failed')
       : isStarted
-      ? 'Running'
-      : 'Scheduled'
+        ? 'Running'
+        : 'Scheduled';
 
-    const nodes = sortBy(run.state.nodes, ['started_at'])
-    const nodeRows = nodes.map((node, idx) =>
+    const tasks = sortBy(job.status.tasks, ['start_time']);
+    const rows = tasks.map((task, idx) =>
       <TaskStateRow key={idx}
-                     runId={run.id}
-                     node={node}
-                     logs={this.state.logs && this.state.logs.node == node.name ? this.state.logs.classifier : null}
-                     onLogsShow={this._handleLogsToggle}/>
-    )
+                    job={job}
+                    node={task}
+                    logs={this.state.logs && this.state.logs.task === task.name ? this.state.logs.kind : null}
+                    onLogsShow={this._handleLogsToggle}/>
+    );
 
     return (
       <Panel header={<h3><Glyphicon glyph={statusGlyph}/> Run status: {statusText}</h3>}
@@ -77,21 +77,24 @@ class StatusPanel extends React.Component {
              defaultExpanded={!isCompleted}>
         <Row>
           <Col sm={2} className="accio-view-label">Started</Col>
-          <Col sm={10}>{run.state.started_at ? moment(run.state.started_at).format('MMM Do YYYY, hh:mma') : '–'}</Col>
+          <Col
+            sm={10}>{job.state.started_at ? moment(job.state.started_at).format('MMM Do YYYY, hh:mma') : '–'}</Col>
         </Row>
         <Row>
           <Col sm={2} className="accio-view-label">Completed</Col>
-          <Col sm={10}>{run.state.completed_at ? moment(run.state.completed_at).format('MMM Do YYYY, hh:mma') : '–'}</Col>
+          <Col
+            sm={10}>{job.state.completed_at ? moment(job.state.completed_at).format('MMM Do YYYY, hh:mma') : '–'}</Col>
         </Row>
         <Row>
           <Col sm={2} className="accio-view-label">Duration</Col>
           <Col sm={10}>{duration ? moment.duration(duration).humanize() : '–'}</Col>
         </Row>
         <Row>
-          <Col sm={2} className="accio-view-label">{run.children.length ? 'Child runs' : 'Nodes'}</Col>
+          <Col sm={2}
+               className="accio-view-label">{job.children.length ? 'Child jobs' : 'Nodes'}</Col>
           <Col sm={10}>
-            {run.children.length
-              ? <ChildrenTableContainer run={run}/>
+            {job.children.length
+              ? <ChildrenTableContainer job={job}/>
               : nodeRows}
           </Col>
         </Row>
@@ -101,7 +104,7 @@ class StatusPanel extends React.Component {
 }
 
 StatusPanel.propTypes = {
-  run: React.PropTypes.object.isRequired
-}
+  job: React.PropTypes.object.isRequired
+};
 
-export default StatusPanel
+export default StatusPanel;
