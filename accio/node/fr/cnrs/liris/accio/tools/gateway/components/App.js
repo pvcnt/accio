@@ -23,10 +23,6 @@ import Home from './home/Home'
 import RunSection from './run/RunSection'
 import RunListContainer from './run/list/RunListContainer'
 import RunViewContainer from './run/view/RunViewContainer'
-import WorkflowSection from './workflow/WorkflowSection'
-import WorkflowListContainer from './workflow/list/WorkflowListContainer'
-import WorkflowViewContainer from './workflow/view/WorkflowViewContainer'
-import WorkflowEditContainer from './workflow/edit/WorkflowEditContainer'
 
 class App extends React.Component {
   render() {
@@ -37,12 +33,6 @@ class App extends React.Component {
           <Route path="runs" component={RunSection}>
             <IndexRoute component={RunListContainer}/>
             <Route path="view/:id" component={RunViewContainer}/>
-          </Route>
-          <Route path="workflows" component={WorkflowSection}>
-            <IndexRoute component={WorkflowListContainer}/>
-            <Route path="view/:id" component={WorkflowViewContainer}/>
-            <Route path="view/:id/:version" component={WorkflowViewContainer}/>
-            <Route path="edit/:id" component={WorkflowEditContainer}/>
           </Route>
         </Route>
       </Router>
