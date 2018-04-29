@@ -42,7 +42,6 @@ object MysqlStorage {
       "unused_id int not null auto_increment," +
       "name varchar(255) not null," +
       "parent varchar(255) null," +
-      "cloned_from varchar(255) null," +
       // Longblob is up to 4GB. We do not need so much space, but mediumblob is only up to 16Mb,
       // which is not sufficient for runs with large results. The `max_allowed_packet` parameter
       // of MySQL has to be set accordingly (but weirdly its maximum value is "only" 1GB).
