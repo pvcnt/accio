@@ -238,11 +238,11 @@ scala_import(
 scala_import(
     name = "finagle_thrift",
     exports = [
+        "//3rdparty/jvm/org/apache/thrift:libthrift",
         "//3rdparty/jvm/org/scala_lang:scala_library",
         ":finagle_core",
         ":finagle_netty4_2_11",
         ":finagle_toggle_2_11",
-        ":libthrift",
         ":scrooge_core"
     ],
     jars = [
@@ -516,8 +516,8 @@ scala_import(
 scala_import(
     name = "inject_thrift",
     exports = [
+        "//3rdparty/jvm/org/apache/thrift:libthrift",
         ":finagle_mux",
-        ":libthrift",
         ":scrooge_core"
     ],
     jars = [
@@ -540,21 +540,6 @@ scala_import(
     ],
     jars = [
         "//external:jar/com/twitter/inject_utils_2_11"
-    ],
-    visibility = [
-        "//visibility:public"
-    ]
-)
-
-
-
-java_library(
-    name = "libthrift",
-    exports = [
-        "//3rdparty/jvm/commons_lang:commons_lang",
-        "//3rdparty/jvm/javax/servlet:servlet_api",
-        "//3rdparty/jvm/org/slf4j:slf4j_api",
-        "//external:jar/com/twitter/libthrift"
     ],
     visibility = [
         "//visibility:public"
@@ -586,10 +571,10 @@ scala_import(
         "//3rdparty/jvm/com/github/spullara/mustache/java:compiler",
         "//3rdparty/jvm/com/google/code/findbugs:jsr305",
         "//3rdparty/jvm/commons_cli:commons_cli",
+        "//3rdparty/jvm/org/apache/thrift:libthrift",
         "//3rdparty/jvm/org/codehaus/plexus:plexus_utils",
         "//3rdparty/jvm/org/scala_lang/modules:scala_parser_combinators_2_11",
-        "//3rdparty/jvm/org/scala_lang:scala_library",
-        ":libthrift"
+        "//3rdparty/jvm/org/scala_lang:scala_library"
     ],
     jars = [
         "//external:jar/com/twitter/scrooge_generator_2_11"

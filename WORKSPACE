@@ -56,6 +56,7 @@ maven_dependencies()
 # Update to a more recent Scrooge version.
 bind(name = 'io_bazel_rules_scala/dependency/thrift/scrooge_core', actual = '//3rdparty/jvm/com/twitter:scrooge_core')
 bind(name = 'io_bazel_rules_scala/dependency/thrift/scrooge_generator', actual = '//3rdparty/jvm/com/twitter:scrooge_generator')
+bind(name = 'io_bazel_rules_scala/dependency/thrift/libthrift', actual = '//3rdparty/jvm/org/apache/thrift:libthrift')
 
 ## Download and load the rules bringing Docker support.
 # https://github.com/bazelbuild/rules_docker

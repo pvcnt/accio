@@ -74,7 +74,6 @@ object JobStore {
    * @param parent     If a non-empty string is given, only include jobs being a child of the given
    *                   job. If an empty string is given , only include jobs having no parent
    *                   (i.e., not being a child of any other job).
-   * @param clonedFrom Only include jobs being cloned from of a given job.
    * @param tags       Only include jobs having all of specified tags.
    * @param q          Multi-criteria search. If specified, fields `author`, `title` and `tags`
    *                   are ignored.
@@ -84,7 +83,6 @@ object JobStore {
     title: Option[String] = None,
     state: Option[Set[ExecState]] = None,
     parent: Option[String] = None,
-    clonedFrom: Option[String] = None,
     tags: Set[String] = Set.empty,
     q: Option[String] = None) {
 
@@ -110,8 +108,7 @@ object JobStore {
 
       res1 &&
         state.forall(_.contains(job.status.state)) &&
-        parent.forall(parent => parent.isEmpty && job.parent.isEmpty || job.parent.contains(parent)) &&
-        clonedFrom.forall(job.clonedFrom.contains)
+        parent.forall(parent => parent.isEmpty && job.parent.isEmpty || job.parent.contains(parent))
     }
   }
 

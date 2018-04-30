@@ -60,8 +60,7 @@ struct ListJobsRequest {
   5: optional set<api.ExecState> state;
   6: optional set<string> tags;
   7: optional string parent;
-  8: optional string cloned_from;
-  9: optional string q;
+  8: optional string q;
   10: optional i32 limit;
   11: optional i32 offset;
 }

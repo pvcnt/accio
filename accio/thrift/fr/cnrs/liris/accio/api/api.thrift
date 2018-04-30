@@ -246,9 +246,8 @@ struct Step {
  * A run is a particular instantiation of a workflow, where everything is well defined (i.e., all workflow parameters
  * have been affected a value).
  *
- * Runs can be single runs, cloned from another run or belong to a parameter sweep. Clones have their `cloned_from`
- * property defined to the identifier of the run they have been cloned from, and with which they share the same
- * workflow, cluster and environment. Runs that are part of a parameter sweep have their `parent` property set to the
+ * Runs can be single runs, cloned from another run or belong to a parameter sweep. Runs that are part
+ * of a parameter sweep have their `parent` property set to the
  * identifier of the run that acts as a root for the parameter sweep. All runs that are part of a same parameter sweep
  * share the same workflow, cluster, environment, user and metadata. Parent runs are "dummy" runs that are not
  * actually scheduled, although their state will be updated as the execution of their children progresses.
@@ -280,13 +279,10 @@ struct Job {
   // Identifier of the run this instance is a child of.
   8: optional string parent;
 
-  // Identifier of the run this instance has been cloned from.
-  9: optional string cloned_from;
-
-  10: list<Step> steps;
+  9: list<Step> steps;
 
   // Execution state.
-  12: JobStatus status = {};
+  10: JobStatus status = {};
 }
 
 /**

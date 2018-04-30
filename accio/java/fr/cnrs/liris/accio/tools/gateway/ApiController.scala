@@ -54,7 +54,6 @@ final class ApiController @Inject()(client: AgentService.MethodPerEndpoint) exte
       title = httpReq.title,
       author = httpReq.author,
       parent = httpReq.parent,
-      clonedFrom = httpReq.clonedFrom,
       state = httpReq.state.map(v => ExecState.valueOf(v).toSet),
       tags = if (httpReq.tags.nonEmpty) Some(explode(httpReq.tags, ",")) else None,
       q = httpReq.q,
@@ -113,7 +112,6 @@ case class ListJobsHttpRequest(
   @QueryParam title: Option[String],
   @QueryParam state: Option[String],
   @QueryParam parent: Option[String],
-  @QueryParam clonedFrom: Option[String],
   @QueryParam tags: Option[String],
   @QueryParam q: Option[String],
   @QueryParam @Min(1) page: Int = 1,
@@ -129,4 +127,3 @@ case class ListLogsHttpRequest(
   @RouteParam kind: String,
   @QueryParam @Min(0) skip: Option[Int],
   @QueryParam download: Boolean = false)
-

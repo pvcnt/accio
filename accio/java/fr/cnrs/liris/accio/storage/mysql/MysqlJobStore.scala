@@ -37,11 +37,10 @@ private[mysql] final class MysqlJobStore(client: Client, statsReceiver: StatsRec
     val content = BinaryScroogeSerializer.toBytes(job)
     sizeStat.add(StorageUnit.fromBytes(content.length).inKilobytes)
     client
-      .prepare("insert into jobs(name, parent, cloned_from, content) values(?, ?, ?, ?)")
+      .prepare("insert into jobs(name, parent, content) values(?, ?, ?, ?)")
       .apply(
         job.name,
         job.parent.map(wrap(_)).getOrElse(NullParameter),
-        job.clonedFrom.map(wrap(_)).getOrElse(NullParameter),
         content)
       .map {
         case _: OK => true
@@ -57,10 +56,9 @@ private[mysql] final class MysqlJobStore(client: Client, statsReceiver: StatsRec
     val content = BinaryScroogeSerializer.toBytes(job)
     sizeStat.add(StorageUnit.fromBytes(content.length).inKilobytes)
     client
-      .prepare("update jobs set parent = ?, cloned_from = ?, content = ? where name = ?")
+      .prepare("update jobs set parent = ?, content = ? where name = ?")
       .apply(
         job.parent.map(wrap(_)).getOrElse(NullParameter),
-        job.clonedFrom.map(wrap(_)).getOrElse(NullParameter),
         content,
         job.name)
       .map {
@@ -91,11 +89,6 @@ private[mysql] final class MysqlJobStore(client: Client, statsReceiver: StatsRec
         params += parent
         query2 = query2.copy(parent = None)
       }
-    }
-    query.clonedFrom.foreach { clonedFrom =>
-      where += "cloned_from = ?"
-      params += clonedFrom
-      query2 = query2.copy(clonedFrom = None)
     }
 
     val sql = s"select content from jobs where ${if (where.nonEmpty) where.mkString(" and ") else "true"}"

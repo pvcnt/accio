@@ -111,7 +111,6 @@ final class AgentServiceController @Inject()(
       author = args.req.author,
       state = args.req.state.map(_.toSet),
       parent = args.req.parent,
-      clonedFrom = args.req.clonedFrom,
       tags = args.req.tags.toSet.flatten,
       q = args.req.q)
     storage.jobs
