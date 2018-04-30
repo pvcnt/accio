@@ -80,12 +80,6 @@ final class ApiController @Inject()(client: AgentService.MethodPerEndpoint) exte
       }
   }
 
-  get("/api/v1/job/:name/graph") { httpReq: GetJobHttpRequest =>
-    client
-      .getJob(GetJobRequest(httpReq.name))
-      .map(resp => resp.job.steps)
-  }
-
   get("/api/v1/job/:name/logs/:task/:kind") { httpReq: ListLogsHttpRequest =>
     val req = ListLogsRequest(
       job = httpReq.name,
