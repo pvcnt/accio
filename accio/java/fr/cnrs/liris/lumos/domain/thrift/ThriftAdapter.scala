@@ -40,7 +40,6 @@ object ThriftAdapter {
   def toDomain(obj: Job): domain.Job = {
     domain.Job(
       name = obj.name,
-      version = obj.version,
       createTime = new Instant(obj.createTime),
       labels = obj.labels.toMap,
       metadata = obj.metadata.toMap,
@@ -147,7 +146,6 @@ object ThriftAdapter {
   def toThrift(obj: domain.Job): Job = {
     Job(
       name = obj.name,
-      version = obj.version,
       createTime = obj.createTime.millis,
       labels = obj.labels,
       metadata = obj.metadata,

@@ -16,20 +16,15 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.lumos.domain
+package fr.cnrs.liris.lumos.storage.memory
 
-case class Selector(key: String, op: Selector.Op, values: Set[String] = Set.empty)
+import fr.cnrs.liris.lumos.storage.{JobStore, JobStoreSpec}
 
-object Selector {
+/**
+ * Unit tests of [[MemoryJobStore]].
+ */
+class MemoryJobStoreSpec extends JobStoreSpec {
+  behavior of "MemoryJobStore"
 
-  sealed trait Op
-
-  case object In extends Op
-
-  case object NotIn extends Op
-
-  case object Present extends Op
-
-  case object Absent extends Op
-
+  override def createStore: JobStore = MemoryJobStore.empty
 }

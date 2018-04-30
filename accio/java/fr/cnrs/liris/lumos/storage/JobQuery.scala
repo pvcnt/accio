@@ -16,24 +16,30 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.lumos.domain
+package fr.cnrs.liris.lumos.storage
 
-import org.joda.time.Instant
+import fr.cnrs.liris.lumos.domain.{ExecStatus, Job, LabelSelector}
 
-case class Job(
-  name: String = "",
-  createTime: Instant = new Instant(0),
+/**
+ * Query to search for jobs.
+ *
+ * @param owner  Only include jobs owned by a given user.
+ * @param state  Only include jobs whose state belong to those specified.
+ * @param labels Only include jobs whose labels match the given selectors.
+ */
+case class JobQuery(
   owner: Option[String] = None,
-  contact: Option[String] = None,
-  labels: Map[String, String] = Map.empty,
-  metadata: Map[String, String] = Map.empty,
-  inputs: Seq[AttrValue] = Seq.empty,
-  outputs: Seq[AttrValue] = Seq.empty,
-  progress: Int = 0,
-  tasks: Seq[Task] = Seq.empty,
-  status: ExecStatus = ExecStatus(),
-  history: Seq[ExecStatus] = Seq.empty)
+  state: Set[ExecStatus.State] = Set.empty,
+  labels: Set[LabelSelector] = Set.empty) {
 
-object Job {
-  val empty = Job()
+  /**
+   * Check whether a given job matches this query.
+   *
+   * @param job Job.
+   */
+  private[storage] def matches(job: Job): Boolean = {
+    (state.isEmpty || state.contains(job.status.state)) &&
+      owner.forall(job.owner.contains) &&
+      labels.forall(_.matches(job.labels))
+  }
 }

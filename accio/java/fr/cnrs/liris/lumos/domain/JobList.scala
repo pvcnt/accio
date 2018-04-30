@@ -18,22 +18,20 @@
 
 package fr.cnrs.liris.lumos.domain
 
-import org.joda.time.Instant
+/**
+ * Results and total number of jobs.
+ *
+ * @param results    List of jobs.
+ * @param totalCount Total number of jobs.
+ */
+case class JobList(results: Seq[Job], totalCount: Long)
 
-case class Job(
-  name: String = "",
-  createTime: Instant = new Instant(0),
-  owner: Option[String] = None,
-  contact: Option[String] = None,
-  labels: Map[String, String] = Map.empty,
-  metadata: Map[String, String] = Map.empty,
-  inputs: Seq[AttrValue] = Seq.empty,
-  outputs: Seq[AttrValue] = Seq.empty,
-  progress: Int = 0,
-  tasks: Seq[Task] = Seq.empty,
-  status: ExecStatus = ExecStatus(),
-  history: Seq[ExecStatus] = Seq.empty)
-
-object Job {
-  val empty = Job()
+object JobList {
+  def slice(items: Seq[Job], offset: Option[Int], limit: Option[Int]): JobList = {
+    val totalCount = items.size
+    var results = items
+    offset.foreach { offset => results = results.drop(offset) }
+    limit.foreach { limit => results = results.take(limit) }
+    JobList(results, totalCount)
+  }
 }

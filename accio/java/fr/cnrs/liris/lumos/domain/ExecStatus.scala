@@ -30,26 +30,38 @@ object ExecStatus {
 
   sealed trait State {
     def isCompleted: Boolean
+
+    def name: String
   }
 
   case object Pending extends State {
     override def isCompleted = false
+
+    override def name = "Pending"
   }
 
   case object Running extends State {
     override def isCompleted = false
+
+    override def name = "Running"
   }
 
   case object Canceled extends State {
     override def isCompleted = true
+
+    override def name = "Canceled"
   }
 
   case object Successful extends State {
     override def isCompleted = true
+
+    override def name = "Successful"
   }
 
   case object Failed extends State {
     override def isCompleted = true
+
+    override def name = "Failed"
   }
 
 }

@@ -16,24 +16,16 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.lumos.domain
+package fr.cnrs.liris.lumos.storage
 
-import org.joda.time.Instant
+sealed trait WriteResult
 
-case class Job(
-  name: String = "",
-  createTime: Instant = new Instant(0),
-  owner: Option[String] = None,
-  contact: Option[String] = None,
-  labels: Map[String, String] = Map.empty,
-  metadata: Map[String, String] = Map.empty,
-  inputs: Seq[AttrValue] = Seq.empty,
-  outputs: Seq[AttrValue] = Seq.empty,
-  progress: Int = 0,
-  tasks: Seq[Task] = Seq.empty,
-  status: ExecStatus = ExecStatus(),
-  history: Seq[ExecStatus] = Seq.empty)
+object WriteResult {
 
-object Job {
-  val empty = Job()
+  case object Ok extends WriteResult
+
+  case object AlreadyExists extends WriteResult
+
+  case object NotFound extends WriteResult
+
 }

@@ -15,15 +15,15 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_library(
-  name = "domain",
+  name = "storage",
   srcs = glob(["*.scala"]),
   deps = [
+    "//accio/java/fr/cnrs/liris/lumos/storage",
+    "//accio/java/fr/cnrs/liris/lumos/domain",
+    "//accio/java/fr/cnrs/liris/util",
+    "//accio/javatests/fr/cnrs/liris/testing",
     "//3rdparty/jvm/com/github/nscala_time",
-    "//3rdparty/jvm/com/twitter:util_core",
+    "@scalatest//jar:jar",
   ],
-  exports = [
-    "//3rdparty/jvm/com/github/nscala_time",
-    "//3rdparty/jvm/com/twitter:util_core",
-  ],
-  visibility = ["//visibility:public"],
+  visibility = ["//accio/javatests:__subpackages__"],
 )

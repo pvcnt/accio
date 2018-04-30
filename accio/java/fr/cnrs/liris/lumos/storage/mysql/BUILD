@@ -15,15 +15,18 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_library(
-  name = "domain",
+  name = "mysql",
   srcs = glob(["*.scala"]),
   deps = [
-    "//3rdparty/jvm/com/github/nscala_time",
-    "//3rdparty/jvm/com/twitter:util_core",
+    "//accio/java/fr/cnrs/liris/lumos/storage",
+    "//accio/java/fr/cnrs/liris/lumos/domain",
+    "//accio/java/fr/cnrs/liris/lumos/domain/thrift",
+    "//accio/java/fr/cnrs/liris/util/scrooge",
+    "//3rdparty/jvm/com/twitter:finagle_mysql",
+    "//3rdparty/jvm/com/twitter:util_slf4j_api",
   ],
   exports = [
-    "//3rdparty/jvm/com/github/nscala_time",
-    "//3rdparty/jvm/com/twitter:util_core",
+    "//3rdparty/jvm/com/twitter:finagle_mysql",
   ],
   visibility = ["//visibility:public"],
 )

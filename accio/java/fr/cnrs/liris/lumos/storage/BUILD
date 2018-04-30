@@ -15,14 +15,10 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_library(
-  name = "domain",
+  name = "storage",
   srcs = glob(["*.scala"]),
   deps = [
-    "//3rdparty/jvm/com/github/nscala_time",
-    "//3rdparty/jvm/com/twitter:util_core",
-  ],
-  exports = [
-    "//3rdparty/jvm/com/github/nscala_time",
+    "//accio/java/fr/cnrs/liris/lumos/domain",
     "//3rdparty/jvm/com/twitter:util_core",
   ],
   visibility = ["//visibility:public"],

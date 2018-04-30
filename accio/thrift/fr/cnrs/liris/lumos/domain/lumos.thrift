@@ -94,18 +94,17 @@ struct Task {
 
 struct Job {
   1: string name;
-  2: string version;
-  3: i64 create_time;
-  4: optional string owner;
-  5: optional string contact;
-  6: map<string, string> labels;
-  7: map<string, string> metadata;
-  8: list<AttrValue> inputs;
-  9: list<AttrValue> outputs;
-  10: i32 progress;
-  11: list<Task> tasks;
-  12: optional ExecStatus status;
-  13: list<ExecStatus> history;
+  2: i64 create_time;
+  3: optional string owner;
+  4: optional string contact;
+  5: map<string, string> labels;
+  6: map<string, string> metadata;
+  7: list<AttrValue> inputs;
+  8: list<AttrValue> outputs;
+  9: i32 progress;
+  10: list<Task> tasks;
+  11: optional ExecStatus status;
+  12: list<ExecStatus> history;
 }
 
 struct JobEnqueuedEvent {
