@@ -19,9 +19,9 @@
 package fr.cnrs.liris.accio.agent
 
 import com.twitter.finatra.thrift.ThriftServer
-import com.twitter.finatra.thrift.exceptions.FinatraThriftExceptionMapper
 import com.twitter.finatra.thrift.filters._
 import com.twitter.finatra.thrift.routing.ThriftRouter
+import fr.cnrs.liris.finatra.auth.AuthFilter
 import fr.cnrs.liris.locapriv.install.OpsModule
 
 object AgentServerMain extends AgentServer
@@ -38,6 +38,7 @@ class AgentServer extends ThriftServer {
       .filter[StatsFilter]
       .filter[AuthFilter]
       .filter[ExceptionMappingFilter]
+      .exceptionMapper[AgentExceptionMapper]
       .add[AgentServiceController]
   }
 

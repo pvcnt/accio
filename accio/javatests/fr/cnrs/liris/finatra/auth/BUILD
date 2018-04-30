@@ -19,9 +19,8 @@ scala_test(
   srcs = glob(["*.scala"]),
   size = "small",
   deps = [
-    "//accio/java/fr/cnrs/liris/accio/auth",
-    "//accio/java/fr/cnrs/liris/accio/api",
-    "//accio/java/fr/cnrs/liris/accio/webhook",
+    "//accio/java/fr/cnrs/liris/finatra/auth",
+    "//accio/java/fr/cnrs/liris/finatra/webhook",
     "//accio/javatests/fr/cnrs/liris/testing",
     "//accio/javatests/com/twitter/inject",
     "//3rdparty/jvm/com/twitter:util_core",

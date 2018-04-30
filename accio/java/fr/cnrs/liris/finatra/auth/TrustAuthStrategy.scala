@@ -16,22 +16,12 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.auth
+package fr.cnrs.liris.finatra.auth
 
-import com.google.inject.Module
-import com.twitter.inject.CreateTwitterInjector
-import fr.cnrs.liris.testing.UnitSpec
+import com.twitter.util.Future
 
-/**
- * Unit tests for [[AuthModule]].
- */
-class AuthModuleSpec extends UnitSpec with CreateTwitterInjector {
-  behavior of "AuthModule"
-
-  override protected def modules: Seq[Module] = Seq(AuthModule)
-
-  it should "provide an authentication chain" in {
-    val injector = createInjector
-    injector.instance[AuthChain] shouldBe an[AuthChain]
+object TrustAuthStrategy extends AuthStrategy {
+  override def authenticate(credentials: String): Future[Option[UserInfo]] = {
+    Future(Some(UserInfo.parse(credentials)))
   }
 }

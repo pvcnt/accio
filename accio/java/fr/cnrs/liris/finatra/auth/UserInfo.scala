@@ -16,14 +16,12 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.api
+package fr.cnrs.liris.finatra.auth
 
 import com.twitter.finagle.context.Contexts
 import fr.cnrs.liris.util.StringUtils.maybe
 
-case class UserInfo(name: String, email: Option[String] = None, groups: Set[String] = Set.empty) {
-  def toThrift: thrift.User = thrift.User(name, email, groups)
-}
+case class UserInfo(name: String, email: Option[String] = None, groups: Set[String] = Set.empty)
 
 object UserInfo {
   private[this] val key = new Contexts.local.Key[UserInfo]()
@@ -42,6 +40,4 @@ object UserInfo {
         UserInfo(name, maybe(email), groups.split(',').filter(_.nonEmpty).toSet)
     }
   }
-
-  def fromThrift(struct: thrift.User): UserInfo = UserInfo(struct.name, struct.email, struct.groups.toSet)
 }

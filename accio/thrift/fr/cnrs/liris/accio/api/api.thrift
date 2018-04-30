@@ -258,7 +258,7 @@ struct Step {
 struct Job {
   1: string name;
 
-  2: optional User author;
+  2: optional string author;
 
   // Time at which this job has been created.
   3: Timestamp create_time = 0;

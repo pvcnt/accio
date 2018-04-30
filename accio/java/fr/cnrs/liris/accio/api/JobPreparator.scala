@@ -27,7 +27,7 @@ import scala.util.Random
 
 @Singleton
 final class JobPreparator @Inject()(opRegistry: OpRegistry) {
-  def prepare(job: Job, user: Option[UserInfo]): Job = {
+  def prepare(job: Job, user: Option[String]): Job = {
     // https://stackoverflow.com/questions/4267475/generating-8-character-only-uuids
     val name = if (job.name.isEmpty) UUID.randomUUID().getLeastSignificantBits.toHexString else job.name
     val createTime = if (job.createTime == 0) System.currentTimeMillis() else job.createTime
@@ -37,7 +37,7 @@ final class JobPreparator @Inject()(opRegistry: OpRegistry) {
     job.copy(
       name = name,
       createTime = createTime,
-      author = user.map(_.toThrift).orElse(job.author),
+      author = user.orElse(job.author),
       params = params,
       parent = None,
       seed = seed,

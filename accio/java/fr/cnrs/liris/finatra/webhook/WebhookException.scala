@@ -16,13 +16,14 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.auth
+package fr.cnrs.liris.finatra.webhook
 
-import com.twitter.util.Future
-import fr.cnrs.liris.accio.api.UserInfo
+import com.twitter.finagle.http.Response
 
-object TrustAuthStrategy extends AuthStrategy {
-  override def authenticate(credentials: String): Future[Option[UserInfo]] = {
-    Future(Some(UserInfo.parse(credentials)))
-  }
-}
+/**
+ * Exception thrown when a call to a webhook fails.
+ *
+ * @param response HTTP response.
+ */
+final class WebhookException(val response: Response)
+  extends RuntimeException(s"Unexpected webhook status: ${response.status.code} (${response.contentString})")

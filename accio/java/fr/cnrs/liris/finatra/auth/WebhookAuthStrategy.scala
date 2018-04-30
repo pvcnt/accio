@@ -16,15 +16,14 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.auth
+package fr.cnrs.liris.finatra.auth
 
 import java.nio.file.Path
 
 import com.twitter.util.logging.Logging
 import com.twitter.util.{Duration, Future}
-import fr.cnrs.liris.accio.api.UserInfo
-import fr.cnrs.liris.accio.auth.WebhookAuthStrategy.{ReviewRequest, ReviewResponse}
-import fr.cnrs.liris.accio.webhook.Webhook
+import fr.cnrs.liris.finatra.auth.WebhookAuthStrategy.{ReviewRequest, ReviewResponse}
+import fr.cnrs.liris.finatra.webhook.Webhook
 import fr.cnrs.liris.util.cache.CacheBuilder
 
 final class WebhookAuthStrategy(webhook: Webhook[ReviewResponse], cacheTtl: Duration)

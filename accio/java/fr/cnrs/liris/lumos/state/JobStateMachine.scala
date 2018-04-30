@@ -46,8 +46,10 @@ object JobStateMachine {
     if (job.name.nonEmpty) {
       Illegal(Seq(s"Job already exists"))
     } else {
+      // https://stackoverflow.com/questions/4267475/generating-8-character-only-uuids
+      val name = if (job.name.isEmpty) UUID.randomUUID().getLeastSignificantBits.toHexString else job.name
       Ok(Job(
-        name = if (job.name.isEmpty) UUID.randomUUID().toString else job.name,
+        name = name,
         createTime = time,
         owner = job.owner,
         contact = job.contact,

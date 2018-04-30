@@ -28,6 +28,7 @@ import fr.cnrs.liris.accio.scheduler.{Process, Scheduler}
 import fr.cnrs.liris.accio.state.StateManager
 import fr.cnrs.liris.accio.storage.{JobStore, Storage}
 import fr.cnrs.liris.accio.version.Version
+import fr.cnrs.liris.finatra.auth.UserInfo
 
 @Singleton
 final class AgentServiceController @Inject()(
@@ -68,14 +69,14 @@ final class AgentServiceController @Inject()(
 
   override val validateJob = handle(ValidateJob) { args: ValidateJob.Args =>
     Future {
-      val job = jobPreparator.prepare(args.req.job, UserInfo.current)
+      val job = jobPreparator.prepare(args.req.job, UserInfo.current.map(_.name))
       val result = jobValidator.validate(job)
       ValidateJobResponse(result.errors, result.warnings)
     }
   }
 
   override val createJob = handle(CreateJob) { args: CreateJob.Args =>
-    val job = jobPreparator.prepare(args.req.job, UserInfo.current)
+    val job = jobPreparator.prepare(args.req.job, UserInfo.current.map(_.name))
     val result = jobValidator.validate(job)
     if (result.isInvalid) {
       Future.exception(Errors.badRequest("job", result.errors, result.warnings))

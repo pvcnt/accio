@@ -16,20 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.auth
+package fr.cnrs.liris.finatra.auth
 
-import com.twitter.util.Await
-import fr.cnrs.liris.accio.api.UserInfo
-import fr.cnrs.liris.testing.{CreateTmpDirectory, UnitSpec}
-
-/**
- * Unit tests for [[TrustAuthStrategy]].
- */
-class TrustAuthStrategySpec extends UnitSpec with CreateTmpDirectory {
-  behavior of "TrustAuthStrategy"
-
-  it should "allow a valid client identifier" in {
-    Await.result(TrustAuthStrategy.authenticate("john")) shouldBe Some(UserInfo("john"))
-    Await.result(TrustAuthStrategy.authenticate("john::foo,bar")) shouldBe Some(UserInfo("john", None, Set("foo", "bar")))
-  }
-}
+case class UnauthenticatedException(credentials: Option[String])
+  extends Exception(s"Provided credentials could not authenticate the client: ${credentials.getOrElse("<none>")}")

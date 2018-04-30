@@ -23,17 +23,18 @@ import com.twitter.inject.utils.Handler
 import com.twitter.util.logging.Logging
 import com.twitter.util.{Return, Throw}
 import fr.cnrs.liris.accio.agent.AgentService.ListJobs
+import fr.cnrs.liris.finatra.auth.AuthFilter
 import javax.inject.Inject
 
 final class AgentWarmupHandler @Inject()(warmup: ThriftWarmup) extends Handler with Logging {
   override def handle(): Unit = {
     try {
-      //clientId.asCurrent {
-      warmup.send(ListJobs, ListJobs.Args(ListJobsRequest()), times = 3) {
-        case Return(_) => // Warmup request was successful.
-        case Throw(e) => logger.warn("Warmup request failed", e)
+      AuthFilter.MasterClientId.asCurrent {
+        warmup.send(ListJobs, ListJobs.Args(ListJobsRequest()), times = 3) {
+          case Return(_) => // Warmup request was successful.
+          case Throw(e) => logger.warn("Warmup request failed", e)
+        }
       }
-      //}
     } catch {
       case e: Throwable =>
         // Here we don't want a warmup failure to prevent server start-up --
@@ -43,8 +44,6 @@ final class AgentWarmupHandler @Inject()(warmup: ThriftWarmup) extends Handler w
         // warm-up and prevent the server from starting. So we simply log
         // the error message here.
         logger.error(e.getMessage, e)
-    } finally {
-      warmup.close()
     }
     logger.info("Warm-up done.")
   }

@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.agent
 import com.google.inject.{Provides, Singleton}
 import com.twitter.inject.TwitterModule
 import fr.cnrs.liris.accio.api.OpRegistry
-import fr.cnrs.liris.accio.auth.AuthModule
+import fr.cnrs.liris.finatra.auth.AuthModule
 import fr.cnrs.liris.accio.config.ConfigModule
 import fr.cnrs.liris.accio.runtime.OpMeta
 import fr.cnrs.liris.accio.scheduler.install.SchedulerModule

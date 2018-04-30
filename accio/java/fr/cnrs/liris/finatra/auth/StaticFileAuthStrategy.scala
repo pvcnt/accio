@@ -16,13 +16,12 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.auth
+package fr.cnrs.liris.finatra.auth
 
 import java.nio.file.Path
 
 import com.twitter.util.Future
 import com.twitter.util.logging.Logging
-import fr.cnrs.liris.accio.api.UserInfo
 import fr.cnrs.liris.util.StringUtils.maybe
 
 import scala.io.Source

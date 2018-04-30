@@ -16,14 +16,13 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.auth
+package fr.cnrs.liris.finatra.auth
 
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.{Request, Response, Status}
 import com.twitter.util.{Await, Duration, Future}
-import fr.cnrs.liris.accio.api.UserInfo
-import fr.cnrs.liris.accio.auth.WebhookAuthStrategy.ReviewResponse
-import fr.cnrs.liris.accio.webhook.Webhook
+import fr.cnrs.liris.finatra.auth.WebhookAuthStrategy.ReviewResponse
+import fr.cnrs.liris.finatra.webhook.Webhook
 import fr.cnrs.liris.testing.UnitSpec
 import org.scalatest.BeforeAndAfter
 

@@ -16,10 +16,9 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.auth
+package fr.cnrs.liris.finatra.auth
 
 import com.twitter.util.Future
-import fr.cnrs.liris.accio.api.UserInfo
 
 /**
  * Tries to determine whether a given client identifier is allowed by using a sequence of

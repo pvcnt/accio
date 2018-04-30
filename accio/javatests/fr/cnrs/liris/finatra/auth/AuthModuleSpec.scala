@@ -16,25 +16,22 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.lumos.server
+package fr.cnrs.liris.finatra.auth
 
-import com.google.inject.{Inject, Singleton}
-import com.twitter.finagle.Service
-import com.twitter.finatra.thrift.Controller
-import com.twitter.util.Future
-import fr.cnrs.liris.lumos.server.LumosService._
+import com.google.inject.Module
+import com.twitter.inject.CreateTwitterInjector
+import fr.cnrs.liris.testing.UnitSpec
 
-@Singleton
-final class AgentServiceController @Inject()()
-  extends Controller with LumosService.ServicePerEndpoint {
+/**
+ * Unit tests for [[AuthModule]].
+ */
+class AuthModuleSpec extends UnitSpec with CreateTwitterInjector {
+  behavior of "AuthModule"
 
-  override val getInfo = handle(GetInfo) { args: GetInfo.Args =>
-    Future.value(GetInfoResponse("devel"))
+  override protected def modules: Seq[Module] = Seq(AuthModule)
+
+  it should "provide an authentication chain" in {
+    val injector = createInjector
+    injector.instance[AuthChain] shouldBe an[AuthChain]
   }
-
-  override def pushEvent: Service[PushEvent.Args, PushEventResponse] = ???
-
-  override def getJob: Service[GetJob.Args, GetJobResponse] = ???
-
-  override def listJobs: Service[ListJobs.Args, ListJobsResponse] = ???
 }

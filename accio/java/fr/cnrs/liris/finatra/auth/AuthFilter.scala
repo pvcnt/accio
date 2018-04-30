@@ -16,22 +16,32 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.agent
+package fr.cnrs.liris.finatra.auth
+
+import java.util.UUID
 
 import com.google.inject.{Inject, Singleton}
 import com.twitter.finagle.Service
+import com.twitter.finagle.thrift.ClientId
 import com.twitter.finatra.thrift.{ThriftFilter, ThriftRequest}
 import com.twitter.util.Future
-import fr.cnrs.liris.accio.api.{Errors, UserInfo}
-import fr.cnrs.liris.accio.auth.AuthChain
 
 @Singleton
 final class AuthFilter @Inject()(chain: AuthChain) extends ThriftFilter {
   override def apply[T, Rep](request: ThriftRequest[T], service: Service[ThriftRequest[T], Rep]): Future[Rep] = {
-    val credentials = request.clientId.map(_.name)
-    chain.authenticate(credentials).flatMap {
-      case None => Future.exception(Errors.unauthenticated)
-      case Some(userInfo) => UserInfo.let(userInfo)(service(request))
+    if (request.clientId.contains(AuthFilter.MasterClientId)) {
+      UserInfo.let(AuthFilter.MasterUserInfo)(service(request))
+    } else {
+      val credentials = request.clientId.map(_.name)
+      chain.authenticate(credentials).flatMap {
+        case None => Future.exception(UnauthenticatedException(credentials))
+        case Some(userInfo) => UserInfo.let(userInfo)(service(request))
+      }
     }
   }
+}
+
+object AuthFilter {
+  val MasterClientId = ClientId("master:" + UUID.randomUUID().toString.replace("-", ""))
+  val MasterUserInfo = UserInfo("system:master", None, Set("system:master", "system:authenticated"))
 }

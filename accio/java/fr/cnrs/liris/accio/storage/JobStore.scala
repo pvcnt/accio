@@ -97,11 +97,11 @@ object JobStore {
         case Some(str) =>
           str.split(' ').map(_.trim).forall { s =>
             title.exists(_.contains(s)) ||
-              job.author.exists(_.name == s) ||
+              job.author.contains(s) ||
               job.tags.contains(s)
           }
         case None =>
-          author.forall(s => job.author.exists(_.name == s)) &&
+          author.forall(s => job.author.contains(s)) &&
             title.forall(s => job.title.exists(_.contains(s))) &&
             tags.forall(s => job.tags.contains(s))
       }

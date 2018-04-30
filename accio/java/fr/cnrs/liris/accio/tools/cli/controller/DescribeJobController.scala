@@ -49,7 +49,7 @@ class DescribeJobController extends DescribeController[(Job, Seq[Job])] with For
       out.outErr.printOutLn(s"${padTo("Parent Id", colWidth)} $parentId")
     }
     out.outErr.printOutLn(s"${padTo("Created", colWidth)} ${format(Time.fromMilliseconds(job.createTime))}")
-    out.outErr.printOutLn(s"${padTo("Author", colWidth)} ${job.author.map(Utils.toString).getOrElse("<none>")}")
+    out.outErr.printOutLn(s"${padTo("Author", colWidth)} ${job.author.getOrElse("<none>")}")
     out.outErr.printOutLn(s"${padTo("Title", colWidth)} ${job.title.getOrElse("<untitled>")}")
     out.outErr.printOutLn(s"${padTo("Tags", colWidth)} ${if (job.tags.nonEmpty) job.tags.mkString(", ") else "<none>"}")
     out.outErr.printOutLn(s"${padTo("Seed", colWidth)} ${job.seed}")

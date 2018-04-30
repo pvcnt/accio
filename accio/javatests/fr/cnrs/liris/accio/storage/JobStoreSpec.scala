@@ -36,7 +36,7 @@ private[storage] abstract class JobStoreSpec extends UnitSpec with BeforeAndAfte
     Job(
       name = "exp1",
       createTime = now,
-      author = Some(User("me")),
+      author = Some("me"),
       title = Some("foo bar workflow"),
       tags = Set("foo", "bar"),
       steps = Seq(
@@ -55,13 +55,13 @@ private[storage] abstract class JobStoreSpec extends UnitSpec with BeforeAndAfte
       name = "exp2",
       createTime = now + 10,
       title = Some("other workflow"),
-      author = Some(User("him")),
+      author = Some("him"),
       parent = Some("exp1"),
       tags = Set("bar", "foo", "bar bar")),
     Job(
       name = "exp3",
       createTime = now + 20,
-      author = Some(User("him")),
+      author = Some("him"),
       parent = Some("exp1"),
       steps = Seq(),
       status = JobStatus(state = ExecState.Running)),

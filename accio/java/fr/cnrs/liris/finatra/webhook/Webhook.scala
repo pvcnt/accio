@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.webhook
+package fr.cnrs.liris.finatra.webhook
 
 import java.nio.file.Path
 

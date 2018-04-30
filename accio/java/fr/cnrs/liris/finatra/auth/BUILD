@@ -18,11 +18,11 @@ scala_library(
   name = "auth",
   srcs = glob(["*.scala"]),
   deps = [
-    "//accio/java/fr/cnrs/liris/accio/api",
-    "//accio/java/fr/cnrs/liris/accio/webhook",
+    "//accio/java/fr/cnrs/liris/finatra/webhook",
     "//accio/java/fr/cnrs/liris/util/cache",
     "//accio/java/fr/cnrs/liris/util",
     "//3rdparty/jvm/com/twitter:finatra_jackson",
+    "//3rdparty/jvm/com/twitter:finatra_thrift",
     "//3rdparty/jvm/com/twitter:util_slf4j_api",
     "//3rdparty/jvm/com/twitter:inject_core",
     "//3rdparty/jvm/com/twitter:util_core",

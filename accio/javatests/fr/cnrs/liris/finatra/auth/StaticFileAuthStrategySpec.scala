@@ -16,10 +16,9 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.auth
+package fr.cnrs.liris.finatra.auth
 
 import com.twitter.util.Await
-import fr.cnrs.liris.accio.api.UserInfo
 import fr.cnrs.liris.testing.{CreateTmpDirectory, UnitSpec}
 
 /**
@@ -29,7 +28,7 @@ class StaticFileAuthStrategySpec extends UnitSpec with CreateTmpDirectory {
   behavior of "StaticAuthStrategy"
 
   private lazy val authenticator = {
-    val path = copyResource("fr/cnrs/liris/accio/auth/static_file.txt")
+    val path = copyResource("fr/cnrs/liris/finatra/auth/static_file.txt")
     StaticFileAuthStrategy.fromFile(path)
   }
 
