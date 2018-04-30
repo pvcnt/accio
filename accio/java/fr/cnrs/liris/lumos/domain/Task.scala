@@ -20,8 +20,8 @@ package fr.cnrs.liris.lumos.domain
 
 case class Task(
   name: String,
+  mnemonic: Option[String] = None,
   dependencies: Set[String] = Set.empty,
-  metadata: Map[String, String] = Map.empty,
   links: Seq[Link] = Seq.empty,
   exitCode: Option[Int] = None,
   metrics: Seq[MetricValue] = Seq.empty,

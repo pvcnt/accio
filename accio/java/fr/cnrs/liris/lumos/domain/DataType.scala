@@ -18,11 +18,24 @@
 
 package fr.cnrs.liris.lumos.domain
 
-import com.twitter.util.StorageUnit
+sealed trait DataType
 
-case class RemoteFile(
-  uri: String,
-  contentType: String,
-  format: Option[String] = None,
-  size: Option[StorageUnit] = None,
-  sha256: Option[String] = None)
+object DataType {
+
+  case object Int extends DataType
+
+  case object Long extends DataType
+
+  case object Float extends DataType
+
+  case object Double extends DataType
+
+  case object String extends DataType
+
+  case object Bool extends DataType
+
+  case object Dataset extends DataType
+
+  case object File extends DataType
+
+}

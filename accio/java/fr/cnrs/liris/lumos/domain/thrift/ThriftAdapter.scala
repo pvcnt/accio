@@ -1,0 +1,240 @@
+/*
+ * Accio is a platform to launch computer science experiments.
+ * Copyright (C) 2016-2018 Vincent Primault <v.primault@ucl.ac.uk>
+ *
+ * Accio is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Accio is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package fr.cnrs.liris.lumos.domain.thrift
+
+import com.github.nscala_time.time.Imports._
+import com.twitter.util.StorageUnit
+import fr.cnrs.liris.lumos.domain
+import org.joda.time.Instant
+
+object ThriftAdapter {
+  def toDomain(obj: Value): domain.Value =
+    obj match {
+      case Value.Int(v) => domain.Value.Int(v)
+      case Value.Long(v) => domain.Value.Long(v)
+      case Value.Float(v) => domain.Value.Float(v.toFloat)
+      case Value.Dbl(v) => domain.Value.Double(v)
+      case Value.Boolean(v) => domain.Value.Bool(v)
+      case Value.Str(v) => domain.Value.String(v)
+      case Value.Dataset(v) => domain.Value.Dataset(toDomain(v))
+      case Value.File(v) => domain.Value.File(toDomain(v))
+      case Value.UnknownUnionField(_) => throw new IllegalArgumentException("Illegal value")
+    }
+
+  def toDomain(obj: Job): domain.Job = {
+    domain.Job(
+      name = obj.name,
+      version = obj.version,
+      createTime = new Instant(obj.createTime),
+      labels = obj.labels.toMap,
+      metadata = obj.metadata.toMap,
+      owner = obj.owner,
+      contact = obj.contact,
+      inputs = obj.inputs.map(toDomain),
+      outputs = obj.outputs.map(toDomain),
+      tasks = obj.tasks.map(toDomain),
+      progress = obj.progress,
+      status = obj.status.map(toDomain).getOrElse(domain.ExecStatus()),
+      history = obj.history.map(toDomain))
+  }
+
+  private def toDomain(obj: RemoteFile): domain.RemoteFile = {
+    domain.RemoteFile(
+      uri = obj.uri,
+      contentType = obj.contentType,
+      format = obj.format,
+      size = obj.sizeKb.map(StorageUnit.fromKilobytes),
+      sha256 = obj.sha256)
+  }
+
+  private def toDomain(obj: Task): domain.Task = {
+    domain.Task(
+      name = obj.name,
+      mnemonic = obj.mnemonic,
+      dependencies = obj.dependencies.toSet,
+      status = obj.status.map(toDomain).getOrElse(domain.ExecStatus()),
+      history = obj.history.map(toDomain),
+      exitCode = obj.exitCode,
+      metrics = obj.metrics.map(toDomain),
+      links = obj.links.map(toDomain))
+  }
+
+  def toDomain(obj: Event): domain.Event = {
+    val payload = obj.payload match {
+      case EventPayload.JobEnqueued(e) => domain.Event.JobEnqueued(toDomain(e.job))
+      case EventPayload.JobExpanded(e) => domain.Event.JobExpanded(e.tasks.map(toDomain))
+      case EventPayload.JobStarted(_) => domain.Event.JobStarted
+      case EventPayload.JobCanceled(_) => domain.Event.JobCanceled
+      case EventPayload.JobCompleted(e) => domain.Event.JobCompleted(e.outputs.map(toDomain))
+      case EventPayload.TaskStarted(e) => domain.Event.TaskStarted(e.name, e.links.map(toDomain))
+      case EventPayload.TaskCompleted(e) =>
+        domain.Event.TaskCompleted(e.name, e.exitCode, e.metrics.map(toDomain))
+      case EventPayload.UnknownUnionField(_) => throw new IllegalArgumentException("Illegal value")
+    }
+    domain.Event(obj.parent, obj.sequence, new Instant(obj.time), payload)
+  }
+
+  private def toDomain(obj: ExecStatus): domain.ExecStatus = {
+    domain.ExecStatus(
+      state = toDomain(obj.state),
+      time = new Instant(obj.time),
+      reason = obj.reason,
+      message = obj.message)
+  }
+
+  private def toDomain(obj: ExecState): domain.ExecStatus.State =
+    obj match {
+      case ExecState.Pending => domain.ExecStatus.Pending
+      case ExecState.Running => domain.ExecStatus.Running
+      case ExecState.Successful => domain.ExecStatus.Successful
+      case ExecState.Failed => domain.ExecStatus.Failed
+      case ExecState.Canceled => domain.ExecStatus.Canceled
+      case ExecState.EnumUnknownExecState(_) => throw new IllegalArgumentException("Illegal value")
+    }
+
+  private def toDomain(obj: DataType): domain.DataType =
+    obj match {
+      case DataType.Int => domain.DataType.Int
+      case DataType.Long => domain.DataType.Long
+      case DataType.Float => domain.DataType.Float
+      case DataType.Double => domain.DataType.Double
+      case DataType.String => domain.DataType.String
+      case DataType.Boolean => domain.DataType.Bool
+      case DataType.Blob => domain.DataType.File
+      case DataType.Dataset => domain.DataType.Dataset
+      case DataType.EnumUnknownDataType(_) => throw new IllegalArgumentException("Illegal value")
+    }
+
+  private def toDomain(obj: Link): domain.Link = domain.Link(obj.title, obj.url)
+
+  private def toDomain(obj: AttrValue): domain.AttrValue = {
+    domain.AttrValue(obj.name, toDomain(obj.dataType), toDomain(obj.value), obj.aspects.toSet)
+  }
+
+  private def toDomain(obj: MetricValue): domain.MetricValue = {
+    domain.MetricValue(obj.name, obj.value, obj.aspects.toSet)
+  }
+
+  def toThrift(obj: domain.Value): Value = {
+    obj match {
+      case domain.Value.Int(v) => Value.Int(v)
+      case domain.Value.Long(v) => Value.Long(v)
+      case domain.Value.Float(v) => Value.Float(v)
+      case domain.Value.Double(v) => Value.Dbl(v)
+      case domain.Value.String(v) => Value.Str(v)
+      case domain.Value.Bool(v) => Value.Boolean(v)
+      case domain.Value.File(v) => Value.File(toThrift(v))
+      case domain.Value.Dataset(v) => Value.Dataset(toThrift(v))
+    }
+  }
+
+  def toThrift(obj: domain.Job): Job = {
+    Job(
+      name = obj.name,
+      version = obj.version,
+      createTime = obj.createTime.millis,
+      labels = obj.labels,
+      metadata = obj.metadata,
+      owner = obj.owner,
+      contact = obj.contact,
+      inputs = obj.inputs.map(toThrift),
+      outputs = obj.outputs.map(toThrift),
+      progress = obj.progress,
+      status = Some(toThrift(obj.status)),
+      history = obj.history.map(toThrift))
+  }
+
+  def toThrift(obj: domain.Event): Event = {
+    val payload = obj.payload match {
+      case e: domain.Event.JobEnqueued =>
+        EventPayload.JobEnqueued(JobEnqueuedEvent(toThrift(e.job)))
+      case e: domain.Event.JobExpanded =>
+        EventPayload.JobExpanded(JobExpandedEvent(e.tasks.map(toThrift)))
+      case domain.Event.JobStarted => EventPayload.JobStarted(JobStartedEvent())
+      case domain.Event.JobCanceled => EventPayload.JobCanceled(JobCanceledEvent())
+      case e: domain.Event.JobCompleted =>
+        EventPayload.JobCompleted(JobCompletedEvent(e.outputs.map(toThrift)))
+      case e: domain.Event.TaskStarted =>
+        EventPayload.TaskStarted(TaskStartedEvent(e.name, e.links.map(toThrift)))
+      case e: domain.Event.TaskCompleted =>
+        EventPayload.TaskCompleted(TaskCompletedEvent(e.name, e.exitCode, e.metrics.map(toThrift)))
+    }
+    Event(obj.parent, obj.sequence, obj.time.millis, payload)
+  }
+
+  private def toThrift(obj: domain.Task): Task = {
+    Task(
+      name = obj.name,
+      mnemonic = obj.mnemonic,
+      dependencies = obj.dependencies,
+      exitCode = obj.exitCode,
+      metrics = obj.metrics.map(toThrift),
+      links = obj.links.map(toThrift),
+      status = Some(toThrift(obj.status)),
+      history = obj.history.map(toThrift))
+  }
+
+  private def toThrift(obj: domain.DataType): DataType =
+    obj match {
+      case domain.DataType.Int => DataType.Int
+      case domain.DataType.Long => DataType.Long
+      case domain.DataType.Float => DataType.Float
+      case domain.DataType.Double => DataType.Double
+      case domain.DataType.String => DataType.String
+      case domain.DataType.Bool => DataType.Boolean
+      case domain.DataType.File => DataType.Blob
+      case domain.DataType.Dataset => DataType.Dataset
+    }
+
+  private def toThrift(obj: domain.ExecStatus): ExecStatus = {
+    ExecStatus(
+      state = toThrift(obj.state),
+      time = obj.time.millis,
+      reason = obj.reason,
+      message = obj.reason)
+  }
+
+  private def toThrift(obj: domain.ExecStatus.State): ExecState =
+    obj match {
+      case domain.ExecStatus.Pending => ExecState.Pending
+      case domain.ExecStatus.Running => ExecState.Running
+      case domain.ExecStatus.Successful => ExecState.Successful
+      case domain.ExecStatus.Failed => ExecState.Failed
+      case domain.ExecStatus.Canceled => ExecState.Canceled
+    }
+
+  private def toThrift(obj: domain.Link): Link = Link(obj.title, obj.url)
+
+  private def toThrift(obj: domain.AttrValue): AttrValue = {
+    AttrValue(obj.name, toThrift(obj.dataType), toThrift(obj.value), obj.aspects)
+  }
+
+  private def toThrift(obj: domain.MetricValue): MetricValue = {
+    MetricValue(obj.name, obj.value, obj.aspects)
+  }
+
+  private def toThrift(obj: domain.RemoteFile): RemoteFile = {
+    RemoteFile(
+      uri = obj.uri,
+      contentType = obj.contentType,
+      format = obj.format,
+      sizeKb = obj.size.map(_.inKilobytes),
+      sha256 = obj.sha256)
+  }
+}

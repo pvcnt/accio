@@ -25,6 +25,7 @@ struct FieldViolation {
   // A path leading to a field in the request body, as a dot-separated sequence of field names.
   2: string field;
 }
+
 enum ErrorCode {
   UNKNONWN = 1;
   NOT_FOUND = 2;

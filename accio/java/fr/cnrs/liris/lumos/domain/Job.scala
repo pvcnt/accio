@@ -22,18 +22,19 @@ import org.joda.time.Instant
 
 case class Job(
   name: String = "",
+  version: String = "",
   createTime: Instant = new Instant(0),
-  owner: Owner = Owner(),
+  owner: Option[String] = None,
+  contact: Option[String] = None,
   labels: Map[String, String] = Map.empty,
   metadata: Map[String, String] = Map.empty,
   inputs: Seq[AttrValue] = Seq.empty,
   outputs: Seq[AttrValue] = Seq.empty,
+  progress: Int = 0,
   tasks: Seq[Task] = Seq.empty,
   status: ExecStatus = ExecStatus(),
   history: Seq[ExecStatus] = Seq.empty)
 
-case class Owner(role: Option[String] = None, content: Option[String] = None)
-
-
-
-
+object Job {
+  val empty = Job()
+}

@@ -16,13 +16,24 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.lumos.domain
+package fr.cnrs.liris.lumos.server
 
-import com.twitter.util.StorageUnit
+import com.google.inject.{Inject, Singleton}
+import com.twitter.finagle.Service
+import com.twitter.finatra.thrift.Controller
+import com.twitter.util.Future
+import fr.cnrs.liris.lumos.server.LumosService._
 
-case class RemoteFile(
-  uri: String,
-  contentType: String,
-  format: Option[String] = None,
-  size: Option[StorageUnit] = None,
-  sha256: Option[String] = None)
+@Singleton
+final class AgentServiceController @Inject()()
+  extends Controller with LumosService.ServicePerEndpoint {
+  override val getInfo = handle(GetInfo) { args: GetInfo.Args =>
+    Future.value(GetInfoResponse("devel"))
+  }
+
+  override def pushEvent: Service[PushEvent.Args, PushEventResponse] = ???
+
+  override def getJob: Service[GetJob.Args, GetJobResponse] = ???
+
+  override def listJobs: Service[ListJobs.Args, ListJobsResponse] = ???
+}

@@ -18,11 +18,26 @@
 
 package fr.cnrs.liris.lumos.domain
 
-import com.twitter.util.StorageUnit
+import org.joda.time.Instant
 
-case class RemoteFile(
-  uri: String,
-  contentType: String,
-  format: Option[String] = None,
-  size: Option[StorageUnit] = None,
-  sha256: Option[String] = None)
+case class Event(parent: String, sequence: Long, time: Instant, payload: Event.Payload)
+
+object Event {
+
+  sealed trait Payload
+
+  case class JobEnqueued(job: Job) extends Payload
+
+  case class JobExpanded(tasks: Seq[Task]) extends Payload
+
+  case object JobStarted extends Payload
+
+  case object JobCanceled extends Payload
+
+  case class JobCompleted(outputs: Seq[AttrValue] = Seq.empty) extends Payload
+
+  case class TaskStarted(name: String, links: Seq[Link] = Seq.empty) extends Payload
+
+  case class TaskCompleted(name: String, exitCode: Int, metrics: Seq[MetricValue] = Seq.empty) extends Payload
+
+}

@@ -18,50 +18,120 @@
 
 package fr.cnrs.liris.lumos.domain
 
+import com.twitter.util.Try
+
 sealed trait Value {
   def v: Any
 
-  def dataType: Value.DataType
+  def cast(to: DataType): Option[Value]
+
+  def dataType: DataType
 }
 
 object Value {
 
-  sealed trait DataType
+  case class Int(v: scala.Int) extends Value {
+    override def dataType: DataType = DataType.Int
 
-  case object Integer extends DataType
-
-  case object Number extends DataType
-
-  case object String extends DataType
-
-  case object Boolean extends DataType
-
-  case object Dataset extends DataType
-
-  case object Blob extends DataType
-
-  case class Integer(v: Long) extends Value {
-    override def dataType: DataType = Integer
+    override def cast(to: DataType): Option[Value] =
+      to match {
+        case DataType.Long => Some(Long(v))
+        case DataType.Float => Some(Float(v))
+        case DataType.Double => Some(Double(v))
+        case DataType.String => Some(String(v.toString))
+        case DataType.Int => Some(this)
+        case _ => None
+      }
   }
 
-  case class Number(v: Double) extends Value {
-    override def dataType: DataType = Number
+  case class Long(v: scala.Long) extends Value {
+    override def dataType: DataType = DataType.Long
+
+    override def cast(to: DataType): Option[Value] =
+      to match {
+        case DataType.Float => Some(Float(v))
+        case DataType.Double => Some(Double(v))
+        case DataType.String => Some(String(v.toString))
+        case DataType.Long => Some(this)
+        case _ => None
+      }
+  }
+
+  case class Float(v: scala.Float) extends Value {
+    override def dataType: DataType = DataType.Float
+
+    override def cast(to: DataType): Option[Value] =
+      to match {
+        case DataType.Double => Some(Double(v))
+        case DataType.String => Some(String(v.toString))
+        case DataType.Float => Some(this)
+        case _ => None
+      }
+  }
+
+  case class Double(v: scala.Double) extends Value {
+    override def dataType: DataType = DataType.Double
+
+    override def cast(to: DataType): Option[Value] =
+      to match {
+        case DataType.String => Some(String(v.toString))
+        case DataType.Double => Some(this)
+        case _ => None
+      }
   }
 
   case class String(v: Predef.String) extends Value {
-    override def dataType: DataType = String
+    override def dataType: DataType = DataType.String
+
+    override def cast(to: DataType): Option[Value] =
+      to match {
+        case DataType.Int => Try(v.toInt).toOption.map(Value.Int)
+        case DataType.Long => Try(v.toLong).toOption.map(Value.Long)
+        case DataType.Float => Try(v.toFloat).toOption.map(Value.Float)
+        case DataType.Double => Try(v.toDouble).toOption.map(Value.Double)
+        case DataType.Bool =>
+          v match {
+            case "true" | "t" | "yes" | "y" | "1" => Some(Value.True)
+            case "false" | "f" | "no" | "n" | "0" => Some(Value.False)
+            case _ => None
+          }
+        case DataType.String => Some(this)
+        case _ => None
+      }
   }
 
-  case class Boolean(v: scala.Boolean) extends Value {
-    override def dataType: DataType = Boolean
+  case class Bool(v: Boolean) extends Value {
+    override def dataType: DataType = DataType.Bool
+
+    override def cast(to: DataType): Option[Value] =
+      to match {
+        case DataType.String => Some(String(v.toString))
+        case _ => None
+      }
   }
 
-  case class Blob(v: RemoteFile) extends Value {
-    override def dataType: DataType = Blob
+  val True = Bool(true)
+  val False = Bool(true)
+
+  case class File(v: RemoteFile) extends Value {
+    override def dataType: DataType = DataType.File
+
+    override def cast(to: DataType): Option[Value] =
+      to match {
+        case DataType.File => Some(this)
+        case _ => None
+      }
   }
 
   case class Dataset(v: RemoteFile) extends Value {
-    override def dataType: DataType = Dataset
+    override def dataType: DataType = DataType.Dataset
+
+    override def cast(to: DataType): Option[Value] =
+      to match {
+        case DataType.File => Some(File(v))
+        case DataType.Dataset => Some(this)
+        case _ => None
+      }
   }
 
 }
