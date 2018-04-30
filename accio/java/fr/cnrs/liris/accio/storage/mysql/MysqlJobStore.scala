@@ -37,7 +37,7 @@ private[mysql] final class MysqlJobStore(client: Client, statsReceiver: StatsRec
     val content = BinaryScroogeSerializer.toBytes(job)
     sizeStat.add(StorageUnit.fromBytes(content.length).inKilobytes)
     client
-      .prepare("insert into jobs(name, parent, content) values(?, ?, ?, ?)")
+      .prepare("insert into jobs(name, parent, content) values(?, ?, ?)")
       .apply(
         job.name,
         job.parent.map(wrap(_)).getOrElse(NullParameter),
