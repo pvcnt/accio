@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.lumos.domain
 
-case class LabelSelector(key: String, op: LabelSelector.Op, values: Set[String] = Set.empty) {
+case class LabelSelector(key: String, op: LabelSelector.Op, values: Set[String]) {
   def matches(labels: Map[String, String]): Boolean = op.matches(labels.get(key), values)
 }
 
@@ -47,6 +47,18 @@ object LabelSelector {
   case object Absent extends Op {
     override def matches(value: Option[String], values: Set[String]): Boolean = value.isEmpty
   }
+
+  def present(key: String): LabelSelector = LabelSelector(key, Present, Set.empty)
+
+  def absent(key: String): LabelSelector = LabelSelector(key, Absent, Set.empty)
+
+  def in(key: String, values: Set[String]): LabelSelector = LabelSelector(key, In, values)
+
+  def notIn(key: String, values: Set[String]): LabelSelector = LabelSelector(key, NotIn, values)
+
+  def equal(key: String, value: String): LabelSelector = LabelSelector(key, In, Set(value))
+
+  def notEqual(key: String, value: String): LabelSelector = LabelSelector(key, NotIn, Set(value))
 
   def parse(str: String): LabelSelector = {
     //TODO

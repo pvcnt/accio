@@ -23,7 +23,7 @@ import com.twitter.finagle.mysql._
 import com.twitter.finagle.stats.StatsReceiver
 import com.twitter.util.{Future, StorageUnit}
 import fr.cnrs.liris.lumos.domain.thrift.ThriftAdapter
-import fr.cnrs.liris.lumos.domain.{Job, JobList, thrift}
+import fr.cnrs.liris.lumos.domain.{Job, JobList, LabelSelector, thrift}
 import fr.cnrs.liris.lumos.storage.{JobQuery, JobStore, WriteResult}
 import fr.cnrs.liris.util.scrooge.BinaryScroogeSerializer
 
@@ -38,22 +38,19 @@ private[storage] final class MysqlJobStore(client: Client, statsReceiver: StatsR
     val content = encode(job)
     sizeStat.add(StorageUnit.fromBytes(content.length).inKilobytes)
     client
-      .prepare("insert into jobs(name, state, owner, content) values(?, ?, ?, ?)")
+      .prepare(MysqlJobStore.InsertQuery)
       .apply(
         job.name,
+        job.createTime.getMillis,
         job.status.state.name,
         job.owner.map(wrap(_)).getOrElse(NullParameter),
         content)
       .flatMap {
         case _: OK =>
           val fs = job.labels.toSeq.map { case (k, v) =>
-            client
-              .prepare("insert into jobs_labels(name, label_key, label_value) values(?, ?, ?)")
-              .apply(job.name, k, v)
+            client.prepare(MysqlJobStore.InsertLabelQuery).apply(job.name, k, v)
           }
-          Future
-            .join(fs)
-            .map(_ => WriteResult.Ok)
+          Future.join(fs).map(_ => WriteResult.Ok)
         case res => throw new RuntimeException(s"Unexpected MySQL result: $res")
       }
       .handle {
@@ -63,11 +60,12 @@ private[storage] final class MysqlJobStore(client: Client, statsReceiver: StatsR
   }
 
   override def replace(job: Job): Future[WriteResult] = {
-    // Owner and labels are both immutable, so we do not update their associated denormalizations.
+    // Create time, owner and labels are all immutable, so we do not update their denormalizations.
+    // Only the state might be updated later on.
     val content = encode(job)
     sizeStat.add(StorageUnit.fromBytes(content.length).inKilobytes)
     client
-      .prepare("update jobs set state = ?, content = ? where name = ?")
+      .prepare(MysqlJobStore.ReplaceQuery)
       .apply(job.status.state.name, content, job.name)
       .map {
         case ok: OK => if (ok.affectedRows == 1) WriteResult.Ok else WriteResult.NotFound
@@ -77,7 +75,7 @@ private[storage] final class MysqlJobStore(client: Client, statsReceiver: StatsR
 
   override def delete(name: String): Future[WriteResult] = {
     client
-      .prepare("delete from jobs where name = ?")
+      .prepare(MysqlJobStore.DeleteQuery)
       .apply(name)
       .map {
         case ok: OK => if (ok.affectedRows == 1) WriteResult.Ok else WriteResult.NotFound
@@ -92,16 +90,50 @@ private[storage] final class MysqlJobStore(client: Client, statsReceiver: StatsR
       where += "owner = ?"
       params += owner
     }
-    query.state.foreach { state =>
-      where += "state = ?"
-      params += state.name
+    if (query.state.nonEmpty) {
+      where += s"state in ${sqlSet(query.state)}"
+      query.state.foreach(v => params += v.name)
     }
-    query.labels.foreach { selector =>
-      // TODO
+    if (query.labels.nonEmpty) {
+      query.labels.foreach { selector =>
+        selector.op match {
+          case LabelSelector.Absent =>
+            where += "(select count(1) from jobs_labels where name = t.name and label_key = ?) = 0"
+            params += selector.key
+          case LabelSelector.Present =>
+            where += "(select count(1) from jobs_labels where name = t.name and label_key = ?) > 0"
+            params += selector.key
+          case LabelSelector.In =>
+            // We assume that the selector is valid and hence `values` is not empty (otherwise the
+            // SQL clause `in()` would be problematic).
+            where += "(select label_value from jobs_labels where name = t.name and label_key = ?) " +
+              s"in (${Seq.fill(selector.values.size)("?").mkString(", ")})"
+            params += selector.key
+            selector.values.foreach(v => params += v)
+          case LabelSelector.NotIn =>
+            // We prefer re-using the same sub-query twice (`getValueQuery`) instead of performing
+            // a count first (as in the absent case above), because we expect MySQL to optimize
+            // when the same sub-query appears twice and only execute it once.
+            val getValueQuery = "(select label_value from jobs_labels where name = t.name and label_key = ?)"
+            // We assume that the selector is valid and hence `values` is not empty (otherwise the
+            // SQL clause `in()` would be problematic).
+            where += s"($getValueQuery is null or $getValueQuery not in ${sqlSet(selector.values)})"
+            params += selector.key
+            params += selector.key
+            selector.values.foreach(v => params += v)
+        }
+      }
     }
 
-    val sql = s"select content from jobs where ${if (where.nonEmpty) where.mkString(" and ") else "true"}"
-    val sql2 = s"select count(1) from jobs where ${if (where.nonEmpty) where.mkString(" and ") else "true"}"
+    var sql = s"select content from jobs t where ${if (where.nonEmpty) where.mkString(" and ") else "true"} order by create_time desc"
+    (offset, limit) match {
+      case (Some(o), Some(l)) => sql += s" limit $l offset $o"
+      case (Some(o), None) => sql += s" limit ${Int.MaxValue} offset $o"
+      case (None, Some(l)) => sql += s" limit $l"
+      case (None, None) => // Do nothing.
+    }
+    val sql2 = s"select count(1) from jobs t where ${if (where.nonEmpty) where.mkString(" and ") else "true"}"
+
     Future.join(
       client.prepare(sql).select(params: _*)(decodeJob),
       client.prepare(sql2).select(params: _*)(decodeCount).map(_.head))
@@ -110,7 +142,7 @@ private[storage] final class MysqlJobStore(client: Client, statsReceiver: StatsR
 
   override def get(name: String): Future[Option[Job]] = {
     client
-      .prepare("select content from jobs where name = ?")
+      .prepare(MysqlJobStore.GetQuery)
       .select(name)(decodeJob)
       .map(_.headOption)
   }
@@ -141,6 +173,8 @@ private[storage] final class MysqlJobStore(client: Client, statsReceiver: StatsR
   }
 
   override def shutDown(): Future[Unit] = client.close()
+
+  private def sqlSet(elements: Iterable[_]) = '(' + Seq.fill(elements.size)("?").mkString(", ") + ')'
 }
 
 object MysqlJobStore {
@@ -150,7 +184,8 @@ object MysqlJobStore {
       "name varchar(255) not null," +
       "state varchar(15) not null," +
       "owner varchar(255) null," +
-      // Mediumblob is up to 16Mb. The `max_allowed_packet` parameter has to be set accordingly.
+      "create_time bigint not null," +
+      // Mediumblob is up to 16Mb.
       "content mediumblob not null," +
       "primary key (unused_id)," +
       "unique key uix_name(name)" +
@@ -161,6 +196,12 @@ object MysqlJobStore {
       "label_key varchar(255) not null," +
       "label_value varchar(255) not null," +
       "primary key (unused_id)," +
-      "key uix_name(job_name, label_key)" +
+      "key uix_name_label_key(name, label_key)" +
       ") engine=InnoDB default charset=utf8")
+
+  private val GetQuery = "select content from jobs where name = ?"
+  private val DeleteQuery = "delete from jobs where name = ?"
+  private val ReplaceQuery = "update jobs set state = ?, content = ? where name = ?"
+  private val InsertQuery = "insert into jobs(name, create_time, state, owner, content) values(?, ?, ?, ?, ?)"
+  private val InsertLabelQuery = "insert into jobs_labels(name, label_key, label_value) values(?, ?, ?)"
 }

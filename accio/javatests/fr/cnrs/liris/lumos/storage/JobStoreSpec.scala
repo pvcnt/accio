@@ -41,7 +41,7 @@ private[storage] abstract class JobStoreSpec extends UnitSpec with BeforeAndAfte
       name = "exp2",
       createTime = now.plus(10),
       owner = Some("him"),
-      labels = Map("bar" -> "foo", "bar" -> "bar")),
+      labels = Map("bar" -> "foo", "foo" -> "bar")),
     Job(
       name = "exp3",
       createTime = now.plus(20),
@@ -55,14 +55,21 @@ private[storage] abstract class JobStoreSpec extends UnitSpec with BeforeAndAfte
 
   protected def createStore: JobStore
 
+  /**
+   * Whether this test suite should be disabled. This allows to temporarily disable some tests,
+   * e.g., if required dependencies are not available on the machine.
+   */
   protected def disabled: Boolean = false
 
+  /**
+   * Instant of the [[JobStore]] being tested.
+   */
   protected var store: JobStore = _
 
   override def beforeEach(): Unit = {
     if (!disabled) {
       store = createStore
-      store.startUp()
+      Await.result(store.startUp())
     }
     super.beforeEach()
   }
@@ -70,7 +77,7 @@ private[storage] abstract class JobStoreSpec extends UnitSpec with BeforeAndAfte
   override def afterEach(): Unit = {
     super.afterEach()
     if (!disabled) {
-      store.shutDown()
+      Await.result(store.shutDown())
       store = null
     }
   }
@@ -141,30 +148,41 @@ private[storage] abstract class JobStoreSpec extends UnitSpec with BeforeAndAfte
       res.results should contain theSameElementsInOrderAs Seq(jobs(1))
     }
 
-    //TODO
-    /*it should "search for jobs by labels" in {
+    it should "search for jobs by labels" in {
       Await.result(Future.join(jobs.map(store.create)))
 
-      var res = Await.result(store.list(JobQuery(tags = Set("foo"))))
+      var res = Await.result(store.list(JobQuery(labels = Set(LabelSelector.present("foo")))))
       res.totalCount shouldBe 3
       res.results should contain theSameElementsInOrderAs Seq(jobs(3), jobs(1), jobs(0))
 
-      res = Await.result(store.list(JobQuery(tags = Set("foo")), limit = Some(2)))
+      res = Await.result(store.list(JobQuery(labels = Set(LabelSelector.present("foo"))), limit = Some(2)))
       res.totalCount shouldBe 3
       res.results should contain theSameElementsInOrderAs Seq(jobs(3), jobs(1))
 
-      res = Await.result(store.list(JobQuery(tags = Set("foo")), offset = Some(1)))
+      res = Await.result(store.list(JobQuery(labels = Set(LabelSelector.present("foo"))), offset = Some(1)))
       res.totalCount shouldBe 3
       res.results should contain theSameElementsInOrderAs Seq(jobs(1), jobs(0))
 
-      res = Await.result(store.list(JobQuery(tags = Set("bar"))))
+      res = Await.result(store.list(JobQuery(labels = Set(LabelSelector.in("foo", Set("bar"))))))
       res.totalCount shouldBe 2
       res.results should contain theSameElementsInOrderAs Seq(jobs(1), jobs(0))
 
-      res = Await.result(store.list(JobQuery(tags = Set("foo", "bar"))))
+      res = Await.result(store.list(JobQuery(labels = Set(LabelSelector.in("foo", Set("foo", "bar"))))))
+      res.totalCount shouldBe 3
+      res.results should contain theSameElementsInOrderAs Seq(jobs(3), jobs(1), jobs(0))
+
+      res = Await.result(store.list(JobQuery(labels = Set(LabelSelector.notIn("foo", Set("bar"))))))
       res.totalCount shouldBe 2
-      res.results should contain theSameElementsInOrderAs Seq(jobs(1), jobs(0))
-    }*/
+      res.results should contain theSameElementsInOrderAs Seq(jobs(3), jobs(2))
+
+      res = Await.result(store.list(JobQuery(labels = Set(LabelSelector.absent("foo")))))
+      res.totalCount shouldBe 1
+      res.results should contain theSameElementsInOrderAs Seq(jobs(2))
+
+      res = Await.result(store.list(JobQuery(labels = Set(LabelSelector.in("foo", Set("bar")), LabelSelector.present("bar")))))
+      res.totalCount shouldBe 1
+      res.results should contain theSameElementsInOrderAs Seq(jobs(1))
+    }
 
     it should "search for jobs by state" in {
       Await.result(Future.join(jobs.map(store.create)))
