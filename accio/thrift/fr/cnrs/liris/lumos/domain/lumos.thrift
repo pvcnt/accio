@@ -81,6 +81,12 @@ struct Link {
   2: string url;
 }
 
+struct ErrorDatum {
+  1: string class_name;
+  2: optional string message;
+  3: list<string> stacktrace;
+}
+
 struct Task {
   1: string name;
   2: optional string mnemonic;
@@ -88,8 +94,9 @@ struct Task {
   4: list<Link> links;
   5: optional i32 exit_code;
   6: list<MetricValue> metrics;
-  7: optional ExecStatus status;
-  8: list<ExecStatus> history;
+  7: optional ErrorDatum error;
+  8: optional ExecStatus status;
+  9: list<ExecStatus> history;
 }
 
 struct Job {
@@ -132,6 +139,7 @@ struct TaskCompletedEvent {
   1: string name;
   2: i32 exit_code;
   3: list<MetricValue> metrics;
+  4: optional ErrorDatum error;
 }
 
 union EventPayload {

@@ -18,31 +18,22 @@
 
 package fr.cnrs.liris.lumos.domain
 
-import org.joda.time.Instant
+import java.io.{PrintWriter, StringWriter}
 
-case class Event(parent: String, sequence: Long, time: Instant, payload: Event.Payload)
+import fr.cnrs.liris.util.StringUtils.maybe
 
-object Event {
+case class ErrorDatum(className: String, message: Option[String], stacktrace: Seq[String])
 
-  sealed trait Payload
-
-  case class JobEnqueued(job: Job) extends Payload
-
-  case class JobExpanded(tasks: Seq[Task]) extends Payload
-
-  case object JobStarted extends Payload
-
-  case object JobCanceled extends Payload
-
-  case class JobCompleted(outputs: Seq[AttrValue] = Seq.empty) extends Payload
-
-  case class TaskStarted(name: String, links: Seq[Link] = Seq.empty) extends Payload
-
-  case class TaskCompleted(
-    name: String,
-    exitCode: Int,
-    metrics: Seq[MetricValue] = Seq.empty,
-    error: Option[ErrorDatum] = None)
-    extends Payload
-
+object ErrorDatum {
+  /**
+   * Create a new error datum from a Java exception.
+   *
+   * @param e Java throwable.
+   */
+  def create(e: Throwable): ErrorDatum = {
+    val writer = new StringWriter
+    e.printStackTrace(new PrintWriter(writer, true))
+    val stacktrace = writer.toString.split('\n')
+    ErrorDatum(e.getClass.getName, Option(e.getMessage).flatMap(maybe), stacktrace)
+  }
 }

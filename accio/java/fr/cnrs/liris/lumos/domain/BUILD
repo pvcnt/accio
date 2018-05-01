@@ -18,6 +18,7 @@ scala_library(
   name = "domain",
   srcs = glob(["*.scala"]),
   deps = [
+    "//accio/java/fr/cnrs/liris/util",
     "//3rdparty/jvm/com/github/nscala_time",
     "//3rdparty/jvm/com/twitter:util_core",
   ],

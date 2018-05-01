@@ -31,6 +31,8 @@ object JobStateMachine {
 
   case class Illegal(errors: Seq[String]) extends Result
 
+  case object AlreadyExists extends Result
+
   def apply(job: Job, event: Event): Result =
     event.payload match {
       case e: Event.JobEnqueued => handleJobEnqueued(job, event.time, e)
@@ -44,7 +46,7 @@ object JobStateMachine {
 
   private def handleJobEnqueued(job: Job, time: Instant, e: Event.JobEnqueued) = {
     if (job.name.nonEmpty) {
-      Illegal(Seq(s"Job already exists"))
+      AlreadyExists
     } else {
       // https://stackoverflow.com/questions/4267475/generating-8-character-only-uuids
       val name = if (job.name.isEmpty) UUID.randomUUID().getLeastSignificantBits.toHexString else job.name
@@ -140,14 +142,19 @@ object JobStateMachine {
         case ExecStatus.Pending => Illegal(Seq("Task is not running"))
         case ExecStatus.Running =>
           val state = if (e.exitCode == 0) ExecStatus.Successful else ExecStatus.Failed
-          task = task.copy(
-            history = task.history :+ task.status,
-            status = ExecStatus(state, Instant.now()),
-            exitCode = Some(e.exitCode),
-            metrics = e.metrics)
-          val tasks = job.tasks.updated(idx, task)
-          val progress = ((tasks.count(_.status.state.isCompleted).toDouble / tasks.size) * 100).round
-          Ok(job.copy(tasks = tasks, progress = progress.toInt))
+          if (state == ExecStatus.Successful && e.error.isDefined) {
+            Illegal(Seq("A successful task cannot also define an error"))
+          } else {
+            task = task.copy(
+              history = task.history :+ task.status,
+              status = ExecStatus(state, Instant.now()),
+              exitCode = Some(e.exitCode),
+              metrics = e.metrics,
+              error = e.error)
+            val tasks = job.tasks.updated(idx, task)
+            val progress = ((tasks.count(_.status.state.isCompleted).toDouble / tasks.size) * 100).round
+            Ok(job.copy(tasks = tasks, progress = progress.toInt))
+          }
         case _ => Illegal(Seq("Task is already completed"))
       }
     }

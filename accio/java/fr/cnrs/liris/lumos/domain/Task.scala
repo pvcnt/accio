@@ -25,5 +25,6 @@ case class Task(
   links: Seq[Link] = Seq.empty,
   exitCode: Option[Int] = None,
   metrics: Seq[MetricValue] = Seq.empty,
+  error: Option[ErrorDatum] = None,
   status: ExecStatus = ExecStatus(),
   history: Seq[ExecStatus] = Seq.empty)
