@@ -18,9 +18,7 @@
 
 package fr.cnrs.liris.lumos.domain
 
-import scala.collection.mutable
-
-case class LabelSelector(requirements: Set[LabelSelector.Requirement]) {
+case class LabelSelector(requirements: Seq[LabelSelector.Req]) {
   def matches(labels: Map[String, String]): Boolean = requirements.forall(_.matches(labels))
 
   def +(other: LabelSelector): LabelSelector = LabelSelector(requirements ++ other.requirements)
@@ -28,7 +26,13 @@ case class LabelSelector(requirements: Set[LabelSelector.Requirement]) {
 
 object LabelSelector {
 
-  case class Requirement(key: String, op: Op, values: Set[String]) {
+  case class Req(key: String, op: Op, values: Set[String] = Set.empty) {
+    op match {
+      case In => require(values.nonEmpty, "'In' operator requires at least one value")
+      case NotIn => require(values.nonEmpty, "'NotIn' operator requires at least one value")
+      case _ => // Nothing to check.
+    }
+
     def matches(labels: Map[String, String]): Boolean = op.matches(labels.get(key), values)
   }
 
@@ -56,17 +60,19 @@ object LabelSelector {
     override def matches(value: Option[String], values: Set[String]): Boolean = value.isEmpty
   }
 
-  def present(key: String): LabelSelector = LabelSelector(Set(Requirement(key, Present, Set.empty)))
+  def apply(first: Req, rest: Req*): LabelSelector = LabelSelector(first +: rest)
 
-  def absent(key: String): LabelSelector = LabelSelector(Set(Requirement(key, Absent, Set.empty)))
+  def present(key: String): LabelSelector = LabelSelector(Req(key, Present))
 
-  def in(key: String, values: Set[String]): LabelSelector = LabelSelector(Set(Requirement(key, In, values)))
+  def absent(key: String): LabelSelector = LabelSelector(Req(key, Absent))
 
-  def notIn(key: String, values: Set[String]): LabelSelector = LabelSelector(Set(Requirement(key, NotIn, values)))
+  def in(key: String, values: Set[String]): LabelSelector = LabelSelector(Req(key, In, values))
 
-  def equal(key: String, value: String): LabelSelector = LabelSelector(Set(Requirement(key, In, Set(value))))
+  def notIn(key: String, values: Set[String]): LabelSelector = LabelSelector(Req(key, NotIn, values))
 
-  def notEqual(key: String, value: String): LabelSelector = LabelSelector(Set(Requirement(key, NotIn, Set(value))))
+  def equal(key: String, value: String): LabelSelector = LabelSelector(Req(key, In, Set(value)))
 
-  def parse(str: String): LabelSelector = ???
+  def notEqual(key: String, value: String): LabelSelector = LabelSelector(Req(key, NotIn, Set(value)))
+
+  def parse(str: String): Either[String, LabelSelector] = LabelSelectorParser.parse(str)
 }

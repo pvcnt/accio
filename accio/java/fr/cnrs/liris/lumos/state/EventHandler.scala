@@ -42,8 +42,8 @@ final class EventHandler @Inject()(jobStore: JobStore) {
         .flatMap {
           case Some(job) =>
             JobStateMachine.apply(job, event) match {
-              case Left(newJob) => jobStore.replace(newJob)
-              case Right(status) => Future.value(status)
+              case Right(newJob) => jobStore.replace(newJob)
+              case Left(status) => Future.value(status)
             }
           case None => Future.value(Status.NotFound(jobStore.resourceType, event.parent))
         }

@@ -55,16 +55,21 @@ final class AgentServiceController @Inject()(jobStore: JobStore, eventHandler: E
   }
 
   override val listJobs = handle(ListJobs) { args: ListJobs.Args =>
-    val query = JobQuery(
-      state = args.req.state.toSet.flatten.map(ThriftAdapter.toDomain),
-      owner = args.req.owner,
-      labels = args.req.labels.map(LabelSelector.parse))
-    jobStore
-      .list(query, limit = args.req.limit, offset = args.req.offset)
-      .map { results =>
-        ListJobsResponse(
-          jobs = results.jobs.map(ThriftAdapter.toThrift),
-          totalCount = results.totalCount)
-      }
+    val maybeSelector = args.req.labels.map(LabelSelector.parse)
+    if (maybeSelector.exists(_.isLeft)) {
+      Future.exception(LumosException.InvalidArgument(Seq(s"Invalid label selector: ${args.req.labels}")))
+    } else {
+      val query = JobQuery(
+        state = args.req.state.toSet.flatten.map(ThriftAdapter.toDomain),
+        owner = args.req.owner,
+        labels = maybeSelector.map(_.right.get))
+      jobStore
+        .list(query, limit = args.req.limit, offset = args.req.offset)
+        .map { results =>
+          ListJobsResponse(
+            jobs = results.jobs.map(ThriftAdapter.toThrift),
+            totalCount = results.totalCount)
+        }
+    }
   }
 }

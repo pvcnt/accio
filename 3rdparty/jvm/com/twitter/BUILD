@@ -573,7 +573,7 @@ scala_import(
         "//3rdparty/jvm/commons_cli:commons_cli",
         "//3rdparty/jvm/org/apache/thrift:libthrift",
         "//3rdparty/jvm/org/codehaus/plexus:plexus_utils",
-        "//3rdparty/jvm/org/scala_lang/modules:scala_parser_combinators_2_11",
+        "//3rdparty/jvm/org/scala_lang/modules:scala_parser_combinators",
         "//3rdparty/jvm/org/scala_lang:scala_library"
     ],
     jars = [
@@ -695,7 +695,7 @@ java_library(
 scala_import(
     name = "util_core",
     exports = [
-        "//3rdparty/jvm/org/scala_lang/modules:scala_parser_combinators_2_11",
+        "//3rdparty/jvm/org/scala_lang/modules:scala_parser_combinators",
         "//3rdparty/jvm/org/scala_lang:scala_library",
         "//3rdparty/jvm/org/scala_lang:scala_reflect",
         ":util_function_2_11"

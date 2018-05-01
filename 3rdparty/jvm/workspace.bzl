@@ -146,10 +146,10 @@ def list_dependencies():
     {"artifact": "org.junit.vintage:junit-vintage-engine:5.1.0", "lang": "java", "sha1": "a752dd045d08753ac77622dc83b584dc5abda1e1", "repository": "http://central.maven.org/maven2/", "name": "org_junit_vintage_junit_vintage_engine", "actual": "@org_junit_vintage_junit_vintage_engine//jar", "bind": "jar/org/junit/vintage/junit_vintage_engine"},
     {"artifact": "org.ocpsoft.prettytime:prettytime:4.0.1.Final", "lang": "java", "sha1": "5537d74e2102a82fd937dd9b8a652e3b26026a7a", "repository": "http://central.maven.org/maven2/", "name": "org_ocpsoft_prettytime_prettytime", "actual": "@org_ocpsoft_prettytime_prettytime//jar", "bind": "jar/org/ocpsoft/prettytime/prettytime"},
     {"artifact": "org.opentest4j:opentest4j:1.0.0", "lang": "java", "sha1": "6f09c598e9ff64bf0ce2fa7e7de49a99ba83c0b4", "repository": "http://central.maven.org/maven2/", "name": "org_opentest4j_opentest4j", "actual": "@org_opentest4j_opentest4j//jar", "bind": "jar/org/opentest4j/opentest4j"},
-    {"artifact": "org.scala-lang.modules:scala-parser-combinators_2.11:1.0.4", "lang": "java", "sha1": "7369d653bcfa95d321994660477a4d7e81d7f490", "repository": "http://central.maven.org/maven2/", "name": "org_scala_lang_modules_scala_parser_combinators_2_11", "actual": "@org_scala_lang_modules_scala_parser_combinators_2_11//jar", "bind": "jar/org/scala_lang/modules/scala_parser_combinators_2_11"},
+    {"artifact": "org.scala-lang.modules:scala-parser-combinators_2.11:1.1.0", "lang": "scala", "sha1": "fbf4d9948b22f37c658c8c7712a621a732798b13", "repository": "http://central.maven.org/maven2/", "name": "org_scala_lang_modules_scala_parser_combinators_2_11", "actual": "@org_scala_lang_modules_scala_parser_combinators_2_11//jar:file", "bind": "jar/org/scala_lang/modules/scala_parser_combinators_2_11"},
     {"artifact": "org.scala-lang.modules:scala-xml_2.11:1.0.5", "lang": "java", "sha1": "77ac9be4033768cf03cc04fbd1fc5e5711de2459", "repository": "http://central.maven.org/maven2/", "name": "org_scala_lang_modules_scala_xml_2_11", "actual": "@org_scala_lang_modules_scala_xml_2_11//jar", "bind": "jar/org/scala_lang/modules/scala_xml_2_11"},
     {"artifact": "org.scala-lang:scala-compiler:2.11.11", "lang": "java", "sha1": "2f1568549280da6d0a332846cb7c27edae76fd10", "repository": "http://central.maven.org/maven2/", "name": "org_scala_lang_scala_compiler", "actual": "@org_scala_lang_scala_compiler//jar", "bind": "jar/org/scala_lang/scala_compiler"},
-# duplicates in org.scala-lang:scala-library promoted to 2.11.11
+# duplicates in org.scala-lang:scala-library promoted to 2.11.12
 # - com.github.nscala-time:nscala-time_2.11:2.18.0 wanted version 2.11.11
 # - com.twitter:finagle-core_2.11:18.4.0 wanted version 2.11.11
 # - com.twitter:finagle-http_2.11:18.4.0 wanted version 2.11.11
@@ -174,8 +174,9 @@ def list_dependencies():
 # - com.twitter:util-slf4j-api_2.11:18.4.0 wanted version 2.11.11
 # - com.twitter:util-slf4j-jul-bridge_2.11:18.4.0 wanted version 2.11.11
 # - com.twitter:util-stats_2.11:18.4.0 wanted version 2.11.11
+# - org.scala-lang.modules:scala-parser-combinators_2.11:1.1.0 wanted version 2.11.12
 # - org.scalanlp:breeze_2.11:0.12 wanted version 2.11.7
-    {"artifact": "org.scala-lang:scala-library:2.11.11", "lang": "java", "sha1": "e283d2b7fde6504f6a86458b1f6af465353907cc", "repository": "http://central.maven.org/maven2/", "name": "org_scala_lang_scala_library", "actual": "@org_scala_lang_scala_library//jar", "bind": "jar/org/scala_lang/scala_library"},
+    {"artifact": "org.scala-lang:scala-library:2.11.12", "lang": "java", "sha1": "bf5534e6fec3d665bd6419c952a929a8bdd4b591", "repository": "http://central.maven.org/maven2/", "name": "org_scala_lang_scala_library", "actual": "@org_scala_lang_scala_library//jar", "bind": "jar/org/scala_lang/scala_library"},
 # duplicates in org.scala-lang:scala-reflect promoted to 2.11.11
 # - com.fasterxml.jackson.module:jackson-module-scala_2.11:2.8.4 wanted version 2.11.8
 # - com.twitter:util-core_2.11:18.4.0 wanted version 2.11.11
