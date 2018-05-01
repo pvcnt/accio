@@ -58,7 +58,7 @@ final class AgentServiceController @Inject()(jobStore: JobStore, eventHandler: E
     val query = JobQuery(
       state = args.req.state.toSet.flatten.map(ThriftAdapter.toDomain),
       owner = args.req.owner,
-      labels = args.req.labels.toSet.flatten.map(LabelSelector.parse))
+      labels = args.req.labels.map(LabelSelector.parse))
     jobStore
       .list(query, limit = args.req.limit, offset = args.req.offset)
       .map { results =>

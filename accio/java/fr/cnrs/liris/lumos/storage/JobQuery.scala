@@ -25,12 +25,12 @@ import fr.cnrs.liris.lumos.domain.{ExecStatus, Job, LabelSelector}
  *
  * @param owner  Only include jobs owned by a given user.
  * @param state  Only include jobs whose state belong to those specified.
- * @param labels Only include jobs whose labels match the given selectors.
+ * @param labels Only include jobs whose labels match the given selector.
  */
 case class JobQuery(
   owner: Option[String] = None,
   state: Set[ExecStatus.State] = Set.empty,
-  labels: Set[LabelSelector] = Set.empty) {
+  labels: Option[LabelSelector] = None) {
 
   /**
    * Check whether a given job matches this query.

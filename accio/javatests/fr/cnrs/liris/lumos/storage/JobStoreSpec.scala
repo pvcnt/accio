@@ -87,7 +87,7 @@ private[storage] abstract class JobStoreSpec extends UnitSpec with BeforeAndAfte
       Await.result(store.get("job1")) shouldBe None
       Await.result(store.get("job2")) shouldBe None
       jobs.foreach(job => Await.result(store.create(job)) shouldBe Status.Ok)
-      Await.result(store.create(jobs.head)) shouldBe Status.AlreadyExists("job", "job1")
+      Await.result(store.create(jobs.head)) shouldBe Status.AlreadyExists("jobs", "job1")
       Await.result(store.get("job1")) shouldBe Some(jobs(0))
       Await.result(store.get("job2")) shouldBe Some(jobs(1))
 
@@ -109,7 +109,7 @@ private[storage] abstract class JobStoreSpec extends UnitSpec with BeforeAndAfte
     }
 
     it should "replace jobs" in {
-      Await.result(store.replace(jobs.head)) shouldBe Status.NotFound("job", "job1")
+      Await.result(store.replace(jobs.head)) shouldBe Status.NotFound("jobs", "job1")
       Await.result(Future.join(jobs.map(store.create)))
       Await.result(store.replace(jobs.head.copy(labels = Map("foo" -> "otherbar")))) shouldBe Status.Ok
       Await.result(store.get("job1")) shouldBe Some(jobs.head.copy(labels = Map("foo" -> "otherbar")))
@@ -119,7 +119,7 @@ private[storage] abstract class JobStoreSpec extends UnitSpec with BeforeAndAfte
     }
 
     it should "delete jobs" in {
-      Await.result(store.delete("job4")) shouldBe Status.NotFound("job", "job4")
+      Await.result(store.delete("job4")) shouldBe Status.NotFound("jobs", "job4")
       Await.result(Future.join(jobs.map(store.create)))
       Await.result(store.delete("job4")) shouldBe Status.Ok
       Await.result(store.get("job4")) shouldBe None
@@ -151,35 +151,35 @@ private[storage] abstract class JobStoreSpec extends UnitSpec with BeforeAndAfte
     it should "search for jobs by labels" in {
       Await.result(Future.join(jobs.map(store.create)))
 
-      var res = Await.result(store.list(JobQuery(labels = Set(LabelSelector.present("foo")))))
+      var res = Await.result(store.list(JobQuery(labels = Some(LabelSelector.present("foo")))))
       res.totalCount shouldBe 3
       res.jobs should contain theSameElementsInOrderAs Seq(jobs(3), jobs(1), jobs(0))
 
-      res = Await.result(store.list(JobQuery(labels = Set(LabelSelector.present("foo"))), limit = Some(2)))
+      res = Await.result(store.list(JobQuery(labels = Some(LabelSelector.present("foo"))), limit = Some(2)))
       res.totalCount shouldBe 3
       res.jobs should contain theSameElementsInOrderAs Seq(jobs(3), jobs(1))
 
-      res = Await.result(store.list(JobQuery(labels = Set(LabelSelector.present("foo"))), offset = Some(1)))
+      res = Await.result(store.list(JobQuery(labels = Some(LabelSelector.present("foo"))), offset = Some(1)))
       res.totalCount shouldBe 3
       res.jobs should contain theSameElementsInOrderAs Seq(jobs(1), jobs(0))
 
-      res = Await.result(store.list(JobQuery(labels = Set(LabelSelector.in("foo", Set("bar"))))))
+      res = Await.result(store.list(JobQuery(labels = Some(LabelSelector.in("foo", Set("bar"))))))
       res.totalCount shouldBe 2
       res.jobs should contain theSameElementsInOrderAs Seq(jobs(1), jobs(0))
 
-      res = Await.result(store.list(JobQuery(labels = Set(LabelSelector.in("foo", Set("foo", "bar"))))))
+      res = Await.result(store.list(JobQuery(labels = Some(LabelSelector.in("foo", Set("foo", "bar"))))))
       res.totalCount shouldBe 3
       res.jobs should contain theSameElementsInOrderAs Seq(jobs(3), jobs(1), jobs(0))
 
-      res = Await.result(store.list(JobQuery(labels = Set(LabelSelector.notIn("foo", Set("bar"))))))
+      res = Await.result(store.list(JobQuery(labels = Some(LabelSelector.notIn("foo", Set("bar"))))))
       res.totalCount shouldBe 2
       res.jobs should contain theSameElementsInOrderAs Seq(jobs(3), jobs(2))
 
-      res = Await.result(store.list(JobQuery(labels = Set(LabelSelector.absent("foo")))))
+      res = Await.result(store.list(JobQuery(labels = Some(LabelSelector.absent("foo")))))
       res.totalCount shouldBe 1
       res.jobs should contain theSameElementsInOrderAs Seq(jobs(2))
 
-      res = Await.result(store.list(JobQuery(labels = Set(LabelSelector.in("foo", Set("bar")), LabelSelector.present("bar")))))
+      res = Await.result(store.list(JobQuery(labels = Some(LabelSelector.in("foo", Set("bar")) + LabelSelector.present("bar")))))
       res.totalCount shouldBe 1
       res.jobs should contain theSameElementsInOrderAs Seq(jobs(1))
     }

@@ -96,22 +96,22 @@ private[storage] final class MysqlJobStore(client: Client, statsReceiver: StatsR
       where += s"state in ${sqlSet(query.state)}"
       query.state.foreach(v => params += v.name)
     }
-    if (query.labels.nonEmpty) {
-      query.labels.foreach { selector =>
-        selector.op match {
+    query.labels.foreach { selector =>
+      selector.requirements.foreach { req =>
+        req.op match {
           case LabelSelector.Absent =>
             where += "(select count(1) from jobs_labels where name = t.name and label_key = ?) = 0"
-            params += selector.key
+            params += req.key
           case LabelSelector.Present =>
             where += "(select count(1) from jobs_labels where name = t.name and label_key = ?) > 0"
-            params += selector.key
+            params += req.key
           case LabelSelector.In =>
             // We assume that the selector is valid and hence `values` is not empty (otherwise the
             // SQL clause `in()` would be problematic).
             where += "(select label_value from jobs_labels where name = t.name and label_key = ?) " +
-              s"in (${Seq.fill(selector.values.size)("?").mkString(", ")})"
-            params += selector.key
-            selector.values.foreach(v => params += v)
+              s"in (${Seq.fill(req.values.size)("?").mkString(", ")})"
+            params += req.key
+            req.values.foreach(v => params += v)
           case LabelSelector.NotIn =>
             // We prefer re-using the same sub-query twice (`getValueQuery`) instead of performing
             // a count first (as in the absent case above), because we expect MySQL to optimize
@@ -119,10 +119,10 @@ private[storage] final class MysqlJobStore(client: Client, statsReceiver: StatsR
             val getValueQuery = "(select label_value from jobs_labels where name = t.name and label_key = ?)"
             // We assume that the selector is valid and hence `values` is not empty (otherwise the
             // SQL clause `in()` would be problematic).
-            where += s"($getValueQuery is null or $getValueQuery not in ${sqlSet(selector.values)})"
-            params += selector.key
-            params += selector.key
-            selector.values.foreach(v => params += v)
+            where += s"($getValueQuery is null or $getValueQuery not in ${sqlSet(req.values)})"
+            params += req.key
+            params += req.key
+            req.values.foreach(v => params += v)
         }
       }
     }

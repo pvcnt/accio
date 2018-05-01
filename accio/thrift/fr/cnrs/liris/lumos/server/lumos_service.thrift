@@ -59,7 +59,7 @@ struct GetJobResponse {
 }
 
 struct ListJobsRequest {
-  1: optional set<string> labels;
+  1: optional string labels;
   2: optional string owner;
   3: optional set<lumos.ExecState> state;
   10: optional i32 limit;
