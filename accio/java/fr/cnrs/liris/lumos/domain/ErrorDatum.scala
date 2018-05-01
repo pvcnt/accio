@@ -22,7 +22,7 @@ import java.io.{PrintWriter, StringWriter}
 
 import fr.cnrs.liris.util.StringUtils.maybe
 
-case class ErrorDatum(className: String, message: Option[String], stacktrace: Seq[String])
+case class ErrorDatum(mnemonic: String, message: Option[String], stacktrace: Seq[String])
 
 object ErrorDatum {
   /**

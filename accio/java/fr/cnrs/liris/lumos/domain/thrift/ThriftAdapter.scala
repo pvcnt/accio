@@ -118,7 +118,7 @@ object ThriftAdapter {
     }
 
   private def toDomain(obj: ErrorDatum): domain.ErrorDatum = {
-    domain.ErrorDatum(obj.className, obj.message, obj.stacktrace)
+    domain.ErrorDatum(obj.mnemonic, obj.message, obj.stacktrace)
   }
 
   private def toDomain(obj: Link): domain.Link = domain.Link(obj.title, obj.url)
@@ -218,7 +218,7 @@ object ThriftAdapter {
   private def toThrift(obj: domain.Link): Link = Link(obj.title, obj.url)
 
   private def toThrift(obj: domain.ErrorDatum): ErrorDatum = {
-    ErrorDatum(obj.className, obj.message, obj.stacktrace)
+    ErrorDatum(obj.mnemonic, obj.message, obj.stacktrace)
   }
 
   private def toThrift(obj: domain.AttrValue): AttrValue = {

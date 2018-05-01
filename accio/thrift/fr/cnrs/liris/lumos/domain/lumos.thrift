@@ -81,7 +81,7 @@ struct Link {
 }
 
 struct ErrorDatum {
-  1: string class_name;
+  1: string mnemonic;
   2: optional string message;
   3: list<string> stacktrace;
 }
