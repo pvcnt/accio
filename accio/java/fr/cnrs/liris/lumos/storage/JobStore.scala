@@ -19,12 +19,14 @@
 package fr.cnrs.liris.lumos.storage
 
 import com.twitter.util.Future
-import fr.cnrs.liris.lumos.domain.{Job, JobList}
+import fr.cnrs.liris.lumos.domain.{Job, JobList, Status}
 
 /**
  * Store providing access to jobs.
  */
 trait JobStore {
+  val resourceType = "jobs"
+
   /**
    * Search for jobs matching a given query. Jobs are returned ordered in inverse chronological
    * order, the most recent matching job being the first result.
@@ -47,11 +49,11 @@ trait JobStore {
    *
    * @param job Job to save.
    */
-  def create(job: Job): Future[WriteResult]
+  def create(job: Job): Future[Status]
 
-  def replace(job: Job): Future[WriteResult]
+  def replace(job: Job): Future[Status]
 
-  def delete(name: String): Future[WriteResult]
+  def delete(name: String): Future[Status]
 
   def startUp(): Future[Unit]
 

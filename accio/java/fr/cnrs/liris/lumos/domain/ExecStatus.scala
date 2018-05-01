@@ -23,7 +23,6 @@ import org.joda.time.Instant
 case class ExecStatus(
   state: ExecStatus.State = ExecStatus.Pending,
   time: Instant = new Instant(0),
-  reason: Option[String] = None,
   message: Option[String] = None)
 
 object ExecStatus {

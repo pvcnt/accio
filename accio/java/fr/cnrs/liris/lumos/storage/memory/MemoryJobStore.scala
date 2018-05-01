@@ -23,8 +23,8 @@ import java.util.concurrent.ConcurrentHashMap
 import com.github.nscala_time.time.Imports._
 import com.twitter.finagle.stats.{NullStatsReceiver, StatsReceiver}
 import com.twitter.util.Future
-import fr.cnrs.liris.lumos.domain.{Job, JobList}
-import fr.cnrs.liris.lumos.storage.{JobQuery, JobStore, WriteResult}
+import fr.cnrs.liris.lumos.domain.{Job, JobList, Status}
+import fr.cnrs.liris.lumos.storage.{JobQuery, JobStore}
 
 import scala.collection.JavaConverters._
 
@@ -47,27 +47,27 @@ private[storage] final class MemoryJobStore(statsReceiver: StatsReceiver) extend
 
   override def get(name: String): Future[Option[Job]] = Future.value(index.get(name))
 
-  override def create(job: Job): Future[WriteResult] = {
+  override def create(job: Job): Future[Status] = {
     if (index.putIfAbsent(job.name, job).isEmpty) {
-      Future.value(WriteResult.Ok)
+      Future.value(Status.Ok)
     } else {
-      Future.value(WriteResult.AlreadyExists)
+      Future.value(Status.AlreadyExists(resourceType, job.name))
     }
   }
 
-  override def replace(job: Job): Future[WriteResult] = {
+  override def replace(job: Job): Future[Status] = {
     if (index.replace(job.name, job).isDefined) {
-      Future.value(WriteResult.Ok)
+      Future.value(Status.Ok)
     } else {
-      Future.value(WriteResult.NotFound)
+      Future.value(Status.NotFound(resourceType, job.name))
     }
   }
 
-  override def delete(name: String): Future[WriteResult] = {
+  override def delete(name: String): Future[Status] = {
     if (index.remove(name).isDefined) {
-      Future.value(WriteResult.Ok)
+      Future.value(Status.Ok)
     } else {
-      Future.value(WriteResult.NotFound)
+      Future.value(Status.NotFound(resourceType, name))
     }
   }
 

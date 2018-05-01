@@ -19,7 +19,9 @@ scala_library(
   srcs = glob(["*.scala"]),
   deps = [
     "//accio/java/fr/cnrs/liris/lumos/domain",
+    "//accio/java/fr/cnrs/liris/lumos/storage",
     "//3rdparty/jvm/com/github/nscala_time",
+    "//3rdparty/jvm/com/twitter:inject_core",
   ],
   visibility = ["//visibility:public"],
 )

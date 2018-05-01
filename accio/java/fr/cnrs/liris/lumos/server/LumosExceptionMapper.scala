@@ -21,11 +21,25 @@ package fr.cnrs.liris.lumos.server
 import com.google.inject.Singleton
 import com.twitter.finatra.thrift.exceptions.ExceptionMapper
 import com.twitter.util.Future
-import fr.cnrs.liris.finatra.auth.UnauthenticatedException
+import fr.cnrs.liris.lumos.domain.LumosException
 
 @Singleton
-final class LumosExceptionMapper extends ExceptionMapper[UnauthenticatedException, ServerException] {
-  override def handleException(e: UnauthenticatedException): Future[ServerException] = {
-    Future.exception(ServerException("Unauthenticated"))
-  }
+final class LumosExceptionMapper extends ExceptionMapper[LumosException, ServerException] {
+  override def handleException(e: LumosException): Future[ServerException] =
+    e match {
+      case LumosException.NotFound(resourceType, resourceName) =>
+        Future.exception(ServerException(
+          code = ErrorCode.NotFound,
+          resourceType = Some(resourceType),
+          resourceName = Some(resourceName)))
+      case LumosException.AlreadyExists(resourceType, resourceName) =>
+        Future.exception(ServerException(
+          code = ErrorCode.AlreadyExists,
+          resourceType = Some(resourceType),
+          resourceName = Some(resourceName)))
+      case LumosException.FailedPrecondition(errors) =>
+        Future.exception(ServerException(code = ErrorCode.FailedPrecondition, errors = Some(errors)))
+      case LumosException.InvalidArgument(errors) =>
+        Future.exception(ServerException(code = ErrorCode.InvalidArgument, errors = Some(errors)))
+    }
 }

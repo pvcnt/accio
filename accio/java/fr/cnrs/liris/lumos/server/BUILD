@@ -19,8 +19,9 @@ scala_binary(
   srcs = glob(["*.scala"]),
   deps = [
     "//accio/java/fr/cnrs/liris/lumos/domain",
+    "//accio/java/fr/cnrs/liris/lumos/domain/thrift",
     "//accio/java/fr/cnrs/liris/lumos/state",
-    #"//accio/java/fr/cnrs/liris/lumos/storage",
+    "//accio/java/fr/cnrs/liris/lumos/storage",
     #"//accio/java/fr/cnrs/liris/lumos/version",
     "//accio/java/fr/cnrs/liris/finatra/auth",
     "//accio/thrift/fr/cnrs/liris/lumos/server",

@@ -32,23 +32,23 @@ private[storage] abstract class JobStoreSpec extends UnitSpec with BeforeAndAfte
   private[this] val now = Instant.now()
   private[this] val jobs = Seq(
     Job(
-      name = "exp1",
+      name = "job1",
       createTime = now,
       owner = Some("me"),
       labels = Map("foo" -> "bar"),
       status = ExecStatus(state = ExecStatus.Running)),
     Job(
-      name = "exp2",
+      name = "job2",
       createTime = now.plus(10),
       owner = Some("him"),
       labels = Map("bar" -> "foo", "foo" -> "bar")),
     Job(
-      name = "exp3",
+      name = "job3",
       createTime = now.plus(20),
       owner = Some("him"),
       status = ExecStatus(state = ExecStatus.Running)),
     Job(
-      name = "exp4",
+      name = "job4",
       createTime = now.plus(30),
       labels = Map("foo" -> "foo"),
       status = ExecStatus(state = ExecStatus.Successful)))
@@ -84,48 +84,48 @@ private[storage] abstract class JobStoreSpec extends UnitSpec with BeforeAndAfte
 
   if (!disabled) {
     it should "create and retrieve jobs" in {
-      Await.result(store.get("exp1")) shouldBe None
-      Await.result(store.get("exp2")) shouldBe None
-      jobs.foreach(job => Await.result(store.create(job)) shouldBe WriteResult.Ok)
-      Await.result(store.create(jobs.head)) shouldBe WriteResult.AlreadyExists
-      Await.result(store.get("exp1")) shouldBe Some(jobs(0))
-      Await.result(store.get("exp2")) shouldBe Some(jobs(1))
+      Await.result(store.get("job1")) shouldBe None
+      Await.result(store.get("job2")) shouldBe None
+      jobs.foreach(job => Await.result(store.create(job)) shouldBe Status.Ok)
+      Await.result(store.create(jobs.head)) shouldBe Status.AlreadyExists("job", "job1")
+      Await.result(store.get("job1")) shouldBe Some(jobs(0))
+      Await.result(store.get("job2")) shouldBe Some(jobs(1))
 
       var res = Await.result(store.list())
       res.totalCount shouldBe 4
-      res.results should contain theSameElementsInOrderAs jobs.reverse
+      res.jobs should contain theSameElementsInOrderAs jobs.reverse
 
       res = Await.result(store.list(limit = Some(2)))
       res.totalCount shouldBe 4
-      res.results should contain theSameElementsInOrderAs Seq(jobs(3), jobs(2))
+      res.jobs should contain theSameElementsInOrderAs Seq(jobs(3), jobs(2))
 
       res = Await.result(store.list(offset = Some(2)))
       res.totalCount shouldBe 4
-      res.results should contain theSameElementsInOrderAs Seq(jobs(1), jobs(0))
+      res.jobs should contain theSameElementsInOrderAs Seq(jobs(1), jobs(0))
 
       res = Await.result(store.list(limit = Some(2), offset = Some(1)))
       res.totalCount shouldBe 4
-      res.results should contain theSameElementsInOrderAs Seq(jobs(2), jobs(1))
+      res.jobs should contain theSameElementsInOrderAs Seq(jobs(2), jobs(1))
     }
 
     it should "replace jobs" in {
-      Await.result(store.replace(jobs.head)) shouldBe WriteResult.NotFound
+      Await.result(store.replace(jobs.head)) shouldBe Status.NotFound("job", "job1")
       Await.result(Future.join(jobs.map(store.create)))
-      Await.result(store.replace(jobs.head.copy(labels = Map("foo" -> "otherbar")))) shouldBe WriteResult.Ok
-      Await.result(store.get("exp1")) shouldBe Some(jobs.head.copy(labels = Map("foo" -> "otherbar")))
-      Await.result(store.get("exp2")) shouldBe Some(jobs(1))
-      Await.result(store.get("exp3")) shouldBe Some(jobs(2))
-      Await.result(store.get("exp4")) shouldBe Some(jobs(3))
+      Await.result(store.replace(jobs.head.copy(labels = Map("foo" -> "otherbar")))) shouldBe Status.Ok
+      Await.result(store.get("job1")) shouldBe Some(jobs.head.copy(labels = Map("foo" -> "otherbar")))
+      Await.result(store.get("job2")) shouldBe Some(jobs(1))
+      Await.result(store.get("job3")) shouldBe Some(jobs(2))
+      Await.result(store.get("job4")) shouldBe Some(jobs(3))
     }
 
     it should "delete jobs" in {
-      Await.result(store.delete("exp4")) shouldBe WriteResult.NotFound
+      Await.result(store.delete("job4")) shouldBe Status.NotFound("job", "job4")
       Await.result(Future.join(jobs.map(store.create)))
-      Await.result(store.delete("exp4")) shouldBe WriteResult.Ok
-      Await.result(store.get("exp4")) shouldBe None
-      Await.result(store.get("exp1")) shouldBe Some(jobs(0))
-      Await.result(store.get("exp2")) shouldBe Some(jobs(1))
-      Await.result(store.get("exp3")) shouldBe Some(jobs(2))
+      Await.result(store.delete("job4")) shouldBe Status.Ok
+      Await.result(store.get("job4")) shouldBe None
+      Await.result(store.get("job1")) shouldBe Some(jobs(0))
+      Await.result(store.get("job2")) shouldBe Some(jobs(1))
+      Await.result(store.get("job3")) shouldBe Some(jobs(2))
     }
 
     it should "search for jobs by owner" in {
@@ -133,19 +133,19 @@ private[storage] abstract class JobStoreSpec extends UnitSpec with BeforeAndAfte
 
       var res = Await.result(store.list(JobQuery(owner = Some("me"))))
       res.totalCount shouldBe 1
-      res.results should contain theSameElementsInOrderAs Seq(jobs(0))
+      res.jobs should contain theSameElementsInOrderAs Seq(jobs(0))
 
       res = Await.result(store.list(JobQuery(owner = Some("him"))))
       res.totalCount shouldBe 2
-      res.results should contain theSameElementsInOrderAs Seq(jobs(2), jobs(1))
+      res.jobs should contain theSameElementsInOrderAs Seq(jobs(2), jobs(1))
 
       res = Await.result(store.list(JobQuery(owner = Some("him")), limit = Some(1)))
       res.totalCount shouldBe 2
-      res.results should contain theSameElementsInOrderAs Seq(jobs(2))
+      res.jobs should contain theSameElementsInOrderAs Seq(jobs(2))
 
       res = Await.result(store.list(JobQuery(owner = Some("him")), offset = Some(1)))
       res.totalCount shouldBe 2
-      res.results should contain theSameElementsInOrderAs Seq(jobs(1))
+      res.jobs should contain theSameElementsInOrderAs Seq(jobs(1))
     }
 
     it should "search for jobs by labels" in {
@@ -153,35 +153,35 @@ private[storage] abstract class JobStoreSpec extends UnitSpec with BeforeAndAfte
 
       var res = Await.result(store.list(JobQuery(labels = Set(LabelSelector.present("foo")))))
       res.totalCount shouldBe 3
-      res.results should contain theSameElementsInOrderAs Seq(jobs(3), jobs(1), jobs(0))
+      res.jobs should contain theSameElementsInOrderAs Seq(jobs(3), jobs(1), jobs(0))
 
       res = Await.result(store.list(JobQuery(labels = Set(LabelSelector.present("foo"))), limit = Some(2)))
       res.totalCount shouldBe 3
-      res.results should contain theSameElementsInOrderAs Seq(jobs(3), jobs(1))
+      res.jobs should contain theSameElementsInOrderAs Seq(jobs(3), jobs(1))
 
       res = Await.result(store.list(JobQuery(labels = Set(LabelSelector.present("foo"))), offset = Some(1)))
       res.totalCount shouldBe 3
-      res.results should contain theSameElementsInOrderAs Seq(jobs(1), jobs(0))
+      res.jobs should contain theSameElementsInOrderAs Seq(jobs(1), jobs(0))
 
       res = Await.result(store.list(JobQuery(labels = Set(LabelSelector.in("foo", Set("bar"))))))
       res.totalCount shouldBe 2
-      res.results should contain theSameElementsInOrderAs Seq(jobs(1), jobs(0))
+      res.jobs should contain theSameElementsInOrderAs Seq(jobs(1), jobs(0))
 
       res = Await.result(store.list(JobQuery(labels = Set(LabelSelector.in("foo", Set("foo", "bar"))))))
       res.totalCount shouldBe 3
-      res.results should contain theSameElementsInOrderAs Seq(jobs(3), jobs(1), jobs(0))
+      res.jobs should contain theSameElementsInOrderAs Seq(jobs(3), jobs(1), jobs(0))
 
       res = Await.result(store.list(JobQuery(labels = Set(LabelSelector.notIn("foo", Set("bar"))))))
       res.totalCount shouldBe 2
-      res.results should contain theSameElementsInOrderAs Seq(jobs(3), jobs(2))
+      res.jobs should contain theSameElementsInOrderAs Seq(jobs(3), jobs(2))
 
       res = Await.result(store.list(JobQuery(labels = Set(LabelSelector.absent("foo")))))
       res.totalCount shouldBe 1
-      res.results should contain theSameElementsInOrderAs Seq(jobs(2))
+      res.jobs should contain theSameElementsInOrderAs Seq(jobs(2))
 
       res = Await.result(store.list(JobQuery(labels = Set(LabelSelector.in("foo", Set("bar")), LabelSelector.present("bar")))))
       res.totalCount shouldBe 1
-      res.results should contain theSameElementsInOrderAs Seq(jobs(1))
+      res.jobs should contain theSameElementsInOrderAs Seq(jobs(1))
     }
 
     it should "search for jobs by state" in {
@@ -189,19 +189,19 @@ private[storage] abstract class JobStoreSpec extends UnitSpec with BeforeAndAfte
 
       var res = Await.result(store.list(JobQuery(state = Set(ExecStatus.Running))))
       res.totalCount shouldBe 2
-      res.results should contain theSameElementsInOrderAs Seq(jobs(2), jobs(0))
+      res.jobs should contain theSameElementsInOrderAs Seq(jobs(2), jobs(0))
 
       res = Await.result(store.list(JobQuery(state = Set(ExecStatus.Running)), limit = Some(1)))
       res.totalCount shouldBe 2
-      res.results should contain theSameElementsInOrderAs Seq(jobs(2))
+      res.jobs should contain theSameElementsInOrderAs Seq(jobs(2))
 
       res = Await.result(store.list(JobQuery(state = Set(ExecStatus.Running)), offset = Some(1)))
       res.totalCount shouldBe 2
-      res.results should contain theSameElementsInOrderAs Seq(jobs(0))
+      res.jobs should contain theSameElementsInOrderAs Seq(jobs(0))
 
       res = Await.result(store.list(JobQuery(state = Set(ExecStatus.Running, ExecStatus.Successful))))
       res.totalCount shouldBe 3
-      res.results should contain theSameElementsInOrderAs Seq(jobs(3), jobs(2), jobs(0))
+      res.jobs should contain theSameElementsInOrderAs Seq(jobs(3), jobs(2), jobs(0))
     }
   }
 }

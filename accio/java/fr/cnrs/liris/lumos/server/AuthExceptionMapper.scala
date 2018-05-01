@@ -3,7 +3,7 @@
  * Copyright (C) 2016-2018 Vincent Primault <v.primault@ucl.ac.uk>
  *
  * Accio is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * it under the ter ms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
@@ -16,16 +16,16 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.lumos.storage
+package fr.cnrs.liris.lumos.server
 
-sealed trait WriteResult
+import com.google.inject.Singleton
+import com.twitter.finatra.thrift.exceptions.ExceptionMapper
+import com.twitter.util.Future
+import fr.cnrs.liris.finatra.auth.UnauthenticatedException
 
-object WriteResult {
-
-  case object Ok extends WriteResult
-
-  case object AlreadyExists extends WriteResult
-
-  case object NotFound extends WriteResult
-
+@Singleton
+final class AuthExceptionMapper extends ExceptionMapper[UnauthenticatedException, ServerException] {
+  override def handleException(e: UnauthenticatedException): Future[ServerException] = {
+    Future.exception(ServerException(ErrorCode.Unauthenticated))
+  }
 }

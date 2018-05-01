@@ -20,17 +20,19 @@ namespace java fr.cnrs.liris.lumos.server
 
 include "accio/thrift/fr/cnrs/liris/lumos/domain/lumos.thrift"
 
+enum ErrorCode {
+  ALREADY_EXISTS,
+  NOT_FOUND,
+  FAILED_PRECONDITION,
+  INVALID_ARGUMENT,
+  UNAUTHENTICATED,
+}
+
 exception ServerException {
-  1: string reason;
+  1: ErrorCode code;
   2: optional string message;
-
-  // A name for the type of resource being accessed.
   3: optional string resource_type;
-
-  // The name of the resource being accessed.
   4: optional string resource_name;
-
-  // A list of errors.
   5: optional list<string> errors;
 }
 
@@ -66,7 +68,7 @@ struct ListJobsRequest {
 
 struct ListJobsResponse {
   1: required list<lumos.Job> jobs;
-  2: required i32 total_count;
+  2: required i64 total_count;
 }
 
 service LumosService {

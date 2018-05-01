@@ -23,8 +23,8 @@ import com.twitter.finagle.mysql._
 import com.twitter.finagle.stats.StatsReceiver
 import com.twitter.util.{Future, StorageUnit}
 import fr.cnrs.liris.lumos.domain.thrift.ThriftAdapter
-import fr.cnrs.liris.lumos.domain.{Job, JobList, LabelSelector, thrift}
-import fr.cnrs.liris.lumos.storage.{JobQuery, JobStore, WriteResult}
+import fr.cnrs.liris.lumos.domain._
+import fr.cnrs.liris.lumos.storage.{JobQuery, JobStore}
 import fr.cnrs.liris.util.scrooge.BinaryScroogeSerializer
 
 import scala.collection.mutable
@@ -34,7 +34,7 @@ private[storage] final class MysqlJobStore(client: Client, statsReceiver: StatsR
 
   private[this] val sizeStat = statsReceiver.stat("storage", "job", "content_size_kb")
 
-  override def create(job: Job): Future[WriteResult] = {
+  override def create(job: Job): Future[Status] = {
     val content = encode(job)
     sizeStat.add(StorageUnit.fromBytes(content.length).inKilobytes)
     client
@@ -50,16 +50,16 @@ private[storage] final class MysqlJobStore(client: Client, statsReceiver: StatsR
           val fs = job.labels.toSeq.map { case (k, v) =>
             client.prepare(MysqlJobStore.InsertLabelQuery).apply(job.name, k, v)
           }
-          Future.join(fs).map(_ => WriteResult.Ok)
+          Future.join(fs).map(_ => Status.Ok)
         case res => throw new RuntimeException(s"Unexpected MySQL result: $res")
       }
       .handle {
         // Error code 1062 corresponds to a duplicate entry, which means the object already exists.
-        case ServerError(1062, _, _) => WriteResult.AlreadyExists
+        case ServerError(1062, _, _) => Status.AlreadyExists(resourceType, job.name)
       }
   }
 
-  override def replace(job: Job): Future[WriteResult] = {
+  override def replace(job: Job): Future[Status] = {
     // Create time, owner and labels are all immutable, so we do not update their denormalizations.
     // Only the state might be updated later on.
     val content = encode(job)
@@ -68,17 +68,19 @@ private[storage] final class MysqlJobStore(client: Client, statsReceiver: StatsR
       .prepare(MysqlJobStore.ReplaceQuery)
       .apply(job.status.state.name, content, job.name)
       .map {
-        case ok: OK => if (ok.affectedRows == 1) WriteResult.Ok else WriteResult.NotFound
+        case ok: OK =>
+          if (ok.affectedRows == 1) Status.Ok else Status.NotFound(resourceType, job.name)
         case res => throw new RuntimeException(s"Unexpected MySQL result: $res")
       }
   }
 
-  override def delete(name: String): Future[WriteResult] = {
+  override def delete(name: String): Future[Status] = {
     client
       .prepare(MysqlJobStore.DeleteQuery)
       .apply(name)
       .map {
-        case ok: OK => if (ok.affectedRows == 1) WriteResult.Ok else WriteResult.NotFound
+        case ok: OK =>
+          if (ok.affectedRows == 1) Status.Ok else Status.NotFound(resourceType, name)
         case res => throw new RuntimeException(s"Unexpected MySQL result: $res")
       }
   }

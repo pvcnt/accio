@@ -30,19 +30,27 @@ object Event {
 
   case class JobExpanded(tasks: Seq[Task]) extends Payload
 
-  case object JobStarted extends Payload
+  case class JobStarted(message: Option[String] = None) extends Payload
 
-  case object JobCanceled extends Payload
+  case class JobCanceled(message: Option[String] = None) extends Payload
 
-  case class JobCompleted(outputs: Seq[AttrValue] = Seq.empty) extends Payload
+  case class JobCompleted(
+    outputs: Seq[AttrValue] = Seq.empty,
+    message: Option[String] = None)
+    extends Payload
 
-  case class TaskStarted(name: String, links: Seq[Link] = Seq.empty) extends Payload
+  case class TaskStarted(
+    name: String,
+    links: Seq[Link] = Seq.empty,
+    message: Option[String] = None)
+    extends Payload
 
   case class TaskCompleted(
     name: String,
     exitCode: Int,
     metrics: Seq[MetricValue] = Seq.empty,
-    error: Option[ErrorDatum] = None)
+    error: Option[ErrorDatum] = None,
+    message: Option[String] = None)
     extends Payload
 
 }

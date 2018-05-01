@@ -18,47 +18,34 @@
 
 package fr.cnrs.liris.lumos.state
 
-import java.util.UUID
-
-import fr.cnrs.liris.lumos.domain.{Event, ExecStatus, Job, Task}
+import fr.cnrs.liris.lumos.domain._
 import org.joda.time.Instant
 
 object JobStateMachine {
-
-  sealed trait Result
-
-  case class Ok(job: Job) extends Result
-
-  case class Illegal(errors: Seq[String]) extends Result
-
-  case object AlreadyExists extends Result
-
-  def apply(job: Job, event: Event): Result =
+  def apply(job: Job, event: Event): Either[Job, Status] =
     event.payload match {
       case e: Event.JobEnqueued => handleJobEnqueued(job, event.time, e)
       case e: Event.JobExpanded => handleJobExpanded(job, event.time, e)
-      case Event.JobStarted => handleJobStarted(job, event.time)
+      case e: Event.JobStarted => handleJobStarted(job, event.time, e)
       case e: Event.JobCompleted => handleJobCompleted(job, event.time, e)
-      case Event.JobCanceled => handleJobCanceled(job, event.time)
+      case e: Event.JobCanceled => handleJobCanceled(job, event.time, e)
       case e: Event.TaskStarted => handleTaskStarted(job, event.time, e)
       case e: Event.TaskCompleted => handleTaskCompleted(job, event.time, e)
     }
 
   private def handleJobEnqueued(job: Job, time: Instant, e: Event.JobEnqueued) = {
     if (job.name.nonEmpty) {
-      AlreadyExists
+      Right(Status.AlreadyExists("job", job.name))
     } else {
-      // https://stackoverflow.com/questions/4267475/generating-8-character-only-uuids
-      val name = if (job.name.isEmpty) UUID.randomUUID().getLeastSignificantBits.toHexString else job.name
-      Ok(Job(
-        name = name,
+      Left(Job(
+        name = job.name,
         createTime = time,
         owner = job.owner,
         contact = job.contact,
         labels = job.labels,
         metadata = job.metadata,
         inputs = job.inputs,
-        status = ExecStatus(ExecStatus.Pending, time, reason = Some("Created"))))
+        status = ExecStatus(ExecStatus.Pending, time, message = Some("Job created"))))
     }
   }
 
@@ -70,20 +57,20 @@ object JobStateMachine {
             name = task.name,
             mnemonic = task.mnemonic,
             dependencies = task.dependencies,
-            status = ExecStatus(ExecStatus.Pending, time, reason = Some("Created")))
+            status = ExecStatus(ExecStatus.Pending, time, message = Some("Job expanded")))
         }
-        Ok(job.copy(tasks = job.tasks ++ tasks))
-      case _ => Illegal(Seq("Job is already completed"))
+        Left(job.copy(tasks = job.tasks ++ tasks))
+      case _ => Right(Status.FailedPrecondition(Seq("Job is already completed")))
     }
 
-  private def handleJobStarted(job: Job, time: Instant) =
+  private def handleJobStarted(job: Job, time: Instant, e: Event.JobStarted) =
     job.status.state match {
       case ExecStatus.Pending =>
-        Ok(job.copy(
+        Left(job.copy(
           history = job.history :+ job.status,
-          status = ExecStatus(ExecStatus.Running, time)))
-      case ExecStatus.Running => Illegal(Seq("Job is already running"))
-      case _ => Illegal(Seq("Job is already completed"))
+          status = ExecStatus(ExecStatus.Running, time, e.message)))
+      case ExecStatus.Running => Right(Status.FailedPrecondition(Seq("Job is already running")))
+      case _ => Right(Status.FailedPrecondition(Seq("Job is already completed")))
     }
 
   private def handleJobCompleted(job: Job, time: Instant, e: Event.JobCompleted) =
@@ -96,13 +83,13 @@ object JobStateMachine {
       } else {
         ExecStatus.Failed
       }
-      Ok(job.copy(
+      Left(job.copy(
         history = job.history :+ job.status,
-        status = ExecStatus(state, time),
+        status = ExecStatus(state, time, e.message),
         outputs = e.outputs))
     }
 
-  private def handleJobCanceled(job: Job, time: Instant) =
+  private def handleJobCanceled(job: Job, time: Instant, e: Event.JobCanceled) =
     ifRunning(job) {
       val tasks = job.tasks.map { task =>
         if (task.status.state.isCompleted) {
@@ -110,10 +97,10 @@ object JobStateMachine {
         } else {
           task.copy(
             history = task.history :+ task.status,
-            status = ExecStatus(ExecStatus.Canceled, time))
+            status = ExecStatus(ExecStatus.Canceled, time, e.message))
         }
       }
-      Ok(job.copy(
+      Left(job.copy(
         history = job.history :+ job.status,
         status = ExecStatus(ExecStatus.Canceled, time),
         tasks = tasks))
@@ -127,10 +114,10 @@ object JobStateMachine {
         case ExecStatus.Pending =>
           task = task.copy(
             history = task.history :+ task.status,
-            status = ExecStatus(ExecStatus.Running, Instant.now()),
+            status = ExecStatus(ExecStatus.Running, time, e.message),
             links = e.links)
-          Ok(job.copy(tasks = job.tasks.updated(idx, task)))
-        case _ => Illegal(Seq("Task is already running or completed"))
+          Left(job.copy(tasks = job.tasks.updated(idx, task)))
+        case _ => Right(Status.FailedPrecondition(Seq("Task is already running or completed")))
       }
     }
 
@@ -139,30 +126,30 @@ object JobStateMachine {
       val idx = job.tasks.indexWhere(_.name == e.name)
       var task = job.tasks(idx)
       task.status.state match {
-        case ExecStatus.Pending => Illegal(Seq("Task is not running"))
+        case ExecStatus.Pending => Right(Status.FailedPrecondition(Seq("Task is not running")))
         case ExecStatus.Running =>
           val state = if (e.exitCode == 0) ExecStatus.Successful else ExecStatus.Failed
           if (state == ExecStatus.Successful && e.error.isDefined) {
-            Illegal(Seq("A successful task cannot also define an error"))
+            Right(Status.InvalidArgument(Seq("A successful task cannot also define an error")))
           } else {
             task = task.copy(
               history = task.history :+ task.status,
-              status = ExecStatus(state, Instant.now()),
+              status = ExecStatus(state, time, e.message),
               exitCode = Some(e.exitCode),
               metrics = e.metrics,
               error = e.error)
             val tasks = job.tasks.updated(idx, task)
             val progress = ((tasks.count(_.status.state.isCompleted).toDouble / tasks.size) * 100).round
-            Ok(job.copy(tasks = tasks, progress = progress.toInt))
+            Left(job.copy(tasks = tasks, progress = progress.toInt))
           }
-        case _ => Illegal(Seq("Task is already completed"))
+        case _ => Right(Status.FailedPrecondition(Seq("Task is already completed")))
       }
     }
 
-  private def ifRunning(job: Job)(fn: => Result) =
+  private def ifRunning(job: Job)(fn: => Either[Job, Status]) =
     job.status.state match {
-      case ExecStatus.Pending => Illegal(Seq("Job is not running"))
+      case ExecStatus.Pending => Right(Status.FailedPrecondition(Seq("Job is not running")))
       case ExecStatus.Running => fn
-      case _ => Illegal(Seq("Job is already completed"))
+      case _ => Right(Status.FailedPrecondition(Seq("Job is already completed")))
     }
 }

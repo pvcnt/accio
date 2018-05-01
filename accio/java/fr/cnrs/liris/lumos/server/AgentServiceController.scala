@@ -19,22 +19,52 @@
 package fr.cnrs.liris.lumos.server
 
 import com.google.inject.{Inject, Singleton}
-import com.twitter.finagle.Service
 import com.twitter.finatra.thrift.Controller
 import com.twitter.util.Future
+import fr.cnrs.liris.lumos.domain.thrift.ThriftAdapter
+import fr.cnrs.liris.lumos.domain.{LabelSelector, LumosException}
 import fr.cnrs.liris.lumos.server.LumosService._
+import fr.cnrs.liris.lumos.state.EventHandler
+import fr.cnrs.liris.lumos.storage.{JobQuery, JobStore}
 
 @Singleton
-final class AgentServiceController @Inject()()
+final class AgentServiceController @Inject()(jobStore: JobStore, eventHandler: EventHandler)
   extends Controller with LumosService.ServicePerEndpoint {
 
   override val getInfo = handle(GetInfo) { args: GetInfo.Args =>
     Future.value(GetInfoResponse("devel"))
   }
 
-  override def pushEvent: Service[PushEvent.Args, PushEventResponse] = ???
+  override val pushEvent = handle(PushEvent) { args: PushEvent.Args =>
+    eventHandler
+      .handle(ThriftAdapter.toDomain(args.req.event))
+      .map(_.toException)
+      .flatMap {
+        case Some(e) => Future.exception(e)
+        case None => Future.value(PushEventResponse())
+      }
+  }
 
-  override def getJob: Service[GetJob.Args, GetJobResponse] = ???
+  override val getJob = handle(GetJob) { args: GetJob.Args =>
+    jobStore
+      .get(args.req.name)
+      .flatMap {
+        case Some(job) => Future.value(GetJobResponse(ThriftAdapter.toThrift(job)))
+        case None => Future.exception(LumosException.NotFound(jobStore.resourceType, args.req.name))
+      }
+  }
 
-  override def listJobs: Service[ListJobs.Args, ListJobsResponse] = ???
+  override val listJobs = handle(ListJobs) { args: ListJobs.Args =>
+    val query = JobQuery(
+      state = args.req.state.toSet.flatten.map(ThriftAdapter.toDomain),
+      owner = args.req.owner,
+      labels = args.req.labels.toSet.flatten.map(LabelSelector.parse))
+    jobStore
+      .list(query, limit = args.req.limit, offset = args.req.offset)
+      .map { results =>
+        ListJobsResponse(
+          jobs = results.jobs.map(ThriftAdapter.toThrift),
+          totalCount = results.totalCount)
+      }
+  }
 }

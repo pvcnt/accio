@@ -72,8 +72,7 @@ enum ExecState {
 struct ExecStatus {
   1: ExecState state;
   2: i64 time;
-  3: optional string reason;
-  4: optional string message;
+  3: optional string message;
 }
 
 struct Link {
@@ -122,17 +121,23 @@ struct JobExpandedEvent {
   1: list<Task> tasks;
 }
 
-struct JobStartedEvent {}
+struct JobStartedEvent {
+  1: optional string message;
+}
 
 struct JobCompletedEvent {
   1: list<AttrValue> outputs;
+  2: optional string message;
 }
 
-struct JobCanceledEvent {}
+struct JobCanceledEvent {
+  1: optional string message;
+}
 
 struct TaskStartedEvent {
   1: string name;
   2: list<Link> links;
+  3: optional string message;
 }
 
 struct TaskCompletedEvent {
@@ -140,6 +145,7 @@ struct TaskCompletedEvent {
   2: i32 exit_code;
   3: list<MetricValue> metrics;
   4: optional ErrorDatum error;
+  5: optional string message;
 }
 
 union EventPayload {

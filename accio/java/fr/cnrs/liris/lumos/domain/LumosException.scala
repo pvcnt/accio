@@ -18,20 +18,18 @@
 
 package fr.cnrs.liris.lumos.domain
 
-/**
- * Results and total number of jobs.
- *
- * @param jobs    List of jobs.
- * @param totalCount Total number of jobs.
- */
-case class JobList(jobs: Seq[Job], totalCount: Long)
+sealed abstract class LumosException(message: String) extends Exception(message)
 
-object JobList {
-  def slice(items: Seq[Job], offset: Option[Int], limit: Option[Int]): JobList = {
-    val totalCount = items.size
-    var results = items
-    offset.foreach { offset => results = results.drop(offset) }
-    limit.foreach { limit => results = results.take(limit) }
-    JobList(results, totalCount)
-  }
+object LumosException {
+  case class AlreadyExists(resourceType: String, resourceName: String)
+    extends LumosException(s"The $resourceType resource already exists: $resourceName")
+
+  case class NotFound(resourceType: String, resourceName: String)
+    extends LumosException(s"The $resourceType resource was not found: $resourceName")
+
+  case class InvalidArgument(errors: Seq[String])
+    extends LumosException(s"Some arguments were invalid:\n  ${errors.mkString("\n  ")}")
+
+  case class FailedPrecondition(errors: Seq[String])
+    extends LumosException(s"Some preconditions failed:\n  ${errors.mkString("\n  ")}")
 }

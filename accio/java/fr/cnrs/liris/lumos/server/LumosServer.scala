@@ -37,6 +37,7 @@ class LumosServer extends ThriftServer {
       .filter[StatsFilter]
       .filter[AuthFilter]
       .filter[ExceptionMappingFilter]
+      .exceptionMapper[AuthExceptionMapper]
       .exceptionMapper[LumosExceptionMapper]
       .add[AgentServiceController]
   }
