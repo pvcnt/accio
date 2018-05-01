@@ -33,10 +33,10 @@ class RangeSpec extends UnitSpec {
     checkContains(range)
     range.hasLowerBound shouldBe true
     range.lowerEndpoint shouldBe 4
-    range.lowerBoundType shouldBe BoundType.Open
+    range.lowerBoundType shouldBe Range.Open
     range.hasUpperBound shouldBe true
     range.upperEndpoint shouldBe 8
-    range.upperBoundType shouldBe BoundType.Open
+    range.upperBoundType shouldBe Range.Open
     range.isEmpty shouldBe false
     range.toString shouldBe "(4..8)"
   }
@@ -55,10 +55,10 @@ class RangeSpec extends UnitSpec {
     checkContains(range)
     range.hasLowerBound shouldBe true
     range.lowerEndpoint shouldBe 5
-    range.lowerBoundType shouldBe BoundType.Closed
+    range.lowerBoundType shouldBe Range.Closed
     range.hasUpperBound shouldBe true
     range.upperEndpoint shouldBe 7
-    range.upperBoundType shouldBe BoundType.Closed
+    range.upperBoundType shouldBe Range.Closed
     range.isEmpty shouldBe false
     range.toString shouldBe "[5..7]"
   }
@@ -74,10 +74,10 @@ class RangeSpec extends UnitSpec {
     checkContains(range)
     range.hasLowerBound shouldBe true
     range.lowerEndpoint shouldBe 4
-    range.lowerBoundType shouldBe BoundType.Open
+    range.lowerBoundType shouldBe Range.Open
     range.hasUpperBound shouldBe true
     range.upperEndpoint shouldBe 7
-    range.upperBoundType shouldBe BoundType.Closed
+    range.upperBoundType shouldBe Range.Closed
     range.isEmpty shouldBe false
     range.toString shouldBe "(4..7]"
   }
@@ -87,15 +87,15 @@ class RangeSpec extends UnitSpec {
     checkContains(range)
     range.hasLowerBound shouldBe true
     range.lowerEndpoint shouldBe 5
-    range.lowerBoundType shouldBe BoundType.Closed
+    range.lowerBoundType shouldBe Range.Closed
     range.hasUpperBound shouldBe true
     range.upperEndpoint shouldBe 8
-    range.upperBoundType shouldBe BoundType.Open
+    range.upperBoundType shouldBe Range.Open
     range.isEmpty shouldBe false
     range.toString shouldBe "[5..8)"
   }
 
-  private def checkContains(range: Range[Int]) = {
+  private def checkContains(range: Range[Int]): Unit = {
     range.contains(4) shouldBe false
     range.contains(5) shouldBe true
     range.contains(7) shouldBe true
@@ -109,10 +109,10 @@ class RangeSpec extends UnitSpec {
     range.contains(5) shouldBe false
     range.hasLowerBound shouldBe true
     range.lowerEndpoint shouldBe 4
-    range.lowerBoundType shouldBe BoundType.Closed
+    range.lowerBoundType shouldBe Range.Closed
     range.hasUpperBound shouldBe true
     range.upperEndpoint shouldBe 4
-    range.upperBoundType shouldBe BoundType.Closed
+    range.upperBoundType shouldBe Range.Closed
     range.isEmpty shouldBe false
     range.toString shouldBe "[4..4]"
   }
@@ -124,10 +124,10 @@ class RangeSpec extends UnitSpec {
     range.contains(5) shouldBe false
     range.hasLowerBound shouldBe true
     range.lowerEndpoint shouldBe 4
-    range.lowerBoundType shouldBe BoundType.Closed
+    range.lowerBoundType shouldBe Range.Closed
     range.hasUpperBound shouldBe true
     range.upperEndpoint shouldBe 4
-    range.upperBoundType shouldBe BoundType.Open
+    range.upperBoundType shouldBe Range.Open
     range.isEmpty shouldBe true
     range.toString shouldBe "[4..4)"
   }
@@ -139,10 +139,10 @@ class RangeSpec extends UnitSpec {
     range.contains(5) shouldBe false
     range.hasLowerBound shouldBe true
     range.lowerEndpoint shouldBe 4
-    range.lowerBoundType shouldBe BoundType.Open
+    range.lowerBoundType shouldBe Range.Open
     range.hasUpperBound shouldBe true
     range.upperEndpoint shouldBe 4
-    range.upperBoundType shouldBe BoundType.Closed
+    range.upperBoundType shouldBe Range.Closed
     range.isEmpty shouldBe true
     range.toString shouldBe "(4..4]"
   }
@@ -155,7 +155,7 @@ class RangeSpec extends UnitSpec {
     assertUnboundedBelow(range)
     range.hasUpperBound shouldBe true
     range.upperEndpoint shouldBe 5
-    range.upperBoundType shouldBe BoundType.Open
+    range.upperBoundType shouldBe Range.Open
     range.isEmpty shouldBe false
     range.toString shouldBe "(-\u221e..5)"
   }
@@ -167,7 +167,7 @@ class RangeSpec extends UnitSpec {
     range.contains(Integer.MAX_VALUE) shouldBe true
     range.hasLowerBound shouldBe true
     range.lowerEndpoint shouldBe 5
-    range.lowerBoundType shouldBe BoundType.Open
+    range.lowerBoundType shouldBe Range.Open
     assertUnboundedAbove(range)
     range.isEmpty shouldBe false
     range.toString shouldBe "(5..+\u221e)"
@@ -180,7 +180,7 @@ class RangeSpec extends UnitSpec {
     range.contains(Integer.MAX_VALUE) shouldBe true
     range.hasLowerBound shouldBe true
     range.lowerEndpoint shouldBe 6
-    range.lowerBoundType shouldBe BoundType.Closed
+    range.lowerBoundType shouldBe Range.Closed
     assertUnboundedAbove(range)
     range.isEmpty shouldBe false
     range.toString shouldBe "[6..+\u221e)"
@@ -194,7 +194,7 @@ class RangeSpec extends UnitSpec {
     assertUnboundedBelow(range)
     range.hasUpperBound shouldBe true
     range.upperEndpoint shouldBe 4
-    range.upperBoundType shouldBe BoundType.Closed
+    range.upperBoundType shouldBe Range.Closed
     range.isEmpty shouldBe false
     range.toString shouldBe "(-\u221e..4]"
   }
@@ -210,7 +210,7 @@ class RangeSpec extends UnitSpec {
     Range.all shouldBe range
   }
 
-  private def assertUnboundedBelow(range: Range[Int]) = {
+  private def assertUnboundedBelow(range: Range[Int]): Unit = {
     range.hasLowerBound shouldBe false
     a[NoSuchElementException] shouldBe thrownBy {
       range.lowerEndpoint
@@ -220,7 +220,7 @@ class RangeSpec extends UnitSpec {
     }*/
   }
 
-  private def assertUnboundedAbove(range: Range[Int]) = {
+  private def assertUnboundedAbove(range: Range[Int]): Unit = {
     range.hasUpperBound shouldBe false
     a[NoSuchElementException] shouldBe thrownBy {
       range.upperEndpoint
@@ -284,10 +284,10 @@ class RangeSpec extends UnitSpec {
     range.intersection(Range.greaterThan(3)) shouldBe Range.openClosed(3, 3)
 
     an[IllegalArgumentException] shouldBe thrownBy {
-      range.intersection(Range.atLeast(4));
+      range.intersection(Range.atLeast(4))
     }
     an[IllegalArgumentException] shouldBe thrownBy {
-      range.intersection(Range.atMost(2));
+      range.intersection(Range.atMost(2))
     }
   }
 
@@ -334,7 +334,7 @@ class RangeSpec extends UnitSpec {
 
     // separate above
     an[IllegalArgumentException] shouldBe thrownBy {
-      range.intersection(Range.closed(10, 12));
+      range.intersection(Range.closed(10, 12))
     }
   }
 }

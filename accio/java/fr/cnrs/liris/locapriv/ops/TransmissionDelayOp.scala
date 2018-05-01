@@ -20,7 +20,6 @@ package fr.cnrs.liris.locapriv.ops
 
 import com.github.nscala_time.time.Imports._
 import fr.cnrs.liris.accio.sdk._
-import fr.cnrs.liris.util.Requirements._
 import fr.cnrs.liris.locapriv.model.Trace
 
 @Op(
@@ -41,7 +40,7 @@ case class TransmissionDelayOp(
   }
 
   private def evaluate(ref: Trace, res: Trace) = {
-    requireState(ref.id == res.id, s"Trace mismatch: ${ref.id} / ${res.id}")
+    require(ref.id == res.id, s"Trace mismatch: ${ref.id} / ${res.id}")
     res.id -> (ref.events.last.time to res.events.last.time).millis
   }
 }

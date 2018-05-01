@@ -19,9 +19,8 @@
 package fr.cnrs.liris.locapriv.ops
 
 import fr.cnrs.liris.accio.sdk.{Dataset, _}
-import fr.cnrs.liris.util.geo.Point
-import fr.cnrs.liris.util.Requirements._
 import fr.cnrs.liris.locapriv.model.Trace
+import fr.cnrs.liris.util.geo.Point
 
 @Op(
   category = "metric",
@@ -50,7 +49,7 @@ case class SpatialDistortionOp(
   }
 
   private def evaluate(ref: Trace, res: Trace) = {
-    requireState(ref.id == res.id, s"Trace mismatch: ${ref.id} / ${res.id}")
+    require(ref.id == res.id, s"Trace mismatch: ${ref.id} / ${res.id}")
     require(res.isEmpty || ref.size >= 1, s"Cannot evaluate spatial distortion with empty reference trace ${ref.id}")
     val points = ref.events.map(_.point)
     val distances = if (interpolate) {

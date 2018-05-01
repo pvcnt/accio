@@ -26,11 +26,7 @@ import com.google.common.escape.{CharEscaperBuilder, Escaper}
  * Utils for dealing with strings and text.
  */
 object StringUtils {
-  val QuotesEscaper: Escaper = new CharEscaperBuilder().addEscape('"', "\\\"").addEscape('\\', "\\\\").toEscaper
-  val DoubleQuoteEscaper: Escaper = new CharEscaperBuilder().addEscape('"', "\\\"").toEscaper
-  val SingleQuoteEscaper: Escaper = new CharEscaperBuilder().addEscape('\\', "\\\\").toEscaper
-
-  def padTo(str: String, n: Int) = str.padTo(n, " ").take(n).mkString
+  def padTo(str: String, n: Int): String = str.padTo(n, " ").take(n).mkString
 
   /**
    * Paragraph-fill the specified input text, indenting lines to 'indent' and

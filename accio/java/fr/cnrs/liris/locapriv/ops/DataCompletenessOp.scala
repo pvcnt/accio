@@ -19,7 +19,6 @@
 package fr.cnrs.liris.locapriv.ops
 
 import fr.cnrs.liris.accio.sdk.{Dataset, _}
-import fr.cnrs.liris.util.Requirements._
 import fr.cnrs.liris.locapriv.model.Trace
 
 @Op(
@@ -40,7 +39,7 @@ case class DataCompletenessOp(
   }
 
   private def evaluate(ref: Trace, res: Trace) = {
-    requireState(ref.id == res.id, s"Trace mismatch: ${ref.id} / ${res.id}")
+    require(ref.id == res.id, s"Trace mismatch: ${ref.id} / ${res.id}")
     val value = {
       if (res.isEmpty && ref.isEmpty) 1d
       else if (res.isEmpty) 0d

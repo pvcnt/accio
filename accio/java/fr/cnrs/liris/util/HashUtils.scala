@@ -18,11 +18,8 @@
 
 package fr.cnrs.liris.util
 
-import java.nio.file.{Path, Paths}
-
 import com.google.common.base.Charsets
 import com.google.common.hash.Hashing
-import com.google.common.io.Files
 
 /**
  * Some utilities related to hashing.
@@ -34,31 +31,4 @@ object HashUtils {
    * @param str String to hash.
    */
   def sha1(str: String): String = Hashing.sha1().hashString(str, Charsets.UTF_8).toString
-
-  /**
-   * Get the sha1 hash of several strings as a string. The result will not depend of the order of the strings.
-   *
-   * @param strs Strings to hash.
-   */
-  def sha1(strs: Iterable[String]): String = {
-    val quoted = strs.toSeq.sorted.map(s => "\"" + StringUtils.QuotesEscaper.escape(s) + "\"")
-    sha1(quoted.mkString(","))
-  }
-
-  /**
-   * Return the md5 hash of a string as a string.
-   *
-   * @param str String to hash.
-   */
-  def md5(str: String): String = Hashing.md5().hashString(str, Charsets.UTF_8).toString
-
-  def md5Path(path: Path): String =
-    if (path.toFile.isFile) {
-      Files.hash(path.toFile, Hashing.md5()).toString
-    } else {
-      md5Path(path.toFile.listFiles.map(f => Paths.get(f.getAbsolutePath)))
-    }
-
-  def md5Path(paths: Iterable[Path]): String =
-    md5(paths.toSeq.sortBy(_.toAbsolutePath.toString).map(md5Path).mkString("|"))
 }

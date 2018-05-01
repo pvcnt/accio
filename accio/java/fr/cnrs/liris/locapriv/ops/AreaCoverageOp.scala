@@ -20,9 +20,8 @@ package fr.cnrs.liris.locapriv.ops
 
 import com.google.common.geometry.S2CellId
 import fr.cnrs.liris.accio.sdk.{Dataset, _}
-import fr.cnrs.liris.util.geo.LatLng
-import fr.cnrs.liris.util.Requirements._
 import fr.cnrs.liris.locapriv.model.Trace
+import fr.cnrs.liris.util.geo.LatLng
 import org.joda.time.{Duration, Instant}
 
 @Op(
@@ -48,7 +47,7 @@ case class AreaCoverageOp(
   }
 
   private def evaluate(ref: Trace, res: Trace) = {
-    requireState(ref.id == res.id, s"Trace mismatch: ${ref.id} / ${res.id}")
+    require(ref.id == res.id, s"Trace mismatch: ${ref.id} / ${res.id}")
     val refCells = getCells(ref, level)
     val resCells = getCells(res, level)
     val matched = resCells.intersect(refCells).size
