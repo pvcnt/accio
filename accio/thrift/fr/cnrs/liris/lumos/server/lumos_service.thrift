@@ -26,6 +26,7 @@ enum ErrorCode {
   FAILED_PRECONDITION,
   INVALID_ARGUMENT,
   UNAUTHENTICATED,
+  UNIMPLEMENTED,
 }
 
 exception ServerException {
