@@ -91,11 +91,12 @@ struct Task {
   2: optional string mnemonic;
   3: set<string> dependencies;
   4: list<Link> links;
-  5: optional i32 exit_code;
-  6: list<MetricValue> metrics;
-  7: optional ErrorDatum error;
-  8: optional ExecStatus status;
-  9: list<ExecStatus> history;
+  5: map<string, string> metadata;
+  6: optional i32 exit_code;
+  7: list<MetricValue> metrics;
+  8: optional ErrorDatum error;
+  9: optional ExecStatus status;
+  10: list<ExecStatus> history;
 }
 
 struct Job {
@@ -122,7 +123,8 @@ struct JobExpandedEvent {
 }
 
 struct JobStartedEvent {
-  1: optional string message;
+  1: map<string, string> metadata;
+  2: optional string message;
 }
 
 struct JobCompletedEvent {
@@ -137,7 +139,8 @@ struct JobCanceledEvent {
 struct TaskStartedEvent {
   1: string name;
   2: list<Link> links;
-  3: optional string message;
+  3: map<string, string> metadata;
+  4: optional string message;
 }
 
 struct TaskCompletedEvent {

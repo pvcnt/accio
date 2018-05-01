@@ -57,6 +57,7 @@ object JobStateMachine {
             name = task.name,
             mnemonic = task.mnemonic,
             dependencies = task.dependencies,
+            metadata = task.metadata,
             status = ExecStatus(ExecStatus.Pending, time, message = Some("Job expanded")))
         }
         Right(job.copy(tasks = job.tasks ++ tasks))
@@ -67,6 +68,7 @@ object JobStateMachine {
     job.status.state match {
       case ExecStatus.Pending =>
         Right(job.copy(
+          metadata = job.metadata ++ e.metadata,
           history = job.history :+ job.status,
           status = ExecStatus(ExecStatus.Running, time, e.message)))
       case ExecStatus.Running => Left(Status.FailedPrecondition(Seq("Job is already running")))
@@ -113,6 +115,7 @@ object JobStateMachine {
       task.status.state match {
         case ExecStatus.Pending =>
           task = task.copy(
+            metadata = task.metadata ++ e.metadata,
             history = task.history :+ task.status,
             status = ExecStatus(ExecStatus.Running, time, e.message),
             links = e.links)
