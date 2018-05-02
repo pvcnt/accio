@@ -16,19 +16,19 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.locapriv.sparkle
+package fr.cnrs.liris.locapriv.domain
 
-import scala.reflect.ClassTag
+import fr.cnrs.liris.locapriv.testing.WithCabspotting
+import fr.cnrs.liris.testing.UnitSpec
 
 /**
- * A data frame reading its data from the memory.
- *
- * @param data Data, indexed by key.
- * @param env  Sparkle environment.
- * @tparam T Elements' type.
+ * Unit tests for [[NoClusterer]].
  */
-private[sparkle] class ParallelCollectionDataFrame[T: ClassTag](data: Map[String, Seq[T]], env: SparkleEnv) extends DataFrame[T](env) {
-  override def keys: Seq[String] = data.keySet.toSeq
+class NoClustererSpec extends UnitSpec with WithCabspotting {
+  behavior of "NoClusterer"
 
-  override def load(key: String): Iterator[T] = if (data.contains(key)) data(key).iterator else Iterator.empty
+  it should "cluster a trace" in {
+    val clusters = NoClusterer.cluster(abboipTrace)
+    clusters should have size 0
+  }
 }

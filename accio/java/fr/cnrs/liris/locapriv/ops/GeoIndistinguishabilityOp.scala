@@ -19,8 +19,7 @@
 package fr.cnrs.liris.locapriv.ops
 
 import fr.cnrs.liris.accio.sdk.{Dataset, _}
-import fr.cnrs.liris.locapriv.lppm.Laplace
-import fr.cnrs.liris.locapriv.model.Trace
+import fr.cnrs.liris.locapriv.domain.{Laplace, Trace}
 
 import scala.util.Random
 

@@ -20,7 +20,7 @@ package fr.cnrs.liris.locapriv.testing
 
 import com.google.common.io.Resources
 import fr.cnrs.liris.locapriv.io.TraceCodec
-import fr.cnrs.liris.locapriv.model.Trace
+import fr.cnrs.liris.locapriv.domain.Trace
 
 trait WithCabspotting {
   // It doesn't work with a val..

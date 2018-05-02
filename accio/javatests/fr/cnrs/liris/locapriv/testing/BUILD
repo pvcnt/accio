@@ -17,7 +17,7 @@
 scala_library(
   name = "testing",
   deps=[
-    "//accio/java/fr/cnrs/liris/locapriv/model",
+    "//accio/java/fr/cnrs/liris/locapriv/domain",
     "//accio/java/fr/cnrs/liris/locapriv/io",
     "//accio/java/fr/cnrs/liris/util/geo",
     "//3rdparty/jvm/com/github/nscala_time",

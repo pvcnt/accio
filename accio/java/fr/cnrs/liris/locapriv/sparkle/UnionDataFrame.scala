@@ -16,20 +16,19 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.locapriv.io
+package fr.cnrs.liris.locapriv.sparkle
 
-import java.nio.charset.Charset
+import com.google.common.base.MoreObjects
 
-import com.google.common.base.Charsets
+import scala.reflect.ClassTag
 
-import scala.reflect._
+private[sparkle] class UnionDataFrame[T: ClassTag](frames: Iterable[DataFrame[T]], env: SparkleEnv)
+  extends DataFrame[T](env) {
 
-final class StringCodec(charset: Charset = Charsets.UTF_8) extends Codec[String] {
-  override def elementClassTag: ClassTag[String] = classTag[String]
+  override def keys: Seq[String] = frames.flatMap(_.keys).toSeq.distinct.sorted
 
-  override def decode(key: String, bytes: Array[Byte]): Seq[String] = {
-    if (bytes.nonEmpty) Seq(new String(bytes, charset)) else Seq.empty
-  }
+  override def load(key: String): Iterator[T] =
+    frames.map(_.load(key)).foldLeft(Iterator.empty: Iterator[T])(_ ++ _)
 
-  override def encode(key: String, elements: Seq[String]): Array[Byte] = elements.mkString.getBytes(charset)
+  override def toString: String = MoreObjects.toStringHelper(this).addValue(frames.mkString(", ")).toString
 }

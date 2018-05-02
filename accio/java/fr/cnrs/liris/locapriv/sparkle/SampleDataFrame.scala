@@ -16,29 +16,29 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.locapriv.ops
+package fr.cnrs.liris.locapriv.sparkle
 
-import fr.cnrs.liris.accio.sdk._
-import fr.cnrs.liris.util.geo.Distance
-import fr.cnrs.liris.locapriv.domain.{SpeedSmoothing, Trace}
+import com.google.common.base.MoreObjects
+import fr.cnrs.liris.util.random.RandomSampler
 
-@Op(
-  category = "lppm",
-  help = "Enforce speed smoothing guarantees on traces.",
-  cpus = 4,
-  ram = "2G")
-case class PromesseOp(
-  @Arg(help = "Distance to enforce between two consecutive points")
-  epsilon: Distance,
-  @Arg(help = "Input dataset")
-  data: Dataset)
-  extends ScalaOperator[PromesseOut] with SparkleOperator {
+import scala.reflect.ClassTag
+import scala.util.Random
 
-  override def execute(ctx: OpContext): PromesseOut = {
-    val lppm = new SpeedSmoothing(epsilon)
-    val output = read[Trace](data).map(lppm.transform)
-    PromesseOut(write(output, ctx))
+private[sparkle] class SampleDataFrame[T: ClassTag](inner: DataFrame[T], sampler: RandomSampler[T, T], seed: Long)
+  extends DataFrame[T](inner.env) {
+
+  private[this] val seeds = {
+    val random = new Random(seed)
+    inner.keys.map(key => key -> random.nextLong).toMap
   }
-}
 
-case class PromesseOut(@Arg(help = "Output dataset") data: Dataset)
+  override def keys: Seq[String] = inner.keys
+
+  override def load(key: String): Iterator[T] = {
+    val aSampler = sampler.clone
+    aSampler.setSeed(seeds(key))
+    aSampler.sample(inner.load(key))
+  }
+
+  override def toString: String = MoreObjects.toStringHelper(this).addValue(inner).toString
+}

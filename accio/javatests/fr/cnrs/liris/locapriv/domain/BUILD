@@ -14,14 +14,15 @@
 # You should have received a copy of the GNU General Public License
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
-scala_library(
-  name = 'clustering',
+scala_test(
+  name = "domain",
   srcs = glob(["*.scala"]),
   deps = [
-    '//accio/java/fr/cnrs/liris/locapriv/model',
-    '//accio/java/fr/cnrs/liris/util/geo',
-    '//3rdparty/jvm/com/google/guava',
-    '//3rdparty/jvm/com/github/nscala_time',
+    "//accio/java/fr/cnrs/liris/locapriv/domain",
+    "//accio/java/fr/cnrs/liris/util/geo",
+    "//accio/javatests/fr/cnrs/liris/locapriv/testing",
+    "//accio/javatests/fr/cnrs/liris/testing",
+    "//3rdparty/jvm/com/github/nscala_time",
   ],
-  visibility = ["//visibility:public"],
+  size = "small",
 )

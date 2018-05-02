@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.locapriv.model
+package fr.cnrs.liris.locapriv.domain
 
 import com.github.nscala_time.time.Imports._
 import fr.cnrs.liris.util.geo.{Location, Point}

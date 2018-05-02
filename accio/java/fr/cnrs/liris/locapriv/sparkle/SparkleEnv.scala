@@ -47,7 +47,7 @@ class SparkleEnv(level: Int) extends Logging {
    * @tparam T Elements' type.
    */
   def parallelize[T: ClassTag](data: (String, Iterable[T])*): DataFrame[T] = {
-    new ParallelCollectionDataFrame(ListMap(data.map { case (key, value) => key -> value.toSeq }: _*), this)
+    new MemoryDataFrame(ListMap(data.map { case (key, value) => key -> value.toSeq }: _*), this)
   }
 
   /**
@@ -58,7 +58,7 @@ class SparkleEnv(level: Int) extends Logging {
    * @tparam T Elements' type.
    */
   def parallelize[T: ClassTag](values: T*)(indexer: T => String): DataFrame[T] = {
-    new ParallelCollectionDataFrame(values.groupBy(indexer), this)
+    new MemoryDataFrame(values.groupBy(indexer), this)
   }
 
   /**

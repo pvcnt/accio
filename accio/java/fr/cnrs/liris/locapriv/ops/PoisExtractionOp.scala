@@ -20,9 +20,8 @@ package fr.cnrs.liris.locapriv.ops
 
 import com.github.nscala_time.time.Imports._
 import fr.cnrs.liris.accio.sdk._
+import fr.cnrs.liris.locapriv.domain._
 import fr.cnrs.liris.util.geo.Distance
-import fr.cnrs.liris.locapriv.clustering.{DTClusterer, PoisClusterer}
-import fr.cnrs.liris.locapriv.model.{Poi, PoiSet, Trace}
 
 @Op(
   category = "transform",

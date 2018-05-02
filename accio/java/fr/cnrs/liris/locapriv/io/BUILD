@@ -18,7 +18,7 @@ scala_library(
   name = 'io',
   srcs = glob(["*.scala"]),
   deps = [
-    '//accio/java/fr/cnrs/liris/locapriv/model',
+    '//accio/java/fr/cnrs/liris/locapriv/domain',
     '//accio/java/fr/cnrs/liris/locapriv/sparkle',
     '//accio/java/fr/cnrs/liris/util',
     '//accio/java/fr/cnrs/liris/util/geo',

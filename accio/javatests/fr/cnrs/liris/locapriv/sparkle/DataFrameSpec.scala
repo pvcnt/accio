@@ -74,15 +74,6 @@ class DataFrameSpec extends UnitSpec with BeforeAndAfter {
     data.filter(i => (i % 2) == 0).toArray shouldBe Array(2, 4)
   }
 
-  it should "restrict keys" in {
-    val data = env.parallelize("foo" -> Seq(1, 2), "bar" -> Seq(3), "foobar" -> Seq(4), "barfoo" -> Seq(5, 6, 7))
-    data.restrict(Set("foo", "bar")).toArray shouldBe Array(1, 2, 3)
-    data.restrict(Set("barfoo")).toArray shouldBe Array(5, 6, 7)
-    data.restrict(Set("barfoo", "invalid_key")).toArray shouldBe Array(5, 6, 7)
-    data.restrict(Set("invalid_key")).toArray shouldBe Array.empty[Int]
-    data.restrict(Set("foo", "bar")).load("invalid_key") shouldBe Iterator.empty
-  }
-
   it should "zip with another dataset with same keys and same size" in {
     val data1 = env.parallelize("foo" -> Seq(1, 2, 3), "bar" -> Seq(4, 5))
     val data2 = env.parallelize("foo" -> Seq(2, 4, 6), "bar" -> Seq(8, 10))

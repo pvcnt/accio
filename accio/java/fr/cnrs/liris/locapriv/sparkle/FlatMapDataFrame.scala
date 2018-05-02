@@ -16,29 +16,18 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.locapriv.ops
+package fr.cnrs.liris.locapriv.sparkle
 
-import fr.cnrs.liris.accio.sdk._
-import fr.cnrs.liris.util.geo.Distance
-import fr.cnrs.liris.locapriv.domain.{SpeedSmoothing, Trace}
+import com.google.common.base.MoreObjects
 
-@Op(
-  category = "lppm",
-  help = "Enforce speed smoothing guarantees on traces.",
-  cpus = 4,
-  ram = "2G")
-case class PromesseOp(
-  @Arg(help = "Distance to enforce between two consecutive points")
-  epsilon: Distance,
-  @Arg(help = "Input dataset")
-  data: Dataset)
-  extends ScalaOperator[PromesseOut] with SparkleOperator {
+import scala.reflect.ClassTag
 
-  override def execute(ctx: OpContext): PromesseOut = {
-    val lppm = new SpeedSmoothing(epsilon)
-    val output = read[Trace](data).map(lppm.transform)
-    PromesseOut(write(output, ctx))
-  }
+private[sparkle] class FlatMapDataFrame[T, U: ClassTag](inner: DataFrame[T], fn: T => Iterable[U])
+  extends DataFrame[U](inner.env) {
+
+  override def keys: Seq[String] = inner.keys
+
+  override def load(key: String): Iterator[U] = inner.load(key).flatMap(fn)
+
+  override def toString: String = MoreObjects.toStringHelper(this).addValue(inner).toString
 }
-
-case class PromesseOut(@Arg(help = "Output dataset") data: Dataset)

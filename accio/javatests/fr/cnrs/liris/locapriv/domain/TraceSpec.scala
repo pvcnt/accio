@@ -1,4 +1,4 @@
-package fr.cnrs.liris.locapriv.model
+package fr.cnrs.liris.locapriv.domain
 
 import com.github.nscala_time.time.Imports._
 import fr.cnrs.liris.locapriv.testing.WithTraceGenerator

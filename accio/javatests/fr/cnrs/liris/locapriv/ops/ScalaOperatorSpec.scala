@@ -22,7 +22,7 @@ import java.nio.file.Files
 
 import fr.cnrs.liris.accio.sdk.{Dataset, OpContext}
 import fr.cnrs.liris.locapriv.io.{CsvPoiSetCodec, CsvSink, CsvSource, TraceCodec}
-import fr.cnrs.liris.locapriv.model.{PoiSet, Trace}
+import fr.cnrs.liris.locapriv.domain.{PoiSet, Trace}
 import fr.cnrs.liris.locapriv.sparkle.SparkleEnv
 import org.scalatest.{BeforeAndAfterEach, FlatSpec}
 

@@ -28,7 +28,7 @@ import fr.cnrs.liris.util.geo.{Distance, Point}
 import fr.cnrs.liris.locapriv.io.CsvSink
 import fr.cnrs.liris.locapriv.sparkle.DataSink
 import fr.cnrs.liris.locapriv.io.TraceCodec
-import fr.cnrs.liris.locapriv.model.{Event, Trace}
+import fr.cnrs.liris.locapriv.domain.{Event, Trace}
 import org.joda.time.{Duration, Instant}
 
 import scala.collection.JavaConverters._

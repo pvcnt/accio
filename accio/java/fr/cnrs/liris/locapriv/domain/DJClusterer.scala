@@ -16,10 +16,9 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.locapriv.clustering
+package fr.cnrs.liris.locapriv.domain
 
 import fr.cnrs.liris.util.geo.{Distance, Point}
-import fr.cnrs.liris.locapriv.model.Event
 
 import scala.collection.mutable
 

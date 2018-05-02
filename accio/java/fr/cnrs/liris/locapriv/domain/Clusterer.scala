@@ -16,11 +16,10 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.locapriv.clustering
+package fr.cnrs.liris.locapriv.domain
 
 import com.google.common.base.MoreObjects
-import fr.cnrs.liris.util.geo.Point
-import fr.cnrs.liris.locapriv.model.{Event, Trace}
+import fr.cnrs.liris.util.geo.{Distance, Point}
 import org.joda.time.Duration
 
 /**
@@ -49,13 +48,13 @@ trait Clusterer extends Serializable {
  *
  * @param events List of temporally-ordered events.
  */
-class Cluster private[clustering](val events: Seq[Event]) {
+case class Cluster (events: Seq[Event]) {
   require(events.nonEmpty, "Cannot create a cluster of empty events")
 
   /**
    * Return the centroid of this cluster.
    */
-  lazy val centroid = Point.centroid(events.map(_.point))
+  lazy val centroid: Point = Point.centroid(events.map(_.point))
 
   /**
    * Return the total duration spent inside his cluster.
@@ -65,26 +64,16 @@ class Cluster private[clustering](val events: Seq[Event]) {
   /**
    * Return the diameter of this cluster.
    */
-  lazy val diameter = Point.exactDiameter(events.map(_.point))
+  lazy val diameter: Distance = Point.exactDiameter(events.map(_.point))
 
-  override def equals(other: Any): Boolean = other match {
-    case c: Cluster => c.events == events
-    case _ => false
-  }
-
-  override def hashCode: Int = events.hashCode
-
-  override def toString: String =
-    MoreObjects.toStringHelper(this)
-      .add("size", events.size)
-      .toString
+  override def toString: String = MoreObjects.toStringHelper(this).add("size", events.size).toString
 }
 
 /**
  * A clusterer creating a cluster for each input event.
  */
 object IdentityClusterer extends Clusterer {
-  override def cluster(events: Seq[Event]): Seq[Cluster] = events.map(event => new Cluster(Seq(event)))
+  override def cluster(events: Seq[Event]): Seq[Cluster] = events.map(event => Cluster(Seq(event)))
 }
 
 /**

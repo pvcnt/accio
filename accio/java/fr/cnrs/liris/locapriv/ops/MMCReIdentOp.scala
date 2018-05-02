@@ -19,8 +19,7 @@
 package fr.cnrs.liris.locapriv.ops
 
 import fr.cnrs.liris.accio.sdk._
-import fr.cnrs.liris.locapriv.clustering.{Cluster, PoisClusterer}
-import fr.cnrs.liris.locapriv.model.{Event, Trace}
+import fr.cnrs.liris.locapriv.domain.{Cluster, Event, PoisClusterer, Trace}
 import fr.cnrs.liris.locapriv.sparkle.DataFrame
 import fr.cnrs.liris.util.geo.Distance
 import org.joda.time.Duration
@@ -45,7 +44,7 @@ case class MmcReidentOp(
   duration: Duration = new Duration(3600),
   @Arg(help = "Attack")
   attack: String = "gambs")
-extends ScalaOperator[MmcReidentOut] with SparkleOperator {
+  extends ScalaOperator[MmcReidentOut] with SparkleOperator {
   override def execute(ctx: OpContext): MmcReidentOut = {
     val dstrain = read[Trace](train)
     val dstest = read[Trace](test)
