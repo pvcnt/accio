@@ -40,9 +40,9 @@ class ScroogeJacksonModuleSpec extends UnitSpec {
   }
 
   it should "serialize unions" in {
-    objectMapper.writeValueAsString(TestUnion.A("foo")) shouldBe """{"value":"foo","@type":"A"}"""
-    objectMapper.writeValueAsString(TestUnion.B(42)) shouldBe """{"value":42,"@type":"B"}"""
-    objectMapper.writeValueAsString(TestUnion.C(InnerStruct("bar"))) shouldBe """{"s":"bar","@type":"C"}"""
+    objectMapper.writeValueAsString(TestUnion.A("foo")) shouldBe """{"a":"foo"}"""
+    objectMapper.writeValueAsString(TestUnion.B(42)) shouldBe """{"b":42}"""
+    objectMapper.writeValueAsString(TestUnion.C(InnerStruct("bar"))) shouldBe """{"C":{"s":"bar"}}"""
   }
 
   it should "serialize structs" in {

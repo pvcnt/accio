@@ -19,13 +19,11 @@
 package fr.cnrs.liris.finatra.jackson
 
 import com.fasterxml.jackson.core.JsonGenerator
+import com.fasterxml.jackson.databind.SerializerProvider
 import com.fasterxml.jackson.databind.module.SimpleModule
-import com.fasterxml.jackson.databind.node.{ObjectNode, TextNode}
 import com.fasterxml.jackson.databind.ser.std.StdSerializer
-import com.fasterxml.jackson.databind.{ObjectMapper, SerializerProvider}
 import com.google.common.base.CaseFormat
 import com.twitter.scrooge._
-import org.apache.thrift.protocol.TType
 
 /**
  * Jackson module providing serializers for Scrooge structures.
@@ -48,7 +46,7 @@ private object ScroogeStructSerializer extends StdSerializer[ThriftStruct](class
     val product = struct.asInstanceOf[Product]
     jsonGen.writeStartObject()
     codec.metaData.fieldInfos.zipWithIndex.foreach { case (fieldInfo, idx) =>
-      val fieldName = lowerCamel(fieldInfo.tfield.name)
+      val fieldName = Inflector.lowerCamel(fieldInfo.tfield.name)
       val rawValue = product.productElement(idx)
       rawValue match {
         case None => // Do not serialize None's.
@@ -58,31 +56,22 @@ private object ScroogeStructSerializer extends StdSerializer[ThriftStruct](class
     }
     jsonGen.writeEndObject()
   }
-
-  private def lowerCamel(str: String) = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, str)
 }
 
 private object ScroogeUnionSerializer extends StdSerializer[ThriftUnion](classOf[ThriftUnion]) {
   override def serialize(union: ThriftUnion, jsonGen: JsonGenerator, serializerProvider: SerializerProvider): Unit = {
-    val objectMapper = jsonGen.getCodec.asInstanceOf[ObjectMapper]
     val codec = union.asInstanceOf[HasThriftStructCodec3[_]]._codec
     val struct = union.asInstanceOf[ThriftUnion with ThriftStruct]
     val maybeFieldInfo = codec.metaData.unionFields.find(union.getClass == _.fieldClassTag.runtimeClass)
     maybeFieldInfo.foreach { fieldInfo =>
-      val fieldValue = fieldInfo.fieldValue(struct)
-      val fieldType = upperCamel(fieldInfo.structFieldInfo.tfield.name)
-      val jsonObject = if (fieldInfo.structFieldInfo.tfield.`type` == TType.STRUCT) {
-        val jsonObject = objectMapper.valueToTree[ObjectNode](fieldValue)
-        jsonObject.set("@type", new TextNode(fieldType))
-      } else {
-        val jsonObject = objectMapper.createObjectNode()
-        jsonObject.set("value", objectMapper.valueToTree(fieldValue))
-        jsonObject.set("@type", new TextNode(fieldType))
-        jsonObject
-      }
-      jsonGen.writeObject(jsonObject)
+      jsonGen.writeStartObject()
+      val fieldName = Inflector.lowerCamel(fieldInfo.structFieldInfo.tfield.name)
+      jsonGen.writeObjectField(fieldName, fieldInfo.fieldValue(struct))
+      jsonGen.writeEndObject()
     }
   }
+}
 
-  private def upperCamel(str: String) = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, str)
+private object Inflector {
+  def lowerCamel(str: String): String = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, str)
 }
