@@ -35,8 +35,8 @@ trait SparkleOperator {
   // It is a poor-man's way to isolate execution in terms of CPU usage.
   protected val env = new SparkleEnv(math.max(1, com.twitter.jvm.numProcs().round.toInt))
 
-  private[this] val encoders = Set(new StringCodec, new CsvEventCodec, new TraceCodec, new CsvPoiCodec, new CsvPoiSetCodec)
-  private[this] val decoders = Set(new StringCodec, new CsvEventCodec, new TraceCodec, new CsvPoiCodec, new CsvPoiSetCodec)
+  private[this] val encoders = Set(new CsvEventCodec, new TraceCodec, new CsvPoiCodec, new CsvPoiSetCodec)
+  private[this] val decoders = Set(new CsvEventCodec, new TraceCodec, new CsvPoiCodec, new CsvPoiSetCodec)
 
   /**
    * Read a CSV dataset as a [[DataFrame]].

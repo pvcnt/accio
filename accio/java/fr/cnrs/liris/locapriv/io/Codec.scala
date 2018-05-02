@@ -18,8 +18,6 @@
 
 package fr.cnrs.liris.locapriv.io
 
-import fr.cnrs.liris.util.ByteUtils
-
 import scala.reflect.ClassTag
 
 /**
@@ -67,17 +65,4 @@ trait Decoder[T] {
    * @param bytes Binary content.
    */
   def decode(key: String, bytes: Array[Byte]): Seq[T]
-}
-
-import scala.reflect.{ClassTag, classTag}
-
-/**
- * Codec doing nothing (reading and returning bytes).
- */
-object IdentityCodec extends Codec[Array[Byte]] {
-  override def elementClassTag: ClassTag[Array[Byte]] = classTag[Array[Byte]]
-
-  override def encode(key: String, elements: Seq[Array[Byte]]): Array[Byte] = ByteUtils.foldLines(elements)
-
-  override def decode(key: String, bytes: Array[Byte]): Seq[Array[Byte]] = Seq(bytes)
 }
