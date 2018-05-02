@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.accio.sdk.{Dataset, _}
+import fr.cnrs.liris.accio.sdk.{RemoteFile, _}
 import fr.cnrs.liris.locapriv.domain.{Poi, PoiSet}
 import fr.cnrs.liris.util.geo.Distance
 import org.joda.time.Duration
@@ -34,9 +34,9 @@ case class PoisRetrievalOp(
   @Arg(help = "Minimum overlap between two POIs to consider they match")
   overlap: Option[Duration],
   @Arg(help = "Train dataset (POIs)")
-  train: Dataset,
+  train: RemoteFile,
   @Arg(help = "Test dataset (POIs)")
-  test: Dataset)
+  test: RemoteFile)
   extends ScalaOperator[PoisRetrievalOut] with SparkleOperator {
   override def execute(ctx: OpContext): PoisRetrievalOut = {
     val trainDs = read[PoiSet](train)

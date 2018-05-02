@@ -19,7 +19,7 @@
 package fr.cnrs.liris.locapriv.ops
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.sdk.{Dataset, _}
+import fr.cnrs.liris.accio.sdk.{RemoteFile, _}
 import fr.cnrs.liris.locapriv.domain.Trace
 import org.joda.time.Instant
 
@@ -30,9 +30,9 @@ import org.joda.time.Instant
   ram = "6G")
 case class SpatioTemporalDistortionOp(
   @Arg(help = "Train dataset")
-  train: Dataset,
+  train: RemoteFile,
   @Arg(help = "Test dataset")
-  test: Dataset)
+  test: RemoteFile)
   extends ScalaOperator[SpatioTemporalDistortionOut] with SparkleOperator {
 
   override def execute(ctx: OpContext): SpatioTemporalDistortionOut = {

@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.accio.sdk.{Dataset, _}
+import fr.cnrs.liris.accio.sdk.{RemoteFile, _}
 import fr.cnrs.liris.locapriv.domain.Trace
 import fr.cnrs.liris.util.geo.Point
 
@@ -29,9 +29,9 @@ import fr.cnrs.liris.util.geo.Point
   ram = "3G")
 case class SpatialDistortionOp(
   @Arg(help = "Train dataset")
-  train: Dataset,
+  train: RemoteFile,
   @Arg(help = "Test dataset")
-  test: Dataset,
+  test: RemoteFile,
   @Arg(help = "Whether to interpolate between points")
   interpolate: Boolean = true)
   extends ScalaOperator[SpatialDistortionOut] with SparkleOperator {

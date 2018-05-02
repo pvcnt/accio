@@ -15,10 +15,13 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_library(
-  name = 'random',
+  name = "random",
   srcs = glob(["*.scala"]),
   deps = [
-    '//3rdparty/jvm/org/apache/commons:commons_math3',
+    "//3rdparty/jvm/org/apache/commons:commons_math3",
+  ],
+  exports = [
+    "//3rdparty/jvm/org/apache/commons:commons_math3",
   ],
   visibility = ["//visibility:public"],
 )

@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.accio.sdk.{Dataset, _}
+import fr.cnrs.liris.accio.sdk.{RemoteFile, _}
 import fr.cnrs.liris.locapriv.domain.Trace
 
 @Op(
@@ -34,7 +34,7 @@ case class SequentialSplittingOp(
   @Arg(help = "Whether to take the complement trace")
   complement: Boolean = false,
   @Arg(help = "Input dataset")
-  data: Dataset)
+  data: RemoteFile)
   extends ScalaOperator[SequentialSplittingOut] with SparkleOperator {
   require(percentBegin >= 0 && percentBegin <= 100, s"Begin percentage must be in [0,100] (got $percentBegin)")
   require(percentEnd >= 0 && percentEnd <= 100, s"End percentage must be in [0,100] (got $percentEnd)")
@@ -58,4 +58,4 @@ case class SequentialSplittingOp(
 
 case class SequentialSplittingOut(
   @Arg(help = "Output dataset")
-  data: Dataset)
+  data: RemoteFile)

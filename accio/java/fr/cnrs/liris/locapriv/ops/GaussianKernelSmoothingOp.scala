@@ -19,7 +19,7 @@
 package fr.cnrs.liris.locapriv.ops
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.sdk.{Dataset, _}
+import fr.cnrs.liris.accio.sdk.{RemoteFile, _}
 import fr.cnrs.liris.util.geo.Point
 import fr.cnrs.liris.locapriv.domain.{Event, Trace}
 
@@ -33,7 +33,7 @@ case class GaussianKernelSmoothingOp(
   @Arg(help = "Bandwidth")
   omega: Duration,
   @Arg(help = "Input dataset")
-  data: Dataset)
+  data: RemoteFile)
   extends ScalaOperator[GaussianKernelSmoothingOut] with SparkleOperator {
 
   override def execute(ctx: OpContext): GaussianKernelSmoothingOut = {
@@ -62,4 +62,4 @@ case class GaussianKernelSmoothingOp(
     Math.exp(-Math.pow(t1 - t2, 2) / (2 * omega.millis * omega.millis))
 }
 
-case class GaussianKernelSmoothingOut(@Arg(help = "Output dataset") data: Dataset)
+case class GaussianKernelSmoothingOut(@Arg(help = "Output dataset") data: RemoteFile)

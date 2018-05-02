@@ -162,7 +162,7 @@ class OpMetaSpec extends UnitSpec {
   it should "support dataset inputs" in {
     val defn = OpMeta.apply[AllDataTypesOp].defn
     assertMandatoryInput(defn, "data", DataType.Dataset(DatasetType()))
-    assertMandatoryInput(defn, "data2", DataType.Dataset(DatasetType()), defaultValue = Dataset("/dev/null"))
+    assertMandatoryInput(defn, "data2", DataType.Dataset(DatasetType()), defaultValue = RemoteFile("/dev/null"))
     assertOptionalInput(defn, "data3", DataType.Dataset(DatasetType()))
   }
 

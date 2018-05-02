@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.accio.sdk.{Dataset, _}
+import fr.cnrs.liris.accio.sdk.{RemoteFile, _}
 import fr.cnrs.liris.util.random.RandomUtils
 import fr.cnrs.liris.locapriv.domain.Trace
 
@@ -35,7 +35,7 @@ case class UniformSamplingOp(
   @Arg(help = "Probability to keep each event")
   probability: Double,
   @Arg(help = "Input dataset")
-  data: Dataset)
+  data: RemoteFile)
   extends ScalaOperator[UniformSamplingOut] with SparkleOperator {
   require(probability >= 0 && probability <= 1, s"Probability must be in [0, 1] (got $probability)")
 
@@ -53,4 +53,4 @@ case class UniformSamplingOp(
 }
 
 case class UniformSamplingOut(
-  @Arg(help = "Output dataset") data: Dataset)
+  @Arg(help = "Output dataset") data: RemoteFile)

@@ -36,7 +36,7 @@ case class PoisExtractionOp(
   @Arg(help = "Minimum number of times a cluster should appear to consider it")
   minPoints: Int = 0,
   @Arg(help = "Input traces dataset")
-  data: Dataset)
+  data: RemoteFile)
   extends ScalaOperator[PoisExtractionOut] with SparkleOperator {
 
   override def execute(ctx: OpContext): PoisExtractionOut = {
@@ -60,4 +60,4 @@ case class PoisExtractionOp(
 
 case class PoisExtractionOut(
   @Arg(help = "Output POIs dataset")
-  data: Dataset)
+  data: RemoteFile)

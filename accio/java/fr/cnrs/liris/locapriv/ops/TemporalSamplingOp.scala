@@ -19,7 +19,7 @@
 package fr.cnrs.liris.locapriv.ops
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.sdk.{Dataset, _}
+import fr.cnrs.liris.accio.sdk.{RemoteFile, _}
 import fr.cnrs.liris.locapriv.domain.{Event, Trace}
 
 @Op(
@@ -31,7 +31,7 @@ import fr.cnrs.liris.locapriv.domain.{Event, Trace}
   ram = "2G")
 case class TemporalSamplingOp(
   @Arg(help = "Minimum duration between two consecutive events") duration: org.joda.time.Duration,
-  @Arg(help = "Input dataset") data: Dataset)
+  @Arg(help = "Input dataset") data: RemoteFile)
   extends ScalaOperator[TemporalSamplingOut] with SlidingSampling with SparkleOperator {
 
   override def execute(ctx: OpContext): TemporalSamplingOut = {
@@ -42,4 +42,4 @@ case class TemporalSamplingOp(
 }
 
 case class TemporalSamplingOut(
-  @Arg(help = "Output dataset") data: Dataset)
+  @Arg(help = "Output dataset") data: RemoteFile)

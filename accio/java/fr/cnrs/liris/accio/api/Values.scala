@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.api
 
 import com.twitter.util.{Try, Duration => TwitterDuration}
 import fr.cnrs.liris.accio.api.thrift._
-import fr.cnrs.liris.accio.sdk.Dataset
+import fr.cnrs.liris.accio.sdk.RemoteFile
 import fr.cnrs.liris.util.geo.{Distance, LatLng, Location}
 import org.joda.time.{Instant, Duration => JodaDuration}
 
@@ -197,14 +197,14 @@ object Values {
       case _ => None
     }
 
-  def encodeDataset(v: Dataset): Value = {
+  def encodeDataset(v: RemoteFile): Value = {
     Value(DataType.Dataset(DatasetType()), strings = Seq(v.uri))
   }
 
   def encodeDataset(rawValue: Any): Option[Value] =
     rawValue match {
       case s: String => parseDataset(s)
-      case d: Dataset => Some(encodeDataset(d))
+      case d: RemoteFile => Some(encodeDataset(d))
       case _ => None
     }
 
@@ -327,7 +327,7 @@ object Values {
 
   def decodeTimestamp(value: Value): Instant = new Instant(value.longs.head)
 
-  def decodeDataset(value: Value, tpe: DatasetType): Dataset = Dataset(value.strings.head)
+  def decodeDataset(value: Value, tpe: DatasetType): RemoteFile = RemoteFile(value.strings.head)
 
   def decodeList(value: Value, tpe: ListType): Seq[Any] = {
     split(value, tpe.values).map(decode)
@@ -416,7 +416,7 @@ object Values {
 
   def parseDistance(str: String): Option[Value] = Try(Distance.parse(str)).toOption.map(encodeDistance)
 
-  def parseDataset(str: String): Option[Value] = Some(encodeDataset(Dataset(str)))
+  def parseDataset(str: String): Option[Value] = Some(encodeDataset(RemoteFile(str)))
 
   private def merge(size: Int, values: Seq[Value], dataType: DataType): Value = {
     Value(

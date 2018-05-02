@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.accio.sdk.{Dataset, _}
+import fr.cnrs.liris.accio.sdk.{RemoteFile, _}
 import fr.cnrs.liris.util.FileUtils
 import fr.cnrs.liris.locapriv.io.CsvSource
 import fr.cnrs.liris.locapriv.io._
@@ -40,9 +40,9 @@ case class EventSourceOp(
       case "geolife" => GeolifeSource(FileUtils.expand(url))
       case _ => throw new IllegalArgumentException(s"Unknown dataset kind: $kind")
     }
-    val output = if (kind != "csv") write(env.read(source), ctx) else Dataset(url)
+    val output = if (kind != "csv") write(env.read(source), ctx) else RemoteFile(url)
     EventSourceOut(output)
   }
 }
 
-case class EventSourceOut(@Arg(help = "Source dataset") data: Dataset)
+case class EventSourceOut(@Arg(help = "Source dataset") data: RemoteFile)

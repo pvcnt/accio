@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.accio.sdk.{Dataset, _}
+import fr.cnrs.liris.accio.sdk.{RemoteFile, _}
 import fr.cnrs.liris.locapriv.domain.PoiSet
 
 /**
@@ -36,9 +36,9 @@ import fr.cnrs.liris.locapriv.domain.PoiSet
   ram = "3G")
 case class PoisReidentOp(
   @Arg(help = "Train dataset (POIs)")
-  train: Dataset,
+  train: RemoteFile,
   @Arg(help = "Test dataset (POIs)")
-  test: Dataset)
+  test: RemoteFile)
   extends ScalaOperator[ReidentificationOut] with SparkleOperator {
 
   override def execute(ctx: OpContext): ReidentificationOut = {

@@ -74,9 +74,9 @@ case class AllDataTypesOp(
   @Arg list2: Seq[Int] = Seq(3, 14),
   @Arg map: Map[String, Int],
   @Arg map2: Map[String, Int] = Map("foo" -> 3, "bar" -> 14),
-  @Arg data: Dataset,
-  @Arg data2: Dataset = Dataset("/dev/null"),
-  @Arg data3: Option[Dataset])
+  @Arg data: RemoteFile,
+  @Arg data2: RemoteFile = RemoteFile("/dev/null"),
+  @Arg data3: Option[RemoteFile])
   extends ScalaOperator[NoOutputOut] {
 
   override def execute(ctx: OpContext): NoOutputOut = NoOutputOut()
@@ -98,8 +98,8 @@ case class DoALotOfThingsOut(@Arg(help = "baz output") baz: Int, @Arg bal: Int)
 case class DoALotOfThingsOp(
   @Arg(help = "i param") i: Int,
   @Arg s: String,
-  @Arg(help = "foo input") foo: Dataset,
-  @Arg bar: Dataset)
+  @Arg(help = "foo input") foo: RemoteFile,
+  @Arg bar: RemoteFile)
   extends ScalaOperator[DoALotOfThingsOut] {
 
   override def execute(ctx: OpContext): DoALotOfThingsOut = DoALotOfThingsOut(0, 1)
@@ -157,21 +157,21 @@ case class ExceptionalOp(@Arg str: String, @Arg i: Option[Int]) extends ScalaOpe
   override def execute(ctx: OpContext): SimpleOpOut = throw new RuntimeException("Testing exceptions")
 }
 
-case class DatasetProducerOut(@Arg data: Dataset)
+case class DatasetProducerOut(@Arg data: RemoteFile)
 
 @Op
 case class DatasetProducerOp() extends ScalaOperator[DatasetProducerOut] {
   override def execute(ctx: OpContext): DatasetProducerOut = {
     val dir = ctx.workDir.resolve("data")
     Files.createDirectory(dir)
-    DatasetProducerOut(Dataset(dir.toAbsolutePath.toString))
+    DatasetProducerOut(RemoteFile(dir.toAbsolutePath.toString))
   }
 }
 
 case class DatasetConsumerOut(@Arg ok: Boolean)
 
 @Op
-case class DatasetConsumerOp(@Arg data: Dataset) extends ScalaOperator[DatasetConsumerOut] {
+case class DatasetConsumerOp(@Arg data: RemoteFile) extends ScalaOperator[DatasetConsumerOut] {
   override def execute(ctx: OpContext): DatasetConsumerOut = {
     val ok = Paths.get(data.uri).toFile.exists
     DatasetConsumerOut(ok)

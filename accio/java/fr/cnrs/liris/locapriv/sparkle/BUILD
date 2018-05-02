@@ -15,14 +15,15 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_library(
-  name = 'sparkle',
+  name = "sparkle",
   srcs = glob(["*.scala"]),
   deps = [
-    '//accio/java/fr/cnrs/liris/util/random',
-    '//accio/java/fr/cnrs/liris/util',
-    '//3rdparty/jvm/com/twitter:util_slf4j_api',
-    '//3rdparty/jvm/com/google/guava',
-    '//3rdparty/jvm/org/scalanlp:breeze',
+    "//accio/java/fr/cnrs/liris/util/random",
+    "//accio/java/fr/cnrs/liris/util",
+    "//3rdparty/jvm/com/twitter:util_slf4j_api",
+    "//3rdparty/jvm/com/twitter:util_core",
+    "//3rdparty/jvm/com/google/guava",
+    "//3rdparty/jvm/com/univocity:univocity_parsers",
   ],
   visibility = ["//visibility:public"],
 )

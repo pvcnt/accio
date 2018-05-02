@@ -19,7 +19,7 @@
 package fr.cnrs.liris.locapriv.ops
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.sdk.{Dataset, _}
+import fr.cnrs.liris.accio.sdk.{RemoteFile, _}
 import fr.cnrs.liris.locapriv.domain.Trace
 import org.joda.time.Instant
 
@@ -31,7 +31,7 @@ import org.joda.time.Instant
   ram = "2G")
 case class CollapseTemporalGapsOp(
   @Arg(help = "Start date for all traces") startAt: Instant,
-  @Arg(help = "Input dataset") data: Dataset)
+  @Arg(help = "Input dataset") data: RemoteFile)
   extends ScalaOperator[CollapseTemporalGapsOut] with SparkleOperator {
 
   override def execute(ctx: OpContext): CollapseTemporalGapsOut = {
@@ -66,4 +66,4 @@ case class CollapseTemporalGapsOp(
 }
 
 case class CollapseTemporalGapsOut(
-  @Arg(help = "Output dataset") data: Dataset)
+  @Arg(help = "Output dataset") data: RemoteFile)

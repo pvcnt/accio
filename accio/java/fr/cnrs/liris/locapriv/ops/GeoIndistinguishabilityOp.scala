@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.accio.sdk.{Dataset, _}
+import fr.cnrs.liris.accio.sdk.{RemoteFile, _}
 import fr.cnrs.liris.locapriv.domain.{Laplace, Trace}
 
 import scala.util.Random
@@ -35,7 +35,7 @@ case class GeoIndistinguishabilityOp(
   @Arg(help = "Privacy budget")
   epsilon: Double = 0.001,
   @Arg(help = "Input dataset")
-  data: Dataset)
+  data: RemoteFile)
   extends ScalaOperator[GeoIndistinguishabilityOut] with SparkleOperator {
   require(epsilon > 0, s"Epsilon must be strictly positive (got $epsilon)")
 
@@ -49,4 +49,4 @@ case class GeoIndistinguishabilityOp(
 }
 
 case class GeoIndistinguishabilityOut(
-  @Arg(help = "Output dataset") data: Dataset)
+  @Arg(help = "Output dataset") data: RemoteFile)

@@ -19,7 +19,7 @@
 package fr.cnrs.liris.accio.api
 
 import fr.cnrs.liris.accio.api.thrift._
-import fr.cnrs.liris.accio.sdk.Dataset
+import fr.cnrs.liris.accio.sdk.RemoteFile
 import fr.cnrs.liris.testing.UnitSpec
 import fr.cnrs.liris.util.geo.{Distance, LatLng}
 import org.joda.time.{Duration, Instant}
@@ -133,7 +133,7 @@ class ValuesSpec extends UnitSpec {
   }
 
   it should "encode/decode datasets" in {
-    val dataset = Dataset("/dev/null")
+    val dataset = RemoteFile("/dev/null")
     Values.decodeDataset(Values.encodeDataset(dataset), DatasetType()) shouldBe dataset
     Values.decode(Values.encodeDataset(dataset)) shouldBe dataset
     Values.decode(Values.encodeDataset(dataset), DataType.Dataset(DatasetType())) shouldBe dataset

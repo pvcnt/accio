@@ -28,9 +28,9 @@ import fr.cnrs.liris.locapriv.sparkle.DataFrame
   help = "Computes the HeatMaps' distortions between two datasets")
 case class HeatMapDistortionOp(
   @Arg(help = "Input train dataset")
-  train: Dataset,
+  train: RemoteFile,
   @Arg(help = "Input test dataset")
-  test: Dataset,
+  test: RemoteFile,
   @Arg(help = "Type of distance metrics between matrices")
   distanceType: String = "topsoe",
   @Arg(help = "Cell Size in meters")

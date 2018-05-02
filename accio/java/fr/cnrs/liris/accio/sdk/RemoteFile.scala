@@ -16,19 +16,11 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.locapriv.sparkle
+package fr.cnrs.liris.accio.sdk
 
-import com.google.common.base.MoreObjects
-
-import scala.reflect.ClassTag
-
-private[sparkle] class UnionDataFrame[T: ClassTag](frames: Iterable[DataFrame[T]], env: SparkleEnv)
-  extends DataFrame[T](env) {
-
-  override def keys: Seq[String] = frames.flatMap(_.keys).toSeq.distinct.sorted
-
-  override def load(key: String): Iterator[T] =
-    frames.map(_.load(key)).foldLeft(Iterator.empty: Iterator[T])(_ ++ _)
-
-  override def toString: String = MoreObjects.toStringHelper(this).addValue(frames.mkString(", ")).toString
-}
+/**
+ * Reference to a remote file.
+ *
+ * @param uri URI where the file is located.
+ */
+case class RemoteFile(uri: String)

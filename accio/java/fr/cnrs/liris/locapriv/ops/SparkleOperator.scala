@@ -20,7 +20,7 @@ package fr.cnrs.liris.locapriv.ops
 
 import java.nio.file.Files
 
-import fr.cnrs.liris.accio.sdk.{Dataset, OpContext, ScalaOperator}
+import fr.cnrs.liris.accio.sdk.{RemoteFile, OpContext, ScalaOperator}
 import fr.cnrs.liris.util.Identified
 import fr.cnrs.liris.locapriv.io._
 import fr.cnrs.liris.locapriv.sparkle.{DataFrame, SparkleEnv}
@@ -45,7 +45,7 @@ trait SparkleOperator {
    * @tparam T Dataframe type.
    * @throws RuntimeException If there is no decoder to read as given type.
    */
-  protected final def read[T: ClassTag](dataset: Dataset): DataFrame[T] = {
+  protected final def read[T: ClassTag](dataset: RemoteFile): DataFrame[T] = {
     val clazz = classTag[T].runtimeClass
     decoders.find(decoder => clazz.isAssignableFrom(decoder.elementClassTag.runtimeClass)) match {
       case None => throw new RuntimeException(s"No decoder available for ${clazz.getName}")
@@ -61,7 +61,7 @@ trait SparkleOperator {
    * @tparam T Dataframe type.
    * @throws RuntimeException If there is no encoder to write dataframe.
    */
-  protected final def write[T <: Identified : ClassTag](frame: DataFrame[T], ctx: OpContext): Dataset =
+  protected final def write[T <: Identified : ClassTag](frame: DataFrame[T], ctx: OpContext): RemoteFile =
     write(frame, ctx, "data")
 
   /**
@@ -73,7 +73,7 @@ trait SparkleOperator {
    * @tparam T Dataframe type.
    * @throws RuntimeException If there is no encoder to write dataframe.
    */
-  protected final def write[T <: Identified : ClassTag](frame: DataFrame[T], ctx: OpContext, port: String): Dataset = {
+  protected final def write[T <: Identified : ClassTag](frame: DataFrame[T], ctx: OpContext, port: String): RemoteFile = {
     val clazz = classTag[T].runtimeClass
     encoders.find(encoder => clazz.isAssignableFrom(encoder.elementClassTag.runtimeClass)) match {
       case None => throw new RuntimeException(s"No encoder available for ${clazz.getName}")
@@ -81,7 +81,7 @@ trait SparkleOperator {
         val path = ctx.workDir.resolve(port).toAbsolutePath
         Files.createDirectories(path)
         frame.write(new CsvSink(path.toString, encoder.asInstanceOf[Encoder[T]]))
-        Dataset(path.toString)
+        RemoteFile(path.toString)
     }
   }
 }

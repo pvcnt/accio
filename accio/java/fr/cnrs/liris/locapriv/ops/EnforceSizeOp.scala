@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.accio.sdk.{Dataset, _}
+import fr.cnrs.liris.accio.sdk.{RemoteFile, _}
 import fr.cnrs.liris.locapriv.domain.Trace
 
 @Op(
@@ -32,7 +32,7 @@ case class EnforceSizeOp(
   minSize: Option[Int],
   @Arg(help = "Maximum number of events in each trace")
   maxSize: Option[Int],
-  @Arg(help = "Input dataset") data: Dataset)
+  @Arg(help = "Input dataset") data: RemoteFile)
   extends ScalaOperator[EnforceSizeOut] with SparkleOperator {
 
   override def execute(ctx: OpContext): EnforceSizeOut = {
@@ -55,4 +55,4 @@ case class EnforceSizeOp(
 }
 
 case class EnforceSizeOut(
-  @Arg(help = "Output dataset") data: Dataset)
+  @Arg(help = "Output dataset") data: RemoteFile)

@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.accio.sdk.{Dataset, _}
+import fr.cnrs.liris.accio.sdk.{RemoteFile, _}
 import fr.cnrs.liris.util.geo.Distance
 import fr.cnrs.liris.locapriv.domain.{Event, Trace}
 
@@ -33,7 +33,7 @@ case class SpatialSamplingOp(
   @Arg(help = "Minimum distance between two consecutive events")
   distance: Distance,
   @Arg(help = "Input dataset")
-  data: Dataset)
+  data: RemoteFile)
   extends ScalaOperator[SpatialSamplingOut] with SlidingSampling with SparkleOperator {
   
   override def execute(ctx: OpContext): SpatialSamplingOut = {
@@ -43,4 +43,4 @@ case class SpatialSamplingOp(
   }
 }
 
-case class SpatialSamplingOut(@Arg(help = "Output dataset") data: Dataset)
+case class SpatialSamplingOut(@Arg(help = "Output dataset") data: RemoteFile)

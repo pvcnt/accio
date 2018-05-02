@@ -30,7 +30,7 @@ case class SizeSplittingOp(
   @Arg(help = "Maximum number of events allowed in each trace")
   size: Int,
   @Arg(help = "Input dataset")
-  data: Dataset)
+  data: RemoteFile)
   extends ScalaOperator[SizeSplittingOut] with SlidingSplitting with SparkleOperator {
 
   override def execute(ctx: OpContext): SizeSplittingOut = {
@@ -42,4 +42,4 @@ case class SizeSplittingOp(
 
 case class SizeSplittingOut(
   @Arg(help = "Output dataset")
-  data: Dataset)
+  data: RemoteFile)

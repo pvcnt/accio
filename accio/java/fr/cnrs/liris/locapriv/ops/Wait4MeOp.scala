@@ -23,7 +23,7 @@ import java.nio.file.{Files, Path, Paths, StandardOpenOption}
 import java.util.Locale
 
 import com.google.common.io.Resources
-import fr.cnrs.liris.accio.sdk.{Dataset, _}
+import fr.cnrs.liris.accio.sdk.{RemoteFile, _}
 import fr.cnrs.liris.util.geo.{Distance, Point}
 import fr.cnrs.liris.locapriv.io.CsvSink
 import fr.cnrs.liris.locapriv.sparkle.DataSink
@@ -49,7 +49,7 @@ import scala.collection.mutable
   ram = "2G")
 case class Wait4MeOp(
   @Arg(help = "Input dataset")
-  data: Dataset,
+  data: RemoteFile,
   @Arg(help = "Anonymity level")
   k: Int,
   @Arg(help = "Uncertainty")
@@ -208,7 +208,7 @@ case class Wait4MeOp(
     if (events.nonEmpty) {
       env.parallelize(keysReverseIndex(currIdx.get) -> Seq(Trace(keysReverseIndex(currIdx.get), events.toList))).write(sink)
     }
-    Dataset(outputUri)
+    RemoteFile(outputUri)
   }
 }
 
@@ -217,7 +217,7 @@ object Wait4MeOp {
 }
 
 case class Wait4MeOut(
-  @Arg(help = "Output dataset") data: Dataset,
+  @Arg(help = "Output dataset") data: RemoteFile,
   @Arg(help = "Trash_size") trashSize: Int,
   @Arg(help = "Number of trashed points") trashedPoints: Long,
   @Arg(help = "Discernibility metric") discernibility: Long,

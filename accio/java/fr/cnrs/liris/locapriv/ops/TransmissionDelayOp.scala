@@ -28,8 +28,8 @@ import fr.cnrs.liris.locapriv.domain.Trace
   cpus = 4,
   ram = "2G")
 case class TransmissionDelayOp(
-  @Arg(help = "Train dataset") train: Dataset,
-  @Arg(help = "Test dataset") test: Dataset)
+  @Arg(help = "Train dataset") train: RemoteFile,
+  @Arg(help = "Test dataset") test: RemoteFile)
   extends ScalaOperator[TransmissionDelayOut] with SparkleOperator {
 
   override def execute(ctx: OpContext): TransmissionDelayOut = {

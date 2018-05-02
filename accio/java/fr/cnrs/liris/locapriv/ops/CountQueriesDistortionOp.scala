@@ -20,7 +20,7 @@ package fr.cnrs.liris.locapriv.ops
 
 import java.util.concurrent.atomic.AtomicLong
 
-import fr.cnrs.liris.accio.sdk.{Dataset, _}
+import fr.cnrs.liris.accio.sdk.{RemoteFile, _}
 import fr.cnrs.liris.locapriv.sparkle.DataFrame
 import fr.cnrs.liris.util.geo.{BoundingBox, Distance, Point}
 import fr.cnrs.liris.util.random.RandomUtils
@@ -40,8 +40,8 @@ case class CountQueriesDistortionOp(
   @Arg(help = "Maximum size of the generated queries' geographical area") maxSize: Distance = Distance.kilometers(2),
   @Arg(help = "Minimum duration of the generated queries' temporal window") minDuration: Duration = Duration.standardHours(2),
   @Arg(help = "Maximum duration of the generated queries' temporal window") maxDuration: Duration = Duration.standardHours(4),
-  @Arg(help = "Train dataset") train: Dataset,
-  @Arg(help = "Test dataset") test: Dataset)
+  @Arg(help = "Train dataset") train: RemoteFile,
+  @Arg(help = "Test dataset") test: RemoteFile)
   extends ScalaOperator[CountQueriesDistortionOut] with SparkleOperator {
 
   override def execute(ctx: OpContext): CountQueriesDistortionOut = {

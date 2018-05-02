@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.accio.sdk.{Dataset, _}
+import fr.cnrs.liris.accio.sdk.{RemoteFile, _}
 import fr.cnrs.liris.locapriv.domain.Trace
 
 @Op(
@@ -27,8 +27,8 @@ import fr.cnrs.liris.locapriv.domain.Trace
   cpus = 2,
   ram = "1G")
 case class DataCompletenessOp(
-  @Arg(help = "Train dataset") train: Dataset,
-  @Arg(help = "Test dataset") test: Dataset)
+  @Arg(help = "Train dataset") train: RemoteFile,
+  @Arg(help = "Test dataset") test: RemoteFile)
   extends ScalaOperator[DataCompletenessOut] with SparkleOperator {
 
   override def execute(ctx: OpContext): DataCompletenessOut = {

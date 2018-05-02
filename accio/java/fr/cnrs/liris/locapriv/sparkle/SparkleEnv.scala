@@ -29,15 +29,14 @@ import scala.reflect.ClassTag
 import scala.util.{Failure, Success}
 
 /**
- * A Sparkle environment is responsible for the execution of parallel tasks on [[DataFrame]]s. It also provide
- * utility methods to create or manipulate datafframes.
+ * A Sparkle environment is responsible for the execution of parallel tasks on [[DataFrame]]s.
  *
- * @param level Parallelism level (i.e., number of cores to use).
+ * @param parallelism Parallelism level (i.e., number of cores to use).
  */
-class SparkleEnv(level: Int) extends Logging {
-  require(level > 0, s"Parallelism level must be > 0 (got $level)")
-  logger.info(s"Initializing Sparkle to utilize $level cores")
-  private[this] val executor = if (1 == level) Executors.newSingleThreadExecutor else Executors.newWorkStealingPool(level)
+class SparkleEnv(parallelism: Int) extends Logging {
+  require(parallelism > 0, s"Parallelism level must be > 0 (got $parallelism)")
+  logger.info(s"Initializing Sparkle to utilize $parallelism cores")
+  private[this] val executor = if (1 == parallelism) Executors.newSingleThreadExecutor else Executors.newWorkStealingPool(parallelism)
   private[this] implicit val ec = ExecutionContext.fromExecutor(executor)
 
   /**
@@ -70,21 +69,13 @@ class SparkleEnv(level: Int) extends Logging {
   def read[T: ClassTag](source: DataSource[T]): DataFrame[T] = new SourceDataFrame(source, this)
 
   /**
-   * Create a new dataframe which is the union of several dataframes.
-   *
-   * @param frames Frames to union.
-   * @tparam T Elements' type.
-   */
-  def union[T: ClassTag](frames: DataFrame[T]*): DataFrame[T] = new UnionDataFrame(frames, this)
-
-  /**
    * Clean and stop this environment. It will not be usable after. This method is blocking.
    */
   def stop(): Unit = synchronized {
     if (!executor.isTerminated) {
       executor.shutdown()
       while (!executor.isTerminated) {
-        executor.awaitTermination(1, TimeUnit.SECONDS)
+        executor.awaitTermination(100, TimeUnit.MILLISECONDS)
       }
     }
   }
@@ -97,10 +88,7 @@ class SparkleEnv(level: Int) extends Logging {
    * @param processor
    * @tparam T
    * @tparam U
-   * @throws SparkleJobException
-   * @return
    */
-  @throws[SparkleJobException]
   private[sparkle] def submit[T, U: ClassTag](frame: DataFrame[T], keys: Seq[String], processor: (String, Iterator[T]) => U): Array[U] = {
     if (keys.isEmpty) {
       Array.empty
@@ -112,10 +100,8 @@ class SparkleEnv(level: Int) extends Logging {
       Await.ready[Array[U]](future, Duration.Inf)
       future.value.get match {
         case Success(res) => res
-        case Failure(e) => throw new SparkleJobException(frame, e)
+        case Failure(e) => throw e
       }
     }
   }
 }
-
-class SparkleJobException(val frame: DataFrame[_], cause: Throwable) extends Exception(s"Error while processing $frame", cause)

@@ -24,7 +24,7 @@ import com.twitter.util.StorageUnit
 import com.twitter.util.logging.Logging
 import fr.cnrs.liris.accio.api.Values
 import fr.cnrs.liris.accio.api.thrift._
-import fr.cnrs.liris.accio.sdk.{Arg, Dataset, Op, ScalaOperator}
+import fr.cnrs.liris.accio.sdk.{Arg, RemoteFile, Op, ScalaOperator}
 import fr.cnrs.liris.util.ResourceFileLoader
 import fr.cnrs.liris.util.StringUtils.maybe
 import fr.cnrs.liris.util.geo.{Distance, Location}
@@ -158,7 +158,7 @@ object OpMeta extends Logging {
         val keys = getAtomicType(scalaType.args.head)
         val values = getAtomicType(scalaType.args.last)
         DataType.MapType(MapType(keys, values))
-      case c if c <:< ru.typeOf[Dataset] => DataType.Dataset(DatasetType())
+      case c if c <:< ru.typeOf[RemoteFile] => DataType.Dataset(DatasetType())
       case _ => DataType.Atomic(getAtomicType(scalaType))
     }
 

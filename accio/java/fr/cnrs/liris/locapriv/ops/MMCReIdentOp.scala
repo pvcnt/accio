@@ -33,9 +33,9 @@ import scala.collection.immutable
   ram = "3G")
 case class MmcReidentOp(
   @Arg(help = "Input train dataset")
-  train: Dataset,
+  train: RemoteFile,
   @Arg(help = "Input test dataset")
-  test: Dataset,
+  test: RemoteFile,
   @Arg(help = "Clustering parameter : minimum points in a cluster")
   minPts: Int = 10,
   @Arg(help = "Clustering parameter : maximum size cluster")

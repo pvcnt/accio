@@ -19,7 +19,7 @@
 package fr.cnrs.liris.locapriv.sparkle
 
 import fr.cnrs.liris.testing.UnitSpec
-import org.scalatest.BeforeAndAfter
+import org.scalatest.BeforeAndAfterEach
 
 import scala.collection.mutable
 import scala.reflect._
@@ -27,19 +27,21 @@ import scala.reflect._
 /**
  * Unit tests for [[DataFrame]].
  */
-class DataFrameSpec extends UnitSpec with BeforeAndAfter {
-  private[this] var env: SparkleEnv = null
+class DataFrameSpec extends UnitSpec with BeforeAndAfterEach {
+  behavior of "Dataset"
 
-  before {
-    env = new SparkleEnv(level = 1)
+  private[this] var env: SparkleEnv = _
+
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    env = new SparkleEnv(parallelism = 1)
   }
 
-  after {
+  override def afterEach(): Unit = {
     env.stop()
     env = null
+    super.afterEach()
   }
-
-  behavior of "DataFrame"
 
   // Basic/meta operations.
   it should "return its elements' type" in {
@@ -106,16 +108,6 @@ class DataFrameSpec extends UnitSpec with BeforeAndAfter {
   it should "return its elements in order" in {
     val data = env.parallelize("foo" -> Seq(1, 2, 3), "bar" -> Seq(4, 5))
     data.toArray shouldBe Array(1, 2, 3, 4, 5)
-  }
-
-  it should "return its maximum w.r.t. implicit ordering" in {
-    val data = env.parallelize("foo" -> Seq(3, 1, 2), "bar" -> Seq(5, 4))
-    data.max shouldBe 5
-  }
-
-  it should "return its minimum w.r.t. implicit ordering" in {
-    val data = env.parallelize("foo" -> Seq(3, 1, 2), "bar" -> Seq(5, 4))
-    data.min shouldBe 1
   }
 
   it should "apply an operation on each element" in {

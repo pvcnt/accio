@@ -15,14 +15,15 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_library(
-  name = 'io',
+  name = "io",
   srcs = glob(["*.scala"]),
   deps = [
-    '//accio/java/fr/cnrs/liris/locapriv/domain',
-    '//accio/java/fr/cnrs/liris/locapriv/sparkle',
-    '//accio/java/fr/cnrs/liris/util',
-    '//accio/java/fr/cnrs/liris/util/geo',
-    '//3rdparty/jvm/com/twitter:inject_core',
+    "//accio/java/fr/cnrs/liris/locapriv/domain",
+    "//accio/java/fr/cnrs/liris/locapriv/sparkle",
+    "//accio/java/fr/cnrs/liris/util",
+    "//accio/java/fr/cnrs/liris/util/geo",
+    "//3rdparty/jvm/com/twitter:inject_core",
+    "//3rdparty/jvm/com/univocity:univocity_parsers",
   ],
   visibility = ["//visibility:public"],
 )

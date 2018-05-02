@@ -33,7 +33,7 @@ case class EnforceDurationOp(
   minDuration: Option[Duration],
   @Arg(help = "Maximum duration of a trace")
   maxDuration: Option[Duration],
-  @Arg(help = "Input dataset") data: Dataset)
+  @Arg(help = "Input dataset") data: RemoteFile)
   extends ScalaOperator[EnforceDurationOut] with SparkleOperator {
 
   override def execute(ctx: OpContext): EnforceDurationOut = {
@@ -57,4 +57,4 @@ case class EnforceDurationOp(
 
 case class EnforceDurationOut(
   @Arg(help = "Output dataset")
-  data: Dataset)
+  data: RemoteFile)

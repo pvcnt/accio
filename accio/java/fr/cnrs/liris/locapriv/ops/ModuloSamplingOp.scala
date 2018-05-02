@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.accio.sdk.{Dataset, _}
+import fr.cnrs.liris.accio.sdk.{RemoteFile, _}
 import fr.cnrs.liris.locapriv.domain.Trace
 
 @Op(
@@ -32,7 +32,7 @@ case class ModuloSamplingOp(
   @Arg(help = "Number of events to keep")
   n: Int,
   @Arg(help = "Input dataset")
-  data: Dataset)
+  data: RemoteFile)
   extends ScalaOperator[ModuloSamplingOut] with SparkleOperator {
   require(n >= 0, s"n must be >0 = (got $n)")
 
@@ -54,4 +54,4 @@ case class ModuloSamplingOp(
 }
 
 case class ModuloSamplingOut(
-  @Arg(help = "Output dataset") data: Dataset)
+  @Arg(help = "Output dataset") data: RemoteFile)

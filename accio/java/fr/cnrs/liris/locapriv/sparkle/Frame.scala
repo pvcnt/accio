@@ -16,29 +16,19 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.locapriv.ops
+package fr.cnrs.liris.locapriv.sparkle
 
-import fr.cnrs.liris.accio.sdk._
-import fr.cnrs.liris.util.geo.Distance
-import fr.cnrs.liris.locapriv.domain.{SpeedSmoothing, Trace}
+final class Frame(columns: Seq[Column[_]]) {
+  def numRows: Int = if (columns.isEmpty) 0 else columns.head.size
 
-@Op(
-  category = "lppm",
-  help = "Enforce speed smoothing guarantees on traces.",
-  cpus = 4,
-  ram = "2G")
-case class PromesseOp(
-  @Arg(help = "Distance to enforce between two consecutive points")
-  epsilon: Distance,
-  @Arg(help = "Input dataset")
-  data: RemoteFile)
-  extends ScalaOperator[PromesseOut] with SparkleOperator {
-
-  override def execute(ctx: OpContext): PromesseOut = {
-    val lppm = new SpeedSmoothing(epsilon)
-    val output = read[Trace](data).map(lppm.transform)
-    PromesseOut(write(output, ctx))
-  }
+  def apply(idx: Int): GenericRow =
+    if (idx < numRows) {
+      new GenericRow(columns.map(_.apply(idx)))
+    } else {
+      GenericRow.empty
+    }
 }
 
-case class PromesseOut(@Arg(help = "Output dataset") data: RemoteFile)
+object Frame {
+  val empty = new Frame(Seq.empty)
+}

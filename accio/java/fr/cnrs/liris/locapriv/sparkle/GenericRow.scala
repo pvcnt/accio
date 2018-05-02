@@ -16,23 +16,12 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.sdk
+package fr.cnrs.liris.locapriv.sparkle
 
-/**
- * Descriptor of a dataset.
- *
- * @param uri URI where the dataset is written.
- */
-case class Dataset(uri: String)
+case class GenericRow(fields: Seq[Any]) extends AnyVal {
+  def apply(idx: Int): Any = fields(idx)
+}
 
-/**
- * Factory for [[Dataset]].
- */
-object Dataset {
-  /**
-   * Parse a string into a dataset.
-   *
-   * @param str String to parse.
-   */
-  def parse(str: String): Dataset = new Dataset(str)
+object GenericRow {
+  val empty = new GenericRow(Seq.empty)
 }

@@ -19,7 +19,7 @@
 package fr.cnrs.liris.locapriv.ops
 
 import com.google.common.geometry.S2CellId
-import fr.cnrs.liris.accio.sdk.{Dataset, _}
+import fr.cnrs.liris.accio.sdk.{RemoteFile, _}
 import fr.cnrs.liris.locapriv.domain.Trace
 import fr.cnrs.liris.util.geo.LatLng
 import org.joda.time.{Duration, Instant}
@@ -32,8 +32,8 @@ import org.joda.time.{Duration, Instant}
 case class AreaCoverageOp(
   @Arg(help = "S2 cells levels") level: Int,
   @Arg(help = "Width of time buckets") width: Option[Duration],
-  @Arg(help = "Train dataset") train: Dataset,
-  @Arg(help = "Test dataset") test: Dataset)
+  @Arg(help = "Train dataset") train: RemoteFile,
+  @Arg(help = "Test dataset") test: RemoteFile)
   extends ScalaOperator[AreaCoverageOut] with SparkleOperator {
 
   override def execute(ctx: OpContext): AreaCoverageOut = {

@@ -19,7 +19,7 @@
 package fr.cnrs.liris.locapriv.ops
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.sdk.{Dataset, _}
+import fr.cnrs.liris.accio.sdk.{RemoteFile, _}
 import fr.cnrs.liris.locapriv.domain.{Event, Trace}
 
 @Op(
@@ -29,7 +29,7 @@ import fr.cnrs.liris.locapriv.domain.{Event, Trace}
   ram = "2G")
 case class DurationSplittingOp(
   @Arg(help = "Maximum duration of each trace") duration: org.joda.time.Duration,
-  @Arg(help = "Input dataset") data: Dataset)
+  @Arg(help = "Input dataset") data: RemoteFile)
   extends ScalaOperator[DurationSplittingOut] with SlidingSplitting with SparkleOperator {
 
   override def execute(ctx: OpContext): DurationSplittingOut = {
@@ -41,4 +41,4 @@ case class DurationSplittingOp(
 
 case class DurationSplittingOut(
   @Arg(help = "Output dataset")
-  data: Dataset)
+  data: RemoteFile)
