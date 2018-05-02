@@ -20,8 +20,7 @@ package fr.cnrs.liris.locapriv.ops
 
 import fr.cnrs.liris.accio.sdk._
 import fr.cnrs.liris.util.geo.Distance
-import fr.cnrs.liris.locapriv.lppm.SpeedSmoothing
-import fr.cnrs.liris.locapriv.model.Trace
+import fr.cnrs.liris.locapriv.domain.{SpeedSmoothing, Trace}
 
 @Op(
   category = "lppm",

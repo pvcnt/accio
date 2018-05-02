@@ -20,7 +20,7 @@ package fr.cnrs.liris.locapriv.ops
 
 import com.google.common.geometry.{S2Cell, S2CellId, S2LatLng}
 import fr.cnrs.liris.util.geo.LatLng
-import fr.cnrs.liris.locapriv.model.{Event, Trace}
+import fr.cnrs.liris.locapriv.domain.{Event, Trace}
 import fr.cnrs.liris.locapriv.testing.WithTraceGenerator
 import fr.cnrs.liris.testing.UnitSpec
 import org.joda.time.{Duration, Instant}

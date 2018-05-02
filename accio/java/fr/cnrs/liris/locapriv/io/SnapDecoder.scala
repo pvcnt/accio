@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.locapriv.io
 
-import fr.cnrs.liris.locapriv.model.Poi
+import fr.cnrs.liris.locapriv.domain.Poi
 import fr.cnrs.liris.util.geo.LatLng
 import org.joda.time.Instant
 

@@ -16,19 +16,32 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.locapriv.clustering
+package fr.cnrs.liris.locapriv.domain
 
 import fr.cnrs.liris.locapriv.testing.WithCabspotting
 import fr.cnrs.liris.testing.UnitSpec
+import fr.cnrs.liris.util.geo.Distance
+import org.joda.time.Duration
 
 /**
- * Unit tests for [[NoClusterer]].
+ * Unit tests for [[IdentityClusterer]].
  */
-class NoClustererSpec extends UnitSpec with WithCabspotting {
-  behavior of "NoClusterer"
+class IdentityClustererSpec extends UnitSpec with WithCabspotting {
+  behavior of "IdentityClusterer"
 
   it should "cluster a trace" in {
-    val clusters = NoClusterer.cluster(abboipTrace)
-    clusters should have size 0
+    val clusters = IdentityClusterer.cluster(abboipTrace)
+    clusters should have size abboipTrace.size
+    clusters.foreach { cluster =>
+      cluster.events should have size 1
+    }
+  }
+
+  it should "be deterministic" in {
+    val clusterer = new DTClusterer(Duration.standardMinutes(15), Distance.meters(100))
+    val clustersByRun = Seq.fill(5)(clusterer.cluster(abboipTrace))
+    (1 until 5).foreach { i =>
+      clustersByRun(i) should contain theSameElementsAs clustersByRun.head
+    }
   }
 }

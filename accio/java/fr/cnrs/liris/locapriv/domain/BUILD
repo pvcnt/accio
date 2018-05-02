@@ -15,17 +15,18 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_library(
-  name = 'model',
+  name = "domain",
   srcs = glob(["*.scala"]),
   deps = [
-    '//accio/java/fr/cnrs/liris/util/geo',
-    '//accio/java/fr/cnrs/liris/util',
-    '//3rdparty/jvm/com/google/guava',
-    '//3rdparty/jvm/com/github/nscala_time',
-    '//3rdparty/jvm/org/scalanlp:breeze',
+    "//accio/java/fr/cnrs/liris/util/geo",
+    "//accio/java/fr/cnrs/liris/util/random",
+    "//accio/java/fr/cnrs/liris/util",
+    "//3rdparty/jvm/com/google/guava",
+    "//3rdparty/jvm/com/github/nscala_time",
+    "//3rdparty/jvm/org/scalanlp:breeze",
   ],
   exports = [
-    '//accio/java/fr/cnrs/liris/util',
+    "//accio/java/fr/cnrs/liris/util",
   ],
   visibility = ["//visibility:public"],
 )

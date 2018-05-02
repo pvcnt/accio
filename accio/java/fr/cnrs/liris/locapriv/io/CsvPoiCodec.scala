@@ -21,7 +21,7 @@ package fr.cnrs.liris.locapriv.io
 import java.nio.charset.Charset
 
 import com.google.common.base.Charsets
-import fr.cnrs.liris.locapriv.model.Poi
+import fr.cnrs.liris.locapriv.domain.Poi
 import fr.cnrs.liris.util.geo.{Distance, LatLng}
 import fr.cnrs.liris.util.ByteUtils
 import org.joda.time.Instant

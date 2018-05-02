@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.locapriv.io
 
-import fr.cnrs.liris.locapriv.model._
+import fr.cnrs.liris.locapriv.domain._
 
 import scala.reflect._
 

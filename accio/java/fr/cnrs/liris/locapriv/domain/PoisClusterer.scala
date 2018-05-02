@@ -16,11 +16,10 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.locapriv.clustering
+package fr.cnrs.liris.locapriv.domain
 
 import com.github.nscala_time.time.Imports._
 import fr.cnrs.liris.util.geo.Distance
-import fr.cnrs.liris.locapriv.model.{Event, Poi}
 import org.joda.time.Instant
 
 /**

@@ -24,7 +24,7 @@ import fr.cnrs.liris.accio.sdk.{Dataset, _}
 import fr.cnrs.liris.locapriv.sparkle.DataFrame
 import fr.cnrs.liris.util.geo.{BoundingBox, Distance, Point}
 import fr.cnrs.liris.util.random.RandomUtils
-import fr.cnrs.liris.locapriv.model.Trace
+import fr.cnrs.liris.locapriv.domain.Trace
 import org.apache.commons.math3.random.RandomDataGenerator
 import org.joda.time.{Duration, Interval}
 

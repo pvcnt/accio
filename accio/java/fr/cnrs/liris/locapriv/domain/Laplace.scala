@@ -16,13 +16,11 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.locapriv.lppm
+package fr.cnrs.liris.locapriv.domain
 
 import com.google.common.geometry.S1Angle
-import fr.cnrs.liris.util.geo.{LatLng, Point}
+import fr.cnrs.liris.util.geo.{Distance, LatLng, Point}
 import fr.cnrs.liris.util.random.RandomUtils
-import fr.cnrs.liris.util.geo.Distance
-import fr.cnrs.liris.locapriv.model.Trace
 
 import scala.util.Random
 

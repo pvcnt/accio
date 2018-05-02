@@ -16,12 +16,11 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.locapriv.clustering
+package fr.cnrs.liris.locapriv.domain
 
-import fr.cnrs.liris.util.geo.{Distance, Point}
-import fr.cnrs.liris.locapriv.model.{Event, Trace}
 import fr.cnrs.liris.locapriv.testing.WithCabspotting
 import fr.cnrs.liris.testing.UnitSpec
+import fr.cnrs.liris.util.geo.{Distance, Point}
 import org.joda.time.{Duration, Instant}
 
 /**
