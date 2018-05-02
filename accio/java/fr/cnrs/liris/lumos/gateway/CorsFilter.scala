@@ -18,13 +18,21 @@
 
 package fr.cnrs.liris.lumos.gateway
 
-import com.google.inject.Singleton
-import com.twitter.finagle.http.Request
-import com.twitter.finatra.http.Controller
+import com.twitter.finagle.http.filter.Cors
+import com.twitter.finagle.http.{Request, Response}
+import com.twitter.finagle.{Service, SimpleFilter}
+import com.twitter.util.Future
 
-@Singleton
-final class UiController extends Controller {
-  get("/") { request: Request => response.ok.file("index.html") }
+class CorsFilter extends SimpleFilter[Request, Response] {
+  private[this] val cors = {
+    val allowsOrigin = { origin: String => Some(origin) }
+    val allowsMethods = { method: String => Some(Seq("GET", "POST", "PUT", "DELETE")) }
+    val allowsHeaders = { headers: Seq[String] => Some(headers) }
 
-  get("/:*") { request: Request => response.ok.file(request.params("*")) }
+    val policy = Cors.Policy(allowsOrigin, allowsMethods, allowsHeaders)
+    new Cors.HttpFilter(policy)
+  }
+
+  override def apply(request: Request, service: Service[Request, Response]): Future[Response] =
+    cors.apply(request, service)
 }

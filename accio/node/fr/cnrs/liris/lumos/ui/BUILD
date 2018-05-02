@@ -14,24 +14,32 @@
 # You should have received a copy of the GNU General Public License
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
-scala_binary(
-  name = "gateway",
-  srcs = glob(["*.scala"]),
-  deps = [
-    "//accio/java/fr/cnrs/liris/lumos/domain",
-    "//accio/java/fr/cnrs/liris/finatra/jackson",
-    "//accio/thrift/fr/cnrs/liris/lumos/server",
-    "//3rdparty/jvm/com/twitter:finatra_http",
-    "//3rdparty/jvm/com/twitter:finatra_httpclient",
-  ],
-  runtime_deps = [
-    "//3rdparty/jvm/ch/qos/logback:logback_classic",
-    "//3rdparty/jvm/com/twitter:twitter_server_logback_classic",
-  ],
-  resources = [
-    "//accio/node/fr/cnrs/liris/lumos/ui:index.bundle.js",
-    "//accio/node/fr/cnrs/liris/lumos/ui:assets",
-  ],
-  resource_strip_prefix = "accio/node/fr/cnrs/liris/lumos/ui",
-  main_class = "fr.cnrs.liris.lumos.gateway.LumosGatewayMain",
+load("//tools/build_rules/node:node_build.bzl", "node_build")
+
+config_setting(name = "devel", define_values = {"env": "devel"})
+config_setting(name = "production", define_values = {"env": "production"})
+
+devel_env = {
+  "NODE_ENV": "devel",
+}
+production_env = {
+  "NODE_ENV": "production",
+}
+
+node_build(
+  name = "ui",
+  entry = ["index.js"],
+  srcs = glob(["**/*.js", "**/*.jsx", "**/*.css"]),
+  env = select({
+    ":devel": devel_env,
+    ":production": production_env,
+    "//conditions:default": devel_env,
+  }),
+  visibility = ["//visibility:public"],
+)
+
+filegroup(
+  name = "assets",
+  srcs = glob(["images/**"]) + ["index.html", "robots.txt", "favicon.ico"],
+  visibility = ["//visibility:public"],
 )

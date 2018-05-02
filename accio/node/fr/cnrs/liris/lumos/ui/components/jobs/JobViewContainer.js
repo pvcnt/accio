@@ -16,15 +16,8 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.lumos.gateway
+import React from 'react';
+import JobView from './JobView';
+import withJob from '../hoc/withJob';
 
-import com.google.inject.Singleton
-import com.twitter.finagle.http.Request
-import com.twitter.finatra.http.Controller
-
-@Singleton
-final class UiController extends Controller {
-  get("/") { request: Request => response.ok.file("index.html") }
-
-  get("/:*") { request: Request => response.ok.file(request.params("*")) }
-}
+export default withJob(JobView);

@@ -16,15 +16,25 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.lumos.gateway
+import xhr from './xhr';
 
-import com.google.inject.Singleton
-import com.twitter.finagle.http.Request
-import com.twitter.finatra.http.Controller
+export function checkAuthenticated() {
+  return xhr('/auth').then(resp => resp.authenticated);
+}
 
-@Singleton
-final class UiController extends Controller {
-  get("/") { request: Request => response.ok.file("index.html") }
+export function authenticate(password) {
+  return xhr('/auth', { method: 'POST', body: JSON.stringify({ password }) }).then(resp => {
+    if (resp.authenticated) {
+      if (resp.accessToken) {
+        window.localStorage.setItem('access_token', resp.accessToken);
+      }
+      return true;
+    } else {
+      return false;
+    }
+  });
+}
 
-  get("/:*") { request: Request => response.ok.file(request.params("*")) }
+export function logout() {
+  window.localStorage.removeItem('access_token');
 }

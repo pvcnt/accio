@@ -16,15 +16,22 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.lumos.gateway
+import React from 'react';
+import PropTypes from 'prop-types';
 
-import com.google.inject.Singleton
-import com.twitter.finagle.http.Request
-import com.twitter.finatra.http.Controller
-
-@Singleton
-final class UiController extends Controller {
-  get("/") { request: Request => response.ok.file("index.html") }
-
-  get("/:*") { request: Request => response.ok.file(request.params("*")) }
+class ViewJob extends React.Component {
+  render() {
+    const { job } = this.props;
+    return (
+      <div>
+        <h1>Job {job.name}</h1>
+      </div>
+    );
+  }
 }
+
+ViewJob.propTypes = {
+  job: PropTypes.object.isRequired,
+};
+
+export default ViewJob;

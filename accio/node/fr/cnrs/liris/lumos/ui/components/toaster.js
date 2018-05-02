@@ -16,15 +16,9 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.lumos.gateway
+import { Toaster } from '@blueprintjs/core';
 
-import com.google.inject.Singleton
-import com.twitter.finagle.http.Request
-import com.twitter.finatra.http.Controller
+// Singleton instance of a toaster used to display ephemeral messages.
+const toaster = Toaster.create();
 
-@Singleton
-final class UiController extends Controller {
-  get("/") { request: Request => response.ok.file("index.html") }
-
-  get("/:*") { request: Request => response.ok.file(request.params("*")) }
-}
+export default toaster;

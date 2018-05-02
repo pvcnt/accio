@@ -16,15 +16,17 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.lumos.gateway
 
-import com.google.inject.Singleton
-import com.twitter.finagle.http.Request
-import com.twitter.finatra.http.Controller
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { HashRouter } from 'react-router-dom';
+import App from './components/App';
 
-@Singleton
-final class UiController extends Controller {
-  get("/") { request: Request => response.ok.file("index.html") }
+// Import stylesheets.
+import 'normalize.css/normalize.css';
+import '@blueprintjs/core/lib/css/blueprint.css';
+import '@blueprintjs/icons/lib/css/blueprint-icons.css';
+import '@blueprintjs/datetime/lib/css/blueprint-datetime.css';
+import './app.css';
 
-  get("/:*") { request: Request => response.ok.file(request.params("*")) }
-}
+ReactDOM.render(<HashRouter><App/></HashRouter>, document.getElementById('app'));
