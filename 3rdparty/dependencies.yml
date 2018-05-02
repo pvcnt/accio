@@ -71,6 +71,10 @@ dependencies:
     prettytime:
       version: "4.0.1.Final"
       lang: java
+  com.univocity:
+    univocity-parsers:
+      version: 2.6.3
+      lang: java
   org.scala-lang.modules:
     scala-parser-combinators:
       version: "1.1.0"
