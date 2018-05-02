@@ -27,6 +27,8 @@ scala_library(
   ],
   exports = [
     "//accio/java/fr/cnrs/liris/util",
+    "//accio/java/fr/cnrs/liris/util/geo",
+    "//3rdparty/jvm/com/github/nscala_time",
   ],
   visibility = ["//visibility:public"],
 )
