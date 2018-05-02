@@ -18,10 +18,9 @@
 
 package fr.cnrs.liris.locapriv.sparkle
 
-import com.google.common.base.MoreObjects
 import com.twitter.util.logging.Logging
-import fr.cnrs.liris.util.random._
 import fr.cnrs.liris.util.Identified
+import fr.cnrs.liris.util.random._
 
 import scala.collection.mutable
 import scala.reflect._
@@ -34,8 +33,6 @@ abstract class DataFrame[T: ClassTag](val env: SparkleEnv) extends Logging {
 
   def load(key: String): Iterator[T]
 
-  final def restrict(keys: Iterable[String]): DataFrame[T] = new RestrictDataFrame(this, this.keys.intersect(keys.toSeq))
-
   /**
    * Return a sampled subset of this RDD.
    *
@@ -45,7 +42,7 @@ abstract class DataFrame[T: ClassTag](val env: SparkleEnv) extends Logging {
    *                        With replacement: expected number of times each element is chosen; fraction must be >= 0.
    * @param seed            Seed for the random number generator.
    */
-  final def sample(withReplacement: Boolean, fraction: Double, seed: Long = RandomUtils.random.nextLong): DataFrame[T] = {
+  def sample(withReplacement: Boolean, fraction: Double, seed: Long = RandomUtils.random.nextLong): DataFrame[T] = {
     require(fraction >= 0.0, s"Negative fraction value: $fraction")
     if (withReplacement) {
       new SampleDataFrame[T](this, new PoissonSampler[T](fraction), seed)
@@ -54,25 +51,25 @@ abstract class DataFrame[T: ClassTag](val env: SparkleEnv) extends Logging {
     }
   }
 
-  final def filter(fn: T => Boolean): DataFrame[T] = new FilterDataFrame(this, fn)
+  def filter(fn: T => Boolean): DataFrame[T] = new FilterDataFrame(this, fn)
 
-  final def map[U: ClassTag](fn: T => U): DataFrame[U] = new MapDataFrame(this, fn)
+  def map[U: ClassTag](fn: T => U): DataFrame[U] = new FlatMapDataFrame(this, (el: T) => Seq(fn(el)))
 
-  final def flatMap[U: ClassTag](fn: T => Iterable[U]): DataFrame[U] = new FlatMapDataFrame(this, fn)
+  def flatMap[U: ClassTag](fn: T => Iterable[U]): DataFrame[U] = new FlatMapDataFrame(this, fn)
 
-  final def zip[U: ClassTag](other: DataFrame[U]): DataFrame[(T, U)] = new ZipDataFrame(this, other)
+  def zip[U: ClassTag](other: DataFrame[U]): DataFrame[(T, U)] = new ZipDataFrame(this, other)
 
-  final def union(other: DataFrame[T]): DataFrame[T] = new UnionDataFrame(Seq(this, other), env)
+  def union(other: DataFrame[T]): DataFrame[T] = new UnionDataFrame(Seq(this, other), env)
 
-  final def count(): Long = env.submit[T, Long](this, keys, (_, it) => it.size).sum
+  def count(): Long = env.submit[T, Long](this, keys, (_, it) => it.size).sum
 
-  final def min(implicit cmp: Ordering[T]): T = env.submit[T, T](this, keys, (_, it) => it.min(cmp)).min(cmp)
+  def min(implicit cmp: Ordering[T]): T = env.submit[T, T](this, keys, (_, it) => it.min(cmp)).min(cmp)
 
-  final def max(implicit cmp: Ordering[T]): T = env.submit[T, T](this, keys, (_, it) => it.max(cmp)).max(cmp)
+  def max(implicit cmp: Ordering[T]): T = env.submit[T, T](this, keys, (_, it) => it.max(cmp)).max(cmp)
 
-  final def reduce(fn: (T, T) => T): T = env.submit[T, T](this, keys, (_, it) => it.reduce(fn)).reduce(fn)
+  def reduce(fn: (T, T) => T): T = env.submit[T, T](this, keys, (_, it) => it.reduce(fn)).reduce(fn)
 
-  final def toArray: Array[T] = env.submit[T, Array[T]](this, keys, (_, it) => it.toArray).flatten
+  def toArray: Array[T] = env.submit[T, Array[T]](this, keys, (_, it) => it.toArray).flatten
 
   /**
    * Return a fixed-size sampled subset of this data frame in an array
@@ -81,7 +78,7 @@ abstract class DataFrame[T: ClassTag](val env: SparkleEnv) extends Logging {
    * @param num             Size of the returned sample.
    * @param seed            Seed for the random number generator.
    */
-  final def takeSample(
+  def takeSample(
     withReplacement: Boolean,
     num: Int,
     seed: Long = RandomUtils.random.nextLong): Array[T] = {
@@ -118,7 +115,7 @@ abstract class DataFrame[T: ClassTag](val env: SparkleEnv) extends Logging {
     }
   }
 
-  final def take(n: Int): Array[T] = {
+  def take(n: Int): Array[T] = {
     if (keys.isEmpty) {
       Array.empty
     } else {
@@ -145,7 +142,7 @@ abstract class DataFrame[T: ClassTag](val env: SparkleEnv) extends Logging {
     }
   }
 
-  final def first(): T = {
+  def first(): T = {
     val keysIt = keys.iterator
     var res: Option[T] = None
     while (res.isEmpty && keysIt.hasNext) {
@@ -156,9 +153,9 @@ abstract class DataFrame[T: ClassTag](val env: SparkleEnv) extends Logging {
     res.get
   }
 
-  final def foreach(fn: T => Unit): Unit = env.submit[T, Unit](this, keys, (_, it) => it.foreach(fn))
+  def foreach(fn: T => Unit): Unit = env.submit[T, Unit](this, keys, (_, it) => it.foreach(fn))
 
-  final def write(sink: DataSink[T]): Unit = {
+  def write(sink: DataSink[T]): Unit = {
     val identifiable = classOf[Identified].isAssignableFrom(elementClassTag.runtimeClass)
     env.submit[T, Unit](this, keys, (key, it) => {
       if (identifiable) {
@@ -171,104 +168,4 @@ abstract class DataFrame[T: ClassTag](val env: SparkleEnv) extends Logging {
       }
     })
   }
-}
-
-private[sparkle] class RestrictDataFrame[T: ClassTag](inner: DataFrame[T], override val keys: Seq[String])
-  extends DataFrame[T](inner.env) {
-
-  override def load(key: String): Iterator[T] = if (keys.contains(key)) inner.load(key) else Iterator.empty
-
-  override def toString: String =
-    MoreObjects.toStringHelper(this)
-      .addValue(inner)
-      .toString
-}
-
-private[sparkle] class FilterDataFrame[T: ClassTag](inner: DataFrame[T], fn: T => Boolean)
-  extends DataFrame[T](inner.env) {
-
-  override def keys: Seq[String] = inner.keys
-
-  override def load(key: String): Iterator[T] = inner.load(key).filter(fn)
-
-  override def toString: String =
-    MoreObjects.toStringHelper(this)
-      .addValue(inner)
-      .toString
-}
-
-private[sparkle] class SampleDataFrame[T: ClassTag](inner: DataFrame[T], sampler: RandomSampler[T, T], seed: Long)
-  extends DataFrame[T](inner.env) {
-
-  private[this] val seeds = {
-    val random = new Random(seed)
-    inner.keys.map(key => key -> random.nextLong).toMap
-  }
-
-  override def keys: Seq[String] = inner.keys
-
-  override def load(key: String): Iterator[T] = {
-    val aSampler = sampler.clone
-    aSampler.setSeed(seeds(key))
-    aSampler.sample(inner.load(key))
-  }
-
-  override def toString: String =
-    MoreObjects.toStringHelper(this)
-      .addValue(inner)
-      .toString
-}
-
-private[sparkle] class MapDataFrame[T, U: ClassTag](inner: DataFrame[T], fn: T => U)
-  extends DataFrame[U](inner.env) {
-
-  override def keys: Seq[String] = inner.keys
-
-  override def load(key: String): Iterator[U] = inner.load(key).map(fn)
-
-  override def toString: String =
-    MoreObjects.toStringHelper(this)
-      .addValue(inner)
-      .toString
-}
-
-private[sparkle] class FlatMapDataFrame[T, U: ClassTag](inner: DataFrame[T], fn: T => Iterable[U])
-  extends DataFrame[U](inner.env) {
-
-  override def keys: Seq[String] = inner.keys
-
-  override def load(key: String): Iterator[U] = inner.load(key).flatMap(fn)
-
-  override def toString: String =
-    MoreObjects.toStringHelper(this)
-      .addValue(inner)
-      .toString
-}
-
-private[sparkle] class UnionDataFrame[T: ClassTag](frames: Iterable[DataFrame[T]], env: SparkleEnv)
-  extends DataFrame[T](env) {
-
-  override def keys: Seq[String] = frames.flatMap(_.keys).toSeq.distinct.sorted
-
-  override def load(key: String): Iterator[T] =
-    frames.map(_.load(key)).foldLeft(Iterator.empty: Iterator[T])(_ ++ _)
-
-  override def toString: String =
-    MoreObjects.toStringHelper(this)
-      .addValue(frames.mkString(", "))
-      .toString
-}
-
-private[sparkle] class ZipDataFrame[T: ClassTag, U: ClassTag](first: DataFrame[T], other: DataFrame[U])
-  extends DataFrame[(T, U)](first.env) {
-
-  override def keys: Seq[String] = first.keys.intersect(other.keys)
-
-  override def load(key: String): Iterator[(T, U)] = first.load(key).zip(other.load(key))
-
-  override def toString: String =
-    MoreObjects.toStringHelper(this)
-      .addValue(first)
-      .addValue(other)
-      .toString
 }

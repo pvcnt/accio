@@ -18,17 +18,17 @@
 
 package fr.cnrs.liris.locapriv.sparkle
 
+import com.google.common.base.MoreObjects
+
 import scala.reflect.ClassTag
 
-/**
- * A data frame reading its data from the memory.
- *
- * @param data Data, indexed by key.
- * @param env  Sparkle environment.
- * @tparam T Elements' type.
- */
-private[sparkle] class ParallelCollectionDataFrame[T: ClassTag](data: Map[String, Seq[T]], env: SparkleEnv) extends DataFrame[T](env) {
-  override def keys: Seq[String] = data.keySet.toSeq
+private[sparkle] class UnionDataFrame[T: ClassTag](frames: Iterable[DataFrame[T]], env: SparkleEnv)
+  extends DataFrame[T](env) {
 
-  override def load(key: String): Iterator[T] = if (data.contains(key)) data(key).iterator else Iterator.empty
+  override def keys: Seq[String] = frames.flatMap(_.keys).toSeq.distinct.sorted
+
+  override def load(key: String): Iterator[T] =
+    frames.map(_.load(key)).foldLeft(Iterator.empty: Iterator[T])(_ ++ _)
+
+  override def toString: String = MoreObjects.toStringHelper(this).addValue(frames.mkString(", ")).toString
 }
