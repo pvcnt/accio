@@ -51,7 +51,7 @@ class UniformSamplingOpSpec extends UnitSpec with WithTraceGenerator with ScalaO
     val trace = randomTrace(Me, 100, 10.seconds)
     val res = transform(Seq(trace), 0)
     res should have size 1
-    res.head.user shouldBe trace.user
+    res.head.id shouldBe trace.id
     res.head.events should have size 0
   }
 
@@ -59,7 +59,7 @@ class UniformSamplingOpSpec extends UnitSpec with WithTraceGenerator with ScalaO
     val trace = randomTrace(Me, 100, 10.seconds)
     val res = transform(Seq(trace), 1)
     res should have size 1
-    res.head.user shouldBe trace.user
+    res.head.id shouldBe trace.id
     res.head.events should contain theSameElementsInOrderAs trace.events
   }
 

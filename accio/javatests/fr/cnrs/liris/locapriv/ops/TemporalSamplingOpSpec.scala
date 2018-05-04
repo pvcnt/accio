@@ -39,7 +39,7 @@ class TemporalSamplingOpSpec extends UnitSpec with WithTraceGenerator with Scala
       Event(Me, Here, Now + 44.seconds)))
     val res = transform(Seq(trace), 10.seconds)
     res should have size 1
-    res.head.user shouldBe trace.user
+    res.head.id shouldBe trace.id
     res.head.events should contain theSameElementsInOrderAs Seq(
       Event(Me, Here, Now),
       Event(Me, Here, Now + 10.seconds),
@@ -51,7 +51,7 @@ class TemporalSamplingOpSpec extends UnitSpec with WithTraceGenerator with Scala
     val trace = Trace.empty(Me)
     val res = transform(Seq(trace), 10.seconds)
     res should have size 1
-    res.head.user shouldBe trace.user
+    res.head.id shouldBe trace.id
     res.head.events shouldBe trace.events
   }
 
@@ -59,7 +59,7 @@ class TemporalSamplingOpSpec extends UnitSpec with WithTraceGenerator with Scala
     val trace = Trace(Seq(Event(Me, Here, Now)))
     val res = transform(Seq(trace), 10.seconds)
     res should have size 1
-    res.head.user shouldBe trace.user
+    res.head.id shouldBe trace.id
     res.head.events should contain theSameElementsInOrderAs trace.events
   }
 

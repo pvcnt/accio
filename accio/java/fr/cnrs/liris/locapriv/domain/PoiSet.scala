@@ -20,20 +20,20 @@ package fr.cnrs.liris.locapriv.domain
 
 import breeze.stats.DescriptiveStats
 import com.google.common.base.MoreObjects
-import fr.cnrs.liris.util.geo.Point
-import fr.cnrs.liris.util.geo.Distance
-import fr.cnrs.liris.util.Identified
+import fr.cnrs.liris.util.geo.{Distance, Point}
 
 /**
- * A set of POIs belonging to a single user. This is essentially a wrapper around a basic set, providing some
- * useful methods to manipulate POIs.
+ * A set of POIs belonging to a single user. This is essentially a wrapper around a basic set,
+ * providing some useful methods to manipulate POIs.
  *
- * @param user User identifier.
+ * @param id   Trace identifier.
  * @param pois List of unique POIs.
  */
-case class PoiSet(user: String, pois: Seq[Poi]) extends Identified {
-
-  override def id: String = user
+case class PoiSet(id: String, pois: Seq[Poi]) {
+  /**
+   * Return the user identifier associated with this trace.
+   */
+  lazy val user: String = id.split("-").head
 
   /**
    * Check whether the set of POIs is not empty.
@@ -92,22 +92,16 @@ case class PoiSet(user: String, pois: Seq[Poi]) extends Identified {
    * @param b A second set of points
    */
   private def distances(a: Iterable[Point], b: Iterable[Point]): Iterable[Double] =
-  if (b.isEmpty) {
-    Iterable.empty[Double]
-  } else {
-    a.map(point => Point.nearest(point, b).distance.meters).filterNot(_.isInfinite)
-  }
+    if (b.isEmpty) {
+      Iterable.empty[Double]
+    } else {
+      a.map(point => Point.nearest(point, b).distance.meters).filterNot(_.isInfinite)
+    }
 
   override def toString: String =
-    MoreObjects.toStringHelper(this)
-      .add("user", user)
-      .add("size", size)
-      .toString
+    MoreObjects.toStringHelper(this).add("id", id).add("size", size).toString
 }
 
-/**
- * Factory for [[PoiSet]].
- */
 object PoiSet {
   /**
    * Create a new set of POIs.

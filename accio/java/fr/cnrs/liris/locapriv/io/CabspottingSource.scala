@@ -22,7 +22,7 @@ import java.nio.file.{Files, Path, Paths}
 
 import com.google.common.base.MoreObjects
 import fr.cnrs.liris.locapriv.domain.{Event, Trace}
-import fr.cnrs.liris.locapriv.sparkle.DataSource
+import fr.cnrs.liris.sparkle.DataSource
 import fr.cnrs.liris.util.geo.LatLng
 import org.joda.time.Instant
 

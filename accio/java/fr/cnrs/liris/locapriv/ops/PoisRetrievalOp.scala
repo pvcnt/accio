@@ -41,7 +41,7 @@ case class PoisRetrievalOp(
   override def execute(ctx: OpContext): PoisRetrievalOut = {
     val trainDs = read[PoiSet](train)
     val testDs = read[PoiSet](test)
-    val metrics = trainDs.zip(testDs).map { case (ref, res) => evaluate(ref, res) }.toArray
+    val metrics = trainDs.zip(testDs).map { case (ref, res) => evaluate(ref, res) }.collect()
     PoisRetrievalOut(
       precision = metrics.map { case (k, v) => k -> v._1 }.toMap,
       recall = metrics.map { case (k, v) => k -> v._2 }.toMap,

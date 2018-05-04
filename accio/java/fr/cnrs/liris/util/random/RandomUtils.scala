@@ -44,11 +44,6 @@ import scala.util.Random
  */
 object RandomUtils {
   /**
-   * A shared [[scala.util.Random]] instance.
-   */
-  val random = new Random
-
-  /**
    * Sample uniformly a sequence by keeping each element with the same probability.
    *
    * @param input Input sequence.
@@ -75,7 +70,7 @@ object RandomUtils {
    * @param seed Seed.
    * @tparam T Elements' type.
    */
-  def randomElement[T](xs: Seq[T], seed: Long = random.nextLong): T = {
+  def randomElement[T](xs: Seq[T], seed: Long = Random.nextLong): T = {
     require(xs.nonEmpty, "Cannot draw a random element from an empty collection")
     if (xs.size == 1) {
       xs.head
@@ -112,7 +107,7 @@ object RandomUtils {
    * @tparam T Elements' type.
    */
   def randomize[T: ClassTag](input: TraversableOnce[T], rand: Random = new Random): Seq[T] =
-  randomizeInPlace(input.toArray, rand).toSeq
+    randomizeInPlace(input.toArray, rand).toSeq
 
   /**
    * Shuffle the elements of an array into a random order, modifying the original array.

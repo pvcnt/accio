@@ -39,7 +39,7 @@ case class SpatialDistortionOp(
   override def execute(ctx: OpContext): SpatialDistortionOut = {
     val trainDs = read[Trace](train)
     val testDs = read[Trace](test)
-    val metrics = trainDs.zip(testDs).map { case (ref, res) => evaluate(ref, res) }.toArray
+    val metrics = trainDs.zip(testDs).map { case (ref, res) => evaluate(ref, res) }.collect()
     SpatialDistortionOut(
       min = metrics.map { case (k, v) => k -> v.min }.toMap,
       max = metrics.map { case (k, v) => k -> v.max }.toMap,

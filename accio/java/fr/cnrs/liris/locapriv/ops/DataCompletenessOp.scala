@@ -34,7 +34,7 @@ case class DataCompletenessOp(
   override def execute(ctx: OpContext): DataCompletenessOut = {
     val trainDs = read[Trace](train)
     val testDs = read[Trace](test)
-    val values = trainDs.zip(testDs).map { case (ref, res) => evaluate(ref, res) }.toArray
+    val values = trainDs.zip(testDs).map { case (ref, res) => evaluate(ref, res) }.collect()
     DataCompletenessOut(values.toMap)
   }
 

@@ -20,7 +20,6 @@ package fr.cnrs.liris.locapriv.domain
 
 import com.google.common.geometry.S1Angle
 import fr.cnrs.liris.util.geo.{Distance, LatLng, Point}
-import fr.cnrs.liris.util.random.RandomUtils
 
 import scala.util.Random
 
@@ -34,7 +33,7 @@ import scala.util.Random
  * @param epsilon Privacy budget
  * @param seed    Seed.
  */
-class Laplace(epsilon: Double, seed: Long = RandomUtils.random.nextLong) {
+class Laplace(epsilon: Double, seed: Long = Random.nextLong) {
   private[this] val rnd = new Random(seed)
 
   /**

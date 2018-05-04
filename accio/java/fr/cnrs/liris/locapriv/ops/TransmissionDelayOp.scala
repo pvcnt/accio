@@ -35,7 +35,7 @@ case class TransmissionDelayOp(
   override def execute(ctx: OpContext): TransmissionDelayOut = {
     val trainDs = read[Trace](train)
     val testDs = read[Trace](test)
-    val values = trainDs.zip(testDs).map { case (ref, res) => evaluate(ref, res) }.toArray
+    val values = trainDs.zip(testDs).map { case (ref, res) => evaluate(ref, res) }.collect()
     TransmissionDelayOut(values.toMap)
   }
 

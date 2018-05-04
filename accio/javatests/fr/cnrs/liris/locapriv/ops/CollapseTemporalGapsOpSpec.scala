@@ -41,7 +41,7 @@ class CollapseTemporalGapsOpSpec extends UnitSpec with ScalaOperatorSpec with Wi
     val startAt = DateTime.parse("2016-01-01T00:00:00Z").toInstant
     val res = execute(startAt, Seq(trace))
     res should have size 1
-    res.head.user shouldBe Me
+    res.head.id shouldBe Me
     res.head.events.map(_.point) should contain theSameElementsInOrderAs trace.events.map(_.point)
     res.head.events.head.time should (be >= startAt and be <= startAt.plus(Duration.standardDays(1)))
     res.head.events.last.time should (be >= startAt.plus(Duration.standardDays(2)) and be <= startAt.plus(Duration.standardDays(3)))

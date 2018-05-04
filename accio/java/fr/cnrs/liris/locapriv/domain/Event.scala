@@ -19,7 +19,7 @@
 package fr.cnrs.liris.locapriv.domain
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.util.geo.{Location, Point}
+import fr.cnrs.liris.util.geo.{LatLng, Location, Point}
 import org.joda.time.{Instant, ReadableInstant}
 
 /**
@@ -30,7 +30,11 @@ import org.joda.time.{Instant, ReadableInstant}
  * @param point Location.
  * @param time  Timestamp.
  */
-case class Event private(user: String, point: Point, time: Instant) extends Ordered[Event] {
+case class Event(user: String, point: Point, time: Instant) extends Ordered[Event] {
+  def this(user: String, lat: Double, lng: Double, time: Instant) = {
+    this(user, LatLng.degrees(lat, lng).toPoint, time)
+  }
+
   /**
    * Events can be compared using their timestamp.
    *
@@ -40,9 +44,6 @@ case class Event private(user: String, point: Point, time: Instant) extends Orde
   override def compare(that: Event): Int = time.compare(that.time)
 }
 
-/**
- * Factory for [[Event]].
- */
 object Event {
   /**
    * Create an event from a user identifier, a location and an instant.

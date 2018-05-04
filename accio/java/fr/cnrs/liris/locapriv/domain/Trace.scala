@@ -21,20 +21,23 @@ package fr.cnrs.liris.locapriv.domain
 import com.github.nscala_time.time.Imports._
 import com.google.common.base.MoreObjects
 import fr.cnrs.liris.util.geo.{BoundingBox, Distance, Point}
-import fr.cnrs.liris.util.Identified
 
 /**
  * A trace is a list of events belonging to a single user.
  *
- * Traces have an identifier allowing to track the lineage of transformations it went through. A trace identifier is
- * only intended to change only when a trace is split into multiple traces. It should begin with the user identifier,
- * and is followed by a unique identifier.
+ * Traces have an identifier allowing to track the lineage of transformations it went through.
+ * A trace identifier is only intended to change only when a trace is split into multiple traces.
+ * It should begin with the user identifier, and is followed by a unique identifier.
  *
  * @param id     Trace identifier.
- * @param user   User identifier.
  * @param events Chronologically ordered events.
  */
-case class Trace private(id: String, user: String, events: Seq[Event]) extends Identified  {
+case class Trace private(id: String, events: Seq[Event]) {
+  /**
+   * Return the user identifier associated with this trace.
+   */
+  lazy val user: String = id.split("-").head
+
   /**
    * Check if this trace is empty, i.e., contains no event.
    */
@@ -72,14 +75,14 @@ case class Trace private(id: String, user: String, events: Seq[Event]) extends I
    * of this trace minus 1 (or 0 if the trace is empty).
    */
   def distances: Seq[Distance] =
-  events.sliding(2).map(rs => rs.head.point.distance(rs.last.point)).toSeq
+    events.sliding(2).map(rs => rs.head.point.distance(rs.last.point)).toSeq
 
   /**
    * Return the sequence of durations between consecutive points. The number of durations is equal
    * to the size of this collection minus 1 (or 0 if the trace is already empty).
    */
   def durations: Seq[Duration] =
-  events.sliding(2).map(rs => (rs.head.time to rs.last.time).duration).toSeq
+    events.sliding(2).map(rs => (rs.head.time to rs.last.time).duration).toSeq
 
   /**
    * Return the minimal bounding box encompassing all points of this trace.
@@ -97,33 +100,33 @@ case class Trace private(id: String, user: String, events: Seq[Event]) extends I
    *
    * @param fn A function modifying the events (it shouldn't modify the events' user)
    */
-  def map(fn: Event => Event): Trace = new Trace(id, user, events.map(fn))
+  def map(fn: Event => Event): Trace = new Trace(id, events.map(fn))
 
   /**
    * Return a new trace after applying a given function on each event.
    *
    * @param fn Whether to keep an event or not
    */
-  def filter(fn: Event => Boolean): Trace = new Trace(id, user, events.filter(fn))
+  def filter(fn: Event => Boolean): Trace = new Trace(id, events.filter(fn))
 
   /**
    * Return a new trace after applying a function on the sequence of events.
    *
    * @param fn A function modifying the events (it shouldn't modify the events' user)
    */
-  def replace(fn: Seq[Event] => Seq[Event]): Trace = new Trace(id, user, fn(events))
+  def replace(fn: Seq[Event] => Seq[Event]): Trace = new Trace(id, fn(events))
 
   /**
    * Return a new trace with other events.
    *
    * @param events New events (should belong to the same user)
    */
-  def replace(events: Seq[Event]): Trace = new Trace(id, user, events)
+  def replace(events: Seq[Event]): Trace = new Trace(id, events)
 
   /**
    * Return an empty trace with the same user.
    */
-  def empty: Trace = new Trace(id, user, Seq.empty)
+  def empty: Trace = new Trace(id, Seq.empty)
 
   /**
    * Return a new trace, which is the concatenation of this trace with another trace.
@@ -136,23 +139,16 @@ case class Trace private(id: String, user: String, events: Seq[Event]) extends I
   }
 
   override def toString: String =
-    MoreObjects.toStringHelper(this)
-      .add("id", id)
-      .add("user", user)
-      .add("size", events.size)
-      .toString
+    MoreObjects.toStringHelper(this).add("id", id).add("size", events.size).toString
 }
 
-/**
- * Factory for [[Trace]].
- */
 object Trace {
   /**
    * Create an empty trace.
    *
    * @param id Trace identifier.
    */
-  def empty(id: String): Trace = new Trace(id, getUser(id), Seq.empty)
+  def empty(id: String): Trace = new Trace(id, Seq.empty)
 
   /**
    * Create a trace from an non-empty and unordered list of events.
@@ -162,52 +158,22 @@ object Trace {
   def apply(events: Iterable[Event]): Trace = {
     val seq = events.toSeq.sortBy(_.time)
     require(seq.nonEmpty, "Cannot create a trace from an empty list of events")
-    new Trace(seq.head.user, seq.head.user, seq)
+    new Trace(seq.head.user, seq)
   }
 
   /**
-   * Create a trace from an non-empty and already ordered list of events.
-   *
-   * @param events A non-empty list of events.
-   */
-  def apply(events: Seq[Event]): Trace = {
-    require(events.nonEmpty, "Cannot create a trace from an empty list of events")
-    new Trace(events.head.user, events.head.user, events)
-  }
-
-  /**
-   * Create a trace from an non-empty and unordered list of events and a trace identifier. Events should be consistent
-   * with given trace identifier.
+   * Create a trace from an non-empty and unordered list of events and a trace identifier. Events
+   * should be consistent with the given trace identifier.
    *
    * @param id     Trace identifier.
    * @param events A non-empty list of events.
    * @throws IllegalArgumentException If events are inconsistent with given trace identifier.
    */
   def apply(id: String, events: Iterable[Event]): Trace = {
-    val user = getUser(id)
-    require(events.isEmpty || events.head.user == user, s"Inconsistent trace identifier and event user: $id and ${events.head.user}")
+    require(
+      events.isEmpty || id.startsWith(s"${events.head.user}-"),
+      s"Inconsistent trace identifier and event user: $id and ${events.head.user}")
     val seq = events.toSeq.sortBy(_.time)
-    new Trace(id, user, seq)
+    new Trace(id, seq)
   }
-
-  /**
-   * Create a trace from an non-empty and already ordered list of events and a trace identifier. Events should be
-   * consistent with given trace identifier.
-   *
-   * @param id     Trace identifier.
-   * @param events A non-empty list of events.
-   * @throws IllegalArgumentException If events are inconsistent with given trace identifier.
-   */
-  def apply(id: String, events: Seq[Event]): Trace = {
-    val user = getUser(id)
-    require(events.isEmpty || events.head.user == user, s"Inconsistent trace identifier and event user: $id and ${events.head.user}")
-    new Trace(id, user, events)
-  }
-
-  /**
-   * Extract the user identifier from a trace identifier.
-   *
-   * @param id Trace identifier.
-   */
-  private def getUser(id: String) = id.split("-").head
 }

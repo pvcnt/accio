@@ -21,7 +21,7 @@ package fr.cnrs.liris.locapriv.ops
 import fr.cnrs.liris.accio.sdk._
 import fr.cnrs.liris.util.geo._
 import fr.cnrs.liris.locapriv.domain.Trace
-import fr.cnrs.liris.locapriv.sparkle.DataFrame
+import fr.cnrs.liris.sparkle.DataFrame
 
 @Op(
   category = "metric",
@@ -74,24 +74,23 @@ case class HeatMapDistortionOp(
   private def formSingleMatrices(ds: DataFrame[Trace], dimensions: (Int, Int, Point)): Map[String, SparseMatrix[Int]] = {
     var outputMap = scala.collection.immutable.Map.empty[String, SparseMatrix[Int]]
     ds.foreach { t =>
-      synchronized(outputMap += (t.user -> new SparseMatrix[Int](dimensions._1, dimensions._2)))
+      synchronized(outputMap += (t.id -> new SparseMatrix[Int](dimensions._1, dimensions._2)))
     }
     ds.foreach { t =>
       val l = t.events.length
       if (l != 0) {
         t.events.last.time
-        val user = t.user
         val events = t.events
         events.foreach { e =>
           val p = e.point
           val j = math.floor((p.x - dimensions._3.x) / cellSize.meters).toInt
           val i = math.floor((p.y - dimensions._3.y) / cellSize.meters).toInt
-          val mat = outputMap(user)
+          val mat = outputMap(t.id)
           mat.inc(i, j)
-          synchronized(outputMap += (user -> mat))
+          synchronized(outputMap += (t.id -> mat))
         }
       } else {
-        synchronized(outputMap -= t.user)
+        synchronized(outputMap -= t.id)
       }
     }
     outputMap
@@ -132,8 +131,8 @@ case class HeatMapDistortionOp(
       val newt = t.filter { e => bounder.contains(e.point) }
       newt
     }
-    val nbTot = ds.map(_.events.size).toArray.sum
-    val nbTaken = output.map(_.events.size).toArray.sum
+    val nbTot = ds.map(_.events.size).collect().sum
+    val nbTaken = output.map(_.events.size).collect().sum
     val ratio = nbTaken.toDouble / nbTot.toDouble
     (output, ratio)
   }

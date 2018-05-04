@@ -20,7 +20,8 @@ package fr.cnrs.liris.locapriv.ops
 
 import com.google.common.geometry.S2CellId
 import fr.cnrs.liris.accio.sdk.{RemoteFile, _}
-import fr.cnrs.liris.locapriv.domain.Trace
+import fr.cnrs.liris.locapriv.domain.Event
+import fr.cnrs.liris.util.collect.PeekingIterator
 import fr.cnrs.liris.util.geo.LatLng
 import org.joda.time.{Duration, Instant}
 
@@ -37,29 +38,24 @@ case class AreaCoverageOp(
   extends ScalaOperator[AreaCoverageOut] with SparkleOperator {
 
   override def execute(ctx: OpContext): AreaCoverageOut = {
-    val trainDs = read[Trace](train)
-    val testDs = read[Trace](test)
-    val metrics = trainDs.zip(testDs).map { case (ref, res) => evaluate(ref, res) }.toArray
-    AreaCoverageOut(
-      precision = metrics.map { case (k, v) => k -> v._1 }.toMap,
-      recall = metrics.map { case (k, v) => k -> v._2 }.toMap,
-      fscore = metrics.map { case (k, v) => k -> v._3 }.toMap)
+    val trainDs = read[Event](train)
+    val testDs = read[Event](test)
+    val metrics = trainDs.zipPartitions(testDs) { case (ref, res) =>
+      evaluate(PeekingIterator(ref), res)
+    }
+    AreaCoverageOut(write(metrics, ctx, "metrics"))
   }
 
-  private def evaluate(ref: Trace, res: Trace) = {
-    require(ref.id == res.id, s"Trace mismatch: ${ref.id} / ${res.id}")
+  private def evaluate(ref: PeekingIterator[Event], res: Iterator[Event]) = {
+    val id = ref.peek().user
     val refCells = getCells(ref, level)
     val resCells = getCells(res, level)
     val matched = resCells.intersect(refCells).size
-    val metrics = (
-      MetricUtils.precision(resCells.size, matched),
-      MetricUtils.recall(refCells.size, matched),
-      MetricUtils.fscore(refCells.size, resCells.size, matched))
-    (ref.id, metrics)
+    Iterator(MetricUtils.value(id, refCells.size, resCells.size, matched))
   }
 
-  private def getCells(trace: Trace, level: Int) = {
-    trace.events.map { rec =>
+  private def getCells(trace: Iterator[Event], level: Int) = {
+    trace.map { rec =>
       width match {
         case None => truncate(rec.point.toLatLng, level).toString
         case Some(w) => truncate(rec.point.toLatLng, level) + "|" + truncate(rec.time, w)
@@ -73,6 +69,4 @@ case class AreaCoverageOp(
 }
 
 case class AreaCoverageOut(
-  @Arg(help = "Area coverage precision") precision: Map[String, Double],
-  @Arg(help = "Area coverage recall") recall: Map[String, Double],
-  @Arg(help = "Area coverage F-score") fscore: Map[String, Double])
+  @Arg(help = "Area coverage metrics") metrics: RemoteFile)

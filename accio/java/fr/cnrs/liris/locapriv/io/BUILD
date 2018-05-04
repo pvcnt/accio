@@ -18,12 +18,12 @@ scala_library(
   name = "io",
   srcs = glob(["*.scala"]),
   deps = [
-    "//accio/java/fr/cnrs/liris/locapriv/domain",
-    "//accio/java/fr/cnrs/liris/locapriv/sparkle",
-    "//accio/java/fr/cnrs/liris/util",
-    "//accio/java/fr/cnrs/liris/util/geo",
-    "//3rdparty/jvm/com/twitter:inject_core",
-    "//3rdparty/jvm/com/univocity:univocity_parsers",
+    #"//accio/java/fr/cnrs/liris/locapriv/domain",
+    "//accio/java/fr/cnrs/liris/sparkle",
+    #"//accio/java/fr/cnrs/liris/util",
+    #"//accio/java/fr/cnrs/liris/util/geo",
+    #"//3rdparty/jvm/com/twitter:inject_core",
+    "//3rdparty/jvm/com/github/nscala_time",
   ],
   visibility = ["//visibility:public"],
 )

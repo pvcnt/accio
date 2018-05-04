@@ -23,7 +23,7 @@ import java.nio.file.Files
 import fr.cnrs.liris.accio.sdk.{RemoteFile, OpContext}
 import fr.cnrs.liris.locapriv.io.{CsvPoiSetCodec, CsvSink, CsvSource, TraceCodec}
 import fr.cnrs.liris.locapriv.domain.{PoiSet, Trace}
-import fr.cnrs.liris.locapriv.sparkle.SparkleEnv
+import fr.cnrs.liris.sparkle.SparkleEnv
 import org.scalatest.{BeforeAndAfterEach, FlatSpec}
 
 /**
@@ -67,6 +67,6 @@ private[ops] trait ScalaOperatorSpec extends BeforeAndAfterEach {
   }
 
   protected final def readTraces(ds: RemoteFile): Seq[Trace] = {
-    env.read(new CsvSource(ds.uri, traceCodec)).toArray.toSeq
+    env.read(new CsvSource(ds.uri, traceCodec)).collect().toSeq
   }
 }

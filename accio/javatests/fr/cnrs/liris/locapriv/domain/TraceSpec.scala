@@ -41,11 +41,11 @@ class TraceSpec extends UnitSpec with WithTraceGenerator {
     t2.size shouldBe 0
   }
 
-  it should "return its user" in {
+  it should "return its id" in {
     val t1 = Trace(Me, Seq(Event(Me, Here, Now)))
-    t1.user shouldBe Me
+    t1.id shouldBe Me
 
     val t2 = Trace.empty(Me)
-    t2.user shouldBe Me
+    t2.id shouldBe Me
   }
 }

@@ -35,7 +35,7 @@ class DurationSplittingOpSpec extends UnitSpec with WithTraceGenerator with Scal
     val trace = randomTrace(Me, 150, Duration.standardSeconds(Random.nextInt(10)))
     val res = transform(Seq(trace), Duration.standardSeconds(10))
     res.foreach { trace =>
-      trace.user shouldBe Me
+      trace.id should startWith(s"$Me-")
       trace.duration.seconds should be <= 10L
     }
     res.flatMap(_.events) should contain theSameElementsInOrderAs trace.events
@@ -45,7 +45,7 @@ class DurationSplittingOpSpec extends UnitSpec with WithTraceGenerator with Scal
     val trace = randomTrace(Me, 60, Duration.standardSeconds(1))
     val res = transform(Seq(trace), Duration.standardSeconds(100))
     res should have size 1
-    res.head.user shouldBe trace.user
+    res.head.id shouldBe trace.id
     res.head.events should contain theSameElementsInOrderAs trace.events
   }
 

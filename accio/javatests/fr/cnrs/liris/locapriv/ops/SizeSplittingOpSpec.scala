@@ -33,7 +33,7 @@ class SizeSplittingOpSpec extends UnitSpec with WithTraceGenerator with ScalaOpe
     val res = transform(Seq(trace), 20)
     res should have size 8
     res.foreach { trace =>
-      trace.user shouldBe Me
+      trace.id should startWith(s"$Me-")
       trace.size should be <= 20
     }
     res.flatMap(_.events) should contain theSameElementsInOrderAs trace.events
@@ -43,7 +43,7 @@ class SizeSplittingOpSpec extends UnitSpec with WithTraceGenerator with ScalaOpe
     val trace = randomTrace(Me, 60)
     val res = transform(Seq(trace), 65)
     res should have size 1
-    res.head.user shouldBe trace.user
+    res.head.id shouldBe Me
     res.head.events should contain theSameElementsInOrderAs trace.events
   }
 

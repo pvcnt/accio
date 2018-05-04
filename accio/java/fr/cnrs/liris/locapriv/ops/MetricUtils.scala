@@ -38,4 +38,17 @@ private[ops] object MetricUtils {
     require(matched <= reference, s"Matched points must be less than reference points (got $matched and $reference)")
     if (reference != 0) matched.toDouble / reference else 0
   }
+
+  def value(id: String, reference: Int, result: Int, matched: Int): Value = {
+    val precision = this.precision(result, matched)
+    val recall = this.recall(reference, matched)
+    val fscore = if (precision > 0 && recall > 0) {
+      2 * precision * recall / (precision + recall)
+    } else {
+      0d
+    }
+    Value(id, precision, recall, fscore)
+  }
+
+  case class Value(id: String, precision: Double, recall: Double, fscore: Double)
 }

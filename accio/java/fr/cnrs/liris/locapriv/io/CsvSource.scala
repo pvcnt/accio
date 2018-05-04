@@ -21,7 +21,7 @@ package fr.cnrs.liris.locapriv.io
 import java.nio.file.{Files, Paths}
 
 import com.google.common.base.MoreObjects
-import fr.cnrs.liris.locapriv.sparkle.DataSource
+import fr.cnrs.liris.sparkle.DataSource
 
 import scala.reflect._
 

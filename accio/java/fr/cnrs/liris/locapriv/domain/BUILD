@@ -19,8 +19,6 @@ scala_library(
   srcs = glob(["*.scala"]),
   deps = [
     "//accio/java/fr/cnrs/liris/util/geo",
-    "//accio/java/fr/cnrs/liris/util/random",
-    "//accio/java/fr/cnrs/liris/util",
     "//3rdparty/jvm/com/google/guava",
     "//3rdparty/jvm/com/github/nscala_time",
     "//3rdparty/jvm/org/scalanlp:breeze",

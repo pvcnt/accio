@@ -20,11 +20,12 @@ package fr.cnrs.liris.locapriv.ops
 
 import java.nio.file.Files
 
-import fr.cnrs.liris.accio.sdk.{RemoteFile, OpContext, ScalaOperator}
+import fr.cnrs.liris.accio.sdk.{OpContext, RemoteFile, ScalaOperator}
 import fr.cnrs.liris.util.Identified
 import fr.cnrs.liris.locapriv.io._
-import fr.cnrs.liris.locapriv.sparkle.{DataFrame, SparkleEnv}
+import fr.cnrs.liris.sparkle.{DataFrame, SparkleEnv}
 import fr.cnrs.liris.locapriv.io.{CsvEventCodec, CsvPoiCodec, CsvPoiSetCodec, TraceCodec}
+import fr.cnrs.liris.sparkle.io.Encoder
 
 import scala.reflect.{ClassTag, classTag}
 
@@ -49,7 +50,10 @@ trait SparkleOperator {
     val clazz = classTag[T].runtimeClass
     decoders.find(decoder => clazz.isAssignableFrom(decoder.elementClassTag.runtimeClass)) match {
       case None => throw new RuntimeException(s"No decoder available for ${clazz.getName}")
-      case Some(decoder) => env.read(new CsvSource(dataset.uri, decoder.asInstanceOf[Decoder[T]]))
+      case Some(decoder) =>
+        //env.read(new CsvSource(dataset.uri, decoder.asInstanceOf[Decoder[T]]))
+        val src = new CsvSource(dataset.uri, decoder.asInstanceOf[Decoder[T]])
+        env.parallelize(src.keys.map(key => key -> src.read(key)): _*)
     }
   }
 

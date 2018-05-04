@@ -42,8 +42,8 @@ case class PoisReidentOp(
   extends ScalaOperator[ReidentificationOut] with SparkleOperator {
 
   override def execute(ctx: OpContext): ReidentificationOut = {
-    val trainPois = read[PoiSet](train).toArray
-    val testPois = read[PoiSet](test).toArray
+    val trainPois = read[PoiSet](train).collect()
+    val testPois = read[PoiSet](test).collect()
 
     val distances = computeDistances(trainPois, testPois)
     val matches = computeMatches(distances)

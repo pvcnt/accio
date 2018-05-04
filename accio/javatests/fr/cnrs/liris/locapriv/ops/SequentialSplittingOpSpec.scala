@@ -50,8 +50,8 @@ class SequentialSplittingOpSpec extends UnitSpec with WithTraceGenerator with Sc
     val (out1, out2) = transform(Seq(trace1, trace2), 50)
     out1 should have size 2
     out2 should have size 2
-    assertTraceIsSplit(trace1, out1.find(_.user == Me).get, out2.find(_.user == Me).get, 75)
-    assertTraceIsSplit(trace2, out1.find(_.user == Him).get, out2.find(_.user == Him).get, 75)
+    assertTraceIsSplit(trace1, out1.find(_.id == Me).get, out2.find(_.id == Me).get, 75)
+    assertTraceIsSplit(trace2, out1.find(_.id == Him).get, out2.find(_.id == Him).get, 75)
   }
 
   it should "split a dataset with an empty trace into two datasets with an empty trace" in {
@@ -92,8 +92,8 @@ class SequentialSplittingOpSpec extends UnitSpec with WithTraceGenerator with Sc
   }
 
   private def assertTraceIsSplit(t: Trace, t1: Trace, t2: Trace, s1: Int): Unit = {
-    t1.user shouldBe t.user
-    t2.user shouldBe t.user
+    t1.id should startWith(s"${t.id}-")
+    t2.id should startWith(s"${t.id}-")
     t1.events should contain theSameElementsInOrderAs t.events.take(s1)
     t2.events should contain theSameElementsInOrderAs t.events.drop(s1)
   }

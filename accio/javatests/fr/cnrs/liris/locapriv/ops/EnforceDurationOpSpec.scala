@@ -59,7 +59,7 @@ class EnforceDurationOpSpec extends UnitSpec with WithTraceGenerator with ScalaO
   }
 
   private def assertTraceIsShortened(t: Trace, t1: Trace, s1: Int): Unit = {
-    t1.user shouldBe t.user
+    t1.id should startWith(s"${t.id}-")
     t1.events should contain theSameElementsInOrderAs t.events.take(s1)
   }
 

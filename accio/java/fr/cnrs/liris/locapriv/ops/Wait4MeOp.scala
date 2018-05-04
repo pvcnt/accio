@@ -26,7 +26,7 @@ import com.google.common.io.Resources
 import fr.cnrs.liris.accio.sdk.{RemoteFile, _}
 import fr.cnrs.liris.util.geo.{Distance, Point}
 import fr.cnrs.liris.locapriv.io.CsvSink
-import fr.cnrs.liris.locapriv.sparkle.DataSink
+import fr.cnrs.liris.sparkle.DataSink
 import fr.cnrs.liris.locapriv.io.TraceCodec
 import fr.cnrs.liris.locapriv.domain.{Event, Trace}
 import org.joda.time.{Duration, Instant}

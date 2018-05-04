@@ -21,10 +21,10 @@ package fr.cnrs.liris.locapriv.ops
 import java.util.concurrent.atomic.AtomicLong
 
 import fr.cnrs.liris.accio.sdk.{RemoteFile, _}
-import fr.cnrs.liris.locapriv.sparkle.DataFrame
+import fr.cnrs.liris.locapriv.domain.Trace
+import fr.cnrs.liris.sparkle.DataFrame
 import fr.cnrs.liris.util.geo.{BoundingBox, Distance, Point}
 import fr.cnrs.liris.util.random.RandomUtils
-import fr.cnrs.liris.locapriv.domain.Trace
 import org.apache.commons.math3.random.RandomDataGenerator
 import org.joda.time.{Duration, Interval}
 
@@ -78,7 +78,7 @@ private case class CountQuery(box: BoundingBox, span: Interval) {
    * @param dataset Dataset of traces.
    * @return Number of traces matching this query.
    */
-  def count(dataset: DataFrame[Trace]): Long = dataset.filter(contains).count()
+  def count(dataset: DataFrame[Trace]): Long = dataset.count(contains)
 
   /**
    * Checks whether a trace contains at least one event inside the spatio-temporal area

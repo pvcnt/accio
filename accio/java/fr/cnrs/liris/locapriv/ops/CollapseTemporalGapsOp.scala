@@ -20,7 +20,7 @@ package fr.cnrs.liris.locapriv.ops
 
 import com.github.nscala_time.time.Imports._
 import fr.cnrs.liris.accio.sdk.{RemoteFile, _}
-import fr.cnrs.liris.locapriv.domain.Trace
+import fr.cnrs.liris.locapriv.domain.{Event, Trace}
 import org.joda.time.Instant
 
 @Op(
@@ -36,12 +36,12 @@ case class CollapseTemporalGapsOp(
 
   override def execute(ctx: OpContext): CollapseTemporalGapsOut = {
     val startAtDate = new Instant(startAt.millis).toDateTime(DateTimeZone.UTC).withTimeAtStartOfDay
-    val input = read[Trace](data)
-    val output = write(input.map(transform(_, startAtDate)), ctx)
+    val input = read[Event](data)
+    val output = write(input.mapPartitions(transform(_, startAtDate)), ctx)
     CollapseTemporalGapsOut(output)
   }
 
-  private def transform(trace: Trace, startAt: DateTime) = {
+  private def transform(trace: Iterable[Event], startAt: DateTime) = {
     trace.replace { events =>
       var shift = 0L
       var prev: Option[DateTime] = None
