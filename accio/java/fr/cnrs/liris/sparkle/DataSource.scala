@@ -35,5 +35,5 @@ trait DataSource[T] {
    *
    * @param key Key.
    */
-  def read(key: String): Iterable[T]
+  def read(key: String): Seq[T]
 }

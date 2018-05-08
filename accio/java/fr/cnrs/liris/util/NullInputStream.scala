@@ -16,21 +16,10 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.locapriv.ops
+package fr.cnrs.liris.util
 
-import fr.cnrs.liris.accio.sdk.{OpContext, RemoteFile, ScalaOperator}
-import fr.cnrs.liris.sparkle.{DataFrame, SparkleEnv}
+import java.io.InputStream
 
-import scala.reflect.runtime.universe.TypeTag
-
-trait SparkleOperator {
-  this: ScalaOperator[_] =>
-
-  // Create a Sparkle environment using the numProcs' flag to limit parallelism.
-  // It is a poor-man's way to isolate execution in terms of CPU usage.
-  protected val env = new SparkleEnv(math.max(1, com.twitter.jvm.numProcs().round.toInt))
-
-  protected final def read[T: TypeTag](dataset: RemoteFile): DataFrame[T] = ???
-
-  protected final def write[T: TypeTag](frame: DataFrame[T], idx: Int, ctx: OpContext): RemoteFile = ???
+object NullInputStream extends InputStream {
+  override def read(): Int = -1
 }

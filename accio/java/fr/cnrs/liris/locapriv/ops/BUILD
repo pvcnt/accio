@@ -22,7 +22,6 @@ scala_library(
     "//accio/java/fr/cnrs/liris/accio/sdk:annotations",
     "//accio/java/fr/cnrs/liris/sparkle",
     "//accio/java/fr/cnrs/liris/locapriv/domain",
-    "//accio/java/fr/cnrs/liris/locapriv/io",
     "//accio/java/fr/cnrs/liris/util/geo",
     "//accio/java/fr/cnrs/liris/util",
     "//accio/java/fr/cnrs/liris/util/random",

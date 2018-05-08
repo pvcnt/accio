@@ -18,8 +18,8 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.accio.sdk.{RemoteFile, _}
-import fr.cnrs.liris.locapriv.domain.Trace
+import fr.cnrs.liris.accio.sdk._
+import fr.cnrs.liris.locapriv.domain.Event
 
 @Op(
   category = "transform",
@@ -35,27 +35,19 @@ case class SequentialSplittingOp(
   complement: Boolean = false,
   @Arg(help = "Input dataset")
   data: RemoteFile)
-  extends ScalaOperator[SequentialSplittingOut] with SparkleOperator {
+  extends TransformOp[Event] {
+
   require(percentBegin >= 0 && percentBegin <= 100, s"Begin percentage must be in [0,100] (got $percentBegin)")
   require(percentEnd >= 0 && percentEnd <= 100, s"End percentage must be in [0,100] (got $percentEnd)")
   require(percentBegin <= percentEnd, s"End percentage must be greater than begin percentage")
 
-  override def execute(ctx: OpContext): SequentialSplittingOut = {
-    val output = read[Trace](data).map(transform)
-    SequentialSplittingOut(write(output, ctx))
-  }
-
-  private def transform(trace: Trace): Trace = {
+  override protected def transform(key: String, trace: Seq[Event]): Seq[Event] = {
     val from = math.max(0, (percentBegin * trace.size / 100).floor.toInt)
     val until = math.min(trace.size, (percentEnd * trace.size / 100).ceil.toInt)
     if (complement) {
-      trace.replace(events => events.slice(0, from) ++ events.slice(until, events.size))
+      trace.slice(0, from) ++ trace.slice(until, trace.size)
     } else {
-      trace.replace(_.slice(from, until))
+      trace.slice(from, until)
     }
   }
 }
-
-case class SequentialSplittingOut(
-  @Arg(help = "Output dataset")
-  data: RemoteFile)

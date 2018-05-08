@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.locapriv.domain.{Event, Trace}
+import fr.cnrs.liris.locapriv.domain.Event
 
 import scala.collection.mutable
 
@@ -26,22 +26,18 @@ import scala.collection.mutable
  * Base trait for transformers using previous event and current one to take a decision about
  * whether to split a trace into multiple parts.
  */
-private[ops] trait SlidingSplitting {
-  protected def transform(input: Trace, split: (Seq[Event], Event) => Boolean): Seq[Trace] = {
-    val output = mutable.ListBuffer.empty[Trace]
-    val buffer = mutable.ListBuffer.empty[Event]
+private[ops] trait SlidingSplittingOp extends TransformOp[Event] {
+  protected def split(buffer: Seq[Event], curr: Event): Boolean
+
+  override protected def transform(key: String, trace: Seq[Event]): Seq[Event] = {
+    val result = mutable.ListBuffer.empty[Event]
     var idx = 0
-    for (event <- input.events) {
-      if (buffer.nonEmpty && split(buffer, event)) {
-        output += Trace(s"${input.id}-$idx", buffer.toList)
-        buffer.clear()
+    for (event <- trace) {
+      if (result.nonEmpty && split(result, event)) {
         idx += 1
       }
-      buffer += event
+      result += event.copy(id = s"${event.id}-$idx")
     }
-    if (buffer.nonEmpty) {
-      output += Trace(s"${input.id}-$idx", buffer.toList)
-    }
-    output.toList
+    result.toList
   }
 }

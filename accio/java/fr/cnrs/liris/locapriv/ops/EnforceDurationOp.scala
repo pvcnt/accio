@@ -20,7 +20,7 @@ package fr.cnrs.liris.locapriv.ops
 
 import com.github.nscala_time.time.Imports._
 import fr.cnrs.liris.accio.sdk._
-import fr.cnrs.liris.locapriv.domain.Trace
+import fr.cnrs.liris.locapriv.domain.Event
 
 @Op(
   category = "transform",
@@ -34,27 +34,37 @@ case class EnforceDurationOp(
   @Arg(help = "Maximum duration of a trace")
   maxDuration: Option[Duration],
   @Arg(help = "Input dataset") data: RemoteFile)
-  extends ScalaOperator[EnforceDurationOut] with SparkleOperator {
+  extends ScalaOperator[EnforceDurationOp.Out] with SparkleOperator {
 
-  override def execute(ctx: OpContext): EnforceDurationOut = {
-    val output = write(read[Trace](data).flatMap(transform), ctx)
-    EnforceDurationOut(output)
+  override def execute(ctx: OpContext): EnforceDurationOp.Out = {
+    val output = read[Event](data).mapPartitions(transform)
+    EnforceDurationOp.Out(write(output, 0, ctx))
   }
 
-  private def transform(trace: Trace): Seq[Trace] = {
-    var res = trace
-    maxDuration.foreach { duration =>
-      val startAt = res.events.head.time
-      val endAt = startAt + duration
-      res = res.replace(_.takeWhile(r => r.time <= endAt))
-    }
-    minDuration match {
-      case None => Seq(res)
-      case Some(duration) => if (res.duration < duration) Seq.empty else Seq(res)
+  private def transform(trace: Seq[Event]): Seq[Event] = {
+    if (trace.isEmpty) {
+      trace
+    } else {
+      var result = trace
+      maxDuration.foreach { duration =>
+        val startAt = result.head.time
+        val endAt = startAt + duration
+        result = result.takeWhile(r => r.time <= endAt)
+      }
+      minDuration match {
+        case None => result
+        case Some(threshold) =>
+          val duration = (trace.head.time to trace.last.time).duration
+          if (duration < threshold) Seq.empty else result
+      }
     }
   }
 }
 
-case class EnforceDurationOut(
-  @Arg(help = "Output dataset")
-  data: RemoteFile)
+object EnforceDurationOp {
+
+  case class Out(
+    @Arg(help = "Transformed dataset")
+    data: RemoteFile)
+
+}

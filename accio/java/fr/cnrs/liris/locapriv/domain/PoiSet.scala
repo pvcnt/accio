@@ -26,15 +26,10 @@ import fr.cnrs.liris.util.geo.{Distance, Point}
  * A set of POIs belonging to a single user. This is essentially a wrapper around a basic set,
  * providing some useful methods to manipulate POIs.
  *
- * @param id   Trace identifier.
+ * @param user   Trace identifier.
  * @param pois List of unique POIs.
  */
-case class PoiSet(id: String, pois: Seq[Poi]) {
-  /**
-   * Return the user identifier associated with this trace.
-   */
-  lazy val user: String = id.split("-").head
-
+case class PoiSet(user: String, pois: Seq[Poi]) {
   /**
    * Check whether the set of POIs is not empty.
    *
@@ -99,7 +94,7 @@ case class PoiSet(id: String, pois: Seq[Poi]) {
     }
 
   override def toString: String =
-    MoreObjects.toStringHelper(this).add("id", id).add("size", size).toString
+    MoreObjects.toStringHelper(this).add("id", user).add("size", size).toString
 }
 
 object PoiSet {

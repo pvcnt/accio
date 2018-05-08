@@ -25,20 +25,23 @@ import scala.reflect.ClassTag
 /**
  * A data frame reading its data from the memory.
  *
- * @param elements Elements, indexed by key.
- * @param env      Sparkle environment.
+ * @param elements      Elements.
+ * @param partitionSize Number of elements per partition.
+ * @param env           Sparkle environment.
  * @tparam T Elements' type.
  */
 private[sparkle] class MemoryDataFrame[T: ClassTag](
-  elements: Map[String, Seq[T]],
+  elements: Seq[T],
+  partitionSize: Int,
   private[sparkle] val env: SparkleEnv)
   extends DataFrame[T] {
 
-  override lazy val keys: Seq[String] = elements.keySet.toSeq.sorted
+  override lazy val keys: Seq[String] = Seq.tabulate(math.ceil(elements.size / partitionSize).toInt)(_.toString)
 
   override def toString: String = MoreObjects.toStringHelper(this).toString
 
-  override private[sparkle] def load(key: String): Iterator[T] = {
-    if (elements.contains(key)) elements(key).iterator else Iterator.empty
+  override private[sparkle] def load(key: String): Seq[T] = {
+    val idx = key.toInt
+    elements.slice(idx, math.max(idx + partitionSize, elements.length))
   }
 }

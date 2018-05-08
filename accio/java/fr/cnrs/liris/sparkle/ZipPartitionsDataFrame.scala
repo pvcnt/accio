@@ -25,14 +25,14 @@ import scala.reflect.ClassTag
 private[sparkle] class ZipPartitionsDataFrame[T: ClassTag, U: ClassTag, V: ClassTag](
   first: DataFrame[T],
   other: DataFrame[U],
-  fn: (Iterator[T], Iterator[U]) => Iterator[V])
+  fn: (Seq[T], Seq[U]) => Seq[V])
   extends DataFrame[V] {
 
-  override def keys: Seq[String] = first.keys.intersect(other.keys)
+  override def keys: Seq[String] = first.keys //TODO?.intersect(other.keys)
 
   override def toString: String = MoreObjects.toStringHelper(this).addValue(first).addValue(other).toString
 
   override private[sparkle] def env: SparkleEnv = first.env
 
-  override private[sparkle] def load(key: String): Iterator[V] = fn(first.load(key), other.load(key))
+  override private[sparkle] def load(key: String): Seq[V] = fn(first.load(key), other.load(key))
 }

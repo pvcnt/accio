@@ -43,12 +43,16 @@ trait Clusterer extends Serializable {
   def cluster(trace: Trace): Seq[Cluster] = cluster(trace.events)
 }
 
+trait PoisClusterer extends Clusterer {
+  def clusterPois(events: Seq[Event]): Seq[Poi]
+}
+
 /**
  * A cluster is formed of a set of events.
  *
  * @param events List of temporally-ordered events.
  */
-case class Cluster (events: Seq[Event]) {
+case class Cluster(events: Seq[Event]) {
   require(events.nonEmpty, "Cannot create a cluster of empty events")
 
   /**

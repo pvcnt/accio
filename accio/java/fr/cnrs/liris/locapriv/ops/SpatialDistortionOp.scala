@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.accio.sdk.{RemoteFile, _}
+import fr.cnrs.liris.accio.sdk._
 import fr.cnrs.liris.locapriv.domain.Trace
 import fr.cnrs.liris.util.geo.Point
 

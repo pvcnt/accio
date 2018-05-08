@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.accio.sdk.{RemoteFile, _}
+import fr.cnrs.liris.accio.sdk._
 import fr.cnrs.liris.locapriv.domain.{Poi, PoiSet}
 import fr.cnrs.liris.util.geo.Distance
 import org.joda.time.Duration
@@ -49,9 +49,9 @@ case class PoisRetrievalOp(
   }
 
   private def evaluate(ref: PoiSet, res: PoiSet) = {
-    require(ref.id == res.id, s"Trace mismatch: ${ref.id} / ${res.id}")
+    require(ref.user == res.user, s"Trace mismatch: ${ref.user} / ${res.user}")
     val matched = res.pois.flatMap(resPoi => remap(resPoi, ref.pois, threshold, overlap)).distinct.size
-    ref.id -> (MetricUtils.precision(res.size, matched), MetricUtils.recall(ref.size, matched), MetricUtils.fscore(ref.size, res.size, matched))
+    ref.user -> (MetricUtils.precision(res.size, matched), MetricUtils.recall(ref.size, matched), MetricUtils.fscore(ref.size, res.size, matched))
   }
 
   private def remap(resPoi: Poi, refPois: Seq[Poi], threshold: Distance, overlap: Option[Duration]) = {

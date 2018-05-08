@@ -20,11 +20,10 @@ package fr.cnrs.liris.locapriv.ops
 
 import java.util.concurrent.atomic.AtomicLong
 
-import fr.cnrs.liris.accio.sdk.{RemoteFile, _}
-import fr.cnrs.liris.locapriv.domain.Trace
+import fr.cnrs.liris.accio.sdk._
+import fr.cnrs.liris.locapriv.domain.Event
 import fr.cnrs.liris.sparkle.DataFrame
 import fr.cnrs.liris.util.geo.{BoundingBox, Distance, Point}
-import fr.cnrs.liris.util.random.RandomUtils
 import org.apache.commons.math3.random.RandomDataGenerator
 import org.joda.time.{Duration, Interval}
 
@@ -35,34 +34,68 @@ import org.joda.time.{Duration, Interval}
   cpus = 2,
   ram = "1G")
 case class CountQueriesDistortionOp(
-  @Arg(help = "Number of queries to generate") n: Int = 1000,
-  @Arg(help = "Minimum size of the generated queries' geographical area") minSize: Distance = Distance.meters(500),
-  @Arg(help = "Maximum size of the generated queries' geographical area") maxSize: Distance = Distance.kilometers(2),
-  @Arg(help = "Minimum duration of the generated queries' temporal window") minDuration: Duration = Duration.standardHours(2),
-  @Arg(help = "Maximum duration of the generated queries' temporal window") maxDuration: Duration = Duration.standardHours(4),
-  @Arg(help = "Train dataset") train: RemoteFile,
-  @Arg(help = "Test dataset") test: RemoteFile)
-  extends ScalaOperator[CountQueriesDistortionOut] with SparkleOperator {
+  @Arg(help = "Number of queries to generate")
+  n: Int = 1000,
+  @Arg(help = "Minimum size of the generated queries' geographical area")
+  minSize: Distance = Distance.meters(500),
+  @Arg(help = "Maximum size of the generated queries' geographical area")
+  maxSize: Distance = Distance.kilometers(2),
+  @Arg(help = "Minimum duration of the generated queries' temporal window")
+  minDuration: Duration = Duration.standardHours(2),
+  @Arg(help = "Maximum duration of the generated queries' temporal window")
+  maxDuration: Duration = Duration.standardHours(4),
+  @Arg(help = "Train dataset")
+  train: RemoteFile,
+  @Arg(help = "Test dataset")
+  test: RemoteFile)
+  extends ScalaOperator[CountQueriesDistortionOp.Out] with SparkleOperator {
 
-  override def execute(ctx: OpContext): CountQueriesDistortionOut = {
-    val trainDs = read[Trace](train)
-    val testDs = read[Trace](test)
-    val generator = new CountQueryGenerator(trainDs, ctx.seed, minSize, maxSize, minDuration, maxDuration)
-    val queries = generator.generate(n)
+  override def execute(ctx: OpContext): CountQueriesDistortionOp.Out = {
+    val trainDs = read[Event](train)
+    val testDs = read[Event](test)
+    val queries = generateQueries(trainDs, ctx.seed)
     val refCounts = queries.count(trainDs)
     val resCounts = queries.count(testDs)
-    val values = refCounts.indices.map(i => compute(refCounts(i), resCounts(i)))
-    CountQueriesDistortionOut(values)
+    val metrics = env.parallelize(Seq.tabulate(n)(i => compute(refCounts(i), resCounts(i))))
+    CountQueriesDistortionOp.Out(write(metrics, 0, ctx))
   }
 
-  private def compute(refCount: Long, resCount: Long): Double = {
-    if (0 == refCount) resCount
-    else Math.abs(refCount - resCount).toDouble / refCount
+  private def generateQueries(trainDs: DataFrame[Event], seed: Long): CountQuerySeq = {
+    val rnd = new RandomDataGenerator()
+    rnd.reSeed(seed)
+
+    val halfSizeMeters = rnd.nextLong(minSize.meters.round, maxSize.meters.round) / 2d
+    val halfDurationMillis = rnd.nextLong(minDuration.getMillis, maxDuration.getMillis) / 2
+    val events = trainDs.takeSample(num = n, seed = seed)
+    val queries = events.map { event =>
+      val bbox = BoundingBox(
+        Point(event.point.x - halfSizeMeters, event.point.y - halfSizeMeters),
+        Point(event.point.x + halfSizeMeters, event.point.y + halfSizeMeters))
+      val span = new Interval(event.time.minus(halfDurationMillis), event.time.plus(halfDurationMillis))
+      CountQuery(bbox, span)
+    }
+    CountQuerySeq(queries)
+  }
+
+  private def compute(refCount: Long, resCount: Long) = {
+    val distortion = if (0 == refCount) {
+      resCount
+    } else {
+      math.abs(refCount - resCount).toDouble / refCount
+    }
+    CountQueriesDistortionOp.Value(refCount, resCount, distortion)
   }
 }
 
-case class CountQueriesDistortionOut(
-  @Arg(help = "Count query distortion") value: Seq[Double])
+object CountQueriesDistortionOp {
+
+  case class Value(trainCount: Long, testCount: Long, distortion: Double)
+
+  case class Out(
+    @Arg(help = "Metrics dataset")
+    metrics: RemoteFile)
+
+}
 
 /**
  * A count query intents to count how many (unique) users are inside a given geographical
@@ -73,22 +106,15 @@ case class CountQueriesDistortionOut(
  */
 private case class CountQuery(box: BoundingBox, span: Interval) {
   /**
-   * Execute the query over a dataset and returns the result.
-   *
-   * @param dataset Dataset of traces.
-   * @return Number of traces matching this query.
-   */
-  def count(dataset: DataFrame[Trace]): Long = dataset.count(contains)
-
-  /**
    * Checks whether a trace contains at least one event inside the spatio-temporal area
    * defined by this query.
    *
    * @param trace Trace.
    * @return True if the trace crosses the area defined by this query, false otherwise.
    */
-  def contains(trace: Trace): Boolean =
-    trace.events.exists(r => box.contains(r.point) && span.contains(r.time))
+  def contains(trace: Seq[Event]): Boolean = {
+    trace.exists(r => box.contains(r.point) && span.contains(r.time))
+  }
 }
 
 /**
@@ -103,45 +129,15 @@ private case class CountQuerySeq(queries: Seq[CountQuery]) {
    * @param dataset Dataset of traces.
    * @return Results, in the same order than the queries.
    */
-  def count(dataset: DataFrame[Trace]): Seq[Long] = {
-    val counters = queries.indices.map(idx => new AtomicLong)
-    dataset.foreach(trace => {
+  def count(dataset: DataFrame[Event]): Seq[Long] = {
+    val counters = Seq.fill(queries.size)(new AtomicLong)
+    dataset.foreachPartition { trace =>
       for (i <- counters.indices) {
         if (queries(i).contains(trace)) {
           counters(i).incrementAndGet()
         }
       }
-    })
-    counters.map(c => c.get())
-  }
-}
-
-/**
- * Generates a bunch of random range queries from a dataset and spatio-temporal areas sizes.
- *
- * @param data        Dataset of traces to generate queries from.
- * @param seed        Seed.
- * @param minSize     Minimum size of the geographical area.
- * @param maxSize     Maximum size of the geographical area.
- * @param minDuration Minimum durations of the temporal window.
- * @param maxDuration Minimum duration of the temporal window.
- */
-private class CountQueryGenerator(data: DataFrame[Trace], seed: Long, minSize: Distance, maxSize: Distance, minDuration: Duration, maxDuration: Duration) {
-  private[this] val rnd = new RandomDataGenerator()
-  rnd.reSeed(seed)
-
-  def generate(): CountQuery = generate(1).queries.head
-
-  def generate(nb: Int): CountQuerySeq = {
-    val halfSizeMeters = rnd.nextLong(minSize.meters.round, maxSize.meters.round) / 2d
-    val halfDurationMillis = rnd.nextLong(minDuration.getMillis, maxDuration.getMillis) / 2
-    val traces = data.takeSample(withReplacement = true, num = nb, seed = seed)
-    val queries = traces.map { trace =>
-      val event = RandomUtils.randomElement(trace.events, seed)
-      val box = BoundingBox(Point(event.point.x - halfSizeMeters, event.point.y - halfSizeMeters), Point(event.point.x + halfSizeMeters, event.point.y + halfSizeMeters))
-      val span = new Interval(event.time.minus(halfDurationMillis), event.time.plus(halfDurationMillis))
-      CountQuery(box, span)
     }
-    CountQuerySeq(queries)
+    counters.map(c => c.get())
   }
 }

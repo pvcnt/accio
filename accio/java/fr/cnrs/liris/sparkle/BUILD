@@ -20,6 +20,7 @@ scala_library(
   deps = [
     "//accio/java/fr/cnrs/liris/sparkle/filesystem",
     "//accio/java/fr/cnrs/liris/sparkle/io",
+    "//accio/java/fr/cnrs/liris/sparkle/io/csv",
     "//accio/java/fr/cnrs/liris/util/random",
     "//accio/java/fr/cnrs/liris/util",
     "//3rdparty/jvm/com/twitter:util_slf4j_api",

@@ -18,11 +18,9 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.accio.sdk.{RemoteFile, _}
+import fr.cnrs.liris.accio.sdk._
+import fr.cnrs.liris.locapriv.domain.Event
 import fr.cnrs.liris.util.random.RandomUtils
-import fr.cnrs.liris.locapriv.domain.Trace
-
-import scala.util.Random
 
 @Op(
   category = "transform",
@@ -36,21 +34,11 @@ case class UniformSamplingOp(
   probability: Double,
   @Arg(help = "Input dataset")
   data: RemoteFile)
-  extends ScalaOperator[UniformSamplingOut] with SparkleOperator {
+  extends TransformOp[Event] {
+
   require(probability >= 0 && probability <= 1, s"Probability must be in [0, 1] (got $probability)")
 
-  override def execute(ctx: OpContext): UniformSamplingOut = {
-    val input = read[Trace](data)
-    val rnd = new Random(ctx.seed)
-    val seeds = input.keys.map(key => key -> rnd.nextLong()).toMap
-    val output = input.map(trace => transform(trace, seeds(trace.id)))
-    UniformSamplingOut(write(output, ctx))
-  }
-
-  private def transform(trace: Trace, seed: Long): Trace = {
-    trace.replace(RandomUtils.sampleUniform(trace.events, probability, seed))
+  override protected def transform(key: String, trace: Seq[Event]): Seq[Event] = {
+    RandomUtils.sampleUniform(trace, probability, seeds(key))
   }
 }
-
-case class UniformSamplingOut(
-  @Arg(help = "Output dataset") data: RemoteFile)

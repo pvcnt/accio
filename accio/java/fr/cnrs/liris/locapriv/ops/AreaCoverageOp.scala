@@ -19,11 +19,12 @@
 package fr.cnrs.liris.locapriv.ops
 
 import com.google.common.geometry.S2CellId
-import fr.cnrs.liris.accio.sdk.{RemoteFile, _}
+import fr.cnrs.liris.accio.sdk._
 import fr.cnrs.liris.locapriv.domain.Event
-import fr.cnrs.liris.util.collect.PeekingIterator
 import fr.cnrs.liris.util.geo.LatLng
 import org.joda.time.{Duration, Instant}
+
+import scala.collection.mutable
 
 @Op(
   category = "metric",
@@ -31,36 +32,43 @@ import org.joda.time.{Duration, Instant}
   cpus = 4,
   ram = "2G")
 case class AreaCoverageOp(
-  @Arg(help = "S2 cells levels") level: Int,
-  @Arg(help = "Width of time buckets") width: Option[Duration],
-  @Arg(help = "Train dataset") train: RemoteFile,
-  @Arg(help = "Test dataset") test: RemoteFile)
-  extends ScalaOperator[AreaCoverageOut] with SparkleOperator {
+  @Arg(help = "S2 cells levels")
+  level: Int,
+  @Arg(help = "Width of time buckets")
+  width: Option[Duration],
+  @Arg(help = "Train dataset")
+  train: RemoteFile,
+  @Arg(help = "Test dataset")
+  test: RemoteFile)
+  extends ScalaOperator[AreaCoverageOp.Out] with SparkleOperator {
 
-  override def execute(ctx: OpContext): AreaCoverageOut = {
+  override def execute(ctx: OpContext): AreaCoverageOp.Out = {
     val trainDs = read[Event](train)
     val testDs = read[Event](test)
     val metrics = trainDs.zipPartitions(testDs) { case (ref, res) =>
-      evaluate(PeekingIterator(ref), res)
+      evaluate(ref, res)
     }
-    AreaCoverageOut(write(metrics, ctx, "metrics"))
+    AreaCoverageOp.Out(write(metrics, 0, ctx))
   }
 
-  private def evaluate(ref: PeekingIterator[Event], res: Iterator[Event]) = {
-    val id = ref.peek().user
+  private def evaluate(ref: Seq[Event], res: Seq[Event]) = {
     val refCells = getCells(ref, level)
     val resCells = getCells(res, level)
     val matched = resCells.intersect(refCells).size
-    Iterator(MetricUtils.value(id, refCells.size, resCells.size, matched))
+    Seq(MetricUtils.value(ref.head.id, refCells.size, resCells.size, matched))
   }
 
-  private def getCells(trace: Iterator[Event], level: Int) = {
-    trace.map { rec =>
+  private def getCells(trace: Seq[Event], level: Int) = {
+    val cells = mutable.Set.empty[String]
+    // Doing a foreach (instead of a map/toSet) seems to be faster, as we only insert de-duplicated
+    // cell identifiers.
+    trace.foreach { rec =>
       width match {
-        case None => truncate(rec.point.toLatLng, level).toString
-        case Some(w) => truncate(rec.point.toLatLng, level) + "|" + truncate(rec.time, w)
+        case None => cells += truncate(rec.point.toLatLng, level).toString
+        case Some(w) => cells += truncate(rec.point.toLatLng, level) + "|" + truncate(rec.time, w)
       }
-    }.toSet
+    }
+    cells
   }
 
   private def truncate(latLng: LatLng, level: Int): Long = S2CellId.fromLatLng(latLng.toS2).parent(level).id
@@ -68,5 +76,10 @@ case class AreaCoverageOp(
   private def truncate(instant: Instant, precision: Duration): Long = instant.getMillis / precision.getMillis
 }
 
-case class AreaCoverageOut(
-  @Arg(help = "Area coverage metrics") metrics: RemoteFile)
+object AreaCoverageOp {
+
+  case class Out(
+    @Arg(help = "Area coverage metrics")
+    metrics: RemoteFile)
+
+}

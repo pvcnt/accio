@@ -16,25 +16,11 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.locapriv.io
+package fr.cnrs.liris.sparkle
 
-import fr.cnrs.liris.locapriv.domain.PoiSet
+import fr.cnrs.liris.sparkle.io.DataFormat
+import fr.cnrs.liris.sparkle.io.csv.CsvDataFormat
 
-import scala.reflect._
-
-/**
- * Codec for our CSV format handling POIs sets.
- */
-final class CsvPoiSetCodec extends Codec[PoiSet] {
-  private[this] val poiCodec = new CsvPoiCodec
-
-  override def elementClassTag: ClassTag[PoiSet] = classTag[PoiSet]
-
-  override def encode(key: String, elements: Seq[PoiSet]): Array[Byte] = {
-    poiCodec.encode(key, elements.flatMap(_.pois))
-  }
-
-  override def decode(key: String, bytes: Array[Byte]): Seq[PoiSet] = {
-    Seq(PoiSet(key, poiCodec.decode(key, bytes)))
-  }
+object DataFormats {
+  val Csv: DataFormat = CsvDataFormat
 }

@@ -30,8 +30,8 @@ import scala.collection.mutable
  * In GIS 2004.
  */
 class DJClusterer(epsilon: Distance, minPoints: Int) extends Clusterer {
-  require(minPoints > 0, s"minPoints must be > 0 (got $minPoints)")
-  require(epsilon > Distance.Zero, s"Epsilon must be > 0 (got $epsilon)")
+  require(minPoints > 0, s"minPoints must be strictly positive 0 (got $minPoints)")
+  require(epsilon > Distance.Zero, s"Epsilon must be strictly positive 0 (got $epsilon)")
 
   override def cluster(events: Seq[Event]): Seq[Cluster] = {
     var clusters = mutable.ListBuffer.empty[Cluster]
@@ -43,7 +43,7 @@ class DJClusterer(epsilon: Distance, minPoints: Int) extends Clusterer {
         val intersecting = clusters.filter(cluster => cluster.events.intersect(newCluster).nonEmpty)
         intersecting.foreach(cluster => newCluster ++= cluster.events)
         clusters = clusters.diff(intersecting)
-        clusters += new Cluster(newCluster.toList)
+        clusters += Cluster(newCluster.toList)
       }
     }
     clusters
@@ -56,6 +56,7 @@ class DJClusterer(epsilon: Distance, minPoints: Int) extends Clusterer {
    * @param world All points.
    * @return Points that are within a threshold fixed by `epsilon`.
    */
-  private def neighbors(point: Point, world: Seq[Event]): Seq[Event] =
-  world.filter(r => r.point.distance(point) <= epsilon)
+  private def neighbors(point: Point, world: Seq[Event]): Seq[Event] = {
+    world.filter(r => r.point.distance(point) <= epsilon)
+  }
 }

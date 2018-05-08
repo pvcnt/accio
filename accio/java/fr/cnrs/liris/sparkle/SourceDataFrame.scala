@@ -33,9 +33,9 @@ private[sparkle] class SourceDataFrame[T: ClassTag](
   private[sparkle] val env: SparkleEnv)
   extends DataFrame[T] {
 
-  override lazy val keys: Seq[String] = source.keys
+  override lazy val keys: Seq[String] = source.keys.sorted
 
   override def toString: String = MoreObjects.toStringHelper(this).add("source", source).toString
 
-  override private[sparkle] def load(key: String): Iterator[T] = source.read(key).iterator
+  override private[sparkle] def load(key: String): Seq[T] = source.read(key)
 }

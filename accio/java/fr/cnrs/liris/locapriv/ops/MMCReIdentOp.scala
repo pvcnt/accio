@@ -18,15 +18,7 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.accio.sdk._
-import fr.cnrs.liris.locapriv.domain.{Cluster, Event, PoisClusterer, Trace}
-import fr.cnrs.liris.sparkle.DataFrame
-import fr.cnrs.liris.util.geo.Distance
-import org.joda.time.Duration
-
-import scala.collection.immutable
-
-@Op(
+/*@Op(
   category = "metric",
   help = "Re-identification attack using mobility Markov chains.",
   cpus = 6,
@@ -191,3 +183,4 @@ case class MmcReidentOut(
   rate: Double)
 
 
+*/

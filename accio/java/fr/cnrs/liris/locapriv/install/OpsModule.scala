@@ -37,7 +37,7 @@ object OpsModule extends TwitterModule {
     ops.addBinding.toInstance(OpMeta.apply[GaussianKernelSmoothingOp])
     ops.addBinding.toInstance(OpMeta.apply[GeoIndistinguishabilityOp])
     ops.addBinding.toInstance(OpMeta.apply[HeatMapDistortionOp])
-    ops.addBinding.toInstance(OpMeta.apply[MmcReidentOp])
+    //ops.addBinding.toInstance(OpMeta.apply[MmcReidentOp])
     ops.addBinding.toInstance(OpMeta.apply[ModuloSamplingOp])
     ops.addBinding.toInstance(OpMeta.apply[PoisExtractionOp])
     ops.addBinding.toInstance(OpMeta.apply[PoisReidentOp])
@@ -51,7 +51,6 @@ object OpsModule extends TwitterModule {
     ops.addBinding.toInstance(OpMeta.apply[SpatioTemporalDistortionOp])
     ops.addBinding.toInstance(OpMeta.apply[TemporalGapSplittingOp])
     ops.addBinding.toInstance(OpMeta.apply[TemporalSamplingOp])
-    ops.addBinding.toInstance(OpMeta.apply[TransmissionDelayOp])
     ops.addBinding.toInstance(OpMeta.apply[UniformSamplingOp])
     ops.addBinding.toInstance(OpMeta.apply[Wait4MeOp])
   }

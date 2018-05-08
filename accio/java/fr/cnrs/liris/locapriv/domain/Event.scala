@@ -26,14 +26,19 @@ import org.joda.time.{Instant, ReadableInstant}
  * The smallest piece of information of our model. It is a discrete event associated with a user,
  * that occurred at an instant and a specific place.
  *
- * @param user  User identifier.
+ * @param id    Trace identifier.
  * @param point Location.
  * @param time  Timestamp.
  */
-case class Event(user: String, point: Point, time: Instant) extends Ordered[Event] {
-  def this(user: String, lat: Double, lng: Double, time: Instant) = {
-    this(user, LatLng.degrees(lat, lng).toPoint, time)
+case class Event(id: String, point: Point, time: Instant) extends Ordered[Event] {
+  def this(id: String, lat: Double, lng: Double, time: Instant) = {
+    this(id, LatLng.degrees(lat, lng).toPoint, time)
   }
+
+  /**
+   * Return the user identifier associated with this trace.
+   */
+  def user: String = id.split("-").head
 
   /**
    * Events can be compared using their timestamp.
@@ -46,11 +51,13 @@ case class Event(user: String, point: Point, time: Instant) extends Ordered[Even
 
 object Event {
   /**
-   * Create an event from a user identifier, a location and an instant.
+   * Create a new event.
    *
-   * @param user     User identifier.
+   * @param id       Trace identifier.
    * @param location Location.
    * @param time     Instant.
    */
-  def apply(user: String, location: Location, time: ReadableInstant): Event = Event(user, location.toPoint, time.toInstant)
+  def apply(id: String, location: Location, time: ReadableInstant): Event = {
+    Event(id, location.toPoint, time.toInstant)
+  }
 }

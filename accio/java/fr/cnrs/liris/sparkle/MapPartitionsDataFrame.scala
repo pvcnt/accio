@@ -24,14 +24,14 @@ import scala.reflect.ClassTag
 
 private[sparkle] class MapPartitionsDataFrame[T, U: ClassTag](
   inner: DataFrame[T],
-  fn: (String, Iterator[T]) => Iterator[U])
+  fn: (String, Seq[T]) => Seq[U])
   extends DataFrame[U] {
 
   override def keys: Seq[String] = inner.keys
 
   override def toString: String = MoreObjects.toStringHelper(this).addValue(inner).toString
 
-  override private[sparkle] def load(key: String): Iterator[U] = fn(key, inner.load(key))
+  override private[sparkle] def load(key: String): Seq[U] = fn(key, inner.load(key))
 
   override private[sparkle] def env = inner.env
 }

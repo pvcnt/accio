@@ -23,9 +23,9 @@ import java.io.{InputStream, OutputStream}
 import com.twitter.util.StorageUnit
 
 trait Filesystem {
-  def openRead(uri: String): InputStream
+  def createInputStream(uri: String): InputStream
 
-  def openWrite(uri: String): OutputStream
+  def createOutputStream(uri: String): OutputStream
 
   def delete(uri: String): Unit
 

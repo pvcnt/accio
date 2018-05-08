@@ -22,7 +22,6 @@ import java.util.concurrent.{Executors, TimeUnit}
 
 import com.twitter.util.logging.Logging
 
-import scala.collection.immutable.ListMap
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.reflect.ClassTag
@@ -36,8 +35,18 @@ import scala.util.{Failure, Success}
 class SparkleEnv(parallelism: Int) extends Logging {
   require(parallelism > 0, s"Parallelism level must be > 0 (got $parallelism)")
   logger.info(s"Initializing Sparkle to utilize $parallelism cores")
+
   private[this] val executor = if (1 == parallelism) Executors.newSingleThreadExecutor else Executors.newWorkStealingPool(parallelism)
   private[this] implicit val ec = ExecutionContext.fromExecutor(executor)
+
+  /**
+   * Create a new dataframe from an in-memory collection.
+   *
+   * @param first First element.
+   * @param rest  Other elements.
+   * @tparam T Elements' type.
+   */
+  def parallelize[T: ClassTag](first: T, rest: T*): DataFrame[T] = parallelize(first +: rest)
 
   /**
    * Create a new dataframe from an in-memory collection.
@@ -45,20 +54,12 @@ class SparkleEnv(parallelism: Int) extends Logging {
    * @param data List of keys and items.
    * @tparam T Elements' type.
    */
-  def parallelize[T: ClassTag](data: (String, Iterable[T])*): DataFrame[T] = {
-    new MemoryDataFrame(ListMap(data.map { case (key, value) => key -> value.toSeq }: _*), this)
+  def parallelize[T: ClassTag](data: Iterable[T]): DataFrame[T] = {
+    val numPartitions = data.size / parallelism
+    new MemoryDataFrame(data.toSeq, numPartitions, this)
   }
 
-  /**
-   * Create a new dataframe from an in-memory collection.
-   *
-   * @param values  List of items.
-   * @param indexer Indexing function, extracting the key from an item.
-   * @tparam T Elements' type.
-   */
-  def parallelize[T: ClassTag](values: T*)(indexer: T => String): DataFrame[T] = {
-    new MemoryDataFrame(values.groupBy(indexer), this)
-  }
+  def emptyDataFrame[T: ClassTag]: DataFrame[T] = new EmptyDataFrame(this)
 
   /**
    * Create a new dataframe from a data source.
@@ -89,7 +90,7 @@ class SparkleEnv(parallelism: Int) extends Logging {
    * @tparam T
    * @tparam U
    */
-  private[sparkle] def submit[T, U: ClassTag](frame: DataFrame[T], keys: Seq[String], processor: (String, Iterator[T]) => U): Array[U] = {
+  private[sparkle] def submit[T, U: ClassTag](frame: DataFrame[T], keys: Seq[String], processor: (String, Seq[T]) => U): Array[U] = {
     if (keys.isEmpty) {
       Array.empty
     } else if (keys.size == 1) {

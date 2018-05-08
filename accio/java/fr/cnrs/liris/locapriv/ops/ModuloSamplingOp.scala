@@ -18,8 +18,8 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.accio.sdk.{RemoteFile, _}
-import fr.cnrs.liris.locapriv.domain.Trace
+import fr.cnrs.liris.accio.sdk._
+import fr.cnrs.liris.locapriv.domain.Event
 
 @Op(
   category = "transform",
@@ -33,25 +33,18 @@ case class ModuloSamplingOp(
   n: Int,
   @Arg(help = "Input dataset")
   data: RemoteFile)
-  extends ScalaOperator[ModuloSamplingOut] with SparkleOperator {
-  require(n >= 0, s"n must be >0 = (got $n)")
+  extends TransformOp[Event] {
 
-  override def execute(ctx: OpContext): ModuloSamplingOut = {
-    val output = read[Trace](data).map(transform)
-    ModuloSamplingOut(write(output, ctx))
-  }
+  require(n >= 0, s"n must be strictly positive (got $n)")
 
-  private def transform(trace: Trace) = {
+  override protected def transform(key: String, trace: Seq[Event]): Seq[Event] = {
     if (trace.size <= n) {
       trace
     } else {
       val modulo = trace.size.toDouble / n
-      // We add an additional take(n) just in case some floating point operation gave an inadequate result, but it is
-      // theoretically unnecessary.
-      trace.replace(_.zipWithIndex.filter { case (_, idx) => (idx % modulo) < 1 }.map(_._1).take(n))
+      // We add an additional take(n) just in case some floating point operation gave an inadequate
+      // result, but it is theoretically unnecessary.
+      trace.zipWithIndex.filter { case (_, idx) => (idx % modulo) < 1 }.map(_._1).take(n)
     }
   }
 }
-
-case class ModuloSamplingOut(
-  @Arg(help = "Output dataset") data: RemoteFile)

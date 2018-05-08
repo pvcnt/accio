@@ -16,21 +16,24 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.locapriv.ops
+package fr.cnrs.liris.sparkle
 
-import fr.cnrs.liris.accio.sdk.{OpContext, RemoteFile, ScalaOperator}
-import fr.cnrs.liris.sparkle.{DataFrame, SparkleEnv}
+import com.google.common.base.MoreObjects
 
-import scala.reflect.runtime.universe.TypeTag
+import scala.reflect.ClassTag
 
-trait SparkleOperator {
-  this: ScalaOperator[_] =>
+/**
+ * A data frame containing no elements.
+ *
+ * @param env           Sparkle environment.
+ * @tparam T Elements' type.
+ */
+private[sparkle] class EmptyDataFrame[T: ClassTag](private[sparkle] val env: SparkleEnv)
+  extends DataFrame[T] {
 
-  // Create a Sparkle environment using the numProcs' flag to limit parallelism.
-  // It is a poor-man's way to isolate execution in terms of CPU usage.
-  protected val env = new SparkleEnv(math.max(1, com.twitter.jvm.numProcs().round.toInt))
+  override lazy val keys: Seq[String] = Seq.empty
 
-  protected final def read[T: TypeTag](dataset: RemoteFile): DataFrame[T] = ???
+  override def toString: String = MoreObjects.toStringHelper(this).toString
 
-  protected final def write[T: TypeTag](frame: DataFrame[T], idx: Int, ctx: OpContext): RemoteFile = ???
+  override private[sparkle] def load(key: String): Seq[T] = Seq.empty
 }

@@ -23,7 +23,7 @@ import java.nio.file.{Files, Path, Paths, StandardOpenOption}
 import java.util.Locale
 
 import com.google.common.io.Resources
-import fr.cnrs.liris.accio.sdk.{RemoteFile, _}
+import fr.cnrs.liris.accio.sdk._
 import fr.cnrs.liris.util.geo.{Distance, Point}
 import fr.cnrs.liris.locapriv.io.CsvSink
 import fr.cnrs.liris.sparkle.DataSink
@@ -37,8 +37,9 @@ import scala.collection.mutable
 /**
  * Wrapper around the implementation of the Wait4Me algorithm, as provided by their authors.
  *
- * Wait 4 Me: Time-tolerant Anonymization of Moving Objects Databases. Abul, Osman, Bonchi, Francesco, Nanni, Mirco.
- * Information Systems Journal, Volume 35, Issue 8, December 2010, pp 884-910.
+ * Wait 4 Me: Time-tolerant Anonymization of Moving Objects Databases. Abul, Osman, Bonchi,
+ * Francesco, Nanni, Mirco. Information Systems Journal, Volume 35, Issue 8, December 2010,
+ * pp 884-910.
  *
  * @see http://www-kdd.isti.cnr.it/W4M/
  */
@@ -60,12 +61,12 @@ case class Wait4MeOp(
   trashMax: Double = 0.1,
   @Arg(help = "Whether to chunk the input dataset")
   chunk: Boolean = false)
-  extends ScalaOperator[Wait4MeOut] with SparkleOperator {
+  extends ScalaOperator[Wait4MeOp.Out] with SparkleOperator {
 
-  override def execute(ctx: OpContext): Wait4MeOut = {
+  override def execute(ctx: OpContext): Wait4MeOp.Out = {
     val input = read[Trace](data)
     if (input.count() == 0) {
-      Wait4MeOut(
+      Wait4MeOp.Out(
         data = data,
         trashSize = 0,
         trashedPoints = 0,
@@ -134,7 +135,7 @@ case class Wait4MeOp(
       val statLines = resultLines.dropWhile(line => !line.startsWith("------")).drop(2)
       val metrics = statLines.map(_.split(":").last.trim)
 
-      Wait4MeOut(
+      Wait4MeOp.Out(
         data = output,
         trashSize = metrics(3).toInt,
         trashedPoints = metrics(4).toLong,
@@ -214,23 +215,38 @@ case class Wait4MeOp(
 
 object Wait4MeOp {
   private val MaxTraceSize = 10000
-}
 
-case class Wait4MeOut(
-  @Arg(help = "Output dataset") data: RemoteFile,
-  @Arg(help = "Trash_size") trashSize: Int,
-  @Arg(help = "Number of trashed points") trashedPoints: Long,
-  @Arg(help = "Discernibility metric") discernibility: Long,
-  @Arg(help = "Total XY translations") totalXyTranslations: Distance,
-  @Arg(help = "Total time translations") totalTimeTranslations: Duration,
-  @Arg(help = "XY translation count") xyTranslationsCount: Int,
-  @Arg(help = "Time translation count") timeTranslationsCount: Int,
-  @Arg(help = "Number of created points") createdPoints: Int,
-  @Arg(help = "Number of deleted points") deletedPoints: Int,
-  @Arg(help = "Mean spatial translation (per trace)") meanSpatialTraceTranslation: Distance,
-  @Arg(help = "Mean temporal translation (per trace)") meanTemporalTraceTranslation: Duration,
-  @Arg(help = "Mean spatial translation (per point)") meanSpatialPointTranslation: Distance,
-  @Arg(help = "Mean temporal translation (per point)") meanTemporalPointTranslation: Duration)
+  case class Out(
+    @Arg(help = "Output dataset")
+    data: RemoteFile,
+    @Arg(help = "Trash_size")
+    trashSize: Int,
+    @Arg(help = "Number of trashed points")
+    trashedPoints: Long,
+    @Arg(help = "Discernibility metric")
+    discernibility: Long,
+    @Arg(help = "Total XY translations")
+    totalXyTranslations: Distance,
+    @Arg(help = "Total time translations")
+    totalTimeTranslations: Duration,
+    @Arg(help = "XY translation count")
+    xyTranslationsCount: Int,
+    @Arg(help = "Time translation count")
+    timeTranslationsCount: Int,
+    @Arg(help = "Number of created points")
+    createdPoints: Int,
+    @Arg(help = "Number of deleted points")
+    deletedPoints: Int,
+    @Arg(help = "Mean spatial translation (per trace)")
+    meanSpatialTraceTranslation: Distance,
+    @Arg(help = "Mean temporal translation (per trace)")
+    meanTemporalTraceTranslation: Duration,
+    @Arg(help = "Mean spatial translation (per point)")
+    meanSpatialPointTranslation: Distance,
+    @Arg(help = "Mean temporal translation (per point)")
+    meanTemporalPointTranslation: Duration)
+
+}
 
 private class W4MSink(uri: String, keysIndex: Map[String, Int]) extends DataSink[Trace] {
   private[this] val path = Paths.get(uri)

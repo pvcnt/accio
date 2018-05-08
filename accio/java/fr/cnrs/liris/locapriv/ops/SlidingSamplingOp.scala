@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.locapriv.domain.{Event, Trace}
+import fr.cnrs.liris.locapriv.domain.Event
 
 import scala.collection.mutable
 
@@ -26,24 +26,26 @@ import scala.collection.mutable
  * Base trait for transformers using previous event and current one to take a decision about
  * whether to keep it or not.
  */
-private[ops] trait SlidingSampling {
-  protected def transform(trace: Trace, sample: (Event, Event) => Boolean): Trace = {
+private[ops] trait SlidingSamplingOp extends TransformOp[Event] {
+  protected def sample(prev: Event, curr: Event): Boolean
+
+  override protected def transform(key: String, trace: Seq[Event]): Seq[Event] = {
     if (trace.isEmpty) {
       trace
     } else {
-      val newEvents = mutable.ListBuffer.empty[Event]
+      val result = mutable.ListBuffer.empty[Event]
       var maybePrev: Option[Event] = None
-      for (event <- trace.events) {
+      for (event <- trace) {
         val keep = maybePrev match {
           case Some(prev) => sample(prev, event)
           case None => true
         }
         if (keep) {
-          newEvents += event
+          result += event
           maybePrev = Some(event)
         }
       }
-      trace.replace(newEvents)
+      result
     }
   }
 }

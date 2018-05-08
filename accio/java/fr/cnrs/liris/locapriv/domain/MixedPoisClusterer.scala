@@ -29,7 +29,9 @@ import org.joda.time.Instant
  * Vincent Primault, Sonia Ben Mokhtar, Cédric Lauradoux and Lionel Brunie. Differentially Private
  * Location Privacy in Practice. In MOST'14.
  */
-class PoisClusterer(minDuration: Duration, maxDiameter: Distance, minPoints: Int) extends Serializable {
+class MixedPoisClusterer(minDuration: Duration, maxDiameter: Distance, minPoints: Int)
+  extends PoisClusterer {
+
   private[this] val dtClusterer = new DTClusterer(minDuration, maxDiameter)
   private[this] val djClusterer = new DJClusterer(maxDiameter / 2, minPoints)
 
@@ -39,31 +41,31 @@ class PoisClusterer(minDuration: Duration, maxDiameter: Distance, minPoints: Int
    * @param events Temporally ordered list of events.
    * @return List of POIs.
    */
-  def cluster(events: Iterable[Event]): Set[Poi] = {
-    val stays = dtClusterer.cluster(events.toSeq)
+  override def clusterPois(events: Seq[Event]): Seq[Poi] = {
+    val stays = dtClusterer.cluster(events)
     val staysAsEvents = stays.zipWithIndex.map {
       case (stay, idx) => Event(idx.toString, stay.centroid, Instant.now)
     }
     val pois = djClusterer.cluster(staysAsEvents)
     pois.map { poi =>
       Poi(poi.events.flatMap(event => stays(event.user.toInt).events))
-    }.toSet
+    }
   }
 
   /**
-    * Perform clustering of spatio-temporal points.
-    *
-    * @param events Temporally ordered list of events.
-    * @return List of Clusters.
-    */
-  def clusterKeepCluster(events: Iterable[Event]): Seq[Cluster] = {
-    val stays = dtClusterer.cluster(events.toSeq)
+   * Perform clustering of spatio-temporal points.
+   *
+   * @param events Temporally ordered list of events.
+   * @return List of Clusters.
+   */
+  override def cluster(events: Seq[Event]): Seq[Cluster] = {
+    val stays = dtClusterer.cluster(events)
     val staysAsEvents = stays.zipWithIndex.map {
       case (stay, idx) => Event(idx.toString, stay.centroid, Instant.now)
     }
     val pois = djClusterer.cluster(staysAsEvents)
     pois.map { poi =>
-      new Cluster(poi.events.flatMap(event => stays(event.user.toInt).events))
+      Cluster(poi.events.flatMap(event => stays(event.user.toInt).events))
     }
   }
 }

@@ -32,8 +32,6 @@ import org.scalatest.{BeforeAndAfterEach, FlatSpec}
 private[ops] trait ScalaOperatorSpec extends BeforeAndAfterEach {
   this: FlatSpec =>
 
-  private val traceCodec = new TraceCodec
-  private val poiSetCodec = new CsvPoiSetCodec
   protected var env: SparkleEnv = null
 
   override protected def beforeEach(): Unit = {

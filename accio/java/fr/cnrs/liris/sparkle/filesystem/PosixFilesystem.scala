@@ -22,23 +22,33 @@ import java.io._
 import java.nio.file.{Files, Paths}
 
 import com.twitter.util.StorageUnit
-import fr.cnrs.liris.util.FileUtils
+import fr.cnrs.liris.util.{FileUtils, NullInputStream}
 
 import scala.collection.JavaConverters._
 
 object PosixFilesystem extends Filesystem {
-  override def openRead(uri: String): InputStream = {
-    new BufferedInputStream(new FileInputStream(uri))
+  override def createInputStream(uri: String): InputStream = {
+    if (Files.isRegularFile(Paths.get(uri))) {
+      new BufferedInputStream(new FileInputStream(uri))
+    } else {
+      NullInputStream
+    }
   }
 
-  override def openWrite(uri: String): OutputStream = {
+  override def createOutputStream(uri: String): OutputStream = {
+    Files.createDirectories(Paths.get(uri).getParent)
     new BufferedOutputStream(new FileOutputStream(uri))
   }
 
   override def delete(uri: String): Unit = FileUtils.safeDelete(Paths.get(uri))
 
   override def list(uri: String): Iterator[String] = {
-    Files.list(Paths.get(uri)).iterator.asScala.map(_.toString)
+    val path = Paths.get(uri)
+    if (Files.isDirectory(path)) {
+      Files.list(path).iterator.asScala.map(_.toString)
+    } else {
+      Iterator.single(uri)
+    }
   }
 
   override def size(uri: String): StorageUnit = StorageUnit.fromBytes(Files.size(Paths.get(uri)))

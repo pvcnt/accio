@@ -173,9 +173,6 @@ class RandomSamplerSpec extends UnitSpec {
   behavior of "BernoulliSampler"
 
   it should "sample an iterator" in {
-    // Tests expect maximum gap sampling fraction to be this value
-    RandomSampler.defaultMaxGapSamplingFraction should be(0.4)
-
     var d: Double = 0.0
 
     var sampler: RandomSampler[Int, Int] = new BernoulliSampler[Int](0.5)
@@ -201,9 +198,6 @@ class RandomSamplerSpec extends UnitSpec {
   }
 
   it should "sample an iterator with gap sampling optimization" in {
-    // Tests expect maximum gap sampling fraction to be this value
-    RandomSampler.defaultMaxGapSamplingFraction should be(0.4)
-
     var d: Double = 0.0
 
     var sampler: RandomSampler[Int, Int] = new BernoulliSampler[Int](0.01)
@@ -245,9 +239,6 @@ class RandomSamplerSpec extends UnitSpec {
   }
 
   it should "work with data types" in {
-    // Tests expect maximum gap sampling fraction to be this value
-    RandomSampler.defaultMaxGapSamplingFraction should be(0.4)
-
     var d: Double = 0.0
     val sampler = new BernoulliSampler[Int](0.1)
     sampler.setSeed(rngSeed.nextLong)
@@ -272,9 +263,6 @@ class RandomSamplerSpec extends UnitSpec {
   }
 
   it should "be cloneable" in {
-    // Tests expect maximum gap sampling fraction to be this value
-    RandomSampler.defaultMaxGapSamplingFraction should be(0.4)
-
     var d = 0.0
     var sampler = new BernoulliSampler[Int](0.1).clone
     sampler.setSeed(rngSeed.nextLong)
@@ -288,8 +276,6 @@ class RandomSamplerSpec extends UnitSpec {
   }
 
   it should "set a new seed" in {
-    RandomSampler.defaultMaxGapSamplingFraction should be(0.4)
-
     var d: Double = 0.0
     var sampler1 = new BernoulliSampler[Int](0.2)
     var sampler2 = new BernoulliSampler[Int](0.2)
@@ -322,235 +308,5 @@ class RandomSamplerSpec extends UnitSpec {
     d = medianKSD(gaps(sampler1.sample(Iterator.from(0))), gaps(sampler2.sample(Iterator.from(0))))
     d should be > 0.0
     d should be < D
-  }
-
-  behavior of "PoissonSampler"
-
-  it should "sample an iterator" in {
-    // Tests expect maximum gap sampling fraction to be this value
-    RandomSampler.defaultMaxGapSamplingFraction should be(0.4)
-
-    var d: Double = 0.0
-
-    var sampler = new PoissonSampler[Int](0.5)
-    sampler.setSeed(rngSeed.nextLong)
-    d = medianKSD(gaps(sampler.sample(Iterator.from(0))), gaps(sampleWR(Iterator.from(0), 0.5)))
-    d should be < D
-
-    sampler = new PoissonSampler[Int](0.7)
-    sampler.setSeed(rngSeed.nextLong)
-    d = medianKSD(gaps(sampler.sample(Iterator.from(0))), gaps(sampleWR(Iterator.from(0), 0.7)))
-    d should be < D
-
-    sampler = new PoissonSampler[Int](0.9)
-    sampler.setSeed(rngSeed.nextLong)
-    d = medianKSD(gaps(sampler.sample(Iterator.from(0))), gaps(sampleWR(Iterator.from(0), 0.9)))
-    d should be < D
-
-    // sampling at different frequencies should show up as statistically different:
-    sampler = new PoissonSampler[Int](0.5)
-    sampler.setSeed(rngSeed.nextLong)
-    d = medianKSD(gaps(sampler.sample(Iterator.from(0))), gaps(sampleWR(Iterator.from(0), 0.6)))
-    d should be > D
-  }
-
-  it should "sample an iterator with gap sampling" in {
-    // Tests expect maximum gap sampling fraction to be this value
-    RandomSampler.defaultMaxGapSamplingFraction should be(0.4)
-
-    var d: Double = 0.0
-
-    var sampler = new PoissonSampler[Int](0.01)
-    sampler.setSeed(rngSeed.nextLong)
-    d = medianKSD(gaps(sampler.sample(Iterator.from(0))), gaps(sampleWR(Iterator.from(0), 0.01)))
-    d should be < D
-
-    sampler = new PoissonSampler[Int](0.1)
-    sampler.setSeed(rngSeed.nextLong)
-    d = medianKSD(gaps(sampler.sample(Iterator.from(0))), gaps(sampleWR(Iterator.from(0), 0.1)))
-    d should be < D
-
-    sampler = new PoissonSampler[Int](0.3)
-    sampler.setSeed(rngSeed.nextLong)
-    d = medianKSD(gaps(sampler.sample(Iterator.from(0))), gaps(sampleWR(Iterator.from(0), 0.3)))
-    d should be < D
-
-    // sampling at different frequencies should show up as statistically different:
-    sampler = new PoissonSampler[Int](0.3)
-    sampler.setSeed(rngSeed.nextLong)
-    d = medianKSD(gaps(sampler.sample(Iterator.from(0))), gaps(sampleWR(Iterator.from(0), 0.4)))
-    d should be > D
-  }
-
-  it should "work on boundary cases" in {
-    val data = (1 to 100).toArray
-
-    var sampler = new PoissonSampler[Int](0.0)
-    sampler.sample(data.iterator).toArray should be(Array.empty[Int])
-
-    sampler = new PoissonSampler[Int](0.0 - (RandomSampler.roundingEpsilon / 2.0))
-    sampler.sample(data.iterator).toArray should be(Array.empty[Int])
-
-    // sampling with replacement has no upper bound on sampling fraction
-    sampler = new PoissonSampler[Int](2.0)
-    sampler.sample(data.iterator).length should be > (data.length)
-  }
-
-  it should "work with data types" in {
-    // Tests expect maximum gap sampling fraction to be this value
-    RandomSampler.defaultMaxGapSamplingFraction should be(0.4)
-
-    var d: Double = 0.0
-    val sampler = new PoissonSampler[Int](0.1)
-    sampler.setSeed(rngSeed.nextLong)
-
-    // Array iterator (indexable type)
-    d = medianKSD(
-      gaps(sampler.sample(Iterator.from(0).take(20 * sampleSize).toArray.iterator)),
-      gaps(sampleWR(Iterator.from(0), 0.1)))
-    d should be < D
-
-    // ArrayBuffer iterator (indexable type)
-    d = medianKSD(
-      gaps(sampler.sample(Iterator.from(0).take(20 * sampleSize).to[ArrayBuffer].iterator)),
-      gaps(sampleWR(Iterator.from(0), 0.1)))
-    d should be < D
-
-    // List iterator (non-indexable type)
-    d = medianKSD(
-      gaps(sampler.sample(Iterator.from(0).take(20 * sampleSize).toList.iterator)),
-      gaps(sampleWR(Iterator.from(0), 0.1)))
-    d should be < D
-  }
-
-  it should "be cloneable" in {
-    // Tests expect maximum gap sampling fraction to be this value
-    RandomSampler.defaultMaxGapSamplingFraction should be(0.4)
-
-    var d = 0.0
-    var sampler = new PoissonSampler[Int](0.1).clone
-    sampler.setSeed(rngSeed.nextLong)
-    d = medianKSD(gaps(sampler.sample(Iterator.from(0))), gaps(sampleWR(Iterator.from(0), 0.1)))
-    d should be < D
-
-    sampler = new PoissonSampler[Int](0.9).clone
-    sampler.setSeed(rngSeed.nextLong)
-    d = medianKSD(gaps(sampler.sample(Iterator.from(0))), gaps(sampleWR(Iterator.from(0), 0.9)))
-    d should be < D
-  }
-
-  it should "set a new seed" in {
-    RandomSampler.defaultMaxGapSamplingFraction should be(0.4)
-
-    var d: Double = 0.0
-    var sampler1 = new PoissonSampler[Int](0.2)
-    var sampler2 = new PoissonSampler[Int](0.2)
-
-    // distributions should be identical if seeds are set same
-    sampler1.setSeed(73)
-    sampler2.setSeed(73)
-    d = medianKSD(gaps(sampler1.sample(Iterator.from(0))), gaps(sampler2.sample(Iterator.from(0))))
-    d should be(0.0)
-
-    // should be different for different seeds
-    sampler1.setSeed(73)
-    sampler2.setSeed(37)
-    d = medianKSD(gaps(sampler1.sample(Iterator.from(0))), gaps(sampler2.sample(Iterator.from(0))))
-    d should be > 0.0
-    d should be < D
-
-    sampler1 = new PoissonSampler[Int](0.8)
-    sampler2 = new PoissonSampler[Int](0.8)
-
-    // distributions should be identical if seeds are set same
-    sampler1.setSeed(73)
-    sampler2.setSeed(73)
-    d = medianKSD(gaps(sampler1.sample(Iterator.from(0))), gaps(sampler2.sample(Iterator.from(0))))
-    d should be(0.0)
-
-    // should be different for different seeds
-    sampler1.setSeed(73)
-    sampler2.setSeed(37)
-    d = medianKSD(gaps(sampler1.sample(Iterator.from(0))), gaps(sampler2.sample(Iterator.from(0))))
-    d should be > 0.0
-    d should be < D
-  }
-
-  it should "perform partitioning sampling" in {
-    var d: Double = 0.0
-
-    var sampler = new BernoulliCellSampler[Int](0.1, 0.2)
-    sampler.setSeed(rngSeed.nextLong)
-    d = medianKSD(gaps(sampler.sample(Iterator.from(0))), gaps(sample(Iterator.from(0), 0.1)))
-    d should be < D
-
-    sampler = new BernoulliCellSampler[Int](0.1, 0.2, true)
-    sampler.setSeed(rngSeed.nextLong)
-    d = medianKSD(gaps(sampler.sample(Iterator.from(0))), gaps(sample(Iterator.from(0), 0.9)))
-    d should be < D
-  }
-
-  it should "perform partitioning sampling on boundary cases" in {
-    val data = (1 to 100).toArray
-    val d = RandomSampler.roundingEpsilon / 2.0
-
-    var sampler = new BernoulliCellSampler[Int](0.0, 0.0)
-    sampler.sample(data.iterator).toArray should be(Array.empty[Int])
-
-    sampler = new BernoulliCellSampler[Int](0.5, 0.5)
-    sampler.sample(data.iterator).toArray should be(Array.empty[Int])
-
-    sampler = new BernoulliCellSampler[Int](1.0, 1.0)
-    sampler.sample(data.iterator).toArray should be(Array.empty[Int])
-
-    sampler = new BernoulliCellSampler[Int](0.0, 1.0)
-    sampler.sample(data.iterator).toArray should be(data)
-
-    sampler = new BernoulliCellSampler[Int](0.0 - d, 1.0 + d)
-    sampler.sample(data.iterator).toArray should be(data)
-
-    sampler = new BernoulliCellSampler[Int](0.5, 0.5 - d)
-    sampler.sample(data.iterator).toArray should be(Array.empty[Int])
-  }
-
-  it should "partition data" in {
-    val seed = rngSeed.nextLong
-    val data = (1 to 100).toArray
-
-    var sampler = new BernoulliCellSampler[Int](0.4, 0.6)
-    sampler.setSeed(seed)
-    val s1 = sampler.sample(data.iterator).toArray
-    s1.length should be > 0
-
-    sampler = new BernoulliCellSampler[Int](0.4, 0.6, true)
-    sampler.setSeed(seed)
-    val s2 = sampler.sample(data.iterator).toArray
-    s2.length should be > 0
-
-    (s1 ++ s2).sorted should be(data)
-
-    sampler = new BernoulliCellSampler[Int](0.5, 0.5)
-    sampler.sample(data.iterator).toArray should be(Array.empty[Int])
-
-    sampler = new BernoulliCellSampler[Int](0.5, 0.5, true)
-    sampler.sample(data.iterator).toArray should be(data)
-  }
-
-  it should "perform partitioning clone" in {
-    val seed = rngSeed.nextLong
-    val data = (1 to 100).toArray
-    val base = new BernoulliCellSampler[Int](0.35, 0.65)
-
-    var sampler = base.clone
-    sampler.setSeed(seed)
-    val s1 = sampler.sample(data.iterator).toArray
-    s1.length should be > 0
-
-    sampler = base.cloneComplement()
-    sampler.setSeed(seed)
-    val s2 = sampler.sample(data.iterator).toArray
-    s2.length should be > 0
-
-    (s1 ++ s2).sorted should be(data)
   }
 }

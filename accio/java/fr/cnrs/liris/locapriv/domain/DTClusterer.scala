@@ -34,8 +34,8 @@ import scala.collection.mutable
  * @param minDuration Minimum amount of time spent inside a stay.
  * @param maxDiameter Maximum diameter of a stay.
  */
-class DTClusterer(minDuration: Duration, maxDiameter: Distance) extends Clusterer {
-  require(maxDiameter > Distance.Zero, s"maxDiameter must be > 0 (got $maxDiameter)")
+class DTClusterer(minDuration: Duration, maxDiameter: Distance) extends Clusterer with PoisClusterer {
+  require(maxDiameter > Distance.Zero, s"maxDiameter must be strictly positive 0 (got $maxDiameter)")
 
   override def cluster(events: Seq[Event]): Seq[Cluster] = {
     val clusters = mutable.ListBuffer.empty[Cluster]
@@ -43,6 +43,10 @@ class DTClusterer(minDuration: Duration, maxDiameter: Distance) extends Clustere
     events.foreach(doCluster(_, candidate, clusters))
     handleCandidate(candidate, clusters)
     clusters
+  }
+
+  override def clusterPois(events: Seq[Event]): Seq[Poi] = {
+    cluster(events).map(cluster => Poi(cluster.events))
   }
 
   /**
@@ -71,7 +75,7 @@ class DTClusterer(minDuration: Duration, maxDiameter: Distance) extends Clustere
    * @return True if the tuple can be safely added, false other.
    */
   private def isInDiameter(event: Event, candidate: Seq[Event]) =
-  candidate.forall(_.point.distance(event.point) <= maxDiameter)
+    candidate.forall(_.point.distance(event.point) <= maxDiameter)
 
   /**
    * Check if a cluster is valid w.r.t. the time threshold.
@@ -86,7 +90,7 @@ class DTClusterer(minDuration: Duration, maxDiameter: Distance) extends Clustere
     } else if ((candidate.head.time to candidate.last.time).duration < minDuration) {
       false
     } else {
-      clusters += new Cluster(candidate.toList)
+      clusters += Cluster(candidate.toList)
       candidate.clear()
       true
     }
