@@ -72,7 +72,7 @@ case class HeatMapDistortionOp(
     HeatMapDistortionOp.Out(write(metrics, 0, ctx), avgDist)
   }
 
-  private def formSingleMatrices(trace: Seq[Event]): SparseMatrix[Int] = {
+  private def computeMatrix(trace: Seq[Event]): SparseMatrix[Int] = {
     val matrix = new SparseMatrix[Int](nbRows, nbColumns)
     trace.foreach { e =>
       val p = e.point
@@ -84,9 +84,10 @@ case class HeatMapDistortionOp(
   }
 
   private def compute(train: Seq[Event], test: Seq[Event]): Seq[HeatMapDistortionOp.Value] = {
-    val matTrain = formSingleMatrices(train)
-    val matTest = formSingleMatrices(test)
-    Seq(HeatMapDistortionOp.Value(train.head.id, DistanceUtils.d(matTest.proportional, matTrain.proportional, distanceType)))
+    val matTrain = computeMatrix(train)
+    val matTest = computeMatrix(test)
+    val d = DistanceUtils.d(matTest.proportional, matTrain.proportional, distanceType)
+    Seq(HeatMapDistortionOp.Value(train.head.id, d))
   }
 
   private def restrictArea(ds: DataFrame[Event]): DataFrame[Event] = {
