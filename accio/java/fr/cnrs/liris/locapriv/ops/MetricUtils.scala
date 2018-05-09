@@ -18,37 +18,59 @@
 
 package fr.cnrs.liris.locapriv.ops
 
+import breeze.stats.DescriptiveStats._
+import breeze.stats._
+
 private[ops] object MetricUtils {
-  def fscore(reference: Int, result: Int, matched: Int): Double = {
-    val precision = this.precision(result, matched)
-    val recall = this.recall(reference, matched)
-    if (precision > 0 && recall > 0) {
-      2 * precision * recall / (precision + recall)
-    } else {
-      0d
-    }
-  }
-
-  def precision(result: Int, matched: Int): Double = {
-    require(matched <= result, s"Matched points must be less than result points (got $matched and $result)")
-    if (result != 0) matched.toDouble / result else 1
-  }
-
-  def recall(reference: Int, matched: Int): Double = {
+  def fscore(id: String, reference: Int, result: Int, matched: Int): FscoreValue = {
     require(matched <= reference, s"Matched points must be less than reference points (got $matched and $reference)")
-    if (reference != 0) matched.toDouble / reference else 0
-  }
-
-  def value(id: String, reference: Int, result: Int, matched: Int): Value = {
-    val precision = this.precision(result, matched)
-    val recall = this.recall(reference, matched)
+    require(matched <= result, s"Matched points must be less than result points (got $matched and $result)")
+    val precision = if (result != 0) matched.toDouble / result else 1
+    val recall = if (reference != 0) matched.toDouble / reference else 0
     val fscore = if (precision > 0 && recall > 0) {
       2 * precision * recall / (precision + recall)
     } else {
       0d
     }
-    Value(id, precision, recall, fscore)
+    FscoreValue(id, precision, recall, fscore)
   }
 
-  case class Value(id: String, precision: Double, recall: Double, fscore: Double)
+  case class FscoreValue(id: String, precision: Double, recall: Double, fscore: Double)
+
+  def stats(id: String, values: Seq[Double]): StatsValue = stats(id, values.toArray)
+
+  def stats(id: String, values: Array[Double]): StatsValue = {
+    if (values.isEmpty) {
+      StatsValue(id, 0, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d)
+    } else {
+      StatsValue(
+        id = id,
+        n = values.length,
+        min = values.min,
+        max = values.max,
+        avg = mean(values),
+        stddev = stddev(values),
+        p25 = percentile(values, .25),
+        p50 = percentile(values, .50),
+        p75 = percentile(values, .75),
+        p90 = percentile(values, .90),
+        p95 = percentile(values, .95),
+        p99 = percentile(values, .99))
+    }
+  }
+
+  case class StatsValue(
+    id: String,
+    n: Long,
+    min: Double,
+    max: Double,
+    avg: Double,
+    stddev: Double,
+    p25: Double,
+    p50: Double,
+    p75: Double,
+    p90: Double,
+    p95: Double,
+    p99: Double)
+
 }

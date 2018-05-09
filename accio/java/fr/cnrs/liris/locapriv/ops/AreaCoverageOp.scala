@@ -55,7 +55,7 @@ case class AreaCoverageOp(
     val refCells = getCells(ref, level)
     val resCells = getCells(res, level)
     val matched = resCells.intersect(refCells).size
-    Seq(MetricUtils.value(ref.head.id, refCells.size, resCells.size, matched))
+    Seq(MetricUtils.fscore(ref.head.id, refCells.size, resCells.size, matched))
   }
 
   private def getCells(trace: Seq[Event], level: Int) = {

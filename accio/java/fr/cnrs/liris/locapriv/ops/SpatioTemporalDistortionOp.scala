@@ -20,7 +20,7 @@ package fr.cnrs.liris.locapriv.ops
 
 import com.github.nscala_time.time.Imports._
 import fr.cnrs.liris.accio.sdk._
-import fr.cnrs.liris.locapriv.domain.Trace
+import fr.cnrs.liris.locapriv.domain.Event
 import org.joda.time.Instant
 
 @Op(
@@ -33,36 +33,30 @@ case class SpatioTemporalDistortionOp(
   train: RemoteFile,
   @Arg(help = "Test dataset")
   test: RemoteFile)
-  extends ScalaOperator[SpatioTemporalDistortionOut] with SparkleOperator {
+  extends ScalaOperator[SpatioTemporalDistortionOp.Out] with SparkleOperator {
 
-  override def execute(ctx: OpContext): SpatioTemporalDistortionOut = {
-    val trainDs = read[Trace](train)
-    val testDs = read[Trace](test)
-    val metrics = trainDs.zip(testDs).map { case (ref, res) => evaluate(ref, res) }.collect()
-    SpatioTemporalDistortionOut(
-      min = metrics.map { case (k, v) => k -> v.min }.toMap,
-      max = metrics.map { case (k, v) => k -> v.max }.toMap,
-      stddev = metrics.map { case (k, v) => k -> v.stddev }.toMap,
-      avg = metrics.map { case (k, v) => k -> v.avg }.toMap,
-      median = metrics.map { case (k, v) => k -> v.median }.toMap)
+  override def execute(ctx: OpContext): SpatioTemporalDistortionOp.Out = {
+    val trainDs = read[Event](train)
+    val testDs = read[Event](test)
+    val metrics = trainDs.zipPartitions(testDs)(evaluate)
+    SpatioTemporalDistortionOp.Out(write(metrics, 0, ctx))
   }
 
-  private def evaluate(ref: Trace, res: Trace) = {
-    require(ref.id == res.id, s"Trace mismatch: ${ref.id} / ${res.id}")
+  private def evaluate(ref: Seq[Event], res: Seq[Event]): Seq[MetricUtils.StatsValue] = {
     val (larger, smaller) = if (ref.size > res.size) (ref, res) else (res, ref)
-    val distances = smaller.events.map { rec =>
-      rec.point.distance(interpolate(larger, rec.time)).meters
+    val distances = smaller.map { event =>
+      event.point.distance(interpolate(larger, event.time)).meters
     }
-    ref.id -> AggregatedStats(distances)
+    Seq(MetricUtils.stats(ref.head.id, distances))
   }
 
-  private def interpolate(trace: Trace, time: Instant) = {
-    if (time.isBefore(trace.events.head.time)) {
-      trace.events.head.point
-    } else if (time.isAfter(trace.events.last.time)) {
-      trace.events.last.point
+  private def interpolate(trace: Seq[Event], time: Instant) = {
+    if (time.isBefore(trace.head.time)) {
+      trace.head.point
+    } else if (time.isAfter(trace.last.time)) {
+      trace.last.point
     } else {
-      val between = trace.events.sliding(2).find { recs =>
+      val between = trace.sliding(2).find { recs =>
         time.compareTo(recs.head.time) >= 0 && time.compareTo(recs.last.time) <= 0
       }.get
       if (time == between.head.time) {
@@ -77,14 +71,10 @@ case class SpatioTemporalDistortionOp(
   }
 }
 
-case class SpatioTemporalDistortionOut(
-  @Arg(help = "Temporal distortion min")
-  min: Map[String, Double],
-  @Arg(help = "Temporal distortion max")
-  max: Map[String, Double],
-  @Arg(help = "Temporal distortion stddev")
-  stddev: Map[String, Double],
-  @Arg(help = "Temporal distortion avg")
-  avg: Map[String, Double],
-  @Arg(help = "Temporal distortion median")
-  median: Map[String, Double])
+object SpatioTemporalDistortionOp {
+
+  case class Out(
+    @Arg(help = "Metrics dataset")
+    metrics: RemoteFile)
+
+}

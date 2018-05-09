@@ -303,5 +303,4 @@ private[ops] object DistanceUtils {
   def complement(m: SparseMatrix[Double]): SparseMatrix[Double] = {
     m.transform { (pair: (Int, Int), v: Double) => 1 - v }
   }
-
 }

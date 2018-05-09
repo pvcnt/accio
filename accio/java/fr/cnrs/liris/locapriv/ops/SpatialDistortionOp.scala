@@ -19,8 +19,8 @@
 package fr.cnrs.liris.locapriv.ops
 
 import fr.cnrs.liris.accio.sdk._
-import fr.cnrs.liris.locapriv.domain.Trace
-import fr.cnrs.liris.util.geo.Point
+import fr.cnrs.liris.locapriv.domain.Event
+import fr.cnrs.liris.util.geo.{Distance, Point}
 
 @Op(
   category = "metric",
@@ -34,37 +34,32 @@ case class SpatialDistortionOp(
   test: RemoteFile,
   @Arg(help = "Whether to interpolate between points")
   interpolate: Boolean = true)
-  extends ScalaOperator[SpatialDistortionOut] with SparkleOperator {
+  extends ScalaOperator[SpatialDistortionOp.Out] with SparkleOperator {
 
-  override def execute(ctx: OpContext): SpatialDistortionOut = {
-    val trainDs = read[Trace](train)
-    val testDs = read[Trace](test)
-    val metrics = trainDs.zip(testDs).map { case (ref, res) => evaluate(ref, res) }.collect()
-    SpatialDistortionOut(
-      min = metrics.map { case (k, v) => k -> v.min }.toMap,
-      max = metrics.map { case (k, v) => k -> v.max }.toMap,
-      stddev = metrics.map { case (k, v) => k -> v.stddev }.toMap,
-      avg = metrics.map { case (k, v) => k -> v.avg }.toMap,
-      median = metrics.map { case (k, v) => k -> v.median }.toMap)
+  override def execute(ctx: OpContext): SpatialDistortionOp.Out = {
+    val trainDs = read[Event](train)
+    val testDs = read[Event](test)
+    val metrics = trainDs.zipPartitions(testDs)(evaluate)
+    SpatialDistortionOp.Out(write(metrics, 0, ctx))
   }
 
-  private def evaluate(ref: Trace, res: Trace) = {
-    require(ref.id == res.id, s"Trace mismatch: ${ref.id} / ${res.id}")
-    require(res.isEmpty || ref.size >= 1, s"Cannot evaluate spatial distortion with empty reference trace ${ref.id}")
-    val points = ref.events.map(_.point)
+  private def evaluate(ref: Seq[Event], res: Seq[Event]): Seq[MetricUtils.StatsValue] = {
+    require(ref.nonEmpty, s"Cannot evaluate spatial distortion with empty reference trace")
+    val points = ref.map(_.point)
     val distances = if (interpolate) {
       evaluateWithInterpolation(points, res)
     } else {
       evaluateWithoutInterpolation(points, res)
     }
-    ref.id -> AggregatedStats(distances.map(_.meters))
+    Seq(MetricUtils.stats(ref.head.id, distances.map(_.meters)))
   }
 
-  private def evaluateWithoutInterpolation(reference: Seq[Point], result: Trace) =
-    result.events.map(event => Point.nearest(event.point, reference).distance)
+  private def evaluateWithoutInterpolation(reference: Seq[Point], result: Seq[Event]): Seq[Distance] = {
+    result.map(event => Point.nearest(event.point, reference).distance)
+  }
 
-  private def evaluateWithInterpolation(reference: Seq[Point], result: Trace) = {
-    result.events.map { event =>
+  private def evaluateWithInterpolation(reference: Seq[Point], result: Seq[Event]): Seq[Distance] = {
+    result.map { event =>
       if (reference.size == 1) {
         event.point.distance(reference.head)
       } else {
@@ -108,14 +103,10 @@ case class SpatialDistortionOp(
   }
 }
 
-case class SpatialDistortionOut(
-  @Arg(help = "Spatial distortion min")
-  min: Map[String, Double],
-  @Arg(help = "Spatial distortion max")
-  max: Map[String, Double],
-  @Arg(help = "Spatial distortion stddev")
-  stddev: Map[String, Double],
-  @Arg(help = "Spatial distortion avg")
-  avg: Map[String, Double],
-  @Arg(help = "Spatial distortion median")
-  median: Map[String, Double])
+object SpatialDistortionOp {
+
+  case class Out(
+    @Arg(help = "Metrics dataset")
+    metrics: RemoteFile)
+
+}

@@ -23,7 +23,7 @@ import fr.cnrs.liris.sparkle.{DataFrame, SparkleEnv}
 
 import scala.reflect.runtime.universe.TypeTag
 
-trait SparkleOperator {
+private[ops] trait SparkleOperator {
   this: ScalaOperator[_] =>
 
   // Create a Sparkle environment using the numProcs' flag to limit parallelism.
