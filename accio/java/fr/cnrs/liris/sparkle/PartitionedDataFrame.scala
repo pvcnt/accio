@@ -21,7 +21,14 @@ package fr.cnrs.liris.sparkle
 private[sparkle] class PartitionedDataFrame[T](inner: DataFrame[T], numPartitions: Int)
   extends DataFrame[T] {
 
-  override def keys: Seq[String] = ???
+  override def keys: Seq[String] = {
+    if (inner.keys.length <= numPartitions) {
+      inner.keys
+    } else {
+      //TODO
+      ???
+    }
+  }
 
   override private[sparkle] def load(key: String) = ???
 
