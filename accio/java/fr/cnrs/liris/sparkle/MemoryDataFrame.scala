@@ -19,8 +19,7 @@
 package fr.cnrs.liris.sparkle
 
 import com.google.common.base.MoreObjects
-
-import scala.reflect.ClassTag
+import fr.cnrs.liris.sparkle.format.Encoder
 
 /**
  * A data frame reading its data from the memory.
@@ -30,10 +29,11 @@ import scala.reflect.ClassTag
  * @param env           Sparkle environment.
  * @tparam T Elements' type.
  */
-private[sparkle] class MemoryDataFrame[T: ClassTag](
+private[sparkle] class MemoryDataFrame[T](
   elements: Seq[T],
   partitionSize: Int,
-  private[sparkle] val env: SparkleEnv)
+  private[sparkle] val env: SparkleEnv,
+  private[sparkle] val encoder: Encoder[T])
   extends DataFrame[T] {
 
   override lazy val keys: Seq[String] = Seq.tabulate(math.ceil(elements.size / partitionSize).toInt)(_.toString)

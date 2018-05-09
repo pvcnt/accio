@@ -40,7 +40,9 @@ object Laplace {
    */
   def transform(trace: Seq[Event], epsilon: Double, seed: Long = Random.nextLong): Seq[Event] = {
     val rnd = new Random(seed)
-    trace.map(event => event.copy(point = noise(event.point, epsilon, rnd)))
+    trace.map(event => event.withPoint(noise(event.point, epsilon, rnd)))
+    //TODO: validate this.
+    //trace.map(event => event.withLatLng(noise(event.latLng, epsilon, rnd)))
   }
 
   /**

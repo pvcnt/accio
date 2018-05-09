@@ -21,6 +21,7 @@ scala_library(
     "//accio/java/fr/cnrs/liris/accio/sdk",
     "//accio/java/fr/cnrs/liris/accio/sdk:annotations",
     "//accio/java/fr/cnrs/liris/sparkle",
+    "//accio/java/fr/cnrs/liris/sparkle/format",
     "//accio/java/fr/cnrs/liris/locapriv/domain",
     "//accio/java/fr/cnrs/liris/util/geo",
     "//accio/java/fr/cnrs/liris/util",

@@ -15,7 +15,7 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_library(
-  name = "io",
+  name = "format",
   srcs = glob(["*.scala"]),
   deps = [
     "//3rdparty/jvm/com/github/nscala_time",

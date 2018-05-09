@@ -16,16 +16,17 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.sparkle.io
+package fr.cnrs.liris.sparkle.format
 
 import java.lang.reflect.Modifier
 
-import fr.cnrs.liris.sparkle.io
+import fr.cnrs.liris.sparkle._
 import org.apache.commons.lang3.reflect.ConstructorUtils
 
+import scala.reflect.ClassTag
 import scala.reflect.runtime.universe.{TypeTag, typeTag}
 
-private[sparkle] class RowEncoder[T](val structType: StructType, cls: Class[_]) extends Encoder[T] {
+private[sparkle] class RowEncoder[T](val structType: StructType, cls: Class[T]) extends Encoder[T] {
   private[this] lazy val constructor = {
     val paramTypes = structType.fields.map(_._2).map {
       case DataType.Int32 => classOf[Int]
@@ -45,6 +46,8 @@ private[sparkle] class RowEncoder[T](val structType: StructType, cls: Class[_]) 
     }
   }
 
+  override def classTag: ClassTag[T] = ClassTag(cls)
+
   override def serialize(obj: T): InternalRow = {
     if (structType.wrapper) {
       InternalRow(Array(obj))
@@ -62,7 +65,7 @@ private[sparkle] class RowEncoder[T](val structType: StructType, cls: Class[_]) 
         throw new RuntimeException(s"Wrong number of fields: ${row.fields.length} (expected ${structType.fields.size})")
       }
       val args = row.fields.map(_.asInstanceOf[AnyRef])
-      constructor.newInstance(args: _*).asInstanceOf[T]
+      constructor.newInstance(args: _*)
     }
   }
 }
@@ -71,7 +74,7 @@ object RowEncoder {
   def apply[T: TypeTag]: Encoder[T] = {
     val tpe = typeTag[T].in(mirror).tpe
     val structType = structTypeFor(tpe)
-    val cls = getClassFromType(tpe)
+    val cls = getClassFromType(tpe).asInstanceOf[Class[T]]
     new RowEncoder(structType, cls)
   }
 
@@ -97,9 +100,9 @@ object RowEncoder {
       val fields = params.map { case (fieldName, fieldType) =>
         fieldName -> dataTypeFor(s"$clsName.$fieldName", fieldType)
       }
-      io.StructType(fields, wrapper = false)
+      format.StructType(fields, wrapper = false)
     } else {
-      io.StructType(Seq("value" -> dataTypeFor(clsName, tpe)), wrapper = true)
+      format.StructType(Seq("value" -> dataTypeFor(clsName, tpe)), wrapper = true)
     }
   }
 

@@ -21,10 +21,12 @@ package fr.cnrs.liris.sparkle
 import com.google.common.base.MoreObjects
 import fr.cnrs.liris.util.random.RandomSampler
 
-import scala.reflect.ClassTag
 import scala.util.Random
 
-private[sparkle] class SampleDataFrame[T: ClassTag](inner: DataFrame[T], sampler: RandomSampler[T, T], seed: Long)
+private[sparkle] class SampleDataFrame[T](
+  inner: DataFrame[T],
+  sampler: RandomSampler[T, T],
+  seed: Long)
   extends DataFrame[T] {
 
   private[this] val seeds = {
@@ -43,4 +45,6 @@ private[sparkle] class SampleDataFrame[T: ClassTag](inner: DataFrame[T], sampler
   }
 
   override private[sparkle] def env = inner.env
+
+  override private[sparkle] def encoder = inner.encoder
 }

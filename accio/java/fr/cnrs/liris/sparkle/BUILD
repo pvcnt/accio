@@ -19,13 +19,15 @@ scala_library(
   srcs = glob(["*.scala"]),
   deps = [
     "//accio/java/fr/cnrs/liris/sparkle/filesystem",
-    "//accio/java/fr/cnrs/liris/sparkle/io",
-    "//accio/java/fr/cnrs/liris/sparkle/io/csv",
+    "//accio/java/fr/cnrs/liris/sparkle/format",
+    "//accio/java/fr/cnrs/liris/sparkle/format/csv",
     "//accio/java/fr/cnrs/liris/util/random",
     "//accio/java/fr/cnrs/liris/util",
     "//3rdparty/jvm/com/twitter:util_slf4j_api",
     "//3rdparty/jvm/com/twitter:util_core",
     "//3rdparty/jvm/com/google/guava",
+    "//3rdparty/jvm/com/github/nscala_time",
+    "//3rdparty/jvm/org/apache/commons:commons_lang3",
   ],
   visibility = ["//visibility:public"],
 )

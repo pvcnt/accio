@@ -21,9 +21,10 @@ package fr.cnrs.liris.sparkle
 import java.util.concurrent.{Executors, TimeUnit}
 
 import com.twitter.util.logging.Logging
+import fr.cnrs.liris.sparkle.format.Encoder
 
 import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor, Future}
 import scala.reflect.ClassTag
 import scala.util.{Failure, Success}
 
@@ -32,12 +33,17 @@ import scala.util.{Failure, Success}
  *
  * @param parallelism Parallelism level (i.e., number of cores to use).
  */
-class SparkleEnv(parallelism: Int) extends Logging {
+final class SparkleEnv(parallelism: Int) extends Logging {
   require(parallelism > 0, s"Parallelism level must be > 0 (got $parallelism)")
-  logger.info(s"Initializing Sparkle to utilize $parallelism cores")
-
-  private[this] val executor = if (1 == parallelism) Executors.newSingleThreadExecutor else Executors.newWorkStealingPool(parallelism)
-  private[this] implicit val ec = ExecutionContext.fromExecutor(executor)
+  private[this] val executor = {
+    if (1 == parallelism) {
+      Executors.newSingleThreadExecutor
+    } else {
+      Executors.newWorkStealingPool(parallelism)
+    }
+  }
+  private[this] implicit val ec: ExecutionContextExecutor = ExecutionContext.fromExecutor(executor)
+  logger.info(s"Initialized Sparkle to use $parallelism cores")
 
   /**
    * Create a new dataframe from an in-memory collection.
@@ -46,7 +52,7 @@ class SparkleEnv(parallelism: Int) extends Logging {
    * @param rest  Other elements.
    * @tparam T Elements' type.
    */
-  def parallelize[T: ClassTag](first: T, rest: T*): DataFrame[T] = parallelize(first +: rest)
+  def parallelize[T: Encoder](first: T, rest: T*): DataFrame[T] = parallelize(first +: rest)
 
   /**
    * Create a new dataframe from an in-memory collection.
@@ -54,20 +60,14 @@ class SparkleEnv(parallelism: Int) extends Logging {
    * @param data List of keys and items.
    * @tparam T Elements' type.
    */
-  def parallelize[T: ClassTag](data: Iterable[T]): DataFrame[T] = {
+  def parallelize[T: Encoder](data: Iterable[T]): DataFrame[T] = {
     val numPartitions = data.size / parallelism
-    new MemoryDataFrame(data.toSeq, numPartitions, this)
+    new MemoryDataFrame(data.toSeq, numPartitions, this, implicitly[Encoder[T]])
   }
 
-  def emptyDataFrame[T: ClassTag]: DataFrame[T] = new EmptyDataFrame(this)
+  def emptyDataFrame[T: Encoder]: DataFrame[T] = new EmptyDataFrame(this, implicitly[Encoder[T]])
 
-  /**
-   * Create a new dataframe from a data source.
-   *
-   * @param source Data source.
-   * @tparam T Elements' type.
-   */
-  def read[T: ClassTag](source: DataSource[T]): DataFrame[T] = new SourceDataFrame(source, this)
+  def read[T: Encoder]: DataFrameReader[T] = new DataFrameReader(this, implicitly[Encoder[T]])
 
   /**
    * Clean and stop this environment. It will not be usable after. This method is blocking.

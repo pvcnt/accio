@@ -16,19 +16,19 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.sparkle.io.csv
+package fr.cnrs.liris.sparkle.format.csv
 
 import java.io.InputStream
 
 import com.univocity.parsers.common.processor.RowListProcessor
-import com.univocity.parsers.csv.{CsvParser, CsvParserSettings}
-import fr.cnrs.liris.sparkle.io._
+import com.univocity.parsers.csv.CsvParser
+import fr.cnrs.liris.sparkle.format._
 import org.joda.time.Instant
 
 import scala.collection.JavaConverters._
 import scala.util.control.NonFatal
 
-private[csv] class CsvRowReader(structType: StructType) extends RowReader {
+private[csv] class CsvRowReader(structType: StructType, options: CsvOptions) extends RowReader {
   private[this] type ValueConverter = String => Any
   private[this] val converters = {
     structType.fields.map { case (_, dataType) => createConverter(dataType) }.toArray
@@ -36,13 +36,9 @@ private[csv] class CsvRowReader(structType: StructType) extends RowReader {
 
   override def read(is: InputStream): Iterable[InternalRow] = {
     val processor = new RowListProcessor
-    val settings = new CsvParserSettings
+    val settings = options.asParserSettings
     settings.setProcessor(processor)
-    settings.getFormat.setDelimiter(',')
-    settings.getFormat.setLineSeparator("\n")
-    settings.setHeaderExtractionEnabled(true)
     settings.selectFields(structType.fields.map(_._1): _*)
-
     val parser = new CsvParser(settings)
     parser.parse(is)
 
@@ -72,28 +68,28 @@ private[csv] class CsvRowReader(structType: StructType) extends RowReader {
     dataType match {
       case DataType.Int32 => (str: String) =>
         str match {
-          case "" => 0
+          case null => 0
           case _ => str.toInt
         }
       case DataType.Int64 => (str: String) =>
         str match {
-          case "" => 0L
+          case null => 0L
           case _ => str.toLong
         }
       case DataType.Float32 => (str: String) =>
         str match {
-          case "" => 0f
-          case "NaN" => Float.NaN
-          case "-inf" | "-Inf" => Float.NegativeInfinity
-          case "+inf" | "+Inf" => Float.PositiveInfinity
+          case null => 0f
+          case options.nanValue => Float.NaN
+          case options.negativeInf => Float.NegativeInfinity
+          case options.positiveInf => Float.PositiveInfinity
           case _ => str.toFloat
         }
       case DataType.Float64 => (str: String) =>
         str match {
-          case "" => 0d
-          case "NaN" => Double.NaN
-          case "-inf" | "-Inf" => Double.NegativeInfinity
-          case "+inf" | "+Inf" => Double.PositiveInfinity
+          case null => 0d
+          case options.nanValue => Double.NaN
+          case options.negativeInf => Double.NegativeInfinity
+          case options.positiveInf => Double.PositiveInfinity
           case _ => str.toDouble
         }
       case DataType.String => identity

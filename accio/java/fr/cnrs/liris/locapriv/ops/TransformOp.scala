@@ -20,12 +20,11 @@ package fr.cnrs.liris.locapriv.ops
 
 import fr.cnrs.liris.accio.sdk.{Arg, OpContext, RemoteFile, ScalaOperator}
 import fr.cnrs.liris.locapriv.domain.Event
+import fr.cnrs.liris.sparkle.format.Encoder
 
-import scala.reflect.ClassTag
-import scala.reflect.runtime.universe.TypeTag
 import scala.util.Random
 
-private[ops] abstract class TransformOp[T: TypeTag: ClassTag]
+private[ops] abstract class TransformOp[T: Encoder]
   extends ScalaOperator[TransformOp.Out]
     with SparkleOperator {
 

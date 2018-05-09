@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.sparkle.io
+package fr.cnrs.liris.sparkle.format
 
 /**
  * Exception thrown when a parser meets a bad record and can't parse it.

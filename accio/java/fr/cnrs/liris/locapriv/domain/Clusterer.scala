@@ -33,14 +33,6 @@ trait Clusterer extends Serializable {
    * @return List of clusters.
    */
   def cluster(events: Seq[Event]): Seq[Cluster]
-
-  /**
-   * Perform the clustering of a mobility trace.
-   *
-   * @param trace Mobility trace.
-   * @return List of clusters.
-   */
-  def cluster(trace: Trace): Seq[Cluster] = cluster(trace.events)
 }
 
 trait PoisClusterer extends Clusterer {

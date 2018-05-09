@@ -16,11 +16,26 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.sparkle
+package fr.cnrs.liris.sparkle.format
 
-import fr.cnrs.liris.sparkle.io.DataFormat
-import fr.cnrs.liris.sparkle.io.csv.CsvDataFormat
+case class StructType(fields: Seq[(String, DataType)], wrapper: Boolean)
 
-object DataFormats {
-  val Csv: DataFormat = CsvDataFormat
+sealed trait DataType
+
+object DataType {
+
+  case object Int32 extends DataType
+
+  case object Int64 extends DataType
+
+  case object Float32 extends DataType
+
+  case object Float64 extends DataType
+
+  case object String extends DataType
+
+  case object Bool extends DataType
+
+  case object Time extends DataType
+
 }

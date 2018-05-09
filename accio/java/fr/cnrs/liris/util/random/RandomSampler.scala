@@ -20,8 +20,6 @@ package fr.cnrs.liris.util.random
 
 import java.util.Random
 
-import scala.reflect.ClassTag
-
 /**
  * A pseudorandom sampler. It is possible to change the sampled item type. For example, we might
  * want to add weights for stratified sampling or importance sampling. Should only use
@@ -30,7 +28,7 @@ import scala.reflect.ClassTag
  * @tparam T item type
  * @tparam U sampled item type
  */
-trait RandomSampler[T, U] extends Pseudorandom with Cloneable with Serializable {
+trait RandomSampler[T, U] extends Pseudorandom with Cloneable {
   /**
    * take a random sample
    */
@@ -69,7 +67,7 @@ object RandomSampler {
  * @param fraction the sampling fraction, aka Bernoulli sampling probability
  * @tparam T item type
  */
-class BernoulliSampler[T: ClassTag](fraction: Double) extends RandomSampler[T, T] {
+class BernoulliSampler[T](fraction: Double) extends RandomSampler[T, T] {
   // Epsilon slop to avoid failure from floating point jitter.
   require(
     fraction >= (0.0 - RandomSampler.roundingEpsilon) && fraction <= (1.0 + RandomSampler.roundingEpsilon),

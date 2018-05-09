@@ -16,12 +16,16 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.sparkle.io
+package fr.cnrs.liris.sparkle.format.csv
 
-case class InternalRow(fields: Array[Any]) extends AnyVal {
-  def apply(idx: Int): Any = fields(idx)
-}
+import fr.cnrs.liris.sparkle.format.{DataFormat, RowReader, RowWriter, StructType}
 
-object InternalRow {
-  val empty = new InternalRow(Array.empty)
+object CsvDataFormat extends DataFormat {
+  override def readerFor(structType: StructType, options: Map[String, String]): RowReader = {
+    new CsvRowReader(structType, CsvOptions.extract(options))
+  }
+
+  override def writerFor(structType: StructType, options: Map[String, String]): RowWriter = {
+    new CsvRowWriter(structType, CsvOptions.extract(options))
+  }
 }

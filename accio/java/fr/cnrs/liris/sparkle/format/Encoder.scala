@@ -16,12 +16,31 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.sparkle.io
+package fr.cnrs.liris.sparkle.format
+
+import org.joda.time.Instant
+
+import scala.reflect.ClassTag
+import scala.reflect.runtime.universe.TypeTag
 
 trait Encoder[T] {
   def structType: StructType
 
+  def classTag: ClassTag[T]
+
   def serialize(obj: T): InternalRow
 
   def deserialize(row: InternalRow): T
+}
+
+object Encoder {
+  implicit val Int32Encoder: Encoder[Int] = RowEncoder[Int]
+  implicit val Int64Encoder: Encoder[Long] = RowEncoder[Long]
+  implicit val Float32Encoder: Encoder[Float] = RowEncoder[Float]
+  implicit val Float64Encoder: Encoder[Double] = RowEncoder[Double]
+  implicit val StringEncoder: Encoder[String] = RowEncoder[String]
+  implicit val BoolEncoder: Encoder[Boolean] = RowEncoder[Boolean]
+  implicit val TimeEncoder: Encoder[Instant] = RowEncoder[Instant]
+
+  implicit def structEncoder[T <: Product : TypeTag]: Encoder[T] = RowEncoder[T]
 }

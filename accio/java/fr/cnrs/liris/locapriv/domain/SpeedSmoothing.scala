@@ -65,9 +65,9 @@ object SpeedSmoothing {
           // of epsilon.
           val ratio = alpha.meters / d.meters
           val newPoint = prev.get.point.interpolate(event.point, ratio)
-          sampled += event.copy(point = newPoint)
+          sampled += event.withPoint(newPoint)
 
-          prev = Some(event.copy(point = newPoint))
+          prev = Some(event.withPoint(newPoint))
           d = event.point.distance(prev.get.point)
         }
       } else {

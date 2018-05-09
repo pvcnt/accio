@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.sparkle.io.csv
+package fr.cnrs.liris.sparkle.format.csv
 
 import com.univocity.parsers.csv.{CsvParserSettings, CsvWriterSettings, UnescapedQuoteHandling}
 
@@ -36,6 +36,7 @@ case class CsvOptions(
     format.setDelimiter(delimiter)
     format.setQuote(quote)
     format.setQuoteEscape(escape)
+    format.setLineSeparator("\n")
     //charToEscapeQuoteEscaping.foreach(format.setCharToEscapeQuoteEscaping)
     //format.setComment(comment)
     //writerSettings.setIgnoreLeadingWhitespaces(ignoreLeadingWhiteSpaceFlagInWrite)
@@ -54,6 +55,8 @@ case class CsvOptions(
     format.setDelimiter(delimiter)
     format.setQuote(quote)
     format.setQuoteEscape(escape)
+    format.setLineSeparator("\n")
+    settings.setHeaderExtractionEnabled(true)
     //charToEscapeQuoteEscaping.foreach(format.setCharToEscapeQuoteEscaping)
     //settings.setIgnoreLeadingWhitespaces(ignoreLeadingWhiteSpaceInRead)
     //settings.setIgnoreTrailingWhitespaces(ignoreTrailingWhiteSpaceInRead)

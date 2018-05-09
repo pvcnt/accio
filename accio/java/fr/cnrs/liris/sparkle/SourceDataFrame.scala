@@ -19,23 +19,34 @@
 package fr.cnrs.liris.sparkle
 
 import com.google.common.base.MoreObjects
-
-import scala.reflect.ClassTag
+import fr.cnrs.liris.sparkle.filesystem.{Filesystem, PosixFilesystem}
+import fr.cnrs.liris.sparkle.format.{DataFormat, Encoder}
 
 /**
  * A dataframe loading its data on the fly using a data source.
  *
- * @param source Data source.
  * @tparam T Elements' type.
  */
-private[sparkle] class SourceDataFrame[T: ClassTag](
-  source: DataSource[T],
-  private[sparkle] val env: SparkleEnv)
+private[sparkle] class SourceDataFrame[T](
+  uri: String,
+  filesystem: Filesystem,
+  format: DataFormat,
+  options: Map[String, String],
+  private[sparkle] val env: SparkleEnv,
+  private[sparkle] val encoder: Encoder[T])
   extends DataFrame[T] {
 
-  override lazy val keys: Seq[String] = source.keys.sorted
+  override val keys: Seq[String] = filesystem.list(uri).toSeq
 
-  override def toString: String = MoreObjects.toStringHelper(this).add("source", source).toString
+  override private[sparkle] def load(key: String) = {
+    val is = PosixFilesystem.createInputStream(key)
+    try {
+      val reader = format.readerFor(encoder.structType, options)
+      reader.read(is).map(encoder.deserialize).toSeq
+    } finally {
+      is.close()
+    }
+  }
 
-  override private[sparkle] def load(key: String): Seq[T] = source.read(key)
+  override def toString: String = MoreObjects.toStringHelper(this).add("format", format).toString
 }

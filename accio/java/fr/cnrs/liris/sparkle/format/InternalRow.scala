@@ -16,24 +16,12 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.sparkle
+package fr.cnrs.liris.sparkle.format
 
-/**
- * A source is responsible for reading elements. Each element is identified by a unique key.
- *
- * @tparam T Type of elements being read.
- */
-trait DataSource[T] {
-  /**
-   * Return the list of the keys of elements available in this data source. Each key should be present only once,
-   * but the list should be ordered in a deterministic order.
-   */
-  def keys: Seq[String]
+case class InternalRow(fields: Array[Any]) extends AnyVal {
+  def apply(idx: Int): Any = fields(idx)
+}
 
-  /**
-   * Read the elements associated with a given key.
-   *
-   * @param key Key.
-   */
-  def read(key: String): Seq[T]
+object InternalRow {
+  val empty = new InternalRow(Array.empty)
 }

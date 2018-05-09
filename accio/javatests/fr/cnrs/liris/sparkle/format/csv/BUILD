@@ -18,8 +18,8 @@ scala_test(
   name = "csv",
   srcs = glob(["*.scala"]),
   deps = [
-    "//accio/java/fr/cnrs/liris/sparkle/io/csv",
-    "//accio/java/fr/cnrs/liris/sparkle/io",
+    "//accio/java/fr/cnrs/liris/sparkle/csv",
+    "//accio/java/fr/cnrs/liris/sparkle",
     "//accio/javatests/fr/cnrs/liris/testing",
     "//3rdparty/jvm/com/github/nscala_time",
   ],

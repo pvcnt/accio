@@ -16,14 +16,14 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.sparkle.io
+package fr.cnrs.liris.sparkle.format
 
 import java.io.{InputStream, OutputStream}
 
 trait DataFormat {
-  def readerFor(structType: StructType): RowReader
+  def readerFor(structType: StructType, options: Map[String, String] = Map.empty): RowReader
 
-  def writerFor(structType: StructType): RowWriter
+  def writerFor(structType: StructType, options: Map[String, String] = Map.empty): RowWriter
 }
 
 trait RowReader {

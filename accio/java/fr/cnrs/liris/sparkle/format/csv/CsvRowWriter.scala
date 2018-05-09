@@ -16,27 +16,25 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.sparkle.io.csv
+package fr.cnrs.liris.sparkle.format.csv
 
 import java.io.OutputStream
 
-import com.univocity.parsers.csv.{CsvWriter, CsvWriterSettings}
-import fr.cnrs.liris.sparkle.io.{DataType, InternalRow, RowWriter, StructType}
+import com.univocity.parsers.csv.CsvWriter
+import fr.cnrs.liris.sparkle.format.{DataType, InternalRow, RowWriter, StructType}
 import org.joda.time.Instant
 
-private[csv] class CsvRowWriter(structType: StructType) extends RowWriter {
+private[csv] class CsvRowWriter(structType: StructType, options: CsvOptions) extends RowWriter {
   private[this] type ValueConverter = Any => String
   private[this] val converters = {
     structType.fields.map { case (_, dataType) => createConverter(dataType) }.toArray
   }
 
   override def write(rows: Iterable[InternalRow], os: OutputStream): Unit = {
-    val settings = new CsvWriterSettings
-    settings.getFormat.setDelimiter(',')
-    settings.getFormat.setLineSeparator("\n")
-
+    val settings = options.asWriterSettings
     val writer = new CsvWriter(os, settings)
     writer.writeHeaders(structType.fields.map(_._1): _*)
+
     rows.foreach { row =>
       val values = row.fields.zipWithIndex.map { case (value, idx) => converters(idx).apply(value) }
       writer.writeRow(values)
@@ -48,6 +46,20 @@ private[csv] class CsvRowWriter(structType: StructType) extends RowWriter {
     dataType match {
       case DataType.Time => (value: Any) =>
         value.asInstanceOf[Instant].getMillis.toString
+      case DataType.Float32 => (value: Any) =>
+        value.asInstanceOf[Float] match {
+          case Float.NaN => options.nanValue
+          case Float.NegativeInfinity => options.negativeInf
+          case Float.PositiveInfinity => options.positiveInf
+          case f => f.toString
+        }
+      case DataType.Float64 => (value: Any) =>
+        value.asInstanceOf[Double] match {
+          case Double.NaN => options.nanValue
+          case Double.NegativeInfinity => options.negativeInf
+          case Double.PositiveInfinity => options.positiveInf
+          case d => d.toString
+        }
       case _ => (value: Any) => value.toString
     }
   }

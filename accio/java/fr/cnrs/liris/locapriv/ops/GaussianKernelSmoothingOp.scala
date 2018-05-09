@@ -52,7 +52,7 @@ case class GaussianKernelSmoothingOp(
     }
     x /= ks
     y /= ks
-    event.copy(point = Point(x, y))
+    event.withPoint(Point(x, y))
   }
 
   private def gaussianKernel(t1: Long, t2: Long, omega: Duration): Double = {

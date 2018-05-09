@@ -18,18 +18,14 @@
 
 package fr.cnrs.liris.sparkle
 
-/**
- * A sink is responsible for persisting elements. If they need to be read back later, you need to implement a
- * matching [[DataSource]].
- *
- * @tparam T Type of elements being written.
- */
-trait DataSink[T] {
-  /**
-   * Persist some elements associated with the same key.
-   *
-   * @param key Key elements are associated to.
-   * @param elements Elements to write.
-   */
-  def write(key: String, elements: Seq[T]): Unit
+private[sparkle] class PartitionedDataFrame[T](inner: DataFrame[T], numPartitions: Int)
+  extends DataFrame[T] {
+
+  override def keys: Seq[String] = ???
+
+  override private[sparkle] def load(key: String) = ???
+
+  override private[sparkle] def env = inner.env
+
+  override private[sparkle] def encoder = inner.encoder
 }

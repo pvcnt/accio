@@ -18,6 +18,8 @@
 
 package fr.cnrs.liris.sparkle.io
 
+import fr.cnrs.liris.sparkle.format.{DataType, InternalRow, RowEncoder}
+import fr.cnrs.liris.sparkle.{DataType, RowEncoder}
 import fr.cnrs.liris.testing.UnitSpec
 import org.joda.time.Instant
 import org.scalactic.Equality

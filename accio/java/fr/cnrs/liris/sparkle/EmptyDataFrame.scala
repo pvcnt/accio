@@ -19,16 +19,17 @@
 package fr.cnrs.liris.sparkle
 
 import com.google.common.base.MoreObjects
-
-import scala.reflect.ClassTag
+import fr.cnrs.liris.sparkle.format.Encoder
 
 /**
  * A data frame containing no elements.
  *
- * @param env           Sparkle environment.
+ * @param env Sparkle environment.
  * @tparam T Elements' type.
  */
-private[sparkle] class EmptyDataFrame[T: ClassTag](private[sparkle] val env: SparkleEnv)
+private[sparkle] class EmptyDataFrame[T](
+  private[sparkle] val env: SparkleEnv,
+  private[sparkle] val encoder: Encoder[T])
   extends DataFrame[T] {
 
   override lazy val keys: Seq[String] = Seq.empty

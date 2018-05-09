@@ -18,7 +18,7 @@ scala_library(
   name = "csv",
   srcs = glob(["*.scala"]),
   deps = [
-    "//accio/java/fr/cnrs/liris/sparkle/io",
+    "//accio/java/fr/cnrs/liris/sparkle/format",
     "//3rdparty/jvm/com/univocity:univocity_parsers",
     "//3rdparty/jvm/com/github/nscala_time",
   ],

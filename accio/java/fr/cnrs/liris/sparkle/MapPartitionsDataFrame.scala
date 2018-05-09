@@ -19,12 +19,12 @@
 package fr.cnrs.liris.sparkle
 
 import com.google.common.base.MoreObjects
+import fr.cnrs.liris.sparkle.format.Encoder
 
-import scala.reflect.ClassTag
-
-private[sparkle] class MapPartitionsDataFrame[T, U: ClassTag](
+private[sparkle] class MapPartitionsDataFrame[T, U](
   inner: DataFrame[T],
-  fn: (String, Seq[T]) => Seq[U])
+  fn: (String, Seq[T]) => Seq[U],
+  private[sparkle] val encoder: Encoder[U])
   extends DataFrame[U] {
 
   override def keys: Seq[String] = inner.keys

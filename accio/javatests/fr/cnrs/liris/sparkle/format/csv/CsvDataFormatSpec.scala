@@ -16,12 +16,14 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.sparkle.io.csv
+package fr.cnrs.liris.sparkle.format.csv
 
 import java.io.{FileInputStream, FileOutputStream}
 import java.nio.file.{Files, Paths}
 
-import fr.cnrs.liris.sparkle.io.{DataType, InternalRow, StructType}
+import fr.cnrs.liris.sparkle.format.{DataType, InternalRow, StructType}
+import fr.cnrs.liris.sparkle.{DataType, StructType}
+import fr.cnrs.liris.sparkle.io.{DataType, StructType}
 import fr.cnrs.liris.testing.UnitSpec
 import org.joda.time.Instant
 import org.scalactic.Equality
@@ -43,7 +45,7 @@ class CsvDataFormatSpec extends UnitSpec {
   }
 
   it should "read a CSV file" in {
-    val is = new FileInputStream("accio/javatests/fr/cnrs/liris/sparkle/io/csv/foo.csv")
+    val is = new FileInputStream("fr/cnrs/liris/sparkle/csv/foo.csv")
     val structType = StructType(Seq(
       "s" -> DataType.String,
       "b" -> DataType.Bool,

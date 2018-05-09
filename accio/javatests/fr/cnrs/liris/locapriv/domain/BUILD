@@ -19,7 +19,6 @@ scala_test(
   srcs = glob(["*.scala"]),
   deps = [
     "//accio/java/fr/cnrs/liris/locapriv/domain",
-    "//accio/java/fr/cnrs/liris/locapriv/io",
     "//accio/java/fr/cnrs/liris/util/geo",
     "//accio/javatests/fr/cnrs/liris/locapriv/testing",
     "//accio/javatests/fr/cnrs/liris/testing",

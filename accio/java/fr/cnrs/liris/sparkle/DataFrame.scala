@@ -19,17 +19,26 @@
 package fr.cnrs.liris.sparkle
 
 import com.twitter.util.logging.Logging
+import fr.cnrs.liris.sparkle.format.Encoder
 import fr.cnrs.liris.util.random._
 
-import scala.reflect._
+import scala.reflect.ClassTag
 import scala.util.Random
 
-abstract class DataFrame[T: ClassTag] extends Logging {
+trait DataFrame[T] extends Logging {
   def keys: Seq[String]
 
   private[sparkle] def load(key: String): Seq[T]
 
   private[sparkle] def env: SparkleEnv
+
+  private[sparkle] def encoder: Encoder[T]
+
+  private[this] implicit def classTag: ClassTag[T] = encoder.classTag
+
+  def repartition(numPartitions: Int): DataFrame[T] = {
+    new PartitionedDataFrame(this, numPartitions)
+  }
 
   /**
    * Return a sampled subset of this dataframe.
@@ -43,23 +52,23 @@ abstract class DataFrame[T: ClassTag] extends Logging {
   }
 
   def filter(fn: T => Boolean): DataFrame[T] = {
-    new MapPartitionsDataFrame[T, T](this, (_, seq) => seq.filter(fn))
+    new MapPartitionsDataFrame[T, T](this, (_, seq) => seq.filter(fn), encoder)
   }
 
-  def mapPartitions[U: ClassTag](fn: Seq[T] => Seq[U]): DataFrame[U] = {
-    new MapPartitionsDataFrame[T, U](this, (_, seq) => fn(seq))
+  def mapPartitions[U: Encoder](fn: Seq[T] => Seq[U]): DataFrame[U] = {
+    new MapPartitionsDataFrame[T, U](this, (_, seq) => fn(seq), implicitly[Encoder[U]])
   }
 
-  def mapPartitionsWithKey[U: ClassTag](fn: (String, Seq[T]) => Seq[U]): DataFrame[U] = {
-    new MapPartitionsDataFrame(this, fn)
+  def mapPartitionsWithKey[U: Encoder](fn: (String, Seq[T]) => Seq[U]): DataFrame[U] = {
+    new MapPartitionsDataFrame(this, fn, implicitly[Encoder[U]])
   }
 
-  def map[U: ClassTag](fn: T => U): DataFrame[U] = {
-    new MapPartitionsDataFrame[T, U](this, (_, seq) => seq.map(fn))
+  def map[U: Encoder](fn: T => U): DataFrame[U] = {
+    new MapPartitionsDataFrame[T, U](this, (_, seq) => seq.map(fn), implicitly[Encoder[U]])
   }
 
-  def flatMap[U: ClassTag](fn: T => Iterable[U]): DataFrame[U] = {
-    new MapPartitionsDataFrame[T, U](this, (_, seq) => seq.flatMap(fn))
+  def flatMap[U: Encoder](fn: T => Iterable[U]): DataFrame[U] = {
+    new MapPartitionsDataFrame[T, U](this, (_, seq) => seq.flatMap(fn), implicitly[Encoder[U]])
   }
 
   /**
@@ -68,11 +77,12 @@ abstract class DataFrame[T: ClassTag] extends Logging {
    * partitions* and the *same number of elements in each partition* (e.g. one was made through
    * a map on the other).
    */
-  def zip[U: ClassTag](other: DataFrame[U]): DataFrame[(T, U)] = {
+  // We do not define encoders for tuples, so not possible for now (but easily doable)
+  /*def zip[U: Encoder](other: DataFrame[U]): DataFrame[(T, U)] = {
     zipPartitions[U, (T, U)](other) { (thisSeq: Seq[T], otherSeq: Seq[U]) =>
       thisSeq.zip(otherSeq)
     }
-  }
+  }*/
 
   /**
    * Zip this RDD's partitions with one (or more) RDD(s) and return a new RDD by
@@ -80,8 +90,8 @@ abstract class DataFrame[T: ClassTag] extends Logging {
    * *same number of partitions*, but does *not* require them to have the same number
    * of elements in each partition.
    */
-  def zipPartitions[U: ClassTag, V: ClassTag](other: DataFrame[U])(fn: (Seq[T], Seq[U]) => Seq[V]): DataFrame[V] = {
-    new ZipPartitionsDataFrame(this, other, fn)
+  def zipPartitions[U, V: Encoder](other: DataFrame[U])(fn: (Seq[T], Seq[U]) => Seq[V]): DataFrame[V] = {
+    new ZipPartitionsDataFrame(this, other, fn, implicitly[Encoder[V]])
   }
 
   def count(): Long = {
@@ -161,9 +171,11 @@ abstract class DataFrame[T: ClassTag] extends Logging {
     env.submit[T, Unit](this, keys, (_, seq) => fn(seq))
   }
 
-  def write(sink: DataSink[T]): Unit = {
-    env.submit[T, Unit](this, keys, (key, seq) => sink.write(key, seq))
+  def foreachPartitionWithKey(fn: (String, Seq[T]) => Unit): Unit = {
+    env.submit[T, Unit](this, keys, fn)
   }
+
+  def write: DataFrameWriter[T] = new DataFrameWriter(this)
 }
 
 object DataFrame {

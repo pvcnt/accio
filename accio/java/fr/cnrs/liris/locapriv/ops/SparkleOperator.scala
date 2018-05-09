@@ -19,9 +19,8 @@
 package fr.cnrs.liris.locapriv.ops
 
 import fr.cnrs.liris.accio.sdk.{OpContext, RemoteFile, ScalaOperator}
+import fr.cnrs.liris.sparkle.format.Encoder
 import fr.cnrs.liris.sparkle.{DataFrame, SparkleEnv}
-
-import scala.reflect.runtime.universe.TypeTag
 
 private[ops] trait SparkleOperator {
   this: ScalaOperator[_] =>
@@ -30,7 +29,13 @@ private[ops] trait SparkleOperator {
   // It is a poor-man's way to isolate execution in terms of CPU usage.
   protected val env = new SparkleEnv(math.max(1, com.twitter.jvm.numProcs().round.toInt))
 
-  protected final def read[T: TypeTag](dataset: RemoteFile): DataFrame[T] = ???
+  protected final def read[T: Encoder](dataset: RemoteFile): DataFrame[T] = {
+    env.read.csv(dataset.uri)
+  }
 
-  protected final def write[T: TypeTag](frame: DataFrame[T], idx: Int, ctx: OpContext): RemoteFile = ???
+  protected final def write[T](df: DataFrame[T], idx: Int, ctx: OpContext): RemoteFile = {
+    val uri = ctx.workDir.resolve(idx.toString).toString
+    df.write.csv(uri)
+    RemoteFile(uri)
+  }
 }

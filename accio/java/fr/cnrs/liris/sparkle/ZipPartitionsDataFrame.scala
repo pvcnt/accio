@@ -19,13 +19,13 @@
 package fr.cnrs.liris.sparkle
 
 import com.google.common.base.MoreObjects
+import fr.cnrs.liris.sparkle.format.Encoder
 
-import scala.reflect.ClassTag
-
-private[sparkle] class ZipPartitionsDataFrame[T: ClassTag, U: ClassTag, V: ClassTag](
+private[sparkle] class ZipPartitionsDataFrame[T, U, V](
   first: DataFrame[T],
   other: DataFrame[U],
-  fn: (Seq[T], Seq[U]) => Seq[V])
+  fn: (Seq[T], Seq[U]) => Seq[V],
+  private[sparkle] val encoder: Encoder[V])
   extends DataFrame[V] {
 
   override def keys: Seq[String] = first.keys //TODO?.intersect(other.keys)

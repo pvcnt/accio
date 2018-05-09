@@ -22,4 +22,8 @@ class NumericDataFrameOps[T: Numeric](inner: DataFrame[T]) {
   private[this] val numeric = implicitly[Numeric[T]]
 
   def sum: T = inner.reduce(numeric.plus)
+
+  def min: T = inner.reduce(numeric.min)
+
+  def max: T = inner.reduce(numeric.max)
 }
