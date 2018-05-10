@@ -49,9 +49,11 @@ class DataCompletenessOpSpec extends UnitSpec with WithTraceGenerator with Scala
   }
 
   private def execute(train: Seq[Event], test: Seq[Event]) = {
-    val trainDs = writeTraces(train: _*)
-    val testDs = writeTraces(test: _*)
-    val res = DataCompletenessOp(trainDs, testDs).execute(ctx)
-    env.read[DataCompletenessOp.Value].csv(res.metrics.uri).collect().toSeq
+    com.twitter.jvm.numProcs.let(1) {
+      val trainDs = writeTraces(train: _*)
+      val testDs = writeTraces(test: _*)
+      val res = DataCompletenessOp(trainDs, testDs).execute(ctx)
+      env.read[DataCompletenessOp.Value].csv(res.metrics.uri).collect().toSeq
+    }
   }
 }

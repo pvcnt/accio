@@ -47,8 +47,10 @@ class CollapseTemporalGapsOpSpec extends UnitSpec with ScalaOperatorSpec with Wi
   }
 
   private def execute(startAt: Instant, traces: Seq[Event]) = {
-    val ds = writeTraces(traces: _*)
-    val res = CollapseTemporalGapsOp(startAt, ds).execute(ctx)
-    env.read[Event].csv(res.data.uri).collect().toSeq
+    com.twitter.jvm.numProcs.let(1) {
+      val ds = writeTraces(traces: _*)
+      val res = CollapseTemporalGapsOp(startAt, ds).execute(ctx)
+      env.read[Event].csv(res.data.uri).collect().toSeq
+    }
   }
 }

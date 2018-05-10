@@ -22,7 +22,7 @@ import java.io.ByteArrayInputStream
 
 import com.google.common.io.Resources
 import fr.cnrs.liris.locapriv.domain.Event
-import fr.cnrs.liris.sparkle.format.RowEncoder
+import fr.cnrs.liris.sparkle.RowEncoder
 import fr.cnrs.liris.sparkle.format.csv.CsvDataFormat
 
 trait WithCabspotting {

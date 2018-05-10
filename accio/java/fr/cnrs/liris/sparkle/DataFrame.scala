@@ -19,7 +19,6 @@
 package fr.cnrs.liris.sparkle
 
 import com.twitter.util.logging.Logging
-import fr.cnrs.liris.sparkle.format.Encoder
 import fr.cnrs.liris.util.random._
 
 import scala.reflect.ClassTag

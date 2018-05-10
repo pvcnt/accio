@@ -72,7 +72,7 @@ class AreaCoverageOpSpec extends UnitSpec with WithTraceGenerator with ScalaOper
         Event(Me, pts(4).toPoint, now))
       val res = execute(t1, t2, level, None)
       res should have size 1
-      res.head shouldBe Me
+      res.head.id shouldBe Me
       res.head.precision shouldBe 1d / 2
       res.head.recall shouldBe closeTo(2d / 3, eps)
       res.head.fscore shouldBe closeTo(2d * 1 / 2 * 2 / 3 * 1 / (1d / 2 + 2d / 3), eps)
@@ -110,7 +110,7 @@ class AreaCoverageOpSpec extends UnitSpec with WithTraceGenerator with ScalaOper
         Event(Me, pts(4).toPoint, now))
       val res = execute(t1, t2, level, Some(width))
       res should have size 1
-      res.head shouldBe Me
+      res.head.id shouldBe Me
       res.head.precision shouldBe 2d / 8
       res.head.recall shouldBe closeTo(2d / 3, eps)
       res.head.fscore shouldBe closeTo(2d * 2 / 8 * 2 / 3 * 1 / (2d / 8 + 2d / 3), eps)
@@ -118,9 +118,11 @@ class AreaCoverageOpSpec extends UnitSpec with WithTraceGenerator with ScalaOper
   }
 
   private def execute(train: Seq[Event], test: Seq[Event], level: Int, bucketSize: Option[Duration]) = {
-    val trainDs = writeTraces(train: _*)
-    val testDs = writeTraces(test: _*)
-    val res = AreaCoverageOp(train = trainDs, test = testDs, level = level, width = bucketSize).execute(ctx)
-    env.read[MetricUtils.FscoreValue].csv(res.metrics.uri).collect().toSeq
+    com.twitter.jvm.numProcs.let(1) {
+      val trainDs = writeTraces(train: _*)
+      val testDs = writeTraces(test: _*)
+      val res = AreaCoverageOp(train = trainDs, test = testDs, level = level, width = bucketSize).execute(ctx)
+      env.read[MetricUtils.FscoreValue].csv(res.metrics.uri).collect().toSeq
+    }
   }
 }

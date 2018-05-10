@@ -17,6 +17,7 @@
 scala_library(
   name = "testing",
   deps=[
+    "//accio/java/fr/cnrs/liris/sparkle",
     "//accio/java/fr/cnrs/liris/sparkle/format",
     "//accio/java/fr/cnrs/liris/sparkle/format/csv",
     "//accio/java/fr/cnrs/liris/locapriv/domain",

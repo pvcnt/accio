@@ -21,7 +21,6 @@ package fr.cnrs.liris.sparkle
 import java.util.concurrent.{Executors, TimeUnit}
 
 import com.twitter.util.logging.Logging
-import fr.cnrs.liris.sparkle.format.Encoder
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor, Future}
@@ -61,8 +60,12 @@ final class SparkleEnv(parallelism: Int) extends Logging {
    * @tparam T Elements' type.
    */
   def parallelize[T: Encoder](data: Iterable[T]): DataFrame[T] = {
-    val numPartitions = data.size / parallelism
-    new MemoryDataFrame(data.toSeq, numPartitions, this, implicitly[Encoder[T]])
+    if (data.isEmpty) {
+      emptyDataFrame
+    } else {
+      val numPartitions = data.size / parallelism
+      new MemoryDataFrame(data.toSeq, numPartitions, this, implicitly[Encoder[T]])
+    }
   }
 
   def emptyDataFrame[T: Encoder]: DataFrame[T] = new EmptyDataFrame(this, implicitly[Encoder[T]])

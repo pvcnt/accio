@@ -70,6 +70,7 @@ object Event {
    * @param time     Instant.
    */
   def apply(id: String, location: Location, time: ReadableInstant): Event = {
-    Event(id, location.toPoint, time.toInstant)
+    val latLng = location.toLatLng
+    Event(id, latLng.lat.degrees, latLng.lng.degrees, time.toInstant)
   }
 }

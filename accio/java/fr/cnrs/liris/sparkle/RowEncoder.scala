@@ -16,11 +16,11 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.sparkle.format
+package fr.cnrs.liris.sparkle
 
 import java.lang.reflect.Modifier
 
-import fr.cnrs.liris.sparkle._
+import fr.cnrs.liris.sparkle.format._
 import org.apache.commons.lang3.reflect.ConstructorUtils
 
 import scala.reflect.ClassTag

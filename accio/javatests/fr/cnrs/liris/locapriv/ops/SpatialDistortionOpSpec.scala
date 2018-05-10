@@ -47,6 +47,7 @@ class SpatialDistortionOpSpec extends UnitSpec with WithTraceGenerator with Scal
     }
     val metrics = execute(t1, t2, interpolate = true)
     metrics should have size 1
+    metrics.head.n shouldBe 120
     metrics.head.avg shouldBe (mean(distances) +- eps)
     metrics.head.min shouldBe (min(distances) +- eps)
     metrics.head.max shouldBe (max(distances) +- eps)
@@ -57,7 +58,7 @@ class SpatialDistortionOpSpec extends UnitSpec with WithTraceGenerator with Scal
   it should "handle identical traces" in {
     val t1 = randomTrace(Me, 120)
     val metrics = execute(t1, t1, interpolate = false)
-    metrics should contain theSameElementsAs Seq(MetricUtils.StatsValue(Me, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+    metrics should contain theSameElementsAs Seq(MetricUtils.StatsValue(Me, 120, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
   }
 
   it should "handle temporally shifted traces" in {
@@ -71,7 +72,7 @@ class SpatialDistortionOpSpec extends UnitSpec with WithTraceGenerator with Scal
       }
     }
     val metrics = execute(t1, t2, interpolate = false)
-    metrics should contain theSameElementsAs Seq(MetricUtils.StatsValue(Me, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+    metrics should contain theSameElementsAs Seq(MetricUtils.StatsValue(Me, 120, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
   }
 
   private def execute(train: Seq[Event], test: Seq[Event], interpolate: Boolean) = {

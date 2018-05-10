@@ -31,7 +31,7 @@ import org.scalatest.{BeforeAndAfterEach, FlatSpec}
 private[ops] trait ScalaOperatorSpec extends BeforeAndAfterEach {
   this: FlatSpec =>
 
-  protected var env: SparkleEnv = null
+  protected var env: SparkleEnv = _
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()

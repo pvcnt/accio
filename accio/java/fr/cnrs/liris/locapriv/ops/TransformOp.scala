@@ -20,7 +20,7 @@ package fr.cnrs.liris.locapriv.ops
 
 import fr.cnrs.liris.accio.sdk.{Arg, OpContext, RemoteFile, ScalaOperator}
 import fr.cnrs.liris.locapriv.domain.Event
-import fr.cnrs.liris.sparkle.format.Encoder
+import fr.cnrs.liris.sparkle.Encoder
 
 import scala.util.Random
 

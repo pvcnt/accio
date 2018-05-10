@@ -31,5 +31,5 @@ scala_test(
     "//3rdparty/jvm/org/scalanlp:breeze",
     "//3rdparty/jvm/com/twitter:util_slf4j_api",
   ],
-  size = "large",
+  size = "small",
 )

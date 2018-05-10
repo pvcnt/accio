@@ -43,9 +43,9 @@ trait WithTraceGenerator {
     } else {
       val events = mutable.ListBuffer.empty[Event]
       var now = Now
-      for (i <- 0 until size) {
+      (0 until size).foreach { _ =>
         events += Event(user, randomLocation(), now)
-        now = now + rate
+        now += rate
       }
       events.toList
     }

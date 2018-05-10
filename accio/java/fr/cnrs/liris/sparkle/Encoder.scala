@@ -16,8 +16,9 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.sparkle.format
+package fr.cnrs.liris.sparkle
 
+import fr.cnrs.liris.sparkle.format.{InternalRow, StructType}
 import org.joda.time.Instant
 
 import scala.reflect.ClassTag

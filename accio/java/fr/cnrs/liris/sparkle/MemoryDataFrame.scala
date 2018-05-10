@@ -19,7 +19,6 @@
 package fr.cnrs.liris.sparkle
 
 import com.google.common.base.MoreObjects
-import fr.cnrs.liris.sparkle.format.Encoder
 
 /**
  * A data frame reading its data from the memory.
@@ -36,7 +35,9 @@ private[sparkle] class MemoryDataFrame[T](
   private[sparkle] val encoder: Encoder[T])
   extends DataFrame[T] {
 
-  override lazy val keys: Seq[String] = Seq.tabulate(math.ceil(elements.size / partitionSize).toInt)(_.toString)
+  override lazy val keys: Seq[String] = {
+    Seq.tabulate(math.ceil(elements.size / partitionSize).toInt)(_.toString)
+  }
 
   override def toString: String = MoreObjects.toStringHelper(this).toString
 

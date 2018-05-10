@@ -19,8 +19,7 @@
 package fr.cnrs.liris.locapriv.ops
 
 import fr.cnrs.liris.accio.sdk.{OpContext, RemoteFile, ScalaOperator}
-import fr.cnrs.liris.sparkle.format.Encoder
-import fr.cnrs.liris.sparkle.{DataFrame, SparkleEnv}
+import fr.cnrs.liris.sparkle.{DataFrame, Encoder, SparkleEnv}
 
 private[ops] trait SparkleOperator {
   this: ScalaOperator[_] =>

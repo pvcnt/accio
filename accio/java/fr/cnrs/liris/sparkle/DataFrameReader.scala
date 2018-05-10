@@ -20,7 +20,7 @@ package fr.cnrs.liris.sparkle
 
 import fr.cnrs.liris.sparkle.filesystem.PosixFilesystem
 import fr.cnrs.liris.sparkle.format.csv.CsvDataFormat
-import fr.cnrs.liris.sparkle.format.{DataFormat, Encoder}
+import fr.cnrs.liris.sparkle.format.DataFormat
 
 import scala.collection.mutable
 

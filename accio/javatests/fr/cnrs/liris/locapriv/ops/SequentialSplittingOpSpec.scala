@@ -29,6 +29,7 @@ class SequentialSplittingOpSpec extends UnitSpec with WithTraceGenerator with Sc
   behavior of "SequentialSplittingOp"
 
   it should "handle an even number of events" in {
+    println("start")
     val trace = randomTrace(Me, 150)
     val (out1, out2) = transform(trace, 50)
     (out1.size + out2.size) shouldBe 150

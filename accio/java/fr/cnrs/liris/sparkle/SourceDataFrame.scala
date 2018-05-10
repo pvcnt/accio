@@ -20,7 +20,7 @@ package fr.cnrs.liris.sparkle
 
 import com.google.common.base.MoreObjects
 import fr.cnrs.liris.sparkle.filesystem.{Filesystem, PosixFilesystem}
-import fr.cnrs.liris.sparkle.format.{DataFormat, Encoder}
+import fr.cnrs.liris.sparkle.format.DataFormat
 
 /**
  * A dataframe loading its data on the fly using a data source.

@@ -60,14 +60,18 @@ class EnforceDurationOpSpec extends UnitSpec with WithTraceGenerator with ScalaO
   }
 
   private def transformMaxDuration(data: Seq[Event], duration: Duration) = {
-    val ds = writeTraces(data: _*)
-    val res = EnforceDurationOp(maxDuration = Some(duration), minDuration = None, data = ds).execute(ctx)
-    env.read[Event].csv(res.data.uri).collect().toSeq
+    com.twitter.jvm.numProcs.let(1) {
+      val ds = writeTraces(data: _*)
+      val res = EnforceDurationOp(maxDuration = Some(duration), minDuration = None, data = ds).execute(ctx)
+      env.read[Event].csv(res.data.uri).collect().toSeq
+    }
   }
 
   private def transformMinDuration(data: Seq[Event], duration: Duration) = {
-    val ds = writeTraces(data: _*)
-    val res = EnforceDurationOp(minDuration = Some(duration), maxDuration = None, data = ds).execute(ctx)
-    env.read[Event].csv(res.data.uri).collect().toSeq
+    com.twitter.jvm.numProcs.let(1) {
+      val ds = writeTraces(data: _*)
+      val res = EnforceDurationOp(minDuration = Some(duration), maxDuration = None, data = ds).execute(ctx)
+      env.read[Event].csv(res.data.uri).collect().toSeq
+    }
   }
 }

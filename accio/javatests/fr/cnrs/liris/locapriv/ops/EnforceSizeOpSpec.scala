@@ -58,8 +58,10 @@ class EnforceSizeOpSpec extends UnitSpec with WithTraceGenerator with ScalaOpera
   }
 
   private def transformMaxSize(data: Seq[Event], size: Int) = {
-    val ds = writeTraces(data: _*)
-    val res = EnforceSizeOp(minSize = None, maxSize = Some(size), data = ds).execute(ctx)
-    env.read[Event].csv(res.data.uri).collect().toSeq
+    com.twitter.jvm.numProcs.let(1) {
+      val ds = writeTraces(data: _*)
+      val res = EnforceSizeOp(minSize = None, maxSize = Some(size), data = ds).execute(ctx)
+      env.read[Event].csv(res.data.uri).collect().toSeq
+    }
   }
 }

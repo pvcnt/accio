@@ -19,7 +19,6 @@
 package fr.cnrs.liris.sparkle
 
 import com.google.common.base.MoreObjects
-import fr.cnrs.liris.sparkle.format.Encoder
 
 /**
  * A data frame containing no elements.

@@ -50,8 +50,10 @@ class DurationSplittingOpSpec extends UnitSpec with WithTraceGenerator with Scal
   }
 
   private def transform(data: Seq[Event], duration: Duration) = {
-    val ds = writeTraces(data: _*)
-    val res = DurationSplittingOp(duration = duration, data = ds).execute(ctx)
-    env.read[Event].csv(res.data.uri).collect().toSeq
+    com.twitter.jvm.numProcs.let(1) {
+      val ds = writeTraces(data: _*)
+      val res = DurationSplittingOp(duration = duration, data = ds).execute(ctx)
+      env.read[Event].csv(res.data.uri).collect().toSeq
+    }
   }
 }
