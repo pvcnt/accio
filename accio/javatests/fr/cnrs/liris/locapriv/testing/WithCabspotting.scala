@@ -18,18 +18,20 @@
 
 package fr.cnrs.liris.locapriv.testing
 
+import java.io.ByteArrayInputStream
+
 import com.google.common.io.Resources
-import fr.cnrs.liris.locapriv.io.TraceCodec
-import fr.cnrs.liris.locapriv.domain.Trace
+import fr.cnrs.liris.locapriv.domain.Event
+import fr.cnrs.liris.sparkle.format.RowEncoder
+import fr.cnrs.liris.sparkle.format.csv.CsvDataFormat
 
 trait WithCabspotting {
-  // It doesn't work with a val..
-  private def decoder = new TraceCodec
-
   lazy val abboipTrace = cabspottingTrace("abboip")
 
-  def cabspottingTrace(key: String): Trace = {
+  def cabspottingTrace(key: String): Seq[Event] = {
+    val encoder = RowEncoder[Event]
     val bytes = Resources.toByteArray(Resources.getResource(s"fr/cnrs/liris/locapriv/testing/$key.csv"))
-    decoder.decode(key, bytes).head
+    val reader = CsvDataFormat.readerFor(encoder.structType)
+    reader.read(new ByteArrayInputStream(bytes)).map(encoder.deserialize).toSeq
   }
 }

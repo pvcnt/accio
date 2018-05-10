@@ -20,9 +20,8 @@ package fr.cnrs.liris.locapriv.ops
 
 import java.nio.file.Files
 
-import fr.cnrs.liris.accio.sdk.{RemoteFile, OpContext}
-import fr.cnrs.liris.locapriv.io.{CsvPoiSetCodec, CsvSink, CsvSource, TraceCodec}
-import fr.cnrs.liris.locapriv.domain.{PoiSet, Trace}
+import fr.cnrs.liris.accio.sdk.{OpContext, RemoteFile}
+import fr.cnrs.liris.locapriv.domain.{Event, Poi}
 import fr.cnrs.liris.sparkle.SparkleEnv
 import org.scalatest.{BeforeAndAfterEach, FlatSpec}
 
@@ -52,19 +51,15 @@ private[ops] trait ScalaOperatorSpec extends BeforeAndAfterEach {
     new OpContext(Some(-7590331047132310476L), workDir)
   }
 
-  protected final def writeTraces(data: Trace*): RemoteFile = {
+  protected final def writeTraces(data: Event*): RemoteFile = {
     val uri = Files.createTempDirectory(getClass.getSimpleName + "-").toAbsolutePath.toString
-    env.parallelize(data: _*)(_.id).write(new CsvSink(uri, traceCodec))
+    env.parallelize(data).write.partitionBy(_.id).csv(uri)
     RemoteFile(uri)
   }
 
-  protected final def writePois(data: PoiSet*): RemoteFile = {
+  protected final def writePois(data: Seq[Poi]): RemoteFile = {
     val uri = Files.createTempDirectory(getClass.getSimpleName + "-").toAbsolutePath.toString
-    env.parallelize(data: _*)(_.id).write(new CsvSink(uri, poiSetCodec))
+    env.parallelize(data).write.partitionBy(_.id).csv(uri)
     RemoteFile(uri)
-  }
-
-  protected final def readTraces(ds: RemoteFile): Seq[Trace] = {
-    env.read(new CsvSource(ds.uri, traceCodec)).collect().toSeq
   }
 }

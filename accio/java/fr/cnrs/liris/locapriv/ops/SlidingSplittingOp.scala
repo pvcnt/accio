@@ -40,4 +40,6 @@ private[ops] trait SlidingSplittingOp extends TransformOp[Event] {
     }
     result.toList
   }
+
+  override protected def partitioner: Option[Event => Any] = Some((e: Event) => e.id)
 }

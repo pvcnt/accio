@@ -19,7 +19,7 @@
 package fr.cnrs.liris.locapriv.testing
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.locapriv.domain.{Event, Trace}
+import fr.cnrs.liris.locapriv.domain.Event
 import fr.cnrs.liris.util.geo.{LatLng, Point}
 import org.joda.time.Instant
 
@@ -39,7 +39,7 @@ trait WithTraceGenerator {
 
   protected def randomTrace(user: String, size: Int, rate: => Duration = Duration.standardSeconds(1)): Seq[Event] = {
     if (size <= 0) {
-      Trace.empty(user)
+      Seq.empty
     } else {
       val events = mutable.ListBuffer.empty[Event]
       var now = Now

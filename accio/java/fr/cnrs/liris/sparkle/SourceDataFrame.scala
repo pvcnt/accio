@@ -36,10 +36,18 @@ private[sparkle] class SourceDataFrame[T](
   private[sparkle] val encoder: Encoder[T])
   extends DataFrame[T] {
 
-  override val keys: Seq[String] = filesystem.list(uri).toSeq
+  override val keys: Seq[String] = {
+    val paths = filesystem.list(uri).toSeq
+    if (paths.size == 1 && paths.head == uri) {
+      Seq(".")
+    } else {
+      paths.map(_.drop(uri.length).stripPrefix("/"))
+    }
+  }
 
   override private[sparkle] def load(key: String) = {
-    val is = PosixFilesystem.createInputStream(key)
+    val path = if (key == ".") uri else s"$uri/$key"
+    val is = PosixFilesystem.createInputStream(path)
     try {
       val reader = format.readerFor(encoder.structType, options)
       reader.read(is).map(encoder.deserialize).toSeq

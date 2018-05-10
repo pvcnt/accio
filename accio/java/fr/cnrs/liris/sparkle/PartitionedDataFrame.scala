@@ -25,12 +25,18 @@ private[sparkle] class PartitionedDataFrame[T](inner: DataFrame[T], numPartition
     if (inner.keys.length <= numPartitions) {
       inner.keys
     } else {
-      //TODO
-      ???
+      Seq.tabulate(numPartitions)(_.toString)
     }
   }
 
-  override private[sparkle] def load(key: String) = ???
+  override private[sparkle] def load(key: String): Seq[T] = {
+    val idx = key.toInt
+    val innerKeys = inner.keys
+      .zipWithIndex
+      .filter { case (_, i) => i % numPartitions == idx }
+      .map(_._1)
+    innerKeys.flatMap(inner.load)
+  }
 
   override private[sparkle] def env = inner.env
 

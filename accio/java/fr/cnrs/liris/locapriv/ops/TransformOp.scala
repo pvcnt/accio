@@ -37,8 +37,10 @@ private[ops] abstract class TransformOp[T: Encoder]
       seeds = input.keys.map(key => key -> rnd.nextLong()).toMap
     }
     val output = input.mapPartitionsWithKey(transform)
-    TransformOp.Out(write(output, 0, ctx))
+    TransformOp.Out(write(output, 0, ctx, partitioner))
   }
+
+  protected def partitioner: Option[T => Any] = None
 
   protected def data: RemoteFile
 
