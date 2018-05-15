@@ -32,15 +32,14 @@ private[ops] abstract class TransformOp[T: Encoder]
 
   override final def execute(ctx: OpContext): TransformOp.Out = {
     val input = read[Event](data)
+    val traces = input.groupBy(_.id)
     if (ctx.hasSeed) {
       val rnd = new Random(ctx.seed)
-      seeds = input.keys.map(key => key -> rnd.nextLong()).toMap
+      seeds = traces.map { case (key, _) => key -> rnd.nextLong() }.collect().toMap
     }
-    val output = input.mapPartitionsWithKey(transform)
-    TransformOp.Out(write(output, 0, ctx, partitioner))
+    val output = traces.flatMap { case (key, trace) => transform(key, trace) }
+    TransformOp.Out(write(output, 0, ctx))
   }
-
-  protected def partitioner: Option[T => Any] = None
 
   protected def data: RemoteFile
 

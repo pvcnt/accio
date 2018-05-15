@@ -40,26 +40,26 @@ case class PoisRetrievalOp(
   extends ScalaOperator[PoisRetrievalOp.Out] with SparkleOperator {
 
   override def execute(ctx: OpContext): PoisRetrievalOp.Out = {
-    val trainDs = read[Poi](train)
-    val testDs = read[Poi](test)
-    val metrics = trainDs.zipPartitions(testDs)(evaluate)
+    val trainDs = read[Poi](train).groupBy(_.id)
+    val testDs = read[Poi](test).groupBy(_.id)
+    val metrics = trainDs.zip(testDs)(evaluate)
     PoisRetrievalOp.Out(write(metrics, 0, ctx))
   }
 
-  private def evaluate(ref: Seq[Poi], res: Seq[Poi]): Seq[MetricUtils.FscoreValue] = {
+  private def evaluate(id: String, ref: Seq[Poi], res: Seq[Poi]): Seq[MetricUtils.FscoreValue] = {
     val matched = res.flatMap(resPoi => remap(resPoi, ref, threshold, overlap)).distinct.size
-    Seq(MetricUtils.fscore(ref.head.id, ref.size, res.size, matched))
+    Seq(MetricUtils.fscore(id, ref.size, res.size, matched))
   }
 
   private def remap(resPoi: Poi, refPois: Seq[Poi], threshold: Distance, overlap: Option[Duration]): Seq[Int] = {
     val matchingPois = refPois.zipWithIndex
       .filter { case (refPoi, _) => matches(refPoi, resPoi, threshold, overlap) }
-      .map { case (refPoi, idx) => (idx, refPoi.centroid.distance(resPoi.centroid)) }
+      .map { case (refPoi, idx) => (idx, refPoi.point.distance(resPoi.point)) }
     if (matchingPois.nonEmpty) Seq(matchingPois.minBy(_._2)._1) else Seq.empty
   }
 
   private def matches(refPoi: Poi, resPoi: Poi, threshold: Distance, overlap: Option[Duration]) = {
-    if (refPoi.centroid.distance(resPoi.centroid) > threshold) {
+    if (refPoi.point.distance(resPoi.point) > threshold) {
       false
     } else {
       overlap match {

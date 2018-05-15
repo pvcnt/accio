@@ -19,8 +19,8 @@
 package fr.cnrs.liris.sparkle
 
 import fr.cnrs.liris.sparkle.filesystem.PosixFilesystem
-import fr.cnrs.liris.sparkle.format.csv.CsvDataFormat
 import fr.cnrs.liris.sparkle.format.DataFormat
+import fr.cnrs.liris.sparkle.format.csv.CsvDataFormat
 
 import scala.collection.mutable
 
@@ -50,15 +50,18 @@ final class DataFrameReader[T](env: SparkleEnv, encoder: Encoder[T]) {
   }
 
   def read(uri: String, format: DataFormat): DataFrame[T] = {
-    val uris = PosixFilesystem.list(uri).toSeq
     new DataFrame[T] {
-      override def keys: Seq[String] = uris
+      override def keys: Seq[String] = {
+        val prefixLength = uri.stripSuffix("/").length + 1
+        val uris = PosixFilesystem.list(uri).toSeq.sorted
+        uris.map(_.drop(prefixLength))
+      }
 
       override private[sparkle] def load(key: String) = {
-        val is = PosixFilesystem.createInputStream(key)
+        val is = PosixFilesystem.createInputStream(s"$uri/$key")
         try {
           val reader = format.readerFor(encoder.structType, _options.toMap)
-          reader.read(is).map(encoder.deserialize).toSeq
+          reader.read(is).map(encoder.deserialize).toList
         } finally {
           is.close()
         }

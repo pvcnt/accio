@@ -45,7 +45,7 @@ class SpatialDistortionOpSpec extends UnitSpec with WithTraceGenerator with Scal
         e.withPoint(e.point.translate(S1Angle.degrees(Random.nextInt(360)), Distance.meters(distances(idx))))
       }
     }
-    val metrics = execute(t1, t2, interpolate = true)
+    val metrics = execute(t1, t2, interpolate = false)
     metrics should have size 1
     metrics.head.n shouldBe 120
     metrics.head.avg shouldBe (mean(distances) +- eps)
@@ -76,9 +76,11 @@ class SpatialDistortionOpSpec extends UnitSpec with WithTraceGenerator with Scal
   }
 
   private def execute(train: Seq[Event], test: Seq[Event], interpolate: Boolean) = {
-    val trainDs = writeTraces(train: _*)
-    val testDs = writeTraces(test: _*)
-    val res = SpatialDistortionOp(train = trainDs, test = testDs, interpolate = interpolate).execute(ctx)
-    env.read[MetricUtils.StatsValue].csv(res.metrics.uri).collect().toSeq
+    com.twitter.jvm.numProcs.let(1) {
+      val trainDs = writeTraces(train: _*)
+      val testDs = writeTraces(test: _*)
+      val res = SpatialDistortionOp(train = trainDs, test = testDs, interpolate = interpolate).execute(ctx)
+      env.read[MetricUtils.StatsValue].csv(res.metrics.uri).collect().toSeq
+    }
   }
 }

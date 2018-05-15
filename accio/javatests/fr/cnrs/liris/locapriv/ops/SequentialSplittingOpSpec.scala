@@ -29,7 +29,6 @@ class SequentialSplittingOpSpec extends UnitSpec with WithTraceGenerator with Sc
   behavior of "SequentialSplittingOp"
 
   it should "handle an even number of events" in {
-    println("start")
     val trace = randomTrace(Me, 150)
     val (out1, out2) = transform(trace, 50)
     (out1.size + out2.size) shouldBe 150
@@ -61,22 +60,24 @@ class SequentialSplittingOpSpec extends UnitSpec with WithTraceGenerator with Sc
   it should "split a trace at 0%" in {
     val trace = randomTrace(Me, 150)
     val (out1, out2) = transform(trace, 0)
-    (out1.size + out2.size) shouldBe 150
-    assertTraceIsSplit(trace, out1, out2, 0)
+    out1 should have size 0
+    out2 should contain theSameElementsInOrderAs trace
   }
 
   it should "split a trace at 100%" in {
     val trace = randomTrace(Me, 150)
     val (out1, out2) = transform(trace, 100)
-    (out1.size + out2.size) shouldBe 150
-    assertTraceIsSplit(trace, out1, out2, 150)
+    out1 should contain theSameElementsInOrderAs trace
+    out2 should have size 0
   }
 
   private def transform(data: Seq[Event], percent: Double): (Seq[Event], Seq[Event]) = {
-    val ds = writeTraces(data: _*)
-    val res1 = SequentialSplittingOp(percentBegin = 0, percentEnd = percent, complement = false, data = ds).execute(ctx)
-    val res2 = SequentialSplittingOp(percentBegin = 0, percentEnd = percent, complement = true, data = ds).execute(ctx)
-    (env.read[Event].csv(res1.data.uri).collect().toSeq, env.read[Event].csv(res2.data.uri).collect().toSeq)
+    com.twitter.jvm.numProcs.let(1) {
+      val ds = writeTraces(data: _*)
+      val res1 = SequentialSplittingOp(percentBegin = 0, percentEnd = percent, complement = false, data = ds).execute(ctx)
+      val res2 = SequentialSplittingOp(percentBegin = 0, percentEnd = percent, complement = true, data = ds).execute(ctx)
+      (env.read[Event].csv(res1.data.uri).collect().toSeq, env.read[Event].csv(res2.data.uri).collect().toSeq)
+    }
   }
 
   private def assertTraceIsSplit(t: Seq[Event], t1: Seq[Event], t2: Seq[Event], s1: Int): Unit = {

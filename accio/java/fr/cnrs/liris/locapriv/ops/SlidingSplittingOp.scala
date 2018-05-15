@@ -30,16 +30,16 @@ private[ops] trait SlidingSplittingOp extends TransformOp[Event] {
   protected def split(buffer: Seq[Event], curr: Event): Boolean
 
   override protected def transform(key: String, trace: Seq[Event]): Seq[Event] = {
-    val result = mutable.ListBuffer.empty[Event]
+    val buffer = mutable.ListBuffer.empty[Event]
     var idx = 0
-    for (event <- trace) {
-      if (result.nonEmpty && split(result, event)) {
+    trace.map { event =>
+      if (buffer.nonEmpty && split(buffer, event)) {
         idx += 1
+        buffer.clear()
       }
-      result += event.copy(id = s"${event.id}-$idx")
+      val newEvent = event.copy(id = s"${event.id}-$idx")
+      buffer += newEvent
+      newEvent
     }
-    result.toList
   }
-
-  override protected def partitioner: Option[Event => Any] = Some((e: Event) => e.id)
 }

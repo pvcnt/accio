@@ -29,7 +29,7 @@ trait Filesystem {
 
   def delete(uri: String): Unit
 
-  def list(uri: String): Iterator[String]
+  def list(uri: String): Iterable[String]
 
   def size(uri: String): StorageUnit
 }

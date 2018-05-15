@@ -37,13 +37,13 @@ case class SpatialDistortionOp(
   extends ScalaOperator[SpatialDistortionOp.Out] with SparkleOperator {
 
   override def execute(ctx: OpContext): SpatialDistortionOp.Out = {
-    val trainDs = read[Event](train)
-    val testDs = read[Event](test)
-    val metrics = trainDs.zipPartitions(testDs)(evaluate)
+    val trainDs = read[Event](train).groupBy(_.id)
+    val testDs = read[Event](test).groupBy(_.id)
+    val metrics = trainDs.zip(testDs)(evaluate)
     SpatialDistortionOp.Out(write(metrics, 0, ctx))
   }
 
-  private def evaluate(ref: Seq[Event], res: Seq[Event]): Seq[MetricUtils.StatsValue] = {
+  private def evaluate(id: String, ref: Seq[Event], res: Seq[Event]): Seq[MetricUtils.StatsValue] = {
     require(ref.nonEmpty, s"Cannot evaluate spatial distortion with empty reference trace")
     val points = ref.map(_.point)
     val distances = if (interpolate) {
@@ -51,11 +51,13 @@ case class SpatialDistortionOp(
     } else {
       evaluateWithoutInterpolation(points, res)
     }
-    Seq(MetricUtils.stats(ref.head.id, distances.map(_.meters)))
+    Seq(MetricUtils.stats(id, distances.map(_.meters)))
   }
 
   private def evaluateWithoutInterpolation(reference: Seq[Point], result: Seq[Event]): Seq[Distance] = {
-    result.map(event => Point.nearest(event.point, reference).distance)
+    result.map { event =>
+      Point.nearest(event.point, reference).distance
+    }
   }
 
   private def evaluateWithInterpolation(reference: Seq[Point], result: Seq[Event]): Seq[Distance] = {

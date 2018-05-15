@@ -19,18 +19,21 @@
 package fr.cnrs.liris.locapriv.ops
 
 import java.nio.file.Files
+import java.util.concurrent.atomic.AtomicInteger
 
 import fr.cnrs.liris.accio.sdk.{OpContext, RemoteFile}
 import fr.cnrs.liris.locapriv.domain.{Event, Poi}
 import fr.cnrs.liris.sparkle.SparkleEnv
+import fr.cnrs.liris.testing.CreateTmpDirectory
 import org.scalatest.{BeforeAndAfterEach, FlatSpec}
 
 /**
  * Trait facilitating testing operators.
  */
-private[ops] trait ScalaOperatorSpec extends BeforeAndAfterEach {
+private[ops] trait ScalaOperatorSpec extends BeforeAndAfterEach with CreateTmpDirectory {
   this: FlatSpec =>
 
+  private val idx = new AtomicInteger(0)
   protected var env: SparkleEnv = _
 
   override protected def beforeEach(): Unit = {
@@ -45,21 +48,20 @@ private[ops] trait ScalaOperatorSpec extends BeforeAndAfterEach {
   }
 
   protected final def ctx: OpContext = {
-    val workDir = Files.createTempDirectory(getClass.getSimpleName + "-")
-    workDir.toFile.deleteOnExit()
+    Files.createDirectories(tmpDir.resolve("ctx"))
     // This seed makes tests of unstable operators to pass for now. Be careful is you modify it!!
-    new OpContext(Some(-7590331047132310476L), workDir)
+    new OpContext(Some(-7590331047132310476L), tmpDir.resolve("ctx"))
   }
 
   protected final def writeTraces(data: Event*): RemoteFile = {
-    val uri = Files.createTempDirectory(getClass.getSimpleName + "-").toAbsolutePath.toString
-    env.parallelize(data).write.partitionBy(_.id).csv(uri)
+    val uri = tmpDir.resolve("tmp").resolve(idx.getAndIncrement().toString).toString
+    env.parallelize(data).write.csv(uri)
     RemoteFile(uri)
   }
 
   protected final def writePois(data: Seq[Poi]): RemoteFile = {
-    val uri = Files.createTempDirectory(getClass.getSimpleName + "-").toAbsolutePath.toString
-    env.parallelize(data).write.partitionBy(_.id).csv(uri)
+    val uri = tmpDir.resolve("tmp").resolve(idx.getAndIncrement().toString).toString
+    env.parallelize(data).write.csv(uri)
     RemoteFile(uri)
   }
 }

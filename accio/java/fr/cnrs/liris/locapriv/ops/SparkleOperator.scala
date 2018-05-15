@@ -32,11 +32,9 @@ private[ops] trait SparkleOperator {
     env.read.csv(dataset.uri)
   }
 
-  protected final def write[T](df: DataFrame[T], idx: Int, ctx: OpContext, partitioner: Option[T => Any] = None): RemoteFile = {
+  protected final def write[T](df: DataFrame[T], idx: Int, ctx: OpContext): RemoteFile = {
     val uri = ctx.workDir.resolve(idx.toString).toString
-    val writer = df.write
-    partitioner.foreach(writer.partitionBy)
-    writer.csv(uri)
+    df.write.csv(uri)
     RemoteFile(uri)
   }
 }

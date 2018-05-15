@@ -16,26 +16,10 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.sparkle.format
+package fr.cnrs.liris.sparkle
 
-case class StructType(fields: Seq[(String, DataType)])
-
-sealed trait DataType
-
-object DataType {
-
-  case object Int32 extends DataType
-
-  case object Int64 extends DataType
-
-  case object Float32 extends DataType
-
-  case object Float64 extends DataType
-
-  case object String extends DataType
-
-  case object Bool extends DataType
-
-  case object Time extends DataType
-
+class GroupedDataFrameOps[T](inner: DataFrame[(String, Seq[T])]) {
+  def zip[U, V: Encoder](other: DataFrame[(String, Seq[U])])(fn: (String, Seq[T], Seq[U]) => Seq[V]): DataFrame[V] = {
+    new ZipDataFrame(inner, other, fn, implicitly[Encoder[V]])
+  }
 }

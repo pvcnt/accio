@@ -16,22 +16,18 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.sparkle.io
+package fr.cnrs.liris.sparkle
 
-import org.joda.time.Instant
+import fr.cnrs.liris.sparkle.format.{InternalRow, StructType}
 
-case class TestStruct(i: Int, l: Long, f: Float, d: Double, b: Boolean, s: String, t: Instant)
+import scala.reflect.ClassTag
 
-case class TestParametrizedStruct[T](i: Int, o: T)
+private[sparkle] class GroupEncoder[V](inner: Encoder[V]) extends Encoder[(String, Seq[V])] {
+  override def structType: StructType = inner.structType
 
-case class TestJavaStruct(i: java.lang.Integer, l: java.lang.Long, f: java.lang.Float, d: java.lang.Double, b: java.lang.Boolean, s: java.lang.String)
+  override def classTag: ClassTag[(String, Seq[V])] = ClassTag(classOf[(String, Seq[V])])
 
-case class TestInvalidType(t: java.sql.Timestamp)
+  override def serialize(obj: (String, Seq[V])): Seq[InternalRow] = obj._2.flatMap(inner.serialize)
 
-class OuterClass {
-  case class InnerStruct(i: Int)
-}
-
-object OuterClass {
-  case class InnerStruct2(i: Int)
+  override def deserialize(row: InternalRow): (String, Seq[V]) = throw new UnsupportedOperationException
 }

@@ -18,6 +18,8 @@
 
 package fr.cnrs.liris.sparkle
 
+import java.util.concurrent.atomic.AtomicInteger
+
 import fr.cnrs.liris.sparkle.filesystem.PosixFilesystem
 import fr.cnrs.liris.sparkle.format.csv.CsvDataFormat
 import fr.cnrs.liris.sparkle.format.{DataFormat, RowWriter}
@@ -26,12 +28,6 @@ import scala.collection.mutable
 
 final class DataFrameWriter[T](df: DataFrame[T]) {
   private[this] var _options = mutable.Map.empty[String, String]
-  private[this] var _partitioner: Option[T => Any] = None
-
-  def partitionBy(fn: T => Any): DataFrameWriter[T] = {
-    _partitioner = Some(fn)
-    this
-  }
 
   def option(key: String, value: String): DataFrameWriter[T] = {
     _options(key) = value
@@ -55,18 +51,9 @@ final class DataFrameWriter[T](df: DataFrame[T]) {
 
   def write(uri: String, format: DataFormat): Unit = {
     val writer = format.writerFor(df.encoder.structType, _options.toMap)
-    if (df.keys.length == 1 && _partitioner.isEmpty) {
-      write(uri, writer, df.load(df.keys.head))
-    } else {
-      df.foreachPartitionWithKey { case (key, elements) =>
-        _partitioner match {
-          case Some(partitioner) =>
-            elements
-              .groupBy(partitioner)
-              .foreach { case (k, v) => write(s"$uri/$k#$key.csv", writer, v) }
-          case None => write(s"$uri/$key.csv", writer, elements)
-        }
-      }
+    //val idx = new AtomicInteger(0)
+    df.foreachPartitionWithKey { case (key, elements) =>
+      write(s"$uri/part-$key.csv", writer, elements)
     }
   }
 
@@ -75,7 +62,7 @@ final class DataFrameWriter[T](df: DataFrame[T]) {
   private def write(uri: String, writer: RowWriter, elements: Seq[T]): Unit = {
     val os = PosixFilesystem.createOutputStream(uri)
     try {
-      writer.write(elements.map(df.encoder.serialize), os)
+      writer.write(elements.flatMap(df.encoder.serialize), os)
     } finally {
       os.close()
     }

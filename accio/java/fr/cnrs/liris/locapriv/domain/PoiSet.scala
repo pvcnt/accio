@@ -54,7 +54,7 @@ case class PoiSet(user: String, pois: Seq[Poi]) {
    *
    * @param poi POI to compute the distance with.
    */
-  def distance(poi: Poi): Distance = Point.nearest(poi.centroid, pois.map(_.centroid)).distance
+  def distance(poi: Poi): Distance = Point.nearest(poi.point, pois.map(_.point)).distance
 
   /**
    * Compute the distance with another set of POIs (it is symmetrical).
@@ -70,8 +70,8 @@ case class PoiSet(user: String, pois: Seq[Poi]) {
    * @param bs Second set of POIs.
    */
   private def distance(as: Iterable[Poi], bs: Iterable[Poi]): Distance = {
-    val a = as.map(_.centroid)
-    val b = bs.map(_.centroid)
+    val a = as.map(_.point)
+    val b = bs.map(_.point)
     val d = distances(a, b) ++ distances(b, a)
     if (d.nonEmpty) {
       Distance.meters(DescriptiveStats.percentile(d, 0.5))

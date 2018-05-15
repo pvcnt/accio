@@ -42,7 +42,8 @@ private[csv] class CsvRowReader(structType: StructType, options: CsvOptions) ext
     val parser = new CsvParser(settings)
     parser.parse(is)
 
-    if (processor.getHeaders.isEmpty) {
+    if (processor.getHeaders == null || processor.getHeaders.isEmpty) {
+      println("--- empty !!")
       Iterable.empty
     } else {
       /*val missing = structType.fields.map(_._1).filterNot(processor.getHeaders.contains)
@@ -50,7 +51,7 @@ private[csv] class CsvRowReader(structType: StructType, options: CsvOptions) ext
         throw new IllegalArgumentException(s"Missing columns: ${missing.mkString(", ")}")
       }
       val columns = structType.fields.map { case (name, _) => processor.getHeaders.indexOf(name) }.toArray*/
-      processor.getRows.asScala.zipWithIndex.map { case (tokens, lineNo) =>
+      processor.getRows.asScala.filter(_.nonEmpty).zipWithIndex.map { case (tokens, lineNo) =>
         val fields = structType.fields.indices.map { idx =>
           val token = tokens(idx)
           try {

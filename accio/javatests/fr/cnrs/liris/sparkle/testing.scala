@@ -16,26 +16,26 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.sparkle.format
+package fr.cnrs.liris.sparkle
 
-case class StructType(fields: Seq[(String, DataType)])
+import org.joda.time.Instant
 
-sealed trait DataType
+case class TestStruct(i: Int, l: Long, f: Float, d: Double, b: Boolean, s: String, t: Instant)
 
-object DataType {
+case class TestParametrizedStruct[T](i: Int, o: T)
 
-  case object Int32 extends DataType
+case class TestJavaStruct(i: java.lang.Integer, l: java.lang.Long, f: java.lang.Float, d: java.lang.Double, b: java.lang.Boolean, s: java.lang.String)
 
-  case object Int64 extends DataType
+case class TestInvalidType(t: java.sql.Timestamp)
 
-  case object Float32 extends DataType
+class OuterClass {
 
-  case object Float64 extends DataType
+  case class InnerStruct(i: Int)
 
-  case object String extends DataType
+}
 
-  case object Bool extends DataType
+object OuterClass {
 
-  case object Time extends DataType
+  case class InnerStruct2(i: Int)
 
 }

@@ -34,14 +34,9 @@ case class EnforceDurationOp(
   @Arg(help = "Maximum duration of a trace")
   maxDuration: Option[Duration],
   @Arg(help = "Input dataset") data: RemoteFile)
-  extends ScalaOperator[EnforceDurationOp.Out] with SparkleOperator {
+  extends TransformOp[Event] {
 
-  override def execute(ctx: OpContext): EnforceDurationOp.Out = {
-    val output = read[Event](data).mapPartitions(transform)
-    EnforceDurationOp.Out(write(output, 0, ctx))
-  }
-
-  private def transform(trace: Seq[Event]): Seq[Event] = {
+  override protected def transform(key: String, trace: Seq[Event]): Seq[Event] = {
     if (trace.isEmpty) {
       trace
     } else {
@@ -59,12 +54,4 @@ case class EnforceDurationOp(
       }
     }
   }
-}
-
-object EnforceDurationOp {
-
-  case class Out(
-    @Arg(help = "Transformed dataset")
-    data: RemoteFile)
-
 }

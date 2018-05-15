@@ -36,18 +36,18 @@ case class SpatioTemporalDistortionOp(
   extends ScalaOperator[SpatioTemporalDistortionOp.Out] with SparkleOperator {
 
   override def execute(ctx: OpContext): SpatioTemporalDistortionOp.Out = {
-    val trainDs = read[Event](train)
-    val testDs = read[Event](test)
-    val metrics = trainDs.zipPartitions(testDs)(evaluate)
+    val trainDs = read[Event](train).groupBy(_.id)
+    val testDs = read[Event](test).groupBy(_.id)
+    val metrics = trainDs.zip(testDs)(evaluate)
     SpatioTemporalDistortionOp.Out(write(metrics, 0, ctx))
   }
 
-  private def evaluate(ref: Seq[Event], res: Seq[Event]): Seq[MetricUtils.StatsValue] = {
+  private def evaluate(id: String, ref: Seq[Event], res: Seq[Event]): Seq[MetricUtils.StatsValue] = {
     val (larger, smaller) = if (ref.size > res.size) (ref, res) else (res, ref)
     val distances = smaller.map { event =>
       event.point.distance(interpolate(larger, event.time)).meters
     }
-    Seq(MetricUtils.stats(ref.head.id, distances))
+    Seq(MetricUtils.stats(id, distances))
   }
 
   private def interpolate(trace: Seq[Event], time: Instant) = {

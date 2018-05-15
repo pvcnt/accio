@@ -18,10 +18,13 @@
 
 package fr.cnrs.liris.sparkle
 
+import java.util.concurrent.ConcurrentHashMap
+
 import fr.cnrs.liris.testing.UnitSpec
 import org.scalatest.BeforeAndAfterEach
 
 import scala.collection.mutable
+import scala.collection.JavaConverters._
 
 /**
  * Unit tests for [[DataFrame]].
@@ -42,61 +45,49 @@ class DataFrameSpec extends UnitSpec with BeforeAndAfterEach {
     super.afterEach()
   }
 
-  it should "return its keys" in {
-    val data = env.parallelize("foo" -> Seq(1, 2, 3), "bar" -> Seq(4, 5))
-    data.keys shouldBe Seq("foo", "bar")
-  }
-
   it should "map elements" in {
-    val data = env.parallelize("foo" -> Seq(1, 2, 3), "bar" -> Seq(4, 5))
+    val data = env.parallelize(1, 2, 3, 4, 5)
     data.map(_ * 2).collect() shouldBe Array(2, 4, 6, 8, 10)
   }
 
   it should "flatMap elements" in {
-    val data = env.parallelize("foo" -> Seq(1, 2, 3), "bar" -> Seq(4, 5))
+    val data = env.parallelize(1, 2, 3, 4, 5)
     data.flatMap(i => Set(i, i * 2)).collect() shouldBe Array(1, 2, 2, 4, 3, 6, 4, 8, 5, 10)
   }
 
   it should "filter elements" in {
-    val data = env.parallelize("foo" -> Seq(1, 2, 3), "bar" -> Seq(4, 5))
+    val data = env.parallelize(1, 2, 3, 4, 5)
     data.filter(i => (i % 2) == 0).collect() shouldBe Array(2, 4)
   }
 
   it should "zip with another dataset with same keys and same size" in {
-    val data1 = env.parallelize("foo" -> Seq(1, 2, 3), "bar" -> Seq(4, 5))
-    val data2 = env.parallelize("foo" -> Seq(2, 4, 6), "bar" -> Seq(8, 10))
-    data1.zip(data2).collect() shouldBe Array((1, 2), (2, 4), (3, 6), (4, 8), (5, 10))
-  }
-
-  it should "zip with another dataset with different keys" in {
-    val data1 = env.parallelize("foo" -> Seq(1, 2, 3), "foobar" -> Seq(4))
-    val data2 = env.parallelize("bar" -> Seq(8, 10), "foobar" -> Seq(8))
-    data1.zip(data2).collect() shouldBe Array((4, 8))
-  }
-
-  it should "zip with another dataset with different size" in {
-    val data1 = env.parallelize("foo" -> Seq(1, 2, 3), "bar" -> Seq(3))
-    val data2 = env.parallelize("foo" -> Seq(2, 4), "bar" -> Seq(6, 23))
-    data1.zip(data2).collect() shouldBe Array((1, 2), (2, 4), (3, 6))
+    val data1 = env.parallelize("aa", "ab", "cd", "ef", "ag").groupBy(_.substring(0, 1))
+    val data2 = env.parallelize("aa", "ca", "bd", "af").groupBy(_.substring(0, 1))
+    val collect = new ConcurrentHashMap[String, Seq[String]].asScala
+    data1.zip(data2) { case (k, v1, v2) =>
+      collect.put(k, v1 ++ v2)
+      v1 ++ v2
+    }.collect() shouldBe Array("ef", "aa", "ab", "ag", "aa", "af", "cd", "ca")
+    collect.toSeq should contain theSameElementsAs Seq("a" -> Seq("aa", "ab", "ag", "aa", "af"), "c" -> Seq("cd", "ca"), "e" -> Seq("ef"))
   }
 
   it should "count elements" in {
-    val data = env.parallelize("foo" -> Seq(1, 2, 3), "bar" -> Seq(4, 5))
+    val data = env.parallelize(1, 2, 3, 4, 5)
     data.count() shouldBe 5
   }
 
   it should "return first element" in {
-    val data = env.parallelize("foo" -> Seq(1, 2, 3), "bar" -> Seq(4, 5))
+    val data = env.parallelize(1, 2, 3, 4, 5)
     data.first() shouldBe 1
   }
 
   it should "return its elements in order" in {
-    val data = env.parallelize("foo" -> Seq(1, 2, 3), "bar" -> Seq(4, 5))
+    val data = env.parallelize(1, 2, 3, 4, 5)
     data.collect() shouldBe Array(1, 2, 3, 4, 5)
   }
 
   it should "apply an operation on each element" in {
-    val data = env.parallelize("foo" -> Seq(1, 2, 3), "bar" -> Seq(4, 5))
+    val data = env.parallelize(1, 2, 3, 4, 5)
     val res = mutable.Set.empty[Int]
     data.foreach { i =>
       res synchronized {

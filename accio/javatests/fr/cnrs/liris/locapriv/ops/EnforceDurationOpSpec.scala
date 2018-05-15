@@ -31,8 +31,8 @@ class EnforceDurationOpSpec extends UnitSpec with WithTraceGenerator with ScalaO
 
   it should "keep traces with a duration greater than min threshold" in {
     val trace = randomTrace(Me, size = 15, rate = Duration.standardMinutes(1))
-    transformMinDuration(trace, Duration.standardMinutes(10)) should contain theSameElementsAs Seq(trace)
-    transformMinDuration(trace, Duration.standardMinutes(14)) should contain theSameElementsAs Seq(trace)
+    transformMinDuration(trace, Duration.standardMinutes(10)) should contain theSameElementsAs trace
+    transformMinDuration(trace, Duration.standardMinutes(14)) should contain theSameElementsAs trace
   }
 
   it should "reject traces with a duration lower than min threshold" in {
@@ -44,18 +44,15 @@ class EnforceDurationOpSpec extends UnitSpec with WithTraceGenerator with ScalaO
   it should "shorten traces with a duration greater than max threshold" in {
     val trace = randomTrace(Me, size = 15, rate = Duration.standardMinutes(1))
     val data = transformMaxDuration(trace, Duration.standardSeconds(10 * 60 + 10))
-    data should have size 1
     data should contain theSameElementsInOrderAs trace.take(11)
   }
 
   it should "keep traces with a duration lower than max threshold" in {
     val trace = randomTrace(Me, size = 15, rate = Duration.standardMinutes(1))
     var data = transformMaxDuration(trace, Duration.standardMinutes(14))
-    data should have size 1
     data should contain theSameElementsInOrderAs trace.take(15)
 
     data = transformMaxDuration(trace, Duration.standardMinutes(20))
-    data should have size 1
     data should contain theSameElementsInOrderAs trace.take(15)
   }
 

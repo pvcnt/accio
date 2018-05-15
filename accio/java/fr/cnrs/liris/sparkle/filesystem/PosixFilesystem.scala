@@ -42,12 +42,14 @@ object PosixFilesystem extends Filesystem {
 
   override def delete(uri: String): Unit = FileUtils.safeDelete(Paths.get(uri))
 
-  override def list(uri: String): Iterator[String] = {
+  override def list(uri: String): Iterable[String] = {
     val path = Paths.get(uri)
-    if (Files.isDirectory(path)) {
-      Files.list(path).iterator.asScala.map(_.toString)
+    if (!Files.exists(path)) {
+      Iterable.empty
+    } else if (Files.isDirectory(path)) {
+      Files.list(path).iterator.asScala.map(_.toString).toSeq
     } else {
-      Iterator.single(uri)
+      Iterable(uri)
     }
   }
 

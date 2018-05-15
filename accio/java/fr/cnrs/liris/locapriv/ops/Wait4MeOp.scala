@@ -94,7 +94,7 @@ case class Wait4MeOp(
 
       // We convert our dataset to the format required by W4M.
       val w4mInputUri = tmpDir.resolve("data.txt").toAbsolutePath.toString
-      toW4MDataFrame(input.mapPartitions(trace => limit(trace)))
+      toW4MDataFrame(input.groupBy(_.id).flatMap { case (_, trace) => limit(trace) })
         .repartition(1) // Everything has to be written inside a single file.
         .write
         .option("delimiter", '\t')
@@ -102,7 +102,7 @@ case class Wait4MeOp(
 
       val process = new ProcessBuilder(
         localBinary.toAbsolutePath.toString,
-        w4mInputUri,
+        s"$w4mInputUri/part-0.csv",
         "out", /* output files prefix */
         k.toString,
         delta.meters.toString,

@@ -20,6 +20,8 @@ package fr.cnrs.liris.sparkle.format
 
 case class InternalRow(fields: Array[Any]) extends AnyVal {
   def apply(idx: Int): Any = fields(idx)
+
+  def +(other: InternalRow): InternalRow = InternalRow(fields ++ other.fields)
 }
 
 object InternalRow {

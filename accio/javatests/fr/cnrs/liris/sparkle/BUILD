@@ -19,8 +19,10 @@ scala_test(
   srcs = glob(["*.scala"]),
   deps = [
     "//accio/java/fr/cnrs/liris/sparkle",
+    "//accio/java/fr/cnrs/liris/sparkle/format",
     "//accio/javatests/fr/cnrs/liris/testing",
     "//3rdparty/jvm/com/twitter:util_slf4j_api",
+    "//3rdparty/jvm/com/github/nscala_time",
   ],
   size = "small",
 )

@@ -34,13 +34,13 @@ case class DataCompletenessOp(
   extends ScalaOperator[DataCompletenessOp.Out] with SparkleOperator {
 
   override def execute(ctx: OpContext): DataCompletenessOp.Out = {
-    val trainDs = read[Event](train)
-    val testDs = read[Event](test)
-    val metrics = trainDs.zipPartitions(testDs)(evaluate)
+    val trainDs = read[Event](train).groupBy(_.id)
+    val testDs = read[Event](test).groupBy(_.id)
+    val metrics = trainDs.zip(testDs)(evaluate)
     DataCompletenessOp.Out(write(metrics, 0, ctx))
   }
 
-  private def evaluate(ref: Seq[Event], res: Seq[Event]) = {
+  private def evaluate(id: String, ref: Seq[Event], res: Seq[Event]) = {
     val completeness = {
       if (res.isEmpty && ref.isEmpty) {
         1d
@@ -50,7 +50,7 @@ case class DataCompletenessOp(
         res.size.toDouble / ref.size
       }
     }
-    Seq(DataCompletenessOp.Value(ref.head.id, ref.size, res.size, completeness))
+    Seq(DataCompletenessOp.Value(id, ref.size, res.size, completeness))
   }
 }
 

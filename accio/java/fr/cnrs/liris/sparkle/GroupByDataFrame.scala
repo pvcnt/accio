@@ -16,19 +16,14 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.locapriv.domain
+package fr.cnrs.liris.sparkle
 
-import fr.cnrs.liris.locapriv.testing.WithCabspotting
-import fr.cnrs.liris.testing.UnitSpec
+private[sparkle] class GroupByDataFrame[V](inner: DataFrame[V], fn: V => String) extends DataFrame[(String, Seq[V])] {
+  override def keys: Seq[String] = inner.keys
 
-/**
- * Unit tests for [[NoClusterer]].
- */
-class NoClustererSpec extends UnitSpec with WithCabspotting {
-  behavior of "NoClusterer"
+  override private[sparkle] def load(key: String) = inner.load(key).groupBy(fn).toSeq
 
-  it should "cluster a trace" in {
-    val clusters = NoClusterer.cluster(abboipTrace)
-    clusters should have size 0
-  }
+  override private[sparkle] def env = inner.env
+
+  override private[sparkle] def encoder = new GroupEncoder(inner.encoder)
 }

@@ -64,17 +64,3 @@ case class Cluster(events: Seq[Event]) {
 
   override def toString: String = MoreObjects.toStringHelper(this).add("size", events.size).toString
 }
-
-/**
- * A clusterer creating a cluster for each input event.
- */
-object IdentityClusterer extends Clusterer {
-  override def cluster(events: Seq[Event]): Seq[Cluster] = events.map(event => Cluster(Seq(event)))
-}
-
-/**
- * A clusterer creating no cluster.
- */
-object NoClusterer extends Clusterer {
-  override def cluster(events: Seq[Event]): Seq[Cluster] = Seq.empty
-}

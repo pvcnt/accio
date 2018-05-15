@@ -63,8 +63,10 @@ class UniformSamplingOpSpec extends UnitSpec with WithTraceGenerator with ScalaO
   }
 
   private def transform(data: Seq[Event], probability: Double) = {
-    val ds = writeTraces(data: _*)
-    val res = UniformSamplingOp(probability = probability, data = ds).execute(ctx)
-    env.read[Event].csv(res.data.uri).collect().toSeq
+    com.twitter.jvm.numProcs.let(1) {
+      val ds = writeTraces(data: _*)
+      val res = UniformSamplingOp(probability = probability, data = ds).execute(ctx)
+      env.read[Event].csv(res.data.uri).collect().toSeq
+    }
   }
 }

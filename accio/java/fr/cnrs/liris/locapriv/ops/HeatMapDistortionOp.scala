@@ -57,10 +57,10 @@ case class HeatMapDistortionOp(
   }
 
   override def execute(ctx: OpContext): HeatMapDistortionOp.Out = {
-    val dstrain = restrictArea(read[Event](train))
-    val dstest = restrictArea(read[Event](test))
+    val dstrain = restrictArea(read[Event](train)).groupBy(_.id)
+    val dstest = restrictArea(read[Event](test)).groupBy(_.id)
 
-    val metrics = dstrain.zipPartitions(dstest)(compute)
+    val metrics = dstrain.zip(dstest)(compute)
     // Add none found user in Train
     /*dstrain.keys.union(dstest.keys).toSet.foreach { u: String =>
       if (!metrics.contains(u)) metrics += u -> Double.NaN
@@ -83,11 +83,11 @@ case class HeatMapDistortionOp(
     matrix
   }
 
-  private def compute(train: Seq[Event], test: Seq[Event]): Seq[HeatMapDistortionOp.Value] = {
+  private def compute(id: String, train: Seq[Event], test: Seq[Event]): Seq[HeatMapDistortionOp.Value] = {
     val matTrain = computeMatrix(train)
     val matTest = computeMatrix(test)
     val d = DistanceUtils.d(matTest.proportional, matTrain.proportional, distanceType)
-    Seq(HeatMapDistortionOp.Value(train.head.id, d))
+    Seq(HeatMapDistortionOp.Value(id, d))
   }
 
   private def restrictArea(ds: DataFrame[Event]): DataFrame[Event] = {

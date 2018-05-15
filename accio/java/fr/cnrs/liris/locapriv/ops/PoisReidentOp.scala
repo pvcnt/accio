@@ -45,6 +45,8 @@ case class PoisReidentOp(
   override def execute(ctx: OpContext): PoisReidentOp.Out = {
     val trainPois = readPois(train)
     val testPois = readPois(test)
+    println(trainPois.mkString(", "))
+    println(testPois.mkString(", "))
     val metrics = computeMetrics(trainPois, testPois)
     val successRate = computeSuccessRate(trainPois, metrics)
     PoisReidentOp.Out(write(metrics, 0, ctx), successRate)
@@ -75,6 +77,7 @@ case class PoisReidentOp(
           case Some((trainUser, d)) => PoisReidentOp.Value(trainUser, pois.user, d)
         }
       }
+      println(metrics.mkString(", "))
       env.parallelize(metrics)
     }
   }

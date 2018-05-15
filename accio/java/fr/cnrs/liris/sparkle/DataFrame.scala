@@ -39,6 +39,10 @@ trait DataFrame[T] extends Logging {
     new PartitionedDataFrame(this, numPartitions)
   }
 
+  def groupBy(fn: T => String): DataFrame[(String, Seq[T])] = {
+    new GroupByDataFrame[T](this, fn)
+  }
+
   /**
    * Return a sampled subset of this dataframe.
    *
@@ -54,43 +58,12 @@ trait DataFrame[T] extends Logging {
     new MapPartitionsDataFrame[T, T](this, (_, seq) => seq.filter(fn), encoder)
   }
 
-  def mapPartitions[U: Encoder](fn: Seq[T] => Seq[U]): DataFrame[U] = {
-    new MapPartitionsDataFrame[T, U](this, (_, seq) => fn(seq), implicitly[Encoder[U]])
-  }
-
-  def mapPartitionsWithKey[U: Encoder](fn: (String, Seq[T]) => Seq[U]): DataFrame[U] = {
-    new MapPartitionsDataFrame(this, fn, implicitly[Encoder[U]])
-  }
-
   def map[U: Encoder](fn: T => U): DataFrame[U] = {
     new MapPartitionsDataFrame[T, U](this, (_, seq) => seq.map(fn), implicitly[Encoder[U]])
   }
 
   def flatMap[U: Encoder](fn: T => Iterable[U]): DataFrame[U] = {
     new MapPartitionsDataFrame[T, U](this, (_, seq) => seq.flatMap(fn), implicitly[Encoder[U]])
-  }
-
-  /**
-   * Zips this RDD with another one, returning key-value pairs with the first element in each RDD,
-   * second element in each RDD, etc. Assumes that the two RDDs have the *same number of
-   * partitions* and the *same number of elements in each partition* (e.g. one was made through
-   * a map on the other).
-   */
-  // We do not define encoders for tuples, so not possible for now (but easily doable)
-  /*def zip[U: Encoder](other: DataFrame[U]): DataFrame[(T, U)] = {
-    zipPartitions[U, (T, U)](other) { (thisSeq: Seq[T], otherSeq: Seq[U]) =>
-      thisSeq.zip(otherSeq)
-    }
-  }*/
-
-  /**
-   * Zip this RDD's partitions with one (or more) RDD(s) and return a new RDD by
-   * applying a function to the zipped partitions. Assumes that all the RDDs have the
-   * *same number of partitions*, but does *not* require them to have the same number
-   * of elements in each partition.
-   */
-  def zipPartitions[U, V: Encoder](other: DataFrame[U])(fn: (Seq[T], Seq[U]) => Seq[V]): DataFrame[V] = {
-    new ZipPartitionsDataFrame(this, other, fn, implicitly[Encoder[V]])
   }
 
   def count(): Long = {
@@ -180,5 +153,9 @@ trait DataFrame[T] extends Logging {
 object DataFrame {
   implicit def toNumericOps[T: Numeric](df: DataFrame[T]): NumericDataFrameOps[T] = {
     new NumericDataFrameOps(df)
+  }
+
+  implicit def toGroupedOps[T](df: DataFrame[(String, Seq[T])]): GroupedDataFrameOps[T] = {
+    new GroupedDataFrameOps(df)
   }
 }

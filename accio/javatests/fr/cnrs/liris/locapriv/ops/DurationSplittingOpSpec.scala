@@ -40,13 +40,20 @@ class DurationSplittingOpSpec extends UnitSpec with WithTraceGenerator with Scal
       e.lat shouldBe trace(idx).lat
       e.lng shouldBe trace(idx).lng
     }
-    res.groupBy(_.id).values.foreach(vs => (vs.last.time.millis - vs.head.time.millis) shouldBe <=(10000))
+    res.groupBy(_.id).values.foreach { vs =>
+      (vs.last.time.millis - vs.head.time.millis) should be <= 10000L
+    }
   }
 
   it should "handle a duration greater than trace's duration" in {
     val trace = randomTrace(Me, 60, Duration.standardSeconds(1))
     val res = transform(trace, Duration.standardSeconds(100))
-    res should contain theSameElementsInOrderAs trace
+    res.zipWithIndex.foreach { case (e, idx) =>
+      e.id shouldBe s"$Me-0"
+      e.time shouldBe trace(idx).time
+      e.lat shouldBe trace(idx).lat
+      e.lng shouldBe trace(idx).lng
+    }
   }
 
   private def transform(data: Seq[Event], duration: Duration) = {

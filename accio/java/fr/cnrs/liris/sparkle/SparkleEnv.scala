@@ -42,7 +42,7 @@ final class SparkleEnv(parallelism: Int) extends Logging {
     }
   }
   private[this] implicit val ec: ExecutionContextExecutor = ExecutionContext.fromExecutor(executor)
-  logger.info(s"Initialized Sparkle to use $parallelism cores")
+  logger.info(s"Initialized Sparkle with $parallelism cores")
 
   /**
    * Create a new dataframe from an in-memory collection.
@@ -63,7 +63,7 @@ final class SparkleEnv(parallelism: Int) extends Logging {
     if (data.isEmpty) {
       emptyDataFrame
     } else {
-      val numPartitions = data.size / parallelism
+      val numPartitions = math.ceil(data.size.toDouble / parallelism).toInt
       new MemoryDataFrame(data.toSeq, numPartitions, this, implicitly[Encoder[T]])
     }
   }

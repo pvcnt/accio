@@ -34,22 +34,19 @@ case class CollapseTemporalGapsOp(
   startAt: Instant,
   @Arg(help = "Input dataset")
   data: RemoteFile)
-  extends ScalaOperator[CollapseTemporalGapsOp.Out] with SparkleOperator {
+  extends TransformOp[Event] {
 
-  override def execute(ctx: OpContext): CollapseTemporalGapsOp.Out = {
-    val startAtDate = new Instant(startAt.millis).toDateTime(DateTimeZone.UTC).withTimeAtStartOfDay
-    val input = read[Event](data)
-    val output = input.mapPartitions(transform(_, startAtDate))
-    CollapseTemporalGapsOp.Out(write(output, 0, ctx))
+  private[this] val startAtMidnight = {
+    new Instant(startAt.millis).toDateTime(DateTimeZone.UTC).withTimeAtStartOfDay
   }
 
-  private def transform(trace: Seq[Event], startAt: DateTime) = {
+  override protected def transform(key: String, trace: Seq[Event]): Seq[Event] = {
     var shift = 0L
     var prev: Option[DateTime] = None
     trace.map { event =>
       val time = event.time.toDateTime(DateTimeZone.UTC).withTimeAtStartOfDay
       if (prev.isEmpty) {
-        shift = (if (time.isBefore(startAt)) time to startAt else startAt to time).duration.days
+        shift = (if (time.isBefore(startAtMidnight)) time to startAtMidnight else startAtMidnight to time).duration.days
       } else if (time != prev.get) {
         val days = (prev.get to time).duration.days
         shift += days - 1
@@ -63,12 +60,4 @@ case class CollapseTemporalGapsOp(
       event.copy(time = aligned)
     }
   }
-}
-
-object CollapseTemporalGapsOp {
-
-  case class Out(
-    @Arg(help = "Output dataset")
-    data: RemoteFile)
-
 }

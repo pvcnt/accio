@@ -43,19 +43,17 @@ case class AreaCoverageOp(
   extends ScalaOperator[AreaCoverageOp.Out] with SparkleOperator {
 
   override def execute(ctx: OpContext): AreaCoverageOp.Out = {
-    val trainDs = read[Event](train)
-    val testDs = read[Event](test)
-    val metrics = trainDs.zipPartitions(testDs) { case (ref, res) =>
-      evaluate(ref, res)
-    }
+    val trainDs = read[Event](train).groupBy(_.id)
+    val testDs = read[Event](test).groupBy(_.id)
+    val metrics = trainDs.zip(testDs)(evaluate)
     AreaCoverageOp.Out(write(metrics, 0, ctx))
   }
 
-  private def evaluate(ref: Seq[Event], res: Seq[Event]) = {
+  private def evaluate(id: String, ref: Seq[Event], res: Seq[Event]) = {
     val refCells = getCells(ref, level)
     val resCells = getCells(res, level)
     val matched = resCells.intersect(refCells).size
-    Seq(MetricUtils.fscore(ref.head.id, refCells.size, resCells.size, matched))
+    Seq(MetricUtils.fscore(id, refCells.size, resCells.size, matched))
   }
 
   private def getCells(trace: Seq[Event], level: Int) = {

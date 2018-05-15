@@ -37,6 +37,4 @@ case class PromesseOp(
   override protected def transform(key: String, trace: Seq[Event]): Seq[Event] = {
     SpeedSmoothing.transform(trace, alpha)
   }
-
-  override protected def partitioner: Option[Event => Any] = Some((e: Event) => e.id)
 }

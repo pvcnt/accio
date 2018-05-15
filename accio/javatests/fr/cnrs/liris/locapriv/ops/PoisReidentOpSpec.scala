@@ -29,7 +29,7 @@ import fr.cnrs.liris.util.geo.Point
 class PoisReidentOpSpec extends UnitSpec with ScalaOperatorSpec with WithTraceGenerator {
   behavior of "PoisReidentOp"
 
-  private[this] lazy val trainDs = {
+  private[this] def trainDs = {
     val pois = Seq(
       Poi(Set(Event("user1", Point(5, 5), Now))),
       Poi(Set(Event("user1", Point(0, 0), Now))),
@@ -62,9 +62,9 @@ class PoisReidentOpSpec extends UnitSpec with ScalaOperatorSpec with WithTraceGe
     val res = PoisReidentOp(trainDs, testDs).execute(ctx)
     val metrics = env.read[PoisReidentOp.Value].csv(res.metrics.uri).collect().toSeq
     metrics should contain theSameElementsAs Seq(
-      PoisReidentOp.Value("user1", "user1", 10),
-      PoisReidentOp.Value("user2", "user3", 10),
-      PoisReidentOp.Value("user3", "user2", 10))
+      PoisReidentOp.Value("user1", "user1", 1.414213562457019),
+      PoisReidentOp.Value("user2", "user3", 1.4142135619571015),
+      PoisReidentOp.Value("user3", "user2", 1.4142135617700253))
     res.rate shouldBe closeTo(1d / 3, 0.001)
   }
 }

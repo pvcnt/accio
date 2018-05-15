@@ -23,13 +23,14 @@ import fr.cnrs.liris.util.geo.Distance
 import org.joda.time.Instant
 
 /**
- * This clusterer finds stays that are repeated, namely points of interests. This is actually a merge between
- * DJClusterer and DTClusterer, where the DJ-clustering is used to cluster the output of the DT-clusterer.
+ * This clusterer finds stays that are repeated, namely points of interests. This is actually a
+ * merge between DJClusterer and DTClusterer, where the DJ-clustering is used to cluster the output
+ * of the DT-clusterer.
  *
  * Vincent Primault, Sonia Ben Mokhtar, Cédric Lauradoux and Lionel Brunie. Differentially Private
  * Location Privacy in Practice. In MOST'14.
  */
-class MixedPoisClusterer(minDuration: Duration, maxDiameter: Distance, minPoints: Int)
+class RepeatedPoisClusterer(minDuration: Duration, maxDiameter: Distance, minPoints: Int)
   extends PoisClusterer {
 
   private[this] val dtClusterer = new DTClusterer(minDuration, maxDiameter)

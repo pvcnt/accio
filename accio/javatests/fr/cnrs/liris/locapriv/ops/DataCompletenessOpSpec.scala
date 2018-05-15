@@ -42,10 +42,8 @@ class DataCompletenessOpSpec extends UnitSpec with WithTraceGenerator with Scala
   }
 
   it should "return 0 for an empty trace" in {
-    val t1 = randomTrace(Me, 85)
-    val t2 = randomTrace(Me, 0)
-    val metrics = execute(t1, t2)
-    metrics should contain theSameElementsAs Seq(DataCompletenessOp.Value(Me, 120, 120, 0))
+    val metrics = execute(randomTrace(Me, 85), randomTrace(Me, 0))
+    metrics should contain theSameElementsAs Seq(DataCompletenessOp.Value(Me, 85, 0, 0))
   }
 
   private def execute(train: Seq[Event], test: Seq[Event]) = {

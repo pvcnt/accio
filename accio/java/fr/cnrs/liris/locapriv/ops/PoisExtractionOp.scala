@@ -42,7 +42,7 @@ case class PoisExtractionOp(
   private[this] val clusterer = if (minPoints == 0) {
     new DTClusterer(duration, diameter)
   } else {
-    new MixedPoisClusterer(duration, diameter, minPoints)
+    new RepeatedPoisClusterer(duration, diameter, minPoints)
   }
 
   override protected def transform(key: String, trace: Seq[Event]): Seq[Poi] = {

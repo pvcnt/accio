@@ -18,12 +18,10 @@
 
 package fr.cnrs.liris.sparkle.format.csv
 
-import java.io.{FileInputStream, FileOutputStream}
-import java.nio.file.{Files, Paths}
+import java.io.{File, FileInputStream, FileOutputStream}
+import java.nio.file.Files
 
 import fr.cnrs.liris.sparkle.format.{DataType, InternalRow, StructType}
-import fr.cnrs.liris.sparkle.{DataType, StructType}
-import fr.cnrs.liris.sparkle.io.{DataType, StructType}
 import fr.cnrs.liris.testing.UnitSpec
 import org.joda.time.Instant
 import org.scalactic.Equality
@@ -45,7 +43,7 @@ class CsvDataFormatSpec extends UnitSpec {
   }
 
   it should "read a CSV file" in {
-    val is = new FileInputStream("fr/cnrs/liris/sparkle/csv/foo.csv")
+    val is = new FileInputStream("accio/javatests/fr/cnrs/liris/sparkle/format/csv/foo.csv")
     val structType = StructType(Seq(
       "s" -> DataType.String,
       "b" -> DataType.Bool,
@@ -53,7 +51,7 @@ class CsvDataFormatSpec extends UnitSpec {
       "d" -> DataType.Float64,
       "l" -> DataType.Int64,
       "i" -> DataType.Int32,
-      "t" -> DataType.Time), wrapper = false)
+      "t" -> DataType.Time))
     val rows = try {
       CsvDataFormat.readerFor(structType).read(is).toList
     } finally {
@@ -76,7 +74,7 @@ class CsvDataFormatSpec extends UnitSpec {
       "d" -> DataType.Float64,
       "l" -> DataType.Int64,
       "i" -> DataType.Int32,
-      "t" -> DataType.Time), wrapper = false)
+      "t" -> DataType.Time))
     val rows = Seq(
       InternalRow(Array("foo", true, 3.15f, 3.14d, 2L, 30, new Instant(1234567890))),
       InternalRow(Array("bar", true, 14.3f, 3.15d, 4L, 50, new Instant(1234567891))),

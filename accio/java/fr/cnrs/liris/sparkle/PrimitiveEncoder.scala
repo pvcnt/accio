@@ -18,20 +18,22 @@
 
 package fr.cnrs.liris.sparkle
 
-import com.google.common.base.MoreObjects
+import fr.cnrs.liris.sparkle.format._
 
-private[sparkle] class ZipPartitionsDataFrame[T, U, V](
-  first: DataFrame[T],
-  other: DataFrame[U],
-  fn: (Seq[T], Seq[U]) => Seq[V],
-  private[sparkle] val encoder: Encoder[V])
-  extends DataFrame[V] {
+import scala.reflect.ClassTag
 
-  override def keys: Seq[String] = first.keys //TODO?.intersect(other.keys)
+private[sparkle] class PrimitiveEncoder[T](val dataType: DataType, cls: Class[T])
+  extends Encoder[T] {
 
-  override def toString: String = MoreObjects.toStringHelper(this).addValue(first).addValue(other).toString
+  override lazy val structType: StructType = StructType(Seq("value" -> dataType))
 
-  override private[sparkle] def env: SparkleEnv = first.env
+  override def classTag: ClassTag[T] = ClassTag(cls)
 
-  override private[sparkle] def load(key: String): Seq[V] = fn(first.load(key), other.load(key))
+  override def serialize(obj: T): Seq[InternalRow] = {
+    Seq(InternalRow(Array(obj)))
+  }
+
+  override def deserialize(row: InternalRow): T = {
+    row.fields.head.asInstanceOf[T]
+  }
 }
