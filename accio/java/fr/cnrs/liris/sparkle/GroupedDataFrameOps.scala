@@ -18,8 +18,8 @@
 
 package fr.cnrs.liris.sparkle
 
-class GroupedDataFrameOps[T](inner: DataFrame[(String, Seq[T])]) {
-  def join[U, V: Encoder](other: DataFrame[(String, Seq[U])])(fn: (String, Seq[T], Seq[U]) => Seq[V]): DataFrame[V] = {
+class GroupedDataFrameOps[T](inner: DataFrame[(String, Iterable[T])]) {
+  def join[U, V: Encoder](other: DataFrame[(String, Iterable[U])])(fn: (String, Iterable[T], Iterable[U]) => Iterable[V]): DataFrame[V] = {
     new JoinDataFrame(inner, other, fn, implicitly[Encoder[V]])
   }
 }

@@ -31,7 +31,7 @@ trait Encoder[T] {
 
   def classTag: ClassTag[T]
 
-  def serialize(obj: T): Seq[InternalRow]
+  def serialize(obj: T): Iterable[InternalRow]
 
   def deserialize(row: InternalRow): T
 }

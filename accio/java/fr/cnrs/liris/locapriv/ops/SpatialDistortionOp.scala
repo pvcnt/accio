@@ -43,7 +43,7 @@ case class SpatialDistortionOp(
     SpatialDistortionOp.Out(write(metrics, 0, ctx))
   }
 
-  private def evaluate(id: String, ref: Seq[Event], res: Seq[Event]): Seq[MetricUtils.StatsValue] = {
+  private def evaluate(id: String, ref: Iterable[Event], res: Iterable[Event]): Iterable[MetricUtils.StatsValue] = {
     require(ref.nonEmpty, s"Cannot evaluate spatial distortion with empty reference trace")
     val points = ref.map(_.point)
     val distances = if (interpolate) {
@@ -51,21 +51,19 @@ case class SpatialDistortionOp(
     } else {
       evaluateWithoutInterpolation(points, res)
     }
-    Seq(MetricUtils.stats(id, distances.map(_.meters)))
+    Iterable(MetricUtils.stats(id, distances.map(_.meters)))
   }
 
-  private def evaluateWithoutInterpolation(reference: Seq[Point], result: Seq[Event]): Seq[Distance] = {
-    result.map { event =>
-      Point.nearest(event.point, reference).distance
-    }
+  private def evaluateWithoutInterpolation(reference: Iterable[Point], result: Iterable[Event]): Iterable[Distance] = {
+    result.map(event => Point.nearest(event.point, reference).distance)
   }
 
-  private def evaluateWithInterpolation(reference: Seq[Point], result: Seq[Event]): Seq[Distance] = {
+  private def evaluateWithInterpolation(reference: Iterable[Point], result: Iterable[Event]): Iterable[Distance] = {
     result.map { event =>
       if (reference.size == 1) {
         event.point.distance(reference.head)
       } else {
-        val (a, b) = nearestLine(event.point, reference)
+        val (a, b) = nearestLine(event.point, reference.toSeq)
         val projected = if (a == b) a else projectToLine(event.point, a, b)
         event.point.distance(projected)
       }

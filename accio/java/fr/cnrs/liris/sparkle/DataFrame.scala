@@ -21,14 +21,14 @@ package fr.cnrs.liris.sparkle
 import com.twitter.util.logging.Logging
 import fr.cnrs.liris.util.random._
 
+import scala.collection.GenTraversableOnce
 import scala.reflect.ClassTag
 import scala.util.Random
 
-// TODO: migrate seq to iterable's (possible lazyness)
 trait DataFrame[T] extends Logging {
   def keys: Seq[String]
 
-  private[sparkle] def load(key: String): Seq[T]
+  private[sparkle] def load(key: String): Iterable[T]
 
   private[sparkle] def env: SparkleEnv
 
@@ -38,7 +38,7 @@ trait DataFrame[T] extends Logging {
 
   def coalesce(): DataFrame[T] = new CoalesceDataFrame(this)
 
-  def groupBy(fn: T => String): DataFrame[(String, Seq[T])] = {
+  def groupBy(fn: T => String): DataFrame[(String, Iterable[T])] = {
     new GroupByDataFrame[T](this, fn)
   }
 
@@ -61,7 +61,7 @@ trait DataFrame[T] extends Logging {
     new MapPartitionsDataFrame[T, U](this, (_, seq) => seq.map(fn), implicitly[Encoder[U]])
   }
 
-  def flatMap[U: Encoder](fn: T => Iterable[U]): DataFrame[U] = {
+  def flatMap[U: Encoder](fn: T => GenTraversableOnce[U]): DataFrame[U] = {
     new MapPartitionsDataFrame[T, U](this, (_, seq) => seq.flatMap(fn), implicitly[Encoder[U]])
   }
 
@@ -146,7 +146,7 @@ object DataFrame {
     new NumericDataFrameOps(df)
   }
 
-  implicit def toGroupedOps[T](df: DataFrame[(String, Seq[T])]): GroupedDataFrameOps[T] = {
+  implicit def toGroupedOps[T](df: DataFrame[(String, Iterable[T])]): GroupedDataFrameOps[T] = {
     new GroupedDataFrameOps(df)
   }
 }

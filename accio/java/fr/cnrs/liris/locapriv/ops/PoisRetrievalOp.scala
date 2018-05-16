@@ -46,16 +46,16 @@ case class PoisRetrievalOp(
     PoisRetrievalOp.Out(write(metrics, 0, ctx))
   }
 
-  private def evaluate(id: String, ref: Seq[Poi], res: Seq[Poi]): Seq[MetricUtils.FscoreValue] = {
-    val matched = res.flatMap(resPoi => remap(resPoi, ref, threshold, overlap)).distinct.size
+  private def evaluate(id: String, ref: Iterable[Poi], res: Iterable[Poi]): Seq[MetricUtils.FscoreValue] = {
+    val matched = res.flatMap(resPoi => remap(resPoi, ref, threshold, overlap)).toSet.size
     Seq(MetricUtils.fscore(id, ref.size, res.size, matched))
   }
 
-  private def remap(resPoi: Poi, refPois: Seq[Poi], threshold: Distance, overlap: Option[Duration]): Seq[Int] = {
+  private def remap(resPoi: Poi, refPois: Iterable[Poi], threshold: Distance, overlap: Option[Duration]): Iterable[Int] = {
     val matchingPois = refPois.zipWithIndex
       .filter { case (refPoi, _) => matches(refPoi, resPoi, threshold, overlap) }
       .map { case (refPoi, idx) => (idx, refPoi.point.distance(resPoi.point)) }
-    if (matchingPois.nonEmpty) Seq(matchingPois.minBy(_._2)._1) else Seq.empty
+    if (matchingPois.nonEmpty) Iterable(matchingPois.minBy(_._2)._1) else Iterable.empty
   }
 
   private def matches(refPoi: Poi, resPoi: Poi, threshold: Distance, overlap: Option[Duration]) = {

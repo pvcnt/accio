@@ -57,7 +57,7 @@ final class DataFrameWriter[T](df: DataFrame[T]) {
 
   def csv(uri: String): Unit = write(uri, CsvDataFormat)
 
-  private def write(uri: String, writer: RowWriter, elements: Seq[T]): Unit = {
+  private def write(uri: String, writer: RowWriter, elements: Iterable[T]): Unit = {
     val os = PosixFilesystem.createOutputStream(uri)
     try {
       writer.write(elements.flatMap(df.encoder.serialize), os)

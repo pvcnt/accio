@@ -112,7 +112,7 @@ private case class CountQuery(box: BoundingBox, span: Interval) {
    * @param trace Trace.
    * @return True if the trace crosses the area defined by this query, false otherwise.
    */
-  def contains(trace: Seq[Event]): Boolean = {
+  def contains(trace: Iterable[Event]): Boolean = {
     trace.exists(r => box.contains(r.point) && span.contains(r.time))
   }
 }

@@ -29,7 +29,7 @@ import scala.collection.mutable
 private[ops] trait SlidingSamplingOp extends TransformOp[Event] {
   protected def sample(prev: Event, curr: Event): Boolean
 
-  override protected def transform(key: String, trace: Seq[Event]): Seq[Event] = {
+  override protected def transform(key: String, trace: Iterable[Event]): Iterable[Event] = {
     if (trace.isEmpty) {
       trace
     } else {

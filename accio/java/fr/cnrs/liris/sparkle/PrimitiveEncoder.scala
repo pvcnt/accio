@@ -29,8 +29,8 @@ private[sparkle] class PrimitiveEncoder[T](val dataType: DataType, cls: Class[T]
 
   override def classTag: ClassTag[T] = ClassTag(cls)
 
-  override def serialize(obj: T): Seq[InternalRow] = {
-    Seq(InternalRow(Array(obj)))
+  override def serialize(obj: T): Iterable[InternalRow] = {
+    Iterable(InternalRow(Array(obj)))
   }
 
   override def deserialize(row: InternalRow): T = {

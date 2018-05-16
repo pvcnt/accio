@@ -21,9 +21,9 @@ package fr.cnrs.liris.sparkle
 import com.google.common.base.MoreObjects
 
 private[sparkle] class JoinDataFrame[T, U, V](
-  first: DataFrame[(String, Seq[T])],
-  other: DataFrame[(String, Seq[U])],
-  fn: (String, Seq[T], Seq[U]) => Seq[V],
+  first: DataFrame[(String, Iterable[T])],
+  other: DataFrame[(String, Iterable[U])],
+  fn: (String, Iterable[T], Iterable[U]) => Iterable[V],
   private[sparkle] val encoder: Encoder[V])
   extends DataFrame[V] {
 
@@ -33,11 +33,11 @@ private[sparkle] class JoinDataFrame[T, U, V](
 
   override private[sparkle] def env: SparkleEnv = first.env
 
-  override private[sparkle] def load(key: String): Seq[V] = {
+  override private[sparkle] def load(key: String): Iterable[V] = {
     val firstPartition = first.load(key).toMap
     val otherPartition = other.load(key).toMap
     firstPartition
-      .flatMap { case (k, v1) => fn(k, v1, otherPartition.getOrElse(k, Seq.empty)) }
+      .flatMap { case (k, v1) => fn(k, v1, otherPartition.getOrElse(k, Iterable.empty)) }
       .toSeq
   }
 }

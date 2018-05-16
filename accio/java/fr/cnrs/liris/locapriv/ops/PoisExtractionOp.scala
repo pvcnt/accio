@@ -45,7 +45,7 @@ case class PoisExtractionOp(
     new RepeatedPoisClusterer(duration, diameter, minPoints)
   }
 
-  override protected def transform(key: String, trace: Seq[Event]): Seq[Poi] = {
-    clusterer.clusterPois(trace)
+  override protected def transform(key: String, trace: Iterable[Event]): Iterable[Poi] = {
+    clusterer.clusterPois(trace.toSeq)
   }
 }

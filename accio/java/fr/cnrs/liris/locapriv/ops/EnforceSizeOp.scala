@@ -35,7 +35,7 @@ case class EnforceSizeOp(
   @Arg(help = "Input dataset") data: RemoteFile)
   extends TransformOp[Event] {
 
-  override protected def transform(key: String, trace: Seq[Event]): Seq[Event] = {
+  override protected def transform(key: String, trace: Iterable[Event]): Iterable[Event] = {
     var result = trace
     maxSize.foreach { size =>
       if (result.size > size) {

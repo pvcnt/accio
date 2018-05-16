@@ -34,7 +34,7 @@ case class PromesseOp(
   data: RemoteFile)
   extends TransformOp[Event] {
 
-  override protected def transform(key: String, trace: Seq[Event]): Seq[Event] = {
+  override protected def transform(key: String, trace: Iterable[Event]): Iterable[Event] = {
     SpeedSmoothing.transform(trace, alpha)
   }
 }

@@ -40,7 +40,7 @@ case class DataCompletenessOp(
     DataCompletenessOp.Out(write(metrics, 0, ctx))
   }
 
-  private def evaluate(id: String, ref: Seq[Event], res: Seq[Event]) = {
+  private def evaluate(id: String, ref: Iterable[Event], res: Iterable[Event]) = {
     val completeness = {
       if (res.isEmpty && ref.isEmpty) {
         1d

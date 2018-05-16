@@ -22,7 +22,7 @@ import com.google.common.base.MoreObjects
 
 private[sparkle] class MapPartitionsDataFrame[T, U](
   inner: DataFrame[T],
-  fn: (String, Seq[T]) => Seq[U],
+  fn: (String, Iterable[T]) => Iterable[U],
   private[sparkle] val encoder: Encoder[U])
   extends DataFrame[U] {
 
@@ -30,7 +30,7 @@ private[sparkle] class MapPartitionsDataFrame[T, U](
 
   override def toString: String = MoreObjects.toStringHelper(this).addValue(inner).toString
 
-  override private[sparkle] def load(key: String): Seq[U] = fn(key, inner.load(key))
+  override private[sparkle] def load(key: String): Iterable[U] = fn(key, inner.load(key))
 
   override private[sparkle] def env = inner.env
 }

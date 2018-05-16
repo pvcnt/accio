@@ -36,8 +36,9 @@ case class GaussianKernelSmoothingOp(
   data: RemoteFile)
   extends TransformOp[Event] {
 
-  override protected def transform(key: String, trace: Seq[Event]): Seq[Event] = {
-    trace.map(transform(_, trace))
+  override protected def transform(key: String, trace: Iterable[Event]): Iterable[Event] = {
+    val traceAsSeq = trace.toSeq
+    trace.map(transform(_, traceAsSeq))
   }
 
   private def transform(event: Event, trace: Seq[Event]): Event = {

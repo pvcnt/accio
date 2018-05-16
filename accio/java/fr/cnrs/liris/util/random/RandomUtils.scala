@@ -44,26 +44,6 @@ import scala.util.Random
  */
 object RandomUtils {
   /**
-   * Sample uniformly a sequence by keeping each element with the same probability.
-   *
-   * @param input Input sequence.
-   * @param proba Probability to keep each element.
-   * @param seed  Seed.
-   * @tparam T Elements' type.
-   */
-  def sampleUniform[T](input: Seq[T], proba: Double, seed: Long = Random.nextLong()): Seq[T] = {
-    require(proba >= 0 && proba <= 1, s"proba must be in [0,1] (got $proba )")
-    if (proba == 1) {
-      input
-    } else if (proba == 0) {
-      Seq.empty
-    } else {
-      val rnd = new Random(seed)
-      input.filter(_ => rnd.nextDouble() <= proba)
-    }
-  }
-
-  /**
    * Shuffle the elements of a collection into a random order, returning the
    * result in a new collection. Unlike [[scala.util.Random.shuffle]], this method
    * uses a local random number generator, avoiding inter-thread contention.

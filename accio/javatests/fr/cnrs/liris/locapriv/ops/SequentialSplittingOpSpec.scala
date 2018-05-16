@@ -18,6 +18,7 @@
 
 package fr.cnrs.liris.locapriv.ops
 
+import fr.cnrs.liris.accio.sdk.RemoteFile
 import fr.cnrs.liris.locapriv.domain.Event
 import fr.cnrs.liris.locapriv.testing.WithTraceGenerator
 import fr.cnrs.liris.testing.UnitSpec
@@ -71,7 +72,24 @@ class SequentialSplittingOpSpec extends UnitSpec with WithTraceGenerator with Sc
     out2 should have size 0
   }
 
-  private def transform(data: Seq[Event], percent: Double): (Seq[Event], Seq[Event]) = {
+  it should "reject invalid parameters" in {
+    var e = intercept[IllegalArgumentException] {
+      SequentialSplittingOp(percentBegin = -1, percentEnd = 90, data = RemoteFile("/dev/null"))
+    }
+    e.getMessage shouldBe "requirement failed: percentBegin must be between 0 and 100: -1"
+
+    e = intercept[IllegalArgumentException] {
+      SequentialSplittingOp(percentBegin = 10, percentEnd = 101, data = RemoteFile("/dev/null"))
+    }
+    e.getMessage shouldBe "requirement failed: percentEnd must be between 0 and 100: 101"
+
+    e = intercept[IllegalArgumentException] {
+      SequentialSplittingOp(percentBegin = 56, percentEnd = 55, data = RemoteFile("/dev/null"))
+    }
+    e.getMessage shouldBe "requirement failed: percentEnd must be greater than percentBegin: 55 < 56"
+  }
+
+  private def transform(data: Seq[Event], percent: Int): (Seq[Event], Seq[Event]) = {
     com.twitter.jvm.numProcs.let(1) {
       val ds = writeTraces(data: _*)
       val res1 = SequentialSplittingOp(percentBegin = 0, percentEnd = percent, complement = false, data = ds).execute(ctx)

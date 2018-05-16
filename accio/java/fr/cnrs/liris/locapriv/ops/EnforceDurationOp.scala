@@ -36,7 +36,7 @@ case class EnforceDurationOp(
   @Arg(help = "Input dataset") data: RemoteFile)
   extends TransformOp[Event] {
 
-  override protected def transform(key: String, trace: Seq[Event]): Seq[Event] = {
+  override protected def transform(key: String, trace: Iterable[Event]): Iterable[Event] = {
     if (trace.isEmpty) {
       trace
     } else {

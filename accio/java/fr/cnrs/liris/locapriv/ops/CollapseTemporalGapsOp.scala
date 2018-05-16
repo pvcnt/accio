@@ -40,7 +40,7 @@ case class CollapseTemporalGapsOp(
     new Instant(startAt.millis).toDateTime(DateTimeZone.UTC).withTimeAtStartOfDay
   }
 
-  override protected def transform(key: String, trace: Seq[Event]): Seq[Event] = {
+  override protected def transform(key: String, trace: Iterable[Event]): Iterable[Event] = {
     var shift = 0L
     var prev: Option[DateTime] = None
     trace.map { event =>

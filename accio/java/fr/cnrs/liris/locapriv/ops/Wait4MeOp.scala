@@ -165,12 +165,15 @@ case class Wait4MeOp(
     }
   }
 
-  private def limit(trace: Seq[Event]): Seq[Event] = {
+  private def limit(trace: Iterable[Event]): Iterable[Event] = {
     // Because of the binary code we use (provided by the authors), each trace is limited to 10000 events. We enforce
     // here this limit by sampling larger traces using the modulo operator.
     if (trace.size > Wait4MeOp.MaxTraceSize) {
       val modulo = trace.size.toDouble / Wait4MeOp.MaxTraceSize
-      trace.zipWithIndex.filter { case (_, idx) => (idx % modulo) < 1 }.map(_._1).take(Wait4MeOp.MaxTraceSize)
+      trace.zipWithIndex
+        .filter { case (_, idx) => (idx % modulo) < 1 }
+        .map(_._1)
+        .take(Wait4MeOp.MaxTraceSize)
     } else {
       trace
     }

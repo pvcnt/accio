@@ -49,14 +49,14 @@ case class AreaCoverageOp(
     AreaCoverageOp.Out(write(metrics, 0, ctx))
   }
 
-  private def evaluate(id: String, ref: Seq[Event], res: Seq[Event]) = {
+  private def evaluate(id: String, ref: Iterable[Event], res: Iterable[Event]) = {
     val refCells = getCells(ref, level)
     val resCells = getCells(res, level)
     val matched = resCells.intersect(refCells).size
     Seq(MetricUtils.fscore(id, refCells.size, resCells.size, matched))
   }
 
-  private def getCells(trace: Seq[Event], level: Int) = {
+  private def getCells(trace: Iterable[Event], level: Int) = {
     val cells = mutable.Set.empty[String]
     // Doing a foreach (instead of a map/toSet) seems to be faster, as we only insert de-duplicated
     // cell identifiers.

@@ -20,7 +20,8 @@ package fr.cnrs.liris.locapriv.ops
 
 import fr.cnrs.liris.accio.sdk._
 import fr.cnrs.liris.locapriv.domain.Event
-import fr.cnrs.liris.util.random.RandomUtils
+
+import scala.util.Random
 
 @Op(
   category = "transform",
@@ -38,7 +39,14 @@ case class UniformSamplingOp(
 
   require(probability >= 0 && probability <= 1, s"Probability must be in [0, 1] (got $probability)")
 
-  override protected def transform(key: String, trace: Seq[Event]): Seq[Event] = {
-    RandomUtils.sampleUniform(trace, probability, seeds(key))
+  override protected def transform(key: String, trace: Iterable[Event]): Iterable[Event] = {
+    if (probability == 1) {
+      trace
+    } else if (probability == 0) {
+      Seq.empty
+    } else {
+      val rnd = new Random(seeds(key))
+      trace.filter(_ => rnd.nextDouble() <= probability)
+    }
   }
 }

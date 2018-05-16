@@ -42,15 +42,15 @@ case class SpatioTemporalDistortionOp(
     SpatioTemporalDistortionOp.Out(write(metrics, 0, ctx))
   }
 
-  private def evaluate(id: String, ref: Seq[Event], res: Seq[Event]): Seq[MetricUtils.StatsValue] = {
+  private def evaluate(id: String, ref: Iterable[Event], res: Iterable[Event]): Iterable[MetricUtils.StatsValue] = {
     val (larger, smaller) = if (ref.size > res.size) (ref, res) else (res, ref)
     val distances = smaller.map { event =>
       event.point.distance(interpolate(larger, event.time)).meters
     }
-    Seq(MetricUtils.stats(id, distances))
+    Iterable(MetricUtils.stats(id, distances))
   }
 
-  private def interpolate(trace: Seq[Event], time: Instant) = {
+  private def interpolate(trace: Iterable[Event], time: Instant) = {
     if (time.isBefore(trace.head.time)) {
       trace.head.point
     } else if (time.isAfter(trace.last.time)) {

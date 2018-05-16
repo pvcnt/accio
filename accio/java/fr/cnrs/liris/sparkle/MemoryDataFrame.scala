@@ -43,7 +43,7 @@ private[sparkle] class MemoryDataFrame[T](
 
   override def toString: String = MoreObjects.toStringHelper(this).toString
 
-  override private[sparkle] def load(key: String): Seq[T] = {
+  override private[sparkle] def load(key: String): Iterable[T] = {
     val start = key.toInt * partitionSize
     elements.slice(start, math.min(start + partitionSize, elements.length))
   }

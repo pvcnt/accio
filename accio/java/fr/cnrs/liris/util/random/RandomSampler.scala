@@ -32,7 +32,7 @@ trait RandomSampler[T, U] extends Pseudorandom with Cloneable {
   /**
    * take a random sample
    */
-  def sample(items: Seq[T]): Seq[U]
+  def sample(items: Iterable[T]): Iterable[U]
 
   /**
    * return a copy of the RandomSampler object
@@ -77,9 +77,9 @@ class BernoulliSampler[T](fraction: Double) extends RandomSampler[T, T] {
 
   override def setSeed(seed: Long): Unit = rng.setSeed(seed)
 
-  override def sample(items: Seq[T]): Seq[T] = {
+  override def sample(items: Iterable[T]): Iterable[T] = {
     if (fraction <= 0.0) {
-      Seq.empty
+      Iterable.empty
     } else if (fraction >= 1.0) {
       items
     } else {

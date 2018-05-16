@@ -22,12 +22,12 @@ import fr.cnrs.liris.sparkle.format.{InternalRow, StructType}
 
 import scala.reflect.ClassTag
 
-private[sparkle] class GroupEncoder[V](inner: Encoder[V]) extends Encoder[(String, Seq[V])] {
+private[sparkle] class GroupEncoder[V](inner: Encoder[V]) extends Encoder[(String, Iterable[V])] {
   override def structType: StructType = inner.structType
 
-  override def classTag: ClassTag[(String, Seq[V])] = ClassTag(classOf[(String, Seq[V])])
+  override def classTag: ClassTag[(String, Iterable[V])] = ClassTag(classOf[(String, Iterable[V])])
 
-  override def serialize(obj: (String, Seq[V])): Seq[InternalRow] = obj._2.flatMap(inner.serialize)
+  override def serialize(obj: (String, Iterable[V])): Iterable[InternalRow] = obj._2.flatMap(inner.serialize)
 
-  override def deserialize(row: InternalRow): (String, Seq[V]) = throw new UnsupportedOperationException
+  override def deserialize(row: InternalRow): (String, Iterable[V]) = throw new UnsupportedOperationException
 }

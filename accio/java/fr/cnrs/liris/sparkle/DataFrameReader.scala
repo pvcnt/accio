@@ -61,12 +61,8 @@ final class DataFrameReader[T](env: SparkleEnv, encoder: Encoder[T]) {
       override private[sparkle] def load(key: String) = {
         val extension = if (format.extension.nonEmpty) '.' + format.extension else ""
         val is = PosixFilesystem.createInputStream(s"$uri/$key$extension")
-        try {
-          val reader = format.readerFor(encoder.structType, _options.toMap)
-          reader.read(is).map(encoder.deserialize).toList
-        } finally {
-          is.close()
-        }
+        val reader = format.readerFor(encoder.structType, _options.toMap)
+        reader.read(is).map(encoder.deserialize)
       }
 
       override private[sparkle] def env = self.env

@@ -43,7 +43,7 @@ private[ops] abstract class TransformOp[T: Encoder]
 
   protected def data: RemoteFile
 
-  protected def transform(key: String, trace: Seq[Event]): Seq[T]
+  protected def transform(key: String, trace: Iterable[Event]): Iterable[T]
 }
 
 object TransformOp {

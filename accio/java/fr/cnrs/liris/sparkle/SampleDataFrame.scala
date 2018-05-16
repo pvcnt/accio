@@ -38,7 +38,7 @@ private[sparkle] class SampleDataFrame[T](
 
   override def toString: String = MoreObjects.toStringHelper(this).addValue(inner).toString
 
-  override private[sparkle] def load(key: String): Seq[T] = {
+  override private[sparkle] def load(key: String): Iterable[T] = {
     val aSampler = sampler.clone
     aSampler.setSeed(seeds(key))
     aSampler.sample(inner.load(key))

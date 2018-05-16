@@ -29,6 +29,14 @@ trait DataFormat {
 }
 
 trait RowReader {
+  /**
+   *
+   * The reader is expected to close its resources (including the `is` input stream) once the end
+   * of the stream is reached, or when an error occurred.
+   *
+   * @param is
+   * @return
+   */
   def read(is: InputStream): Iterable[InternalRow]
 }
 

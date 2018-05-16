@@ -37,9 +37,9 @@ object SpeedSmoothing {
    * @param trace Trace to protect.
    * @param alpha Distance between two consecutive points.
    */
-  def transform(trace: Seq[Event], alpha: Distance): Seq[Event] = {
+  def transform(trace: Iterable[Event], alpha: Distance): Iterable[Event] = {
     if (trace.isEmpty) {
-      Seq.empty
+      Iterable.empty
     } else if (alpha == Distance.Zero) {
       trace
     } else {
@@ -54,7 +54,7 @@ object SpeedSmoothing {
     }
   }
 
-  private def sample(events: Seq[Event], alpha: Distance) = {
+  private def sample(events: Iterable[Event], alpha: Distance) = {
     var sampled = mutable.ListBuffer.empty[Event]
     var prev: Option[Event] = None
     for (event <- events) {

@@ -45,9 +45,9 @@ private[sparkle] class ProductEncoder[T](val structType: StructType, cls: Class[
 
   override def classTag: ClassTag[T] = ClassTag(cls)
 
-  override def serialize(obj: T): Seq[InternalRow] = {
+  override def serialize(obj: T): Iterable[InternalRow] = {
     val product = obj.asInstanceOf[Product]
-    Seq(InternalRow(product.productIterator.toArray))
+    Iterable(InternalRow(product.productIterator.toArray))
   }
 
   override def deserialize(row: InternalRow): T = {

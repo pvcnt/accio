@@ -35,9 +35,9 @@ case class ModuloSamplingOp(
   data: RemoteFile)
   extends TransformOp[Event] {
 
-  require(n >= 0, s"n must be strictly positive (got $n)")
+  require(n >= 0, s"n must be strictly positive: $n")
 
-  override protected def transform(key: String, trace: Seq[Event]): Seq[Event] = {
+  override protected def transform(key: String, trace: Iterable[Event]): Iterable[Event] = {
     if (trace.size <= n) {
       trace
     } else {

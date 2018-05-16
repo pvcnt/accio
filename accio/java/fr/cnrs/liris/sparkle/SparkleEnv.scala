@@ -93,7 +93,7 @@ final class SparkleEnv(parallelism: Int) extends Logging {
    * @tparam T
    * @tparam U
    */
-  private[sparkle] def submit[T, U: ClassTag](frame: DataFrame[T], keys: Seq[String])(processor: (String, Seq[T]) => U): Array[U] = {
+  private[sparkle] def submit[T, U: ClassTag](frame: DataFrame[T], keys: Seq[String])(processor: (String, Iterable[T]) => U): Array[U] = {
     if (keys.isEmpty) {
       Array.empty
     } else if (keys.size == 1) {

@@ -29,7 +29,7 @@ import scala.collection.mutable
 private[ops] trait SlidingSplittingOp extends TransformOp[Event] {
   protected def split(buffer: Seq[Event], curr: Event): Boolean
 
-  override protected def transform(key: String, trace: Seq[Event]): Seq[Event] = {
+  override protected def transform(key: String, trace: Iterable[Event]): Iterable[Event] = {
     val buffer = mutable.ListBuffer.empty[Event]
     var idx = 0
     trace.map { event =>

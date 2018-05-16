@@ -38,7 +38,7 @@ case class GeoIndistinguishabilityOp(
 
   require(epsilon > 0, s"Epsilon must be strictly positive (got $epsilon)")
 
-  override def transform(key: String, trace: Seq[Event]): Seq[Event] = {
+  override def transform(key: String, trace: Iterable[Event]): Iterable[Event] = {
     Laplace.transform(trace, epsilon, seeds(key))
   }
 }

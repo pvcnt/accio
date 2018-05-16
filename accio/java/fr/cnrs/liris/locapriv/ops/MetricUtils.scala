@@ -51,7 +51,7 @@ object MetricUtils {
     FscoreValue(id, precision, recall, fscore)
   }
 
-  private[ops] def stats(id: String, values: Seq[Double]): StatsValue = stats(id, values.toArray)
+  private[ops] def stats(id: String, values: Iterable[Double]): StatsValue = stats(id, values.toArray)
 
   private[ops] def stats(id: String, values: Array[Double]): StatsValue = {
     if (values.isEmpty) {

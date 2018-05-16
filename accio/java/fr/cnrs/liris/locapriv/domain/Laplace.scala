@@ -38,7 +38,7 @@ object Laplace {
    * @param epsilon Privacy budget.
    * @param seed    Seed.
    */
-  def transform(trace: Seq[Event], epsilon: Double, seed: Long = Random.nextLong): Seq[Event] = {
+  def transform(trace: Iterable[Event], epsilon: Double, seed: Long = Random.nextLong): Iterable[Event] = {
     val rnd = new Random(seed)
     trace.map(event => event.withPoint(noise(event.point, epsilon, rnd)))
     //TODO: validate this.

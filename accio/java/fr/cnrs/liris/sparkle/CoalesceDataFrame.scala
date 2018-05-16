@@ -23,8 +23,8 @@ private[sparkle] class CoalesceDataFrame[T](inner: DataFrame[T])
 
   override def keys: Seq[String] = Seq("0")
 
-  override private[sparkle] def load(key: String): Seq[T] = {
-    inner.keys.flatMap(inner.load)
+  override private[sparkle] def load(key: String): Iterable[T] = {
+    Iterable.concat(inner.keys.map(inner.load): _*)
   }
 
   override private[sparkle] def env = inner.env
