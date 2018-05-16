@@ -16,11 +16,24 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.sdk
+package fr.cnrs.liris.accio.domain
+
+import fr.cnrs.liris.lumos.domain.{DataType, Value}
 
 /**
- * Reference to a remote file.
+ * Definition of an operator port (either input or output).
  *
- * @param uri URI where the file is located.
+ * @param name
+ * @param dataType
+ * @param help
+ * @param defaultValue Default value taken by this input if none is specified. It should be empty for output ports.
+ * @param optional
+ * @param aspects
  */
-case class RemoteFile(uri: String)
+case class Attribute(
+  name: String,
+  dataType: DataType,
+  help: Option[String] = None,
+  defaultValue: Option[Value] = None,
+  optional: Boolean = false,
+  aspects: Set[String] = Set.empty)

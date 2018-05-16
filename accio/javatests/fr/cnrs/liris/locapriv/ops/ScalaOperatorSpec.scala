@@ -21,7 +21,8 @@ package fr.cnrs.liris.locapriv.ops
 import java.nio.file.Files
 import java.util.concurrent.atomic.AtomicInteger
 
-import fr.cnrs.liris.accio.sdk.{OpContext, RemoteFile}
+import fr.cnrs.liris.accio.domain.RemoteFile
+import fr.cnrs.liris.accio.sdk.OpContext
 import fr.cnrs.liris.locapriv.domain.{Event, Poi}
 import fr.cnrs.liris.sparkle.SparkleEnv
 import fr.cnrs.liris.testing.CreateTmpDirectory

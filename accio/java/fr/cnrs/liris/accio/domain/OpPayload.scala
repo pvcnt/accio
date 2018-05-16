@@ -16,30 +16,17 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.locapriv.ops
+package fr.cnrs.liris.accio.domain
 
-import fr.cnrs.liris.lumos.domain.RemoteFile
-import fr.cnrs.liris.accio.sdk._
+import fr.cnrs.liris.lumos.domain.AttrValue
 
-@Op(
-  category = "source",
-  help = "Read a dataset of traces.",
-  description = "This operator can manipulate the source dataset, essentially to reduce its size, " +
-    "through some basic preprocessing.")
-case class EventSourceOp(
-  @Arg(help = "Dataset URI")
-  url: String)
-  extends ScalaOperator[EventSourceOp.Out] with SparkleOperator {
-
-  override def execute(ctx: OpContext): EventSourceOp.Out = {
-    EventSourceOp.Out(RemoteFile(url))
-  }
-}
-
-object EventSourceOp {
-
-  case class Out(
-    @Arg(help = "Source dataset")
-    data: RemoteFile)
-
-}
+/**
+ * Payload containing the information needed to execute an operator. It is given to the
+ * operator's binary as a based-64 encoded command-line argument.
+ *
+ * @param seed      Seed used by unstable operators (included even if the operator is not unstable).
+ * @param params    Input values of the operator. All values should be included, even the optional ones.
+ * @param resources Compute resourcess necessary to execute the operator. This may be used by some
+ *                  implementations to provide some isolation, if a proper isolator is not available.
+ */
+case class OpPayload(seed: Long, params: Seq[AttrValue], resources: Map[String, Long] = Map.empty)

@@ -30,6 +30,30 @@ sealed trait Value {
 
 object Value {
 
+  def apply(v: Any, dataType: DataType): Value =
+    dataType match {
+      case DataType.Int => Int(v.asInstanceOf[scala.Int])
+      case DataType.Long => Long(v.asInstanceOf[scala.Long])
+      case DataType.Float => Float(v.asInstanceOf[scala.Float])
+      case DataType.Double => Double(v.asInstanceOf[scala.Double])
+      case DataType.String => String(v.toString)
+      case DataType.Bool => Bool(v.asInstanceOf[Boolean])
+      case DataType.Dataset => Dataset(v.asInstanceOf[RemoteFile])
+      case DataType.File => File(v.asInstanceOf[RemoteFile])
+    }
+
+  def apply(v: Any): Value =
+    v match {
+      case i: scala.Int => Int(i)
+      case l: scala.Long => Long(l)
+      case f: scala.Float => Float(f)
+      case d: scala.Double => Double(d)
+      case s: Predef.String => String(s)
+      case b: Boolean => Bool(b)
+      case f: RemoteFile => Dataset(f)
+      case _ => throw new IllegalArgumentException(s"Unsupported Scala value: $v")
+    }
+
   case class Int(v: scala.Int) extends Value {
     override def dataType: DataType = DataType.Int
 

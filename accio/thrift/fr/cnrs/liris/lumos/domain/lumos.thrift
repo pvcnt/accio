@@ -31,10 +31,9 @@ enum DataType {
 
 struct RemoteFile {
   1: string uri;
-  2: string content_type;
+  2: optional string content_type;
   3: optional string format;
-  4: optional i64 size_kb;
-  5: optional string sha256;
+  4: optional string sha256;
 }
 
 union Value {

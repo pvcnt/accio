@@ -18,12 +18,9 @@ scala_library(
   name = "domain",
   srcs = glob(["*.scala"]),
   deps = [
-    "//accio/java/fr/cnrs/liris/util",
-    "//3rdparty/jvm/com/github/nscala_time",
-    "//3rdparty/jvm/org/scala_lang/modules:scala_parser_combinators",
-  ],
-  exports = [
-    "//3rdparty/jvm/com/github/nscala_time",
+    "//accio/java/fr/cnrs/liris/lumos/domain",
+    "//accio/java/fr/cnrs/liris/util/scrooge",
+    "//3rdparty/jvm/com/twitter:util_slf4j_api",
   ],
   visibility = ["//visibility:public"],
 )

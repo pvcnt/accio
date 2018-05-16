@@ -19,13 +19,16 @@
 package fr.cnrs.liris.accio.sdk
 
 /**
- * An operator is the basic processing unit of Accio. It takes a typed input and produces a typed output. Input and
- * output types must be case classes, whose fields are one of the allowed types. All operators should be annotated
- * with the [[Op]] annotation.
+ * An operator is the basic processing unit of Accio. It takes a typed input and produces a typed
+ * output. The input is materialized as the parameters of this case class, while the output is
+ * materialized as the parameters of the output type. Fields of the input and output types must be
+ * of one of the allowed types. All operators should be annotated with the [[Op]] annotation.
  *
  * @tparam T Output type
  */
 trait ScalaOperator[T] {
+  this: Product =>
+  
   /**
    * Execute this operator. With given input and context, it should produce a deterministic output.
    *

@@ -19,7 +19,7 @@
 package fr.cnrs.liris.accio.api
 
 import fr.cnrs.liris.accio.api.thrift._
-import fr.cnrs.liris.accio.sdk.RemoteFile
+import fr.cnrs.liris.accio.domain.RemoteFile
 import fr.cnrs.liris.testing.UnitSpec
 import fr.cnrs.liris.util.geo.{Distance, LatLng}
 import org.joda.time.{Duration, Instant}

@@ -19,7 +19,6 @@
 package fr.cnrs.liris.lumos.domain.thrift
 
 import com.github.nscala_time.time.Imports._
-import com.twitter.util.StorageUnit
 import fr.cnrs.liris.lumos.domain
 import org.joda.time.Instant
 
@@ -78,12 +77,15 @@ object ThriftAdapter {
       case ExecState.EnumUnknownExecState(_) => throw new IllegalArgumentException("Illegal value")
     }
 
+  def toDomain(obj: AttrValue): domain.AttrValue = {
+    domain.AttrValue(obj.name, toDomain(obj.dataType), toDomain(obj.value), obj.aspects.toSet)
+  }
+
   private def toDomain(obj: RemoteFile): domain.RemoteFile = {
     domain.RemoteFile(
       uri = obj.uri,
       contentType = obj.contentType,
       format = obj.format,
-      size = obj.sizeKb.map(StorageUnit.fromKilobytes),
       sha256 = obj.sha256)
   }
 
@@ -105,7 +107,7 @@ object ThriftAdapter {
     domain.ExecStatus(toDomain(obj.state), new Instant(obj.time), obj.message)
   }
 
-  private def toDomain(obj: DataType): domain.DataType =
+  def toDomain(obj: DataType): domain.DataType =
     obj match {
       case DataType.Int => domain.DataType.Int
       case DataType.Long => domain.DataType.Long
@@ -118,17 +120,13 @@ object ThriftAdapter {
       case DataType.EnumUnknownDataType(_) => throw new IllegalArgumentException("Illegal value")
     }
 
-  private def toDomain(obj: ErrorDatum): domain.ErrorDatum = {
+  def toDomain(obj: ErrorDatum): domain.ErrorDatum = {
     domain.ErrorDatum(obj.mnemonic, obj.message, obj.stacktrace)
   }
 
   private def toDomain(obj: Link): domain.Link = domain.Link(obj.title, obj.url)
 
-  private def toDomain(obj: AttrValue): domain.AttrValue = {
-    domain.AttrValue(obj.name, toDomain(obj.dataType), toDomain(obj.value), obj.aspects.toSet)
-  }
-
-  private def toDomain(obj: MetricValue): domain.MetricValue = {
+  def toDomain(obj: MetricValue): domain.MetricValue = {
     domain.MetricValue(obj.name, obj.value, obj.aspects.toSet)
   }
 
@@ -178,6 +176,10 @@ object ThriftAdapter {
     Event(obj.parent, obj.sequence, obj.time.millis, payload)
   }
 
+  def toThrift(obj: domain.AttrValue): AttrValue = {
+    AttrValue(obj.name, toThrift(obj.dataType), toThrift(obj.value), obj.aspects)
+  }
+
   private def toThrift(obj: domain.Task): Task = {
     Task(
       name = obj.name,
@@ -192,7 +194,7 @@ object ThriftAdapter {
       history = obj.history.map(toThrift))
   }
 
-  private def toThrift(obj: domain.DataType): DataType =
+  def toThrift(obj: domain.DataType): DataType =
     obj match {
       case domain.DataType.Int => DataType.Int
       case domain.DataType.Long => DataType.Long
@@ -219,15 +221,11 @@ object ThriftAdapter {
 
   private def toThrift(obj: domain.Link): Link = Link(obj.title, obj.url)
 
-  private def toThrift(obj: domain.ErrorDatum): ErrorDatum = {
+  def toThrift(obj: domain.ErrorDatum): ErrorDatum = {
     ErrorDatum(obj.mnemonic, obj.message, obj.stacktrace)
   }
 
-  private def toThrift(obj: domain.AttrValue): AttrValue = {
-    AttrValue(obj.name, toThrift(obj.dataType), toThrift(obj.value), obj.aspects)
-  }
-
-  private def toThrift(obj: domain.MetricValue): MetricValue = {
+  def toThrift(obj: domain.MetricValue): MetricValue = {
     MetricValue(obj.name, obj.value, obj.aspects)
   }
 
@@ -236,7 +234,6 @@ object ThriftAdapter {
       uri = obj.uri,
       contentType = obj.contentType,
       format = obj.format,
-      sizeKb = obj.size.map(_.inKilobytes),
       sha256 = obj.sha256)
   }
 }

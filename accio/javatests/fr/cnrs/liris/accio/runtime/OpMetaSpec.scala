@@ -20,6 +20,7 @@ package fr.cnrs.liris.accio.runtime
 
 import fr.cnrs.liris.accio.api.Values
 import fr.cnrs.liris.accio.api.thrift._
+import fr.cnrs.liris.accio.domain.RemoteFile
 import fr.cnrs.liris.accio.sdk._
 import fr.cnrs.liris.testing.UnitSpec
 import fr.cnrs.liris.util.geo.{Distance, LatLng}

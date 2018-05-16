@@ -18,11 +18,8 @@
 
 package fr.cnrs.liris.lumos.domain
 
-import com.twitter.util.StorageUnit
-
 case class RemoteFile(
   uri: String,
-  contentType: String,
+  contentType: Option[String] = None,
   format: Option[String] = None,
-  size: Option[StorageUnit] = None,
   sha256: Option[String] = None)

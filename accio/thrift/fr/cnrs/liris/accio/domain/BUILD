@@ -14,16 +14,21 @@
 # You should have received a copy of the GNU General Public License
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
-scala_library(
+load("@io_bazel_rules_scala//thrift:thrift.bzl", "thrift_library")
+load("@io_bazel_rules_scala//twitter_scrooge:twitter_scrooge.bzl", "scrooge_scala_library")
+
+scrooge_scala_library(
   name = "domain",
-  srcs = glob(["*.scala"]),
   deps = [
-    "//accio/java/fr/cnrs/liris/util",
-    "//3rdparty/jvm/com/github/nscala_time",
-    "//3rdparty/jvm/org/scala_lang/modules:scala_parser_combinators",
-  ],
-  exports = [
-    "//3rdparty/jvm/com/github/nscala_time",
+    ":thrift",
+    "//accio/thrift/fr/cnrs/liris/lumos/domain:thrift",
+    "//accio/thrift/fr/cnrs/liris/lumos/domain",
   ],
   visibility = ["//visibility:public"],
+)
+
+thrift_library(
+  name = "thrift",
+  srcs = glob(["*.thrift"]),
+  visibility = ["//accio/thrift:__subpackages__"],
 )

@@ -27,6 +27,8 @@ import scala.collection.mutable
  * whether to keep it or not.
  */
 private[ops] trait SlidingSamplingOp extends TransformOp[Event] {
+  this: Product =>
+
   protected def sample(prev: Event, curr: Event): Boolean
 
   override protected def transform(key: String, trace: Iterable[Event]): Iterable[Event] = {

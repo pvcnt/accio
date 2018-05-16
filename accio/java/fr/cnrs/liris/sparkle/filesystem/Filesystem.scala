@@ -23,17 +23,56 @@ import java.io.{InputStream, OutputStream}
 import com.twitter.util.StorageUnit
 
 trait Filesystem {
+  /**
+   * Create an input stream pointing to a given file.
+   *
+   * @param uri URI to a file. The URI should match this filesystem's scheme.
+   */
   def createInputStream(uri: String): InputStream
 
+  /**
+   * Create an output stream pointing to a given file.
+   *
+   * @param uri URI to a file. The URI should match this filesystem's scheme.
+   */
   def createOutputStream(uri: String): OutputStream
 
+  /**
+   * Delete a resource. It should handle files and directories (in which case they are deleted
+   * with all of their contained files and directories).
+   *
+   * @param uri URI to a file or directory. The URI should match this filesystem's scheme.
+   */
   def delete(uri: String): Unit
 
+  /**
+   * List the files contained inside a given directory. Files are recursively listed (i.e.,
+   * including sub-directories at any level), and are returned as proper URIs, ready to be used in
+   * another method of this class.
+   *
+   * @param uri URI to a directory. The URI should match this filesystem's scheme.
+   */
   def list(uri: String): Iterable[String]
 
+  /**
+   * Return the size of a resource. It should handle files and directories (in which case the total
+   * size of all contained files is returned)
+   *
+   * @param uri URI to a file or directory. The URI should match this filesystem's scheme.
+   */
   def size(uri: String): StorageUnit
 
+  /**
+   * Return whether a resource is a directory.
+   *
+   * @param uri URI to a file or directory. The URI should match this filesystem's scheme.
+   */
   def isDirectory(uri: String): Boolean
 
+  /**
+   * Return whether a resource is a regular file.
+   *
+   * @param uri URI to a file or directory. The URI should match this filesystem's scheme.
+   */
   def isFile(uri: String): Boolean
 }

@@ -27,6 +27,8 @@ import scala.collection.mutable
  * whether to split a trace into multiple parts.
  */
 private[ops] trait SlidingSplittingOp extends TransformOp[Event] {
+  this: Product =>
+
   protected def split(buffer: Seq[Event], curr: Event): Boolean
 
   override protected def transform(key: String, trace: Iterable[Event]): Iterable[Event] = {

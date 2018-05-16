@@ -15,15 +15,16 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_library(
-  name = "domain",
+  name = "thrift",
   srcs = glob(["*.scala"]),
   deps = [
-    "//accio/java/fr/cnrs/liris/util",
-    "//3rdparty/jvm/com/github/nscala_time",
-    "//3rdparty/jvm/org/scala_lang/modules:scala_parser_combinators",
+    "//accio/java/fr/cnrs/liris/accio/domain",
+    "//accio/java/fr/cnrs/liris/lumos/domain",
+    "//accio/java/fr/cnrs/liris/lumos/domain/thrift",
+    "//accio/thrift/fr/cnrs/liris/accio/domain",
   ],
   exports = [
-    "//3rdparty/jvm/com/github/nscala_time",
+    "//accio/thrift/fr/cnrs/liris/accio/domain",
   ],
   visibility = ["//visibility:public"],
 )

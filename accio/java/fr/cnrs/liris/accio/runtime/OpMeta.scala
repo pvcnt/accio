@@ -24,7 +24,8 @@ import com.twitter.util.StorageUnit
 import com.twitter.util.logging.Logging
 import fr.cnrs.liris.accio.api.Values
 import fr.cnrs.liris.accio.api.thrift._
-import fr.cnrs.liris.accio.sdk.{Arg, RemoteFile, Op, ScalaOperator}
+import fr.cnrs.liris.accio.domain.RemoteFile
+import fr.cnrs.liris.accio.sdk.{Arg, Op, ScalaOperator}
 import fr.cnrs.liris.util.ResourceFileLoader
 import fr.cnrs.liris.util.StringUtils.maybe
 import fr.cnrs.liris.util.geo.{Distance, Location}

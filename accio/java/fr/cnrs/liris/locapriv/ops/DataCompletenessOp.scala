@@ -18,6 +18,7 @@
 
 package fr.cnrs.liris.locapriv.ops
 
+import fr.cnrs.liris.lumos.domain.RemoteFile
 import fr.cnrs.liris.accio.sdk._
 import fr.cnrs.liris.locapriv.domain.Event
 

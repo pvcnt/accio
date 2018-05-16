@@ -23,6 +23,7 @@ import java.nio.file.{Files, Path, Paths}
 import java.util.Locale
 
 import com.google.common.io.Resources
+import fr.cnrs.liris.lumos.domain.RemoteFile
 import fr.cnrs.liris.accio.sdk._
 import fr.cnrs.liris.locapriv.domain.Event
 import fr.cnrs.liris.sparkle.DataFrame

@@ -18,15 +18,16 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.accio.sdk.{Arg, OpContext, RemoteFile, ScalaOperator}
+import fr.cnrs.liris.accio.sdk.{Arg, OpContext, ScalaOperator}
 import fr.cnrs.liris.locapriv.domain.Event
+import fr.cnrs.liris.lumos.domain.RemoteFile
 import fr.cnrs.liris.sparkle.Encoder
 
 import scala.util.Random
 
 private[ops] abstract class TransformOp[T: Encoder]
-  extends ScalaOperator[TransformOp.Out]
-    with SparkleOperator {
+  extends ScalaOperator[TransformOp.Out] with SparkleOperator {
+  this: Product =>
 
   protected var seeds = Map.empty[String, Long]
 
