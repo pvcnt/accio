@@ -187,6 +187,7 @@ case class Wait4MeOp(
 
   private def copyBinary(tmpDir: Path, chunk: Boolean) = {
     val jarBinary = s"fr/cnrs/liris/locapriv/ops/${getPlatform}_w4m_LST${if (chunk) "_chunk" else ""}"
+    Files.createDirectories(tmpDir)
     val localBinary = tmpDir.resolve("program")
     val fos = new FileOutputStream(localBinary.toFile)
     try {
