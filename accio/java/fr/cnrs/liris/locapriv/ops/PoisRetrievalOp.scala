@@ -18,8 +18,8 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.accio.sdk.{RemoteFile, _}
-import fr.cnrs.liris.locapriv.domain.{Poi, PoiSet}
+import fr.cnrs.liris.accio.sdk._
+import fr.cnrs.liris.locapriv.domain.Poi
 import fr.cnrs.liris.util.geo.Distance
 import org.joda.time.Duration
 
@@ -37,32 +37,29 @@ case class PoisRetrievalOp(
   train: RemoteFile,
   @Arg(help = "Test dataset (POIs)")
   test: RemoteFile)
-  extends ScalaOperator[PoisRetrievalOut] with SparkleOperator {
-  override def execute(ctx: OpContext): PoisRetrievalOut = {
-    val trainDs = read[PoiSet](train)
-    val testDs = read[PoiSet](test)
-    val metrics = trainDs.zip(testDs).map { case (ref, res) => evaluate(ref, res) }.toArray
-    PoisRetrievalOut(
-      precision = metrics.map { case (k, v) => k -> v._1 }.toMap,
-      recall = metrics.map { case (k, v) => k -> v._2 }.toMap,
-      fscore = metrics.map { case (k, v) => k -> v._3 }.toMap)
+  extends ScalaOperator[PoisRetrievalOp.Out] with SparkleOperator {
+
+  override def execute(ctx: OpContext): PoisRetrievalOp.Out = {
+    val trainDs = read[Poi](train).groupBy(_.id)
+    val testDs = read[Poi](test).groupBy(_.id)
+    val metrics = trainDs.join(testDs)(evaluate)
+    PoisRetrievalOp.Out(write(metrics, 0, ctx))
   }
 
-  private def evaluate(ref: PoiSet, res: PoiSet) = {
-    require(ref.id == res.id, s"Trace mismatch: ${ref.id} / ${res.id}")
-    val matched = res.pois.flatMap(resPoi => remap(resPoi, ref.pois, threshold, overlap)).distinct.size
-    ref.id -> (MetricUtils.precision(res.size, matched), MetricUtils.recall(ref.size, matched), MetricUtils.fscore(ref.size, res.size, matched))
+  private def evaluate(id: String, ref: Iterable[Poi], res: Iterable[Poi]): Seq[MetricUtils.FscoreValue] = {
+    val matched = res.flatMap(resPoi => remap(resPoi, ref, threshold, overlap)).toSet.size
+    Seq(MetricUtils.fscore(id, ref.size, res.size, matched))
   }
 
-  private def remap(resPoi: Poi, refPois: Seq[Poi], threshold: Distance, overlap: Option[Duration]) = {
+  private def remap(resPoi: Poi, refPois: Iterable[Poi], threshold: Distance, overlap: Option[Duration]): Iterable[Int] = {
     val matchingPois = refPois.zipWithIndex
       .filter { case (refPoi, _) => matches(refPoi, resPoi, threshold, overlap) }
-      .map { case (refPoi, idx) => (idx, refPoi.centroid.distance(resPoi.centroid)) }
-    if (matchingPois.nonEmpty) Some(matchingPois.minBy(_._2)._1) else None
+      .map { case (refPoi, idx) => (idx, refPoi.point.distance(resPoi.point)) }
+    if (matchingPois.nonEmpty) Iterable(matchingPois.minBy(_._2)._1) else Iterable.empty
   }
 
   private def matches(refPoi: Poi, resPoi: Poi, threshold: Distance, overlap: Option[Duration]) = {
-    if (refPoi.centroid.distance(resPoi.centroid) > threshold) {
+    if (refPoi.point.distance(resPoi.point) > threshold) {
       false
     } else {
       overlap match {
@@ -80,10 +77,10 @@ case class PoisRetrievalOp(
   }
 }
 
-case class PoisRetrievalOut(
-  @Arg(help = "POIs retrieval precision")
-  precision: Map[String, Double],
-  @Arg(help = "POIs retrieval recall")
-  recall: Map[String, Double],
-  @Arg(help = "POIs retrieval F-Score")
-  fscore: Map[String, Double])
+object PoisRetrievalOp {
+
+  case class Out(
+    @Arg(help = "Metrics dataset")
+    metrics: RemoteFile)
+
+}

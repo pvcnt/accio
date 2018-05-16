@@ -18,10 +18,7 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.accio.sdk.{RemoteFile, _}
-import fr.cnrs.liris.util.FileUtils
-import fr.cnrs.liris.locapriv.io.CsvSource
-import fr.cnrs.liris.locapriv.io._
+import fr.cnrs.liris.accio.sdk._
 
 @Op(
   category = "source",
@@ -29,20 +26,19 @@ import fr.cnrs.liris.locapriv.io._
   description = "This operator can manipulate the source dataset, essentially to reduce its size, " +
     "through some basic preprocessing.")
 case class EventSourceOp(
-  @Arg(help = "Dataset URL") url: String,
-  @Arg(help = "Kind of dataset") kind: String = "csv")
-  extends ScalaOperator[EventSourceOut] with SparkleOperator {
+  @Arg(help = "Dataset URI")
+  url: String)
+  extends ScalaOperator[EventSourceOp.Out] with SparkleOperator {
 
-  override def execute(ctx: OpContext): EventSourceOut = {
-    val source = kind match {
-      case "csv" => new CsvSource(FileUtils.expand(url), new TraceCodec)
-      case "cabspotting" => CabspottingSource(FileUtils.expand(url))
-      case "geolife" => GeolifeSource(FileUtils.expand(url))
-      case _ => throw new IllegalArgumentException(s"Unknown dataset kind: $kind")
-    }
-    val output = if (kind != "csv") write(env.read(source), ctx) else RemoteFile(url)
-    EventSourceOut(output)
+  override def execute(ctx: OpContext): EventSourceOp.Out = {
+    EventSourceOp.Out(RemoteFile(url))
   }
 }
 
-case class EventSourceOut(@Arg(help = "Source dataset") data: RemoteFile)
+object EventSourceOp {
+
+  case class Out(
+    @Arg(help = "Source dataset")
+    data: RemoteFile)
+
+}

@@ -41,8 +41,7 @@ class DTClustererSpec extends UnitSpec with WithCabspotting {
       Event("Me", Point(1000, 10), now.plus(770 * 1000)),
       Event("Me", Point(1010, 10), now.plus(780 * 1000)),
       Event("Me", Point(1010, 10), now.plus(820 * 1000)))
-    val trace = Trace(
-      Seq(Event("Me", Point(0, 0), now)) ++
+    val trace = Seq(Event("Me", Point(0, 0), now)) ++
         stay1 ++
         Seq(// Too large diameter.
           Event("Me", Point(1000, 20), now.plus(670 * 1000)),
@@ -52,7 +51,6 @@ class DTClustererSpec extends UnitSpec with WithCabspotting {
         Seq(// Too short duration.
           Event("Me", Point(1020, 20), now.plus(830 * 1000)),
           Event("Me", Point(1020, 20), now.plus(880 * 1000)))
-    )
     val clusterer = new DTClusterer(Duration.standardMinutes(1), Distance.meters(15))
     val clusters = clusterer.cluster(trace)
     clusters should have size 2
@@ -84,6 +82,6 @@ class DTClustererSpec extends UnitSpec with WithCabspotting {
     val expected = intercept[IllegalArgumentException] {
       new DTClusterer(Duration.standardMinutes(15), Distance.meters(-1))
     }
-    expected.getMessage should startWith("requirement failed: maxDiameter must be > 0")
+    expected.getMessage should startWith("requirement failed: maxDiameter must be strictly positive")
   }
 }

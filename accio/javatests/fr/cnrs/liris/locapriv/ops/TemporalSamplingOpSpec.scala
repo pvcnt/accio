@@ -19,7 +19,7 @@
 package fr.cnrs.liris.locapriv.ops
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.locapriv.domain.{Event, Trace}
+import fr.cnrs.liris.locapriv.domain.Event
 import fr.cnrs.liris.locapriv.testing.WithTraceGenerator
 import fr.cnrs.liris.testing.UnitSpec
 
@@ -30,17 +30,15 @@ class TemporalSamplingOpSpec extends UnitSpec with WithTraceGenerator with Scala
   behavior of "TemporalSamplingOp"
 
   it should "downsample traces" in {
-    val trace = Trace(Seq(
+    val trace = Seq(
       Event(Me, Here, Now),
       Event(Me, Here, Now + 10.seconds),
       Event(Me, Here, Now + 19.seconds),
       Event(Me, Here, Now + 25.seconds),
       Event(Me, Here, Now + 34.seconds),
-      Event(Me, Here, Now + 44.seconds)))
-    val res = transform(Seq(trace), 10.seconds)
-    res should have size 1
-    res.head.user shouldBe trace.user
-    res.head.events should contain theSameElementsInOrderAs Seq(
+      Event(Me, Here, Now + 44.seconds))
+    val res = transform(trace, 10.seconds)
+    res should contain theSameElementsInOrderAs Seq(
       Event(Me, Here, Now),
       Event(Me, Here, Now + 10.seconds),
       Event(Me, Here, Now + 25.seconds),
@@ -48,24 +46,21 @@ class TemporalSamplingOpSpec extends UnitSpec with WithTraceGenerator with Scala
   }
 
   it should "handle empty traces" in {
-    val trace = Trace.empty(Me)
-    val res = transform(Seq(trace), 10.seconds)
-    res should have size 1
-    res.head.user shouldBe trace.user
-    res.head.events shouldBe trace.events
+    val res = transform(Seq.empty, 10.seconds)
+    res should have size 0
   }
 
   it should "handle singleton traces" in {
-    val trace = Trace(Seq(Event(Me, Here, Now)))
-    val res = transform(Seq(trace), 10.seconds)
-    res should have size 1
-    res.head.user shouldBe trace.user
-    res.head.events should contain theSameElementsInOrderAs trace.events
+    val trace = Seq(Event(Me, Here, Now))
+    val res = transform(trace, 10.seconds)
+    res should contain theSameElementsInOrderAs trace
   }
 
-  private def transform(data: Seq[Trace], duration: Duration) = {
-    val ds = writeTraces(data: _*)
-    val res = TemporalSamplingOp(duration = duration, data = ds).execute(ctx)
-    readTraces(res.data)
+  private def transform(data: Seq[Event], duration: Duration) = {
+    com.twitter.jvm.numProcs.let(1) {
+      val ds = writeTraces(data: _*)
+      val res = TemporalSamplingOp(duration = duration, data = ds).execute(ctx)
+      env.read[Event].csv(res.data.uri).collect().toSeq
+    }
   }
 }

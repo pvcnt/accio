@@ -21,82 +21,92 @@ package fr.cnrs.liris.locapriv.domain
 import java.util.Objects
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.util.geo.{Distance, Point}
+import fr.cnrs.liris.util.geo.{LatLng, Location, Point}
 import org.joda.time.Instant
 
 /**
- * A Point of Interest is a place where a user has spent some time. We only keep summarized information here (instead
- * of keeping the whole set of events forming that POI) to save some memory and allow easy (de)serialization.
+ * A Point of Interest is a place where a user has spent some time. There is no concept of
+ * "empty POI", if a POI exists it means that it is useful.
  *
- * There is no concept of "empty POI", if a POI exists it means that it is useful.
- *
- * @param user      User identifier.
- * @param centroid  Centroid of this POI.
+ * @param id        Trace identifier.
+ * @param lat       Latitude of the centroid of this POI.
+ * @param lng       Longitude of the centroid of this POI.
  * @param size      Number of events forming this POI.
  * @param firstSeen First time the user has been inside inside this POI.
  * @param lastSeen  Last time the user has been inside inside this POI.
- * @param diameter  Diameter of this POI (i.e., the distance between the two farthest points).
  */
 case class Poi(
-  user: String,
-  centroid: Point,
+  id: String,
+  lat: Double,
+  lng: Double,
   size: Int,
   firstSeen: Instant,
-  lastSeen: Instant,
-  diameter: Distance) {
+  lastSeen: Instant) {
+
+  /**
+   * Return the user identifier associated with this trace.
+   */
+  def user: String = id.split("-").head
 
   /**
    * Return the total amount of time spent inside this POI.
    */
   def duration: Duration = (firstSeen to lastSeen).duration
 
+  def location: Location = latLng
+
+  def latLng: LatLng = LatLng.degrees(lat, lng)
+
+  def point: Point = latLng.toPoint
+
   /**
-   * We consider two POIs are the same if they belong to the same user and are defined by the same centroid during
-   * the same time window (we do not consider the other attributes).
+   * We consider two POIs are the same if they belong to the same user (and not trace), and are
+   * defined by the same centroid during the same time window (we do not consider the other
+   * attributes).
    *
    * @param that Another object.
    * @return True if they represent the same POI, false otherwise.
    */
   override def equals(that: Any): Boolean = that match {
-    case p: Poi => p.user == user && p.centroid == centroid && p.firstSeen == firstSeen && p.lastSeen == lastSeen
+    case p: Poi =>
+      p.user == user && p.lat == lat && p.lng == lng && p.firstSeen == firstSeen && p.lastSeen == lastSeen
     case _ => false
   }
 
-  override def hashCode: Int = Objects.hash(user, centroid, firstSeen, lastSeen)
+  override def hashCode: Int = Objects.hash(user, lat: java.lang.Double, lng: java.lang.Double, firstSeen, lastSeen)
 }
 
-/**
- * Factory for [[Poi]].
- */
 object Poi {
   /**
    * Create a new POI from a list of events.
    *
-   * @param events A non-empty list of events
+   * @param events A non-empty list of events.
    */
   def apply(events: Iterable[Event]): Poi = {
-    val seq = events.toSeq.sortBy(_.time)
-    require(seq.nonEmpty, "Cannot create a POI from an empty list of events")
-    val centroid = Point.centroid(seq.map(_.point))
-    val diameter = Point.fastDiameter(seq.map(_.point))
-    new Poi(seq.head.user, centroid, seq.size, seq.head.time, seq.last.time, diameter)
+    val sorted = events.toSeq.sortBy(_.time)
+    require(sorted.nonEmpty, "Cannot create a POI from an empty list of events")
+    val centroid = Point.centroid(sorted.map(_.point)).toLatLng
+    new Poi(sorted.head.id, centroid.lat.degrees, centroid.lng.degrees, sorted.size, sorted.head.time, sorted.last.time)
   }
 
   /**
-   * Create a POI from a single point and timestamp. Its duration will be zero and its diameter arbitrarily fixed
-   * to 10 meters.
+   * Create a POI from a single point and timestamp. Its duration will be zero and its diameter
+   * arbitrarily fixed to 10 meters.
    *
-   * @param user  User identifier
-   * @param point Location of this POI
-   * @param time  Timestamp
+   * @param id    Trace identifier.
+   * @param point Location of this POI.
+   * @param time  Timestamp.
    */
-  def apply(user: String, point: Point, time: Instant): Poi =
-  Poi(user, point, 1, time, time, Distance.meters(10))
+  def apply(id: String, point: Point, time: Instant): Poi = {
+    val latLng = point.toLatLng
+    Poi(id, latLng.lat.degrees, latLng.lng.degrees, 1, time, time)
+  }
 
   /**
-   * Create a POI from a single event. Its duration will be zero and its diameter arbitrarily fixed to 10 meters.
+   * Create a POI from a single event. Its duration will be zero and its diameter arbitrarily
+   * fixed to 10 meters.
    *
-   * @param event Event
+   * @param event Event.
    */
-  def apply(event: Event): Poi = apply(event.user, event.point, event.time)
+  def apply(event: Event): Poi = apply(event.id, event.point, event.time)
 }

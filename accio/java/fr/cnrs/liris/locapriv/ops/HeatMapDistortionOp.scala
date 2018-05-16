@@ -19,9 +19,9 @@
 package fr.cnrs.liris.locapriv.ops
 
 import fr.cnrs.liris.accio.sdk._
+import fr.cnrs.liris.locapriv.domain.Event
+import fr.cnrs.liris.sparkle.DataFrame
 import fr.cnrs.liris.util.geo._
-import fr.cnrs.liris.locapriv.domain.Trace
-import fr.cnrs.liris.locapriv.sparkle.DataFrame
 
 @Op(
   category = "metric",
@@ -39,76 +39,11 @@ case class HeatMapDistortionOp(
   lower: LatLng = LatLng.degrees(-61.0, -131.0),
   @Arg(help = "Upper point")
   upper: LatLng = LatLng.degrees(80, 171))
-  extends ScalaOperator[HeatMapDistortionOut] with SparkleOperator {
+  extends ScalaOperator[HeatMapDistortionOp.Out] with SparkleOperator {
 
-  override def execute(ctx: OpContext): HeatMapDistortionOut = {
-    // read the data
-    val dstrain = read[Trace](train)
-    val dstest = read[Trace](test)
-
-    // rectangular point
-    val (p1, p2) = initializePoint()
-    val (rdstrain, _) = restrictArea(dstrain, p1, p2)
-    val (rdstest, _) = restrictArea(dstest, p1, p2)
-
-    // Dimension of the matrix
-    val dimensions = computeMatricesSize(p1, p2)
-
-    // compute HeatMaps
-    val trainMat = formSingleMatrices(rdstrain, dimensions)
-    val testMat = formSingleMatrices(rdstest, dimensions)
-
-    // Compute distortions
-    var dist = getDistortions(trainMat, testMat)
-    // Add none found user in Train
-    dstrain.keys.union(dstest.keys).toSet.foreach { u: String =>
-      if (!dist.contains(u)) dist += u -> Double.NaN
-    }
-
-    val distWithoutNaN = dist.filter { case (k, p) => p != Double.NaN }
-    val avgDist = distWithoutNaN.values.sum / dist.size.toDouble
-
-    HeatMapDistortionOut(dist, avgDist)
-  }
-
-  private def formSingleMatrices(ds: DataFrame[Trace], dimensions: (Int, Int, Point)): Map[String, SparseMatrix[Int]] = {
-    var outputMap = scala.collection.immutable.Map.empty[String, SparseMatrix[Int]]
-    ds.foreach { t =>
-      synchronized(outputMap += (t.user -> new SparseMatrix[Int](dimensions._1, dimensions._2)))
-    }
-    ds.foreach { t =>
-      val l = t.events.length
-      if (l != 0) {
-        t.events.last.time
-        val user = t.user
-        val events = t.events
-        events.foreach { e =>
-          val p = e.point
-          val j = math.floor((p.x - dimensions._3.x) / cellSize.meters).toInt
-          val i = math.floor((p.y - dimensions._3.y) / cellSize.meters).toInt
-          val mat = outputMap(user)
-          mat.inc(i, j)
-          synchronized(outputMap += (user -> mat))
-        }
-      } else {
-        synchronized(outputMap -= t.user)
-      }
-    }
-    outputMap
-  }
-
-  private def getDistortions(trainMats: Map[String, SparseMatrix[Int]], testMats: Map[String, SparseMatrix[Int]]): Map[String, Double] = {
-    testMats.par.map {
-      case (k, mat_k) =>
-        if (!trainMats.contains(k)) k -> Double.NaN
-        else {
-          val mat_u = trainMats(k)
-          k -> DistanceUtils.d(mat_k.proportional, mat_u.proportional, distanceType)
-        }
-    }.seq
-  }
-
-  private def computeMatricesSize(p1: Point, p2: Point): (Int, Int, Point) = {
+  private[this] val (nbRows, nbColumns, bottomCornerLeft) = {
+    val p1 = lower.toPoint
+    val p2 = upper.toPoint
     val topCornerleft = Point(math.min(p1.x, p2.x), math.max(p1.y, p2.y))
     val bottomCornerleft = Point(math.min(p1.x, p2.x), math.min(p1.y, p2.y))
     val bottomCornerRight = Point(math.max(p1.x, p2.x), math.min(p1.y, p2.y))
@@ -121,26 +56,54 @@ case class HeatMapDistortionOp(
     (nbRows, nbColumn, bottomCornerleft)
   }
 
+  override def execute(ctx: OpContext): HeatMapDistortionOp.Out = {
+    val dstrain = restrictArea(read[Event](train)).groupBy(_.id)
+    val dstest = restrictArea(read[Event](test)).groupBy(_.id)
 
-  private def initializePoint(): (Point, Point) = lower.toPoint -> upper.toPoint
+    val metrics = dstrain.join(dstest)(compute)
+    // Add none found user in Train
+    /*dstrain.keys.union(dstest.keys).toSet.foreach { u: String =>
+      if (!metrics.contains(u)) metrics += u -> Double.NaN
+    }*/
 
-  private def restrictArea(ds: DataFrame[Trace], p1: Point, p2: Point): (DataFrame[Trace], Double) = {
-    // Prepare the restrictive box
-    val bounder = BoundingBox(p1, p2)
-    // Restrict the tracers to the region.
-    val output: DataFrame[Trace] = ds.map { t =>
-      val newt = t.filter { e => bounder.contains(e.point) }
-      newt
+    val distWithoutNaN = metrics.map(_.distortion).filter(n => !n.isNaN)
+    val avgDist = distWithoutNaN.sum / metrics.count()
+
+    HeatMapDistortionOp.Out(write(metrics, 0, ctx), avgDist)
+  }
+
+  private def computeMatrix(trace: Iterable[Event]): SparseMatrix[Int] = {
+    val matrix = new SparseMatrix[Int](nbRows, nbColumns)
+    trace.foreach { e =>
+      val p = e.point
+      val j = math.floor((p.x - bottomCornerLeft.x) / cellSize.meters).toInt
+      val i = math.floor((p.y - bottomCornerLeft.y) / cellSize.meters).toInt
+      matrix.inc(i, j)
     }
-    val nbTot = ds.map(_.events.size).toArray.sum
-    val nbTaken = output.map(_.events.size).toArray.sum
-    val ratio = nbTaken.toDouble / nbTot.toDouble
-    (output, ratio)
+    matrix
+  }
+
+  private def compute(id: String, train: Iterable[Event], test: Iterable[Event]): Seq[HeatMapDistortionOp.Value] = {
+    val matTrain = computeMatrix(train)
+    val matTest = computeMatrix(test)
+    val d = DistanceUtils.d(matTest.proportional, matTrain.proportional, distanceType)
+    Seq(HeatMapDistortionOp.Value(id, d))
+  }
+
+  private def restrictArea(ds: DataFrame[Event]): DataFrame[Event] = {
+    val bounder = BoundingBox(lower.toPoint, upper.toPoint)
+    ds.filter(e => bounder.contains(e.point))
   }
 }
 
-case class HeatMapDistortionOut(
-  @Arg(help = "Distortions (\"-\" = missing user in train or test) ")
-  distortions: Map[String, Double],
-  @Arg(help = "Average distortion")
-  avgDist: Double)
+object HeatMapDistortionOp {
+
+  case class Value(id: String, distortion: Double)
+
+  case class Out(
+    @Arg(help = "Metrics dataset")
+    distortions: RemoteFile,
+    @Arg(help = "Average distortion")
+    avgDist: Double)
+
+}

@@ -63,6 +63,9 @@ dependencies:
     commons-math3:
       version: "3.6.1"
       lang: java
+    commons-lang3:
+      version: "3.7"
+      lang: java
   org.scalanlp:
     breeze:
       version: "0.12"

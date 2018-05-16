@@ -33,14 +33,10 @@ trait Clusterer extends Serializable {
    * @return List of clusters.
    */
   def cluster(events: Seq[Event]): Seq[Cluster]
+}
 
-  /**
-   * Perform the clustering of a mobility trace.
-   *
-   * @param trace Mobility trace.
-   * @return List of clusters.
-   */
-  def cluster(trace: Trace): Seq[Cluster] = cluster(trace.events)
+trait PoisClusterer extends Clusterer {
+  def clusterPois(events: Seq[Event]): Seq[Poi]
 }
 
 /**
@@ -48,7 +44,7 @@ trait Clusterer extends Serializable {
  *
  * @param events List of temporally-ordered events.
  */
-case class Cluster (events: Seq[Event]) {
+case class Cluster(events: Seq[Event]) {
   require(events.nonEmpty, "Cannot create a cluster of empty events")
 
   /**
@@ -67,18 +63,4 @@ case class Cluster (events: Seq[Event]) {
   lazy val diameter: Distance = Point.exactDiameter(events.map(_.point))
 
   override def toString: String = MoreObjects.toStringHelper(this).add("size", events.size).toString
-}
-
-/**
- * A clusterer creating a cluster for each input event.
- */
-object IdentityClusterer extends Clusterer {
-  override def cluster(events: Seq[Event]): Seq[Cluster] = events.map(event => Cluster(Seq(event)))
-}
-
-/**
- * A clusterer creating no cluster.
- */
-object NoClusterer extends Clusterer {
-  override def cluster(events: Seq[Event]): Seq[Cluster] = Seq.empty
 }

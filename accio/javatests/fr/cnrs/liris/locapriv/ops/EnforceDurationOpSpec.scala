@@ -19,7 +19,7 @@
 package fr.cnrs.liris.locapriv.ops
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.locapriv.domain.Trace
+import fr.cnrs.liris.locapriv.domain.Event
 import fr.cnrs.liris.locapriv.testing.WithTraceGenerator
 import fr.cnrs.liris.testing.UnitSpec
 
@@ -31,47 +31,44 @@ class EnforceDurationOpSpec extends UnitSpec with WithTraceGenerator with ScalaO
 
   it should "keep traces with a duration greater than min threshold" in {
     val trace = randomTrace(Me, size = 15, rate = Duration.standardMinutes(1))
-    transformMinDuration(Seq(trace), Duration.standardMinutes(10)) should contain theSameElementsAs Seq(trace)
-    transformMinDuration(Seq(trace), Duration.standardMinutes(14)) should contain theSameElementsAs Seq(trace)
+    transformMinDuration(trace, Duration.standardMinutes(10)) should contain theSameElementsAs trace
+    transformMinDuration(trace, Duration.standardMinutes(14)) should contain theSameElementsAs trace
   }
 
   it should "reject traces with a duration lower than min threshold" in {
     val trace = randomTrace(Me, size = 15, rate = Duration.standardMinutes(1))
-    transformMinDuration(Seq(trace), Duration.standardMinutes(15)) should have size 0
-    transformMinDuration(Seq(trace), Duration.standardMinutes(20)) should have size 0
+    transformMinDuration(trace, Duration.standardMinutes(15)) should have size 0
+    transformMinDuration(trace, Duration.standardMinutes(20)) should have size 0
   }
 
   it should "shorten traces with a duration greater than max threshold" in {
     val trace = randomTrace(Me, size = 15, rate = Duration.standardMinutes(1))
-    val data = transformMaxDuration(Seq(trace), Duration.standardSeconds(10 * 60 + 10))
-    data should have size 1
-    assertTraceIsShortened(trace, data.head, 11)
+    val data = transformMaxDuration(trace, Duration.standardSeconds(10 * 60 + 10))
+    data should contain theSameElementsInOrderAs trace.take(11)
   }
 
   it should "keep traces with a duration lower than max threshold" in {
     val trace = randomTrace(Me, size = 15, rate = Duration.standardMinutes(1))
-    var data = transformMaxDuration(Seq(trace), Duration.standardMinutes(14))
-    data should have size 1
-    assertTraceIsShortened(trace, data.head, 15)
-    data = transformMaxDuration(Seq(trace), Duration.standardMinutes(20))
-    data should have size 1
-    assertTraceIsShortened(trace, data.head, 15)
+    var data = transformMaxDuration(trace, Duration.standardMinutes(14))
+    data should contain theSameElementsInOrderAs trace.take(15)
+
+    data = transformMaxDuration(trace, Duration.standardMinutes(20))
+    data should contain theSameElementsInOrderAs trace.take(15)
   }
 
-  private def assertTraceIsShortened(t: Trace, t1: Trace, s1: Int): Unit = {
-    t1.user shouldBe t.user
-    t1.events should contain theSameElementsInOrderAs t.events.take(s1)
+  private def transformMaxDuration(data: Seq[Event], duration: Duration) = {
+    com.twitter.jvm.numProcs.let(1) {
+      val ds = writeTraces(data: _*)
+      val res = EnforceDurationOp(maxDuration = Some(duration), minDuration = None, data = ds).execute(ctx)
+      env.read[Event].csv(res.data.uri).collect().toSeq
+    }
   }
 
-  private def transformMaxDuration(data: Seq[Trace], duration: Duration) = {
-    val ds = writeTraces(data: _*)
-    val res = EnforceDurationOp(maxDuration = Some(duration), minDuration = None, data = ds).execute(ctx)
-    readTraces(res.data)
-  }
-
-  private def transformMinDuration(data: Seq[Trace], duration: Duration) = {
-    val ds = writeTraces(data: _*)
-    val res = EnforceDurationOp(minDuration = Some(duration), maxDuration = None, data = ds).execute(ctx)
-    readTraces(res.data)
+  private def transformMinDuration(data: Seq[Event], duration: Duration) = {
+    com.twitter.jvm.numProcs.let(1) {
+      val ds = writeTraces(data: _*)
+      val res = EnforceDurationOp(minDuration = Some(duration), maxDuration = None, data = ds).execute(ctx)
+      env.read[Event].csv(res.data.uri).collect().toSeq
+    }
   }
 }

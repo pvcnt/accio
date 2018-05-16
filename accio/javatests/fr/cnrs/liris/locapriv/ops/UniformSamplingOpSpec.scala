@@ -19,7 +19,7 @@
 package fr.cnrs.liris.locapriv.ops
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.locapriv.domain.Trace
+import fr.cnrs.liris.locapriv.domain.Event
 import fr.cnrs.liris.locapriv.testing.WithTraceGenerator
 import fr.cnrs.liris.testing.UnitSpec
 
@@ -32,40 +32,41 @@ class UniformSamplingOpSpec extends UnitSpec with WithTraceGenerator with ScalaO
   it should "downsample traces" in {
     val trace = randomTrace(Me, 100, 10.seconds)
     // Seed is fixed, no need for multiple runs.
-    val res1 = transform(Seq(trace), 0.1)
-    res1.flatMap(_.events).forall(trace.events.contains) shouldBe true
-    // Why isn't it equivalent?!?
-    //res1.flatMap(_.events) should contain only (trace.events: _*)
-    res1.map(_.size).sum.toDouble shouldBe (10d +- 3)
+    var res = transform(trace, 0.1)
+    res.foreach(trace.contains(_) shouldBe true)
+    res.size.toDouble shouldBe (10d +- 3)
 
-    val res2 = transform(Seq(trace), 0.5)
-    res2.flatMap(_.events).forall(trace.events.contains) shouldBe true
-    res2.map(_.size).sum.toDouble shouldBe (50d +- 3)
+    res = transform(trace, 0.5)
+    res.foreach(trace.contains(_) shouldBe true)
+    res.size.toDouble shouldBe (50d +- 3)
 
-    val res3 = transform(Seq(trace), 0.9)
-    res3.flatMap(_.events).forall(trace.events.contains) shouldBe true
-    res3.map(_.size).sum.toDouble shouldBe (90d +- 3)
+    res = transform(trace, 0.9)
+    res.foreach(trace.contains(_) shouldBe true)
+    res.size.toDouble shouldBe (90d +- 3)
   }
 
   it should "handle null probability" in {
     val trace = randomTrace(Me, 100, 10.seconds)
-    val res = transform(Seq(trace), 0)
-    res should have size 1
-    res.head.user shouldBe trace.user
-    res.head.events should have size 0
+    val res = transform(trace, 0)
+    res should have size 0
   }
 
   it should "handle certain probability" in {
     val trace = randomTrace(Me, 100, 10.seconds)
-    val res = transform(Seq(trace), 1)
-    res should have size 1
-    res.head.user shouldBe trace.user
-    res.head.events should contain theSameElementsInOrderAs trace.events
+    val res = transform(trace, 1)
+    res should contain theSameElementsInOrderAs trace
   }
 
-  private def transform(data: Seq[Trace], probability: Double) = {
-    val ds = writeTraces(data: _*)
-    val res = UniformSamplingOp(probability = probability, data = ds).execute(ctx)
-    readTraces(res.data)
+  it should "handle empty traces" in {
+    val res = transform(Seq.empty, 0.5)
+    res should have size 0
+  }
+
+  private def transform(data: Seq[Event], probability: Double) = {
+    com.twitter.jvm.numProcs.let(1) {
+      val ds = writeTraces(data: _*)
+      val res = UniformSamplingOp(probability = probability, data = ds).execute(ctx)
+      env.read[Event].csv(res.data.uri).collect().toSeq
+    }
   }
 }

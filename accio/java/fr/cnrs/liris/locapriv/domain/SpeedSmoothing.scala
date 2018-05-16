@@ -29,40 +29,45 @@ import scala.collection.mutable
  * Vincent Primault, Sonia Ben Mokhtar, Cédric Lauradoux, Lionel Brunie. Time Distortion
  * Anonymization for the Publication of Mobility Data with High Utility. In Proceedings of
  * TrustCom'15.
- *
- * @param epsilon Distance between two consecutive points.
  */
-class SpeedSmoothing(epsilon: Distance) {
-  def transform(trace: Trace): Trace =
+object SpeedSmoothing {
+  /**
+   * Return a protected version of a mobility trace.
+   *
+   * @param trace Trace to protect.
+   * @param alpha Distance between two consecutive points.
+   */
+  def transform(trace: Iterable[Event], alpha: Distance): Iterable[Event] = {
     if (trace.isEmpty) {
-      trace.empty
-    } else if (epsilon == Distance.Zero) {
+      Iterable.empty
+    } else if (alpha == Distance.Zero) {
       trace
     } else {
       // We sample events to keep those at a distance of exactly `epsilon` from the previous one.
       // Sampled locations will be interpolated linearly between the two nearest reported
       // locations. This way there will be the same distance between two consecutive events.
-      val sampled = sample(trace.events, epsilon)
+      val sampled = sample(trace, alpha)
 
       // The time to "spend" will be uniformely allocated. This way there will be the same
       // duration between two consecutive events.
-      trace.replace(allocate(sampled))
+      allocate(sampled)
     }
+  }
 
-  private def sample(events: Seq[Event], epsilon: Distance) = {
+  private def sample(events: Iterable[Event], alpha: Distance) = {
     var sampled = mutable.ListBuffer.empty[Event]
     var prev: Option[Event] = None
     for (event <- events) {
       if (prev.isDefined) {
         var d = event.point.distance(prev.get.point)
-        while (d >= epsilon) {
+        while (d >= alpha) {
           // Generate as many points as needed to get from previous to current location by steps
           // of epsilon.
-          val ratio = epsilon.meters / d.meters
+          val ratio = alpha.meters / d.meters
           val newPoint = prev.get.point.interpolate(event.point, ratio)
-          sampled += event.copy(point = newPoint)
+          sampled += event.withPoint(newPoint)
 
-          prev = Some(event.copy(point = newPoint))
+          prev = Some(event.withPoint(newPoint))
           d = event.point.distance(prev.get.point)
         }
       } else {
@@ -82,7 +87,7 @@ class SpeedSmoothing(epsilon: Distance) {
     sampled
   }
 
-  private def allocate(sampled: Seq[Event]) =
+  private def allocate(sampled: Seq[Event]) = {
     if (sampled.size <= 2) {
       sampled
     } else {
@@ -94,4 +99,5 @@ class SpeedSmoothing(epsilon: Distance) {
         event.copy(time = from + shift)
       }
     }
+  }
 }

@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.locapriv.domain.Trace
+import fr.cnrs.liris.locapriv.domain.Event
 import fr.cnrs.liris.locapriv.testing.WithTraceGenerator
 import fr.cnrs.liris.testing.UnitSpec
 
@@ -30,36 +30,38 @@ class EnforceSizeOpSpec extends UnitSpec with WithTraceGenerator with ScalaOpera
 
   it should "keep traces with a size greater than min threshold" in {
     val trace = randomTrace(Me, 15)
-    transformMinSize(Seq(trace), 10) should contain theSameElementsInOrderAs Seq(trace)
-    transformMinSize(Seq(trace), 15) should contain theSameElementsInOrderAs Seq(trace)
+    transformMinSize(trace, 10) should contain theSameElementsInOrderAs trace
+    transformMinSize(trace, 15) should contain theSameElementsInOrderAs trace
   }
 
   it should "reject traces with a size lower than min threshold" in {
     val trace = randomTrace(Me, 15)
-    transformMinSize(Seq(trace), 16) should have size 0
-    transformMinSize(Seq(trace), 20) should have size 0
+    transformMinSize(trace, 16) should have size 0
+    transformMinSize(trace, 20) should have size 0
   }
 
   it should "shorten traces with a size greater than max threshold" in {
     val trace = randomTrace(Me, size = 15)
-    transformMaxSize(Seq(trace), 10) should contain theSameElementsInOrderAs Seq(trace.replace(_.take(10)))
+    transformMaxSize(trace, 10) should contain theSameElementsInOrderAs trace.take(10)
   }
 
   it should "keep traces with a size lower than max threshold" in {
     val trace = randomTrace(Me, size = 15)
-    transformMaxSize(Seq(trace), 15) should contain theSameElementsInOrderAs Seq(trace)
-    transformMaxSize(Seq(trace), 20) should contain theSameElementsInOrderAs Seq(trace)
+    transformMaxSize(trace, 15) should contain theSameElementsInOrderAs trace
+    transformMaxSize(trace, 20) should contain theSameElementsInOrderAs trace
   }
 
-  private def transformMinSize(data: Seq[Trace], size: Int) = {
+  private def transformMinSize(data: Seq[Event], size: Int) = {
     val ds = writeTraces(data: _*)
     val res = EnforceSizeOp(minSize = Some(size), maxSize = None, data = ds).execute(ctx)
-    readTraces(res.data)
+    env.read[Event].csv(res.data.uri).collect().toSeq
   }
 
-  private def transformMaxSize(data: Seq[Trace], size: Int) = {
-    val ds = writeTraces(data: _*)
-    val res = EnforceSizeOp(minSize = None, maxSize = Some(size), data = ds).execute(ctx)
-    readTraces(res.data)
+  private def transformMaxSize(data: Seq[Event], size: Int) = {
+    com.twitter.jvm.numProcs.let(1) {
+      val ds = writeTraces(data: _*)
+      val res = EnforceSizeOp(minSize = None, maxSize = Some(size), data = ds).execute(ctx)
+      env.read[Event].csv(res.data.uri).collect().toSeq
+    }
   }
 }

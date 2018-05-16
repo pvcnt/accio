@@ -18,70 +18,23 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import java.nio.file.Files
+import fr.cnrs.liris.accio.sdk.{OpContext, RemoteFile, ScalaOperator}
+import fr.cnrs.liris.sparkle.{DataFrame, Encoder, SparkleEnv}
 
-import fr.cnrs.liris.accio.sdk.{RemoteFile, OpContext, ScalaOperator}
-import fr.cnrs.liris.util.Identified
-import fr.cnrs.liris.locapriv.io._
-import fr.cnrs.liris.locapriv.sparkle.{DataFrame, SparkleEnv}
-import fr.cnrs.liris.locapriv.io.{CsvEventCodec, CsvPoiCodec, CsvPoiSetCodec, TraceCodec}
-
-import scala.reflect.{ClassTag, classTag}
-
-trait SparkleOperator {
+private[ops] trait SparkleOperator {
   this: ScalaOperator[_] =>
 
   // Create a Sparkle environment using the numProcs' flag to limit parallelism.
   // It is a poor-man's way to isolate execution in terms of CPU usage.
   protected val env = new SparkleEnv(math.max(1, com.twitter.jvm.numProcs().round.toInt))
 
-  private[this] val encoders = Set(new CsvEventCodec, new TraceCodec, new CsvPoiCodec, new CsvPoiSetCodec)
-  private[this] val decoders = Set(new CsvEventCodec, new TraceCodec, new CsvPoiCodec, new CsvPoiSetCodec)
-
-  /**
-   * Read a CSV dataset as a [[DataFrame]].
-   *
-   * @param dataset Dataset to read.
-   * @tparam T Dataframe type.
-   * @throws RuntimeException If there is no decoder to read as given type.
-   */
-  protected final def read[T: ClassTag](dataset: RemoteFile): DataFrame[T] = {
-    val clazz = classTag[T].runtimeClass
-    decoders.find(decoder => clazz.isAssignableFrom(decoder.elementClassTag.runtimeClass)) match {
-      case None => throw new RuntimeException(s"No decoder available for ${clazz.getName}")
-      case Some(decoder) => env.read(new CsvSource(dataset.uri, decoder.asInstanceOf[Decoder[T]]))
-    }
+  protected final def read[T: Encoder](dataset: RemoteFile): DataFrame[T] = {
+    env.read.csv(dataset.uri)
   }
 
-  /**
-   * Write a [[DataFrame]] as a CSV dataset, for a "data" output port.
-   *
-   * @param frame Dataframe to write.
-   * @param ctx   Operator execution context.
-   * @tparam T Dataframe type.
-   * @throws RuntimeException If there is no encoder to write dataframe.
-   */
-  protected final def write[T <: Identified : ClassTag](frame: DataFrame[T], ctx: OpContext): RemoteFile =
-    write(frame, ctx, "data")
-
-  /**
-   * Write a [[DataFrame]] as a CSV dataset.
-   *
-   * @param frame Dataframe to write.
-   * @param ctx   Operator execution context.
-   * @param port  Output port name.
-   * @tparam T Dataframe type.
-   * @throws RuntimeException If there is no encoder to write dataframe.
-   */
-  protected final def write[T <: Identified : ClassTag](frame: DataFrame[T], ctx: OpContext, port: String): RemoteFile = {
-    val clazz = classTag[T].runtimeClass
-    encoders.find(encoder => clazz.isAssignableFrom(encoder.elementClassTag.runtimeClass)) match {
-      case None => throw new RuntimeException(s"No encoder available for ${clazz.getName}")
-      case Some(encoder) =>
-        val path = ctx.workDir.resolve(port).toAbsolutePath
-        Files.createDirectories(path)
-        frame.write(new CsvSink(path.toString, encoder.asInstanceOf[Encoder[T]]))
-        RemoteFile(path.toString)
-    }
+  protected final def write[T](df: DataFrame[T], idx: Int, ctx: OpContext): RemoteFile = {
+    val uri = ctx.workDir.resolve(idx.toString).toString
+    df.write.csv(uri)
+    RemoteFile(uri)
   }
 }

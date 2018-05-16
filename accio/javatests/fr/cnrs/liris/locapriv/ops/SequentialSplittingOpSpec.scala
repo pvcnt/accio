@@ -18,7 +18,8 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.locapriv.domain.Trace
+import fr.cnrs.liris.accio.sdk.RemoteFile
+import fr.cnrs.liris.locapriv.domain.Event
 import fr.cnrs.liris.locapriv.testing.WithTraceGenerator
 import fr.cnrs.liris.testing.UnitSpec
 
@@ -28,73 +29,78 @@ import fr.cnrs.liris.testing.UnitSpec
 class SequentialSplittingOpSpec extends UnitSpec with WithTraceGenerator with ScalaOperatorSpec {
   behavior of "SequentialSplittingOp"
 
-  it should "split a trace with an even number of events without losing any of them" in {
+  it should "handle an even number of events" in {
     val trace = randomTrace(Me, 150)
-    val (out1, out2) = transform(Seq(trace), 50)
-    out1 should have size 1
-    out2 should have size 1
-    assertTraceIsSplit(trace, out1.head, out2.head, 75)
+    val (out1, out2) = transform(trace, 50)
+    out1 should contain theSameElementsInOrderAs trace.take(75)
+    out2 should contain theSameElementsInOrderAs trace.drop(75)
   }
 
-  it should "split a trace with a odd number of events without losing any of them" in {
+  it should "handle an odd number of events" in {
     val trace = randomTrace(Me, 151)
-    val (out1, out2) = transform(Seq(trace), 50)
-    out1 should have size 1
-    out2 should have size 1
-    assertTraceIsSplit(trace, out1.head, out2.head, 76)
+    val (out1, out2) = transform(trace, 50)
+    out1 should contain theSameElementsInOrderAs trace.take(76)
+    out2 should contain theSameElementsInOrderAs trace.drop(76)
   }
 
-  it should "split several traces" in {
+  it should "handle several traces" in {
     val trace1 = randomTrace(Me, 150)
     val trace2 = randomTrace(Him, 150)
-    val (out1, out2) = transform(Seq(trace1, trace2), 50)
-    out1 should have size 2
-    out2 should have size 2
-    assertTraceIsSplit(trace1, out1.find(_.user == Me).get, out2.find(_.user == Me).get, 75)
-    assertTraceIsSplit(trace2, out1.find(_.user == Him).get, out2.find(_.user == Him).get, 75)
+    val (out1, out2) = transform(trace1 ++ trace2, 50)
+    (out1.size + out2.size) shouldBe 300
+    assertTraceIsSplit(trace1, out1.filter(_.id == Me), out2.filter(_.id == Me), 75)
+    assertTraceIsSplit(trace2, out1.filter(_.id == Him), out2.filter(_.id == Him), 75)
   }
 
-  it should "split a dataset with an empty trace into two datasets with an empty trace" in {
-    val trace = Trace.empty(Me)
-    val (out1, out2) = transform(Seq(trace), 50)
-    out1 should have size 1
-    out2 should have size 1
-    assertTraceIsSplit(trace, out1.head, out2.head, 0)
-  }
-
-  it should "split an empty dataset into two empty datasets" in {
-    val (out1, out2) = transform(Seq.empty, .5)
+  it should "handle empty traces" in {
+    val (out1, out2) = transform(Seq.empty, 50)
     out1 should have size 0
     out2 should have size 0
   }
 
   it should "split a trace at 0%" in {
     val trace = randomTrace(Me, 150)
-    val (out1, out2) = transform(Seq(trace), 0)
-    out1 should have size 1
-    out2 should have size 1
-    assertTraceIsSplit(trace, out1.head, out2.head, 0)
+    val (out1, out2) = transform(trace, 0)
+    out1 should have size 0
+    out2 should contain theSameElementsInOrderAs trace
   }
 
   it should "split a trace at 100%" in {
     val trace = randomTrace(Me, 150)
-    val (out1, out2) = transform(Seq(trace), 100)
-    out1 should have size 1
-    out2 should have size 1
-    assertTraceIsSplit(trace, out1.head, out2.head, 150)
+    val (out1, out2) = transform(trace, 100)
+    out1 should contain theSameElementsInOrderAs trace
+    out2 should have size 0
   }
 
-  private def transform(data: Seq[Trace], percent: Double): (Seq[Trace], Seq[Trace]) = {
-    val ds = writeTraces(data: _*)
-    val res1 = SequentialSplittingOp(percentBegin = 0, percentEnd = percent, complement = false, data = ds).execute(ctx)
-    val res2 = SequentialSplittingOp(percentBegin = 0, percentEnd = percent, complement = true, data = ds).execute(ctx)
-    (readTraces(res1.data), readTraces(res2.data))
+  it should "reject invalid parameters" in {
+    var e = intercept[IllegalArgumentException] {
+      SequentialSplittingOp(percentBegin = -1, percentEnd = 90, data = RemoteFile("/dev/null"))
+    }
+    e.getMessage shouldBe "requirement failed: percentBegin must be between 0 and 100: -1"
+
+    e = intercept[IllegalArgumentException] {
+      SequentialSplittingOp(percentBegin = 10, percentEnd = 101, data = RemoteFile("/dev/null"))
+    }
+    e.getMessage shouldBe "requirement failed: percentEnd must be between 0 and 100: 101"
+
+    e = intercept[IllegalArgumentException] {
+      SequentialSplittingOp(percentBegin = 56, percentEnd = 55, data = RemoteFile("/dev/null"))
+    }
+    e.getMessage shouldBe "requirement failed: percentEnd must be greater than percentBegin: 55 < 56"
   }
 
-  private def assertTraceIsSplit(t: Trace, t1: Trace, t2: Trace, s1: Int): Unit = {
-    t1.user shouldBe t.user
-    t2.user shouldBe t.user
-    t1.events should contain theSameElementsInOrderAs t.events.take(s1)
-    t2.events should contain theSameElementsInOrderAs t.events.drop(s1)
+  private def transform(data: Seq[Event], percent: Int): (Seq[Event], Seq[Event]) = {
+    com.twitter.jvm.numProcs.let(1) {
+      val ds = writeTraces(data: _*)
+      val res1 = SequentialSplittingOp(percentBegin = 0, percentEnd = percent, complement = false, data = ds).execute(ctx)
+      val res2 = SequentialSplittingOp(percentBegin = 0, percentEnd = percent, complement = true, data = ds).execute(ctx)
+      (env.read[Event].csv(res1.data.uri).collect().toSeq,
+        env.read[Event].csv(res2.data.uri).collect().toSeq)
+    }
+  }
+
+  private def assertTraceIsSplit(t: Seq[Event], t1: Seq[Event], t2: Seq[Event], s1: Int): Unit = {
+    t1 should contain theSameElementsInOrderAs t.take(s1)
+    t2 should contain theSameElementsInOrderAs t.drop(s1)
   }
 }

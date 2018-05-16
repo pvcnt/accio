@@ -1,0 +1,60 @@
+Dataset format
+==============
+
+Input and output datasets have the same format (the same adopted by Never Walk Alone): an ASCII file containing 4 TAB-separated columns.
+The columns correspond to:
+Trajectory ID (integer),
+Timestamp (integer),
+X coordinate (float),
+Y coordinate (float).
+
+The input file has to contain
+entries with the same ID should be adjacent (not necessarily sorted by time);
+the timestamps should be integer. As opposed to NWA, timestamps are not required to form a sequence of consecutive integers. However, all experiments reported in the paper were performed on data with points collected at a constant sampling period (10 minutes for Oldenburg, 5 minutes for Milano).
+Here is an example of input file, containing two trajectories (having ID=1 and ID=2) resp. with 6 and 4 points:
+1       7977900 5567.67718820603        -5996.65383462691
+1       7978200 5815.80177161590        -5333.85487354691
+1       7978500 4005.48942987801        -3643.09482322155
+1       7978800 3141.63354672058        -2922.33205202247
+1       7979100 4528.29547065175        -3985.57958090735
+1       7979400 5906.09558768574        -3622.38364606336
+2       8066700 5877.39242725797        -5130.8289383851
+2       8067000 6663.55041764748        -4934.84979191253
+2       8067300 5946.10101216827        -5225.50142050245
+2       8067600 5959.66571211812        -5209.41892185376
+(Notice that, though in this example observations are taken at a constant rate [300 seconds], that is not a requirement of W4M).
+
+Usage and output information
+============================
+
+To see the usage syntax and a short description of all options, invoke the program without parameters.
+The three variants of W4M provided require a common set of 6 parameters (input and output file, K, delta, initial clusters radius and max-trash) plus some others specific for EDR- and LST-based variants. The following is a complete list of parameters required, with descriptions taken from the command-line help:
+w4m_EDR
+  W4M  infile outfileprefix K delta radius_max trash_max edr_dx edr_dy edr_dt
+
+--------------------------------------------------------------------------
+  infile        = input trajectories file name
+  outfileprefix = anonymyzed trajectories (translated & trash-less)
+  K             = anonymity level
+  delta         = uncertainty
+  radius_max    = initial maximum radius used in clustering
+  trash_max     = global maximum trash size
+  delta_match_x = delta_x used for EDR match
+  delta_match_y = delta_y used for EDR match
+  delta_match_t = delta_t used for EDR match
+--------------------------------------------------------------------------
+w4m_LST and w4m_LST_chunk
+  W4M  infile outfileprefix K delta radius_max trash_max M
+
+--------------------------------------------------------------------------
+  infile        = input trajectories file name
+  outfileprefix = anonymyzed trajectories (translated & trash-less)
+  K             = anonymity level
+  delta         = uncertainty
+  radius_max    = initial maximum radius used in clustering
+  trash_max     = global maximum trash size
+  M             = maximum distance used in LST distance, if no idea enter 10
+--------------------------------------------------------------------------
+
+When it is launched with the proper parameters, the software will print on the standard output the status of the computation and some statistics of the dataset.
+

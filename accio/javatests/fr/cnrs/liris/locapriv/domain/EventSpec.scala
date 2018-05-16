@@ -20,9 +20,29 @@ package fr.cnrs.liris.locapriv.domain
 
 import fr.cnrs.liris.locapriv.testing.WithTraceGenerator
 import fr.cnrs.liris.testing.UnitSpec
+import fr.cnrs.liris.util.geo.{LatLng, Point}
 
 /**
  * Unit tests for [[Event]].
  */
 class EventSpec extends UnitSpec with WithTraceGenerator {
+  behavior of "Event"
+
+  it should "provide a copy with a different location" in {
+    val event = Event(Me, Here, Now)
+    event.withPoint(Point(3, 42)).point shouldBe Point(3, 42)
+    event.withLatLng(LatLng.degrees(37.43, -120)).latLng shouldBe LatLng.degrees(37.43, -120)
+  }
+
+  it should "be chronologically comparable" in {
+    val event1 = Event(Me, Here, Now)
+    val event2 = Event(Me, Here, Now.minus(1000))
+    event1 shouldBe > (event2)
+  }
+
+  it should "get the user" in {
+    Event("me", Here, Now).user shouldBe "me"
+    Event("me-01", Here, Now).user shouldBe "me"
+    Event("me-01-02", Here, Now).user shouldBe "me"
+  }
 }

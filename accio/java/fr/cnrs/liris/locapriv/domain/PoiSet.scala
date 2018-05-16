@@ -20,21 +20,16 @@ package fr.cnrs.liris.locapriv.domain
 
 import breeze.stats.DescriptiveStats
 import com.google.common.base.MoreObjects
-import fr.cnrs.liris.util.geo.Point
-import fr.cnrs.liris.util.geo.Distance
-import fr.cnrs.liris.util.Identified
+import fr.cnrs.liris.util.geo.{Distance, Point}
 
 /**
- * A set of POIs belonging to a single user. This is essentially a wrapper around a basic set, providing some
- * useful methods to manipulate POIs.
+ * A set of POIs belonging to a single user. This is essentially a wrapper around a basic set,
+ * providing some useful methods to manipulate POIs.
  *
- * @param user User identifier.
+ * @param user   Trace identifier.
  * @param pois List of unique POIs.
  */
-case class PoiSet(user: String, pois: Seq[Poi]) extends Identified {
-
-  override def id: String = user
-
+case class PoiSet(user: String, pois: Seq[Poi]) {
   /**
    * Check whether the set of POIs is not empty.
    *
@@ -59,7 +54,7 @@ case class PoiSet(user: String, pois: Seq[Poi]) extends Identified {
    *
    * @param poi POI to compute the distance with.
    */
-  def distance(poi: Poi): Distance = Point.nearest(poi.centroid, pois.map(_.centroid)).distance
+  def distance(poi: Poi): Distance = Point.nearest(poi.point, pois.map(_.point)).distance
 
   /**
    * Compute the distance with another set of POIs (it is symmetrical).
@@ -75,8 +70,8 @@ case class PoiSet(user: String, pois: Seq[Poi]) extends Identified {
    * @param bs Second set of POIs.
    */
   private def distance(as: Iterable[Poi], bs: Iterable[Poi]): Distance = {
-    val a = as.map(_.centroid)
-    val b = bs.map(_.centroid)
+    val a = as.map(_.point)
+    val b = bs.map(_.point)
     val d = distances(a, b) ++ distances(b, a)
     if (d.nonEmpty) {
       Distance.meters(DescriptiveStats.percentile(d, 0.5))
@@ -92,22 +87,16 @@ case class PoiSet(user: String, pois: Seq[Poi]) extends Identified {
    * @param b A second set of points
    */
   private def distances(a: Iterable[Point], b: Iterable[Point]): Iterable[Double] =
-  if (b.isEmpty) {
-    Iterable.empty[Double]
-  } else {
-    a.map(point => Point.nearest(point, b).distance.meters).filterNot(_.isInfinite)
-  }
+    if (b.isEmpty) {
+      Iterable.empty[Double]
+    } else {
+      a.map(point => Point.nearest(point, b).distance.meters).filterNot(_.isInfinite)
+    }
 
   override def toString: String =
-    MoreObjects.toStringHelper(this)
-      .add("user", user)
-      .add("size", size)
-      .toString
+    MoreObjects.toStringHelper(this).add("id", user).add("size", size).toString
 }
 
-/**
- * Factory for [[PoiSet]].
- */
 object PoiSet {
   /**
    * Create a new set of POIs.

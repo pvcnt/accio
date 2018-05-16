@@ -18,8 +18,8 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.accio.sdk.{RemoteFile, _}
-import fr.cnrs.liris.locapriv.domain.Trace
+import fr.cnrs.liris.accio.sdk._
+import fr.cnrs.liris.locapriv.domain.Event
 
 @Op(
   category = "metric",
@@ -27,28 +27,39 @@ import fr.cnrs.liris.locapriv.domain.Trace
   cpus = 2,
   ram = "1G")
 case class DataCompletenessOp(
-  @Arg(help = "Train dataset") train: RemoteFile,
-  @Arg(help = "Test dataset") test: RemoteFile)
-  extends ScalaOperator[DataCompletenessOut] with SparkleOperator {
+  @Arg(help = "Train dataset")
+  train: RemoteFile,
+  @Arg(help = "Test dataset")
+  test: RemoteFile)
+  extends ScalaOperator[DataCompletenessOp.Out] with SparkleOperator {
 
-  override def execute(ctx: OpContext): DataCompletenessOut = {
-    val trainDs = read[Trace](train)
-    val testDs = read[Trace](test)
-    val values = trainDs.zip(testDs).map { case (ref, res) => evaluate(ref, res) }.toArray
-    DataCompletenessOut(values.toMap)
+  override def execute(ctx: OpContext): DataCompletenessOp.Out = {
+    val trainDs = read[Event](train).groupBy(_.id)
+    val testDs = read[Event](test).groupBy(_.id)
+    val metrics = trainDs.join(testDs)(evaluate)
+    DataCompletenessOp.Out(write(metrics, 0, ctx))
   }
 
-  private def evaluate(ref: Trace, res: Trace) = {
-    require(ref.id == res.id, s"Trace mismatch: ${ref.id} / ${res.id}")
-    val value = {
-      if (res.isEmpty && ref.isEmpty) 1d
-      else if (res.isEmpty) 0d
-      else res.size.toDouble / ref.size
+  private def evaluate(id: String, ref: Iterable[Event], res: Iterable[Event]) = {
+    val completeness = {
+      if (res.isEmpty && ref.isEmpty) {
+        1d
+      } else if (res.isEmpty) {
+        0d
+      } else {
+        res.size.toDouble / ref.size
+      }
     }
-    res.id -> value
+    Seq(DataCompletenessOp.Value(id, ref.size, res.size, completeness))
   }
 }
 
-case class DataCompletenessOut(
-  @Arg(help = "Data completeness")
-  value: Map[String, Double])
+object DataCompletenessOp {
+
+  case class Value(id: String, trainSize: Int, testSize: Int, completeness: Double)
+
+  case class Out(
+    @Arg(help = "Data completeness")
+    metrics: RemoteFile)
+
+}

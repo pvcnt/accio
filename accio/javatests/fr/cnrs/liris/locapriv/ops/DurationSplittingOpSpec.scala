@@ -19,7 +19,7 @@
 package fr.cnrs.liris.locapriv.ops
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.locapriv.domain.Trace
+import fr.cnrs.liris.locapriv.domain.Event
 import fr.cnrs.liris.locapriv.testing.WithTraceGenerator
 import fr.cnrs.liris.testing.UnitSpec
 
@@ -33,25 +33,34 @@ class DurationSplittingOpSpec extends UnitSpec with WithTraceGenerator with Scal
 
   it should "split by duration" in {
     val trace = randomTrace(Me, 150, Duration.standardSeconds(Random.nextInt(10)))
-    val res = transform(Seq(trace), Duration.standardSeconds(10))
-    res.foreach { trace =>
-      trace.user shouldBe Me
-      trace.duration.seconds should be <= 10L
+    val res = transform(trace, Duration.standardSeconds(10))
+    res.zipWithIndex.foreach { case (e, idx) =>
+      e.id should startWith(s"$Me-")
+      e.time shouldBe trace(idx).time
+      e.lat shouldBe trace(idx).lat
+      e.lng shouldBe trace(idx).lng
     }
-    res.flatMap(_.events) should contain theSameElementsInOrderAs trace.events
+    res.groupBy(_.id).values.foreach { vs =>
+      (vs.last.time.millis - vs.head.time.millis) should be <= 10000L
+    }
   }
 
   it should "handle a duration greater than trace's duration" in {
     val trace = randomTrace(Me, 60, Duration.standardSeconds(1))
-    val res = transform(Seq(trace), Duration.standardSeconds(100))
-    res should have size 1
-    res.head.user shouldBe trace.user
-    res.head.events should contain theSameElementsInOrderAs trace.events
+    val res = transform(trace, Duration.standardSeconds(100))
+    res.zipWithIndex.foreach { case (e, idx) =>
+      e.id shouldBe s"$Me-0"
+      e.time shouldBe trace(idx).time
+      e.lat shouldBe trace(idx).lat
+      e.lng shouldBe trace(idx).lng
+    }
   }
 
-  private def transform(data: Seq[Trace], duration: Duration) = {
-    val ds = writeTraces(data: _*)
-    val res = DurationSplittingOp(duration = duration, data = ds).execute( ctx)
-    readTraces(res.data)
+  private def transform(data: Seq[Event], duration: Duration) = {
+    com.twitter.jvm.numProcs.let(1) {
+      val ds = writeTraces(data: _*)
+      val res = DurationSplittingOp(duration = duration, data = ds).execute(ctx)
+      env.read[Event].csv(res.data.uri).collect().toSeq
+    }
   }
 }

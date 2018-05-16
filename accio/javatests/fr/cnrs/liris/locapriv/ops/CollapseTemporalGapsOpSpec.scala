@@ -18,11 +18,11 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.locapriv.domain.Trace
+import fr.cnrs.liris.accio.api.Values.instantOrdering
+import fr.cnrs.liris.locapriv.domain.Event
 import fr.cnrs.liris.locapriv.testing.WithTraceGenerator
 import fr.cnrs.liris.testing.UnitSpec
 import org.joda.time.{DateTime, Duration, Instant}
-import fr.cnrs.liris.accio.api.Values.instantOrdering
 
 /**
  * Unit tests for [[CollapseTemporalGapsOp]].
@@ -32,24 +32,25 @@ class CollapseTemporalGapsOpSpec extends UnitSpec with ScalaOperatorSpec with Wi
 
   it should "collapse temporal gaps" in {
     val trace = randomTrace(Me, 60, Duration.standardMinutes(1)) ++
-      randomTrace(Me, 60, Duration.standardMinutes(1)).replace { events =>
-        events.map(event => event.copy(time = event.time.plus(Duration.standardDays(5))))
+      randomTrace(Me, 60, Duration.standardMinutes(1)).map { event =>
+        event.copy(time = event.time.plus(Duration.standardDays(5)))
       } ++
-      randomTrace(Me, 60, Duration.standardMinutes(1)).replace { events =>
-        events.map(event => event.copy(time = event.time.plus(Duration.standardDays(6))))
+      randomTrace(Me, 60, Duration.standardMinutes(1)).map { event =>
+        event.copy(time = event.time.plus(Duration.standardDays(6)))
       }
     val startAt = DateTime.parse("2016-01-01T00:00:00Z").toInstant
-    val res = execute(startAt, Seq(trace))
-    res should have size 1
-    res.head.user shouldBe Me
-    res.head.events.map(_.point) should contain theSameElementsInOrderAs trace.events.map(_.point)
-    res.head.events.head.time should (be >= startAt and be <= startAt.plus(Duration.standardDays(1)))
-    res.head.events.last.time should (be >= startAt.plus(Duration.standardDays(2)) and be <= startAt.plus(Duration.standardDays(3)))
+    val res = execute(startAt, trace)
+    res.foreach(_.id shouldBe Me)
+    res.map(_.point) should contain theSameElementsInOrderAs trace.map(_.point)
+    res.head.time should (be >= startAt and be <= startAt.plus(Duration.standardDays(1)))
+    res.last.time should (be >= startAt.plus(Duration.standardDays(2)) and be <= startAt.plus(Duration.standardDays(3)))
   }
 
-  private def execute(startAt: Instant, traces: Seq[Trace]) = {
-    val ds = writeTraces(traces: _*)
-    val res = CollapseTemporalGapsOp(startAt, ds).execute(ctx)
-    readTraces(res.data)
+  private def execute(startAt: Instant, traces: Seq[Event]) = {
+    com.twitter.jvm.numProcs.let(1) {
+      val ds = writeTraces(traces: _*)
+      val res = CollapseTemporalGapsOp(startAt, ds).execute(ctx)
+      env.read[Event].csv(res.data.uri).collect().toSeq
+    }
   }
 }

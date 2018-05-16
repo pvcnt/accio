@@ -27,6 +27,8 @@ import java.nio.file.Path
  * @param workDir  Working directory where temporary data can be written. It will be removed after operator completion.
  */
 final class OpContext(_seed: Option[Long], val workDir: Path) {
+  def hasSeed: Boolean = _seed.isDefined
+
   /**
    * Return the seed to use for an unstable operator.
    *

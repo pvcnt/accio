@@ -19,18 +19,39 @@
 package fr.cnrs.liris.locapriv.domain
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.util.geo.{Location, Point}
+import fr.cnrs.liris.util.geo.{LatLng, Location, Point}
 import org.joda.time.{Instant, ReadableInstant}
 
 /**
  * The smallest piece of information of our model. It is a discrete event associated with a user,
  * that occurred at an instant and a specific place.
  *
- * @param user  User identifier.
- * @param point Location.
- * @param time  Timestamp.
+ * @param id   Trace identifier.
+ * @param lat  Latitude.
+ * @param lng  Longitude.
+ * @param time Timestamp.
  */
-case class Event private(user: String, point: Point, time: Instant) extends Ordered[Event] {
+case class Event(id: String, lat: Double, lng: Double, time: Instant) extends Ordered[Event] {
+  /**
+   * Return the user identifier associated with this trace.
+   */
+  def user: String = id.split("-").head
+
+  def location: Location = latLng
+
+  def latLng: LatLng = LatLng.degrees(lat, lng)
+
+  def point: Point = latLng.toPoint
+
+  def withPoint(point: Point): Event = {
+    val latLng = point.toLatLng
+    copy(lat = latLng.lat.degrees, lng = latLng.lng.degrees)
+  }
+
+  def withLatLng(latLng: LatLng): Event = {
+    copy(lat = latLng.lat.degrees, lng = latLng.lng.degrees)
+  }
+
   /**
    * Events can be compared using their timestamp.
    *
@@ -40,16 +61,16 @@ case class Event private(user: String, point: Point, time: Instant) extends Orde
   override def compare(that: Event): Int = time.compare(that.time)
 }
 
-/**
- * Factory for [[Event]].
- */
 object Event {
   /**
-   * Create an event from a user identifier, a location and an instant.
+   * Create a new event.
    *
-   * @param user     User identifier.
+   * @param id       Trace identifier.
    * @param location Location.
    * @param time     Instant.
    */
-  def apply(user: String, location: Location, time: ReadableInstant): Event = Event(user, location.toPoint, time.toInstant)
+  def apply(id: String, location: Location, time: ReadableInstant): Event = {
+    val latLng = location.toLatLng
+    Event(id, latLng.lat.degrees, latLng.lng.degrees, time.toInstant)
+  }
 }

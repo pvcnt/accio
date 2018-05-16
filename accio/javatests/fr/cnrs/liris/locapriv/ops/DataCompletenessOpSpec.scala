@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.locapriv.domain.Trace
+import fr.cnrs.liris.locapriv.domain.Event
 import fr.cnrs.liris.locapriv.testing.WithTraceGenerator
 import fr.cnrs.liris.testing.UnitSpec
 
@@ -30,27 +30,28 @@ class DataCompletenessOpSpec extends UnitSpec with WithTraceGenerator with Scala
 
   it should "compute the data completeness" in {
     val t1 = randomTrace(Me, 120)
-    val t2 = randomTrace(Me, 85)
-    val metrics = execute(Seq(t1), Seq(t2))
-    metrics.value shouldBe Map(Me -> (85d / 120))
+    val t2 = randomTrace(Me, 81)
+    val metrics = execute(t1, t2)
+    metrics should contain theSameElementsAs Seq(DataCompletenessOp.Value(Me, 120, 81, 0.675))
   }
 
-  it should "return one for identical traces" in {
+  it should "return 1 for identical traces" in {
     val t1 = randomTrace(Me, 120)
-    val metrics = execute(Seq(t1), Seq(t1))
-    metrics.value shouldBe Map(Me -> 1d)
+    val metrics = execute(t1, t1)
+    metrics should contain theSameElementsAs Seq(DataCompletenessOp.Value(Me, 120, 120, 1))
   }
 
-  it should "return nothing for an empty trace" in {
-    val t1 = randomTrace(Me, 85)
-    val t2 = randomTrace(Me, 0)
-    val metrics = execute(Seq(t1), Seq(t2))
-    metrics.value shouldBe Map(Me -> 0d)
+  it should "return 0 for an empty trace" in {
+    val metrics = execute(randomTrace(Me, 85), randomTrace(Me, 0))
+    metrics should contain theSameElementsAs Seq(DataCompletenessOp.Value(Me, 85, 0, 0))
   }
 
-  private def execute(train: Seq[Trace], test: Seq[Trace]) = {
-    val trainDs = writeTraces(train: _*)
-    val testDs = writeTraces(test: _*)
-    DataCompletenessOp(trainDs, testDs).execute(ctx)
+  private def execute(train: Seq[Event], test: Seq[Event]) = {
+    com.twitter.jvm.numProcs.let(1) {
+      val trainDs = writeTraces(train: _*)
+      val testDs = writeTraces(test: _*)
+      val res = DataCompletenessOp(trainDs, testDs).execute(ctx)
+      env.read[DataCompletenessOp.Value].csv(res.metrics.uri).collect().toSeq
+    }
   }
 }

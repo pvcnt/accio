@@ -19,10 +19,10 @@
 package fr.cnrs.liris.locapriv.ops
 
 import com.google.common.geometry.{S2Cell, S2CellId, S2LatLng}
-import fr.cnrs.liris.util.geo.LatLng
-import fr.cnrs.liris.locapriv.domain.{Event, Trace}
+import fr.cnrs.liris.locapriv.domain.Event
 import fr.cnrs.liris.locapriv.testing.WithTraceGenerator
 import fr.cnrs.liris.testing.UnitSpec
+import fr.cnrs.liris.util.geo.LatLng
 import org.joda.time.{Duration, Instant}
 
 import scala.util.Random
@@ -31,21 +31,17 @@ import scala.util.Random
  * Unit tests for [[AreaCoverageOp]].
  */
 class AreaCoverageOpSpec extends UnitSpec with WithTraceGenerator with ScalaOperatorSpec {
-  private[this] val eps = 1E-9
-
   behavior of "AreaCoverageOp"
+
+  private val eps = 1E-9
 
   it should "return 1 for identical traces" in {
     val t1 = randomTrace(Me, 120)
-    var res = execute(Seq(t1), Seq(t1), 14, None)
-    res.precision(Me) shouldBe 1d
-    res.recall(Me) shouldBe 1d
-    res.fscore(Me) shouldBe 1d
+    var res = execute(t1, t1, 14, None)
+    res should contain theSameElementsAs Seq(MetricUtils.FscoreValue(Me, 1, 1, 1))
 
-    res = execute(Seq(t1), Seq(t1), 14, Some(Duration.standardMinutes(30)))
-    res.precision(Me) shouldBe 1d
-    res.recall(Me) shouldBe 1d
-    res.fscore(Me) shouldBe 1d
+    res = execute(t1, t1, 14, Some(Duration.standardMinutes(30)))
+    res should contain theSameElementsAs Seq(MetricUtils.FscoreValue(Me, 1, 1, 1))
   }
 
   it should "compute area coverage w.r.t. level" in {
@@ -59,25 +55,27 @@ class AreaCoverageOpSpec extends UnitSpec with WithTraceGenerator with ScalaOper
         LatLng(new S2LatLng(new S2Cell(cell.nextWrap().nextWrap()).getCenter)),
         LatLng(new S2LatLng(new S2Cell(cell.nextWrap().nextWrap().nextWrap()).getCenter)),
         LatLng(new S2LatLng(new S2Cell(cell.nextWrap().nextWrap().nextWrap().nextWrap()).getCenter)))
-      val t1 = Trace(Me, Seq(
+      val t1 = Seq(
         Event(Me, pts(0).toPoint, now),
         Event(Me, pts(0).toPoint, now),
         Event(Me, pts(0).toPoint, now),
         Event(Me, pts(1).toPoint, now),
         Event(Me, pts(1).toPoint, now),
-        Event(Me, pts(2).toPoint, now)))
-      val t2 = Trace(Me, Seq(
+        Event(Me, pts(2).toPoint, now))
+      val t2 = Seq(
         Event(Me, pts(0).toPoint, now),
         Event(Me, pts(0).toPoint, now),
         Event(Me, pts(2).toPoint, now),
         Event(Me, pts(2).toPoint, now),
         Event(Me, pts(3).toPoint, now),
         Event(Me, pts(3).toPoint, now),
-        Event(Me, pts(4).toPoint, now)))
-      val res = execute(Seq(t1), Seq(t2), level, None)
-      res.precision(Me) shouldBe 1d / 2
-      res.recall(Me) shouldBe closeTo(2d / 3, eps)
-      res.fscore(Me) shouldBe closeTo(2d * 1 / 2 * 2 / 3 * 1 / (1d / 2 + 2d / 3), eps)
+        Event(Me, pts(4).toPoint, now))
+      val res = execute(t1, t2, level, None)
+      res should have size 1
+      res.head.id shouldBe Me
+      res.head.precision shouldBe 1d / 2
+      res.head.recall shouldBe closeTo(2d / 3, eps)
+      res.head.fscore shouldBe closeTo(2d * 1 / 2 * 2 / 3 * 1 / (1d / 2 + 2d / 3), eps)
     }
   }
 
@@ -93,15 +91,14 @@ class AreaCoverageOpSpec extends UnitSpec with WithTraceGenerator with ScalaOper
         LatLng(new S2LatLng(new S2Cell(cell.nextWrap().nextWrap()).getCenter)),
         LatLng(new S2LatLng(new S2Cell(cell.nextWrap().nextWrap().nextWrap()).getCenter)),
         LatLng(new S2LatLng(new S2Cell(cell.nextWrap().nextWrap().nextWrap().nextWrap()).getCenter)))
-
-      val t1 = Trace(Me, Seq(
+      val t1 = Seq(
         Event(Me, pts(0).toPoint, now),
         Event(Me, pts(0).toPoint, now),
         Event(Me, pts(0).toPoint, now),
         Event(Me, pts(1).toPoint, now),
         Event(Me, pts(1).toPoint, now),
-        Event(Me, pts(2).toPoint, now)))
-      val t2 = Trace(Me, Seq(
+        Event(Me, pts(2).toPoint, now))
+      val t2 = Seq(
         Event(Me, pts(0).toPoint, now),
         Event(Me, pts(0).toPoint, now),
         Event(Me, pts(0).toPoint, now.plus(width.getMillis + 1)),
@@ -110,17 +107,22 @@ class AreaCoverageOpSpec extends UnitSpec with WithTraceGenerator with ScalaOper
         Event(Me, pts(2).toPoint, now),
         Event(Me, pts(3).toPoint, now.minus(width.getMillis + 1)),
         Event(Me, pts(3).toPoint, now),
-        Event(Me, pts(4).toPoint, now)))
-      val res = execute(Seq(t1), Seq(t2), level, Some(width))
-      res.precision(Me) shouldBe 2d / 8
-      res.recall(Me) shouldBe closeTo(2d / 3, eps)
-      res.fscore(Me) shouldBe closeTo(2d * 2 / 8 * 2 / 3 * 1 / (2d / 8 + 2d / 3), eps)
+        Event(Me, pts(4).toPoint, now))
+      val res = execute(t1, t2, level, Some(width))
+      res should have size 1
+      res.head.id shouldBe Me
+      res.head.precision shouldBe 2d / 8
+      res.head.recall shouldBe closeTo(2d / 3, eps)
+      res.head.fscore shouldBe closeTo(2d * 2 / 8 * 2 / 3 * 1 / (2d / 8 + 2d / 3), eps)
     }
   }
 
-  private def execute(train: Seq[Trace], test: Seq[Trace], level: Int, bucketSize: Option[Duration]) = {
-    val trainDs = writeTraces(train: _*)
-    val testDs = writeTraces(test: _*)
-    AreaCoverageOp(train = trainDs, test = testDs, level = level, width = bucketSize).execute(ctx)
+  private def execute(train: Seq[Event], test: Seq[Event], level: Int, bucketSize: Option[Duration]) = {
+    com.twitter.jvm.numProcs.let(1) {
+      val trainDs = writeTraces(train: _*)
+      val testDs = writeTraces(test: _*)
+      val res = AreaCoverageOp(train = trainDs, test = testDs, level = level, width = bucketSize).execute(ctx)
+      env.read[MetricUtils.FscoreValue].csv(res.metrics.uri).collect().toSeq
+    }
   }
 }

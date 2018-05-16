@@ -18,9 +18,9 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.accio.sdk.{RemoteFile, _}
+import fr.cnrs.liris.accio.sdk._
+import fr.cnrs.liris.locapriv.domain.Event
 import fr.cnrs.liris.util.geo.Distance
-import fr.cnrs.liris.locapriv.domain.{Event, Trace}
 
 @Op(
   category = "transform",
@@ -28,17 +28,13 @@ import fr.cnrs.liris.locapriv.domain.{Event, Trace}
   cpus = 4,
   ram = "2G")
 case class SpatialGapSplittingOp(
-  @Arg(help = "Maximum distance between two consecutive events") distance: Distance,
-  @Arg(help = "Input dataset") data: RemoteFile)
-  extends ScalaOperator[SpatialGapSplittingOut] with SlidingSplitting with SparkleOperator {
+  @Arg(help = "Maximum distance between two consecutive events")
+  distance: Distance,
+  @Arg(help = "Input dataset")
+  data: RemoteFile)
+  extends SlidingSplittingOp {
 
-  override def execute(ctx: OpContext): SpatialGapSplittingOut = {
-    val split = (buffer: Seq[Event], curr: Event) => buffer.last.point.distance(curr.point) >= distance
-    val output = read[Trace](data).flatMap(transform(_, split))
-    SpatialGapSplittingOut(write(output, ctx))
+  override protected def split(buffer: Seq[Event], curr: Event): Boolean = {
+    buffer.last.point.distance(curr.point) >= distance
   }
 }
-
-case class SpatialGapSplittingOut(
-  @Arg(help = "Output dataset")
-  data: RemoteFile)

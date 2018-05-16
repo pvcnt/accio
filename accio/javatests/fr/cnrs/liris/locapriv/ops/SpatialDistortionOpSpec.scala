@@ -21,10 +21,10 @@ package fr.cnrs.liris.locapriv.ops
 import breeze.linalg.{DenseVector, max, min}
 import breeze.stats._
 import com.google.common.geometry.S1Angle
-import fr.cnrs.liris.util.geo.Distance
-import fr.cnrs.liris.locapriv.domain.Trace
+import fr.cnrs.liris.locapriv.domain.Event
 import fr.cnrs.liris.locapriv.testing.WithTraceGenerator
 import fr.cnrs.liris.testing.UnitSpec
+import fr.cnrs.liris.util.geo.Distance
 import org.joda.time.Duration
 
 import scala.util.Random
@@ -33,57 +33,54 @@ import scala.util.Random
  * Unit tests for [[SpatialDistortionOp]].
  */
 class SpatialDistortionOpSpec extends UnitSpec with WithTraceGenerator with ScalaOperatorSpec {
-  val eps = 1e-7
-
   behavior of "SpatialDistortion"
 
-  it should "return zero for identical traces" in {
-    val t1 = randomTrace(Me, 120)
-    val metrics = execute(Seq(t1), Seq(t1), interpolate = false)
-    metrics.avg(Me) shouldBe 0d
-    metrics.min(Me) shouldBe 0d
-    metrics.max(Me) shouldBe 0d
-    metrics.median(Me) shouldBe 0d
-    metrics.stddev(Me) shouldBe 0d
-  }
-
-  it should "return zero for temporally shifted traces" in {
-    val t1 = randomTrace(Me, 120)
-    val t2 = t1.replace { events =>
-      var prev = events.head.time
-      events.zipWithIndex.map { case (rec, idx) =>
-        val now = prev.plus(Duration.standardSeconds(Random.nextInt(3600)))
-        prev = now
-        rec.copy(time = now)
-      }
-    }
-    val metrics = execute(Seq(t1), Seq(t2), interpolate = false)
-    metrics.avg(Me) shouldBe 0d
-    metrics.min(Me) shouldBe 0d
-    metrics.max(Me) shouldBe 0d
-    metrics.median(Me) shouldBe 0d
-    metrics.stddev(Me) shouldBe 0d
-  }
+  private val eps = 1e-7
 
   it should "compute spatial distortion" in {
     val t1 = randomFixedTrace(Me, 120)
     val distances = DenseVector(Seq.fill(120)(Random.nextInt(5000).toDouble): _*)
-    val t2 = t1.replace { events =>
-      events.zipWithIndex.map { case (rec, idx) =>
-        rec.copy(point = rec.point.translate(S1Angle.degrees(Random.nextInt(360)), Distance.meters(distances(idx))))
+    val t2 = {
+      t1.zipWithIndex.map { case (e, idx) =>
+        e.withPoint(e.point.translate(S1Angle.degrees(Random.nextInt(360)), Distance.meters(distances(idx))))
       }
     }
-    val metrics = execute(Seq(t1), Seq(t2), interpolate = true)
-    metrics.avg(Me) shouldBe (mean(distances) +- eps)
-    metrics.min(Me) shouldBe (min(distances) +- eps)
-    metrics.max(Me) shouldBe (max(distances) +- eps)
-    metrics.median(Me) shouldBe (median(distances) +- eps)
-    metrics.stddev(Me) shouldBe (stddev(distances) +- eps)
+    val metrics = execute(t1, t2, interpolate = false)
+    metrics should have size 1
+    metrics.head.n shouldBe 120
+    metrics.head.avg shouldBe (mean(distances) +- eps)
+    metrics.head.min shouldBe (min(distances) +- eps)
+    metrics.head.max shouldBe (max(distances) +- eps)
+    metrics.head.p50 shouldBe (median(distances) +- eps)
+    metrics.head.stddev shouldBe (stddev(distances) +- eps)
   }
 
-  private def execute(train: Seq[Trace], test: Seq[Trace], interpolate: Boolean) = {
-    val trainDs = writeTraces(train: _*)
-    val testDs = writeTraces(test: _*)
-    SpatialDistortionOp(train = trainDs, test = testDs, interpolate = interpolate).execute(ctx)
+  it should "handle identical traces" in {
+    val t1 = randomTrace(Me, 120)
+    val metrics = execute(t1, t1, interpolate = false)
+    metrics should contain theSameElementsAs Seq(MetricUtils.StatsValue(Me, 120, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+  }
+
+  it should "handle temporally shifted traces" in {
+    val t1 = randomTrace(Me, 120)
+    val t2 = {
+      var prev = t1.head.time
+      t1.map { e =>
+        val now = prev.plus(Duration.standardSeconds(Random.nextInt(3600)))
+        prev = now
+        e.copy(time = now)
+      }
+    }
+    val metrics = execute(t1, t2, interpolate = false)
+    metrics should contain theSameElementsAs Seq(MetricUtils.StatsValue(Me, 120, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+  }
+
+  private def execute(train: Seq[Event], test: Seq[Event], interpolate: Boolean) = {
+    com.twitter.jvm.numProcs.let(1) {
+      val trainDs = writeTraces(train: _*)
+      val testDs = writeTraces(test: _*)
+      val res = SpatialDistortionOp(train = trainDs, test = testDs, interpolate = interpolate).execute(ctx)
+      env.read[MetricUtils.StatsValue].csv(res.metrics.uri).collect().toSeq
+    }
   }
 }

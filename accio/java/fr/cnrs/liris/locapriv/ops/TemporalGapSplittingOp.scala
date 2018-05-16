@@ -19,8 +19,8 @@
 package fr.cnrs.liris.locapriv.ops
 
 import com.github.nscala_time.time.Imports._
-import fr.cnrs.liris.accio.sdk.{RemoteFile, _}
-import fr.cnrs.liris.locapriv.domain.{Event, Trace}
+import fr.cnrs.liris.accio.sdk._
+import fr.cnrs.liris.locapriv.domain.Event
 
 @Op(
   category = "transform",
@@ -28,16 +28,13 @@ import fr.cnrs.liris.locapriv.domain.{Event, Trace}
   cpus = 4,
   ram = "2G")
 case class TemporalGapSplittingOp(
-  @Arg(help = "Maximum duration between two consecutive events") duration: org.joda.time.Duration,
-  @Arg(help = "Input dataset") data: RemoteFile)
-  extends ScalaOperator[TemporalGapSplittingOut] with SlidingSplitting with SparkleOperator {
+  @Arg(help = "Maximum duration between two consecutive events")
+  duration: Duration,
+  @Arg(help = "Input dataset")
+  data: RemoteFile)
+  extends SlidingSplittingOp {
 
-  override def execute(ctx: OpContext): TemporalGapSplittingOut = {
-    val split = (buffer: Seq[Event], curr: Event) => (buffer.last.time to curr.time).duration >= duration
-    val output = read[Trace](data).flatMap(transform(_, split))
-    TemporalGapSplittingOut(write(output, ctx))
+  override protected def split(buffer: Seq[Event], curr: Event): Boolean = {
+    (buffer.last.time to curr.time).duration >= duration
   }
 }
-
-case class TemporalGapSplittingOut(
-  @Arg(help = "Output dataset") data: RemoteFile)

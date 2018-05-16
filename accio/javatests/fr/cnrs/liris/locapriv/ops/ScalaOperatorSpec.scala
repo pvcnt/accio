@@ -19,22 +19,22 @@
 package fr.cnrs.liris.locapriv.ops
 
 import java.nio.file.Files
+import java.util.concurrent.atomic.AtomicInteger
 
-import fr.cnrs.liris.accio.sdk.{RemoteFile, OpContext}
-import fr.cnrs.liris.locapriv.io.{CsvPoiSetCodec, CsvSink, CsvSource, TraceCodec}
-import fr.cnrs.liris.locapriv.domain.{PoiSet, Trace}
-import fr.cnrs.liris.locapriv.sparkle.SparkleEnv
+import fr.cnrs.liris.accio.sdk.{OpContext, RemoteFile}
+import fr.cnrs.liris.locapriv.domain.{Event, Poi}
+import fr.cnrs.liris.sparkle.SparkleEnv
+import fr.cnrs.liris.testing.CreateTmpDirectory
 import org.scalatest.{BeforeAndAfterEach, FlatSpec}
 
 /**
  * Trait facilitating testing operators.
  */
-private[ops] trait ScalaOperatorSpec extends BeforeAndAfterEach {
+private[ops] trait ScalaOperatorSpec extends BeforeAndAfterEach with CreateTmpDirectory {
   this: FlatSpec =>
 
-  private val traceCodec = new TraceCodec
-  private val poiSetCodec = new CsvPoiSetCodec
-  protected var env: SparkleEnv = null
+  private val idx = new AtomicInteger(0)
+  protected var env: SparkleEnv = _
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
@@ -48,25 +48,21 @@ private[ops] trait ScalaOperatorSpec extends BeforeAndAfterEach {
   }
 
   protected final def ctx: OpContext = {
-    val workDir = Files.createTempDirectory(getClass.getSimpleName + "-")
-    workDir.toFile.deleteOnExit()
+    val workDir = tmpDir.resolve(s"tmp-${idx.getAndIncrement()}")
+    Files.createDirectories(workDir)
     // This seed makes tests of unstable operators to pass for now. Be careful is you modify it!!
     new OpContext(Some(-7590331047132310476L), workDir)
   }
 
-  protected final def writeTraces(data: Trace*): RemoteFile = {
-    val uri = Files.createTempDirectory(getClass.getSimpleName + "-").toAbsolutePath.toString
-    env.parallelize(data: _*)(_.id).write(new CsvSink(uri, traceCodec))
+  protected final def writeTraces(data: Event*): RemoteFile = {
+    val uri = tmpDir.resolve(s"tmp-${idx.getAndIncrement()}").toString
+    env.parallelize(data).write.csv(uri)
     RemoteFile(uri)
   }
 
-  protected final def writePois(data: PoiSet*): RemoteFile = {
-    val uri = Files.createTempDirectory(getClass.getSimpleName + "-").toAbsolutePath.toString
-    env.parallelize(data: _*)(_.id).write(new CsvSink(uri, poiSetCodec))
+  protected final def writePois(data: Seq[Poi]): RemoteFile = {
+    val uri = tmpDir.resolve(s"tmp-${idx.getAndIncrement()}").toString
+    env.parallelize(data).write.csv(uri)
     RemoteFile(uri)
-  }
-
-  protected final def readTraces(ds: RemoteFile): Seq[Trace] = {
-    env.read(new CsvSource(ds.uri, traceCodec)).toArray.toSeq
   }
 }

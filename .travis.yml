@@ -67,3 +67,7 @@ script:
     --experimental_repository_cache="$HOME/.bazel_repository_cache" \
     --local_resources=400,1,1.0 \
     //accio/...
+
+branches:
+  except:
+    - issue-1

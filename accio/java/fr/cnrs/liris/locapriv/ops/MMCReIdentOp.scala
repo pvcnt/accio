@@ -18,15 +18,7 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.accio.sdk._
-import fr.cnrs.liris.locapriv.domain.{Cluster, Event, PoisClusterer, Trace}
-import fr.cnrs.liris.locapriv.sparkle.DataFrame
-import fr.cnrs.liris.util.geo.Distance
-import org.joda.time.Duration
-
-import scala.collection.immutable
-
-@Op(
+/*@Op(
   category = "metric",
   help = "Re-identification attack using mobility Markov chains.",
   cpus = 6,
@@ -136,7 +128,7 @@ case class MmcReidentOp(
     val clusterMachine = new PoisClusterer(duration, diameter, minPts)
     ds.foreach { t =>
       val poiSet = clusterMachine.clusterKeepCluster(t.events)
-      if (poiSet.nonEmpty) synchronized(mmcMapPOisTrain += (t.user -> poiSet))
+      if (poiSet.nonEmpty) synchronized(mmcMapPOisTrain += (t.id -> poiSet))
     }
     mmcMapPOisTrain
   }
@@ -144,10 +136,10 @@ case class MmcReidentOp(
   private def formMMCMap(ds: DataFrame[Trace], mapPOis: Map[String, Seq[Cluster]]): Map[String, (SparseMatrix[Double], Array[Double])] = {
     var mapTransMat = Map[String, (SparseMatrix[Double], Array[Double])]()
     ds.foreach { t =>
-      val poiset = mapPOis.get(t.user)
+      val poiset = mapPOis.get(t.id)
       poiset match {
         case Some(pois) =>
-          if (pois.nonEmpty) synchronized(mapTransMat += (t.user -> formTransitionMatrix(t.events, pois)))
+          if (pois.nonEmpty) synchronized(mapTransMat += (t.id -> formTransitionMatrix(t.events, pois)))
         case None => // Do nothing.
       }
     }
@@ -191,3 +183,4 @@ case class MmcReidentOut(
   rate: Double)
 
 
+*/

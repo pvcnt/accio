@@ -19,26 +19,24 @@
 package fr.cnrs.liris.locapriv.ops
 
 import java.io.FileOutputStream
-import java.nio.file.{Files, Path, Paths, StandardOpenOption}
+import java.nio.file.{Files, Path, Paths}
 import java.util.Locale
 
 import com.google.common.io.Resources
-import fr.cnrs.liris.accio.sdk.{RemoteFile, _}
-import fr.cnrs.liris.util.geo.{Distance, Point}
-import fr.cnrs.liris.locapriv.io.CsvSink
-import fr.cnrs.liris.locapriv.sparkle.DataSink
-import fr.cnrs.liris.locapriv.io.TraceCodec
-import fr.cnrs.liris.locapriv.domain.{Event, Trace}
+import fr.cnrs.liris.accio.sdk._
+import fr.cnrs.liris.locapriv.domain.Event
+import fr.cnrs.liris.sparkle.DataFrame
+import fr.cnrs.liris.util.geo.{BoundingBox, Distance, Point}
 import org.joda.time.{Duration, Instant}
 
 import scala.collection.JavaConverters._
-import scala.collection.mutable
 
 /**
  * Wrapper around the implementation of the Wait4Me algorithm, as provided by their authors.
  *
- * Wait 4 Me: Time-tolerant Anonymization of Moving Objects Databases. Abul, Osman, Bonchi, Francesco, Nanni, Mirco.
- * Information Systems Journal, Volume 35, Issue 8, December 2010, pp 884-910.
+ * Wait 4 Me: Time-tolerant Anonymization of Moving Objects Databases. Abul, Osman, Bonchi,
+ * Francesco, Nanni, Mirco. Information Systems Journal, Volume 35, Issue 8, December 2010,
+ * pp 884-910.
  *
  * @see http://www-kdd.isti.cnr.it/W4M/
  */
@@ -55,17 +53,17 @@ case class Wait4MeOp(
   @Arg(help = "Uncertainty")
   delta: Distance,
   @Arg(help = "Initial maximum radius used in clustering")
-  radiusMax: Option[Distance],
+  radiusMax: Option[Distance] = None,
   @Arg(help = "Global maximum trash size, in percentage of the dataset size")
   trashMax: Double = 0.1,
   @Arg(help = "Whether to chunk the input dataset")
   chunk: Boolean = false)
-  extends ScalaOperator[Wait4MeOut] with SparkleOperator {
+  extends ScalaOperator[Wait4MeOp.Out] with SparkleOperator {
 
-  override def execute(ctx: OpContext): Wait4MeOut = {
-    val input = read[Trace](data)
+  override def execute(ctx: OpContext): Wait4MeOp.Out = {
+    val input = read[Event](data)
     if (input.count() == 0) {
-      Wait4MeOut(
+      Wait4MeOp.Out(
         data = data,
         trashSize = 0,
         trashedPoints = 0,
@@ -85,22 +83,27 @@ case class Wait4MeOp(
       val localBinary = copyBinary(tmpDir, chunk)
 
       // Convert the trash max from a percentage to an absolute size.
-      val trashMaxPercent = trashMax * input.keys.size
+      val users = input.groupBy(_.id).map(_._1).collect().sorted
+      val trashMaxPercent = trashMax * users.length
 
       val radiusMaxOrDefault = radiusMax.getOrElse {
-        // If not radiusMax is given, we initialize it to "0.5% of the semi-diagonal of the spatial minimum bounding
-        // box of the dataset", as proposed by the authors of the paper.
-        val boundingBox = input.map(_.boundingBox).reduce(_ union _)
+        // If not radiusMax is given, we initialize it to "0.5% of the semi-diagonal of the spatial
+        // minimum bounding box of the dataset", as proposed by the authors of the paper.
+        val boundingBox = getBoundingBox(input)
         boundingBox.diagonal / 2 * 0.5 / 100
       }
 
       // We convert our dataset to the format required by W4M.
-      val w4mInputUri = tmpDir.resolve("data.txt").toAbsolutePath.toString
-      input.map(trace => limit(trace)).write(new W4MSink(w4mInputUri, input.keys.zipWithIndex.toMap))
+      val w4mInputUri = tmpDir.resolve("w4mdata").toAbsolutePath.toString
+      toW4MDataFrame(input, users)
+        .write
+        .option("delimiter", '\t')
+        .option("header", false)
+        .csv(w4mInputUri)
 
       val process = new ProcessBuilder(
         localBinary.toAbsolutePath.toString,
-        w4mInputUri,
+        s"$w4mInputUri/0.csv",
         "out", /* output files prefix */
         k.toString,
         delta.meters.toString,
@@ -119,8 +122,8 @@ case class Wait4MeOp(
       }
 
       // We convert back the result into a conventional dataset format.
-      val w4mOutputPath = tmpDir.resolve(f"out_${k}_${"%.3f".formatLocal(Locale.ENGLISH, delta.meters)}.txt").toAbsolutePath
-      val output = writeOutput(input.keys, w4mOutputPath, ctx)
+      val w4mOutputPath = tmpDir.resolve(f"out_${k}_${"%.3f".formatLocal(Locale.ENGLISH, delta.meters)}.txt").toString
+      val output = fromW4MDataFrame(env.read[Wait4MeOp.W4MEvent].option("delimiter", '\t').csv(w4mOutputPath), users)
 
       // We extract metrics from the captured stdout. This is quite ugly, but this works.
       // After header and progress information, result looks like:
@@ -134,8 +137,13 @@ case class Wait4MeOp(
       val statLines = resultLines.dropWhile(line => !line.startsWith("------")).drop(2)
       val metrics = statLines.map(_.split(":").last.trim)
 
-      Wait4MeOut(
-        data = output,
+      //println(Files.list(ctx.workDir).iterator.asScala.mkString("\n"))
+      val d = write(output, 0, ctx)
+      //println("total events " + env.read[Event].csv(d.uri).count())
+      //Files.list(Paths.get(d.uri)).iterator.asScala.foreach(p => Files.copy(p, Paths.get(s"/Users/vincent/workspace/accio/${p.getFileName}")))
+
+      Wait4MeOp.Out(
+        data = d,
         trashSize = metrics(3).toInt,
         trashedPoints = metrics(4).toLong,
         discernibility = metrics(5).toLong,
@@ -163,19 +171,22 @@ case class Wait4MeOp(
     }
   }
 
-  private def limit(trace: Trace) = {
+  private def limit(trace: Iterable[Event]): Iterable[Event] = {
     // Because of the binary code we use (provided by the authors), each trace is limited to 10000 events. We enforce
     // here this limit by sampling larger traces using the modulo operator.
     if (trace.size > Wait4MeOp.MaxTraceSize) {
       val modulo = trace.size.toDouble / Wait4MeOp.MaxTraceSize
-      trace.replace(_.zipWithIndex.filter { case (_, idx) => (idx % modulo) < 1 }.map(_._1).take(Wait4MeOp.MaxTraceSize))
+      trace.zipWithIndex
+        .filter { case (_, idx) => (idx % modulo) < 1 }
+        .map(_._1)
+        .take(Wait4MeOp.MaxTraceSize)
     } else {
       trace
     }
   }
 
   private def copyBinary(tmpDir: Path, chunk: Boolean) = {
-    val jarBinary = s"fr/cnrs/liris/locapriv/${getPlatform}_w4m_LST${if (chunk) "_chunk" else ""}"
+    val jarBinary = s"fr/cnrs/liris/locapriv/ops/${getPlatform}_w4m_LST${if (chunk) "_chunk" else ""}"
     val localBinary = tmpDir.resolve("program")
     val fos = new FileOutputStream(localBinary.toFile)
     try {
@@ -187,61 +198,71 @@ case class Wait4MeOp(
     localBinary
   }
 
-  private def writeOutput(keys: Seq[String], w4mOutputPath: Path, ctx: OpContext) = {
-    val keysReverseIndex = keys.zipWithIndex.map { case (k, v) => v -> k }.toMap
-    var currIdx: Option[Int] = None
-    val events = mutable.ListBuffer.empty[Event]
-    val outputUri = ctx.workDir.resolve("data").toAbsolutePath.toString
-    val sink = new CsvSink(outputUri, new TraceCodec, failOnNonEmptyDirectory = false)
-    Files.readAllLines(w4mOutputPath).asScala.foreach { line =>
-      val parts = line.trim.split("\t")
-      val idx = parts(0).toInt
-      if (events.nonEmpty && currIdx.get != idx) {
-        env.parallelize(keysReverseIndex(currIdx.get) -> Seq(Trace(keysReverseIndex(currIdx.get), events.toList))).write(sink)
-        events.clear()
-        currIdx = Some(idx)
-      } else if (currIdx.isEmpty) {
-        currIdx = Some(idx)
-      }
-      events += Event(keysReverseIndex(idx).split("-").head, Point(parts(2).toDouble, parts(3).toDouble), new Instant(parts(1).toLong))
+  private def fromW4MDataFrame(df: DataFrame[Wait4MeOp.W4MEvent], users: Array[String]): DataFrame[Event] = {
+    val keysReverseIndex = users.zipWithIndex.map { case (k, v) => v -> k }.toMap
+    //TODO: partition by user.
+    df.map { event =>
+      Event(keysReverseIndex(event.id), Point(event.x, event.y), new Instant(event.time * 1000))
     }
-    if (events.nonEmpty) {
-      env.parallelize(keysReverseIndex(currIdx.get) -> Seq(Trace(keysReverseIndex(currIdx.get), events.toList))).write(sink)
-    }
-    RemoteFile(outputUri)
+  }
+
+  private def toW4MDataFrame(df: DataFrame[Event], users: Array[String]): DataFrame[Wait4MeOp.W4MEvent] = {
+    // Wait4Me requires events to be written in chronological order and grouped by user. This is
+    // by default already the case with our CSV-based format, so we do not have more to handle
+    // here.
+    val keysIndex = users.zipWithIndex.toMap
+    df.groupBy(_.id)
+      .flatMap { case (id, trace) =>
+        val numericId = keysIndex(id)
+        limit(trace).map { event =>
+          val point = event.point
+          Wait4MeOp.W4MEvent(numericId, event.time.getMillis / 1000, point.x, point.y)
+        }
+      }.coalesce() // Force a single partition, and hence everything to be written inside a single file.
+  }
+
+  private def getBoundingBox(df: DataFrame[Event]): BoundingBox = {
+    val minX = df.map(_.point.x).min
+    val maxX = df.map(_.point.x).max
+    val minY = df.map(_.point.y).min
+    val maxY = df.map(_.point.y).max
+    BoundingBox(Point(minX, minY), Point(maxX, maxY))
   }
 }
 
 object Wait4MeOp {
   private val MaxTraceSize = 10000
-}
 
-case class Wait4MeOut(
-  @Arg(help = "Output dataset") data: RemoteFile,
-  @Arg(help = "Trash_size") trashSize: Int,
-  @Arg(help = "Number of trashed points") trashedPoints: Long,
-  @Arg(help = "Discernibility metric") discernibility: Long,
-  @Arg(help = "Total XY translations") totalXyTranslations: Distance,
-  @Arg(help = "Total time translations") totalTimeTranslations: Duration,
-  @Arg(help = "XY translation count") xyTranslationsCount: Int,
-  @Arg(help = "Time translation count") timeTranslationsCount: Int,
-  @Arg(help = "Number of created points") createdPoints: Int,
-  @Arg(help = "Number of deleted points") deletedPoints: Int,
-  @Arg(help = "Mean spatial translation (per trace)") meanSpatialTraceTranslation: Distance,
-  @Arg(help = "Mean temporal translation (per trace)") meanTemporalTraceTranslation: Duration,
-  @Arg(help = "Mean spatial translation (per point)") meanSpatialPointTranslation: Distance,
-  @Arg(help = "Mean temporal translation (per point)") meanTemporalPointTranslation: Duration)
+  private case class W4MEvent(id: Int, time: Long, x: Double, y: Double)
 
-private class W4MSink(uri: String, keysIndex: Map[String, Int]) extends DataSink[Trace] {
-  private[this] val path = Paths.get(uri)
-  Files.createDirectories(path.getParent)
+  case class Out(
+    @Arg(help = "Output dataset")
+    data: RemoteFile,
+    @Arg(help = "Trash_size")
+    trashSize: Int,
+    @Arg(help = "Number of trashed points")
+    trashedPoints: Long,
+    @Arg(help = "Discernibility metric")
+    discernibility: Long,
+    @Arg(help = "Total XY translations")
+    totalXyTranslations: Distance,
+    @Arg(help = "Total time translations")
+    totalTimeTranslations: Duration,
+    @Arg(help = "XY translation count")
+    xyTranslationsCount: Int,
+    @Arg(help = "Time translation count")
+    timeTranslationsCount: Int,
+    @Arg(help = "Number of created points")
+    createdPoints: Int,
+    @Arg(help = "Number of deleted points")
+    deletedPoints: Int,
+    @Arg(help = "Mean spatial translation (per trace)")
+    meanSpatialTraceTranslation: Distance,
+    @Arg(help = "Mean temporal translation (per trace)")
+    meanTemporalTraceTranslation: Duration,
+    @Arg(help = "Mean spatial translation (per point)")
+    meanSpatialPointTranslation: Distance,
+    @Arg(help = "Mean temporal translation (per point)")
+    meanTemporalPointTranslation: Duration)
 
-  override def write(key: String, elements: Seq[Trace]): Unit = synchronized {
-    val lines = elements.flatMap { trace =>
-      trace.events.map { event =>
-        s"${keysIndex(trace.id)}\t${event.time.getMillis / 1000}\t${event.point.x}\t${event.point.y}"
-      }
-    }
-    Files.write(path, lines.asJava, StandardOpenOption.CREATE, StandardOpenOption.APPEND)
-  }
 }

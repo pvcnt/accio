@@ -20,7 +20,6 @@ package fr.cnrs.liris.locapriv.domain
 
 import com.google.common.geometry.S1Angle
 import fr.cnrs.liris.util.geo.{Distance, LatLng, Point}
-import fr.cnrs.liris.util.random.RandomUtils
 
 import scala.util.Random
 
@@ -30,45 +29,51 @@ import scala.util.Random
  * Miguel E. Andrés, Nicolás E. Bordenabe, Konstantinos Chatzikokolakis and
  * Catuscia Palamidessi. 2013. Geo-indistinguishability: differential privacy for
  * location-based systems. In Proceedings of CCS'13.
- *
- * @param epsilon Privacy budget
- * @param seed    Seed.
  */
-class Laplace(epsilon: Double, seed: Long = RandomUtils.random.nextLong) {
-  private[this] val rnd = new Random(seed)
-
+object Laplace {
   /**
-   * Return a geo-indistinguishable version of a whole trace.
+   * Return a protected version of a mobility trace.
    *
-   * @param trace Trace to protect.
+   * @param trace   Trace to protect.
+   * @param epsilon Privacy budget.
+   * @param seed    Seed.
    */
-  def transform(trace: Trace): Trace = trace.map(rec => rec.copy(point = noise(rec.point)))
+  def transform(trace: Iterable[Event], epsilon: Double, seed: Long = Random.nextLong): Iterable[Event] = {
+    val rnd = new Random(seed)
+    trace.map(event => event.withPoint(noise(event.point, epsilon, rnd)))
+    //TODO: validate this.
+    //trace.map(event => event.withLatLng(noise(event.latLng, epsilon, rnd)))
+  }
 
   /**
    * Return a geo-indistinguishable version of a single point.
    *
-   * @param point Point to protect.
+   * @param point   Point to protect.
+   * @param epsilon Privacy budget.
+   * @param rnd     Random number generator.
    */
-  def noise(point: Point): Point = {
+  def noise(point: Point, epsilon: Double, rnd: Random): Point = {
     val azimuth = math.toDegrees(rnd.nextDouble() * 2 * math.Pi)
     val z = rnd.nextDouble()
-    val distance = inverseCumulativeGamma(z)
+    val distance = inverseCumulativeGamma(z, epsilon)
     point.translate(S1Angle.degrees(azimuth), distance)
   }
 
   /**
    * Return a geo-indistinguishable version of a single point.
    *
-   * @param point Point to protect.
+   * @param point   Point to protect.
+   * @param epsilon Privacy budget.
+   * @param rnd     Random number generator.
    */
-  def noise(point: LatLng): LatLng = {
+  def noise(point: LatLng, epsilon: Double, rnd: Random): LatLng = {
     val azimuth = math.toDegrees(rnd.nextDouble() * 2 * math.Pi)
     val z = rnd.nextDouble()
-    val distance = inverseCumulativeGamma(z)
+    val distance = inverseCumulativeGamma(z, epsilon)
     point.translate(S1Angle.degrees(azimuth), distance)
   }
 
-  def inverseCumulativeGamma(z: Double): Distance = {
+  def inverseCumulativeGamma(z: Double, epsilon: Double): Distance = {
     val x = (z - 1) / math.E
     val r = -(LambertW.lambertWm1(x) + 1) / epsilon
     Distance.meters(r)

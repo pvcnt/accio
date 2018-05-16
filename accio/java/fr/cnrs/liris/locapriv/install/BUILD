@@ -18,9 +18,10 @@ scala_library(
   name = "install",
   srcs = glob(["*.scala"]),
   deps = [
+    "//accio/java/fr/cnrs/liris/locapriv/domain",
+      "//accio/java/fr/cnrs/liris/locapriv/ops",
     "//accio/java/fr/cnrs/liris/accio/api",
     "//accio/java/fr/cnrs/liris/accio/runtime",
-    "//accio/java/fr/cnrs/liris/locapriv/ops",
     "//3rdparty/jvm/com/twitter:inject_core",
   ],
   visibility = ["//visibility:public"],

@@ -18,8 +18,8 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.accio.sdk.{RemoteFile, _}
-import fr.cnrs.liris.locapriv.domain.Trace
+import fr.cnrs.liris.accio.sdk._
+import fr.cnrs.liris.locapriv.domain.Event
 
 @Op(
   category = "transform",
@@ -33,26 +33,18 @@ case class EnforceSizeOp(
   @Arg(help = "Maximum number of events in each trace")
   maxSize: Option[Int],
   @Arg(help = "Input dataset") data: RemoteFile)
-  extends ScalaOperator[EnforceSizeOut] with SparkleOperator {
+  extends TransformOp[Event] {
 
-  override def execute(ctx: OpContext): EnforceSizeOut = {
-    val output = write(read[Trace](data).flatMap(transform), ctx)
-    EnforceSizeOut(output)
-  }
-
-  private def transform(trace: Trace): Seq[Trace] = {
-    var res = trace
+  override protected def transform(key: String, trace: Iterable[Event]): Iterable[Event] = {
+    var result = trace
     maxSize.foreach { size =>
-      if (res.size > size) {
-        res = res.replace(_.take(size))
+      if (result.size > size) {
+        result = result.take(size)
       }
     }
     minSize match {
-      case None => Seq(res)
-      case Some(size) => if (res.size < size) Seq.empty else Seq(res)
+      case None => result
+      case Some(size) => if (result.size < size) Seq.empty else result
     }
   }
 }
-
-case class EnforceSizeOut(
-  @Arg(help = "Output dataset") data: RemoteFile)

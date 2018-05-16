@@ -17,14 +17,15 @@
 scala_library(
   name = "testing",
   deps=[
+    "//accio/java/fr/cnrs/liris/sparkle",
+    "//accio/java/fr/cnrs/liris/sparkle/format",
+    "//accio/java/fr/cnrs/liris/sparkle/format/csv",
     "//accio/java/fr/cnrs/liris/locapriv/domain",
-    "//accio/java/fr/cnrs/liris/locapriv/io",
     "//accio/java/fr/cnrs/liris/util/geo",
     "//3rdparty/jvm/com/github/nscala_time",
     "//3rdparty/jvm/com/google/guava",
   ],
   srcs = glob(["*.scala"]),
-  resources = ["abboip.csv"],
-  resource_strip_prefix = "accio/javatests",
+  data = glob(["*.csv"]),
   visibility = ["//accio/javatests:__subpackages__"],
 )
