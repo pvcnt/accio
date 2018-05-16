@@ -19,16 +19,14 @@
 package fr.cnrs.liris.sparkle
 
 import com.google.common.base.MoreObjects
-import fr.cnrs.liris.util.random.RandomSampler
+import fr.cnrs.liris.util.random.XORShiftRandom
 
 import scala.util.Random
 
-private[sparkle] class SampleDataFrame[T](
-  inner: DataFrame[T],
-  sampler: RandomSampler[T, T],
-  seed: Long)
+private[sparkle] class SampleDataFrame[T](inner: DataFrame[T], fraction: Double, seed: Long)
   extends DataFrame[T] {
 
+  require(fraction >= 0.0, s"Negative fraction value: $fraction")
   private[this] val seeds = {
     val random = new Random(seed)
     inner.keys.map(key => key -> random.nextLong).toMap
@@ -39,9 +37,15 @@ private[sparkle] class SampleDataFrame[T](
   override private[sparkle] def keys: Seq[String] = inner.keys
 
   override private[sparkle] def load(key: String): Iterable[T] = {
-    val aSampler = sampler.clone
-    aSampler.setSeed(seeds(key))
-    aSampler.sample(inner.load(key))
+    val elements = inner.load(key)
+    if (fraction <= 0.0) {
+      Iterable.empty
+    } else if (fraction >= 1.0) {
+      elements
+    } else {
+      val rng = new XORShiftRandom(seeds(key))
+      elements.filter(_ => rng.nextDouble() <= fraction)
+    }
   }
 
   override private[sparkle] def env = inner.env

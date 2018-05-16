@@ -49,8 +49,7 @@ trait DataFrame[T] extends Logging {
    * @param seed     Seed for the random number generator.
    */
   def sample(fraction: Double, seed: Long = Random.nextLong): DataFrame[T] = {
-    require(fraction >= 0.0, s"Negative fraction value: $fraction")
-    new SampleDataFrame[T](this, new BernoulliSampler[T](fraction), seed)
+    new SampleDataFrame[T](this, fraction, seed)
   }
 
   def filter(fn: T => Boolean): DataFrame[T] = {

@@ -34,7 +34,7 @@ import scala.util.hashing.MurmurHash3
  *
  * @see http://www.jstatsoft.org/v08/i14/paper
  */
-private[random] class XORShiftRandom(init: Long) extends JavaRandom(init) {
+final class XORShiftRandom(init: Long) extends JavaRandom(init) {
 
   def this() = this(System.nanoTime)
 

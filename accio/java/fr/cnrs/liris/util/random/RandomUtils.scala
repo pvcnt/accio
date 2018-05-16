@@ -36,26 +36,12 @@
 
 package fr.cnrs.liris.util.random
 
-import scala.reflect.ClassTag
 import scala.util.Random
 
 /**
  * Utils related to randomness.
  */
 object RandomUtils {
-  /**
-   * Shuffle the elements of a collection into a random order, returning the
-   * result in a new collection. Unlike [[scala.util.Random.shuffle]], this method
-   * uses a local random number generator, avoiding inter-thread contention.
-   *
-   * @param input Traversable to shuffle.
-   * @param rand  Random number generator.
-   * @tparam T Elements' type.
-   */
-  def randomize[T: ClassTag](input: TraversableOnce[T], rand: Random = new Random): Seq[T] = {
-    randomizeInPlace(input.toArray, rand).toSeq
-  }
-
   /**
    * Shuffle the elements of an array into a random order, modifying the original array.
    *
@@ -96,15 +82,6 @@ object RandomUtils {
     BinomialBounds.getUpperBound(1e-4, total, fraction)
   }
 }
-
-/**
- * A sample and the total size of the original collection.
- *
- * @param sample A sample.
- * @param count  Total size of the original collection.
- * @tparam T Elements' type.
- */
-case class SampleAndCount[T](sample: Array[T], count: Int)
 
 /**
  * Utility functions that help us determine bounds on adjusted sampling rate to guarantee exact
