@@ -51,16 +51,27 @@ final class DataFrameReader[T](env: SparkleEnv, encoder: Encoder[T]) {
 
   def read(uri: String, format: DataFormat): DataFrame[T] = {
     new DataFrame[T] {
-      override def keys: Seq[String] = {
-        val prefixLength = uri.stripSuffix("/").length + 1
-        val suffixLength = if (format.extension.nonEmpty) format.extension.length + 1 else 0
-        val uris = PosixFilesystem.list(uri).toSeq.sorted
-        uris.map(_.drop(prefixLength).dropRight(suffixLength))
+      override private[sparkle] def keys: Seq[String] = {
+        if (PosixFilesystem.isDirectory(uri)) {
+          val prefixLength = uri.stripSuffix("/").length + 1
+          val suffix = if (format.extension.nonEmpty) '.' + format.extension else ""
+          val suffixLength = suffix.length
+          val uris = PosixFilesystem.list(uri).filter(_.endsWith(suffix)).toSeq.sorted
+          uris.map(_.drop(prefixLength).dropRight(suffixLength))
+        } else if (PosixFilesystem.isFile(uri)) {
+          Seq(".")
+        } else {
+          Seq.empty
+        }
       }
 
       override private[sparkle] def load(key: String) = {
-        val extension = if (format.extension.nonEmpty) '.' + format.extension else ""
-        val is = PosixFilesystem.createInputStream(s"$uri/$key$extension")
+        val is = if (key == ".") {
+          PosixFilesystem.createInputStream(uri)
+        } else {
+          val extension = if (format.extension.nonEmpty) '.' + format.extension else ""
+          PosixFilesystem.createInputStream(s"$uri/$key$extension")
+        }
         val reader = format.readerFor(encoder.structType, _options.toMap)
         reader.read(is).map(encoder.deserialize)
       }

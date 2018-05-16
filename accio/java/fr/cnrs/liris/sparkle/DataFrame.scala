@@ -26,7 +26,7 @@ import scala.reflect.ClassTag
 import scala.util.Random
 
 trait DataFrame[T] extends Logging {
-  def keys: Seq[String]
+  private[sparkle] def keys: Seq[String]
 
   private[sparkle] def load(key: String): Iterable[T]
 
@@ -66,15 +66,15 @@ trait DataFrame[T] extends Logging {
   }
 
   def count(): Long = {
-    env.submit[T, Long](this, keys)((_, seq) => seq.size).sum
+    env.submit[T, Long](this, keys)((_, it) => it.size).sum
   }
 
   def count(fn: T => Boolean): Long = {
-    env.submit[T, Long](this, keys)((_, seq) => seq.count(fn)).sum
+    env.submit[T, Long](this, keys)((_, it) => it.count(fn)).sum
   }
 
   def reduce(fn: (T, T) => T): T = {
-    env.submit[T, T](this, keys)((_, seq) => seq.reduce(fn)).reduce(fn)
+    env.submit[T, T](this, keys)((_, it) => it.reduce(fn)).reduce(fn)
   }
 
   def collect(): Array[T] = {

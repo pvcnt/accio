@@ -18,6 +18,8 @@
 
 package fr.cnrs.liris.sparkle.format.csv
 
+import java.util.Locale
+
 import com.univocity.parsers.csv.{CsvParserSettings, CsvWriterSettings, UnescapedQuoteHandling}
 
 case class CsvOptions(
@@ -28,25 +30,27 @@ case class CsvOptions(
   nanValue: String,
   positiveInf: String,
   negativeInf: String,
-  timestampFormat: String) {
+  timestampFormat: String,
+  header: Boolean) {
 
   def asWriterSettings: CsvWriterSettings = {
-    val writerSettings = new CsvWriterSettings()
-    val format = writerSettings.getFormat
+    val settings = new CsvWriterSettings()
+    val format = settings.getFormat
     format.setDelimiter(delimiter)
     format.setQuote(quote)
     format.setQuoteEscape(escape)
     format.setLineSeparator("\n")
     //charToEscapeQuoteEscaping.foreach(format.setCharToEscapeQuoteEscaping)
     //format.setComment(comment)
-    //writerSettings.setIgnoreLeadingWhitespaces(ignoreLeadingWhiteSpaceFlagInWrite)
-    //writerSettings.setIgnoreTrailingWhitespaces(ignoreTrailingWhiteSpaceFlagInWrite)
-    writerSettings.setNullValue(nullValue)
-    writerSettings.setEmptyValue(nullValue)
-    writerSettings.setSkipEmptyLines(true)
-    //writerSettings.setQuoteAllFields(quoteAll)
-    //writerSettings.setQuoteEscapingEnabled(escapeQuotes)
-    writerSettings
+    //settings.setIgnoreLeadingWhitespaces(ignoreLeadingWhiteSpaceFlagInWrite)
+    //settings.setIgnoreTrailingWhitespaces(ignoreTrailingWhiteSpaceFlagInWrite)
+    settings.setNullValue(nullValue)
+    settings.setEmptyValue(nullValue)
+    settings.setSkipEmptyLines(true)
+    settings.setHeaderWritingEnabled(header)
+    //settings.setQuoteAllFields(quoteAll)
+    //settings.setQuoteEscapingEnabled(escapeQuotes)
+    settings
   }
 
   def asParserSettings: CsvParserSettings = {
@@ -80,7 +84,8 @@ object CsvOptions {
       nanValue = options.getOrElse("nanValue", "NaN"),
       positiveInf = options.getOrElse("positiveInf", "Inf"),
       negativeInf = options.getOrElse("negativeInf", "-Inf"),
-      timestampFormat = options.getOrElse("timestampFormat", ""))
+      timestampFormat = options.getOrElse("timestampFormat", ""),
+      header = getBool("header", options.get("header"), true))
   }
 
   private def getChar(paramName: String, paramValue: Option[String], default: Char): Char = {
@@ -93,4 +98,12 @@ object CsvOptions {
     }
   }
 
+  private def getBool(paramName: String, paramValue: Option[String], default: Boolean): Boolean = {
+    paramValue.map(_.toLowerCase(Locale.ROOT)) match {
+      case Some("true") => true
+      case Some("false") => false
+      case Some(str) => throw new RuntimeException(s"$paramName should be true or false: $str")
+      case None => default
+    }
+  }
 }

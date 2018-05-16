@@ -26,6 +26,6 @@ scala_library(
     "//3rdparty/jvm/com/google/guava",
   ],
   srcs = glob(["*.scala"]),
-  data = ["abboip.csv"],
+  data = glob(["*.csv"]),
   visibility = ["//accio/javatests:__subpackages__"],
 )

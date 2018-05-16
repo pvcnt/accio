@@ -21,7 +21,7 @@ package fr.cnrs.liris.sparkle
 private[sparkle] class GroupByDataFrame[V](inner: DataFrame[V], fn: V => String)
   extends DataFrame[(String, Iterable[V])] {
 
-  override def keys: Seq[String] = inner.keys
+  override private[sparkle] def keys: Seq[String] = inner.keys
 
   override private[sparkle] def load(key: String) = inner.load(key).groupBy(fn)
 

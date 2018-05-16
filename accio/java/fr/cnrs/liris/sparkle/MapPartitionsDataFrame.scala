@@ -26,9 +26,9 @@ private[sparkle] class MapPartitionsDataFrame[T, U](
   private[sparkle] val encoder: Encoder[U])
   extends DataFrame[U] {
 
-  override def keys: Seq[String] = inner.keys
-
   override def toString: String = MoreObjects.toStringHelper(this).addValue(inner).toString
+
+  override private[sparkle] def keys: Seq[String] = inner.keys
 
   override private[sparkle] def load(key: String): Iterable[U] = fn(key, inner.load(key))
 

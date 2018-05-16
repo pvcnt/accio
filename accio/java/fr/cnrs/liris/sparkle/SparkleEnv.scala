@@ -21,11 +21,9 @@ package fr.cnrs.liris.sparkle
 import java.util.concurrent.{Executors, TimeUnit}
 
 import com.twitter.util.logging.Logging
+import com.twitter.util.{Await, Future, FuturePool}
 
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor, Future}
 import scala.reflect.ClassTag
-import scala.util.{Failure, Success}
 
 /**
  * A Sparkle environment is responsible for the execution of parallel tasks on [[DataFrame]]s.
@@ -33,15 +31,11 @@ import scala.util.{Failure, Success}
  * @param parallelism Parallelism level (i.e., number of cores to use).
  */
 final class SparkleEnv(parallelism: Int) extends Logging {
-  require(parallelism > 0, s"Parallelism level must be > 0 (got $parallelism)")
-  private[this] val executor = {
-    if (1 == parallelism) {
-      Executors.newSingleThreadExecutor
-    } else {
-      Executors.newWorkStealingPool(parallelism)
-    }
+  require(parallelism > 0, s"parallelism must be strictly positive: $parallelism")
+  private[this] val pool = {
+    val executor = if (1 == parallelism) Executors.newSingleThreadExecutor else Executors.newWorkStealingPool(parallelism)
+    FuturePool(executor)
   }
-  private[this] implicit val ec: ExecutionContextExecutor = ExecutionContext.fromExecutor(executor)
   logger.info(s"Initialized Sparkle with $parallelism cores")
 
   /**
@@ -56,7 +50,7 @@ final class SparkleEnv(parallelism: Int) extends Logging {
   /**
    * Create a new dataframe from an in-memory collection.
    *
-   * @param data List of keys and items.
+   * @param data Elements.
    * @tparam T Elements' type.
    */
   def parallelize[T: Encoder](data: Iterable[T]): DataFrame[T] = {
@@ -68,18 +62,30 @@ final class SparkleEnv(parallelism: Int) extends Logging {
     }
   }
 
+  /**
+   * Create an empty dataframe.
+   *
+   * @tparam T Elements' type.
+   */
   def emptyDataFrame[T: Encoder]: DataFrame[T] = new EmptyDataFrame(this, implicitly[Encoder[T]])
 
+  /**
+   * Create a new dataframe by reading data stored elsewhere.
+   *
+   * @tparam T Elements' type.
+   * @return A dataframe reader.
+   */
   def read[T: Encoder]: DataFrameReader[T] = new DataFrameReader(this, implicitly[Encoder[T]])
 
   /**
-   * Clean and stop this environment. It will not be usable after. This method is blocking.
+   * Clean and stop this environment. It will not be usable after. This method blocks until the
+   * environment is effectively stopped.
    */
   def stop(): Unit = synchronized {
-    if (!executor.isTerminated) {
-      executor.shutdown()
-      while (!executor.isTerminated) {
-        executor.awaitTermination(100, TimeUnit.MILLISECONDS)
+    if (!pool.executor.isTerminated) {
+      pool.executor.shutdown()
+      while (!pool.executor.isTerminated) {
+        pool.executor.awaitTermination(100, TimeUnit.MILLISECONDS)
       }
     }
   }
@@ -87,25 +93,22 @@ final class SparkleEnv(parallelism: Int) extends Logging {
   /**
    * Submit a job to this environment.
    *
-   * @param frame
+   * @param df
    * @param keys
    * @param processor
    * @tparam T
    * @tparam U
    */
-  private[sparkle] def submit[T, U: ClassTag](frame: DataFrame[T], keys: Seq[String])(processor: (String, Iterable[T]) => U): Array[U] = {
+  private[sparkle] def submit[T, U: ClassTag](df: DataFrame[T], keys: Seq[String])(processor: (String, Iterable[T]) => U): Array[U] = {
     if (keys.isEmpty) {
       Array.empty
-    } else if (keys.size == 1) {
-      Array(processor(keys.head, frame.load(keys.head)))
     } else {
-      val futures = keys.map(key => Future(processor(key, frame.load(key))))
-      val future = Future.sequence(futures).map(_.toArray)
-      Await.ready[Array[U]](future, Duration.Inf)
-      future.value.get match {
-        case Success(res) => res
-        case Failure(e) => throw e
+      val result = Array.ofDim[U](keys.size)
+      val fs = keys.zipWithIndex.map { case (key, idx) =>
+        pool(result(idx) = processor(key, df.load(key)))
       }
+      Await.result(Future.join(fs))
+      result
     }
   }
 }

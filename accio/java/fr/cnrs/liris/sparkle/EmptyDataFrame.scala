@@ -31,9 +31,9 @@ private[sparkle] class EmptyDataFrame[T](
   private[sparkle] val encoder: Encoder[T])
   extends DataFrame[T] {
 
-  override lazy val keys: Seq[String] = Seq.empty
-
   override def toString: String = MoreObjects.toStringHelper(this).toString
+
+  override private[sparkle] lazy val keys: Seq[String] = Seq.empty
 
   override private[sparkle] def load(key: String): Iterable[T] = Iterable.empty
 }

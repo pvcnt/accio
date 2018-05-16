@@ -32,4 +32,8 @@ trait Filesystem {
   def list(uri: String): Iterable[String]
 
   def size(uri: String): StorageUnit
+
+  def isDirectory(uri: String): Boolean
+
+  def isFile(uri: String): Boolean
 }

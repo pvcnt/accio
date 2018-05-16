@@ -19,7 +19,7 @@
 package fr.cnrs.liris.locapriv.ops
 
 import java.io.FileOutputStream
-import java.nio.file.{Files, Path}
+import java.nio.file.{Files, Path, Paths}
 import java.util.Locale
 
 import com.google.common.io.Resources
@@ -53,7 +53,7 @@ case class Wait4MeOp(
   @Arg(help = "Uncertainty")
   delta: Distance,
   @Arg(help = "Initial maximum radius used in clustering")
-  radiusMax: Option[Distance],
+  radiusMax: Option[Distance] = None,
   @Arg(help = "Global maximum trash size, in percentage of the dataset size")
   trashMax: Double = 0.1,
   @Arg(help = "Whether to chunk the input dataset")
@@ -83,21 +83,22 @@ case class Wait4MeOp(
       val localBinary = copyBinary(tmpDir, chunk)
 
       // Convert the trash max from a percentage to an absolute size.
-      val trashMaxPercent = trashMax * input.keys.size
+      val users = input.groupBy(_.id).map(_._1).collect().sorted
+      val trashMaxPercent = trashMax * users.length
 
       val radiusMaxOrDefault = radiusMax.getOrElse {
-        // If not radiusMax is given, we initialize it to "0.5% of the semi-diagonal of the spatial minimum bounding
-        // box of the dataset", as proposed by the authors of the paper.
+        // If not radiusMax is given, we initialize it to "0.5% of the semi-diagonal of the spatial
+        // minimum bounding box of the dataset", as proposed by the authors of the paper.
         val boundingBox = getBoundingBox(input)
         boundingBox.diagonal / 2 * 0.5 / 100
       }
 
       // We convert our dataset to the format required by W4M.
-      val w4mInputUri = tmpDir.resolve("data.txt").toAbsolutePath.toString
-      toW4MDataFrame(input.groupBy(_.id).flatMap { case (_, trace) => limit(trace) })
-        .coalesce() // Everything has to be written inside a single file.
+      val w4mInputUri = tmpDir.resolve("w4mdata").toAbsolutePath.toString
+      toW4MDataFrame(input, users)
         .write
         .option("delimiter", '\t')
+        .option("header", false)
         .csv(w4mInputUri)
 
       val process = new ProcessBuilder(
@@ -122,7 +123,7 @@ case class Wait4MeOp(
 
       // We convert back the result into a conventional dataset format.
       val w4mOutputPath = tmpDir.resolve(f"out_${k}_${"%.3f".formatLocal(Locale.ENGLISH, delta.meters)}.txt").toString
-      val output = fromW4MDataFrame(input.keys, env.read[Wait4MeOp.W4MEvent].option("delimiter", '\t').csv(w4mOutputPath))
+      val output = fromW4MDataFrame(env.read[Wait4MeOp.W4MEvent].option("delimiter", '\t').csv(w4mOutputPath), users)
 
       // We extract metrics from the captured stdout. This is quite ugly, but this works.
       // After header and progress information, result looks like:
@@ -136,8 +137,13 @@ case class Wait4MeOp(
       val statLines = resultLines.dropWhile(line => !line.startsWith("------")).drop(2)
       val metrics = statLines.map(_.split(":").last.trim)
 
+      //println(Files.list(ctx.workDir).iterator.asScala.mkString("\n"))
+      val d = write(output, 0, ctx)
+      //println("total events " + env.read[Event].csv(d.uri).count())
+      //Files.list(Paths.get(d.uri)).iterator.asScala.foreach(p => Files.copy(p, Paths.get(s"/Users/vincent/workspace/accio/${p.getFileName}")))
+
       Wait4MeOp.Out(
-        data = write(output, 0, ctx),
+        data = d,
         trashSize = metrics(3).toInt,
         trashedPoints = metrics(4).toLong,
         discernibility = metrics(5).toLong,
@@ -180,7 +186,7 @@ case class Wait4MeOp(
   }
 
   private def copyBinary(tmpDir: Path, chunk: Boolean) = {
-    val jarBinary = s"fr/cnrs/liris/locapriv/${getPlatform}_w4m_LST${if (chunk) "_chunk" else ""}"
+    val jarBinary = s"fr/cnrs/liris/locapriv/ops/${getPlatform}_w4m_LST${if (chunk) "_chunk" else ""}"
     val localBinary = tmpDir.resolve("program")
     val fos = new FileOutputStream(localBinary.toFile)
     try {
@@ -192,22 +198,27 @@ case class Wait4MeOp(
     localBinary
   }
 
-  private def fromW4MDataFrame(keys: Seq[String], df: DataFrame[Wait4MeOp.W4MEvent]): DataFrame[Event] = {
-    val keysReverseIndex = keys.zipWithIndex.map { case (k, v) => v -> k }.toMap
+  private def fromW4MDataFrame(df: DataFrame[Wait4MeOp.W4MEvent], users: Array[String]): DataFrame[Event] = {
+    val keysReverseIndex = users.zipWithIndex.map { case (k, v) => v -> k }.toMap
+    //TODO: partition by user.
     df.map { event =>
       Event(keysReverseIndex(event.id), Point(event.x, event.y), new Instant(event.time * 1000))
     }
   }
 
-  private def toW4MDataFrame(df: DataFrame[Event]): DataFrame[Wait4MeOp.W4MEvent] = {
-    val keysIndex = df.keys.zipWithIndex.toMap
+  private def toW4MDataFrame(df: DataFrame[Event], users: Array[String]): DataFrame[Wait4MeOp.W4MEvent] = {
     // Wait4Me requires events to be written in chronological order and grouped by user. This is
     // by default already the case with our CSV-based format, so we do not have more to handle
     // here.
-    df.map { event =>
-      val point = event.point
-      Wait4MeOp.W4MEvent(keysIndex(event.id), event.time.getMillis / 1000, point.x, point.y)
-    }
+    val keysIndex = users.zipWithIndex.toMap
+    df.groupBy(_.id)
+      .flatMap { case (id, trace) =>
+        val numericId = keysIndex(id)
+        limit(trace).map { event =>
+          val point = event.point
+          Wait4MeOp.W4MEvent(numericId, event.time.getMillis / 1000, point.x, point.y)
+        }
+      }.coalesce() // Force a single partition, and hence everything to be written inside a single file.
   }
 
   private def getBoundingBox(df: DataFrame[Event]): BoundingBox = {

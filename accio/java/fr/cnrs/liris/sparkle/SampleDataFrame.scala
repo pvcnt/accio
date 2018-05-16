@@ -34,9 +34,9 @@ private[sparkle] class SampleDataFrame[T](
     inner.keys.map(key => key -> random.nextLong).toMap
   }
 
-  override def keys: Seq[String] = inner.keys
-
   override def toString: String = MoreObjects.toStringHelper(this).addValue(inner).toString
+
+  override private[sparkle] def keys: Seq[String] = inner.keys
 
   override private[sparkle] def load(key: String): Iterable[T] = {
     val aSampler = sampler.clone

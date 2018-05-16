@@ -35,13 +35,13 @@ private[sparkle] class MemoryDataFrame[T](
   private[sparkle] val encoder: Encoder[T])
   extends DataFrame[T] {
 
-  require(partitionSize > 0, "Partition size cannot be null")
-
-  override lazy val keys: Seq[String] = {
-    Seq.tabulate(math.floor(elements.size.toDouble / partitionSize).toInt)(_.toString)
-  }
+  require(partitionSize > 0, "partitionSize must be strictly positive")
 
   override def toString: String = MoreObjects.toStringHelper(this).toString
+
+  override private[sparkle] lazy val keys: Seq[String] = {
+    Seq.tabulate(math.floor(elements.size.toDouble / partitionSize).toInt)(_.toString)
+  }
 
   override private[sparkle] def load(key: String): Iterable[T] = {
     val start = key.toInt * partitionSize

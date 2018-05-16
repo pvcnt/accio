@@ -27,9 +27,9 @@ private[sparkle] class JoinDataFrame[T, U, V](
   private[sparkle] val encoder: Encoder[V])
   extends DataFrame[V] {
 
-  override def keys: Seq[String] = first.keys
-
   override def toString: String = MoreObjects.toStringHelper(this).addValue(first).addValue(other).toString
+
+  override private[sparkle] def keys: Seq[String] = first.keys
 
   override private[sparkle] def env: SparkleEnv = first.env
 

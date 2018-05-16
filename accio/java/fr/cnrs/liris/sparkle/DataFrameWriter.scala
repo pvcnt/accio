@@ -51,7 +51,8 @@ final class DataFrameWriter[T](df: DataFrame[T]) {
     val writer = format.writerFor(df.encoder.structType, _options.toMap)
     val extension = if (format.extension.nonEmpty) '.' + format.extension else ""
     df.env.submit[T, Unit](df, df.keys) { (key, elements) =>
-      write(s"$uri/$key$extension", writer, elements)
+      val dest = if (key == ".") uri else s"$uri/$key$extension"
+      write(dest, writer, elements)
     }
   }
 

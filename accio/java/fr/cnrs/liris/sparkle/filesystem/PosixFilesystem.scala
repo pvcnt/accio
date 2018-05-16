@@ -44,14 +44,16 @@ object PosixFilesystem extends Filesystem {
 
   override def list(uri: String): Iterable[String] = {
     val path = Paths.get(uri)
-    if (!Files.exists(path)) {
-      Iterable.empty
-    } else if (Files.isDirectory(path)) {
+    if (Files.isDirectory(path)) {
       Files.list(path).iterator.asScala.map(_.toString).toSeq
     } else {
-      Iterable(uri)
+      Iterable.empty
     }
   }
 
   override def size(uri: String): StorageUnit = StorageUnit.fromBytes(Files.size(Paths.get(uri)))
+
+  override def isDirectory(uri: String): Boolean = Files.isDirectory(Paths.get(uri))
+
+  override def isFile(uri: String): Boolean = Files.isRegularFile(Paths.get(uri))
 }

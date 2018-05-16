@@ -21,7 +21,7 @@ package fr.cnrs.liris.sparkle
 private[sparkle] class CoalesceDataFrame[T](inner: DataFrame[T])
   extends DataFrame[T] {
 
-  override def keys: Seq[String] = Seq("0")
+  override private[sparkle] def keys: Seq[String] = Seq("0")
 
   override private[sparkle] def load(key: String): Iterable[T] = {
     Iterable.concat(inner.keys.map(inner.load): _*)

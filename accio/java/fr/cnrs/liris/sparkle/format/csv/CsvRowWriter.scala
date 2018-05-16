@@ -33,7 +33,9 @@ private[csv] class CsvRowWriter(structType: StructType, options: CsvOptions) ext
   override def write(rows: Iterable[InternalRow], os: OutputStream): Unit = {
     val settings = options.asWriterSettings
     val writer = new CsvWriter(os, settings)
-    writer.writeHeaders(structType.fields.map(_._1): _*)
+    if (options.header) {
+      writer.writeHeaders(structType.fields.map(_._1): _*)
+    }
 
     rows.foreach { row =>
       val values = row.fields.zipWithIndex.map { case (value, idx) => converters(idx).apply(value) }
