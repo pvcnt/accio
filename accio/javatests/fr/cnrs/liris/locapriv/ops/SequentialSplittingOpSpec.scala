@@ -31,15 +31,15 @@ class SequentialSplittingOpSpec extends UnitSpec with WithTraceGenerator with Sc
   it should "handle an even number of events" in {
     val trace = randomTrace(Me, 150)
     val (out1, out2) = transform(trace, 50)
-    (out1.size + out2.size) shouldBe 150
-    assertTraceIsSplit(trace, out1, out2, 75)
+    out1 should contain theSameElementsInOrderAs trace.take(75)
+    out2 should contain theSameElementsInOrderAs trace.drop(75)
   }
 
   it should "handle an odd number of events" in {
     val trace = randomTrace(Me, 151)
     val (out1, out2) = transform(trace, 50)
-    (out1.size + out2.size) shouldBe 151
-    assertTraceIsSplit(trace, out1, out2, 76)
+    out1 should contain theSameElementsInOrderAs trace.take(76)
+    out2 should contain theSameElementsInOrderAs trace.drop(76)
   }
 
   it should "handle several traces" in {
@@ -76,7 +76,8 @@ class SequentialSplittingOpSpec extends UnitSpec with WithTraceGenerator with Sc
       val ds = writeTraces(data: _*)
       val res1 = SequentialSplittingOp(percentBegin = 0, percentEnd = percent, complement = false, data = ds).execute(ctx)
       val res2 = SequentialSplittingOp(percentBegin = 0, percentEnd = percent, complement = true, data = ds).execute(ctx)
-      (env.read[Event].csv(res1.data.uri).collect().toSeq, env.read[Event].csv(res2.data.uri).collect().toSeq)
+      (env.read[Event].csv(res1.data.uri).collect().toSeq,
+        env.read[Event].csv(res2.data.uri).collect().toSeq)
     }
   }
 

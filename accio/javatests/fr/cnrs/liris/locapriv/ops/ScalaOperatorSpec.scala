@@ -48,19 +48,20 @@ private[ops] trait ScalaOperatorSpec extends BeforeAndAfterEach with CreateTmpDi
   }
 
   protected final def ctx: OpContext = {
-    Files.createDirectories(tmpDir.resolve("ctx"))
+    val workDir = tmpDir.resolve(s"tmp-${idx.getAndIncrement()}")
+    Files.createDirectories(workDir)
     // This seed makes tests of unstable operators to pass for now. Be careful is you modify it!!
-    new OpContext(Some(-7590331047132310476L), tmpDir.resolve("ctx"))
+    new OpContext(Some(-7590331047132310476L), workDir)
   }
 
   protected final def writeTraces(data: Event*): RemoteFile = {
-    val uri = tmpDir.resolve("tmp").resolve(idx.getAndIncrement().toString).toString
+    val uri = tmpDir.resolve(s"tmp-${idx.getAndIncrement()}").toString
     env.parallelize(data).write.csv(uri)
     RemoteFile(uri)
   }
 
   protected final def writePois(data: Seq[Poi]): RemoteFile = {
-    val uri = tmpDir.resolve("tmp").resolve(idx.getAndIncrement().toString).toString
+    val uri = tmpDir.resolve(s"tmp-${idx.getAndIncrement()}").toString
     env.parallelize(data).write.csv(uri)
     RemoteFile(uri)
   }

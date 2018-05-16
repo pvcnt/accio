@@ -38,7 +38,7 @@ case class SpatioTemporalDistortionOp(
   override def execute(ctx: OpContext): SpatioTemporalDistortionOp.Out = {
     val trainDs = read[Event](train).groupBy(_.id)
     val testDs = read[Event](test).groupBy(_.id)
-    val metrics = trainDs.zip(testDs)(evaluate)
+    val metrics = trainDs.join(testDs)(evaluate)
     SpatioTemporalDistortionOp.Out(write(metrics, 0, ctx))
   }
 

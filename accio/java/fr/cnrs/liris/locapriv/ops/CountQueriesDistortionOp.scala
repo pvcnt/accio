@@ -131,13 +131,13 @@ private case class CountQuerySeq(queries: Seq[CountQuery]) {
    */
   def count(dataset: DataFrame[Event]): Seq[Long] = {
     val counters = Seq.fill(queries.size)(new AtomicLong)
-    dataset.foreachPartition { trace =>
+    dataset.groupBy(_.user).foreach { case (_, trace) =>
       for (i <- counters.indices) {
         if (queries(i).contains(trace)) {
           counters(i).incrementAndGet()
         }
       }
     }
-    counters.map(c => c.get())
+    counters.map(c => c.get)
   }
 }

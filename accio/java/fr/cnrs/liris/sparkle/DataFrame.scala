@@ -24,6 +24,7 @@ import fr.cnrs.liris.util.random._
 import scala.reflect.ClassTag
 import scala.util.Random
 
+// TODO: migrate seq to iterable's (possible lazyness)
 trait DataFrame[T] extends Logging {
   def keys: Seq[String]
 
@@ -35,9 +36,7 @@ trait DataFrame[T] extends Logging {
 
   private[this] implicit def classTag: ClassTag[T] = encoder.classTag
 
-  def repartition(numPartitions: Int): DataFrame[T] = {
-    new PartitionedDataFrame(this, numPartitions)
-  }
+  def coalesce(): DataFrame[T] = new CoalesceDataFrame(this)
 
   def groupBy(fn: T => String): DataFrame[(String, Seq[T])] = {
     new GroupByDataFrame[T](this, fn)
@@ -67,19 +66,19 @@ trait DataFrame[T] extends Logging {
   }
 
   def count(): Long = {
-    env.submit[T, Long](this, keys, (_, seq) => seq.size).sum
+    env.submit[T, Long](this, keys)((_, seq) => seq.size).sum
   }
 
   def count(fn: T => Boolean): Long = {
-    env.submit[T, Long](this, keys, (_, seq) => seq.count(fn)).sum
+    env.submit[T, Long](this, keys)((_, seq) => seq.count(fn)).sum
   }
 
   def reduce(fn: (T, T) => T): T = {
-    env.submit[T, T](this, keys, (_, seq) => seq.reduce(fn)).reduce(fn)
+    env.submit[T, T](this, keys)((_, seq) => seq.reduce(fn)).reduce(fn)
   }
 
   def collect(): Array[T] = {
-    val results = env.submit[T, Array[T]](this, keys, (_, seq) => seq.toArray)
+    val results = env.submit[T, Array[T]](this, keys)((_, seq) => seq.toArray)
     Array.concat(results: _*)
   }
 
@@ -128,7 +127,7 @@ trait DataFrame[T] extends Logging {
     var res: Option[T] = None
     while (res.isEmpty && keysIt.hasNext) {
       res = env
-        .submit[T, Option[T]](this, Seq(keysIt.next()), (_, seq) => seq.headOption)
+        .submit[T, Option[T]](this, Seq(keysIt.next()))((_, seq) => seq.headOption)
         .headOption
         .flatten
     }
@@ -136,15 +135,7 @@ trait DataFrame[T] extends Logging {
   }
 
   def foreach(fn: T => Unit): Unit = {
-    env.submit[T, Unit](this, keys, (_, seq) => seq.foreach(fn))
-  }
-
-  def foreachPartition(fn: Seq[T] => Unit): Unit = {
-    env.submit[T, Unit](this, keys, (_, seq) => fn(seq))
-  }
-
-  def foreachPartitionWithKey(fn: (String, Seq[T]) => Unit): Unit = {
-    env.submit[T, Unit](this, keys, fn)
+    env.submit[T, Unit](this, keys)((_, seq) => seq.foreach(fn))
   }
 
   def write: DataFrameWriter[T] = new DataFrameWriter(this)

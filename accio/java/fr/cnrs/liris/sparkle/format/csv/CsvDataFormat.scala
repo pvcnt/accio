@@ -21,6 +21,8 @@ package fr.cnrs.liris.sparkle.format.csv
 import fr.cnrs.liris.sparkle.format.{DataFormat, RowReader, RowWriter, StructType}
 
 object CsvDataFormat extends DataFormat {
+  override def extension = "csv"
+
   override def readerFor(structType: StructType, options: Map[String, String]): RowReader = {
     new CsvRowReader(structType, CsvOptions.extract(options))
   }

@@ -21,6 +21,8 @@ package fr.cnrs.liris.sparkle.format
 import java.io.{InputStream, OutputStream}
 
 trait DataFormat {
+  def extension: String
+
   def readerFor(structType: StructType, options: Map[String, String] = Map.empty): RowReader
 
   def writerFor(structType: StructType, options: Map[String, String] = Map.empty): RowWriter

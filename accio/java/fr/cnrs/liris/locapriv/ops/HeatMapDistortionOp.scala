@@ -60,7 +60,7 @@ case class HeatMapDistortionOp(
     val dstrain = restrictArea(read[Event](train)).groupBy(_.id)
     val dstest = restrictArea(read[Event](test)).groupBy(_.id)
 
-    val metrics = dstrain.zip(dstest)(compute)
+    val metrics = dstrain.join(dstest)(compute)
     // Add none found user in Train
     /*dstrain.keys.union(dstest.keys).toSet.foreach { u: String =>
       if (!metrics.contains(u)) metrics += u -> Double.NaN

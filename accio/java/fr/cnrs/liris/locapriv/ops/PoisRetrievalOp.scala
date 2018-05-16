@@ -42,7 +42,7 @@ case class PoisRetrievalOp(
   override def execute(ctx: OpContext): PoisRetrievalOp.Out = {
     val trainDs = read[Poi](train).groupBy(_.id)
     val testDs = read[Poi](test).groupBy(_.id)
-    val metrics = trainDs.zip(testDs)(evaluate)
+    val metrics = trainDs.join(testDs)(evaluate)
     PoisRetrievalOp.Out(write(metrics, 0, ctx))
   }
 

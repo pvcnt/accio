@@ -43,7 +43,6 @@ private[csv] class CsvRowReader(structType: StructType, options: CsvOptions) ext
     parser.parse(is)
 
     if (processor.getHeaders == null || processor.getHeaders.isEmpty) {
-      println("--- empty !!")
       Iterable.empty
     } else {
       /*val missing = structType.fields.map(_._1).filterNot(processor.getHeaders.contains)

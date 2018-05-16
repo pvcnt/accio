@@ -64,7 +64,7 @@ class DataFrameSpec extends UnitSpec with BeforeAndAfterEach {
     val data1 = env.parallelize("aa", "ab", "cd", "ef", "ag").groupBy(_.substring(0, 1))
     val data2 = env.parallelize("aa", "ca", "bd", "af").groupBy(_.substring(0, 1))
     val collect = new ConcurrentHashMap[String, Seq[String]].asScala
-    data1.zip(data2) { case (k, v1, v2) =>
+    data1.join(data2) { case (k, v1, v2) =>
       collect.put(k, v1 ++ v2)
       v1 ++ v2
     }.collect() shouldBe Array("ef", "aa", "ab", "ag", "aa", "af", "cd", "ca")

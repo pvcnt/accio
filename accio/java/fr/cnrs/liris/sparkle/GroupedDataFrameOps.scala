@@ -19,7 +19,7 @@
 package fr.cnrs.liris.sparkle
 
 class GroupedDataFrameOps[T](inner: DataFrame[(String, Seq[T])]) {
-  def zip[U, V: Encoder](other: DataFrame[(String, Seq[U])])(fn: (String, Seq[T], Seq[U]) => Seq[V]): DataFrame[V] = {
-    new ZipDataFrame(inner, other, fn, implicitly[Encoder[V]])
+  def join[U, V: Encoder](other: DataFrame[(String, Seq[U])])(fn: (String, Seq[T], Seq[U]) => Seq[V]): DataFrame[V] = {
+    new JoinDataFrame(inner, other, fn, implicitly[Encoder[V]])
   }
 }

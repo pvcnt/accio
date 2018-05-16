@@ -36,7 +36,7 @@ case class DataCompletenessOp(
   override def execute(ctx: OpContext): DataCompletenessOp.Out = {
     val trainDs = read[Event](train).groupBy(_.id)
     val testDs = read[Event](test).groupBy(_.id)
-    val metrics = trainDs.zip(testDs)(evaluate)
+    val metrics = trainDs.join(testDs)(evaluate)
     DataCompletenessOp.Out(write(metrics, 0, ctx))
   }
 

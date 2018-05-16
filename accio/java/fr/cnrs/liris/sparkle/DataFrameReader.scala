@@ -53,12 +53,14 @@ final class DataFrameReader[T](env: SparkleEnv, encoder: Encoder[T]) {
     new DataFrame[T] {
       override def keys: Seq[String] = {
         val prefixLength = uri.stripSuffix("/").length + 1
+        val suffixLength = if (format.extension.nonEmpty) format.extension.length + 1 else 0
         val uris = PosixFilesystem.list(uri).toSeq.sorted
-        uris.map(_.drop(prefixLength))
+        uris.map(_.drop(prefixLength).dropRight(suffixLength))
       }
 
       override private[sparkle] def load(key: String) = {
-        val is = PosixFilesystem.createInputStream(s"$uri/$key")
+        val extension = if (format.extension.nonEmpty) '.' + format.extension else ""
+        val is = PosixFilesystem.createInputStream(s"$uri/$key$extension")
         try {
           val reader = format.readerFor(encoder.structType, _options.toMap)
           reader.read(is).map(encoder.deserialize).toList

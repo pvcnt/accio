@@ -39,7 +39,7 @@ case class SpatialDistortionOp(
   override def execute(ctx: OpContext): SpatialDistortionOp.Out = {
     val trainDs = read[Event](train).groupBy(_.id)
     val testDs = read[Event](test).groupBy(_.id)
-    val metrics = trainDs.zip(testDs)(evaluate)
+    val metrics = trainDs.join(testDs)(evaluate)
     SpatialDistortionOp.Out(write(metrics, 0, ctx))
   }
 

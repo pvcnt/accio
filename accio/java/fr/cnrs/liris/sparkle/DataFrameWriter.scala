@@ -18,8 +18,6 @@
 
 package fr.cnrs.liris.sparkle
 
-import java.util.concurrent.atomic.AtomicInteger
-
 import fr.cnrs.liris.sparkle.filesystem.PosixFilesystem
 import fr.cnrs.liris.sparkle.format.csv.CsvDataFormat
 import fr.cnrs.liris.sparkle.format.{DataFormat, RowWriter}
@@ -51,9 +49,9 @@ final class DataFrameWriter[T](df: DataFrame[T]) {
 
   def write(uri: String, format: DataFormat): Unit = {
     val writer = format.writerFor(df.encoder.structType, _options.toMap)
-    //val idx = new AtomicInteger(0)
-    df.foreachPartitionWithKey { case (key, elements) =>
-      write(s"$uri/part-$key.csv", writer, elements)
+    val extension = if (format.extension.nonEmpty) '.' + format.extension else ""
+    df.env.submit[T, Unit](df, df.keys) { (key, elements) =>
+      write(s"$uri/$key$extension", writer, elements)
     }
   }
 

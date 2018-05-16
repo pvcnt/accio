@@ -18,27 +18,26 @@
 
 package fr.cnrs.liris.sparkle
 
-private[sparkle] class PartitionedDataFrame[T](inner: DataFrame[T], numPartitions: Int)
-  extends DataFrame[T] {
+import com.google.common.base.MoreObjects
 
-  override def keys: Seq[String] = {
-    if (inner.keys.length <= numPartitions) {
-      inner.keys
-    } else {
-      Seq.tabulate(numPartitions)(_.toString)
-    }
+private[sparkle] class JoinDataFrame[T, U, V](
+  first: DataFrame[(String, Seq[T])],
+  other: DataFrame[(String, Seq[U])],
+  fn: (String, Seq[T], Seq[U]) => Seq[V],
+  private[sparkle] val encoder: Encoder[V])
+  extends DataFrame[V] {
+
+  override def keys: Seq[String] = first.keys
+
+  override def toString: String = MoreObjects.toStringHelper(this).addValue(first).addValue(other).toString
+
+  override private[sparkle] def env: SparkleEnv = first.env
+
+  override private[sparkle] def load(key: String): Seq[V] = {
+    val firstPartition = first.load(key).toMap
+    val otherPartition = other.load(key).toMap
+    firstPartition
+      .flatMap { case (k, v1) => fn(k, v1, otherPartition.getOrElse(k, Seq.empty)) }
+      .toSeq
   }
-
-  override private[sparkle] def load(key: String): Seq[T] = {
-    val idx = key.toInt
-    val innerKeys = inner.keys
-      .zipWithIndex
-      .filter { case (_, i) => i % numPartitions == idx }
-      .map(_._1)
-    innerKeys.flatMap(inner.load)
-  }
-
-  override private[sparkle] def env = inner.env
-
-  override private[sparkle] def encoder = inner.encoder
 }

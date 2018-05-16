@@ -45,7 +45,7 @@ case class AreaCoverageOp(
   override def execute(ctx: OpContext): AreaCoverageOp.Out = {
     val trainDs = read[Event](train).groupBy(_.id)
     val testDs = read[Event](test).groupBy(_.id)
-    val metrics = trainDs.zip(testDs)(evaluate)
+    val metrics = trainDs.join(testDs)(evaluate)
     AreaCoverageOp.Out(write(metrics, 0, ctx))
   }
 
