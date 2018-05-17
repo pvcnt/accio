@@ -21,9 +21,10 @@ namespace java fr.cnrs.liris.accio.domain.thrift
 include "accio/thrift/fr/cnrs/liris/lumos/domain/lumos.thrift"
 
 struct OpPayload {
-  1: i64 seed;
-  2: list<lumos.AttrValue> params;
-  3: map<string, i64> resources;
+  1: string op,
+  2: i64 seed;
+  3: list<lumos.AttrValue> params;
+  4: map<string, i64> resources;
 }
 
 struct OpResult {

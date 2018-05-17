@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.runtime
 
 import java.nio.file.{Files, Paths}
 
-import fr.cnrs.liris.accio.domain.RemoteFile
+import fr.cnrs.liris.lumos.domain.RemoteFile
 import fr.cnrs.liris.accio.sdk._
 import fr.cnrs.liris.util.geo.{Distance, LatLng, Location}
 import org.joda.time.{Duration, Instant}

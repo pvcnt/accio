@@ -16,21 +16,16 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.runtime
+package fr.cnrs.liris.accio.sdk
 
 import java.io.IOException
 
 import com.twitter.util.StorageUnit
 import com.twitter.util.logging.Logging
-import fr.cnrs.liris.accio.api.Values
-import fr.cnrs.liris.accio.api.thrift._
-import fr.cnrs.liris.lumos.domain.RemoteFile
-import fr.cnrs.liris.accio.sdk.{Arg, Op, ScalaOperator}
+import fr.cnrs.liris.accio.domain.{Attribute, Operator}
 import fr.cnrs.liris.util.ResourceFileLoader
 import fr.cnrs.liris.util.StringUtils.maybe
-import fr.cnrs.liris.util.geo.{Distance, Location}
-import fr.cnrs.liris.util.reflect.{CaseClass, ScalaType}
-import org.joda.time.{Duration, Instant}
+import fr.cnrs.liris.util.reflect.CaseClass
 
 import scala.reflect.runtime.{universe => ru}
 import scala.util.matching.Regex
@@ -38,10 +33,10 @@ import scala.util.matching.Regex
 /**
  * Metadata about an operator, i.e., its definition and runtime information.
  *
- * @param defn    Operator definition.
- * @param opClass Operator class.
+ * @param defn  Operator definition.
+ * @param clazz Operator class.
  */
-final class OpMeta(val defn: Operator, val opClass: CaseClass)
+final class OpMeta(val defn: Operator, val clazz: Class[_])
 
 object OpMeta extends Logging {
   /**
@@ -67,10 +62,10 @@ object OpMeta extends Logging {
         if (OpRegex.findFirstIn(name).isEmpty) {
           throw new IllegalArgumentException(s"Invalid name for operator in $tpe: $name")
         }
-        val resources = ComputeResources(
-          cpus = op.cpus,
-          ramMb = parseStorageUnit(op.ram()).inMegabytes,
-          diskGb = parseStorageUnit(op.disk()).inGigabytes)
+        val resources = Map(
+          "cpus" -> op.cpus.toLong,
+          "ramMb" -> parseStorageUnit(op.ram()).inMegabytes,
+          "diskGb" -> parseStorageUnit(op.disk()).inGigabytes)
         val defn = Operator(
           name = name,
           category = op.category,
@@ -80,9 +75,8 @@ object OpMeta extends Logging {
           description = maybe(op.description).flatMap(loadDescription(_, clazz)),
           deprecation = maybe(op.deprecation),
           unstable = op.unstable,
-          resource = resources,
-          executable = ".")
-        new OpMeta(defn, opRefl)
+          resources = resources)
+        new OpMeta(defn, clazz)
     }
   }
 
@@ -106,7 +100,7 @@ object OpMeta extends Logging {
     CaseClass.apply(typ.tpe)
   }
 
-  private def getInputs(inRefl: CaseClass) =
+  private def getInputs(inRefl: CaseClass): Seq[Attribute] =
     inRefl.fields.map { field =>
       field.annotations.get[Arg] match {
         case None => throw new IllegalArgumentException(
@@ -125,7 +119,7 @@ object OpMeta extends Logging {
           }
 
           val isOptional = field.scalaType.isOption
-          val dataType = getDataType(if (isOptional) field.scalaType.args.head else field.scalaType)
+          val (dataType, aspects) = Values.dataTypeOf(if (isOptional) field.scalaType.args.head.tpe else field.scalaType.tpe)
           val defaultValue = if (isOptional) {
             None
           } else {
@@ -135,49 +129,21 @@ object OpMeta extends Logging {
             name = field.name,
             dataType = dataType,
             help = maybe(in.help),
-            isOptional = isOptional,
+            optional = isOptional,
+            aspects = aspects,
             defaultValue = defaultValue)
       }
     }
 
   private def getOutputs(outRefl: CaseClass) = {
     outRefl.fields.flatMap { field =>
-      field
-        .annotations
+      field.annotations
         .get[Arg]
-        .map(out => Attribute(field.name, getDataType(field.scalaType), maybe(out.help)))
+        .map { out =>
+          val (dataType, aspects) = Values.dataTypeOf(field.scalaType.tpe)
+          Attribute(field.name, dataType = dataType, aspects = aspects, help = maybe(out.help))
+        }
         .toSeq
-    }
-  }
-
-  private def getDataType(scalaType: ScalaType): DataType =
-    scalaType.tpe match {
-      case c if c <:< ru.typeOf[Seq[_]] =>
-        val of = getAtomicType(scalaType.args.head)
-        DataType.ListType(ListType(of))
-      case c if c <:< ru.typeOf[Map[_, _]] =>
-        val keys = getAtomicType(scalaType.args.head)
-        val values = getAtomicType(scalaType.args.last)
-        DataType.MapType(MapType(keys, values))
-      case c if c <:< ru.typeOf[RemoteFile] => DataType.Dataset(DatasetType())
-      case _ => DataType.Atomic(getAtomicType(scalaType))
-    }
-
-  private def getAtomicType(scalaType: ScalaType): AtomicType = getAtomicType(scalaType.tpe)
-
-  private def getAtomicType(tpe: ru.Type): AtomicType = {
-    tpe match {
-      case c if c == ru.typeOf[Boolean] || c == ru.typeOf[java.lang.Boolean] => AtomicType.Boolean
-      case c if c == ru.typeOf[Int] || c == ru.typeOf[java.lang.Integer] => AtomicType.Integer
-      case c if c == ru.typeOf[Long] || c == ru.typeOf[java.lang.Long] => AtomicType.Long
-      case c if c == ru.typeOf[Float] || c == ru.typeOf[java.lang.Float] => AtomicType.Float
-      case c if c == ru.typeOf[Double] || c == ru.typeOf[java.lang.Double] => AtomicType.Double
-      case c if c == ru.typeOf[String] => AtomicType.String
-      case c if c <:< ru.typeOf[Location] => AtomicType.Location
-      case c if c <:< ru.typeOf[Instant] => AtomicType.Timestamp
-      case c if c <:< ru.typeOf[Duration] => AtomicType.Duration
-      case c if c <:< ru.typeOf[Distance] => AtomicType.Distance
-      case _ => throw new IllegalArgumentException(s"Unsupported data type: $tpe")
     }
   }
 

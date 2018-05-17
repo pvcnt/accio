@@ -23,9 +23,7 @@ import java.util.UUID
 
 import com.twitter.util.logging.Logging
 import fr.cnrs.liris.accio.domain.{Attribute, OpPayload, OpResult, Operator}
-import fr.cnrs.liris.lumos.domain.{AttrValue, Value}
-import fr.cnrs.liris.util.geo.Distance
-import org.joda.time.{Duration, Instant, ReadableDuration, ReadableInstant}
+import fr.cnrs.liris.lumos.domain.{AttrValue, ErrorDatum, Value}
 
 import scala.util.control.NonFatal
 
@@ -49,38 +47,43 @@ final class OpExecutor(opDef: Operator, clazz: Class[_], workDir: Path) extends 
    * @return Result of the execution.
    */
   def execute(payload: OpPayload): OpResult = {
-    val sandboxDir = workDir.resolve(UUID.randomUUID().toString)
-    Files.createDirectories(sandboxDir.resolve("outputs"))
+    try {
+      val sandboxDir = workDir.resolve(UUID.randomUUID().toString)
+      Files.createDirectories(sandboxDir.resolve("outputs"))
 
-    val operator = createOperator(payload.params)
+      val operator = createOperator(payload.params)
 
-    val maybeSeed = if (opDef.unstable) Some(payload.seed) else None
-    val ctx = new OpContext(maybeSeed, sandboxDir.resolve("outputs"))
-    val profiler = new JvmProfiler
+      val maybeSeed = if (opDef.unstable) Some(payload.seed) else None
+      val ctx = new OpContext(maybeSeed, sandboxDir.resolve("outputs"))
+      val profiler = new JvmProfiler
 
-    // The actual operator is the only profiled section. The outcome is either an output object or an exception.
-    logger.debug(s"Starting operator ${opDef.name} (sandbox in ${sandboxDir.toAbsolutePath})")
-    val res = profiler.profile {
-      try {
-        Some(operator.execute(ctx))
-      } catch {
-        case NonFatal(e) =>
-          logger.warn(s"Unexpected error while executing operator ${opDef.name}", e)
-          None
+      // The actual operator is the only profiled section. The outcome is either an output object or an exception.
+      logger.debug(s"Starting operator ${opDef.name} (sandbox in ${sandboxDir.toAbsolutePath})")
+      val res = profiler.profile {
+        try {
+          Right(operator.execute(ctx))
+        } catch {
+          case NonFatal(e) =>
+            logger.warn(s"Unexpected error while executing operator ${opDef.name}", e)
+            Left(ErrorDatum.create(e))
+        }
       }
+      logger.debug(s"Completed operator ${opDef.name}")
+
+      // We convert the outcome into an exit code, artifacts, metrics and possibly and error.
+      val metrics = profiler.metrics
+      val artifacts = res.right.toSeq.flatMap((out: Any) => extractArtifacts(out.asInstanceOf[Product]))
+      val error = res.left.toOption
+
+      // Sandbox directory can now be deleted. Caveat: If there was a fatal error before, this line
+      // will never be reached and it will not be deleted.
+      // TODO: clean only files that are not referenced in artifacts.
+      // logger.debug(s"Cleaned sandbox")
+
+      OpResult(successful = error.isEmpty, artifacts, metrics, error)
+    } catch {
+      case NonFatal(e) => OpResult(successful = false, error = Some(ErrorDatum.create(e)))
     }
-    logger.debug(s"Completed operator ${opDef.name}")
-
-    // We convert the outcome into an exit code, artifacts, metrics and possibly and error.
-    val metrics = profiler.metrics
-    val artifacts = res.toSeq.flatMap((out: Any) => extractArtifacts(out.asInstanceOf[Product]))
-
-    // Sandbox directory can now be deleted. Caveat: If there was a fatal error before, this line
-    // will never be reached and it will not be deleted.
-    // TODO: clean only files that are not referenced in artifacts.
-    // logger.debug(s"Cleaned sandbox")
-
-    OpResult(successful = res.nonEmpty, artifacts, metrics)
   }
 
   private def createOperator(inputs: Seq[AttrValue]): ScalaOperator[_] = {
@@ -126,48 +129,14 @@ final class OpExecutor(opDef: Operator, clazz: Class[_], workDir: Path) extends 
   }
 
   private def encode(attr: Attribute, v: Any): Value = {
-    if (attr.aspects.contains("time")) {
-      Value.Long(v.asInstanceOf[ReadableInstant].getMillis)
-        .cast(attr.dataType)
-        .getOrElse(throw new RuntimeException(s"Invalid output type for ${attr.name}: $v"))
-    } else if (attr.aspects.contains("duration")) {
-      Value.Long(v.asInstanceOf[ReadableDuration].getMillis)
-        .cast(attr.dataType)
-        .getOrElse(throw new RuntimeException(s"Invalid output type for ${attr.name}: $v"))
-    } else if (attr.aspects.contains("distance")) {
-      Value.Double(v.asInstanceOf[Distance].meters)
-        .cast(attr.dataType)
-        .getOrElse(throw new RuntimeException(s"Invalid output type for ${attr.name}: $v"))
-    } else {
-      Value(v, attr.dataType)
+    Values.encode(v, attr.dataType, attr.aspects).getOrElse {
+      throw new RuntimeException(s"Invalid output type for ${attr.name}: ${v.getClass.getName}")
     }
   }
 
   private def decode(attr: Attribute, value: Value): Any = {
-    val normalizedValue = value.cast(attr.dataType).getOrElse {
+    Values.decode(value, attr.dataType, attr.aspects).getOrElse {
       throw new IllegalArgumentException(s"Invalid input type for ${attr.name}: ${value.dataType}")
-    }
-    if (attr.aspects.contains("time")) {
-      normalizedValue match {
-        case Value.Long(v) => new Instant(v)
-        case _ => throw new IllegalArgumentException(s"Invalid data type for 'time' aspect: ${normalizedValue.dataType}")
-      }
-    } else if (attr.aspects.contains("duration")) {
-      normalizedValue match {
-        case Value.Int(v) => new Duration(v)
-        case Value.Long(v) => new Duration(v)
-        case _ => throw new IllegalArgumentException(s"Invalid data type for 'duration' aspect: ${normalizedValue.dataType}")
-      }
-    } else if (attr.aspects.contains("distance")) {
-      normalizedValue match {
-        case Value.Int(v) => Distance.meters(v)
-        case Value.Long(v) => Distance.meters(v)
-        case Value.Float(v) => Distance.meters(v)
-        case Value.Double(v) => Distance.meters(v)
-        case _ => throw new IllegalArgumentException(s"Invalid data type for 'duration' aspect: ${normalizedValue.dataType}")
-      }
-    } else {
-      normalizedValue.v
     }
   }
 }

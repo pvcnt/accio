@@ -32,10 +32,10 @@ trait ScalaOperator[T] {
   /**
    * Execute this operator. With given input and context, it should produce a deterministic output.
    *
-   * Implementations can use a seed if they need some randomness. Outside of this, the execution should be
-   * perfectly deterministic. A working directory is provided for operators who need to write results
-   * somewhere. This directory is only valid for the operator's life, it can be deleted at any point once
-   * the operator completed.
+   * Implementations can use a seed if they need some randomness. Outside of this, the execution
+   * should be perfectly deterministic. A working directory is provided for operators who need to
+   * write results somewhere. This directory is only valid for the operator's life, it can be
+   * deleted at any point once the operator completed.
    *
    * @param ctx Execution context.
    */

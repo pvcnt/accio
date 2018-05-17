@@ -24,6 +24,7 @@ import fr.cnrs.liris.lumos.domain.thrift.{ThriftAdapter => LumosAdapter}
 object ThriftAdapter {
   def toDomain(obj: OpPayload): domain.OpPayload = {
     domain.OpPayload(
+      op = obj.op,
       seed = obj.seed,
       params = obj.params.map(LumosAdapter.toDomain),
       resources = obj.resources.toMap)
@@ -62,6 +63,7 @@ object ThriftAdapter {
 
   def toThrift(obj: domain.OpPayload): OpPayload = {
     OpPayload(
+      op = obj.op,
       seed = obj.seed,
       params = obj.params.map(LumosAdapter.toThrift),
       resources = obj.resources)

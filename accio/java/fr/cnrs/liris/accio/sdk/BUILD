@@ -18,12 +18,16 @@ scala_library(
   name = "sdk",
   srcs = glob(["*.scala"]),
   deps = [
+    ":annotations",
     "//accio/java/fr/cnrs/liris/accio/domain",
     "//accio/java/fr/cnrs/liris/accio/domain/thrift",
     "//accio/java/fr/cnrs/liris/lumos/domain",
     "//accio/java/fr/cnrs/liris/util/scrooge",
+    "//accio/java/fr/cnrs/liris/util/reflect",
     "//accio/java/fr/cnrs/liris/util/geo",
+    "//accio/java/fr/cnrs/liris/util",
     "//3rdparty/jvm/com/twitter:util_slf4j_api",
+    "//3rdparty/jvm/com/twitter:util_jvm",
     "//3rdparty/jvm/com/github/nscala_time",
   ],
   exports = [

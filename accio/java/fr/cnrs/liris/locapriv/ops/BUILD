@@ -45,4 +45,5 @@ scala_library(
   ],
   resource_strip_prefix = "accio/java",
   visibility = ["//visibility:public"],
+  #main_class = "fr.cnrs.liris.locapriv.ops.OpsLibrary"
 )

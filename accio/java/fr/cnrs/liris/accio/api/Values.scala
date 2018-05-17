@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.api
 
 import com.twitter.util.{Try, Duration => TwitterDuration}
 import fr.cnrs.liris.accio.api.thrift._
-import fr.cnrs.liris.accio.domain.RemoteFile
+import fr.cnrs.liris.lumos.domain.RemoteFile
 import fr.cnrs.liris.util.geo.{Distance, LatLng, Location}
 import org.joda.time.{Instant, Duration => JodaDuration}
 
