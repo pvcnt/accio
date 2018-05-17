@@ -22,7 +22,6 @@ scala_test(
     "//accio/java/fr/cnrs/liris/locapriv/domain",
     "//accio/java/fr/cnrs/liris/sparkle",
     "//accio/java/fr/cnrs/liris/sparkle/format",
-    "//accio/java/fr/cnrs/liris/accio/api",
     "//accio/java/fr/cnrs/liris/accio/sdk",
     "//accio/java/fr/cnrs/liris/util/geo",
     "//accio/javatests/fr/cnrs/liris/locapriv/testing",
@@ -30,6 +29,7 @@ scala_test(
     "//3rdparty/jvm/com/github/nscala_time",
     "//3rdparty/jvm/org/scalanlp:breeze",
     "//3rdparty/jvm/com/twitter:util_slf4j_api",
+    "//3rdparty/jvm/com/twitter:util_jvm",
   ],
   size = "small",
 )

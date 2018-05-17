@@ -18,59 +18,17 @@
 
 package fr.cnrs.liris.accio.scheduler.local
 
-import com.google.common.eventbus.{EventBus, Subscribe}
 import com.twitter.finagle.stats.NullStatsReceiver
-import fr.cnrs.liris.accio.api.thrift._
-import fr.cnrs.liris.accio.api.{ProcessCompletedEvent, ProcessStartedEvent}
-import fr.cnrs.liris.accio.scheduler.Process
+import fr.cnrs.liris.accio.scheduler.{Scheduler, SchedulerSpec}
 import fr.cnrs.liris.testing.{CreateTmpDirectory, UnitSpec}
-import org.scalatest.BeforeAndAfterEach
 
 /**
  * Unit tests for [[LocalScheduler]].
  */
-class LocalSchedulerSpec extends UnitSpec with CreateTmpDirectory with BeforeAndAfterEach {
+class LocalSchedulerSpec extends UnitSpec with CreateTmpDirectory with SchedulerSpec {
   behavior of "LocalScheduler"
 
-  private var scheduler: LocalScheduler = _
-  private var eventBus: EventBus = _
-
-  override def beforeEach(): Unit = {
-    super.beforeEach()
-    eventBus = new EventBus()
-    scheduler = new LocalScheduler(NullStatsReceiver, eventBus, ComputeResources(0, 0, 0), "/dev/null", Seq.empty, true, tmpDir)
-    scheduler.startUp()
-  }
-
-  override def afterEach(): Unit = {
-    scheduler.shutDown()
-    scheduler = null
-    eventBus = null
-    super.afterEach()
-  }
-
-  it should "launch tasks" in {
-    var started = false
-    var completed = false
-    eventBus.register(new {
-      @Subscribe
-      def onTaskStart(e: ProcessStartedEvent): Unit = {
-        e.jobName shouldBe "foo"
-        e.taskName shouldBe "bar"
-        started = true
-      }
-
-      @Subscribe
-      def onTaskComplete(e: ProcessCompletedEvent): Unit = {
-        e.jobName shouldBe "foo"
-        e.taskName shouldBe "bar"
-        completed = true
-      }
-    })
-    val process = Process("accio_job_foo_bar", OpPayload("op", 0, Seq.empty, ComputeResources(0, 0, 0)))
-    scheduler.submit(process)
-    Thread.sleep(2000)
-    started shouldBe true
-    completed shouldBe true
+  override protected def createScheduler: Scheduler = {
+    new LocalScheduler(NullStatsReceiver, Map.empty, true, tmpDir)
   }
 }

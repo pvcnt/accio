@@ -18,53 +18,50 @@
 
 package fr.cnrs.liris.accio.scheduler.local
 
-import java.io.FileInputStream
 import java.lang.{Process => JavaProcess}
 import java.nio.file.{Files, Path}
 import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.{ConcurrentHashMap, ConcurrentLinkedDeque, Executors}
 
-import com.google.common.eventbus.EventBus
 import com.twitter.concurrent.NamedPoolThreadFactory
 import com.twitter.finagle.stats.StatsReceiver
 import com.twitter.io.{Buf, Reader}
 import com.twitter.util.logging.Logging
-import com.twitter.util.{Future, FuturePool}
-import fr.cnrs.liris.accio.api.thrift._
-import fr.cnrs.liris.accio.api.{ProcessCompletedEvent, ProcessStartedEvent}
-import fr.cnrs.liris.accio.scheduler.{Process, Scheduler}
+import com.twitter.util.{Future, FuturePool, Time}
+import fr.cnrs.liris.accio.scheduler._
 import fr.cnrs.liris.util.Platform
-import fr.cnrs.liris.util.scrooge.BinaryScroogeSerializer
 
 import scala.collection.JavaConverters._
-import scala.collection.mutable
 
 final class LocalScheduler(
   statsReceiver: StatsReceiver,
-  eventBus: EventBus,
-  reservedResources: ComputeResources,
-  executorUri: String,
-  executorArgs: Seq[String],
+  reservedResources: Map[String, Long],
   forceScheduling: Boolean,
   dataDir: Path)
   extends Scheduler with Logging {
 
+  private case class Pending(process: Process)
+
   private case class Running(process: Process, future: Future[_])
 
-  private[this] val pending = new ConcurrentLinkedDeque[Process]
+  private[this] val pending = new ConcurrentLinkedDeque[Pending]
   private[this] val running = new ConcurrentHashMap[String, Running].asScala
-  private[this] val javaBinary = {
-    sys.env.get("JAVA_HOME").map(home => s"$home/bin/java").getOrElse("/usr/bin/java")
-  }
   private[this] val pool = {
     val executor = Executors.newCachedThreadPool(new NamedPoolThreadFactory("scheduler"))
     FuturePool.interruptible(executor)
   }
   private[this] val totalResources = {
-    ComputeResources(
-      cpus = sys.runtime.availableProcessors - reservedResources.cpus,
-      ramMb = Platform.totalMemory.map(ram => ram.inMegabytes - reservedResources.ramMb).getOrElse(0),
-      diskGb = Platform.totalDiskSpace.map(disk => disk.inGigabytes - reservedResources.diskGb).getOrElse(0))
+    val available = Map(
+      "cpus" -> sys.runtime.availableProcessors.toLong,
+      "ramMb" -> Platform.totalMemory.map(_.inMegabytes).getOrElse(0L),
+      "diskGb" -> Platform.totalDiskSpace.map(_.inMegabytes).getOrElse(0L))
+    available.map { case (k, v) =>
+      if (reservedResources.contains(k)) {
+        k -> math.max(0, v - reservedResources(k))
+      } else {
+        k -> v
+      }
+    }
   }
   // Although the reserve/release code is synchronized, we register available resources as an
   // AtomicReference because it is accessed by the gauges code, which can occur at any time.
@@ -72,71 +69,71 @@ final class LocalScheduler(
 
   // Register gauges.
   // Total resources are registered as gauges, even though values are not expected to vary.
-  statsReceiver.provideGauge("scheduler", "total", "cpus")(totalResources.cpus.toFloat)
-  statsReceiver.provideGauge("scheduler", "total", "ram_mb")(totalResources.ramMb.toFloat)
-  statsReceiver.provideGauge("scheduler", "total", "disk_gb")(totalResources.diskGb.toFloat)
-
-  statsReceiver.provideGauge("scheduler", "free", "cpus")(availableResources.get.cpus.toFloat)
-  statsReceiver.provideGauge("scheduler", "free", "ram_mb")(availableResources.get.ramMb.toFloat)
-  statsReceiver.provideGauge("scheduler", "free", "disk_gb")(availableResources.get.diskGb.toFloat)
+  totalResources.keySet.foreach { k =>
+    statsReceiver.provideGauge("scheduler", "total", k)(totalResources(k).toFloat)
+    statsReceiver.provideGauge("scheduler", "free", k)(availableResources.get().apply(k).toFloat)
+  }
 
   statsReceiver.provideGauge("scheduler", "pending")(pending.size.toFloat)
   statsReceiver.provideGauge("scheduler", "running")(running.size.toFloat)
 
-  override def submit(process: Process): Unit = {
-    if (reserveResources(process.name, process.payload.resources)) {
-      val future = schedule(process)
-      running(process.name) = Running(process, future)
+  override def submit(process: Process): Future[ProcessInfo] = {
+    if (isActive0(process.name) || isCompleted0(process.name)) {
+      Future.exception(new IllegalArgumentException(s"Process ${process.name} already exists"))
+    } else if (reserveResources(process.name, process.resources)) {
+      running(process.name) = Running(process, schedule(process))
+      Future.value(ProcessInfo())
     } else {
-      if (!forceScheduling && !isEnoughResources(process.name, process.payload.resources, totalResources)) {
-        // TODO: We should cancel the task.
-        logger.warn(s"Not enough resources to schedule task ${process.name} (${process.payload.resources})")
+      if (!forceScheduling && !isEnoughResources(process.name, process.resources, totalResources)) {
+        Future.exception(new RuntimeException(s"Not enough resources to schedule process ${process.name}"))
+      } else {
+        logger.info(s"Queued process ${process.name}")
+        pending.add(Pending(process))
+        Future.value(ProcessInfo())
       }
-      logger.info(s"Queued process ${process.name}")
-      pending.add(process)
     }
   }
 
-  override def kill(name: String): Future[Boolean] = {
-    running.remove(name) match {
-      case None => Future.value(false)
-      case Some(item) =>
-        item.future.raise(new RuntimeException)
-        releaseResources(item.process.payload.resources)
-        Future.value(true)
+  override def kill(name: String): Future[Unit] = {
+    running.remove(name).foreach { item =>
+      item.future.raise(new RuntimeException)
+      releaseResources(item.process.resources)
     }
+    Future.Done
   }
 
-  override def getLogs(name: String, kind: String, skip: Option[Int], tail: Option[Int]): Future[Seq[String]] = {
+  override def listLogs(name: String, kind: String, skip: Option[Int], tail: Option[Int]): Future[Seq[String]] = {
     readLogFile(getWorkDir(name).resolve(kind), skip, tail)
   }
 
+  override def isActive(name: String): Future[Boolean] = Future.value(isActive0(name))
+
+  override def isCompleted(name: String): Future[Boolean] = Future.value(isCompleted0(name))
+
+  private def isActive0(name: String): Boolean = {
+    pending.iterator.asScala.exists(_.process.name == name) || running.contains(name)
+  }
+
+  private def isCompleted0(name: String): Boolean = {
+    Files.isDirectory(getWorkDir(name)) && !running.contains(name)
+  }
+
+  override def close(deadline: Time): Future[Unit] = Future.Done
+
   private def schedule(process: Process): Future[Unit] = {
     pool(execute(process))
-      .onSuccess { exitCode =>
-        read(getResultFile(getWorkDir(process.name))) match {
-          case Some(result) =>
-            eventBus.post(ProcessCompletedEvent(process.jobName, process.taskName, exitCode, result.artifacts, result.metrics))
-          case None =>
-            eventBus.post(ProcessCompletedEvent(process.jobName, process.taskName, -1, Seq.empty, Seq.empty))
-        }
-      }
       .onFailure { e =>
         logger.error(s"Unexpected error while executing process ${process.name}", e)
-        eventBus.post(ProcessCompletedEvent(process.jobName, process.taskName, -1, Seq.empty, Seq.empty))
       }
       .ensure {
         running.remove(process.name)
-        releaseResources(process.payload.resources)
+        releaseResources(process.resources)
       }
       .unit
   }
 
-  private def isEnoughResources(id: String, requests: ComputeResources, resources: ComputeResources): Boolean = {
-    val ok = (requests.cpus == 0 || requests.cpus <= resources.cpus) &&
-      (requests.ramMb == 0 || requests.ramMb <= resources.ramMb) &&
-      (requests.diskGb == 0 || requests.diskGb <= resources.diskGb)
-    if (ok) {
+  private def isEnoughResources(id: String, requests: Map[String, Long], resources: Map[String, Long]): Boolean = {
+    if (requests.forall { case (k, v) => resources.getOrElse(k, 0L) >= v }) {
       true
     } else if (running.isEmpty && forceScheduling) {
       logger.warn(s"Forcing scheduling of task $id")
@@ -146,38 +143,42 @@ final class LocalScheduler(
     }
   }
 
-  private def reserveResources(id: String, requests: ComputeResources): Boolean = synchronized {
+  private def reserveResources(id: String, requests: Map[String, Long]): Boolean = synchronized {
     val available = availableResources.get
     if (!isEnoughResources(id, requests, available)) {
       false
     } else {
-      availableResources.set(ComputeResources(
-        cpus = available.cpus - requests.cpus,
-        ramMb = available.ramMb - requests.ramMb,
-        diskGb = available.diskGb - requests.diskGb))
+      availableResources.set(availableResources.get.map { case (k, v) =>
+        if (requests.contains(k)) {
+          k -> math.max(0L, v - requests(k))
+        } else {
+          k -> v
+        }
+      })
       true
     }
   }
 
-  private def releaseResources(requests: ComputeResources): Unit = synchronized {
-    val available = availableResources.get
-    availableResources.set(ComputeResources(
-      cpus = available.cpus + requests.cpus,
-      ramMb = available.ramMb + requests.ramMb,
-      diskGb = available.diskGb + requests.diskGb))
-
-    pending.asScala.foreach { process =>
-      if (reserveResources(process.name, process.payload.resources)) {
-        pending.remove(process)
-        val future = schedule(process)
-        running(process.name) = Running(process, future)
+  private def releaseResources(requests: Map[String, Long]): Unit = synchronized {
+    availableResources.set(availableResources.get.map { case (k, v) =>
+      if (requests.contains(k)) {
+        k -> math.min(totalResources(k), v + requests(k))
+      } else {
+        k -> v
+      }
+    })
+    pending.asScala.zipWithIndex.foreach { case (item, idx) =>
+      if (reserveResources(item.process.name, item.process.resources)) {
+        val future = schedule(item.process)
+        running(item.process.name) = Running(item.process, future)
+        pending.remove(idx)
       }
     }
   }
 
   private def execute(process: Process): Int = {
     val javaProcess = startProcess(process)
-    eventBus.post(ProcessStartedEvent(process.jobName, process.taskName))
+    logger.info(s"Started execution of process ${process.name}")
     val exitCode = javaProcess.waitFor()
     logger.info(s"Completed execution of process ${process.name} (exit code: $exitCode)")
     exitCode
@@ -186,23 +187,13 @@ final class LocalScheduler(
   private def startProcess(process: Process): JavaProcess = {
     val workDir = getWorkDir(process.name)
     Files.createDirectories(workDir)
-
-    val outputsDir = getOutputsDir(workDir)
-    Files.createDirectories(outputsDir)
-    val command = createCommandLine(process, getResultFile(workDir))
-    logger.debug(s"Command-line for process ${process.name}: ${command.mkString(" ")}")
-
     new ProcessBuilder()
-      .command(command: _*)
-      .directory(outputsDir.toFile)
+      .command("bash", "-c", process.command)
+      .directory(workDir.toFile)
       .redirectOutput(workDir.resolve("stdout").toFile)
       .redirectError(workDir.resolve("stderr").toFile)
       .start()
   }
-
-  private def getOutputsDir(workDir: Path) = workDir.resolve("outputs")
-
-  private def getResultFile(workDir: Path) = workDir.resolve("result")
 
   private def getWorkDir(taskId: String): Path = {
     dataDir
@@ -218,37 +209,8 @@ final class LocalScheduler(
         var lines = content.split("\n")
         skip.foreach(n => lines = lines.drop(n))
         tail.foreach(n => lines = lines.takeRight(n))
-        lines
+        // Processes may generate an empty file log, which we do not want to return.
+        if (lines.length == 1 && lines.head == "") Seq.empty else lines.toSeq
       }
-  }
-
-  private def createCommandLine(process: Process, outputFile: Path): Seq[String] = {
-    val cmd = mutable.ListBuffer.empty[String]
-    cmd += javaBinary
-    cmd ++= Seq("-cp", executorUri)
-    cmd += s"-Xmx${process.payload.resources.ramMb}M"
-    cmd += "fr.cnrs.liris.accio.executor.AccioExecutorMain"
-    cmd += BinaryScroogeSerializer.toString(process.payload)
-    cmd += outputFile.toAbsolutePath.toString
-    cmd ++= executorArgs
-    cmd.toList
-  }
-
-  private def read(file: Path): Option[OpResult] = {
-    if (!file.toFile.canRead) {
-      logger.warn(s"Result file is not readable: $file")
-      None
-    } else {
-      val fis = new FileInputStream(file.toFile)
-      try {
-        Some(BinaryScroogeSerializer.read(fis, OpResult))
-      } catch {
-        case e: Throwable =>
-          logger.warn(s"Error while reading result file: $file", e)
-          None
-      } finally {
-        fis.close()
-      }
-    }
   }
 }

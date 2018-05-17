@@ -24,7 +24,7 @@ import org.joda.time.{Duration, Instant, ReadableDuration, ReadableInstant}
 
 import scala.reflect.runtime.universe.{Type, typeOf}
 
-object Values {
+private[sdk] object Values {
   def dataTypeOf(tpe: Type): (DataType, Set[String]) =
     tpe.dealias match {
       case t if t <:< typeOf[java.lang.Integer] => (DataType.Int, Set.empty)
@@ -38,9 +38,10 @@ object Values {
       case t if t <:< typeOf[Float] => (DataType.Float, Set.empty)
       case t if t <:< typeOf[Double] => (DataType.Double, Set.empty)
       case t if t <:< typeOf[Boolean] => (DataType.Bool, Set.empty)
-      case t if t <:< typeOf[org.joda.time.ReadableInstant] => (DataType.Long, Set("time"))
-      case t if t <:< typeOf[org.joda.time.ReadableDuration] => (DataType.Long, Set("duration"))
+      case t if t <:< typeOf[org.joda.time.Instant] => (DataType.Long, Set("time"))
+      case t if t <:< typeOf[org.joda.time.Duration] => (DataType.Long, Set("duration"))
       case t if t <:< typeOf[fr.cnrs.liris.util.geo.Distance] => (DataType.Double, Set("distance"))
+      case t if t <:< typeOf[fr.cnrs.liris.lumos.domain.RemoteFile] => (DataType.File, Set.empty)
       case _ => throw new IllegalArgumentException(s"Unsupported Scala type: $tpe")
     }
 
@@ -57,7 +58,7 @@ object Values {
   }
 
   def decode(value: Value, dataType: DataType, aspects: Set[String] = Set.empty): Option[Any] = {
-    value.cast(dataType).map { normalizedValue =>
+    value.cast(dataType).flatMap { normalizedValue =>
       if (aspects.contains("time")) {
         normalizedValue match {
           case Value.Long(v) => Some(new Instant(v))

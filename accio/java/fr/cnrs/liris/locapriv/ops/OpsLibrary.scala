@@ -18,35 +18,35 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.accio.sdk.{OpMeta, ScalaLibrary}
+import fr.cnrs.liris.accio.sdk.{OpMetadata, ScalaLibrary}
 
 object OpsLibrary extends ScalaLibrary {
-  override def ops: Seq[OpMeta] = Seq(
-    OpMeta.apply[AreaCoverageOp],
-    OpMeta.apply[CollapseTemporalGapsOp],
-    OpMeta.apply[CountQueriesDistortionOp],
-    OpMeta.apply[DataCompletenessOp],
-    OpMeta.apply[DurationSplittingOp],
-    OpMeta.apply[EnforceDurationOp],
-    OpMeta.apply[EnforceSizeOp],
-    OpMeta.apply[EventSourceOp],
-    OpMeta.apply[GaussianKernelSmoothingOp],
-    OpMeta.apply[GeoIndistinguishabilityOp],
-    OpMeta.apply[HeatMapDistortionOp],
+  override def ops: Seq[OpMetadata] = Seq(
+    OpMetadata.apply[AreaCoverageOp],
+    OpMetadata.apply[CollapseTemporalGapsOp],
+    OpMetadata.apply[CountQueriesDistortionOp],
+    OpMetadata.apply[DataCompletenessOp],
+    OpMetadata.apply[DurationSplittingOp],
+    OpMetadata.apply[EnforceDurationOp],
+    OpMetadata.apply[EnforceSizeOp],
+    OpMetadata.apply[EventSourceOp],
+    OpMetadata.apply[GaussianKernelSmoothingOp],
+    OpMetadata.apply[GeoIndistinguishabilityOp],
+    OpMetadata.apply[HeatMapDistortionOp],
     //OpMeta.apply[MmcReidentOp],
-    OpMeta.apply[ModuloSamplingOp],
-    OpMeta.apply[PoisExtractionOp],
-    OpMeta.apply[PoisReidentOp],
-    OpMeta.apply[PoisRetrievalOp],
-    OpMeta.apply[PromesseOp],
-    OpMeta.apply[SequentialSplittingOp],
-    OpMeta.apply[SizeSplittingOp],
-    OpMeta.apply[SpatialDistortionOp],
-    OpMeta.apply[SpatialGapSplittingOp],
-    OpMeta.apply[SpatialSamplingOp],
-    OpMeta.apply[SpatioTemporalDistortionOp],
-    OpMeta.apply[TemporalGapSplittingOp],
-    OpMeta.apply[TemporalSamplingOp],
-    OpMeta.apply[UniformSamplingOp],
-    OpMeta.apply[Wait4MeOp])
+    OpMetadata.apply[ModuloSamplingOp],
+    OpMetadata.apply[PoisExtractionOp],
+    OpMetadata.apply[PoisReidentOp],
+    OpMetadata.apply[PoisRetrievalOp],
+    OpMetadata.apply[PromesseOp],
+    OpMetadata.apply[SequentialSplittingOp],
+    OpMetadata.apply[SizeSplittingOp],
+    OpMetadata.apply[SpatialDistortionOp],
+    OpMetadata.apply[SpatialGapSplittingOp],
+    OpMetadata.apply[SpatialSamplingOp],
+    OpMetadata.apply[SpatioTemporalDistortionOp],
+    OpMetadata.apply[TemporalGapSplittingOp],
+    OpMetadata.apply[TemporalSamplingOp],
+    OpMetadata.apply[UniformSamplingOp],
+    OpMetadata.apply[Wait4MeOp])
 }

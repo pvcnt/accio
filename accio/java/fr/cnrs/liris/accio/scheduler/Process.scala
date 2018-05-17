@@ -18,22 +18,8 @@
 
 package fr.cnrs.liris.accio.scheduler
 
-import fr.cnrs.liris.accio.api.thrift.OpPayload
-
-case class Process(name: String, payload: OpPayload) {
-  def jobName: String = name match {
-    case Process.NameRegex(v, _) => v
-    case _ => throw new IllegalStateException(s"Malformed process name: $name")
-  }
-
-  def taskName: String = name match {
-    case Process.NameRegex(_, v) => v
-    case _ => throw new IllegalStateException(s"Malformed process name: $name")
-  }
-}
-
-object Process {
-  private val NameRegex = "^accio_job_([^-]+)_([^-]+)$".r
-
-  def name(jobName: String, taskName: String): String = s"accio_job_${jobName}_$taskName"
-}
+case class Process(
+  name: String,
+  command: String,
+  resources: Map[String, Long] = Map.empty,
+  env: Map[String, String] = Map.empty)

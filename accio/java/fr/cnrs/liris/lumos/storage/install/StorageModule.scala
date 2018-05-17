@@ -51,7 +51,7 @@ object StorageModule extends TwitterModule {
   }
 
   override def singletonShutdown(injector: Injector): Unit = {
-    Await.ready(injector.instance[JobStore].shutDown())
+    Await.ready(injector.instance[JobStore].close())
   }
 
   private class MemoryJobStoreProvider @Inject()(statsReceiver: StatsReceiver)

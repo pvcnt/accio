@@ -20,6 +20,8 @@ scala_test(
   deps = [
     "//accio/java/fr/cnrs/liris/lumos/domain",
     "//accio/javatests/fr/cnrs/liris/testing",
+    "//3rdparty/jvm/org/scalacheck",
   ],
   size = "small",
+  visibility = ["//accio/javatests:__subpackages__"],
 )

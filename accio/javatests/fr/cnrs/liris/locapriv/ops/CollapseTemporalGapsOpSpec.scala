@@ -18,8 +18,7 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.accio.api.Values.instantOrdering
-import fr.cnrs.liris.locapriv.domain.Event
+import fr.cnrs.liris.locapriv.domain.{Event, instantOrdering}
 import fr.cnrs.liris.locapriv.testing.WithTraceGenerator
 import fr.cnrs.liris.testing.UnitSpec
 import org.joda.time.{DateTime, Duration, Instant}

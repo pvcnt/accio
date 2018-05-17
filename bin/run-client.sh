@@ -15,5 +15,5 @@
 # You should have received a copy of the GNU General Public License
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
-bazel build accio/java/fr/cnrs/liris/accio/tools/cli
-./bazel-bin/accio/java/fr/cnrs/liris/accio/tools/cli/cli "$@"
+bazel build accio/java/fr/cnrs/liris/accio/cli
+./bazel-bin/accio/java/fr/cnrs/liris/accio/cli/cli "$@"

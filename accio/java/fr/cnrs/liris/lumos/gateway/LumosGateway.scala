@@ -18,31 +18,39 @@
 
 package fr.cnrs.liris.lumos.gateway
 
+import com.google.inject.Module
 import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finatra.http.HttpServer
 import com.twitter.finatra.http.filters.{CommonFilters, LoggingMDCFilter, TraceIdMDCFilter}
 import com.twitter.finatra.http.routing.HttpRouter
-import fr.cnrs.liris.finatra.jackson.ScroogeFinatraJacksonModule
+import fr.cnrs.liris.infra.httpserver.{CorsFilter, ScroogeFinatraJacksonModule}
 
 object LumosGatewayMain extends LumosGateway
 
 class LumosGateway extends HttpServer {
   private[this] val uiFlag = flag("ui", false, "Whether to enable the web-based user interface")
+  private[this] val corsFlag = flag("cors", false, "Whether to enable CORS support")
 
-  override def modules = Seq(LumosClientModule)
+  override protected def modules = Seq(GatewayModule)
 
-  override def jacksonModule = ScroogeFinatraJacksonModule
+  override protected def jacksonModule: Module = ScroogeFinatraJacksonModule
 
-  override def configureHttp(router: HttpRouter): Unit = {
+  override protected def configureHttp(router: HttpRouter): Unit = {
+    if (corsFlag()) {
+      router.filter[CorsFilter]
+    }
     router
       .filter[LoggingMDCFilter[Request, Response]]
       .filter[TraceIdMDCFilter[Request, Response]]
       .filter[CommonFilters]
-      .exceptionMapper[ServerExceptionMapper]
       .add[ApiController]
 
     if (uiFlag()) {
       router.add[UiController]
     }
+  }
+
+  override protected def warmup(): Unit = {
+    handle[GatewayWarmupHandler]()
   }
 }

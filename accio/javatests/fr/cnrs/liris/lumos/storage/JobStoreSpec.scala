@@ -77,7 +77,7 @@ private[storage] abstract class JobStoreSpec extends UnitSpec with BeforeAndAfte
   override def afterEach(): Unit = {
     super.afterEach()
     if (!disabled) {
-      Await.result(store.shutDown())
+      Await.result(store.close())
       store = null
     }
   }
@@ -87,7 +87,7 @@ private[storage] abstract class JobStoreSpec extends UnitSpec with BeforeAndAfte
       Await.result(store.get("job1")) shouldBe None
       Await.result(store.get("job2")) shouldBe None
       jobs.foreach(job => Await.result(store.create(job)) shouldBe Status.Ok)
-      Await.result(store.create(jobs.head)) shouldBe Status.AlreadyExists("jobs", "job1")
+      Await.result(store.create(jobs.head)) shouldBe Status.AlreadyExists("job1")
       Await.result(store.get("job1")) shouldBe Some(jobs(0))
       Await.result(store.get("job2")) shouldBe Some(jobs(1))
 
@@ -109,7 +109,7 @@ private[storage] abstract class JobStoreSpec extends UnitSpec with BeforeAndAfte
     }
 
     it should "replace jobs" in {
-      Await.result(store.replace(jobs.head)) shouldBe Status.NotFound("jobs", "job1")
+      Await.result(store.replace(jobs.head)) shouldBe Status.NotFound("job1")
       Await.result(Future.join(jobs.map(store.create)))
       Await.result(store.replace(jobs.head.copy(labels = Map("foo" -> "otherbar")))) shouldBe Status.Ok
       Await.result(store.get("job1")) shouldBe Some(jobs.head.copy(labels = Map("foo" -> "otherbar")))
@@ -119,7 +119,7 @@ private[storage] abstract class JobStoreSpec extends UnitSpec with BeforeAndAfte
     }
 
     it should "delete jobs" in {
-      Await.result(store.delete("job4")) shouldBe Status.NotFound("jobs", "job4")
+      Await.result(store.delete("job4")) shouldBe Status.NotFound("job4")
       Await.result(Future.join(jobs.map(store.create)))
       Await.result(store.delete("job4")) shouldBe Status.Ok
       Await.result(store.get("job4")) shouldBe None

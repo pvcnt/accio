@@ -33,6 +33,7 @@ case class Job(
   tasks: Seq[Task] = Seq.empty,
   status: ExecStatus = ExecStatus(),
   history: Seq[ExecStatus] = Seq.empty)
+  extends StatusHolder
 
 object Job {
   val empty = Job()

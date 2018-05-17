@@ -18,30 +18,20 @@
 
 package fr.cnrs.liris.lumos.domain
 
-sealed trait Status {
-  def toException: Option[LumosException] = None
-}
+sealed trait Status
 
 object Status {
 
   case object Ok extends Status
 
-  case class AlreadyExists(resourceType: String, resourceName: String) extends Status {
-    override def toException: Option[LumosException] =
-      Some(LumosException.AlreadyExists(resourceType, resourceName))
-  }
+  case class AlreadyExists(jobName: String) extends Status
 
-  case class NotFound(resourceType: String, resourceName: String) extends Status {
-    override def toException: Option[LumosException] =
-      Some(LumosException.AlreadyExists(resourceType, resourceName))
-  }
+  case class NotFound(jobName: String) extends Status
 
-  case class InvalidArgument(errors: Seq[String]) extends Status {
-    override def toException: Option[LumosException] = Some(LumosException.InvalidArgument(errors))
-  }
+  case class InvalidArgument(errors: Seq[FieldViolation]) extends Status
 
-  case class FailedPrecondition(errors: Seq[String]) extends Status {
-    override def toException: Option[LumosException] = Some(LumosException.FailedPrecondition(errors))
-  }
+  case class FailedPrecondition(jobName: String, errors: Seq[FieldViolation] = Seq.empty) extends Status
+
+  case class FieldViolation(message: String, field: String)
 
 }

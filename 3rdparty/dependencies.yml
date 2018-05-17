@@ -70,10 +70,6 @@ dependencies:
     breeze:
       version: "0.12"
       lang: scala
-  org.ocpsoft.prettytime:
-    prettytime:
-      version: "4.0.1.Final"
-      lang: java
   com.univocity:
     univocity-parsers:
       version: 2.6.3
@@ -86,3 +82,9 @@ dependencies:
     junit-vintage-engine:
       version: "5.1.0"
       lang: java
+  org.scalacheck:
+    scalacheck:
+      # Stick to this version while we use ScalaTest 2.2.6.
+      # Cf. https://stackoverflow.com/a/35312699
+      version: "1.12.5"
+      lang: scala

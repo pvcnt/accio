@@ -18,15 +18,13 @@
 
 package fr.cnrs.liris.lumos.storage
 
-import com.twitter.util.Future
+import com.twitter.util.{Closable, Future}
 import fr.cnrs.liris.lumos.domain.{Job, JobList, Status}
 
 /**
  * Store providing access to jobs.
  */
-trait JobStore {
-  val resourceType = "jobs"
-
+trait JobStore extends Closable {
   /**
    * Search for jobs matching a given query. Jobs are returned ordered in inverse chronological
    * order, the most recent matching job being the first result.
@@ -56,6 +54,4 @@ trait JobStore {
   def delete(name: String): Future[Status]
 
   def startUp(): Future[Unit]
-
-  def shutDown(): Future[Unit]
 }

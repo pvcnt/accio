@@ -20,9 +20,9 @@ scala_test(
   deps = [
     "//accio/java/fr/cnrs/liris/accio/scheduler/local",
     "//accio/java/fr/cnrs/liris/accio/scheduler",
-    "//accio/java/fr/cnrs/liris/accio/api",
+    "//accio/javatests/fr/cnrs/liris/accio/scheduler",
     "//accio/javatests/fr/cnrs/liris/testing",
-    "//3rdparty/jvm/com/google/guava",
+    "//3rdparty/jvm/com/twitter:util_stats",
     "//3rdparty/jvm/com/twitter:util_slf4j_api",
   ],
   size = "small",

@@ -19,15 +19,9 @@ scala_library(
   srcs = glob(["*.scala"]),
   deps = [
     "//accio/java/fr/cnrs/liris/accio/scheduler",
-    "//accio/java/fr/cnrs/liris/accio/api",
-    "//accio/java/fr/cnrs/liris/accio/config:annotations",
     "//accio/java/fr/cnrs/liris/util",
-    "//accio/java/fr/cnrs/liris/util/scrooge",
-    "//accio/thrift/fr/cnrs/liris/accio/api",
     "//3rdparty/jvm/com/twitter:util_slf4j_api",
-    "//3rdparty/jvm/com/twitter:util_codec",
     "//3rdparty/jvm/com/twitter:util_stats",
-    "//3rdparty/jvm/com/google/guava",
   ],
   visibility = ["//visibility:public"],
 )

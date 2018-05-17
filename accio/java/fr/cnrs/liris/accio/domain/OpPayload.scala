@@ -27,11 +27,7 @@ import fr.cnrs.liris.lumos.domain.AttrValue
  * @param op        Name of the operator to execute.
  * @param seed      Seed used by unstable operators (included even if the operator is not unstable).
  * @param params    Input values of the operator. All values should be included, even the optional ones.
- * @param resources Compute resourcess necessary to execute the operator. This may be used by some
+ * @param resources Compute resources necessary to execute the operator. This may be used by some
  *                  implementations to provide some isolation, if a proper isolator is not available.
  */
-case class OpPayload(
-  op: String,
-  seed: Long,
-  params: Seq[AttrValue] = Seq.empty,
-  resources: Map[String, Long] = Map.empty)
+case class OpPayload(op: String, seed: Long, params: Seq[AttrValue], resources: Map[String, Long])

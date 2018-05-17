@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 import com.github.nscala_time.time.Imports._
 import com.twitter.finagle.stats.{NullStatsReceiver, StatsReceiver}
-import com.twitter.util.Future
+import com.twitter.util.{Future, Time}
 import fr.cnrs.liris.lumos.domain.{Job, JobList, Status}
 import fr.cnrs.liris.lumos.storage.{JobQuery, JobStore}
 
@@ -51,7 +51,7 @@ private[storage] final class MemoryJobStore(statsReceiver: StatsReceiver) extend
     if (index.putIfAbsent(job.name, job).isEmpty) {
       Future.value(Status.Ok)
     } else {
-      Future.value(Status.AlreadyExists(resourceType, job.name))
+      Future.value(Status.AlreadyExists(job.name))
     }
   }
 
@@ -59,7 +59,7 @@ private[storage] final class MemoryJobStore(statsReceiver: StatsReceiver) extend
     if (index.replace(job.name, job).isDefined) {
       Future.value(Status.Ok)
     } else {
-      Future.value(Status.NotFound(resourceType, job.name))
+      Future.value(Status.NotFound(job.name))
     }
   }
 
@@ -67,13 +67,13 @@ private[storage] final class MemoryJobStore(statsReceiver: StatsReceiver) extend
     if (index.remove(name).isDefined) {
       Future.value(Status.Ok)
     } else {
-      Future.value(Status.NotFound(resourceType, name))
+      Future.value(Status.NotFound(name))
     }
   }
 
   override def startUp(): Future[Unit] = Future.Done
 
-  override def shutDown(): Future[Unit] = Future.Done
+  override def close(deadline: Time): Future[Unit] = Future.Done
 }
 
 object MemoryJobStore {

@@ -18,8 +18,4 @@
 
 package fr.cnrs.liris.lumos.domain
 
-case class AttrValue(
-  name: String,
-  dataType: DataType,
-  value: Value,
-  aspects: Set[String] = Set.empty)
+case class AttrValue(name: String, value: Value, aspects: Set[String] = Set.empty)

@@ -18,8 +18,8 @@
 
 package fr.cnrs.liris.accio.report
 
-import fr.cnrs.liris.accio.api.thrift._
-import fr.cnrs.liris.accio.api.{DataTypes, Values}
+import fr.cnrs.liris.accio.validation.thrift._
+import fr.cnrs.liris.accio.validation.{DataTypes, Values}
 import fr.cnrs.liris.util.MathUtils.mean
 import fr.cnrs.liris.util.Seqs
 import fr.cnrs.liris.util.geo.Distance

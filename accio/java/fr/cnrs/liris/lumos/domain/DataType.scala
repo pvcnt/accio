@@ -18,24 +18,47 @@
 
 package fr.cnrs.liris.lumos.domain
 
-sealed trait DataType
+sealed trait DataType {
+  def name: String
+
+  override def toString: String = name
+}
 
 object DataType {
 
-  case object Int extends DataType
+  case object Int extends DataType {
+    override def name = "Int"
+  }
 
-  case object Long extends DataType
+  case object Long extends DataType {
+    override def name = "Long"
+  }
 
-  case object Float extends DataType
+  case object Float extends DataType {
+    override def name = "Float"
+  }
 
-  case object Double extends DataType
+  case object Double extends DataType {
+    override def name = "Double"
+  }
 
-  case object String extends DataType
+  case object String extends DataType {
+    override def name = "String"
+  }
 
-  case object Bool extends DataType
+  case object Bool extends DataType {
+    override def name = "Bool"
+  }
 
-  case object Dataset extends DataType
+  case object Dataset extends DataType {
+    override def name = "Dataset"
+  }
 
-  case object File extends DataType
+  case object File extends DataType {
+    override def name = "File"
+  }
 
+  def values: Seq[DataType] = Seq(Int, Long, Float, Double, String, Bool, Dataset, File)
+
+  def valueOf(str: String): Option[DataType] = values.find(_.name == str)
 }

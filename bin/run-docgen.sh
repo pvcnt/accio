@@ -15,4 +15,4 @@
 # You should have received a copy of the GNU General Public License
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
-bazel run accio/java/fr/cnrs/liris/accio/tools/docgen -- -out=$(pwd)/docs/_docs/operators
+bazel run accio/java/fr/cnrs/liris/accio/docgen -- -out=$(pwd)/docs/_docs/operators

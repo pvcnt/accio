@@ -18,8 +18,9 @@ scala_library(
   name = "json",
   srcs = glob(["*.scala"]),
   deps = [
-    "//accio/java/fr/cnrs/liris/accio/api",
     "//accio/java/fr/cnrs/liris/accio/dsl",
+    "//accio/java/fr/cnrs/liris/accio/domain",
+    "//accio/java/fr/cnrs/liris/lumos/domain",
     "//accio/java/fr/cnrs/liris/util/geo",
     "//accio/java/fr/cnrs/liris/util",
     "//3rdparty/jvm/com/twitter:finatra_jackson",

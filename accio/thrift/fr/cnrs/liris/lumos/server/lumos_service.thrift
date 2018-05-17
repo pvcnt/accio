@@ -19,26 +19,7 @@
 namespace java fr.cnrs.liris.lumos.server
 
 include "accio/thrift/fr/cnrs/liris/lumos/domain/lumos.thrift"
-
-enum ErrorCode {
-  ALREADY_EXISTS,
-  NOT_FOUND,
-  FAILED_PRECONDITION,
-  INVALID_ARGUMENT,
-  UNAUTHENTICATED,
-  UNIMPLEMENTED,
-}
-
-exception ServerException {
-  1: ErrorCode code;
-  2: optional string message;
-  3: optional string resource_type;
-  4: optional string resource_name;
-  5: optional list<string> errors;
-}
-
-struct GetInfoRequest {
-}
+include "accio/thrift/fr/cnrs/liris/infra/thriftserver/errors.thrift"
 
 struct GetInfoResponse {
   1: required string version;
@@ -74,14 +55,14 @@ struct ListJobsResponse {
 
 service LumosService {
   // Get information about this server.
-  GetInfoResponse getInfo(1: GetInfoRequest req) throws (1: ServerException e);
+  GetInfoResponse getInfo() throws (1: errors.ServerError e);
 
-  // Push an event.
-  PushEventResponse pushEvent(1: PushEventRequest req) throws (1: ServerException e);
+  // Push one or several events.
+  PushEventResponse pushEvent(1: PushEventRequest req) throws (1: errors.ServerError e);
 
   // Retrieve a specific job.
-  GetJobResponse getJob(1: GetJobRequest req) throws (1: ServerException e);
+  GetJobResponse getJob(1: GetJobRequest req) throws (1: errors.ServerError e);
 
   // Retrieve all jobs matching some criteria.
-  ListJobsResponse listJobs(1: ListJobsRequest req) throws (1: ServerException e);
+  ListJobsResponse listJobs(1: ListJobsRequest req) throws (1: errors.ServerError e);
 }

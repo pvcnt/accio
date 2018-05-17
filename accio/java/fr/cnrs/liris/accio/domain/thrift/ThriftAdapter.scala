@@ -42,6 +42,7 @@ object ThriftAdapter {
     domain.Operator(
       name = obj.name,
       category = obj.category,
+      executable = LumosAdapter.toDomain(obj.executable),
       help = obj.help,
       description = obj.description,
       inputs = obj.inputs.map(toDomain),
@@ -50,6 +51,35 @@ object ThriftAdapter {
       resources = obj.resources.toMap,
       unstable = obj.unstable)
   }
+
+  def toDomain(obj: Workflow): domain.Workflow = {
+    domain.Workflow(
+      name = obj.name,
+      owner = obj.owner,
+      contact = obj.contact,
+      labels = obj.labels.toMap,
+      seed = obj.seed,
+      params = obj.params.map(LumosAdapter.toDomain),
+      steps = obj.steps.map(toDomain),
+      repeat = obj.repeat,
+      resources = obj.resources.toMap)
+  }
+
+  private def toDomain(obj: Step): domain.Step = {
+    domain.Step(name = obj.name, op = obj.op, params = obj.params.map(toDomain))
+  }
+
+  private def toDomain(obj: Channel): domain.Channel = {
+    domain.Channel(name = obj.name, source = toDomain(obj.source))
+  }
+
+  private def toDomain(obj: Source): domain.Channel.Source =
+    obj match {
+      case Source.Param(name) => domain.Channel.Param(name)
+      case Source.Reference(ref) => domain.Channel.Reference(ref.step, ref.output)
+      case Source.Constant(value) => domain.Channel.Constant(LumosAdapter.toDomain(value))
+      case Source.UnknownUnionField(_) => throw new IllegalArgumentException("Illegal value")
+    }
 
   private def toDomain(obj: Attribute): domain.Attribute = {
     domain.Attribute(
@@ -77,10 +107,39 @@ object ThriftAdapter {
       error = obj.error.map(LumosAdapter.toThrift))
   }
 
+  def toThrift(obj: domain.Workflow): Workflow = {
+    Workflow(
+      name = obj.name,
+      owner = obj.owner,
+      contact = obj.contact,
+      labels = obj.labels,
+      seed = obj.seed,
+      params = obj.params.map(LumosAdapter.toThrift),
+      steps = obj.steps.map(toThrift),
+      repeat = obj.repeat,
+      resources = obj.resources)
+  }
+
+  private def toThrift(obj: domain.Step): Step = {
+    Step(name = obj.name, op = obj.op, params = obj.params.map(toThrift))
+  }
+
+  private def toThrift(obj: domain.Channel): Channel = {
+    Channel(name = obj.name, source = toThrift(obj.source))
+  }
+
+  private def toThrift(obj: domain.Channel.Source): Source =
+    obj match {
+      case domain.Channel.Param(name) => Source.Param(name)
+      case domain.Channel.Reference(step, output) => Source.Reference(Reference(step, output))
+      case domain.Channel.Constant(value) => Source.Constant(LumosAdapter.toThrift(value))
+    }
+
   def toThrift(obj: domain.Operator): Operator = {
     Operator(
       name = obj.name,
       category = obj.category,
+      executable = LumosAdapter.toThrift(obj.executable),
       help = obj.help,
       description = obj.description,
       inputs = obj.inputs.map(toThrift),

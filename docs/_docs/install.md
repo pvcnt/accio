@@ -137,14 +137,14 @@ git checkout v0.6.0 # Replace the version number with the one you target
 You can now build the Accio client from source.
 
 ```bash
-bazel build accio/java/fr/cnrs/liris/accio/tools/cli:cli_deploy.jar
+bazel build accio/java/fr/cnrs/liris/accio/cli:cli_deploy.jar
 ```
 
-This will create a "fat JAR" under `bazel-bin/accio/java/fr/cnrs/liris/accio/tools/cli/cli_deploy.jar`.
+This will create a "fat JAR" under `bazel-bin/accio/java/fr/cnrs/liris/accio/cli/cli_deploy.jar`.
 It can be executed wherever a Java JRE is available, for example:
 
 ```bash
-java -jar bazel-bin/accio/java/fr/cnrs/liris/accio/tools/cli/cli_deploy.jar version -client
+java -jar bazel-bin/accio/java/fr/cnrs/liris/accio/cli/cli_deploy.jar version -client
 ```
 
 The section for contributors contains full instructions [how to compile and develop Accio](../contribute/compile.html).

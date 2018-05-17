@@ -19,8 +19,10 @@ scala_library(
   srcs = glob(["*.scala"]),
   deps = [
     "//accio/java/fr/cnrs/liris/lumos/domain",
-    "//accio/java/fr/cnrs/liris/util/scrooge",
     "//3rdparty/jvm/com/twitter:util_slf4j_api",
+  ],
+  exports = [
+    "//accio/java/fr/cnrs/liris/lumos/domain",
   ],
   visibility = ["//visibility:public"],
 )

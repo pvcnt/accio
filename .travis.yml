@@ -70,4 +70,4 @@ script:
 
 branches:
   except:
-    - issue-1
+    - experimental

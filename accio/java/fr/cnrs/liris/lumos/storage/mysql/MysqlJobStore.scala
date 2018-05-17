@@ -21,9 +21,9 @@ package fr.cnrs.liris.lumos.storage.mysql
 import com.twitter.finagle.mysql.Parameter.{NullParameter, wrap}
 import com.twitter.finagle.mysql._
 import com.twitter.finagle.stats.StatsReceiver
-import com.twitter.util.{Future, StorageUnit}
-import fr.cnrs.liris.lumos.domain.thrift.ThriftAdapter
+import com.twitter.util.{Future, StorageUnit, Time}
 import fr.cnrs.liris.lumos.domain._
+import fr.cnrs.liris.lumos.domain.thrift.ThriftAdapter
 import fr.cnrs.liris.lumos.storage.{JobQuery, JobStore}
 import fr.cnrs.liris.util.scrooge.BinaryScroogeSerializer
 
@@ -55,7 +55,7 @@ private[storage] final class MysqlJobStore(client: Client, statsReceiver: StatsR
       }
       .handle {
         // Error code 1062 corresponds to a duplicate entry, which means the object already exists.
-        case ServerError(1062, _, _) => Status.AlreadyExists(resourceType, job.name)
+        case ServerError(1062, _, _) => Status.AlreadyExists(job.name)
       }
   }
 
@@ -69,7 +69,7 @@ private[storage] final class MysqlJobStore(client: Client, statsReceiver: StatsR
       .apply(job.status.state.name, content, job.name)
       .map {
         case ok: OK =>
-          if (ok.affectedRows == 1) Status.Ok else Status.NotFound(resourceType, job.name)
+          if (ok.affectedRows == 1) Status.Ok else Status.NotFound(job.name)
         case res => throw new RuntimeException(s"Unexpected MySQL result: $res")
       }
   }
@@ -80,7 +80,7 @@ private[storage] final class MysqlJobStore(client: Client, statsReceiver: StatsR
       .apply(name)
       .map {
         case ok: OK =>
-          if (ok.affectedRows == 1) Status.Ok else Status.NotFound(resourceType, name)
+          if (ok.affectedRows == 1) Status.Ok else Status.NotFound(name)
         case res => throw new RuntimeException(s"Unexpected MySQL result: $res")
       }
   }
@@ -174,7 +174,7 @@ private[storage] final class MysqlJobStore(client: Client, statsReceiver: StatsR
     Future.join(fs)
   }
 
-  override def shutDown(): Future[Unit] = client.close()
+  override def close(deadline: Time): Future[Unit] = client.close(deadline)
 
   private def sqlSet(elements: Iterable[_]) = '(' + Seq.fill(elements.size)("?").mkString(", ") + ')'
 }

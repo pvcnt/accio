@@ -20,31 +20,36 @@ package fr.cnrs.liris.accio.executor
 
 import java.nio.file.Paths
 
-import com.google.inject.Guice
-import com.twitter.inject.Injector
-import fr.cnrs.liris.accio.api.thrift.OpPayload
-import fr.cnrs.liris.locapriv.install.OpsModule
+import com.twitter.inject.app.App
+import com.twitter.util.Await
+import com.twitter.util.logging.Logging
+import fr.cnrs.liris.accio.discovery.{DiscoveryModule, OpRegistry}
+import fr.cnrs.liris.accio.domain.thrift.{ThriftAdapter, Workflow}
+import fr.cnrs.liris.lumos.transport.{EventTransport, EventTransportModule}
 import fr.cnrs.liris.util.scrooge.BinaryScroogeSerializer
+
+import scala.util.control.NonFatal
 
 object AccioExecutorMain extends AccioExecutor
 
 /**
  * Accio executor.
  */
-class AccioExecutor {
-  def main(args: Array[String]): Unit = {
-    require(args.length >= 2, "There should be at least two arguments")
-    val injector = Injector(Guice.createInjector(OpsModule))
-    val executor = injector.instance[TaskExecutor]
+class AccioExecutor extends App with Logging {
+  override def modules = Seq(EventTransportModule, DiscoveryModule)
 
-    val payload = BinaryScroogeSerializer.fromString(args.head, OpPayload)
-    // The following line is here to trick the Sparkle executor in thinking there is less cores
-    // than effectively available. This is used as a poor-man isolation system, when nothing more
-    // sophisticated is in place, to prevent Sparkle from using all available cores.
-    val successful = com.twitter.jvm.numProcs.let(payload.resources.cpus) {
-      executor.execute(payload, Paths.get(args(1)))
+  override def run(): Unit = {
+    require(args.length == 1, "There should be a single argument")
+    val workflow = try {
+      ThriftAdapter.toDomain(BinaryScroogeSerializer.fromString(args.head, Workflow))
+    } catch {
+      case NonFatal(e) =>
+        logger.error(s"Failed to read workflow from ${args.head}", e)
+        sys.exit(1)
     }
-
-    sys.exit(if (successful) 0 else 1)
+    val eventTransport = injector.instance[EventTransport]
+    val opRegistry = injector.instance[OpRegistry]
+    val executor = new WorkflowExecutor(workflow, Paths.get("."), opRegistry, eventTransport)
+    Await.ready(executor.execute())
   }
 }

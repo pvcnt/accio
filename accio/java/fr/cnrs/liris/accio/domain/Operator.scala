@@ -18,11 +18,14 @@
 
 package fr.cnrs.liris.accio.domain
 
+import fr.cnrs.liris.lumos.domain.{DataType, RemoteFile, Value}
+
 /**
  * Definition of an operator.
  *
  * @param name        Unique operator name.
- * @param category    Category. Only used for presentational purposes.
+ * @param category    Category.
+ * @param executable  Binary providing the operator's implementation.
  * @param help        One-line help text.
  * @param description Longer description of what the operator does.
  * @param inputs      Definition of inputs the operator consumes.
@@ -35,7 +38,8 @@ package fr.cnrs.liris.accio.domain
  */
 case class Operator(
   name: String,
-  category: String,
+  executable: RemoteFile,
+  category: String = "misc",
   help: Option[String] = None,
   description: Option[String] = None,
   inputs: Seq[Attribute] = Seq.empty,
@@ -43,3 +47,21 @@ case class Operator(
   deprecation: Option[String] = None,
   resources: Map[String, Long] = Map.empty,
   unstable: Boolean = false)
+
+/**
+ * Definition of an operator port (either input or output).
+ *
+ * @param name
+ * @param dataType
+ * @param help
+ * @param defaultValue Default value taken by this input if none is specified. It should be empty for output ports.
+ * @param optional
+ * @param aspects
+ */
+case class Attribute(
+  name: String,
+  dataType: DataType,
+  help: Option[String] = None,
+  defaultValue: Option[Value] = None,
+  optional: Boolean = false,
+  aspects: Set[String] = Set.empty)

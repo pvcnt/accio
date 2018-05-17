@@ -20,8 +20,42 @@ namespace java fr.cnrs.liris.accio.domain.thrift
 
 include "accio/thrift/fr/cnrs/liris/lumos/domain/lumos.thrift"
 
+struct Reference {
+  1: string step;
+  2: string output;
+}
+
+union Source {
+  1: string param;
+  2: optional lumos.Value constant;
+  3: optional Reference reference;
+}
+
+struct Channel {
+  1: string name;
+  2: Source source;
+}
+
+struct Step {
+  1: string name;
+  2: string op;
+  3: list<Channel> params;
+}
+
+struct Workflow {
+  1: string name;
+  2: optional string owner;
+  3: optional string contact;
+  4: map<string, string> labels;
+  5: i64 seed = 0;
+  6: list<lumos.AttrValue> params;
+  7: list<Step> steps;
+  8: i32 repeat = 1;
+  9: map<string, i64> resources;
+}
+
 struct OpPayload {
-  1: string op,
+  1: string op;
   2: i64 seed;
   3: list<lumos.AttrValue> params;
   4: map<string, i64> resources;
@@ -46,11 +80,12 @@ struct Attribute {
 struct Operator {
   1: string name;
   2: string category;
-  3: optional string help;
-  4: optional string description;
-  5: list<Attribute> inputs;
-  6: list<Attribute> outputs;
-  7: optional string deprecation;
-  8: map<string, i64> resources;
-  9: bool unstable;
+  3: lumos.RemoteFile executable;
+  4: optional string help;
+  5: optional string description;
+  6: list<Attribute> inputs;
+  7: list<Attribute> outputs;
+  8: optional string deprecation;
+  9: map<string, i64> resources;
+  10: bool unstable;
 }

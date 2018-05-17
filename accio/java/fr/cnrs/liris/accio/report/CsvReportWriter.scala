@@ -20,8 +20,8 @@ package fr.cnrs.liris.accio.report
 
 import java.nio.file.{Files, Path, StandardOpenOption}
 
-import fr.cnrs.liris.accio.api.thrift._
-import fr.cnrs.liris.accio.api.{Utils, Values}
+import fr.cnrs.liris.accio.validation.thrift._
+import fr.cnrs.liris.accio.validation.{Utils, Values}
 
 import scala.collection.JavaConverters._
 
