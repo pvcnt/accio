@@ -20,7 +20,6 @@ package fr.cnrs.liris.accio.domain
 
 import fr.cnrs.liris.lumos.domain.{AttrValue, ErrorDatum, MetricValue}
 
-
 /**
  * Result of the operator. It is written by the operator's binary into a file specified as a
  * command-line argument.

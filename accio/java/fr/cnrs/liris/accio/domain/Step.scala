@@ -16,15 +16,6 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.tools.docgen
+package fr.cnrs.liris.accio.domain
 
-import com.google.inject.{Provides, Singleton}
-import com.twitter.inject.TwitterModule
-import fr.cnrs.liris.accio.api.OpRegistry
-import fr.cnrs.liris.accio.runtime.OpMeta
-
-object DocgenModule extends TwitterModule {
-  @Provides
-  @Singleton
-  def providesOpRegistry(ops: Set[OpMeta]): OpRegistry = new OpRegistry(ops.map(_.defn))
-}
+case class Step(name: String, op: String, params: Seq[Channel])

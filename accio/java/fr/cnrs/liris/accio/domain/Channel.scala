@@ -18,16 +18,18 @@
 
 package fr.cnrs.liris.accio.domain
 
-import fr.cnrs.liris.lumos.domain.AttrValue
+import fr.cnrs.liris.lumos.domain.Value
 
-/**
- * Payload containing the information needed to execute an operator. It is given to the
- * operator's binary as a based-64 encoded command-line argument.
- *
- * @param op        Name of the operator to execute.
- * @param seed      Seed used by unstable operators (included even if the operator is not unstable).
- * @param params    Input values of the operator. All values should be included, even the optional ones.
- * @param resources Compute resources necessary to execute the operator. This may be used by some
- *                  implementations to provide some isolation, if a proper isolator is not available.
- */
-case class OpPayload(op: String, seed: Long, params: Seq[AttrValue], resources: Map[String, Long])
+case class Channel(name: String, source: Channel.Source)
+
+object Channel {
+
+  sealed trait Source
+
+  case class Reference(step: String, output: String) extends Source
+
+  case class Param(name: String) extends Source
+
+  case class Constant(value: Value) extends Source
+
+}

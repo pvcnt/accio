@@ -16,18 +16,14 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.domain
+package fr.cnrs.liris.accio.executor
 
+import fr.cnrs.liris.accio.domain.Step
 import fr.cnrs.liris.lumos.domain.AttrValue
 
-/**
- * Payload containing the information needed to execute an operator. It is given to the
- * operator's binary as a based-64 encoded command-line argument.
- *
- * @param op        Name of the operator to execute.
- * @param seed      Seed used by unstable operators (included even if the operator is not unstable).
- * @param params    Input values of the operator. All values should be included, even the optional ones.
- * @param resources Compute resources necessary to execute the operator. This may be used by some
- *                  implementations to provide some isolation, if a proper isolator is not available.
- */
-case class OpPayload(op: String, seed: Long, params: Seq[AttrValue], resources: Map[String, Long])
+case class Job(
+  name: String,
+  params: Seq[AttrValue],
+  seed: Long,
+  steps: Seq[Step],
+  resources: Map[String, Long])

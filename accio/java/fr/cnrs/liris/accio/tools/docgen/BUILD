@@ -19,11 +19,9 @@ scala_binary(
   srcs = glob(["*.scala"]),
   deps = [
     "//accio/java/fr/cnrs/liris/accio/api",
-    "//accio/java/fr/cnrs/liris/accio/runtime",
     "//accio/java/fr/cnrs/liris/accio/logging",
     "//accio/java/fr/cnrs/liris/accio/sdk",
     "//accio/java/fr/cnrs/liris/util",
-    "//accio/java/fr/cnrs/liris/locapriv/install",
     "//3rdparty/jvm/com/twitter:inject_app",
   ],
   resource_strip_prefix = "accio/java",

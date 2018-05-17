@@ -21,20 +21,20 @@ package fr.cnrs.liris.accio.tools.docgen
 import java.io.{BufferedOutputStream, FileOutputStream, PrintStream}
 import java.nio.file.Files
 
-import com.google.inject.Inject
-import fr.cnrs.liris.accio.api.thrift.Operator
-import fr.cnrs.liris.accio.api.{DataTypes, OpRegistry, Values}
+import fr.cnrs.liris.accio.domain.Operator
+import fr.cnrs.liris.accio.api.{DataTypes, Values}
 
 /**
  * Generate documentation for all operators known to a registry in Markdown format.
  */
-final class MarkdownDocgen @Inject()(opRegistry: OpRegistry) {
+final class MarkdownDocgen {
   /**
    * Generate documentation w.r.t. given options.
    *
+   * @param ops   Operators for which to generate documentation.
    * @param flags Generator options.
    */
-  def generate(flags: DocgenOpts): Unit = {
+  def generate(ops: Seq[Operator], flags: DocgenOpts): Unit = {
     Files.createDirectories(flags.out)
     opRegistry
       .ops

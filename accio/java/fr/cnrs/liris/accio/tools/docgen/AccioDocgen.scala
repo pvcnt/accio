@@ -34,11 +34,11 @@ class AccioDocgen extends App with LogbackConfigurator {
   private[this] val outFlag = flag[String]("out", "File where to write generated documentation")
   private[this] val tocFlag = flag("toc", true, "Whether to include a table of contents")
 
-  override def modules = Seq(DocgenModule, OpsModule)
+  override def failfastOnFlagsNotParsed = true
 
   override def run(): Unit = {
     val elapsed = Stopwatch.start()
-    val docgen = injector.instance[MarkdownDocgen]
+    val docgen = new MarkdownDocgen
     docgen.generate(DocgenOpts(Paths.get(outFlag()), tocFlag()))
     println(s"Done in ${elapsed().inSeconds} seconds.")
   }
