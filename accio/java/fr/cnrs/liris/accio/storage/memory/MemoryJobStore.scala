@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap
 import com.twitter.finagle.stats.StatsReceiver
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.api.thrift._
-import fr.cnrs.liris.accio.storage.{JobStore, ResultList}
+import fr.cnrs.liris.accio.storage.{JobStore, JobList}
 
 import scala.collection.JavaConverters._
 
@@ -36,13 +36,13 @@ private[memory] final class MemoryJobStore(statsReceiver: StatsReceiver) extends
   private[this] val index = new ConcurrentHashMap[String, Job].asScala
   statsReceiver.provideGauge("storage", "memory", "job", "index_size")(index.size)
 
-  override def list(query: JobStore.Query, limit: Option[Int], offset: Option[Int]): Future[ResultList[Job]] =
+  override def list(query: JobStore.Query, limit: Option[Int], offset: Option[Int]): Future[JobList] =
     Future {
       val results = index.values
         .filter(query.matches)
         .toSeq
         .sortWith((a, b) => a.createTime > b.createTime)
-      ResultList.slice(results, offset = offset, limit = limit)
+      JobList.slice(results, offset = offset, limit = limit)
     }
 
   override def get(name: String): Future[Option[Job]] = Future(index.get(name))

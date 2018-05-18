@@ -28,7 +28,7 @@ import fr.cnrs.liris.util.scrooge.BinaryScroogeSerializer
 import scala.util.control.NonFatal
 
 trait ScalaLibrary extends Logging {
-  def ops: Seq[OpMeta]
+  def ops: Seq[OpMetadata]
 
   final def main(args: Array[String]): Unit = sys.exit(run(args))
 
@@ -82,13 +82,7 @@ trait ScalaLibrary extends Logging {
         3
       case Some(opMeta) =>
         val executor = new OpExecutor(opMeta.defn, opMeta.clazz, Paths.get("."))
-        // The two next lines is here to trick the Sparkle executor in thinking there is less cores
-        // than effectively available. This is used as a poor-man isolation system, when nothing more
-        // sophisticated is in place, to prevent Sparkle from using all available cores.
-        val cpus = payload.resources.get("cpus").map(_.toInt).getOrElse(sys.runtime.availableProcessors())
-        val res = com.twitter.jvm.numProcs.let(cpus) {
-          executor.execute(payload)
-        }
+        val res = executor.execute(payload)
         val os = new FileOutputStream(outputFileName)
         try {
           BinaryScroogeSerializer.write(ThriftAdapter.toThrift(res), os)

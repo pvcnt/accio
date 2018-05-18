@@ -81,7 +81,7 @@ object ThriftAdapter {
     domain.AttrValue(obj.name, toDomain(obj.dataType), toDomain(obj.value), obj.aspects.toSet)
   }
 
-  private def toDomain(obj: RemoteFile): domain.RemoteFile = {
+  def toDomain(obj: RemoteFile): domain.RemoteFile = {
     domain.RemoteFile(
       uri = obj.uri,
       contentType = obj.contentType,
@@ -229,7 +229,7 @@ object ThriftAdapter {
     MetricValue(obj.name, obj.value, obj.aspects)
   }
 
-  private def toThrift(obj: domain.RemoteFile): RemoteFile = {
+  def toThrift(obj: domain.RemoteFile): RemoteFile = {
     RemoteFile(
       uri = obj.uri,
       contentType = obj.contentType,

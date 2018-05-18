@@ -16,12 +16,10 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.executor
+package fr.cnrs.liris.accio.discovery
 
-import fr.cnrs.liris.accio.domain.OpPayload
+import com.google.inject.{Inject, Singleton}
+import fr.cnrs.liris.accio.domain.Operator
 
-final class ProcessScheduler {
-  def schedule(name: String, payload: OpPayload): Unit = ???
-
-  def kill(name: String): Unit = ???
-}
+@Singleton
+final class MemoryOpRegistry @Inject()(val ops: Set[Operator]) extends OpRegistry

@@ -27,13 +27,13 @@ import org.joda.time.Instant
 
 import scala.collection.mutable
 
-final class StateMachine(job: Job) extends Logging {
+final class StateMachine(workflow: Workflow, jobName: String) extends Logging {
   private[this] val artifacts = mutable.Map.empty[String, AttrValue]
   private[this] val tasks = mutable.Map.empty[String, ExecStatus.State]
-  private[this] val graph = Graph.create(job)
+  private[this] val graph = Graph.create(workflow)
   private[this] val sequence = new AtomicLong(0)
 
-  job.steps.foreach(step => tasks(step.name) = ExecStatus.Pending)
+  workflow.steps.foreach(step => tasks(step.name) = ExecStatus.Pending)
 
   def startJob(): Seq[SideEffect] = synchronized {
     Seq(SideEffect.Publish(createEvent(Event.JobStarted()))) ++ startAllSteps()
@@ -48,10 +48,6 @@ final class StateMachine(job: Job) extends Logging {
     Seq(SideEffect.Publish(createEvent(Event.JobCompleted(outputs))))
   }
 
-  def isStarted: Boolean = synchronized {
-    tasks.values.exists(v => v != ExecStatus.Pending)
-  }
-
   def isCompleted: Boolean = synchronized {
     tasks.values.forall(_.isCompleted)
   }
@@ -59,7 +55,7 @@ final class StateMachine(job: Job) extends Logging {
   def stepStarted(stepName: String): Seq[SideEffect] = synchronized {
     val sideEffects = mutable.ListBuffer.empty[SideEffect]
     if (tasks(stepName) != ExecStatus.Pending) {
-      logger.warn(s"Attempted to start already started task ${job.name}:$stepName")
+      logger.warn(s"Attempted to start already started task $stepName")
     } else {
       tasks(stepName) = ExecStatus.Running
       sideEffects += SideEffect.Publish(createEvent(Event.TaskStarted(stepName)))
@@ -70,7 +66,7 @@ final class StateMachine(job: Job) extends Logging {
   def stepCompleted(stepName: String, exitCode: Int, result: OpResult): Seq[SideEffect] = synchronized {
     val sideEffects = mutable.ListBuffer.empty[SideEffect]
     if (tasks(stepName) != ExecStatus.Running) {
-      logger.warn(s"Attempted to complete already completed task ${job.name}:$stepName")
+      logger.warn(s"Attempted to complete already completed task $stepName")
     } else {
       if (exitCode == 0) {
         artifacts ++= result.artifacts.map { value =>
@@ -118,7 +114,7 @@ final class StateMachine(job: Job) extends Logging {
   }
 
   private def scheduleStep(stepName: String): Seq[SideEffect] = {
-    Seq(SideEffect.Schedule(createPayload(stepName)))
+    Seq(SideEffect.Schedule(stepName, createPayload(stepName)))
   }
 
   private def cancelStep(stepName: String): Seq[SideEffect] = {
@@ -126,7 +122,7 @@ final class StateMachine(job: Job) extends Logging {
     Seq(SideEffect.Kill(stepName))
   }
 
-  private def getNextNodes(stepName: String): Set[Node] = {
+  private def getNextNodes(stepName: String): Set[Graph.Node] = {
     graph(stepName)
       .successors
       .filter(name => tasks(name) == ExecStatus.Pending)
@@ -134,22 +130,22 @@ final class StateMachine(job: Job) extends Logging {
   }
 
   private def createPayload(stepName: String): OpPayload = {
-    val step = job.steps.find(_.name == stepName).get
+    val step = workflow.steps.find(_.name == stepName).get
     val params = step.params.map { channel =>
       channel.source match {
         case Channel.Constant(v) => AttrValue(channel.name, v.dataType, v)
         case Channel.Param(paramName) =>
-          val param = job.params.find(_.name == paramName).get
+          val param = workflow.params.find(_.name == paramName).get
           AttrValue(channel.name, param.dataType, param.value)
         case Channel.Reference(otherName, outputName) =>
           val artifact = artifacts(s"$otherName/$outputName")
           AttrValue(channel.name, artifact.dataType, artifact.value)
       }
     }
-    OpPayload(step.op, job.seed, params, job.resources)
+    OpPayload(step.op, workflow.seed, params, workflow.resources)
   }
 
   private def createEvent(payload: Event.Payload) = {
-    Event(job.name, sequence.getAndIncrement(), Instant.now, payload)
+    Event(jobName, sequence.getAndIncrement(), Instant.now, payload)
   }
 }

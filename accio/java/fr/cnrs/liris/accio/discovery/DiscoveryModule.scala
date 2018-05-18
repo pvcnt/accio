@@ -16,46 +16,27 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.lumos.domain
+package fr.cnrs.liris.accio.discovery
 
-sealed trait DataType {
-  def name: String
+import java.nio.file.Paths
 
-  override def toString: String = name
-}
+import com.google.inject.{Provides, Singleton}
+import com.twitter.conversions.time._
+import com.twitter.inject.TwitterModule
 
-object DataType {
+object DiscoveryModule extends TwitterModule {
+  private[this] val dirFile = flag[String]("discovery.dir.file", "Directory in which to look for definitions of operators")
+  private[this] val dirFrequency = flag("discovery.dir.frequency", 1.minute, "Frequency at which to check for updates")
 
-  case object Int extends DataType {
-    override def name = "Int"
+  override def configure(): Unit = {
+    if (dirFile.isDefined) {
+      bind[OpRegistry].to[DirectoryOpRegistry]
+    }
   }
 
-  case object Long extends DataType {
-    override def name = "Long"
+  @Provides
+  @Singleton
+  def providesDirectoryOpRegistry: DirectoryOpRegistry = {
+    new DirectoryOpRegistry(Paths.get(dirFile()), dirFrequency())
   }
-
-  case object Float extends DataType {
-    override def name = "Float"
-  }
-
-  case object Double extends DataType {
-    override def name = "Double"
-  }
-
-  case object String extends DataType {
-    override def name = "String"
-  }
-
-  case object Bool extends DataType {
-    override def name = "Bool"
-  }
-
-  case object Dataset extends DataType {
-    override def name = "Dataset"
-  }
-
-  case object File extends DataType {
-    override def name = "File"
-  }
-
 }

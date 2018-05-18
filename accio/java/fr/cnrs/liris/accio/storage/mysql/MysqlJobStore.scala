@@ -23,7 +23,7 @@ import com.twitter.finagle.mysql._
 import com.twitter.finagle.stats.StatsReceiver
 import com.twitter.util.{Future, StorageUnit}
 import fr.cnrs.liris.accio.api.thrift.Job
-import fr.cnrs.liris.accio.storage.{JobStore, ResultList}
+import fr.cnrs.liris.accio.storage.{JobStore, JobList}
 import fr.cnrs.liris.util.scrooge.BinaryScroogeSerializer
 
 import scala.collection.mutable
@@ -77,7 +77,7 @@ private[mysql] final class MysqlJobStore(client: Client, statsReceiver: StatsRec
       }
   }
 
-  override def list(query: JobStore.Query, limit: Option[Int], offset: Option[Int]): Future[ResultList[Job]] = {
+  override def list(query: JobStore.Query, limit: Option[Int], offset: Option[Int]): Future[JobList] = {
     val where = mutable.ListBuffer.empty[String]
     val params = mutable.ListBuffer.empty[Parameter]
     var query2 = query
@@ -99,7 +99,7 @@ private[mysql] final class MysqlJobStore(client: Client, statsReceiver: StatsRec
         val results = jobs
           .filter(query2.matches)
           .sortWith((a, b) => a.createTime > b.createTime)
-        ResultList.slice(results, offset = offset, limit = limit)
+        JobList.slice(results, offset = offset, limit = limit)
       }
   }
 

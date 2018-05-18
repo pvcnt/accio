@@ -16,21 +16,19 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.executor
+package fr.cnrs.liris.lumos.transport
 
-import java.util.UUID
+import java.nio.file.Path
 
-import fr.cnrs.liris.accio.domain.{Operator, Workflow}
+import com.twitter.io.Buf
+import fr.cnrs.liris.lumos.domain.Event
+import fr.cnrs.liris.lumos.domain.thrift.ThriftAdapter
+import fr.cnrs.liris.util.scrooge.BinaryScroogeSerializer
 
-import scala.util.Random
+final class BinaryFileEventTransport(path: Path) extends FileEventTransport(path) {
+  override def name = "BinaryFile"
 
-final class Compiler(ops: Seq[Operator]) {
-  def compile(workflow: Workflow): Seq[Job] = {
-    Seq(Job(
-      name = UUID.randomUUID().toString,
-      params = workflow.params,
-      seed = workflow.seed.getOrElse(Random.nextLong()),
-      steps = workflow.steps,
-      resources = workflow.resources))
+  override def serialize(event: Event): Buf = {
+    BinaryScroogeSerializer.toBuf(ThriftAdapter.toThrift(event))
   }
 }

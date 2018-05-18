@@ -21,6 +21,10 @@ package fr.cnrs.liris.lumos.domain
 import org.joda.time.Instant
 
 case class Event(parent: String, sequence: Long, time: Instant, payload: Event.Payload)
+  extends Ordered[Event] {
+
+  override def compare(that: Event): Int = sequence.compare(that.sequence)
+}
 
 object Event {
 

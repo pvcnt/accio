@@ -16,46 +16,41 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.lumos.domain
+package fr.cnrs.liris.util.scrooge
 
-sealed trait DataType {
-  def name: String
+private[scrooge] trait ParsingContext {
+  /**
+   * Called before we write an item
+   */
+  def write(): Unit
 
-  override def toString: String = name
+  /**
+   * Thrift maps are made up of name value pairs, are we parsing a
+   * thrift map name (e.g. left hand side of a map entry) here?
+   */
+  def isMapKey: Boolean
 }
 
-object DataType {
+private[scrooge] object ParsingContext {
 
-  case object Int extends DataType {
-    override def name = "Int"
+  final class Map extends ParsingContext {
+    private[this] var lhs = false
+
+    override def write(): Unit = lhs = !lhs
+
+    override def isMapKey: Boolean = lhs
   }
 
-  case object Long extends DataType {
-    override def name = "Long"
+  final class Struct extends ParsingContext {
+    override def write(): Unit = {}
+
+    override def isMapKey: Boolean = false
   }
 
-  case object Float extends DataType {
-    override def name = "Float"
-  }
+  final class Sequence extends ParsingContext {
+    override def write(): Unit = {}
 
-  case object Double extends DataType {
-    override def name = "Double"
-  }
-
-  case object String extends DataType {
-    override def name = "String"
-  }
-
-  case object Bool extends DataType {
-    override def name = "Bool"
-  }
-
-  case object Dataset extends DataType {
-    override def name = "Dataset"
-  }
-
-  case object File extends DataType {
-    override def name = "File"
+    override def isMapKey: Boolean = false
   }
 
 }

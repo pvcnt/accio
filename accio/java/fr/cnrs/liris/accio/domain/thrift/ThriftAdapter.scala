@@ -42,6 +42,7 @@ object ThriftAdapter {
     domain.Operator(
       name = obj.name,
       category = obj.category,
+      executable = LumosAdapter.toDomain(obj.executable),
       help = obj.help,
       description = obj.description,
       inputs = obj.inputs.map(toDomain),
@@ -136,6 +137,7 @@ object ThriftAdapter {
     Operator(
       name = obj.name,
       category = obj.category,
+      executable = LumosAdapter.toThrift(obj.executable),
       help = obj.help,
       description = obj.description,
       inputs = obj.inputs.map(toThrift),

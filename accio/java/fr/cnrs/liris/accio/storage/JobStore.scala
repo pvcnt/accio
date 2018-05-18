@@ -36,7 +36,7 @@ trait JobStore {
   def list(
     query: JobStore.Query = JobStore.Query(),
     limit: Option[Int] = None,
-    offset: Option[Int] = None): Future[ResultList[Job]]
+    offset: Option[Int] = None): Future[JobList[Job]]
 
   /**
    * Retrieve a specific job, if it exists.

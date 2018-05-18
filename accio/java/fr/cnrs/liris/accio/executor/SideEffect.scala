@@ -25,7 +25,7 @@ sealed trait SideEffect
 
 object SideEffect {
 
-  case class Schedule(payload: OpPayload) extends SideEffect
+  case class Schedule(stepName: String, payload: OpPayload) extends SideEffect
 
   case class Publish(event: Event) extends SideEffect
 

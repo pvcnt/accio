@@ -14,21 +14,17 @@
 # You should have received a copy of the GNU General Public License
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
-scala_binary(
-  name = "executor",
+scala_library(
+  name = "transport",
   srcs = glob(["*.scala"]),
   deps = [
-    "//accio/java/fr/cnrs/liris/accio/domain",
-    "//accio/java/fr/cnrs/liris/accio/domain/thrift",
-    "//accio/java/fr/cnrs/liris/accio/discovery",
     "//accio/java/fr/cnrs/liris/lumos/domain",
     "//accio/java/fr/cnrs/liris/lumos/domain/thrift",
-    "//accio/java/fr/cnrs/liris/lumos/transport",
+    "//accio/thrift/fr/cnrs/liris/lumos/server",
     "//accio/java/fr/cnrs/liris/util/scrooge",
+    "//3rdparty/jvm/com/twitter:inject_core",
     "//3rdparty/jvm/com/twitter:util_slf4j_api",
-    "//3rdparty/jvm/com/twitter:inject_app",
-    "//3rdparty/jvm/ch/qos/logback:logback_core",
-    "//3rdparty/jvm/ch/qos/logback:logback_classic",
+    "//3rdparty/jvm/com/google/guava",
   ],
-  main_class = "fr.cnrs.liris.accio.executor.AccioExecutorMain",
+  visibility = ["//visibility:public"],
 )

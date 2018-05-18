@@ -22,5 +22,8 @@ scala_library(
     "//accio/java/fr/cnrs/liris/util/scrooge",
     "//3rdparty/jvm/com/twitter:util_slf4j_api",
   ],
+  exports = [
+    "//accio/java/fr/cnrs/liris/lumos/domain",
+  ],
   visibility = ["//visibility:public"],
 )

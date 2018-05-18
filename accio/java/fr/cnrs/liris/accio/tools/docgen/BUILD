@@ -20,7 +20,7 @@ scala_binary(
   deps = [
     "//accio/java/fr/cnrs/liris/accio/api",
     "//accio/java/fr/cnrs/liris/accio/logging",
-    "//accio/java/fr/cnrs/liris/accio/sdk",
+    "//accio/java/fr/cnrs/liris/accio/discovery",
     "//accio/java/fr/cnrs/liris/util",
     "//3rdparty/jvm/com/twitter:inject_app",
   ],

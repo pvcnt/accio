@@ -18,18 +18,18 @@
 
 package fr.cnrs.liris.accio.executor
 
-import fr.cnrs.liris.accio.domain.Channel
+import fr.cnrs.liris.accio.domain.{Channel, Workflow}
 
 /**
  * An executable graph.
  *
  * @param nodes Nodes forming this graph.
  */
-private[executor] class Graph(nodes: Map[String, Node]) {
+private[executor] class Graph(nodes: Map[String, Graph.Node]) {
   /**
    * Return the set of root steps.
    */
-  def roots: Set[Node] = nodes.values.filter(_.isRoot).toSet
+  def roots: Set[Graph.Node] = nodes.values.filter(_.isRoot).toSet
 
   /**
    * Return a step by its name.
@@ -37,17 +37,17 @@ private[executor] class Graph(nodes: Map[String, Node]) {
    * @param name Step name.
    * @throws NoSuchElementException If there is no step with given name.
    */
-  def apply(name: String): Node = nodes(name)
+  def apply(name: String): Graph.Node = nodes(name)
 }
 
 private[executor] object Graph {
-  def create(job: Job): Graph = {
-    val nodes = job.steps.map { step =>
+  def create(workflow: Workflow): Graph = {
+    val nodes = workflow.steps.map { step =>
       val predecessors = step.params.map(_.source).flatMap {
         case Channel.Reference(stepName, _) => Set(stepName)
         case _ => Set.empty[String]
       }.toSet
-      val successors = job.steps.flatMap { other =>
+      val successors = workflow.steps.flatMap { other =>
         other.params.flatMap {
           case Channel(_, Channel.Reference(stepName, _)) if stepName == step.name => Set(other.name)
           case _ => Set.empty[String]
@@ -57,11 +57,12 @@ private[executor] object Graph {
     }
     new Graph(nodes.toMap)
   }
-}
 
-private[executor] case class Node(name: String, predecessors: Set[String], successors: Set[String]) {
-  /**
-   * Check whether this step is a root node, i.e., it does not depend on any other node.
-   */
-  def isRoot: Boolean = predecessors.isEmpty
+  case class Node(name: String, predecessors: Set[String], successors: Set[String]) {
+    /**
+     * Check whether this step is a root node, i.e., it does not depend on any other node.
+     */
+    def isRoot: Boolean = predecessors.isEmpty
+  }
+
 }

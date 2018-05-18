@@ -21,36 +21,35 @@ package fr.cnrs.liris.accio.tools.docgen
 import java.io.{BufferedOutputStream, FileOutputStream, PrintStream}
 import java.nio.file.Files
 
+import com.google.inject.{Inject, Singleton}
+import fr.cnrs.liris.accio.discovery.OpRegistry
 import fr.cnrs.liris.accio.domain.Operator
-import fr.cnrs.liris.accio.api.{DataTypes, Values}
 
 /**
  * Generate documentation for all operators known to a registry in Markdown format.
  */
-final class MarkdownDocgen {
+@Singleton
+final class MarkdownDocgen @Inject()(opRegistry: OpRegistry) {
   /**
-   * Generate documentation w.r.t. given options.
+   * Generate documentation.
    *
-   * @param ops   Operators for which to generate documentation.
    * @param flags Generator options.
    */
-  def generate(ops: Seq[Operator], flags: DocgenOpts): Unit = {
+  def generate(flags: DocgenOpts): Unit = {
     Files.createDirectories(flags.out)
-    opRegistry
-      .ops
+    val ops = opRegistry.ops
       .groupBy(_.category)
       .toSeq
       .sortBy(_._1)
-      .zipWithIndex
-      .foreach { case ((category, ops), idx) =>
-        val out = new PrintStream(new BufferedOutputStream(new FileOutputStream(flags.out.resolve(s"ops-$category.md").toFile)))
-        try {
-          writeIntro(out, flags, category, 50 + idx)
-          ops.toSeq.sortBy(_.name).foreach(opDef => writeOp(out, opDef))
-        } finally {
-          out.close()
-        }
+    ops.zipWithIndex.foreach { case ((category, ops), idx) =>
+      val out = new PrintStream(new BufferedOutputStream(new FileOutputStream(flags.out.resolve(s"ops-$category.md").toFile)))
+      try {
+        writeIntro(out, flags, category, 50 + idx)
+        ops.toSeq.sortBy(_.name).foreach(opDef => writeOp(out, opDef))
+      } finally {
+        out.close()
       }
+    }
   }
 
   private def writeIntro(out: PrintStream, flags: DocgenOpts, category: String, order: Int): Unit = {
@@ -80,10 +79,10 @@ final class MarkdownDocgen {
       out.println("| Input name | Type | Description |")
       out.println("|:-----------|:-----|:------------|")
       opDef.inputs.foreach { argDef =>
-        out.print(s"| `${argDef.name}` | ${DataTypes.stringify(argDef.dataType)}")
+        out.print(s"| `${argDef.name}` | ${argDef.dataType}")
         if (argDef.defaultValue.isDefined) {
-          out.print(s"; optional; default: ${Values.stringify(argDef.defaultValue.get)}")
-        } else if (argDef.isOptional) {
+          out.print(s"; optional; default: ${argDef.defaultValue.get}")
+        } else if (argDef.optional) {
           out.print("; optional")
         } else {
           out.print("; required")
@@ -97,7 +96,7 @@ final class MarkdownDocgen {
       out.println("| Output name | Type | Description |")
       out.println("|:------------|:-----|:------------|")
       opDef.outputs.foreach { argDef =>
-        out.println(s"| `${argDef.name}` | ${DataTypes.stringify(argDef.dataType)} | ${argDef.help.getOrElse("-")} |")
+        out.println(s"| `${argDef.name}` | ${argDef.dataType} | ${argDef.help.getOrElse("-")} |")
       }
       out.println("{: class=\"table table-striped\"}\n")
     }

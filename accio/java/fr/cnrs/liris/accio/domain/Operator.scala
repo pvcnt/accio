@@ -18,11 +18,14 @@
 
 package fr.cnrs.liris.accio.domain
 
+import fr.cnrs.liris.lumos.domain.RemoteFile
+
 /**
  * Definition of an operator.
  *
  * @param name        Unique operator name.
- * @param category    Category. Only used for presentational purposes.
+ * @param category    Category.
+ * @param executable  Binary providing the operator's implementation.
  * @param help        One-line help text.
  * @param description Longer description of what the operator does.
  * @param inputs      Definition of inputs the operator consumes.
@@ -36,6 +39,7 @@ package fr.cnrs.liris.accio.domain
 case class Operator(
   name: String,
   category: String,
+  executable: RemoteFile,
   help: Option[String] = None,
   description: Option[String] = None,
   inputs: Seq[Attribute] = Seq.empty,

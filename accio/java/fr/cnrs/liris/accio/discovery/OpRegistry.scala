@@ -16,46 +16,14 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.lumos.domain
+package fr.cnrs.liris.accio.discovery
 
-sealed trait DataType {
-  def name: String
+import fr.cnrs.liris.accio.domain.Operator
 
-  override def toString: String = name
-}
+trait OpRegistry {
+  def ops: Iterable[Operator]
 
-object DataType {
+  def get(name: String): Option[Operator] = ops.find(_.name == name)
 
-  case object Int extends DataType {
-    override def name = "Int"
-  }
-
-  case object Long extends DataType {
-    override def name = "Long"
-  }
-
-  case object Float extends DataType {
-    override def name = "Float"
-  }
-
-  case object Double extends DataType {
-    override def name = "Double"
-  }
-
-  case object String extends DataType {
-    override def name = "String"
-  }
-
-  case object Bool extends DataType {
-    override def name = "Bool"
-  }
-
-  case object Dataset extends DataType {
-    override def name = "Dataset"
-  }
-
-  case object File extends DataType {
-    override def name = "File"
-  }
-
+  def apply(name: String): Operator = get(name).get
 }

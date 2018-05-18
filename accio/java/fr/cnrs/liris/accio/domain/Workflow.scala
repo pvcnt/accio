@@ -24,7 +24,7 @@ case class Workflow(
   owner: Option[String] = None,
   contact: Option[String] = None,
   labels: Map[String, String] = Map.empty,
-  seed: Option[Long] = None,
+  seed: Long = 0,
   params: Seq[AttrValue] = Seq.empty,
   steps: Seq[Step] = Seq.empty,
   repeat: Int = 1,

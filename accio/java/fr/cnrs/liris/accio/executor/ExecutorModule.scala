@@ -16,46 +16,16 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.lumos.domain
+package fr.cnrs.liris.accio.executor
 
-sealed trait DataType {
-  def name: String
+import com.twitter.inject.TwitterModule
+import fr.cnrs.liris.accio.discovery.DiscoveryModule
+import fr.cnrs.liris.lumos.transport.EventTransportModule
 
-  override def toString: String = name
-}
+object ExecutorModule extends TwitterModule {
+  override def modules = Seq(EventTransportModule, DiscoveryModule)
 
-object DataType {
-
-  case object Int extends DataType {
-    override def name = "Int"
+  override def configure(): Unit = {
+    bind[NameGenerator].to[UUIDNameGenerator]
   }
-
-  case object Long extends DataType {
-    override def name = "Long"
-  }
-
-  case object Float extends DataType {
-    override def name = "Float"
-  }
-
-  case object Double extends DataType {
-    override def name = "Double"
-  }
-
-  case object String extends DataType {
-    override def name = "String"
-  }
-
-  case object Bool extends DataType {
-    override def name = "Bool"
-  }
-
-  case object Dataset extends DataType {
-    override def name = "Dataset"
-  }
-
-  case object File extends DataType {
-    override def name = "File"
-  }
-
 }

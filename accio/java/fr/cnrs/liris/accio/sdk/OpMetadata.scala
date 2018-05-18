@@ -23,6 +23,7 @@ import java.io.IOException
 import com.twitter.util.StorageUnit
 import com.twitter.util.logging.Logging
 import fr.cnrs.liris.accio.domain.{Attribute, Operator}
+import fr.cnrs.liris.lumos.domain.RemoteFile
 import fr.cnrs.liris.util.ResourceFileLoader
 import fr.cnrs.liris.util.StringUtils.maybe
 import fr.cnrs.liris.util.reflect.CaseClass
@@ -36,9 +37,9 @@ import scala.util.matching.Regex
  * @param defn  Operator definition.
  * @param clazz Operator class.
  */
-final class OpMeta(val defn: Operator, val clazz: Class[_])
+final class OpMetadata(val defn: Operator, val clazz: Class[_])
 
-object OpMeta extends Logging {
+object OpMetadata extends Logging {
   /**
    * Pattern for valid operator names.
    */
@@ -49,9 +50,9 @@ object OpMeta extends Logging {
    */
   private[this] val OpRegex: Regex = ("^" + OpPattern + "$").r
 
-  def apply[T <: ScalaOperator[_] : ru.TypeTag]: OpMeta = apply(ru.typeOf[T])
+  def apply[T <: ScalaOperator[_] : ru.TypeTag]: OpMetadata = apply(ru.typeOf[T])
 
-  def apply(tpe: ru.Type): OpMeta = {
+  def apply(tpe: ru.Type): OpMetadata = {
     val opRefl = CaseClass.apply(tpe)
     opRefl.annotations.get[Op] match {
       case None => throw new IllegalArgumentException(s"Operator in $tpe must be annotated with @Op")
@@ -69,6 +70,7 @@ object OpMeta extends Logging {
         val defn = Operator(
           name = name,
           category = op.category,
+          executable = RemoteFile("."),
           inputs = getInputs(opRefl),
           outputs = getOutputs(outRefl),
           help = maybe(op.help),
@@ -76,7 +78,7 @@ object OpMeta extends Logging {
           deprecation = maybe(op.deprecation),
           unstable = op.unstable,
           resources = resources)
-        new OpMeta(defn, clazz)
+        new OpMetadata(defn, clazz)
     }
   }
 

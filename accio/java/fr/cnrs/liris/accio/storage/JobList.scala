@@ -16,46 +16,22 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.lumos.domain
+package fr.cnrs.liris.accio.storage
 
-sealed trait DataType {
-  def name: String
+/**
+ * Results and total number of results.
+ *
+ * @param results    List of objects.
+ * @param totalCount Total number of results.
+ */
+case class JobList[T](results: Seq[T], totalCount: Int)
 
-  override def toString: String = name
-}
-
-object DataType {
-
-  case object Int extends DataType {
-    override def name = "Int"
+object JobList {
+  def slice[T](items: Seq[T], offset: Option[Int], limit: Option[Int]): JobList[T] = {
+    val totalCount = items.size
+    var results = items
+    offset.foreach { offset => results = results.drop(offset) }
+    limit.foreach { limit => results = results.take(limit) }
+    JobList(results, totalCount)
   }
-
-  case object Long extends DataType {
-    override def name = "Long"
-  }
-
-  case object Float extends DataType {
-    override def name = "Float"
-  }
-
-  case object Double extends DataType {
-    override def name = "Double"
-  }
-
-  case object String extends DataType {
-    override def name = "String"
-  }
-
-  case object Bool extends DataType {
-    override def name = "Bool"
-  }
-
-  case object Dataset extends DataType {
-    override def name = "Dataset"
-  }
-
-  case object File extends DataType {
-    override def name = "File"
-  }
-
 }

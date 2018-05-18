@@ -19,7 +19,9 @@ scala_library(
   srcs = glob(["*.scala"]),
   deps = [
     "//3rdparty/jvm/com/twitter:util_codec",
+    "//3rdparty/jvm/com/twitter:util_core",
     "//3rdparty/jvm/com/twitter:scrooge_core",
+    "//3rdparty/jvm/com/google/guava",
     "//external:io_bazel_rules_scala/dependency/thrift/libthrift",
   ],
   visibility = ["//visibility:public"],

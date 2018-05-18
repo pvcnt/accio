@@ -1,6 +1,6 @@
 /*
  * Accio is a platform to launch computer science experiments.
- * Copyright (C) 2016-2018 Vincent Primault <v.primault@ucl.ac.uk>
+ * Copyright (C) 2016-2018 Vincent Primault <vincent.primault@liris.cnrs.fr>
  *
  * Accio is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,22 +16,12 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.storage
+package fr.cnrs.liris.accio.executor
 
-/**
- * Results and total number of results.
- *
- * @param results    List of objects.
- * @param totalCount Total number of results.
- */
-case class ResultList[T](results: Seq[T], totalCount: Int)
+import fr.cnrs.liris.accio.domain.OpResult
 
-object ResultList {
-  def slice[T](items: Seq[T], offset: Option[Int], limit: Option[Int]): ResultList[T] = {
-    val totalCount = items.size
-    var results = items
-    offset.foreach { offset => results = results.drop(offset) }
-    limit.foreach { limit => results = results.take(limit) }
-    ResultList(results, totalCount)
-  }
+trait TaskLifecycleHandler {
+  def taskStarted(name: String): Unit
+
+  def taskCompleted(name: String, exitCode: Int, result: OpResult): Unit
 }

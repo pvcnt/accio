@@ -16,46 +16,26 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.lumos.domain
+package fr.cnrs.liris.lumos.transport
 
-sealed trait DataType {
-  def name: String
+import java.io.{BufferedOutputStream, FileOutputStream}
+import java.nio.file.Path
 
-  override def toString: String = name
-}
+import com.twitter.io.{Buf, Writer}
+import com.twitter.util.{Future, Time}
+import fr.cnrs.liris.lumos.domain.Event
 
-object DataType {
-
-  case object Int extends DataType {
-    override def name = "Int"
+abstract class FileEventTransport(path: Path) extends EventTransport {
+  private[this] val writer = {
+    val os = new BufferedOutputStream(new FileOutputStream(path.toFile))
+    Writer.fromOutputStream(os)
   }
 
-  case object Long extends DataType {
-    override def name = "Long"
+  override final def sendEvent(event: Event): Future[Unit] = synchronized {
+    writer.write(serialize(event))
   }
 
-  case object Float extends DataType {
-    override def name = "Float"
-  }
+  override final def close(deadline: Time): Future[Unit] = writer.close(deadline)
 
-  case object Double extends DataType {
-    override def name = "Double"
-  }
-
-  case object String extends DataType {
-    override def name = "String"
-  }
-
-  case object Bool extends DataType {
-    override def name = "Bool"
-  }
-
-  case object Dataset extends DataType {
-    override def name = "Dataset"
-  }
-
-  case object File extends DataType {
-    override def name = "File"
-  }
-
+  protected def serialize(event: Event): Buf
 }

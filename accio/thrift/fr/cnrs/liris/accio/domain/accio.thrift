@@ -45,13 +45,12 @@ struct Step {
 struct Workflow {
   1: optional string owner;
   2: optional string contact;
-  3: optional string title;
-  4: map<string, string> labels;
-  5: optional i64 seed;
-  6: list<lumos.AttrValue> params;
-  7: list<Step> steps;
-  8: i32 repeat = 1;
-  9: map<string, i64> resources;
+  3: map<string, string> labels;
+  4: i64 seed = 0;
+  5: list<lumos.AttrValue> params;
+  6: list<Step> steps;
+  7: i32 repeat = 1;
+  8: map<string, i64> resources;
 }
 
 struct OpPayload {
@@ -80,11 +79,12 @@ struct Attribute {
 struct Operator {
   1: string name;
   2: string category;
-  3: optional string help;
-  4: optional string description;
-  5: list<Attribute> inputs;
-  6: list<Attribute> outputs;
-  7: optional string deprecation;
-  8: map<string, i64> resources;
-  9: bool unstable;
+  3: lumos.RemoteFile executable;
+  4: optional string help;
+  5: optional string description;
+  6: list<Attribute> inputs;
+  7: list<Attribute> outputs;
+  8: optional string deprecation;
+  9: map<string, i64> resources;
+  10: bool unstable;
 }

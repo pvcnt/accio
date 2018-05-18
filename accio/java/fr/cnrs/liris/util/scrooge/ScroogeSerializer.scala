@@ -20,6 +20,7 @@ package fr.cnrs.liris.util.scrooge
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, InputStream, OutputStream}
 
+import com.twitter.io.Buf
 import com.twitter.scrooge.{ThriftStruct, ThriftStructCodec}
 import com.twitter.util.Base64StringEncoder
 import org.apache.thrift.protocol.{TBinaryProtocol, TCompactProtocol, TProtocolFactory}
@@ -45,6 +46,8 @@ trait ScroogeSerializer {
     baos.toByteArray
   }
 
+  def toBuf[T <: ThriftStruct](obj: T): Buf = Buf.ByteArray.Owned(toBytes(obj))
+
   def write[T <: ThriftStruct](obj: T, os: OutputStream): Unit = {
     val protocol = protocolFactory.getProtocol(new TIOStreamTransport(os))
     obj.write(protocol)
@@ -59,4 +62,8 @@ object BinaryScroogeSerializer extends ScroogeSerializer {
 
 object CompactScroogeSerializer extends ScroogeSerializer {
   override protected val protocolFactory = new TCompactProtocol.Factory
+}
+
+object TextScroogeSerializer extends ScroogeSerializer {
+  override protected val protocolFactory = new TTextProtocol.Factory
 }

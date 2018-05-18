@@ -16,14 +16,19 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.executor
+package fr.cnrs.liris.lumos.transport
 
-import fr.cnrs.liris.accio.domain.Step
-import fr.cnrs.liris.lumos.domain.AttrValue
+import java.nio.file.Path
 
-case class Job(
-  name: String,
-  params: Seq[AttrValue],
-  seed: Long,
-  steps: Seq[Step],
-  resources: Map[String, Long])
+import com.twitter.io.Buf
+import fr.cnrs.liris.lumos.domain.Event
+import fr.cnrs.liris.lumos.domain.thrift.ThriftAdapter
+import fr.cnrs.liris.util.scrooge.TextScroogeSerializer
+
+final class TextFileEventTransport(path: Path) extends FileEventTransport(path) {
+  override def name = "TextFile"
+
+  override def serialize(event: Event): Buf = {
+    TextScroogeSerializer.toBuf(ThriftAdapter.toThrift(event))
+  }
+}
