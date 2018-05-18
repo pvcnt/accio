@@ -22,7 +22,7 @@ import java.nio.file.{Files, Path}
 import java.util.UUID
 
 import com.twitter.util.logging.Logging
-import fr.cnrs.liris.accio.domain.{Attribute, OpPayload, OpResult, Operator}
+import fr.cnrs.liris.accio.domain.{Attribute, OpPayload, OpResult}
 import fr.cnrs.liris.lumos.domain.{AttrValue, ErrorDatum, Value}
 
 import scala.util.control.NonFatal
@@ -35,11 +35,10 @@ import scala.util.control.NonFatal
  * result should be the same outputs (modulo the metrics, as timing or load information may vary
  * and are not controllable).
  *
- * @param opDef   Operator definition.
- * @param clazz   Operator class.
+ * @param opMeta  Operator metadata.
  * @param workDir Path to the sandbox, where the executor can write temporary files.
  */
-final class OpExecutor(opDef: Operator, clazz: Class[_], workDir: Path) extends Logging {
+final class OpExecutor(opMeta: OpMetadata, workDir: Path) extends Logging {
   /**
    * Execute an operator.
    *
@@ -53,22 +52,22 @@ final class OpExecutor(opDef: Operator, clazz: Class[_], workDir: Path) extends 
 
       val operator = createOperator(payload.params)
 
-      val maybeSeed = if (opDef.unstable) Some(payload.seed) else None
+      val maybeSeed = if (opMeta.defn.unstable) Some(payload.seed) else None
       val ctx = new OpContext(maybeSeed, sandboxDir.resolve("outputs"))
       val profiler = new JvmProfiler
 
       // The actual operator is the only profiled section. The outcome is either an output object or an exception.
-      logger.debug(s"Starting operator ${opDef.name} (sandbox in ${sandboxDir.toAbsolutePath})")
+      logger.debug(s"Starting operator ${opMeta.defn.name} (sandbox in ${sandboxDir.toAbsolutePath})")
       val res = profiler.profile {
         try {
           Right(operator.execute(ctx))
         } catch {
           case NonFatal(e) =>
-            logger.warn(s"Unexpected error while executing operator ${opDef.name}", e)
+            logger.warn(s"Unexpected error while executing operator ${opMeta.defn.name}", e)
             Left(ErrorDatum.create(e))
         }
       }
-      logger.debug(s"Completed operator ${opDef.name}")
+      logger.debug(s"Completed operator ${opMeta.defn.name}")
 
       // We convert the outcome into an exit code, artifacts, metrics and possibly and error.
       val metrics = profiler.metrics
@@ -87,7 +86,7 @@ final class OpExecutor(opDef: Operator, clazz: Class[_], workDir: Path) extends 
   }
 
   private def createOperator(inputs: Seq[AttrValue]): ScalaOperator[_] = {
-    val args = opDef.inputs.map { attr =>
+    val args = opMeta.defn.inputs.map { attr =>
       inputs.find(_.name == attr.name) match {
         case None =>
           attr.defaultValue match {
@@ -108,12 +107,12 @@ final class OpExecutor(opDef: Operator, clazz: Class[_], workDir: Path) extends 
           if (attr.optional) Some(arg) else arg
       }
     }
-    val ctor = clazz.getConstructors.head
+    val ctor = opMeta.clazz.getConstructors.head
     ctor.newInstance(args.map(_.asInstanceOf[AnyRef]): _*).asInstanceOf[ScalaOperator[_]]
   }
 
   private def extractArtifacts(out: Product): Seq[AttrValue] = {
-    opDef.outputs.zipWithIndex.map { case (attr, idx) =>
+    opMeta.defn.outputs.zipWithIndex.map { case (attr, idx) =>
       val rawValue = out.productElement(idx)
       // The exception should never be thrown, if everything else is correct. It seems indeed
       // extremely difficult for the client to return something over the wrong type, because it

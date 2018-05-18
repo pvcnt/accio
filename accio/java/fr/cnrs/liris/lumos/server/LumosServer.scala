@@ -22,11 +22,13 @@ import com.twitter.finatra.thrift.ThriftServer
 import com.twitter.finatra.thrift.filters._
 import com.twitter.finatra.thrift.routing.ThriftRouter
 import fr.cnrs.liris.finatra.auth.{AuthFilter, AuthModule}
+import fr.cnrs.liris.finatra.errors.ServerErrorMapper
+import fr.cnrs.liris.lumos.storage.install.StorageModule
 
 object LumosServerMain extends LumosServer
 
 class LumosServer extends ThriftServer {
-  override def modules = Seq(AuthModule)
+  override def modules = Seq(AuthModule, StorageModule)
 
   override def configureThrift(router: ThriftRouter): Unit = {
     router
@@ -37,9 +39,8 @@ class LumosServer extends ThriftServer {
       .filter[StatsFilter]
       .filter[AuthFilter]
       .filter[ExceptionMappingFilter]
-      .exceptionMapper[AuthExceptionMapper]
-      .exceptionMapper[LumosExceptionMapper]
-      .add[AgentServiceController]
+      .exceptionMapper[ServerErrorMapper]
+      .add[LumosServiceController]
   }
 
   override def warmup(): Unit = {

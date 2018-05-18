@@ -45,7 +45,7 @@ final class EventHandler @Inject()(jobStore: JobStore) {
               case Right(newJob) => jobStore.replace(newJob)
               case Left(status) => Future.value(status)
             }
-          case None => Future.value(Status.NotFound(jobStore.resourceType, event.parent))
+          case None => Future.value(Status.NotFound(event.parent))
         }
     } finally {
       lock.unlock()

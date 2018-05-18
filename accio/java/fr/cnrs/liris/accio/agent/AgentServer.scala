@@ -27,7 +27,7 @@ import fr.cnrs.liris.locapriv.install.OpsModule
 object AgentServerMain extends AgentServer
 
 class AgentServer extends ThriftServer {
-  override def modules = Seq(AgentServerModule, OpsModule)
+  override def modules = Seq(AgentServerModule)
 
   override def configureThrift(router: ThriftRouter): Unit = {
     router
@@ -38,7 +38,6 @@ class AgentServer extends ThriftServer {
       .filter[StatsFilter]
       .filter[AuthFilter]
       .filter[ExceptionMappingFilter]
-      .exceptionMapper[AgentExceptionMapper]
       .add[AgentServiceController]
   }
 

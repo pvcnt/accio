@@ -125,7 +125,7 @@ object OpMetadata extends Logging {
           val defaultValue = if (isOptional) {
             None
           } else {
-            field.defaultValue.flatMap(Values.encode(_, dataType))
+            field.defaultValue.flatMap(Values.encode(_, dataType, aspects))
           }
           Attribute(
             name = field.name,
@@ -139,13 +139,10 @@ object OpMetadata extends Logging {
 
   private def getOutputs(outRefl: CaseClass) = {
     outRefl.fields.flatMap { field =>
-      field.annotations
-        .get[Arg]
-        .map { out =>
-          val (dataType, aspects) = Values.dataTypeOf(field.scalaType.tpe)
-          Attribute(field.name, dataType = dataType, aspects = aspects, help = maybe(out.help))
-        }
-        .toSeq
+      field.annotations.get[Arg].map { out =>
+        val (dataType, aspects) = Values.dataTypeOf(field.scalaType.tpe)
+        Attribute(field.name, dataType = dataType, aspects = aspects, help = maybe(out.help))
+      }.toSeq
     }
   }
 

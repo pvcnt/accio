@@ -28,11 +28,15 @@ scala_library(
     "//accio/java/fr/cnrs/liris/util",
     "//3rdparty/jvm/com/twitter:util_slf4j_api",
     "//3rdparty/jvm/com/twitter:util_jvm",
+    "//3rdparty/jvm/com/twitter:util_core",
     "//3rdparty/jvm/com/github/nscala_time",
   ],
   exports = [
+    "//accio/java/fr/cnrs/liris/util/geo",
     "//accio/java/fr/cnrs/liris/accio/domain",
     "//accio/java/fr/cnrs/liris/lumos/domain",
+    "//3rdparty/jvm/com/twitter:util_core",
+    "//3rdparty/jvm/com/github/nscala_time",
   ],
   visibility = ["//visibility:public"],
 )

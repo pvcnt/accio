@@ -41,6 +41,7 @@ object Values {
       case t if t <:< typeOf[org.joda.time.ReadableInstant] => (DataType.Long, Set("time"))
       case t if t <:< typeOf[org.joda.time.ReadableDuration] => (DataType.Long, Set("duration"))
       case t if t <:< typeOf[fr.cnrs.liris.util.geo.Distance] => (DataType.Double, Set("distance"))
+      case t if t <:< typeOf[fr.cnrs.liris.lumos.domain.RemoteFile] => (DataType.File, Set.empty)
       case _ => throw new IllegalArgumentException(s"Unsupported Scala type: $tpe")
     }
 

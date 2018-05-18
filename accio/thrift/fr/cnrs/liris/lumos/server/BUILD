@@ -23,6 +23,8 @@ scrooge_scala_library(
     ":thrift",
     "//accio/thrift/fr/cnrs/liris/lumos/domain:thrift",
     "//accio/thrift/fr/cnrs/liris/lumos/domain",
+    "//accio/thrift/fr/cnrs/liris/finatra/errors:thrift",
+    "//accio/thrift/fr/cnrs/liris/finatra/errors",
     "//3rdparty/jvm/com/twitter:finagle_thrift",
   ],
   visibility = ["//visibility:public"],

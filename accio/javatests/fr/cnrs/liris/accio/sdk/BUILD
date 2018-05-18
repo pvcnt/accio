@@ -19,7 +19,11 @@ scala_test(
   srcs = glob(["*.scala"]),
   deps = [
     "//accio/java/fr/cnrs/liris/accio/sdk",
+    "//accio/java/fr/cnrs/liris/accio/sdk:annotations",
+    "//accio/java/fr/cnrs/liris/accio/domain",
+    "//accio/java/fr/cnrs/liris/lumos/domain",
     "//accio/javatests/fr/cnrs/liris/testing",
+    "//3rdparty/jvm/com/twitter:util_slf4j_api",
   ],
   size = "small",
 )

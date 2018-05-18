@@ -18,6 +18,7 @@ scala_library(
   name = "auth",
   srcs = glob(["*.scala"]),
   deps = [
+    "//accio/java/fr/cnrs/liris/finatra/errors",
     "//accio/java/fr/cnrs/liris/finatra/webhook",
     "//accio/java/fr/cnrs/liris/util/cache",
     "//accio/java/fr/cnrs/liris/util",

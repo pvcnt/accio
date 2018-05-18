@@ -81,7 +81,7 @@ trait ScalaLibrary extends Logging {
         logger.error(s"Unknown operator: ${payload.op}")
         3
       case Some(opMeta) =>
-        val executor = new OpExecutor(opMeta.defn, opMeta.clazz, Paths.get("."))
+        val executor = new OpExecutor(opMeta, Paths.get("."))
         val res = executor.execute(payload)
         val os = new FileOutputStream(outputFileName)
         try {

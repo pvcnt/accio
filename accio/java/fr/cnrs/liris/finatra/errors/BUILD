@@ -14,16 +14,12 @@
 # You should have received a copy of the GNU General Public License
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
-scala_binary(
-  name = "docgen",
+scala_library(
+  name = "errors",
   srcs = glob(["*.scala"]),
   deps = [
-    "//accio/java/fr/cnrs/liris/accio/domain",
-    "//accio/java/fr/cnrs/liris/accio/discovery",
-    "//accio/java/fr/cnrs/liris/util/logback",
-    "//accio/java/fr/cnrs/liris/util",
-    "//3rdparty/jvm/com/twitter:inject_app",
+    "//accio/thrift/fr/cnrs/liris/finatra/errors",
+    "//3rdparty/jvm/com/twitter:finatra_thrift",
   ],
-  resource_strip_prefix = "accio/java",
-  main_class = "fr.cnrs.liris.accio.tools.docgen.AccioDocgenMain",
+  visibility = ["//visibility:public"],
 )

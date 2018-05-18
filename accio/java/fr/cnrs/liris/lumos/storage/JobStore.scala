@@ -25,8 +25,6 @@ import fr.cnrs.liris.lumos.domain.{Job, JobList, Status}
  * Store providing access to jobs.
  */
 trait JobStore {
-  val resourceType = "jobs"
-
   /**
    * Search for jobs matching a given query. Jobs are returned ordered in inverse chronological
    * order, the most recent matching job being the first result.

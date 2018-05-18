@@ -20,7 +20,6 @@ scala_library(
   deps = [
     "//accio/java/fr/cnrs/liris/accio/scheduler",
     "//accio/java/fr/cnrs/liris/accio/api",
-    "//accio/java/fr/cnrs/liris/accio/config:annotations",
     "//accio/java/fr/cnrs/liris/util",
     "//accio/java/fr/cnrs/liris/util/scrooge",
     "//accio/thrift/fr/cnrs/liris/accio/api",

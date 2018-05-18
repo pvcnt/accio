@@ -25,6 +25,7 @@ import com.twitter.finagle.Service
 import com.twitter.finagle.thrift.ClientId
 import com.twitter.finatra.thrift.{ThriftFilter, ThriftRequest}
 import com.twitter.util.Future
+import fr.cnrs.liris.finatra.errors.ServerError
 
 @Singleton
 final class AuthFilter @Inject()(chain: AuthChain) extends ThriftFilter {
@@ -34,7 +35,7 @@ final class AuthFilter @Inject()(chain: AuthChain) extends ThriftFilter {
     } else {
       val credentials = request.clientId.map(_.name)
       chain.authenticate(credentials).flatMap {
-        case None => Future.exception(UnauthenticatedException(credentials))
+        case None => Future.exception(ServerError.Unauthenticated)
         case Some(userInfo) => UserInfo.let(userInfo)(service(request))
       }
     }

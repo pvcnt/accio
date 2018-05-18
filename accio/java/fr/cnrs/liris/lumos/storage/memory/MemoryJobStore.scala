@@ -51,7 +51,7 @@ private[storage] final class MemoryJobStore(statsReceiver: StatsReceiver) extend
     if (index.putIfAbsent(job.name, job).isEmpty) {
       Future.value(Status.Ok)
     } else {
-      Future.value(Status.AlreadyExists(resourceType, job.name))
+      Future.value(Status.AlreadyExists(job.name))
     }
   }
 
@@ -59,7 +59,7 @@ private[storage] final class MemoryJobStore(statsReceiver: StatsReceiver) extend
     if (index.replace(job.name, job).isDefined) {
       Future.value(Status.Ok)
     } else {
-      Future.value(Status.NotFound(resourceType, job.name))
+      Future.value(Status.NotFound(job.name))
     }
   }
 
@@ -67,7 +67,7 @@ private[storage] final class MemoryJobStore(statsReceiver: StatsReceiver) extend
     if (index.remove(name).isDefined) {
       Future.value(Status.Ok)
     } else {
-      Future.value(Status.NotFound(resourceType, name))
+      Future.value(Status.NotFound(name))
     }
   }
 
