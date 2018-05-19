@@ -19,7 +19,7 @@
 package fr.cnrs.liris.accio.tools.cli.commands
 
 import com.twitter.util.Future
-import fr.cnrs.liris.accio.agent.ListLogsRequest
+import fr.cnrs.liris.accio.server.ListLogsRequest
 import fr.cnrs.liris.accio.tools.cli.event.Event
 
 final class LogsCommand extends Command with ClientCommand {

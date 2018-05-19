@@ -18,9 +18,10 @@
 
 package fr.cnrs.liris.accio.domain
 
-import fr.cnrs.liris.lumos.domain.AttrValue
+import fr.cnrs.liris.lumos.domain.{AttrValue, Value}
 
 case class Workflow(
+  name: String = "",
   owner: Option[String] = None,
   contact: Option[String] = None,
   labels: Map[String, String] = Map.empty,
@@ -29,3 +30,19 @@ case class Workflow(
   steps: Seq[Step] = Seq.empty,
   repeat: Int = 1,
   resources: Map[String, Long] = Map.empty)
+
+case class Step(name: String, op: String, params: Seq[Channel])
+
+case class Channel(name: String, source: Channel.Source)
+
+object Channel {
+
+  sealed trait Source
+
+  case class Reference(step: String, output: String) extends Source
+
+  case class Param(name: String) extends Source
+
+  case class Constant(value: Value) extends Source
+
+}

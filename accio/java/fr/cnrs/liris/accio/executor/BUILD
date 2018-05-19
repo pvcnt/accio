@@ -25,6 +25,7 @@ scala_binary(
     "//accio/java/fr/cnrs/liris/lumos/domain/thrift",
     "//accio/java/fr/cnrs/liris/lumos/transport",
     "//accio/java/fr/cnrs/liris/util/scrooge",
+    "//accio/java/fr/cnrs/liris/util/jvm",
     "//3rdparty/jvm/com/twitter:util_slf4j_api",
     "//3rdparty/jvm/com/twitter:inject_app",
     "//3rdparty/jvm/ch/qos/logback:logback_core",

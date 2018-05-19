@@ -25,3 +25,9 @@ trait TaskLifecycleHandler {
 
   def taskCompleted(name: String, exitCode: Int, result: OpResult): Unit
 }
+
+object NullTaskLifecycleHandler extends TaskLifecycleHandler {
+  override def taskStarted(name: String): Unit = {}
+
+  override def taskCompleted(name: String, exitCode: Int, result: OpResult): Unit = {}
+}

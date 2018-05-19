@@ -19,7 +19,7 @@
 package fr.cnrs.liris.accio.tools.cli.controller
 
 import com.twitter.util.Future
-import fr.cnrs.liris.accio.agent.AgentService
+import fr.cnrs.liris.accio.server.AgentService
 import fr.cnrs.liris.accio.tools.cli.event.Reporter
 
 case class NoResultException() extends Exception

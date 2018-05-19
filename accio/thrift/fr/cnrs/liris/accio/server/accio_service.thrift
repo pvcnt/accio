@@ -70,7 +70,7 @@ struct ValidateWorkflowResponse {
   2: required list<errors.FieldViolation> errors;
 }
 
-service AgentService {
+service AccioService {
   // Get information about this server.
   GetInfoResponse getInfo(1: GetInfoRequest req) throws (1: errors.ServerException e);
 

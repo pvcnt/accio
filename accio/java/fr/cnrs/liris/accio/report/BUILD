@@ -18,11 +18,10 @@ scala_library(
   name = "report",
   srcs = glob(["*.scala"]),
   deps = [
-    "//accio/java/fr/cnrs/liris/accio/api",
+    "//accio/java/fr/cnrs/liris/accio/domain",
     "//accio/java/fr/cnrs/liris/accio/sdk",
     "//accio/java/fr/cnrs/liris/util/geo",
     "//accio/java/fr/cnrs/liris/util",
-    "//accio/thrift/fr/cnrs/liris/accio/api",
     "//3rdparty/jvm/com/github/nscala_time",
   ],
   visibility = ["//visibility:public"],

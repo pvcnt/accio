@@ -27,7 +27,7 @@ import org.joda.time.Instant
 
 import scala.collection.mutable
 
-final class StateMachine(workflow: Workflow, jobName: String) extends Logging {
+final class StateMachine(workflow: Workflow) extends Logging {
   private[this] val artifacts = mutable.Map.empty[String, AttrValue]
   private[this] val tasks = mutable.Map.empty[String, ExecStatus.State]
   private[this] val graph = Graph.create(workflow)
@@ -48,8 +48,19 @@ final class StateMachine(workflow: Workflow, jobName: String) extends Logging {
     Seq(SideEffect.Publish(createEvent(Event.JobCompleted(outputs))))
   }
 
-  def isCompleted: Boolean = synchronized {
-    tasks.values.forall(_.isCompleted)
+  def currentState: ExecStatus.State = synchronized {
+    val states = tasks.values.toSet
+    if (states == Set(ExecStatus.Pending)) {
+      ExecStatus.Pending
+    } else if (states.contains(ExecStatus.Running)) {
+      ExecStatus.Running
+    } else if (states == Set(ExecStatus.Successful)) {
+      ExecStatus.Successful
+    } else if (states.contains(ExecStatus.Canceled)) {
+      ExecStatus.Canceled
+    } else {
+      ExecStatus.Failed
+    }
   }
 
   def stepStarted(stepName: String): Seq[SideEffect] = synchronized {
@@ -146,6 +157,6 @@ final class StateMachine(workflow: Workflow, jobName: String) extends Logging {
   }
 
   private def createEvent(payload: Event.Payload) = {
-    Event(jobName, sequence.getAndIncrement(), Instant.now, payload)
+    Event(workflow.name, sequence.getAndIncrement(), Instant.now, payload)
   }
 }

@@ -54,6 +54,7 @@ object ThriftAdapter {
 
   def toDomain(obj: Workflow): domain.Workflow = {
     domain.Workflow(
+      name = obj.name,
       owner = obj.owner,
       contact = obj.contact,
       labels = obj.labels.toMap,
@@ -108,6 +109,7 @@ object ThriftAdapter {
 
   def toThrift(obj: domain.Workflow): Workflow = {
     Workflow(
+      name = obj.name,
       owner = obj.owner,
       contact = obj.contact,
       labels = obj.labels,

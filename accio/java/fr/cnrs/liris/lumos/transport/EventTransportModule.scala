@@ -33,6 +33,10 @@ object EventTransportModule extends TwitterModule {
   private[this] val textFile = flag[String]("event.text.file", "File where to write Lumos events in Thrift text format")
   private[this] val serverAddress = flag[String]("event.server.address", "Address to a server where to send Lumos events")
 
+  def forwardableArgs: Seq[String] = {
+    flags.filter(_.isDefined).map(flag => s"-${flag.name}=${flag()}")
+  }
+
   override def configure(): Unit = {
     val transports = ScalaMultibinder.newSetBinder[EventTransport](binder)
     if (binaryFile.isDefined) {
@@ -44,7 +48,6 @@ object EventTransportModule extends TwitterModule {
     if (serverAddress.isDefined) {
       transports.addBinding.to[LumosServiceEventTransport]
     }
-
     bind[EventTransport].to[MultiplexerEventTransport]
   }
 

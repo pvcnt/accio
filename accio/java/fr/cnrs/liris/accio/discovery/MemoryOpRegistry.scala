@@ -18,8 +18,6 @@
 
 package fr.cnrs.liris.accio.discovery
 
-import com.google.inject.{Inject, Singleton}
 import fr.cnrs.liris.accio.domain.Operator
 
-@Singleton
-final class MemoryOpRegistry @Inject()(val ops: Set[Operator]) extends OpRegistry
+final class MemoryOpRegistry(val ops: Set[Operator]) extends OpRegistry

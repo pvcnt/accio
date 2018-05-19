@@ -43,14 +43,15 @@ struct Step {
 }
 
 struct Workflow {
-  1: optional string owner;
-  2: optional string contact;
-  3: map<string, string> labels;
-  4: i64 seed = 0;
-  5: list<lumos.AttrValue> params;
-  6: list<Step> steps;
-  7: i32 repeat = 1;
-  8: map<string, i64> resources;
+  1: string name;
+  2: optional string owner;
+  3: optional string contact;
+  4: map<string, string> labels;
+  5: i64 seed = 0;
+  6: list<lumos.AttrValue> params;
+  7: list<Step> steps;
+  8: i32 repeat = 1;
+  9: map<string, i64> resources;
 }
 
 struct OpPayload {

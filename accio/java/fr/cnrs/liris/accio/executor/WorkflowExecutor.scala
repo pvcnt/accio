@@ -24,18 +24,17 @@ import com.twitter.util.logging.Logging
 import com.twitter.util.{Future, Promise}
 import fr.cnrs.liris.accio.discovery.OpRegistry
 import fr.cnrs.liris.accio.domain.{OpResult, Workflow}
+import fr.cnrs.liris.lumos.domain.ExecStatus
 import fr.cnrs.liris.lumos.transport.EventTransport
 
 final class WorkflowExecutor(
   workflow: Workflow,
   workDir: Path,
-  opRegistry: OpRegistry,
-  eventTransport: EventTransport,
-  nameGenerator: NameGenerator)
+  registry: OpRegistry,
+  transport: EventTransport)
   extends Logging {
 
-  private[this] val jobName = nameGenerator.generateName()
-  private[this] val stateMachine = new StateMachine(workflow, jobName)
+  private[this] val stateMachine = new StateMachine(workflow)
   private[this] val handler = new TaskLifecycleHandler {
     override def taskCompleted(name: String, exitCode: Int, result: OpResult): Unit = {
       applySideEffects(stateMachine.stepCompleted(name, exitCode, result))
@@ -43,29 +42,30 @@ final class WorkflowExecutor(
 
     override def taskStarted(name: String): Unit = applySideEffects(stateMachine.stepStarted(name))
   }
-  private[this] val scheduler = new TaskScheduler(workDir, handler, workflow.resources)
-  private[this] val promise = new Promise[Unit]
+  private[this] val scheduler = new TaskExecutor(workDir, handler)
+  private[this] val promise = new Promise[Int]
 
-  def execute(): Future[Unit] = {
-    logger.info(s"Starting the execution of job $jobName")
+  def execute(): Future[Int] = {
+    logger.info(s"Starting the execution of workflow ${workflow.name}")
     applySideEffects(stateMachine.startJob())
     promise
   }
 
   private def applySideEffects(sideEffects: Iterable[SideEffect]): Unit = {
     sideEffects.foreach {
-      case SideEffect.Publish(event) => eventTransport.sendEvent(event)
+      case SideEffect.Publish(event) => transport.sendEvent(event)
       case SideEffect.Kill(name) => scheduler.kill(name)
       case SideEffect.Schedule(stepName, payload) =>
-        opRegistry.get(payload.op) match {
+        registry.get(payload.op) match {
           case None =>
-            logger.error(s"Unknown operator: ${payload.op} (known operators are ${opRegistry.ops.map(_.name).mkString(", ")})")
+            logger.error(s"Unknown operator: ${payload.op} (registered operators: ${registry.ops.map(_.name).mkString(", ")})")
             applySideEffects(stateMachine.cancelJob())
-          case Some(op) => scheduler.schedule(stepName, op.executable, payload)
+          case Some(op) => scheduler.submit(stepName, op.executable, payload)
         }
     }
-    if (stateMachine.isCompleted) {
-      promise.setDone()
+    val state = stateMachine.currentState
+    if (state.isCompleted) {
+      promise.setValue(if (state == ExecStatus.Successful) 0 else 1)
     }
   }
 }

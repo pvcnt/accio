@@ -29,6 +29,7 @@ scala_test(
     "//3rdparty/jvm/com/github/nscala_time",
     "//3rdparty/jvm/org/scalanlp:breeze",
     "//3rdparty/jvm/com/twitter:util_slf4j_api",
+    "//3rdparty/jvm/com/twitter:util_jvm",
   ],
   size = "small",
 )

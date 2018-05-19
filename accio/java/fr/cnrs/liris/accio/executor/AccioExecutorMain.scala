@@ -23,9 +23,9 @@ import java.nio.file.Paths
 import com.twitter.inject.app.App
 import com.twitter.util.Await
 import com.twitter.util.logging.Logging
-import fr.cnrs.liris.accio.discovery.OpRegistry
+import fr.cnrs.liris.accio.discovery.{DiscoveryModule, OpRegistry}
 import fr.cnrs.liris.accio.domain.thrift.{ThriftAdapter, Workflow}
-import fr.cnrs.liris.lumos.transport.EventTransport
+import fr.cnrs.liris.lumos.transport.{EventTransport, EventTransportModule}
 import fr.cnrs.liris.util.scrooge.BinaryScroogeSerializer
 
 import scala.util.control.NonFatal
@@ -36,7 +36,7 @@ object AccioExecutorMain extends AccioExecutor
  * Accio executor.
  */
 class AccioExecutor extends App with Logging {
-  override def modules = Seq(ExecutorModule)
+  override def modules = Seq(EventTransportModule, DiscoveryModule)
 
   override def run(): Unit = {
     require(args.length == 1, "There should be a single argument")
@@ -47,10 +47,9 @@ class AccioExecutor extends App with Logging {
         logger.error(s"Failed to read workflow from ${args.head}", e)
         sys.exit(1)
     }
-
     val eventTransport = injector.instance[EventTransport]
     val opRegistry = injector.instance[OpRegistry]
-    val executor = new WorkflowExecutor(workflow, Paths.get(""), opRegistry, eventTransport, injector.instance[NameGenerator])
+    val executor = new WorkflowExecutor(workflow, Paths.get("."), opRegistry, eventTransport)
     Await.ready(executor.execute())
   }
 }

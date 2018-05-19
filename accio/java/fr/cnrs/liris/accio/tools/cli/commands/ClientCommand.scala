@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.tools.cli.commands
 
-import fr.cnrs.liris.accio.agent.AgentService
+import fr.cnrs.liris.accio.server.AgentService
 import fr.cnrs.liris.accio.tools.cli.config.ConfigParser
 
 private[commands] trait ClientCommand {

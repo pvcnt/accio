@@ -21,9 +21,9 @@ package fr.cnrs.liris.accio.tools.cli.commands
 import java.io.File
 
 import com.twitter.util.Future
-import fr.cnrs.liris.accio.agent.ValidateJobRequest
+import fr.cnrs.liris.accio.server.ValidateJobRequest
 import fr.cnrs.liris.accio.api.thrift.FieldViolation
-import fr.cnrs.liris.accio.dsl.json.JsonJobParser
+import fr.cnrs.liris.accio.dsl.json.JsonWorkflowParser
 import fr.cnrs.liris.accio.tools.cli.event.{Event, EventKind, Reporter}
 import fr.cnrs.liris.util.FileUtils
 
@@ -49,7 +49,7 @@ final class ValidateCommand extends Command with ClientCommand {
       reporter.handle(Event.error(s"Cannot read file ${file.getAbsolutePath}"))
       return Future.value(ExitCode.DefinitionError)
     }
-    val parser = new JsonJobParser
+    val parser = new JsonWorkflowParser
     parser.parse(file)
       .flatMap(job => client.validateJob(ValidateJobRequest(job)))
       .map(resp => handleResponse(resp.errors, resp.warnings, file, reporter))

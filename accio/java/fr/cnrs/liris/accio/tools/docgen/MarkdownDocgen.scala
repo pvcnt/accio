@@ -29,7 +29,7 @@ import fr.cnrs.liris.accio.domain.Operator
  * Generate documentation for all operators known to a registry in Markdown format.
  */
 @Singleton
-final class MarkdownDocgen @Inject()(opRegistry: OpRegistry) {
+final class MarkdownDocgen @Inject()(registry: OpRegistry) {
   /**
    * Generate documentation.
    *
@@ -37,7 +37,7 @@ final class MarkdownDocgen @Inject()(opRegistry: OpRegistry) {
    */
   def generate(flags: DocgenOpts): Unit = {
     Files.createDirectories(flags.out)
-    val ops = opRegistry.ops
+    val ops = registry.ops
       .groupBy(_.category)
       .toSeq
       .sortBy(_._1)

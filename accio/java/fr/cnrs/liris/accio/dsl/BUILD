@@ -18,7 +18,7 @@ scala_library(
   name = "dsl",
   srcs = glob(["*.scala"]),
   deps = [
-    "//accio/java/fr/cnrs/liris/accio/api",
+    "//accio/java/fr/cnrs/liris/accio/domain",
     "//3rdparty/jvm/com/twitter:util_core",
   ],
   visibility = ["//visibility:public"],

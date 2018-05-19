@@ -21,8 +21,10 @@ scala_library(
     "//accio/java/fr/cnrs/liris/accio/domain",
     "//accio/java/fr/cnrs/liris/accio/domain/thrift",
     "//accio/java/fr/cnrs/liris/util/scrooge",
+    "//accio/java/fr/cnrs/liris/util/jvm",
     "//3rdparty/jvm/com/twitter:inject_core",
     "//3rdparty/jvm/com/twitter:util_slf4j_api",
+    "//3rdparty/jvm/com/google/guava",
   ],
   visibility = ["//visibility:public"],
 )

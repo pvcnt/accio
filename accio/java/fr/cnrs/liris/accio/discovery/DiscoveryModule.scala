@@ -25,18 +25,35 @@ import com.twitter.conversions.time._
 import com.twitter.inject.TwitterModule
 
 object DiscoveryModule extends TwitterModule {
-  private[this] val dirFile = flag[String]("discovery.dir.file", "Directory in which to look for definitions of operators")
-  private[this] val dirFrequency = flag("discovery.dir.frequency", 1.minute, "Frequency at which to check for updates")
+  private[this] val localRoot = flag[String]("discovery.local.root", "Directory in which to look for operator binaries")
+  private[this] val localFilter = flag[String]("discovery.local.filter", "Filters to select files")
+  private[this] val fileRoot = flag[String]("discovery.file.root", "Directory in which to look for definitions of operators")
+  private[this] val fileFrequency = flag("discovery.file.frequency", 1.minute, "Frequency at which to check for updates")
+
+  def forwardableArgs: Seq[String] = {
+    flags.filter(_.isDefined).map(flag => s"-${flag.name}=${flag()}")
+  }
 
   override def configure(): Unit = {
-    if (dirFile.isDefined) {
-      bind[OpRegistry].to[DirectoryOpRegistry]
+    if (localRoot.isDefined) {
+      bind[OpRegistry].to[LocalOpRegistry]
+    } else if (fileRoot.isDefined) {
+      bind[OpRegistry].to[FileOpRegistry]
+    } else {
+      logger.warn("Operator discovery is not configured, no operator will be available!")
+      bind[OpRegistry].toInstance(new MemoryOpRegistry(Set.empty))
     }
   }
 
   @Provides
   @Singleton
-  def providesDirectoryOpRegistry: DirectoryOpRegistry = {
-    new DirectoryOpRegistry(Paths.get(dirFile()), dirFrequency())
+  def providesFileOpRegistry: FileOpRegistry = {
+    new FileOpRegistry(Paths.get(fileRoot()), fileFrequency())
+  }
+
+  @Provides
+  @Singleton
+  def providesLocalOpRegistry: LocalOpRegistry = {
+    new LocalOpRegistry(Paths.get(localRoot()), localFilter.get)
   }
 }

@@ -18,16 +18,13 @@
 
 package fr.cnrs.liris.accio.scheduler
 
-import com.twitter.util.Future
+import com.twitter.util.{Closable, Future}
+import fr.cnrs.liris.accio.domain.Workflow
 
-trait Scheduler {
-  def submit(process: Process): Unit
+trait Scheduler extends Closable {
+  def submit(workflow: Workflow, args: Seq[String] = Seq.empty): Unit
 
-  def kill(name: String): Future[Boolean]
+  def kill(name: String): Unit
 
   def getLogs(name: String, kind: String, skip: Option[Int] = None, tail: Option[Int] = None): Future[Seq[String]]
-
-  def startUp(): Unit = {}
-
-  def shutDown(): Unit = {}
 }

@@ -23,7 +23,7 @@ import java.nio.file.Paths
 import com.twitter.finagle.Thrift
 import com.twitter.finagle.thrift.{ClientId, RichClientParam}
 import com.twitter.util.{Duration, Stopwatch}
-import fr.cnrs.liris.accio.agent.AgentService
+import fr.cnrs.liris.accio.server.AgentService
 import fr.cnrs.liris.accio.tools.cli.config.{Cluster, ClusterConfig, ConfigParser}
 import fr.cnrs.liris.util.FileUtils
 

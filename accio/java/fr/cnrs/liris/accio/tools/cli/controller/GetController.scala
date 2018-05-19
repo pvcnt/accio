@@ -19,7 +19,7 @@
 package fr.cnrs.liris.accio.tools.cli.controller
 
 import com.twitter.util.Future
-import fr.cnrs.liris.accio.agent._
+import fr.cnrs.liris.accio.server._
 import fr.cnrs.liris.accio.tools.cli.event.Reporter
 import fr.cnrs.liris.util.StringUtils.padTo
 

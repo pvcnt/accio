@@ -19,7 +19,7 @@
 package fr.cnrs.liris.accio.tools.cli.controller
 
 import com.twitter.util.Future
-import fr.cnrs.liris.accio.agent.{AgentService, GetOperatorRequest}
+import fr.cnrs.liris.accio.server.{AgentService, GetOperatorRequest}
 import fr.cnrs.liris.accio.api.thrift._
 import fr.cnrs.liris.accio.api.{DataTypes, Values}
 import fr.cnrs.liris.accio.tools.cli.event.Reporter

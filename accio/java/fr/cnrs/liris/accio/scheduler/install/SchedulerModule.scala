@@ -18,15 +18,12 @@
 
 package fr.cnrs.liris.accio.scheduler.install
 
-import java.nio.file.Path
+import java.nio.file.{Files, Paths}
 
-import com.google.common.eventbus.EventBus
-import com.google.inject.{Inject, Provider, Singleton}
+import com.google.inject.{Provides, Singleton}
 import com.twitter.finagle.stats.StatsReceiver
 import com.twitter.inject.{Injector, TwitterModule}
-import com.twitter.util.StorageUnit
-import fr.cnrs.liris.accio.api.thrift.ComputeResources
-import fr.cnrs.liris.accio.config.DataDir
+import com.twitter.util.{Await, StorageUnit}
 import fr.cnrs.liris.accio.scheduler.Scheduler
 import fr.cnrs.liris.accio.scheduler.local.LocalScheduler
 
@@ -36,57 +33,39 @@ import fr.cnrs.liris.accio.scheduler.local.LocalScheduler
 object SchedulerModule extends TwitterModule {
   private[this] val typeFlag = flag("scheduler", "local", "Scheduler type")
 
-  // Common configuration.
   private[this] val executorUriFlag = flag[String]("executor_uri", "URI to the executor")
-  private[this] val executorArgsFlag = flag("executor_args", "", "Additional arguments to the executor")
-
-  // Local scheduler configuration.
-  private[this] val forceSchedulingFlag = flag("force_scheduling", false, "Whether to force the scheduling of too large tasks")
-  private[this] val reservedCpusFlag = flag("reserved_cpus", 0, "Number of cores that are not available for scheduling")
-  private[this] val reservedRamFlag = flag("reserved_ram", StorageUnit.zero, "Amount of RAM that is not available for scheduling")
-  private[this] val reservedDiskFlag = flag("reserved_disk", StorageUnit.zero, "Disk space that is not available for scheduling")
+  private[this] val forceSchedulingFlag = flag("scheduler.force_scheduling", false, "Whether to force the scheduling of too large tasks")
+  private[this] val dataDirFlag = flag[String]("scheduler.data_dir", "Path where to store scheduler data")
+  private[this] val reservedCpusFlag = flag("scheduler.reserved_cpus", 0, "Number of cores that are not available for scheduling")
+  private[this] val reservedRamFlag = flag("scheduler.reserved_ram", StorageUnit.zero, "Amount of RAM that is not available for scheduling")
+  private[this] val reservedDiskFlag = flag("scheduler.reserved_disk", StorageUnit.zero, "Disk space that is not available for scheduling")
 
   override def configure(): Unit = {
     typeFlag() match {
-      case "local" => bind[Scheduler].toProvider[LocalSchedulerProvider].in[Singleton]
+      case "local" => bind[Scheduler].to[LocalScheduler]
       case invalid => throw new IllegalArgumentException(s"Unknown scheduler type: $invalid")
     }
   }
 
-  override def singletonStartup(injector: Injector): Unit = {
-    injector.instance[Scheduler].startUp()
-  }
-
   override def singletonShutdown(injector: Injector): Unit = {
-    injector.instance[Scheduler].shutDown()
+    Await.ready(injector.instance[Scheduler].close())
   }
 
-  private class LocalSchedulerProvider @Inject()(
-    statsReceiver: StatsReceiver,
-    eventBus: EventBus,
-    @DataDir dataDir: Path)
-    extends Provider[Scheduler] {
-
-    override def get(): Scheduler = {
-      val reservedResources = ComputeResources(
-        cpus = reservedCpusFlag(),
-        ramMb = reservedRamFlag().inMegabytes,
-        diskGb = reservedDiskFlag().inGigabytes)
-      new LocalScheduler(
-        statsReceiver,
-        eventBus,
-        reservedResources,
-        executorUriFlag(),
-        executorArgs,
-        forceSchedulingFlag(),
-        dataDir.resolve("local-scheduler"))
-    }
+  @Provides
+  @Singleton
+  def providesLocalScheduler(statsReceiver: StatsReceiver): LocalScheduler = {
+    val reservedResources = Map(
+      "cpus" -> reservedCpusFlag().toLong,
+      "ramMb" -> reservedRamFlag().inMegabytes,
+      "diskGb" -> reservedDiskFlag().inGigabytes)
+    val dataDir = dataDirFlag.get
+      .map(Paths.get(_))
+      .getOrElse(Files.createTempDirectory("accio-scheduler-"))
+    new LocalScheduler(
+      statsReceiver,
+      reservedResources,
+      executorUriFlag(),
+      forceSchedulingFlag(),
+      dataDir)
   }
-
-  private def executorArgs = {
-    executorArgsFlag.get
-      .map(_.split(" ").map(_.trim).filter(_.nonEmpty).toSeq)
-      .getOrElse(Seq.empty)
-  }
-
 }

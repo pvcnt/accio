@@ -19,7 +19,7 @@
 package fr.cnrs.liris.accio.tools.cli.controller
 
 import com.twitter.util.{Future, Time}
-import fr.cnrs.liris.accio.agent._
+import fr.cnrs.liris.accio.server._
 import fr.cnrs.liris.accio.api.thrift.ExecState
 
 class GetJobController extends AbstractGetController[ListJobsResponse] with FormatHelper {

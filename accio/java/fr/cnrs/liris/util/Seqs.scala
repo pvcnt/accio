@@ -22,24 +22,6 @@ package fr.cnrs.liris.util
  * Utils dealing with sequences.
  */
 object Seqs {
-  /**
-   * Generate a cross product between several lists, i.e., all possible combinations between their values.
-   *
-   * @param input Lists of node inputs between which to perform the cross product
-   * @return Cross product of these lists
-   */
-  def crossProduct[T](input: Seq[Seq[T]]): Seq[Seq[T]] = {
-    //https://stackoverflow.com/questions/13567543/cross-product-of-arbitrary-number-of-lists-in-scala
-    val zss: Seq[Seq[T]] = Seq(Seq())
-    def fun(xs: Seq[T], zss: Seq[Seq[T]]): Seq[Seq[T]] = {
-      for {
-        x <- xs
-        zs <- zss
-      } yield Seq[T](x) ++ zs
-    }
-    input.foldRight(zss)(fun)
-  }
-
   def index[T, U](input: Seq[(T, U)]): Map[T, Seq[U]] =
     input.groupBy(_._1).map { case (k, v) => k -> v.map(_._2) }
 

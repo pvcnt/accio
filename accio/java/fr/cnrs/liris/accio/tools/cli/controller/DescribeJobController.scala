@@ -19,7 +19,7 @@
 package fr.cnrs.liris.accio.tools.cli.controller
 
 import com.twitter.util.{Duration, Future, Time}
-import fr.cnrs.liris.accio.agent._
+import fr.cnrs.liris.accio.server._
 import fr.cnrs.liris.accio.api.thrift._
 import fr.cnrs.liris.accio.api.{Utils, Values}
 import fr.cnrs.liris.accio.tools.cli.event.Reporter

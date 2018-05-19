@@ -19,7 +19,7 @@
 package fr.cnrs.liris.accio.tools.cli.commands
 
 import com.twitter.util.Future
-import fr.cnrs.liris.accio.agent.DeleteJobRequest
+import fr.cnrs.liris.accio.server.DeleteJobRequest
 import fr.cnrs.liris.accio.tools.cli.event.{Event, Reporter}
 
 final class DeleteCommand extends Command with ClientCommand {

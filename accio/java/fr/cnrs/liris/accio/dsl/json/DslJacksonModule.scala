@@ -22,111 +22,58 @@ import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.databind.{DeserializationContext, JsonNode, ObjectMapper}
-import fr.cnrs.liris.accio.api.thrift.AtomicType
-import fr.cnrs.liris.accio.api.{Values, thrift}
+import fr.cnrs.liris.accio.domain._
+import fr.cnrs.liris.lumos.domain.{DataType, Value}
 
-import scala.collection.JavaConverters._
-
-object DslJacksonModule extends SimpleModule {
-  addDeserializer(classOf[thrift.Channel], ChannelDeserializer)
-  addDeserializer(classOf[thrift.Value], ValueDeserializer)
+private[json] object DslJacksonModule extends SimpleModule {
+  addDeserializer(classOf[Channel.Source], SourceDeserializer)
+  addDeserializer(classOf[DataType], DataTypeDeserializer)
+  addDeserializer(classOf[Value], ValueDeserializer)
 }
 
-private object ChannelDeserializer extends StdDeserializer[thrift.Channel](classOf[thrift.Channel]) {
+private object SourceDeserializer extends StdDeserializer[Channel.Source](classOf[Channel.Source]) {
 
   private case class Reference(step: String, output: String)
 
-  override def deserialize(jsonParser: JsonParser, ctx: DeserializationContext): thrift.Channel = {
+  override def deserialize(jsonParser: JsonParser, ctx: DeserializationContext): Channel.Source = {
     val tree = jsonParser.readValueAsTree[JsonNode]
     val mapper = jsonParser.getCodec.asInstanceOf[ObjectMapper]
     if (tree.has("param")) {
-      thrift.Channel.Param(tree.get("param").asText)
+      Channel.Param(tree.get("param").asText)
     } else if (tree.has("value")) {
-      thrift.Channel.Value(mapper.treeToValue(tree.get("value"), classOf[thrift.Value]))
+      Channel.Constant(mapper.treeToValue(tree.get("value"), classOf[Value]))
     } else if (tree.has("reference")) {
       val ref = mapper.treeToValue(tree.get("reference"), classOf[Reference])
-      thrift.Channel.Reference(thrift.Reference(ref.step, ref.output))
+      Channel.Reference(ref.step, ref.output)
     } else {
       throw ctx.mappingException(s"No discriminant field found, expected one of 'param', 'value', 'reference'")
     }
   }
 }
 
-private object ValueDeserializer extends StdDeserializer[thrift.Value](classOf[thrift.Value]) {
-  override def deserialize(jsonParser: JsonParser, ctx: DeserializationContext): thrift.Value = {
+private object DataTypeDeserializer extends StdDeserializer[DataType](classOf[DataType]) {
+  override def deserialize(jsonParser: JsonParser, ctx: DeserializationContext): DataType = {
+    DataType.valueOf(jsonParser.toString).getOrElse {
+      throw ctx.mappingException(s"Invalid data type: ${jsonParser.toString}")
+    }
+  }
+}
+
+private object ValueDeserializer extends StdDeserializer[Value](classOf[Value]) {
+  override def deserialize(jsonParser: JsonParser, ctx: DeserializationContext): Value = {
     val tree = jsonParser.readValueAsTree[JsonNode]
-    toValue(tree, ctx)
-  }
-
-  private def getAtomicType(tree: JsonNode, ctx: DeserializationContext): thrift.AtomicType = {
     if (tree.isBoolean) {
-      thrift.AtomicType.Boolean
+      Value.Bool(tree.asBoolean)
     } else if (tree.isDouble) {
-      thrift.AtomicType.Double
+      Value.Double(tree.asDouble)
     } else if (tree.isInt) {
-      thrift.AtomicType.Integer
+      Value.Int(tree.asInt)
     } else if (tree.isLong) {
-      thrift.AtomicType.Long
+      Value.Long(tree.asLong)
     } else if (tree.isTextual) {
-      thrift.AtomicType.String
+      Value.String(tree.asText)
     } else {
       throw ctx.mappingException(s"Invalid node type: ${tree.getNodeType}")
-    }
-  }
-
-  private def toValue(tree: JsonNode, ctx: DeserializationContext): thrift.Value = {
-    if (tree.isBoolean) {
-      Values.encodeBoolean(tree.asBoolean)
-    } else if (tree.isDouble) {
-      Values.encodeDouble(tree.asDouble)
-    } else if (tree.isInt) {
-      Values.encodeInteger(tree.asInt)
-    } else if (tree.isLong) {
-      Values.encodeLong(tree.asLong)
-    } else if (tree.isTextual) {
-      Values.encodeString(tree.asText)
-    } else if (tree.isArray) {
-      val items = tree.elements.asScala.toSeq
-      if (items.isEmpty) {
-        Values.emptyList
-      } else {
-        val values = getAtomicType(items.head, ctx)
-        Values
-          .encodeList(items.map(toPojo(_, ctx)), values)
-          .getOrElse(throw ctx.mappingException("Heterogeneous value types"))
-      }
-    } else if (tree.isObject) {
-      val items = tree.fields.asScala.map(kv => kv.getKey -> kv.getValue).toMap
-      if (items.isEmpty) {
-        Values.emptyMap
-      } else {
-        val values = getAtomicType(items.values.head, ctx)
-        Values
-          .encodeMap(items.map { case (k, v) => k -> toPojo(v, ctx) }, AtomicType.String, values)
-          .getOrElse(throw ctx.mappingException("Heterogeneous value types"))
-      }
-    } else {
-      throw ctx.mappingException(s"Invalid node type: ${tree.getNodeType}")
-    }
-  }
-
-  private def toPojo(tree: JsonNode, ctx: DeserializationContext): Any = {
-    if (tree.isBoolean) {
-      tree.asBoolean
-    } else if (tree.isDouble) {
-      tree.asDouble
-    } else if (tree.isInt) {
-      tree.asInt
-    } else if (tree.isLong) {
-      tree.asLong
-    } else if (tree.isTextual) {
-      tree.asText
-    } else if (tree.isArray) {
-      tree.elements.asScala.toArray.map(toPojo(_, ctx))
-    } else if (tree.isObject) {
-      tree.fields.asScala.map(kv => kv.getKey -> toPojo(kv.getValue, ctx)).toMap
-    } else {
-      ctx.mappingException(s"Invalid node type for an input: ${tree.getNodeType}")
     }
   }
 }

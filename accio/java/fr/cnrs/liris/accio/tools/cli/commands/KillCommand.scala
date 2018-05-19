@@ -19,7 +19,7 @@
 package fr.cnrs.liris.accio.tools.cli.commands
 
 import com.twitter.util.Future
-import fr.cnrs.liris.accio.agent.KillJobRequest
+import fr.cnrs.liris.accio.server.KillJobRequest
 import fr.cnrs.liris.accio.tools.cli.event.Event
 
 final class KillCommand extends Command with ClientCommand {

@@ -18,9 +18,7 @@ scala_library(
   name = "controller",
   srcs = glob(["*.scala"]),
   deps = [
-    "//accio/java/fr/cnrs/liris/accio/api",
-    "//accio/thrift/fr/cnrs/liris/accio/api",
-    "//accio/thrift/fr/cnrs/liris/accio/agent",
+    "//accio/java/fr/cnrs/liris/accio/domain",
     "//accio/java/fr/cnrs/liris/accio/tools/cli/event",
     "//accio/java/fr/cnrs/liris/accio/tools/cli/terminal",
     "//accio/java/fr/cnrs/liris/util",
