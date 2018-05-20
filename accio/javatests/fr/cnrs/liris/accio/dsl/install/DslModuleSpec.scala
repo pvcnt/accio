@@ -16,33 +16,23 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.domain
+package fr.cnrs.liris.accio.dsl.install
 
-import fr.cnrs.liris.lumos.domain.{AttrValue, Value}
+import com.google.inject.Module
+import com.twitter.inject.CreateTwitterInjector
+import fr.cnrs.liris.accio.dsl.json.JsonWorkflowParser
+import fr.cnrs.liris.testing.UnitSpec
 
-case class Workflow(
-  name: String = "",
-  owner: Option[String] = None,
-  contact: Option[String] = None,
-  labels: Map[String, String] = Map.empty,
-  seed: Long = 0,
-  params: Seq[AttrValue] = Seq.empty,
-  steps: Seq[Step] = Seq.empty,
-  repeat: Int = 1,
-  resources: Map[String, Long] = Map.empty)
+/**
+ * Unit tests for [[DslModule]].
+ */
+class DslModuleSpec extends UnitSpec with CreateTwitterInjector {
+  behavior of "DslModule"
 
-case class Step(name: String, op: String, params: Seq[Channel] = Seq.empty)
+  override protected def modules: Seq[Module] = Seq(DslModule)
 
-case class Channel(name: String, source: Channel.Source)
-
-object Channel {
-
-  sealed trait Source
-
-  case class Reference(step: String, output: String) extends Source
-
-  case class Param(name: String) extends Source
-
-  case class Constant(value: Value) extends Source
-
+  it should "provide a JSON DSL parser" in {
+    val injector = createInjector()
+    injector.instance[JsonWorkflowParser] shouldBe a[JsonWorkflowParser]
+  }
 }

@@ -20,8 +20,8 @@ package fr.cnrs.liris.accio.tools.cli.commands
 
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.server.CreateJobRequest
-import fr.cnrs.liris.accio.api.Values
-import fr.cnrs.liris.accio.api.thrift.{Job, NamedValue}
+import fr.cnrs.liris.accio.validation.Values
+import fr.cnrs.liris.accio.validation.thrift.{Job, NamedValue}
 import fr.cnrs.liris.accio.dsl.json.JsonWorkflowParser
 import fr.cnrs.liris.accio.tools.cli.event.{Event, EventKind, Reporter}
 import fr.cnrs.liris.util.{FileUtils, StringUtils}

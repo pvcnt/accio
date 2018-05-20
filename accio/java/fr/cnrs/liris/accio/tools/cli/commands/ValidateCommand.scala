@@ -22,7 +22,7 @@ import java.io.File
 
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.server.ValidateJobRequest
-import fr.cnrs.liris.accio.api.thrift.FieldViolation
+import fr.cnrs.liris.accio.validation.thrift.FieldViolation
 import fr.cnrs.liris.accio.dsl.json.JsonWorkflowParser
 import fr.cnrs.liris.accio.tools.cli.event.{Event, EventKind, Reporter}
 import fr.cnrs.liris.util.FileUtils

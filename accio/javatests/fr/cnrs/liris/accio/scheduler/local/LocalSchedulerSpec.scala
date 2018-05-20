@@ -20,8 +20,8 @@ package fr.cnrs.liris.accio.scheduler.local
 
 import com.google.common.eventbus.{EventBus, Subscribe}
 import com.twitter.finagle.stats.NullStatsReceiver
-import fr.cnrs.liris.accio.api.thrift._
-import fr.cnrs.liris.accio.api.{ProcessCompletedEvent, ProcessStartedEvent}
+import fr.cnrs.liris.accio.validation.thrift._
+import fr.cnrs.liris.accio.validation.{ProcessCompletedEvent, ProcessStartedEvent}
 import fr.cnrs.liris.accio.scheduler.Process
 import fr.cnrs.liris.testing.{CreateTmpDirectory, UnitSpec}
 import org.scalatest.BeforeAndAfterEach

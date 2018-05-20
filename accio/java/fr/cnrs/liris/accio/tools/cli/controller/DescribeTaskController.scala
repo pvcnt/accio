@@ -20,8 +20,8 @@ package fr.cnrs.liris.accio.tools.cli.controller
 
 import com.twitter.util.{Duration, Future, Time}
 import fr.cnrs.liris.accio.server.{AgentService, GetJobRequest}
-import fr.cnrs.liris.accio.api.Errors
-import fr.cnrs.liris.accio.api.thrift._
+import fr.cnrs.liris.accio.validation.Errors
+import fr.cnrs.liris.accio.validation.thrift._
 import fr.cnrs.liris.accio.tools.cli.event.Reporter
 import fr.cnrs.liris.util.StringUtils.padTo
 

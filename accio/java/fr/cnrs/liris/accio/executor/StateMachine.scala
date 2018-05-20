@@ -144,13 +144,13 @@ final class StateMachine(workflow: Workflow) extends Logging {
     val step = workflow.steps.find(_.name == stepName).get
     val params = step.params.map { channel =>
       channel.source match {
-        case Channel.Constant(v) => AttrValue(channel.name, v.dataType, v)
+        case Channel.Constant(v) => AttrValue(channel.name, v)
         case Channel.Param(paramName) =>
           val param = workflow.params.find(_.name == paramName).get
-          AttrValue(channel.name, param.dataType, param.value)
+          AttrValue(channel.name, param.value)
         case Channel.Reference(otherName, outputName) =>
           val artifact = artifacts(s"$otherName/$outputName")
-          AttrValue(channel.name, artifact.dataType, artifact.value)
+          AttrValue(channel.name, artifact.value)
       }
     }
     OpPayload(step.op, workflow.seed, params, workflow.resources)

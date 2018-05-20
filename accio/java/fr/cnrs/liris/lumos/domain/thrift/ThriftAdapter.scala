@@ -78,7 +78,7 @@ object ThriftAdapter {
     }
 
   def toDomain(obj: AttrValue): domain.AttrValue = {
-    domain.AttrValue(obj.name, toDomain(obj.dataType), toDomain(obj.value), obj.aspects.toSet)
+    domain.AttrValue(obj.name, toDomain(obj.value), obj.aspects.toSet)
   }
 
   def toDomain(obj: RemoteFile): domain.RemoteFile = {
@@ -177,7 +177,7 @@ object ThriftAdapter {
   }
 
   def toThrift(obj: domain.AttrValue): AttrValue = {
-    AttrValue(obj.name, toThrift(obj.dataType), toThrift(obj.value), obj.aspects)
+    AttrValue(obj.name, toThrift(obj.value), obj.aspects)
   }
 
   private def toThrift(obj: domain.Task): Task = {

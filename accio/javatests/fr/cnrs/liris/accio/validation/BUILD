@@ -15,13 +15,15 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_test(
-  name = "event",
+  name = "validation",
   srcs = glob(["*.scala"]),
   deps = [
-    "//accio/java/fr/cnrs/liris/accio/tools/cli/event",
-    "//accio/java/fr/cnrs/liris/accio/tools/cli/terminal",
+    "//accio/java/fr/cnrs/liris/accio/validation",
+    "//accio/java/fr/cnrs/liris/accio/domain",
+    "//accio/java/fr/cnrs/liris/accio/discovery",
+    "//accio/java/fr/cnrs/liris/lumos/domain",
     "//accio/javatests/fr/cnrs/liris/testing",
-    "//3rdparty/jvm/com/twitter:util_slf4j_api",
+    "//3rdparty/jvm/com/google/guava",
   ],
   size = "small",
 )

@@ -18,23 +18,22 @@
 
 package fr.cnrs.liris.accio.dsl.json
 
-import fr.cnrs.liris.accio.api.Values
-import fr.cnrs.liris.accio.api.thrift
-import fr.cnrs.liris.accio.api.thrift.{Export, NamedChannel}
+import com.twitter.io.Buf
+import fr.cnrs.liris.accio.domain.{Channel, Step}
+import fr.cnrs.liris.lumos.domain.{AttrValue, Value}
 import fr.cnrs.liris.testing.UnitSpec
 
 /**
  * Unit tests for [[JsonWorkflowParser]].
  */
 class JsonWorkflowParserSpec extends UnitSpec {
-  private[this] val parser = new JsonWorkflowParser
+  private[this] val parser = new JsonWorkflowParser(ObjectMapperFactory())
 
   it should "parse a job definition" in {
-    val job = parser.parse(
+    val workflow = parser.decode(Buf.Utf8(
       """{
         |"name": "my_workflow",
-        |"title": "named run",
-        |"tags": ["my", "awesome", "run"],
+        |"labels": {"foo": "bar", "bar": "barbar"},
         |"params": [
         |  {"name": "foo", "value": true},
         |  {"name": "dbl", "value": 3.14},
@@ -45,59 +44,54 @@ class JsonWorkflowParserSpec extends UnitSpec {
         |  {
         |    "name": "step1",
         |    "op": "MyOp",
-        |    "inputs": [
+        |    "params": [
         |      {
         |        "name": "v",
-        |        "channel": {"value": 14}
+        |        "source": {"constant": 14}
         |      },
         |      {
         |        "name": "data",
-        |        "channel": {
+        |        "source": {
         |          "reference": {"step": "step2", "output": "out"}
         |        }
         |      }
-        |    ],
-        |    "exports": [
-        |      {"output": "data", "exportAs": "data1"}
         |    ]
         |  },
         |  {
         |    "name": "step2",
         |    "op": "OtherOp",
-        |    "inputs": [
+        |    "params": [
         |      {
         |        "name": "str",
-        |        "channel": {"value": "bar"}
+        |        "source": {"constant": "bar"}
         |      },
         |      {
         |        "name": "p",
-        |        "channel": {"param": "foo"}
+        |        "source": {"param": "foo"}
         |      }
         |    ]
         |  }
         |]
-        |}""".stripMargin)
-    job.name shouldBe "my_workflow"
-    job.title shouldBe Some("named run")
-    job.tags shouldBe Set("my", "awesome", "run")
-    job.seed shouldBe 1234567890123L
-    job.params shouldBe Seq(
-      thrift.NamedValue("foo", Values.encodeBoolean(true)),
-      thrift.NamedValue("dbl", Values.encodeDouble(3.14)),
-      thrift.NamedValue("dbl", Values.encodeInteger(42)))
-    job.steps shouldBe Seq(
-      thrift.Step(
+        |}""".stripMargin))
+    workflow.name shouldBe "my_workflow"
+    workflow.labels shouldBe Map("foo" -> "bar", "bar" -> "barbar")
+    workflow.seed shouldBe 1234567890123L
+    workflow.params shouldBe Seq(
+      AttrValue("foo", Value.True),
+      AttrValue("dbl", Value.Double(3.14)),
+      AttrValue("dbl", Value.Int(42)))
+    workflow.steps shouldBe Seq(
+      Step(
         name = "step1",
         op = "MyOp",
-        inputs = Seq(
-          NamedChannel("v", thrift.Channel.Value(Values.encodeInteger(14))),
-          NamedChannel("data", thrift.Channel.Reference(thrift.Reference("step2", "out")))),
-        exports = Seq(Export(output = "data", exportAs = "data1"))),
-      thrift.Step(
+        params = Seq(
+          Channel("v", Channel.Constant(Value.Int(14))),
+          Channel("data", Channel.Reference("step2", "out")))),
+      Step(
         name = "step2",
         op = "OtherOp",
-        inputs = Seq(
-          NamedChannel("str", thrift.Channel.Value(Values.encodeString("bar"))),
-          NamedChannel("p", thrift.Channel.Param("foo")))))
+        params = Seq(
+          Channel("str", Channel.Constant(Value.String("bar"))),
+          Channel("p", Channel.Param("foo")))))
   }
 }

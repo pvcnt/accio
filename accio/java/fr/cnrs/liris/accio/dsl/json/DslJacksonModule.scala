@@ -40,13 +40,13 @@ private object SourceDeserializer extends StdDeserializer[Channel.Source](classO
     val mapper = jsonParser.getCodec.asInstanceOf[ObjectMapper]
     if (tree.has("param")) {
       Channel.Param(tree.get("param").asText)
-    } else if (tree.has("value")) {
-      Channel.Constant(mapper.treeToValue(tree.get("value"), classOf[Value]))
+    } else if (tree.has("constant")) {
+      Channel.Constant(mapper.treeToValue(tree.get("constant"), classOf[Value]))
     } else if (tree.has("reference")) {
       val ref = mapper.treeToValue(tree.get("reference"), classOf[Reference])
       Channel.Reference(ref.step, ref.output)
     } else {
-      throw ctx.mappingException(s"No discriminant field found, expected one of 'param', 'value', 'reference'")
+      throw ctx.mappingException(s"No discriminant field found, expected one of 'param', 'constant', 'reference'")
     }
   }
 }

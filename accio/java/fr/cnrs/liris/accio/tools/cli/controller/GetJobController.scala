@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.tools.cli.controller
 
 import com.twitter.util.{Future, Time}
 import fr.cnrs.liris.accio.server._
-import fr.cnrs.liris.accio.api.thrift.ExecState
+import fr.cnrs.liris.accio.validation.thrift.ExecState
 
 class GetJobController extends AbstractGetController[ListJobsResponse] with FormatHelper {
   override def retrieve(opts: GetQuery, client: AgentService.MethodPerEndpoint): Future[ListJobsResponse] = {

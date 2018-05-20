@@ -55,9 +55,8 @@ struct MetricValue {
 
 struct AttrValue {
   1: string name;
-  2: DataType data_type;
-  3: Value value;
-  4: set<string> aspects;
+  2: Value value;
+  3: set<string> aspects;
 }
 
 enum ExecState {

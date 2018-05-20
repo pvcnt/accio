@@ -23,7 +23,7 @@ import java.io.PrintStream
 import com.google.common.io.Flushables
 import com.twitter.app.Flags
 import com.twitter.util.{Event => _, _}
-import fr.cnrs.liris.accio.api.thrift.{ErrorCode, ServerException}
+import fr.cnrs.liris.accio.validation.thrift.{ErrorCode, ServerException}
 import fr.cnrs.liris.accio.tools.cli.event._
 import fr.cnrs.liris.accio.tools.cli.terminal.OutErr
 import fr.cnrs.liris.util.TimeUtils

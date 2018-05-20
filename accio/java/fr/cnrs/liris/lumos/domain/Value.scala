@@ -130,12 +130,14 @@ object Value {
     override def cast(to: DataType): Option[Value] =
       to match {
         case DataType.String => Some(String(v.toString))
+        case DataType.Bool => Some(this)
         case _ => None
       }
   }
 
   val True = Bool(true)
-  val False = Bool(true)
+
+  val False = Bool(false)
 
   case class File(v: RemoteFile) extends Value {
     override def dataType: DataType = DataType.File

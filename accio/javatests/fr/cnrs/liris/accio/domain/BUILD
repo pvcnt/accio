@@ -15,12 +15,12 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_test(
-  name = "terminal",
+  name = "domain",
   srcs = glob(["*.scala"]),
   deps = [
-    "//accio/java/fr/cnrs/liris/accio/tools/cli/terminal",
+    "//accio/java/fr/cnrs/liris/accio/domain",
+    "//accio/java/fr/cnrs/liris/lumos/domain",
     "//accio/javatests/fr/cnrs/liris/testing",
-    "//3rdparty/jvm/com/google/guava",
   ],
   size = "small",
 )

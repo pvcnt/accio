@@ -38,8 +38,8 @@ import fr.cnrs.liris.lumos.domain.{DataType, RemoteFile, Value}
  */
 case class Operator(
   name: String,
-  category: String,
   executable: RemoteFile,
+  category: String = "misc",
   help: Option[String] = None,
   description: Option[String] = None,
   inputs: Seq[Attribute] = Seq.empty,

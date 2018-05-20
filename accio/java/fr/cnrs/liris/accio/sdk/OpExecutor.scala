@@ -119,11 +119,7 @@ final class OpExecutor(opMeta: OpMetadata, workDir: Path) extends Logging {
       // is checked by the JVM (unless he does some dangerous type cast).
       // If this exception is thrown, it is likely there is an error somewhere else, while
       // inferring the various types.
-      AttrValue(
-        name = attr.name,
-        dataType = attr.dataType,
-        aspects = attr.aspects,
-        value = encode(attr, rawValue))
+      AttrValue(attr.name, encode(attr, rawValue), attr.aspects)
     }
   }
 
