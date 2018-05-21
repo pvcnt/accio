@@ -30,7 +30,7 @@ final class ApiController @Inject()(client: LumosService.MethodPerEndpoint) exte
   get("/api/v1/jobs") { httpReq: ListJobsHttpRequest =>
     val maybeState = httpReq.state.map(thrift.ExecState.valueOf)
     if (maybeState.exists(_.isEmpty)) {
-      response.badRequest(ServerException(
+      response.badRequest(ServerError(
         code = ErrorCode.InvalidArgument,
         errors = Some(Seq(s"Invalid state: ${httpReq.state.get}"))))
     } else {

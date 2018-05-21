@@ -22,7 +22,7 @@ import com.twitter.finatra.thrift.routing.ThriftWarmup
 import com.twitter.inject.utils.Handler
 import com.twitter.util.logging.Logging
 import com.twitter.util.{Return, Throw}
-import fr.cnrs.liris.finatra.auth.AuthFilter
+import fr.cnrs.liris.infra.thriftserver.AuthFilter
 import fr.cnrs.liris.lumos.server.LumosService.ListJobs
 import javax.inject.Inject
 

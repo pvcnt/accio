@@ -24,7 +24,8 @@ import com.twitter.finatra.thrift.routing.ThriftRouter
 import fr.cnrs.liris.accio.discovery.DiscoveryModule
 import fr.cnrs.liris.accio.scheduler.install.SchedulerModule
 import fr.cnrs.liris.accio.validation.ValidationModule
-import fr.cnrs.liris.finatra.auth.{AuthFilter, AuthModule}
+import fr.cnrs.liris.infra.thriftserver.{AuthFilter, AuthModule}
+import fr.cnrs.liris.infra.thriftserver.{AuthFilter, AuthModule}
 import fr.cnrs.liris.lumos.transport.EventTransportModule
 
 object AccioServerMain extends AccioServer

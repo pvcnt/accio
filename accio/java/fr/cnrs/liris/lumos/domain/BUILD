@@ -19,12 +19,10 @@ scala_library(
   srcs = glob(["*.scala"]),
   deps = [
     "//accio/java/fr/cnrs/liris/util",
-    "//accio/java/fr/cnrs/liris/finatra/errors",
     "//3rdparty/jvm/com/github/nscala_time",
     "//3rdparty/jvm/org/scala_lang/modules:scala_parser_combinators",
   ],
   exports = [
-    "//accio/java/fr/cnrs/liris/finatra/errors",
     "//3rdparty/jvm/com/github/nscala_time",
   ],
   visibility = ["//visibility:public"],

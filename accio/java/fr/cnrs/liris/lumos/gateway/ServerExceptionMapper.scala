@@ -22,11 +22,11 @@ import com.google.inject.{Inject, Singleton}
 import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finatra.http.exceptions.ExceptionMapper
 import com.twitter.finatra.http.response.ResponseBuilder
-import fr.cnrs.liris.lumos.server.{ErrorCode, ServerException}
+import fr.cnrs.liris.lumos.server.{ErrorCode, ServerError}
 
 @Singleton
-final class ServerExceptionMapper @Inject()(response: ResponseBuilder) extends ExceptionMapper[ServerException] {
-  override def toResponse(request: Request, e: ServerException): Response = {
+final class ServerErrorMapper @Inject()(response: ResponseBuilder) extends ExceptionMapper[ServerError] {
+  override def toResponse(request: Request, e: ServerError): Response = {
     e.code match {
       case ErrorCode.Unauthenticated => response.unauthorized(e)
       case ErrorCode.NotFound => response.notFound(e)
@@ -34,7 +34,7 @@ final class ServerExceptionMapper @Inject()(response: ResponseBuilder) extends E
       case ErrorCode.FailedPrecondition => response.badRequest(e)
       case ErrorCode.InvalidArgument => response.badRequest(e)
       case ErrorCode.Unimplemented => response.notImplemented
-      case _ => response.internalServerError(e)
+      case _ => response.internalServerException(e)
     }
   }
 }

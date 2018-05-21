@@ -23,7 +23,7 @@ import java.io.PrintStream
 import com.google.common.io.Flushables
 import com.twitter.app.Flags
 import com.twitter.util.{Event => _, _}
-import fr.cnrs.liris.accio.validation.thrift.{ErrorCode, ServerException}
+import fr.cnrs.liris.accio.validation.thrift.{ErrorCode, ServerError}
 import fr.cnrs.liris.accio.tools.cli.event._
 import fr.cnrs.liris.accio.tools.cli.terminal.OutErr
 import fr.cnrs.liris.util.TimeUtils
@@ -106,7 +106,7 @@ final class CommandDispatcher(registry: CommandRegistry) {
 
   private def tryExec(command: Command, residue: Seq[String], env: CommandEnvironment): ExitCode = {
     val f = command.execute(residue, env).handle {
-      case e: ServerException =>
+      case e: ServerError =>
         e.message.foreach { message =>
           env.reporter.handle(Event.error(message))
         }

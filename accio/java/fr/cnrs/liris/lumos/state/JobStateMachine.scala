@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.lumos.state
 
-import fr.cnrs.liris.finatra.errors.ServerError
+import fr.cnrs.liris.lumos.domain.Status.FieldViolation
 import fr.cnrs.liris.lumos.domain._
 import org.joda.time.Instant
 
@@ -62,7 +62,7 @@ object JobStateMachine {
             status = ExecStatus(ExecStatus.Pending, time, message = Some("Job expanded")))
         }
         Right(job.copy(tasks = job.tasks ++ tasks))
-      case _ => Left(Status.FailedPrecondition(job.name, Seq(ServerError.FieldViolation("Job is already completed", "status.state"))))
+      case _ => Left(Status.FailedPrecondition(job.name, Seq(FieldViolation("Job is already completed", "status.state"))))
     }
 
   private def handleJobStarted(job: Job, time: Instant, e: Event.JobStarted) =
@@ -72,8 +72,8 @@ object JobStateMachine {
           metadata = job.metadata ++ e.metadata,
           history = job.history :+ job.status,
           status = ExecStatus(ExecStatus.Running, time, e.message)))
-      case ExecStatus.Running => Left(Status.FailedPrecondition(job.name, Seq(ServerError.FieldViolation("Job is already running", "status.state"))))
-      case _ => Left(Status.FailedPrecondition(job.name, Seq(ServerError.FieldViolation("Job is already completed", "status.state"))))
+      case ExecStatus.Running => Left(Status.FailedPrecondition(job.name, Seq(FieldViolation("Job is already running", "status.state"))))
+      case _ => Left(Status.FailedPrecondition(job.name, Seq(FieldViolation("Job is already completed", "status.state"))))
     }
 
   private def handleJobCompleted(job: Job, time: Instant, e: Event.JobCompleted) =
@@ -122,7 +122,7 @@ object JobStateMachine {
             links = e.links)
           Right(job.copy(tasks = job.tasks.updated(idx, task)))
         case _ =>
-          Left(Status.FailedPrecondition(job.name, Seq(ServerError.FieldViolation("Task is already running or completed", s"tasks.$idx.status.state"))))
+          Left(Status.FailedPrecondition(job.name, Seq(FieldViolation("Task is already running or completed", s"tasks.$idx.status.state"))))
       }
     }
 
@@ -132,11 +132,11 @@ object JobStateMachine {
       var task = job.tasks(idx)
       task.status.state match {
         case ExecStatus.Pending =>
-          Left(Status.FailedPrecondition(job.name, Seq(ServerError.FieldViolation("Task is not running", s"tasks.$idx.status.state"))))
+          Left(Status.FailedPrecondition(job.name, Seq(FieldViolation("Task is not running", s"tasks.$idx.status.state"))))
         case ExecStatus.Running =>
           val state = if (e.exitCode == 0) ExecStatus.Successful else ExecStatus.Failed
           if (state == ExecStatus.Successful && e.error.isDefined) {
-            Left(Status.InvalidArgument(Seq(ServerError.FieldViolation("A successful task cannot also define an error", s"error"))))
+            Left(Status.InvalidArgument(Seq(FieldViolation("A successful task cannot also define an error", s"error"))))
           } else {
             task = task.copy(
               history = task.history :+ task.status,
@@ -148,14 +148,14 @@ object JobStateMachine {
             val progress = ((tasks.count(_.status.state.isCompleted).toDouble / tasks.size) * 100).round
             Right(job.copy(tasks = tasks, progress = progress.toInt))
           }
-        case _ => Left(Status.FailedPrecondition(job.name, Seq(ServerError.FieldViolation("Job is already completed", "status.state"))))
+        case _ => Left(Status.FailedPrecondition(job.name, Seq(FieldViolation("Job is already completed", "status.state"))))
       }
     }
 
   private def ifRunning(job: Job)(fn: => Either[Status, Job]) =
     job.status.state match {
-      case ExecStatus.Pending => Left(Status.FailedPrecondition(job.name, Seq(ServerError.FieldViolation("Job is not running", "status.state"))))
+      case ExecStatus.Pending => Left(Status.FailedPrecondition(job.name, Seq(FieldViolation("Job is not running", "status.state"))))
       case ExecStatus.Running => fn
-      case _ => Left(Status.FailedPrecondition(job.name, Seq(ServerError.FieldViolation("Job is already completed", "status.state"))))
+      case _ => Left(Status.FailedPrecondition(job.name, Seq(FieldViolation("Job is already completed", "status.state"))))
     }
 }

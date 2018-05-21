@@ -27,8 +27,7 @@ import fr.cnrs.liris.accio.scheduler.Scheduler
 import fr.cnrs.liris.accio.server.AccioService._
 import fr.cnrs.liris.accio.validation.{ValidationResult, WorkflowFactory, WorkflowPreparator, WorkflowValidator}
 import fr.cnrs.liris.accio.version.Version
-import fr.cnrs.liris.finatra.auth.UserInfo
-import fr.cnrs.liris.finatra.errors.{FieldViolation, ServerError}
+import fr.cnrs.liris.infra.thriftserver.{FieldViolation, ServerException, UserInfo}
 import fr.cnrs.liris.lumos.transport.EventTransportModule
 
 @Singleton
@@ -48,7 +47,7 @@ final class AccioServiceController @Inject()(
 
   override val getOperator = handle(GetOperator) { args: GetOperator.Args =>
     registry.get(args.req.name) match {
-      case None => Future.exception(ServerError.NotFound("operators", args.req.name))
+      case None => Future.exception(ServerException.NotFound("operators", args.req.name))
       case Some(opDef) => Future.value(GetOperatorResponse(ThriftAdapter.toThrift(opDef)))
     }
   }
@@ -75,7 +74,7 @@ final class AccioServiceController @Inject()(
     val workflow = preparator.prepare(ThriftAdapter.toDomain(args.req.workflow), UserInfo.current.map(_.name))
     val result = validator.validate(workflow)
     if (result.isInvalid) {
-      Future.exception(ServerError.InvalidArgument(result.errors.map(v => ServerError.FieldViolation(v.message, v.field))))
+      Future.exception(ServerException.InvalidArgument(result.errors.map(v => ServerException.FieldViolation(v.message, v.field))))
     } else {
       val workflows = factory.create(workflow)
       val args = EventTransportModule.forwardableArgs ++ DiscoveryModule.forwardableArgs

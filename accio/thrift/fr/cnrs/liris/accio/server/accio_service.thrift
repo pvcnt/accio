@@ -19,7 +19,7 @@
 namespace java fr.cnrs.liris.accio.server
 
 include "accio/thrift/fr/cnrs/liris/accio/domain/accio.thrift"
-include "accio/thrift/fr/cnrs/liris/finatra/errors/errors.thrift"
+include "accio/thrift/fr/cnrs/liris/infra/thriftserver/errors.thrift"
 
 struct GetInfoRequest {
 }
@@ -72,20 +72,20 @@ struct ValidateWorkflowResponse {
 
 service AccioService {
   // Get information about this server.
-  GetInfoResponse getInfo(1: GetInfoRequest req) throws (1: errors.ServerException e);
+  GetInfoResponse getInfo(1: GetInfoRequest req) throws (1: errors.ServerError e);
 
   // Get a specific operator, if it exists.
-  GetOperatorResponse getOperator(1: GetOperatorRequest req) throws (1: errors.ServerException e);
+  GetOperatorResponse getOperator(1: GetOperatorRequest req) throws (1: errors.ServerError e);
 
   // List all known operators.
-  ListOperatorsResponse listOperators(1: ListOperatorsRequest req) throws (1: errors.ServerException e);
+  ListOperatorsResponse listOperators(1: ListOperatorsRequest req) throws (1: errors.ServerError e);
 
   // Validate that a job is valid, and would be accepted by the server.
-  ValidateWorkflowResponse validateWorkflow(1: ValidateWorkflowRequest req) throws (1: errors.ServerException e);
+  ValidateWorkflowResponse validateWorkflow(1: ValidateWorkflowRequest req) throws (1: errors.ServerError e);
 
   // Submit a new workflow.
-  SubmitWorkflowResponse submitWorkflow(1: SubmitWorkflowRequest req) throws (1: errors.ServerException e);
+  SubmitWorkflowResponse submitWorkflow(1: SubmitWorkflowRequest req) throws (1: errors.ServerError e);
 
   // Kill a specific workflow.
-  KillWorkflowResponse killWorkflow(1: KillWorkflowRequest req) throws (1: errors.ServerException e);
+  KillWorkflowResponse killWorkflow(1: KillWorkflowRequest req) throws (1: errors.ServerError e);
 }

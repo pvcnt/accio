@@ -20,7 +20,6 @@ scala_library(
   deps = [
     "//accio/java/fr/cnrs/liris/lumos/domain",
     "//accio/java/fr/cnrs/liris/lumos/storage",
-    "//accio/java/fr/cnrs/liris/finatra/errors",
     "//3rdparty/jvm/com/github/nscala_time",
     "//3rdparty/jvm/com/twitter:inject_core",
   ],

@@ -16,22 +16,15 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.lumos.domain
+package fr.cnrs.liris.infra.thriftserver
 
-sealed trait Status
+import com.twitter.util.Future
 
-object Status {
-
-  case object Ok extends Status
-
-  case class AlreadyExists(jobName: String) extends Status
-
-  case class NotFound(jobName: String) extends Status
-
-  case class InvalidArgument(errors: Seq[FieldViolation]) extends Status
-
-  case class FailedPrecondition(jobName: String, errors: Seq[FieldViolation] = Seq.empty) extends Status
-
-  case class FieldViolation(message: String, field: String)
-
+trait AuthStrategy {
+  /**
+   * Try to authenticate a user, given some credentials.
+   *
+   * @param credentials Credentials provided by the client.
+   */
+  def authenticate(credentials: String): Future[Option[UserInfo]]
 }

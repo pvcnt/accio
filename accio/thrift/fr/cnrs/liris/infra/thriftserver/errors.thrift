@@ -1,6 +1,6 @@
 /*
  * Accio is a platform to launch computer science experiments.
- * Copyright (C) 2016-2018 Vincent Primault <v.primault@ucl.ac.uk>
+ * Copyright (C) 2016-201 8 Vincent Primault <v.primault@ucl.ac.uk>
  *
  * Accio is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,22 +16,26 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.lumos.domain
+namespace java fr.cnrs.liris.infra.thriftserver
 
-sealed trait Status
+enum ErrorCode {
+  ALREADY_EXISTS,
+  NOT_FOUND,
+  FAILED_PRECONDITION,
+  INVALID_ARGUMENT,
+  UNAUTHENTICATED,
+  UNIMPLEMENTED,
+}
 
-object Status {
+struct FieldViolation {
+  1: string message;
+  2: string field;
+}
 
-  case object Ok extends Status
-
-  case class AlreadyExists(jobName: String) extends Status
-
-  case class NotFound(jobName: String) extends Status
-
-  case class InvalidArgument(errors: Seq[FieldViolation]) extends Status
-
-  case class FailedPrecondition(jobName: String, errors: Seq[FieldViolation] = Seq.empty) extends Status
-
-  case class FieldViolation(message: String, field: String)
-
+exception ServerError {
+  1: ErrorCode code;
+  2: optional string message;
+  3: optional string resource_type;
+  4: optional string resource_name;
+  5: optional list<FieldViolation> errors;
 }

@@ -16,22 +16,29 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.lumos.domain
+namespace java fr.cnrs.liris.infra.jackson
 
-sealed trait Status
+enum TestEnum {
+  FIRST,
+  SECOND,
+  OTHER_ELEM,
+}
 
-object Status {
+struct InnerStruct {
+  1: string s;
+}
 
-  case object Ok extends Status
+struct TestStruct {
+  1: i32 int;
+  2: i64 long;
+  3: string str;
+  4: double dbl;
+  5: bool b;
+  6: InnerStruct inner_struct;
+}
 
-  case class AlreadyExists(jobName: String) extends Status
-
-  case class NotFound(jobName: String) extends Status
-
-  case class InvalidArgument(errors: Seq[FieldViolation]) extends Status
-
-  case class FailedPrecondition(jobName: String, errors: Seq[FieldViolation] = Seq.empty) extends Status
-
-  case class FieldViolation(message: String, field: String)
-
+union TestUnion {
+  1: string a;
+  2: i32 b;
+  3: InnerStruct c;
 }

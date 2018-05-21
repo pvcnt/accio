@@ -22,7 +22,7 @@ import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finatra.http.HttpServer
 import com.twitter.finatra.http.filters.{CommonFilters, LoggingMDCFilter, TraceIdMDCFilter}
 import com.twitter.finatra.http.routing.HttpRouter
-import fr.cnrs.liris.finatra.jackson.ScroogeFinatraJacksonModule
+import fr.cnrs.liris.infra.jackson.ScroogeFinatraJacksonModule
 
 object LumosGatewayMain extends LumosGateway
 
@@ -38,7 +38,7 @@ class LumosGateway extends HttpServer {
       .filter[LoggingMDCFilter[Request, Response]]
       .filter[TraceIdMDCFilter[Request, Response]]
       .filter[CommonFilters]
-      .exceptionMapper[ServerExceptionMapper]
+      .exceptionMapper[ServerErrorMapper]
       .add[ApiController]
 
     if (uiFlag()) {

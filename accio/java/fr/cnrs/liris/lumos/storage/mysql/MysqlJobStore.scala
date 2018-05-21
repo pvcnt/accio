@@ -22,8 +22,8 @@ import com.twitter.finagle.mysql.Parameter.{NullParameter, wrap}
 import com.twitter.finagle.mysql._
 import com.twitter.finagle.stats.StatsReceiver
 import com.twitter.util.{Future, StorageUnit}
-import fr.cnrs.liris.lumos.domain.thrift.ThriftAdapter
 import fr.cnrs.liris.lumos.domain._
+import fr.cnrs.liris.lumos.domain.thrift.ThriftAdapter
 import fr.cnrs.liris.lumos.storage.{JobQuery, JobStore}
 import fr.cnrs.liris.util.scrooge.BinaryScroogeSerializer
 

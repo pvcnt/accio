@@ -14,25 +14,19 @@
 # You should have received a copy of the GNU General Public License
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
-load("@io_bazel_rules_scala//thrift:thrift.bzl", "thrift_library")
-load("@io_bazel_rules_scala//twitter_scrooge:twitter_scrooge.bzl", "scrooge_scala_library")
-
-scrooge_scala_library(
-  name = "server",
+scala_library(
+  name = "thriftserver",
+  srcs = glob(["*.scala"]),
   deps = [
-    ":thrift",
-    "//accio/thrift/fr/cnrs/liris/accio/domain:thrift",
-    "//accio/thrift/fr/cnrs/liris/accio/domain",
-    "//accio/thrift/fr/cnrs/liris/infra/thriftserver:thrift",
+    "//accio/java/fr/cnrs/liris/infra/webhook",
+    "//accio/java/fr/cnrs/liris/util/cache",
+    "//accio/java/fr/cnrs/liris/util",
     "//accio/thrift/fr/cnrs/liris/infra/thriftserver",
-    "//3rdparty/jvm/com/twitter:finagle_thrift",
+    "//3rdparty/jvm/com/twitter:finatra_jackson",
+    "//3rdparty/jvm/com/twitter:finatra_thrift",
+    "//3rdparty/jvm/com/twitter:util_slf4j_api",
+    "//3rdparty/jvm/com/twitter:inject_core",
+    "//3rdparty/jvm/com/twitter:util_core",
   ],
   visibility = ["//visibility:public"],
-  with_finagle = True,
-)
-
-thrift_library(
-  name = "thrift",
-  srcs = glob(["*.thrift"]),
-  visibility = ["//accio/thrift:__subpackages__"],
 )

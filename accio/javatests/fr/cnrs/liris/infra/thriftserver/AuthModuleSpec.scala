@@ -16,22 +16,22 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.lumos.domain
+package fr.cnrs.liris.infra.thriftserver
 
-sealed trait Status
+import com.google.inject.Module
+import com.twitter.inject.CreateTwitterInjector
+import fr.cnrs.liris.testing.UnitSpec
 
-object Status {
+/**
+ * Unit tests for [[AuthModule]].
+ */
+class AuthModuleSpec extends UnitSpec with CreateTwitterInjector {
+  behavior of "AuthModule"
 
-  case object Ok extends Status
+  override protected def modules: Seq[Module] = Seq(AuthModule)
 
-  case class AlreadyExists(jobName: String) extends Status
-
-  case class NotFound(jobName: String) extends Status
-
-  case class InvalidArgument(errors: Seq[FieldViolation]) extends Status
-
-  case class FailedPrecondition(jobName: String, errors: Seq[FieldViolation] = Seq.empty) extends Status
-
-  case class FieldViolation(message: String, field: String)
-
+  it should "provide an authentication chain" in {
+    val injector = createInjector
+    injector.instance[AuthChain] shouldBe an[AuthChain]
+  }
 }

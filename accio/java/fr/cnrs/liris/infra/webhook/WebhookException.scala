@@ -16,22 +16,14 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.lumos.domain
+package fr.cnrs.liris.infra.webhook
 
-sealed trait Status
+import com.twitter.finagle.http.Response
 
-object Status {
-
-  case object Ok extends Status
-
-  case class AlreadyExists(jobName: String) extends Status
-
-  case class NotFound(jobName: String) extends Status
-
-  case class InvalidArgument(errors: Seq[FieldViolation]) extends Status
-
-  case class FailedPrecondition(jobName: String, errors: Seq[FieldViolation] = Seq.empty) extends Status
-
-  case class FieldViolation(message: String, field: String)
-
-}
+/**
+ * Exception thrown when a call to a webhook fails.
+ *
+ * @param response HTTP response.
+ */
+final class WebhookException(val response: Response)
+  extends RuntimeException(s"Unexpected webhook status: ${response.status.code} (${response.contentString})")

@@ -17,22 +17,24 @@
 load("@io_bazel_rules_scala//thrift:thrift.bzl", "thrift_library")
 load("@io_bazel_rules_scala//twitter_scrooge:twitter_scrooge.bzl", "scrooge_scala_library")
 
-scrooge_scala_library(
-  name = "server",
+scala_test(
+  name = "jackson",
+  srcs = glob(["*.scala"]),
+  size = "small",
   deps = [
-    ":thrift",
-    "//accio/thrift/fr/cnrs/liris/accio/domain:thrift",
-    "//accio/thrift/fr/cnrs/liris/accio/domain",
-    "//accio/thrift/fr/cnrs/liris/infra/thriftserver:thrift",
-    "//accio/thrift/fr/cnrs/liris/infra/thriftserver",
-    "//3rdparty/jvm/com/twitter:finagle_thrift",
+    ":scrooge",
+    "//accio/java/fr/cnrs/liris/infra/jackson",
+    "//accio/javatests/fr/cnrs/liris/testing",
+    "//3rdparty/jvm/com/twitter:finatra_jackson",
   ],
-  visibility = ["//visibility:public"],
-  with_finagle = True,
+)
+
+scrooge_scala_library(
+  name = "scrooge",
+  deps = [":thrift"],
 )
 
 thrift_library(
   name = "thrift",
   srcs = glob(["*.thrift"]),
-  visibility = ["//accio/thrift:__subpackages__"],
 )
