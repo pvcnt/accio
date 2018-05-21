@@ -21,9 +21,6 @@ namespace java fr.cnrs.liris.lumos.server
 include "accio/thrift/fr/cnrs/liris/lumos/domain/lumos.thrift"
 include "accio/thrift/fr/cnrs/liris/infra/thriftserver/errors.thrift"
 
-struct GetInfoRequest {
-}
-
 struct GetInfoResponse {
   1: required string version;
 }
@@ -58,7 +55,7 @@ struct ListJobsResponse {
 
 service LumosService {
   // Get information about this server.
-  GetInfoResponse getInfo(1: GetInfoRequest req) throws (1: errors.ServerError e);
+  GetInfoResponse getInfo() throws (1: errors.ServerError e);
 
   // Push an event.
   PushEventResponse pushEvent(1: PushEventRequest req) throws (1: errors.ServerError e);

@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 # Accio is a platform to launch computer science experiments.
 # Copyright (C) 2016-2018 Vincent Primault <v.primault@ucl.ac.uk>
 #
@@ -15,5 +14,17 @@
 # You should have received a copy of the GNU General Public License
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
-bazel build accio/java/fr/cnrs/liris/accio/cli
-./bazel-bin/accio/java/fr/cnrs/liris/accio/cli/cli "$@"
+scala_library(
+  name = "cli",
+  srcs = glob(["*.scala"]),
+  deps = [
+    "//3rdparty/jvm/com/twitter:util_core",
+    "//3rdparty/jvm/com/twitter:inject_app",
+    "//3rdparty/jvm/com/google/guava",
+    "//3rdparty/jvm/ch/qos/logback:logback_core",
+    "//3rdparty/jvm/ch/qos/logback:logback_classic",
+    "//3rdparty/jvm/com/twitter:util_slf4j_jul_bridge",
+    "//3rdparty/jvm/com/twitter:util_slf4j_api",
+  ],
+  visibility = ["//visibility:public"],
+)

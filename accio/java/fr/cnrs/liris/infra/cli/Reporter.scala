@@ -16,22 +16,14 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.dsl.json
+package fr.cnrs.liris.infra.cli
 
-import com.twitter.finatra.json.FinatraObjectMapper
-import com.twitter.io.Buf
-import fr.cnrs.liris.accio.domain.Workflow
-import fr.cnrs.liris.accio.dsl.WorkflowParser
+trait Reporter extends ExceptionListener {
+  def outErr: OutErr
 
-final class JsonWorkflowParser(mapper: FinatraObjectMapper) extends WorkflowParser {
-  override def decode(buf: Buf): Workflow = {
-    val content = buf match {
-      case Buf.Utf8(str) => str
-    }
-    mapper.parse[Workflow](content)
-  }
-}
+  def warn(message: String): Unit
 
-object JsonWorkflowParser {
-  val default: JsonWorkflowParser = new JsonWorkflowParser(ObjectMapperFactory())
+  def error(message: String): Unit
+
+  def info(message: String): Unit
 }

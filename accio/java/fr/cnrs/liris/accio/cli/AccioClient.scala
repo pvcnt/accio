@@ -16,22 +16,23 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.dsl.json
+package fr.cnrs.liris.accio.cli
 
-import com.twitter.finatra.json.FinatraObjectMapper
-import com.twitter.io.Buf
-import fr.cnrs.liris.accio.domain.Workflow
-import fr.cnrs.liris.accio.dsl.WorkflowParser
+import fr.cnrs.liris.infra.cli.Application
 
-final class JsonWorkflowParser(mapper: FinatraObjectMapper) extends WorkflowParser {
-  override def decode(buf: Buf): Workflow = {
-    val content = buf match {
-      case Buf.Utf8(str) => str
-    }
-    mapper.parse[Workflow](content)
-  }
-}
+object AccioClientMain extends AccioClient
 
-object JsonWorkflowParser {
-  val default: JsonWorkflowParser = new JsonWorkflowParser(ObjectMapperFactory())
+/**
+ * Entry point of the Accio command line application.
+ */
+class AccioClient extends Application {
+  override def name = "accio"
+
+  override def productName = "Accio"
+
+  override def commands = Set(
+    new VersionCommand,
+    new SubmitCommand,
+    new KillCommand,
+    new ValidateCommand)
 }

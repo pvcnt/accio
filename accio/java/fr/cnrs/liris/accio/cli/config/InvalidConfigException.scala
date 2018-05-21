@@ -16,22 +16,14 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.dsl.json
+package fr.cnrs.liris.accio.cli.config
 
-import com.twitter.finatra.json.FinatraObjectMapper
-import com.twitter.io.Buf
-import fr.cnrs.liris.accio.domain.Workflow
-import fr.cnrs.liris.accio.dsl.WorkflowParser
-
-final class JsonWorkflowParser(mapper: FinatraObjectMapper) extends WorkflowParser {
-  override def decode(buf: Buf): Workflow = {
-    val content = buf match {
-      case Buf.Utf8(str) => str
-    }
-    mapper.parse[Workflow](content)
-  }
-}
-
-object JsonWorkflowParser {
-  val default: JsonWorkflowParser = new JsonWorkflowParser(ObjectMapperFactory())
-}
+/**
+ * Exception thrown when a configuration is invalid, either syntaxically or semantically.
+ *
+ * @param uri     Configuration file this exception is about.
+ * @param message Error message.
+ * @param cause   Possible root cause.
+ */
+final class InvalidConfigException(val uri: String, message: String, cause: Throwable = null)
+  extends RuntimeException(message, cause)

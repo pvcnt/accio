@@ -16,22 +16,31 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.dsl.json
+package fr.cnrs.liris.infra.cli
 
-import com.twitter.finatra.json.FinatraObjectMapper
-import com.twitter.io.Buf
-import fr.cnrs.liris.accio.domain.Workflow
-import fr.cnrs.liris.accio.dsl.WorkflowParser
+/**
+ * A command line exit code.
+ *
+ * @param code Numerical code.
+ * @param name Machine name.
+ */
+case class ExitCode(code: Int, name: String)
 
-final class JsonWorkflowParser(mapper: FinatraObjectMapper) extends WorkflowParser {
-  override def decode(buf: Buf): Workflow = {
-    val content = buf match {
-      case Buf.Utf8(str) => str
+object ExitCode {
+  val Success = ExitCode(0, "SUCCESS")
+  val CommandLineError = ExitCode(1, "COMMAND_LINE_ERROR")
+  val DefinitionError = ExitCode(2, "DEFINITION_ERROR")
+  val InternalError = ExitCode(3, "INTERNAL_ERROR")
+
+  def select(codes: Seq[ExitCode]): ExitCode = {
+    if (codes.contains(CommandLineError)) {
+      CommandLineError
+    } else if (codes.contains(DefinitionError)) {
+      DefinitionError
+    } else if (codes.contains(InternalError)) {
+      InternalError
+    } else {
+      Success
     }
-    mapper.parse[Workflow](content)
   }
-}
-
-object JsonWorkflowParser {
-  val default: JsonWorkflowParser = new JsonWorkflowParser(ObjectMapperFactory())
 }

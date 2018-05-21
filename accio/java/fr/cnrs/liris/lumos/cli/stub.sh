@@ -1,5 +1,5 @@
-#!/usr/bin/env bash
-# Accio is a platform to launch computer science experiments.
+#!/bin/sh
+# Accio is a program whose purpose is to study location privacy.
 # Copyright (C) 2016-2018 Vincent Primault <v.primault@ucl.ac.uk>
 #
 # Accio is free software: you can redistribute it and/or modify
@@ -15,5 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
-bazel build accio/java/fr/cnrs/liris/accio/cli
-./bazel-bin/accio/java/fr/cnrs/liris/accio/cli/cli "$@"
+# See https://coderwall.com/p/ssuaxa/how-to-make-a-jar-file-linux-executable
+
+MYSELF=$(which "$0" 2>/dev/null)
+if [ $? -gt 0 -a -f "$0" ]; then
+    MYSELF="./$0"
+fi
+JAVA=java
+if [ -n "$JAVA_HOME" ]; then
+	JAVA="$JAVA_HOME/bin/java"
+fi
+exec ${JAVA} ${JAVA_OPTS} -jar ${MYSELF} $@
+exit 1

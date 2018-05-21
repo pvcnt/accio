@@ -30,34 +30,34 @@ class OpExecutorSpec extends UnitSpec with CreateTmpDirectory {
 
   it should "execute operators and return artifacts" in {
     val executor = new OpExecutor(OpMetadata[SimpleOp], tmpDir)
-    var payload = OpPayload("Simple", 123, Seq(AttrValue("str", DataType.String, Value.String("foo"))), Map.empty)
+    var payload = OpPayload("Simple", 123, Seq(AttrValue("str", Value.String("foo"))), Map.empty)
     var res = executor.execute(payload)
     res.successful shouldBe true
     res.artifacts should have size 2
-    res.artifacts should contain(AttrValue("str", DataType.String, Value.String("foo+0")))
-    res.artifacts should contain(AttrValue("b", DataType.Bool, Value.False))
+    res.artifacts should contain(AttrValue("str", Value.String("foo+0")))
+    res.artifacts should contain(AttrValue("b", Value.False))
 
-    payload = OpPayload("Simple", 123, Seq(AttrValue("str", DataType.String, Value.String("bar")), AttrValue("i", DataType.Int, Value.Int(3))), Map.empty)
+    payload = OpPayload("Simple", 123, Seq(AttrValue("str", Value.String("bar")), AttrValue("i", Value.Int(3))), Map.empty)
     res = executor.execute(payload)
     res.successful shouldBe true
     res.artifacts should have size 2
-    res.artifacts should contain(AttrValue("str", DataType.String, Value.String("bar+3")))
-    res.artifacts should contain(AttrValue("b", DataType.Bool, Value.True))
+    res.artifacts should contain(AttrValue("str", Value.String("bar+3")))
+    res.artifacts should contain(AttrValue("b", Value.True))
   }
 
   it should "coerce input values when possible" in {
     val executor = new OpExecutor(OpMetadata[SimpleOp], tmpDir)
-    val payload = OpPayload("Simple", 123, Seq(AttrValue("str", DataType.Int, Value.Int(2)), AttrValue("i", DataType.String, Value.String("3"))), Map.empty)
+    val payload = OpPayload("Simple", 123, Seq(AttrValue("str", Value.Int(2)), AttrValue("i", Value.String("3"))), Map.empty)
     val res = executor.execute(payload)
     res.successful shouldBe true
     res.artifacts should have size 2
-    res.artifacts should contain(AttrValue("str", DataType.String, Value.String("2+3")))
-    res.artifacts should contain(AttrValue("b", DataType.Bool, Value.True))
+    res.artifacts should contain(AttrValue("str", Value.String("2+3")))
+    res.artifacts should contain(AttrValue("b", Value.True))
   }
 
   it should "reject invalid inputs" in {
     val executor = new OpExecutor(OpMetadata[SimpleOp], tmpDir)
-    val payload = OpPayload("Simple", 123, Seq(AttrValue("str", DataType.String, Value.String("foo")), AttrValue("i", DataType.Double, Value.Double(2))), Map.empty)
+    val payload = OpPayload("Simple", 123, Seq(AttrValue("str", Value.String("foo")), AttrValue("i", Value.Double(2))), Map.empty)
     val e = intercept[IllegalArgumentException] {
       executor.execute(payload)
     }
@@ -69,12 +69,12 @@ class OpExecutorSpec extends UnitSpec with CreateTmpDirectory {
     val payload = OpPayload("NoInput", 123, Seq.empty, Map.empty)
     val res = executor.execute(payload)
     res.successful shouldBe true
-    res.artifacts should contain theSameElementsAs Seq(AttrValue("s", DataType.String, Value.String("foo")))
+    res.artifacts should contain theSameElementsAs Seq(AttrValue("s", Value.String("foo")))
   }
 
   it should "execute operators with no output" in {
     val executor = new OpExecutor(OpMetadata[NoOutputOp], tmpDir)
-    val payload = OpPayload("NoOutput", 123, Seq(AttrValue("s", DataType.String, Value.String("foo"))), Map.empty)
+    val payload = OpPayload("NoOutput", 123, Seq(AttrValue("s", Value.String("foo"))), Map.empty)
     val res = executor.execute(payload)
     res.successful shouldBe true
     res.artifacts should have size 0
@@ -91,7 +91,7 @@ class OpExecutorSpec extends UnitSpec with CreateTmpDirectory {
 
   it should "catch exceptions thrown by the operator" in {
     val executor = new OpExecutor(OpMetadata[ExceptionalOp], tmpDir)
-    val payload = OpPayload("Exceptional", 123, Seq(AttrValue("str", DataType.String, Value.String("foo"))), Map.empty)
+    val payload = OpPayload("Exceptional", 123, Seq(AttrValue("str", Value.String("foo"))), Map.empty)
     val res = executor.execute(payload)
     res.successful shouldBe false
     res.artifacts should have size 0

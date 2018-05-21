@@ -27,7 +27,9 @@ import fr.cnrs.liris.testing.UnitSpec
  * Unit tests for [[JsonWorkflowParser]].
  */
 class JsonWorkflowParserSpec extends UnitSpec {
-  private[this] val parser = new JsonWorkflowParser(ObjectMapperFactory())
+  behavior of "JsonWorkflowParser"
+
+  private def parser = JsonWorkflowParser.default
 
   it should "parse a job definition" in {
     val workflow = parser.decode(Buf.Utf8(

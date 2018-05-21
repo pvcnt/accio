@@ -70,10 +70,6 @@ dependencies:
     breeze:
       version: "0.12"
       lang: scala
-  org.ocpsoft.prettytime:
-    prettytime:
-      version: "4.0.1.Final"
-      lang: java
   com.univocity:
     univocity-parsers:
       version: 2.6.3

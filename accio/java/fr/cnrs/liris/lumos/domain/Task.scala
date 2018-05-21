@@ -29,3 +29,4 @@ case class Task(
   error: Option[ErrorDatum] = None,
   status: ExecStatus = ExecStatus(),
   history: Seq[ExecStatus] = Seq.empty)
+  extends StatusHolder

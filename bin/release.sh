@@ -22,11 +22,11 @@ mkdir -p $DIST_DIR
 bazel build accio/java/fr/cnrs/liris/accio/agent:agent_deploy.jar
 bazel build accio/java/fr/cnrs/liris/accio/executor:executor_deploy.jar
 bazel build accio/java/fr/cnrs/liris/accio/tools/gateway:gateway_deploy.jar
-bazel build accio/java/fr/cnrs/liris/accio/tools/cli:binary
+bazel build accio/java/fr/cnrs/liris/accio/cli:binary
 
 cp bazel-bin/accio/java/fr/cnrs/liris/accio/agent/agent_deploy.jar $DIST_DIR/accio-agent.jar
 cp bazel-bin/accio/java/fr/cnrs/liris/accio/executor/executor_deploy.jar $DIST_DIR/accio-executor.jar
 cp bazel-bin/accio/java/fr/cnrs/liris/accio/tools/gateway/gateway_deploy.jar $DIST_DIR/accio-gateway.jar
-cp bazel-genfiles/accio/java/fr/cnrs/liris/accio/tools/cli/cli_binary $DIST_DIR/accio
+cp bazel-genfiles/accio/java/fr/cnrs/liris/accio/cli/cli_binary $DIST_DIR/accio
 
 echo "Release artifacts are available in $DIST_DIR"

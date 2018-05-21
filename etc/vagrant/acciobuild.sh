@@ -29,8 +29,8 @@ function upstart_update {
 }
 
 function build_client {
-  bazel build accio/java/fr/cnrs/liris/accio/tools/cli:binary
-  sudo cp bazel-genfiles/accio/java/fr/cnrs/liris/accio/tools/cli/cli_binary /usr/local/bin/accio
+  bazel build accio/java/fr/cnrs/liris/accio/cli:binary
+  sudo cp bazel-genfiles/accio/java/fr/cnrs/liris/accio/cli/cli_binary /usr/local/bin/accio
 }
 
 function build_agent {

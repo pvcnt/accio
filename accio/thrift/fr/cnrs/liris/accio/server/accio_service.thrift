@@ -21,9 +21,6 @@ namespace java fr.cnrs.liris.accio.server
 include "accio/thrift/fr/cnrs/liris/accio/domain/accio.thrift"
 include "accio/thrift/fr/cnrs/liris/infra/thriftserver/errors.thrift"
 
-struct GetInfoRequest {
-}
-
 struct GetInfoResponse {
   1: required string version;
 }
@@ -72,7 +69,7 @@ struct ValidateWorkflowResponse {
 
 service AccioService {
   // Get information about this server.
-  GetInfoResponse getInfo(1: GetInfoRequest req) throws (1: errors.ServerError e);
+  GetInfoResponse getInfo() throws (1: errors.ServerError e);
 
   // Get a specific operator, if it exists.
   GetOperatorResponse getOperator(1: GetOperatorRequest req) throws (1: errors.ServerError e);
