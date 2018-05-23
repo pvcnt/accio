@@ -75,8 +75,13 @@ private[scheduler] trait SchedulerSpec extends BeforeAndAfterEach {
     val process = Process("echo-process", "sleep 1")
     Await.result(scheduler.submit(process))
 
-    Await.ready(scheduler.submit(process)).poll.get shouldBe Throw(new IllegalArgumentException("Process echo-process already exists"))
+    var res = Await.ready(scheduler.submit(process)).poll.get
+    res.isThrow shouldBe true
+    res.throwable.getMessage shouldBe "Process echo-process already exists"
+
     Thread.sleep(2000)
-    Await.ready(scheduler.submit(process)).poll.get shouldBe Throw(new IllegalArgumentException("Process echo-process already exists"))
+    res = Await.ready(scheduler.submit(process)).poll.get
+    res.isThrow shouldBe true
+    res.throwable.getMessage shouldBe "Process echo-process already exists"
   }
 }
