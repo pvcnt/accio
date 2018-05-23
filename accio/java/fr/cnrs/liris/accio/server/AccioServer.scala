@@ -25,7 +25,6 @@ import fr.cnrs.liris.accio.discovery.DiscoveryModule
 import fr.cnrs.liris.accio.scheduler.install.SchedulerModule
 import fr.cnrs.liris.accio.validation.ValidationModule
 import fr.cnrs.liris.infra.thriftserver.{AuthFilter, AuthModule}
-import fr.cnrs.liris.infra.thriftserver.{AuthFilter, AuthModule}
 import fr.cnrs.liris.lumos.transport.EventTransportModule
 
 object AccioServerMain extends AccioServer
@@ -36,7 +35,8 @@ class AccioServer extends ThriftServer {
     DiscoveryModule,
     ValidationModule,
     SchedulerModule,
-    EventTransportModule)
+    EventTransportModule,
+    AccioConfigModule)
 
   override def configureThrift(router: ThriftRouter): Unit = {
     router

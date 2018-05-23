@@ -45,6 +45,7 @@ object JobStateMachine {
         contact = job.contact,
         labels = job.labels,
         metadata = job.metadata,
+        links = job.links,
         inputs = job.inputs,
         status = ExecStatus(ExecStatus.Pending, time, message = Some("Job created"))))
     }
@@ -70,6 +71,7 @@ object JobStateMachine {
       case ExecStatus.Pending =>
         Right(job.copy(
           metadata = job.metadata ++ e.metadata,
+          links = job.links ++ e.links,
           history = job.history :+ job.status,
           status = ExecStatus(ExecStatus.Running, time, e.message)))
       case ExecStatus.Running => Left(Status.FailedPrecondition(job.name, Seq(FieldViolation("Job is already running", "status.state"))))

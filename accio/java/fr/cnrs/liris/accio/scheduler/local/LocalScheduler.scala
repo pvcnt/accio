@@ -28,27 +28,21 @@ import com.twitter.finagle.stats.StatsReceiver
 import com.twitter.io.{Buf, Reader}
 import com.twitter.util.logging.Logging
 import com.twitter.util.{Future, FuturePool, Time}
-import fr.cnrs.liris.accio.domain.Workflow
-import fr.cnrs.liris.accio.domain.thrift.ThriftAdapter
-import fr.cnrs.liris.accio.scheduler.Scheduler
+import fr.cnrs.liris.accio.scheduler._
 import fr.cnrs.liris.util.Platform
-import fr.cnrs.liris.util.jvm.JavaHome
-import fr.cnrs.liris.util.scrooge.BinaryScroogeSerializer
 
 import scala.collection.JavaConverters._
-import scala.collection.mutable
 
 final class LocalScheduler(
   statsReceiver: StatsReceiver,
   reservedResources: Map[String, Long],
-  executorUri: String,
   forceScheduling: Boolean,
   dataDir: Path)
   extends Scheduler with Logging {
 
-  private case class Pending(workflow: Workflow, args: Seq[String])
+  private case class Pending(process: Process)
 
-  private case class Running(workflow: Workflow, future: Future[_])
+  private case class Running(process: Process, future: Future[_])
 
   private[this] val pending = new ConcurrentLinkedDeque[Pending]
   private[this] val running = new ConcurrentHashMap[String, Running].asScala
@@ -83,41 +77,57 @@ final class LocalScheduler(
   statsReceiver.provideGauge("scheduler", "pending")(pending.size.toFloat)
   statsReceiver.provideGauge("scheduler", "running")(running.size.toFloat)
 
-  override def submit(workflow: Workflow, args: Seq[String]): Unit = {
-    if (reserveResources(workflow.name, workflow.resources)) {
-      val future = schedule(workflow, args)
-      running(workflow.name) = Running(workflow, future)
+  override def submit(process: Process): Future[ProcessInfo] = {
+    if (isActive0(process.name) || isCompleted0(process.name)) {
+      Future.exception(ProcessAlreadyExistsException(process.name))
+    } else if (reserveResources(process.name, process.resources)) {
+      running(process.name) = Running(process, schedule(process))
+      Future.value(ProcessInfo())
     } else {
-      if (!forceScheduling && !isEnoughResources(workflow.name, workflow.resources, totalResources)) {
-        // TODO: We should cancel the task.
-        logger.warn(s"Not enough resources to schedule workflow ${workflow.name} (${workflow.resources})")
+      if (!forceScheduling && !isEnoughResources(process.name, process.resources, totalResources)) {
+        Future.exception(UnschedulableProcessException(process.name, "Not enough resources"))
+      } else {
+        logger.info(s"Queued process ${process.name}")
+        pending.add(Pending(process))
+        Future.value(ProcessInfo())
       }
-      logger.info(s"Queued workflow ${workflow.name}")
-      pending.add(Pending(workflow, args))
     }
   }
 
-  override def kill(name: String): Unit = {
+  override def kill(name: String): Future[Unit] = {
     running.remove(name).foreach { item =>
       item.future.raise(new RuntimeException)
-      releaseResources(item.workflow.resources)
+      releaseResources(item.process.resources)
     }
+    Future.Done
   }
 
-  override def getLogs(name: String, kind: String, skip: Option[Int], tail: Option[Int]): Future[Seq[String]] = {
+  override def listLogs(name: String, kind: String, skip: Option[Int], tail: Option[Int]): Future[Seq[String]] = {
     readLogFile(getWorkDir(name).resolve(kind), skip, tail)
+  }
+
+  override def isActive(name: String): Future[Boolean] = Future.value(isActive0(name))
+
+  override def isCompleted(name: String): Future[Boolean] = Future.value(isCompleted0(name))
+
+  private def isActive0(name: String): Boolean = {
+    pending.iterator.asScala.exists(_.process.name == name) || running.contains(name)
+  }
+
+  private def isCompleted0(name: String): Boolean = {
+    Files.isDirectory(getWorkDir(name)) && !running.contains(name)
   }
 
   override def close(deadline: Time): Future[Unit] = Future.Done
 
-  private def schedule(workflow: Workflow, args: Seq[String]): Future[Unit] = {
-    pool(execute(workflow, args))
+  private def schedule(process: Process): Future[Unit] = {
+    pool(execute(process))
       .onFailure { e =>
-        logger.error(s"Unexpected error while executing workflow ${workflow.name}", e)
+        logger.error(s"Unexpected error while executing process ${process.name}", e)
       }
       .ensure {
-        running.remove(workflow.name)
-        releaseResources(workflow.resources)
+        running.remove(process.name)
+        releaseResources(process.resources)
       }
       .unit
   }
@@ -158,36 +168,27 @@ final class LocalScheduler(
       }
     })
     pending.asScala.zipWithIndex.foreach { case (item, idx) =>
-      if (reserveResources(item.workflow.name, item.workflow.resources)) {
+      if (reserveResources(item.process.name, item.process.resources)) {
+        val future = schedule(item.process)
+        running(item.process.name) = Running(item.process, future)
         pending.remove(idx)
-        val future = schedule(item.workflow, item.args)
-        running(item.workflow.name) = Running(item.workflow, future)
       }
     }
   }
 
-  private def execute(workflow: Workflow, args: Seq[String]): Int = {
-    val javaProcess = startProcess(workflow, args)
-    logger.info(s"Started execution of workflow ${workflow.name}")
+  private def execute(process: Process): Int = {
+    val javaProcess = startProcess(process)
+    logger.info(s"Started execution of process ${process.name}")
     val exitCode = javaProcess.waitFor()
-    logger.info(s"Completed execution of workflow ${workflow.name} (exit code: $exitCode)")
+    logger.info(s"Completed execution of process ${process.name} (exit code: $exitCode)")
     exitCode
   }
 
-  private def startProcess(workflow: Workflow, args: Seq[String]): JavaProcess = {
-    val workDir = getWorkDir(workflow.name)
+  private def startProcess(process: Process): JavaProcess = {
+    val workDir = getWorkDir(process.name)
     Files.createDirectories(workDir)
-
-    val cmd = mutable.ListBuffer.empty[String]
-    cmd += JavaHome.javaBinary.toString
-    cmd += s"-Xmm200M"
-    cmd += s"-Xmx200M"
-    cmd ++= Seq("-jar", executorUri)
-    cmd ++= args
-    cmd += BinaryScroogeSerializer.toString(ThriftAdapter.toThrift(workflow))
-
     new ProcessBuilder()
-      .command(cmd: _*)
+      .command("bash", "-c", process.command)
       .directory(workDir.toFile)
       .redirectOutput(workDir.resolve("stdout").toFile)
       .redirectError(workDir.resolve("stderr").toFile)
@@ -208,7 +209,8 @@ final class LocalScheduler(
         var lines = content.split("\n")
         skip.foreach(n => lines = lines.drop(n))
         tail.foreach(n => lines = lines.takeRight(n))
-        lines
+        // Processes may generate an empty file log, which we do not want to return.
+        if (lines.length == 1 && lines.head == "") Seq.empty else lines.toSeq
       }
   }
 }

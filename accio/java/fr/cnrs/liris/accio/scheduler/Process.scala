@@ -16,26 +16,10 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.lumos.domain
+package fr.cnrs.liris.accio.scheduler
 
-import org.joda.time.Instant
-
-case class Job(
-  name: String = "",
-  createTime: Instant = new Instant(0),
-  owner: Option[String] = None,
-  contact: Option[String] = None,
-  labels: Map[String, String] = Map.empty,
-  metadata: Map[String, String] = Map.empty,
-  inputs: Seq[AttrValue] = Seq.empty,
-  outputs: Seq[AttrValue] = Seq.empty,
-  progress: Int = 0,
-  links: Seq[Link] = Seq.empty,
-  tasks: Seq[Task] = Seq.empty,
-  status: ExecStatus = ExecStatus(),
-  history: Seq[ExecStatus] = Seq.empty)
-  extends StatusHolder
-
-object Job {
-  val empty = Job()
-}
+case class Process(
+  name: String,
+  command: String,
+  resources: Map[String, Long] = Map.empty,
+  env: Map[String, String] = Map.empty)

@@ -20,15 +20,22 @@ package fr.cnrs.liris.accio.server
 
 import com.google.inject.{Inject, Singleton}
 import com.twitter.finatra.thrift.Controller
+import com.twitter.inject.annotations.Flag
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.discovery.{DiscoveryModule, OpRegistry}
 import fr.cnrs.liris.accio.domain.thrift.ThriftAdapter
-import fr.cnrs.liris.accio.scheduler.Scheduler
+import fr.cnrs.liris.accio.scheduler.{Process, ProcessAlreadyExistsException, Scheduler, UnschedulableProcessException}
 import fr.cnrs.liris.accio.server.AccioService._
 import fr.cnrs.liris.accio.validation.{ValidationResult, WorkflowFactory, WorkflowPreparator, WorkflowValidator}
 import fr.cnrs.liris.accio.version.Version
 import fr.cnrs.liris.infra.thriftserver.{FieldViolation, ServerException, UserInfo}
-import fr.cnrs.liris.lumos.transport.EventTransportModule
+import fr.cnrs.liris.lumos.domain.{Event, Job, Link}
+import fr.cnrs.liris.lumos.transport.{EventTransport, EventTransportModule}
+import fr.cnrs.liris.util.jvm.JavaHome
+import fr.cnrs.liris.util.scrooge.BinaryScroogeSerializer
+import org.joda.time.Instant
+
+import scala.collection.mutable
 
 @Singleton
 final class AccioServiceController @Inject()(
@@ -36,6 +43,8 @@ final class AccioServiceController @Inject()(
   preparator: WorkflowPreparator,
   validator: WorkflowValidator,
   scheduler: Scheduler,
+  transport: EventTransport,
+  @Flag("executor_uri") executorUri: String,
   registry: OpRegistry)
   extends Controller with AccioService.ServicePerEndpoint {
 
@@ -77,9 +86,36 @@ final class AccioServiceController @Inject()(
       Future.exception(ServerException.InvalidArgument(result.errors.map(v => ServerException.FieldViolation(v.message, v.field))))
     } else {
       val workflows = factory.create(workflow)
-      val args = EventTransportModule.forwardableArgs ++ DiscoveryModule.forwardableArgs
-      workflows.foreach(scheduler.submit(_, args))
-      Future.value(SubmitWorkflowResponse(workflow.name, workflows.map(_.name)))
+      val fs = Future.collect(workflows.map { child =>
+        val cmd = mutable.ListBuffer.empty[String]
+        cmd += JavaHome.javaBinary.toString
+        cmd += s"-Xmm200M"
+        cmd += s"-Xmx200M"
+        cmd ++= Seq("-jar", executorUri)
+        cmd ++= EventTransportModule.forwardableArgs
+        cmd ++= DiscoveryModule.forwardableArgs
+        cmd += BinaryScroogeSerializer.toString(ThriftAdapter.toThrift(workflow))
+        val process = Process(child.name, cmd.mkString, workflow.resources)
+        scheduler.submit(process)
+          .rescue {
+            case UnschedulableProcessException(name, message) =>
+              Future.exception(ServerException.FailedPrecondition("workflow", name, Seq.empty))
+            case ProcessAlreadyExistsException(name) =>
+              Future.exception(ServerException.AlreadyExists("workflow", name))
+          }
+          .flatMap { info =>
+            val job = Job(
+              name = child.name,
+              owner = workflow.owner,
+              contact = workflow.contact,
+              labels = workflow.labels,
+              metadata = info.metadata,
+              links = info.url.map(url => Link("scheduler-task", url)).toSeq,
+              inputs = workflow.params)
+            transport.sendEvent(Event(workflow.name, 0, Instant.now(), Event.JobEnqueued(job)))
+          }
+      })
+      fs.map(_ => SubmitWorkflowResponse(workflow.name, workflows.map(_.name)))
     }
   }
 

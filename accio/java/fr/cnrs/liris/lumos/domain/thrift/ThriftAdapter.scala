@@ -47,6 +47,7 @@ object ThriftAdapter {
       inputs = obj.inputs.map(toDomain),
       outputs = obj.outputs.map(toDomain),
       tasks = obj.tasks.map(toDomain),
+      links = obj.links.map(toDomain),
       progress = obj.progress,
       status = obj.status.map(toDomain).getOrElse(domain.ExecStatus()),
       history = obj.history.map(toDomain))
@@ -56,7 +57,8 @@ object ThriftAdapter {
     val payload = obj.payload match {
       case EventPayload.JobEnqueued(e) => domain.Event.JobEnqueued(toDomain(e.job))
       case EventPayload.JobExpanded(e) => domain.Event.JobExpanded(e.tasks.map(toDomain))
-      case EventPayload.JobStarted(e) => domain.Event.JobStarted(e.metadata.toMap, e.message)
+      case EventPayload.JobStarted(e) =>
+        domain.Event.JobStarted(e.links.map(toDomain), e.metadata.toMap, e.message)
       case EventPayload.JobCanceled(e) => domain.Event.JobCanceled(e.message)
       case EventPayload.JobCompleted(e) => domain.Event.JobCompleted(e.outputs.map(toDomain), e.message)
       case EventPayload.TaskStarted(e) => domain.Event.TaskStarted(e.name, e.links.map(toDomain), e.metadata.toMap, e.message)
@@ -153,6 +155,7 @@ object ThriftAdapter {
       contact = obj.contact,
       inputs = obj.inputs.map(toThrift),
       outputs = obj.outputs.map(toThrift),
+      links = obj.links.map(toThrift),
       progress = obj.progress,
       status = Some(toThrift(obj.status)),
       history = obj.history.map(toThrift))
@@ -164,7 +167,8 @@ object ThriftAdapter {
         EventPayload.JobEnqueued(JobEnqueuedEvent(toThrift(e.job)))
       case e: domain.Event.JobExpanded =>
         EventPayload.JobExpanded(JobExpandedEvent(e.tasks.map(toThrift)))
-      case e: domain.Event.JobStarted => EventPayload.JobStarted(JobStartedEvent(e.metadata, e.message))
+      case e: domain.Event.JobStarted =>
+        EventPayload.JobStarted(JobStartedEvent(e.links.map(toThrift), e.metadata, e.message))
       case e: domain.Event.JobCanceled => EventPayload.JobCanceled(JobCanceledEvent(e.message))
       case e: domain.Event.JobCompleted =>
         EventPayload.JobCompleted(JobCompletedEvent(e.outputs.map(toThrift), e.message))

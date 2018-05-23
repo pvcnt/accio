@@ -31,7 +31,7 @@ final class StateMachine(workflow: Workflow) extends Logging {
   private[this] val artifacts = mutable.Map.empty[String, AttrValue]
   private[this] val tasks = mutable.Map.empty[String, ExecStatus.State]
   private[this] val graph = Graph.create(workflow)
-  private[this] val sequence = new AtomicLong(0)
+  private[this] val sequence = new AtomicLong(1) // There has already been a first JobEnqueued event.
 
   workflow.steps.foreach(step => tasks(step.name) = ExecStatus.Pending)
 

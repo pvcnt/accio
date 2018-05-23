@@ -107,9 +107,10 @@ struct Job {
   7: list<AttrValue> inputs;
   8: list<AttrValue> outputs;
   9: i32 progress;
-  10: list<Task> tasks;
-  11: optional ExecStatus status;
-  12: list<ExecStatus> history;
+  10: list<Link> links;
+  11: list<Task> tasks;
+  12: optional ExecStatus status;
+  13: list<ExecStatus> history;
 }
 
 struct JobEnqueuedEvent {
@@ -121,8 +122,9 @@ struct JobExpandedEvent {
 }
 
 struct JobStartedEvent {
-  1: map<string, string> metadata;
-  2: optional string message;
+  1: list<Link> links;
+  2: map<string, string> metadata;
+  3: optional string message;
 }
 
 struct JobCompletedEvent {

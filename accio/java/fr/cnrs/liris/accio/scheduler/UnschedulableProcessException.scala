@@ -1,6 +1,6 @@
 /*
  * Accio is a platform to launch computer science experiments.
- * Copyright (C) 2016-2018 Vincent Primault <v.primault@ucl.ac.uk>
+ * Copyright (C) 2016-2018 Vincent Primault <vincent.primault@liris.cnrs.fr>
  *
  * Accio is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,26 +16,9 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.lumos.domain
+package fr.cnrs.liris.accio.scheduler
 
-import org.joda.time.Instant
+import scala.util.control.NoStackTrace
 
-case class Job(
-  name: String = "",
-  createTime: Instant = new Instant(0),
-  owner: Option[String] = None,
-  contact: Option[String] = None,
-  labels: Map[String, String] = Map.empty,
-  metadata: Map[String, String] = Map.empty,
-  inputs: Seq[AttrValue] = Seq.empty,
-  outputs: Seq[AttrValue] = Seq.empty,
-  progress: Int = 0,
-  links: Seq[Link] = Seq.empty,
-  tasks: Seq[Task] = Seq.empty,
-  status: ExecStatus = ExecStatus(),
-  history: Seq[ExecStatus] = Seq.empty)
-  extends StatusHolder
-
-object Job {
-  val empty = Job()
-}
+case class UnschedulableProcessException(name: String, message: String)
+  extends Exception(s"Cannot schedule process $name: $message") with NoStackTrace

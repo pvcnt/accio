@@ -33,7 +33,6 @@ import fr.cnrs.liris.accio.scheduler.local.LocalScheduler
 object SchedulerModule extends TwitterModule {
   private[this] val typeFlag = flag("scheduler", "local", "Scheduler type")
 
-  private[this] val executorUriFlag = flag[String]("executor_uri", "URI to the executor")
   private[this] val forceSchedulingFlag = flag("scheduler.force_scheduling", false, "Whether to force the scheduling of too large tasks")
   private[this] val dataDirFlag = flag[String]("scheduler.data_dir", "Path where to store scheduler data")
   private[this] val reservedCpusFlag = flag("scheduler.reserved_cpus", 0, "Number of cores that are not available for scheduling")
@@ -61,11 +60,6 @@ object SchedulerModule extends TwitterModule {
     val dataDir = dataDirFlag.get
       .map(Paths.get(_))
       .getOrElse(Files.createTempDirectory("accio-scheduler-"))
-    new LocalScheduler(
-      statsReceiver,
-      reservedResources,
-      executorUriFlag(),
-      forceSchedulingFlag(),
-      dataDir)
+    new LocalScheduler(statsReceiver, reservedResources, forceSchedulingFlag(), dataDir)
   }
 }
