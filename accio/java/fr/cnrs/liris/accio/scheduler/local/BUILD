@@ -20,10 +20,7 @@ scala_library(
   deps = [
     "//accio/java/fr/cnrs/liris/accio/scheduler",
     "//accio/java/fr/cnrs/liris/util",
-    "//accio/java/fr/cnrs/liris/util/scrooge",
-    "//accio/java/fr/cnrs/liris/util/jvm",
     "//3rdparty/jvm/com/twitter:util_slf4j_api",
-    "//3rdparty/jvm/com/twitter:util_codec",
     "//3rdparty/jvm/com/twitter:util_stats",
   ],
   visibility = ["//visibility:public"],

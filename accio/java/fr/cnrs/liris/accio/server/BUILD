@@ -27,6 +27,8 @@ scala_binary(
     "//accio/java/fr/cnrs/liris/accio/version",
     "//accio/java/fr/cnrs/liris/lumos/transport",
     "//accio/java/fr/cnrs/liris/infra/thriftserver",
+    "//accio/java/fr/cnrs/liris/util/jvm",
+    "//accio/java/fr/cnrs/liris/util/scrooge",
     "//accio/thrift/fr/cnrs/liris/accio/server",
     "//3rdparty/jvm/com/twitter:finatra_thrift",
     "//3rdparty/jvm/com/twitter:util_slf4j_api",
