@@ -102,7 +102,7 @@ class OpExecutorSpec extends UnitSpec with CreateTmpDirectory {
     val payload = OpPayload("Unstable", 123, Seq.empty, Map.empty)
     val res = executor.execute(payload)
     res.successful shouldBe true
-    res.artifacts should contain theSameElementsAs Seq(AttrValue("lng", DataType.Long, Value.Long(123)))
+    res.artifacts should contain theSameElementsAs Seq(AttrValue("lng", Value.Long(123)))
   }
 
   it should "not give a seed to non-unstable operators" in {
