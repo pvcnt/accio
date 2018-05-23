@@ -27,9 +27,11 @@ object JobStateMachine {
     event.payload match {
       case e: Event.JobEnqueued => handleJobEnqueued(job, event.time, e)
       case e: Event.JobExpanded => handleJobExpanded(job, event.time, e)
+      case e: Event.JobScheduled => handleJobScheduled(job, event.time, e)
       case e: Event.JobStarted => handleJobStarted(job, event.time, e)
       case e: Event.JobCompleted => handleJobCompleted(job, event.time, e)
       case e: Event.JobCanceled => handleJobCanceled(job, event.time, e)
+      case e: Event.TaskScheduled => handleTaskScheduled(job, event.time, e)
       case e: Event.TaskStarted => handleTaskStarted(job, event.time, e)
       case e: Event.TaskCompleted => handleTaskCompleted(job, event.time, e)
     }
@@ -45,8 +47,8 @@ object JobStateMachine {
         contact = job.contact,
         labels = job.labels,
         metadata = job.metadata,
-        links = job.links,
         inputs = job.inputs,
+        tasks = job.tasks,
         status = ExecStatus(ExecStatus.Pending, time, message = Some("Job created"))))
     }
   }
@@ -66,20 +68,28 @@ object JobStateMachine {
       case _ => Left(Status.FailedPrecondition(job.name, Seq(FieldViolation("Job is already completed", "status.state"))))
     }
 
-  private def handleJobStarted(job: Job, time: Instant, e: Event.JobStarted) =
+  private def handleJobScheduled(job: Job, time: Instant, e: Event.JobScheduled) =
     job.status.state match {
       case ExecStatus.Pending =>
         Right(job.copy(
           metadata = job.metadata ++ e.metadata,
-          links = job.links ++ e.links,
+          history = job.history :+ job.status,
+          status = ExecStatus(ExecStatus.Scheduled, time, e.message)))
+      case state => Left(Status.FailedPrecondition(job.name, Seq(FieldViolation(s"Job is already $state", "status.state"))))
+    }
+
+  private def handleJobStarted(job: Job, time: Instant, e: Event.JobStarted) =
+    job.status.state match {
+      // It is allowed to skip the Scheduled state.
+      case ExecStatus.Pending | ExecStatus.Scheduled =>
+        Right(job.copy(
           history = job.history :+ job.status,
           status = ExecStatus(ExecStatus.Running, time, e.message)))
-      case ExecStatus.Running => Left(Status.FailedPrecondition(job.name, Seq(FieldViolation("Job is already running", "status.state"))))
-      case _ => Left(Status.FailedPrecondition(job.name, Seq(FieldViolation("Job is already completed", "status.state"))))
+      case state => Left(Status.FailedPrecondition(job.name, Seq(FieldViolation(s"Job is already $state", "status.state"))))
     }
 
   private def handleJobCompleted(job: Job, time: Instant, e: Event.JobCompleted) =
-    ifRunning(job) {
+    ifJobRunning(job) {
       val states = job.tasks.map(_.status.state).toSet
       val state = if (states == Set(ExecStatus.Successful)) {
         ExecStatus.Successful
@@ -95,7 +105,7 @@ object JobStateMachine {
     }
 
   private def handleJobCanceled(job: Job, time: Instant, e: Event.JobCanceled) =
-    ifRunning(job) {
+    ifJobRunning(job) {
       val tasks = job.tasks.map { task =>
         if (task.status.state.isCompleted) {
           task
@@ -111,8 +121,8 @@ object JobStateMachine {
         tasks = tasks))
     }
 
-  private def handleTaskStarted(job: Job, time: Instant, e: Event.TaskStarted) =
-    ifRunning(job) {
+  private def handleTaskScheduled(job: Job, time: Instant, e: Event.TaskScheduled) =
+    ifJobRunning(job) {
       val idx = job.tasks.indexWhere(_.name == e.name)
       var task = job.tasks(idx)
       task.status.state match {
@@ -120,16 +130,29 @@ object JobStateMachine {
           task = task.copy(
             metadata = task.metadata ++ e.metadata,
             history = task.history :+ task.status,
-            status = ExecStatus(ExecStatus.Running, time, e.message),
-            links = e.links)
+            status = ExecStatus(ExecStatus.Scheduled, time, e.message))
           Right(job.copy(tasks = job.tasks.updated(idx, task)))
-        case _ =>
-          Left(Status.FailedPrecondition(job.name, Seq(FieldViolation("Task is already running or completed", s"tasks.$idx.status.state"))))
+        case state => Left(Status.FailedPrecondition(job.name, Seq(FieldViolation(s"Task is already $state", s"tasks.$idx.status.state"))))
+      }
+    }
+
+  private def handleTaskStarted(job: Job, time: Instant, e: Event.TaskStarted) =
+    ifJobRunning(job) {
+      val idx = job.tasks.indexWhere(_.name == e.name)
+      var task = job.tasks(idx)
+      task.status.state match {
+        // It is allowed to skip the Scheduled state.
+        case ExecStatus.Pending | ExecStatus.Scheduled =>
+          task = task.copy(
+            history = task.history :+ task.status,
+            status = ExecStatus(ExecStatus.Running, time, e.message))
+          Right(job.copy(tasks = job.tasks.updated(idx, task)))
+        case state => Left(Status.FailedPrecondition(job.name, Seq(FieldViolation(s"Task is already $state", s"tasks.$idx.status.state"))))
       }
     }
 
   private def handleTaskCompleted(job: Job, time: Instant, e: Event.TaskCompleted) =
-    ifRunning(job) {
+    ifJobRunning(job) {
       val idx = job.tasks.indexWhere(_.name == e.name)
       var task = job.tasks(idx)
       task.status.state match {
@@ -154,10 +177,10 @@ object JobStateMachine {
       }
     }
 
-  private def ifRunning(job: Job)(fn: => Either[Status, Job]) =
+  private def ifJobRunning(job: Job)(fn: => Either[Status, Job]) =
     job.status.state match {
       case ExecStatus.Pending => Left(Status.FailedPrecondition(job.name, Seq(FieldViolation("Job is not running", "status.state"))))
       case ExecStatus.Running => fn
-      case _ => Left(Status.FailedPrecondition(job.name, Seq(FieldViolation("Job is already completed", "status.state"))))
+      case state => Left(Status.FailedPrecondition(job.name, Seq(FieldViolation(s"Job is already $state", "status.state"))))
     }
 }

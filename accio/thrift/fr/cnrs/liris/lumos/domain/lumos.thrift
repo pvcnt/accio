@@ -61,6 +61,7 @@ struct AttrValue {
 
 enum ExecState {
   PENDING,
+  SCHEDULED,
   RUNNING,
   SUCCESSFUL,
   FAILED,
@@ -73,11 +74,6 @@ struct ExecStatus {
   3: optional string message;
 }
 
-struct Link {
-  1: string title;
-  2: string url;
-}
-
 struct ErrorDatum {
   1: string mnemonic;
   2: optional string message;
@@ -88,13 +84,12 @@ struct Task {
   1: string name;
   2: optional string mnemonic;
   3: set<string> dependencies;
-  4: list<Link> links;
-  5: map<string, string> metadata;
-  6: optional i32 exit_code;
-  7: list<MetricValue> metrics;
-  8: optional ErrorDatum error;
-  9: optional ExecStatus status;
-  10: list<ExecStatus> history;
+  4: map<string, string> metadata;
+  5: optional i32 exit_code;
+  6: list<MetricValue> metrics;
+  7: optional ErrorDatum error;
+  8: optional ExecStatus status;
+  9: list<ExecStatus> history;
 }
 
 struct Job {
@@ -107,10 +102,9 @@ struct Job {
   7: list<AttrValue> inputs;
   8: list<AttrValue> outputs;
   9: i32 progress;
-  10: list<Link> links;
-  11: list<Task> tasks;
-  12: optional ExecStatus status;
-  13: list<ExecStatus> history;
+  10: list<Task> tasks;
+  11: optional ExecStatus status;
+  12: list<ExecStatus> history;
 }
 
 struct JobEnqueuedEvent {
@@ -121,10 +115,13 @@ struct JobExpandedEvent {
   1: list<Task> tasks;
 }
 
+struct JobScheduledEvent {
+  1: map<string, string> metadata;
+  2: optional string message;
+}
+
 struct JobStartedEvent {
-  1: list<Link> links;
-  2: map<string, string> metadata;
-  3: optional string message;
+  1: optional string message;
 }
 
 struct JobCompletedEvent {
@@ -136,11 +133,15 @@ struct JobCanceledEvent {
   1: optional string message;
 }
 
+struct TaskScheduledEvent {
+  1: string name;
+  2: map<string, string> metadata;
+  3: optional string message;
+}
+
 struct TaskStartedEvent {
   1: string name;
-  2: list<Link> links;
-  3: map<string, string> metadata;
-  4: optional string message;
+  2: optional string message;
 }
 
 struct TaskCompletedEvent {
@@ -154,11 +155,13 @@ struct TaskCompletedEvent {
 union EventPayload {
   1: JobEnqueuedEvent job_enqueued;
   2: JobExpandedEvent job_expanded;
-  3: JobStartedEvent job_started;
-  4: JobCompletedEvent job_completed;
-  5: JobCanceledEvent job_canceled;
-  6: TaskStartedEvent task_started;
-  7: TaskCompletedEvent task_completed;
+  3: JobScheduledEvent job_scheduled;
+  4: JobStartedEvent job_started;
+  5: JobCompletedEvent job_completed;
+  6: JobCanceledEvent job_canceled;
+  7: TaskScheduledEvent task_scheduled;
+  8: TaskStartedEvent task_started;
+  9: TaskCompletedEvent task_completed;
 }
 
 struct Event {

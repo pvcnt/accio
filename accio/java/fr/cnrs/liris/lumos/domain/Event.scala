@@ -34,11 +34,12 @@ object Event {
 
   case class JobExpanded(tasks: Seq[Task]) extends Payload
 
-  case class JobStarted(
-    links: Seq[Link] = Seq.empty,
+  case class JobScheduled(
     metadata: Map[String, String] = Map.empty,
     message: Option[String] = None)
     extends Payload
+
+  case class JobStarted(message: Option[String] = None) extends Payload
 
   case class JobCanceled(message: Option[String] = None) extends Payload
 
@@ -47,12 +48,13 @@ object Event {
     message: Option[String] = None)
     extends Payload
 
-  case class TaskStarted(
+  case class TaskScheduled(
     name: String,
-    links: Seq[Link] = Seq.empty,
     metadata: Map[String, String] = Map.empty,
     message: Option[String] = None)
     extends Payload
+
+  case class TaskStarted(name: String, message: Option[String] = None) extends Payload
 
   case class TaskCompleted(
     name: String,

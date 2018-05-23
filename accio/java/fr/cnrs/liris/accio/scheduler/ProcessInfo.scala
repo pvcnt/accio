@@ -18,4 +18,4 @@
 
 package fr.cnrs.liris.accio.scheduler
 
-case class ProcessInfo(metadata: Map[String, String] = Map.empty, url: Option[String] = None)
+case class ProcessInfo(metadata: Map[String, String] = Map.empty)

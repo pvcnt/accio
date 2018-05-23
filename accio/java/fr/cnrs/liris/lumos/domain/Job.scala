@@ -30,7 +30,6 @@ case class Job(
   inputs: Seq[AttrValue] = Seq.empty,
   outputs: Seq[AttrValue] = Seq.empty,
   progress: Int = 0,
-  links: Seq[Link] = Seq.empty,
   tasks: Seq[Task] = Seq.empty,
   status: ExecStatus = ExecStatus(),
   history: Seq[ExecStatus] = Seq.empty)

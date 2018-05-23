@@ -22,7 +22,6 @@ case class Task(
   name: String,
   mnemonic: Option[String] = None,
   dependencies: Set[String] = Set.empty,
-  links: Seq[Link] = Seq.empty,
   metadata: Map[String, String] = Map.empty,
   exitCode: Option[Int] = None,
   metrics: Seq[MetricValue] = Seq.empty,

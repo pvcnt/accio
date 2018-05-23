@@ -47,7 +47,6 @@ object ThriftAdapter {
       inputs = obj.inputs.map(toDomain),
       outputs = obj.outputs.map(toDomain),
       tasks = obj.tasks.map(toDomain),
-      links = obj.links.map(toDomain),
       progress = obj.progress,
       status = obj.status.map(toDomain).getOrElse(domain.ExecStatus()),
       history = obj.history.map(toDomain))
@@ -57,11 +56,12 @@ object ThriftAdapter {
     val payload = obj.payload match {
       case EventPayload.JobEnqueued(e) => domain.Event.JobEnqueued(toDomain(e.job))
       case EventPayload.JobExpanded(e) => domain.Event.JobExpanded(e.tasks.map(toDomain))
-      case EventPayload.JobStarted(e) =>
-        domain.Event.JobStarted(e.links.map(toDomain), e.metadata.toMap, e.message)
+      case EventPayload.JobScheduled(e) => domain.Event.JobScheduled(e.metadata.toMap, e.message)
+      case EventPayload.JobStarted(e) => domain.Event.JobStarted(e.message)
       case EventPayload.JobCanceled(e) => domain.Event.JobCanceled(e.message)
       case EventPayload.JobCompleted(e) => domain.Event.JobCompleted(e.outputs.map(toDomain), e.message)
-      case EventPayload.TaskStarted(e) => domain.Event.TaskStarted(e.name, e.links.map(toDomain), e.metadata.toMap, e.message)
+      case EventPayload.TaskScheduled(e) => domain.Event.TaskScheduled(e.name, e.metadata.toMap, e.message)
+      case EventPayload.TaskStarted(e) => domain.Event.TaskStarted(e.name, e.message)
       case EventPayload.TaskCompleted(e) =>
         domain.Event.TaskCompleted(e.name, e.exitCode, e.metrics.map(toDomain), e.error.map(toDomain), e.message)
       case EventPayload.UnknownUnionField(_) => throw new IllegalArgumentException("Illegal value")
@@ -72,6 +72,7 @@ object ThriftAdapter {
   def toDomain(obj: ExecState): domain.ExecStatus.State =
     obj match {
       case ExecState.Pending => domain.ExecStatus.Pending
+      case ExecState.Scheduled => domain.ExecStatus.Scheduled
       case ExecState.Running => domain.ExecStatus.Running
       case ExecState.Successful => domain.ExecStatus.Successful
       case ExecState.Failed => domain.ExecStatus.Failed
@@ -101,8 +102,7 @@ object ThriftAdapter {
       history = obj.history.map(toDomain),
       exitCode = obj.exitCode,
       error = obj.error.map(toDomain),
-      metrics = obj.metrics.map(toDomain),
-      links = obj.links.map(toDomain))
+      metrics = obj.metrics.map(toDomain))
   }
 
   private def toDomain(obj: ExecStatus): domain.ExecStatus = {
@@ -125,8 +125,6 @@ object ThriftAdapter {
   def toDomain(obj: ErrorDatum): domain.ErrorDatum = {
     domain.ErrorDatum(obj.mnemonic, obj.message, obj.stacktrace)
   }
-
-  private def toDomain(obj: Link): domain.Link = domain.Link(obj.title, obj.url)
 
   def toDomain(obj: MetricValue): domain.MetricValue = {
     domain.MetricValue(obj.name, obj.value, obj.aspects.toSet)
@@ -155,7 +153,6 @@ object ThriftAdapter {
       contact = obj.contact,
       inputs = obj.inputs.map(toThrift),
       outputs = obj.outputs.map(toThrift),
-      links = obj.links.map(toThrift),
       progress = obj.progress,
       status = Some(toThrift(obj.status)),
       history = obj.history.map(toThrift))
@@ -167,13 +164,15 @@ object ThriftAdapter {
         EventPayload.JobEnqueued(JobEnqueuedEvent(toThrift(e.job)))
       case e: domain.Event.JobExpanded =>
         EventPayload.JobExpanded(JobExpandedEvent(e.tasks.map(toThrift)))
-      case e: domain.Event.JobStarted =>
-        EventPayload.JobStarted(JobStartedEvent(e.links.map(toThrift), e.metadata, e.message))
+      case e: domain.Event.JobScheduled =>
+        EventPayload.JobScheduled(JobScheduledEvent(e.metadata, e.message))
+      case e: domain.Event.JobStarted => EventPayload.JobStarted(JobStartedEvent(e.message))
       case e: domain.Event.JobCanceled => EventPayload.JobCanceled(JobCanceledEvent(e.message))
       case e: domain.Event.JobCompleted =>
         EventPayload.JobCompleted(JobCompletedEvent(e.outputs.map(toThrift), e.message))
-      case e: domain.Event.TaskStarted =>
-        EventPayload.TaskStarted(TaskStartedEvent(e.name, e.links.map(toThrift), e.metadata, e.message))
+      case e: domain.Event.TaskScheduled =>
+        EventPayload.TaskScheduled(TaskScheduledEvent(e.name, e.metadata, e.message))
+      case e: domain.Event.TaskStarted => EventPayload.TaskStarted(TaskStartedEvent(e.name))
       case e: domain.Event.TaskCompleted =>
         EventPayload.TaskCompleted(TaskCompletedEvent(e.name, e.exitCode, e.metrics.map(toThrift), e.error.map(toThrift), e.message))
     }
@@ -192,7 +191,6 @@ object ThriftAdapter {
       metadata = obj.metadata,
       exitCode = obj.exitCode,
       metrics = obj.metrics.map(toThrift),
-      links = obj.links.map(toThrift),
       error = obj.error.map(toThrift),
       status = Some(toThrift(obj.status)),
       history = obj.history.map(toThrift))
@@ -217,13 +215,12 @@ object ThriftAdapter {
   private def toThrift(obj: domain.ExecStatus.State): ExecState =
     obj match {
       case domain.ExecStatus.Pending => ExecState.Pending
+      case domain.ExecStatus.Scheduled => ExecState.Scheduled
       case domain.ExecStatus.Running => ExecState.Running
       case domain.ExecStatus.Successful => ExecState.Successful
       case domain.ExecStatus.Failed => ExecState.Failed
       case domain.ExecStatus.Canceled => ExecState.Canceled
     }
-
-  private def toThrift(obj: domain.Link): Link = Link(obj.title, obj.url)
 
   def toThrift(obj: domain.ErrorDatum): ErrorDatum = {
     ErrorDatum(obj.mnemonic, obj.message, obj.stacktrace)
