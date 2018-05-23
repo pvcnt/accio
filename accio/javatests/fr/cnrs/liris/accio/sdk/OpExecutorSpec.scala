@@ -57,11 +57,11 @@ class OpExecutorSpec extends UnitSpec with CreateTmpDirectory {
 
   it should "reject invalid inputs" in {
     val executor = new OpExecutor(OpMetadata[SimpleOp], tmpDir)
-    val payload = OpPayload("Simple", 123, Seq(AttrValue("str", Value.String("foo")), AttrValue("i", Value.Double(2))), Map.empty)
-    val e = intercept[IllegalArgumentException] {
-      executor.execute(payload)
-    }
-    e.getMessage shouldBe "Invalid input type for i: distance"
+    val payload = OpPayload("Simple", 123, Seq(AttrValue("str", Value.String("foo")), AttrValue("i", Value.Double(2.4))), Map.empty)
+    val res = executor.execute(payload)
+    res.successful shouldBe false
+    res.error.isDefined shouldBe true
+    res.error.get.message shouldBe Some("Invalid input type for i: Double")
   }
 
   it should "execute operators with no input" in {
@@ -83,10 +83,10 @@ class OpExecutorSpec extends UnitSpec with CreateTmpDirectory {
   it should "detect a missing input" in {
     val executor = new OpExecutor(OpMetadata[SimpleOp], tmpDir)
     val payload = OpPayload("Simple", 123, Seq.empty, Map.empty)
-    val e = intercept[IllegalArgumentException] {
-      executor.execute(payload)
-    }
-    e.getMessage shouldBe "Missing required input str"
+    val res = executor.execute(payload)
+    res.successful shouldBe false
+    res.error.isDefined shouldBe true
+    res.error.get.message shouldBe Some("Missing required input str")
   }
 
   it should "catch exceptions thrown by the operator" in {

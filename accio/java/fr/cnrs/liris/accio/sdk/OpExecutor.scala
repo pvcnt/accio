@@ -25,7 +25,7 @@ import com.twitter.util.logging.Logging
 import fr.cnrs.liris.accio.domain.{Attribute, OpPayload, OpResult}
 import fr.cnrs.liris.lumos.domain.{AttrValue, ErrorDatum, Value}
 
-import scala.util.control.NonFatal
+import scala.util.control.{NoStackTrace, NonFatal}
 
 /**
  * Entry point for executing an operator from a payload. It manages the whole lifecycle of
@@ -97,7 +97,7 @@ final class OpExecutor(opMeta: OpMetadata, workDir: Path) extends Logging {
             case None =>
               // An optional argument always accept None as value.
               if (!attr.optional) {
-                throw new IllegalArgumentException(s"Missing required input ${attr.name}")
+                throw new IllegalArgumentException(s"Missing required input ${attr.name}") with NoStackTrace
               }
               None
           }
@@ -125,13 +125,13 @@ final class OpExecutor(opMeta: OpMetadata, workDir: Path) extends Logging {
 
   private def encode(attr: Attribute, v: Any): Value = {
     Values.encode(v, attr.dataType, attr.aspects).getOrElse {
-      throw new RuntimeException(s"Invalid output type for ${attr.name}: ${v.getClass.getName}")
+      throw new RuntimeException(s"Invalid output type for ${attr.name}: ${v.getClass.getName}") with NoStackTrace
     }
   }
 
   private def decode(attr: Attribute, value: Value): Any = {
     Values.decode(value, attr.dataType, attr.aspects).getOrElse {
-      throw new IllegalArgumentException(s"Invalid input type for ${attr.name}: ${value.dataType}")
+      throw new IllegalArgumentException(s"Invalid input type for ${attr.name}: ${value.dataType}") with NoStackTrace
     }
   }
 }

@@ -58,7 +58,7 @@ object Values {
   }
 
   def decode(value: Value, dataType: DataType, aspects: Set[String] = Set.empty): Option[Any] = {
-    value.cast(dataType).map { normalizedValue =>
+    value.cast(dataType).flatMap { normalizedValue =>
       if (aspects.contains("time")) {
         normalizedValue match {
           case Value.Long(v) => Some(new Instant(v))
