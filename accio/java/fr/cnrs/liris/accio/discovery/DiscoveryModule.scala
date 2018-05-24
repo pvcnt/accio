@@ -40,8 +40,7 @@ object DiscoveryModule extends TwitterModule {
     } else if (fileRoot.isDefined) {
       bind[OpRegistry].to[FileOpRegistry]
     } else {
-      logger.warn("Operator discovery is not configured, no operator will be available!")
-      bind[OpRegistry].toInstance(new MemoryOpRegistry(Set.empty))
+      bind[OpRegistry].toInstance(NullOpRegistry)
     }
   }
 

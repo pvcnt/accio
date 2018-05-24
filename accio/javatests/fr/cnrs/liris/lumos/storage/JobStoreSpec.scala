@@ -77,7 +77,7 @@ private[storage] abstract class JobStoreSpec extends UnitSpec with BeforeAndAfte
   override def afterEach(): Unit = {
     super.afterEach()
     if (!disabled) {
-      Await.result(store.shutDown())
+      Await.result(store.close())
       store = null
     }
   }

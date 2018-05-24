@@ -18,37 +18,61 @@
 
 package fr.cnrs.liris.lumos.transport
 
-import com.twitter.util.{Future, Time}
 import com.twitter.util.logging.Logging
+import com.twitter.util.{Future, Time}
 import fr.cnrs.liris.lumos.domain.Event
 import fr.cnrs.liris.lumos.domain.thrift.ThriftAdapter
 import fr.cnrs.liris.lumos.server.{LumosService, PushEventRequest}
 
 import scala.collection.mutable
 
-final class LumosServiceEventTransport(client: LumosService.MethodPerEndpoint) extends EventTransport with Logging {
-  private[this] val queue = mutable.ListBuffer.empty[Event]
-  private[this] var lastSequence = -1L
+/**
+ * Transport pushing events to a Lumos server.
+ *
+ * @param client Lumos client.
+ */
+final class LumosServiceEventTransport(client: LumosService.MethodPerEndpoint)
+  extends EventTransport with Logging {
+
+  // TODO: clean that structure periodically to avoid it growing in case of stale events.
+  private[this] val states = mutable.Map.empty[String, State]
+
+  private class State(val queue: mutable.ListBuffer[Event], var lastSequence: Long)
 
   override def name = "LumosService"
 
   override def sendEvent(event: Event): Future[Unit] = synchronized {
-    if (queue.isEmpty && lastSequence == event.sequence - 1) {
-      lastSequence = event.sequence
+    // All the complexity here lies in the fact that we want to enforce a correct order before
+    // sending events, otherwise they may be rejected by the server. What we do is that we keep
+    // a local buffer of events until we have a complete sequence, in which case we dequeue the
+    // latter. We then have to send the events one by one (instead of in parallel), to ensure that
+    // the previous event is indeed committed before sending the next one.
+
+    // I am not completely convinced that this code should belongs to the client side. Maybe it
+    // could be moved to the client-side, this alleviating clients of this concern.
+    val state = states.getOrElseUpdate(event.parent, new State(mutable.ListBuffer.empty[Event], -1))
+    if (state.queue.isEmpty && state.lastSequence == event.sequence - 1) {
+      state.lastSequence = event.sequence
       pushEvent(event)
     } else {
-      val idx = queue.indexWhere(_.sequence > event.sequence)
+      val idx = state.queue.indexWhere(_.sequence > event.sequence)
       if (idx > -1) {
-        queue.insert(idx, event)
+        state.queue.insert(idx, event)
       } else {
-        queue.append(event)
+        state.queue.append(event)
       }
-      val sequences = queue.map(_.sequence).sliding(2).takeWhile(vs => vs.last == vs.head + 1).flatten.toSet
-      if (sequences.nonEmpty && lastSequence == sequences.min - 1) {
-        val f = Future.join(queue.take(sequences.size).map(pushEvent))
-        lastSequence = sequences.max
-        queue.remove(0, sequences.size)
-        f
+      val sequences = state.queue.map(_.sequence).sliding(2).takeWhile(vs => vs.last == vs.head + 1).flatten.toSet
+      // TODO: return something in case an event was not accepted by the remote server.
+      if (sequences.nonEmpty && state.lastSequence == sequences.min - 1) {
+        var continue = true
+        var idx = 0
+        Future.whileDo(continue && idx < sequences.size) {
+          pushEvent(state.queue.remove(0))
+            .onFailure { _ => continue = false }
+            .onSuccess { _ => idx += 1 }
+        }.ensure {
+          state.lastSequence += idx
+        }
       } else {
         Future.Done
       }

@@ -28,7 +28,7 @@ import fr.cnrs.liris.util.scrooge.BinaryScroogeSerializer
 final class BinaryFileEventTransport(path: Path) extends FileEventTransport(path) {
   override def name = "BinaryFile"
 
-  override def serialize(event: Event): Buf = {
+  override protected def serialize(event: Event): Buf = {
     BinaryScroogeSerializer.toBuf(ThriftAdapter.toThrift(event))
   }
 }

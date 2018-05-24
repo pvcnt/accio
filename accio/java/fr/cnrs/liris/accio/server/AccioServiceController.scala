@@ -108,10 +108,10 @@ final class AccioServiceController @Inject()(
             scheduler
               .submit(process)
               .onSuccess { info =>
-                transport.sendEvent(Event(workflow.name, 0, Instant.now(), Event.JobScheduled(info.metadata)))
+                transport.sendEvent(Event(workflow.name, 1, Instant.now(), Event.JobScheduled(info.metadata)))
               }
               .rescue { case NonFatal(e) =>
-                transport.sendEvent(Event(workflow.name, 0, Instant.now(), Event.JobCompleted(message = Some(s"Failed to schedule job: ${e.getMessage}"))))
+                transport.sendEvent(Event(workflow.name, 1, Instant.now(), Event.JobCompleted(message = Some(s"Failed to schedule job: ${e.getMessage}"))))
               }
           }
       })

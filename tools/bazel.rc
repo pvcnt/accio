@@ -19,9 +19,9 @@ build --strategy=Scalac=worker
 test --strategy=Scalac=worker
 build --workspace_status_command=tools/print-workspace-status.sh
 
-# Ignore problematic directories (because they may contain files named build/BUILD, which messes
+# Ignore problematic directories (because they may contain files named BUILD, which messes
 # up with Bazel).
-build --deleted_packages .git,3rdparty/node_modules/polybooljs
+build --deleted_packages .git,3rdparty/node_modules/polybooljs,3rdparty/node_modules/rxjs/src,3rdparty/node_modules/listr/node_modules/rxjs/src/ajax,3rdparty/node_modules/listr/node_modules/rxjs/src/testing,3rdparty/node_modules/listr/node_modules/rxjs/src/webSocket,3rdparty/node_modules/listr/node_modules/rxjs/src,3rdparty/node_modules/listr/node_modules/rxjs/src/operators
 
 # Here follow the configuration relevant for continuous integration services.
 # Run with: bazel test --config=ci

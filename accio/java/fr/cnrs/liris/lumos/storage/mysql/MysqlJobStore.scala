@@ -21,7 +21,7 @@ package fr.cnrs.liris.lumos.storage.mysql
 import com.twitter.finagle.mysql.Parameter.{NullParameter, wrap}
 import com.twitter.finagle.mysql._
 import com.twitter.finagle.stats.StatsReceiver
-import com.twitter.util.{Future, StorageUnit}
+import com.twitter.util.{Future, StorageUnit, Time}
 import fr.cnrs.liris.lumos.domain._
 import fr.cnrs.liris.lumos.domain.thrift.ThriftAdapter
 import fr.cnrs.liris.lumos.storage.{JobQuery, JobStore}
@@ -174,7 +174,7 @@ private[storage] final class MysqlJobStore(client: Client, statsReceiver: StatsR
     Future.join(fs)
   }
 
-  override def shutDown(): Future[Unit] = client.close()
+  override def close(deadline: Time): Future[Unit] = client.close(deadline)
 
   private def sqlSet(elements: Iterable[_]) = '(' + Seq.fill(elements.size)("?").mkString(", ") + ')'
 }

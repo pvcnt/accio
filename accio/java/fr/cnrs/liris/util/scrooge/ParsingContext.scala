@@ -22,13 +22,15 @@ private[scrooge] trait ParsingContext {
   /**
    * Called before we write an item
    */
-  def write(): Unit
+  def write(): Unit = {}
 
   /**
    * Thrift maps are made up of name value pairs, are we parsing a
    * thrift map name (e.g. left hand side of a map entry) here?
    */
-  def isMapKey: Boolean
+  def isMapKey: Boolean = false
+
+  def indent: Int = 0
 }
 
 private[scrooge] object ParsingContext {
@@ -39,18 +41,18 @@ private[scrooge] object ParsingContext {
     override def write(): Unit = lhs = !lhs
 
     override def isMapKey: Boolean = lhs
+
+    override def indent: Int = 1
   }
 
   final class Struct extends ParsingContext {
-    override def write(): Unit = {}
-
-    override def isMapKey: Boolean = false
+    override def indent: Int = 1
   }
 
   final class Sequence extends ParsingContext {
-    override def write(): Unit = {}
-
-    override def isMapKey: Boolean = false
+    override def indent: Int = 1
   }
+
+  object Null extends ParsingContext
 
 }

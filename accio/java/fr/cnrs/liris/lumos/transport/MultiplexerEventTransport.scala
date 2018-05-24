@@ -31,7 +31,7 @@ final class MultiplexerEventTransport @Inject()(transports: Set[EventTransport])
 
   def hasErrors: Boolean = errors.get > 0
 
-  override def name = "Multiplexer"
+  override def name = s"Multiplexer[${transports.map(_.name).mkString(",")}]"
 
   override def sendEvent(event: Event): Future[Unit] = {
     Future.join(transports.map(sendEvent(event, _)).toSeq)

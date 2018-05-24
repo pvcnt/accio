@@ -15,15 +15,17 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_test(
-  name = "domain",
+  name = "transport",
   srcs = glob(["*.scala"]),
   deps = [
-    "//accio/java/fr/cnrs/liris/accio/domain",
+    "//accio/java/fr/cnrs/liris/lumos/transport",
     "//accio/java/fr/cnrs/liris/lumos/domain",
-    "//accio/javatests/fr/cnrs/liris/lumos/domain",
+    "//accio/java/fr/cnrs/liris/util/scrooge",
     "//accio/javatests/fr/cnrs/liris/testing",
-    "//3rdparty/jvm/org/scalacheck",
+    "//accio/javatests/com/twitter/inject",
+    "//accio/thrift/fr/cnrs/liris/lumos/domain",
+    "//accio/thrift/fr/cnrs/liris/lumos/server",
+    "//3rdparty/jvm/com/twitter:inject_core",
   ],
   size = "small",
-  visibility = ["//accio/javatests:__subpackages__"],
 )

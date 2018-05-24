@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 import com.github.nscala_time.time.Imports._
 import com.twitter.finagle.stats.{NullStatsReceiver, StatsReceiver}
-import com.twitter.util.Future
+import com.twitter.util.{Future, Time}
 import fr.cnrs.liris.lumos.domain.{Job, JobList, Status}
 import fr.cnrs.liris.lumos.storage.{JobQuery, JobStore}
 
@@ -73,7 +73,7 @@ private[storage] final class MemoryJobStore(statsReceiver: StatsReceiver) extend
 
   override def startUp(): Future[Unit] = Future.Done
 
-  override def shutDown(): Future[Unit] = Future.Done
+  override def close(deadline: Time): Future[Unit] = Future.Done
 }
 
 object MemoryJobStore {

@@ -20,7 +20,7 @@ package fr.cnrs.liris.lumos.transport
 
 import java.nio.file.Paths
 
-import com.google.inject.{Provides, Singleton}
+import com.google.inject.{Provider, Singleton}
 import com.twitter.finagle.Thrift
 import com.twitter.finagle.thrift.RichClientParam
 import com.twitter.inject.{Injector, TwitterModule}
@@ -34,46 +34,46 @@ object EventTransportModule extends TwitterModule {
   private[this] val serverAddress = flag[String]("event.server.address", "Address to a server where to send Lumos events")
 
   def forwardableArgs: Seq[String] = {
-    flags.filter(_.isDefined).map(flag => s"-${flag.name}=${flag()}")
+    flags.filter(_.isDefined).flatMap(flag => Seq(s"-${flag.name}", flag.apply().toString))
   }
 
   override def configure(): Unit = {
     val transports = ScalaMultibinder.newSetBinder[EventTransport](binder)
     if (binaryFile.isDefined) {
-      transports.addBinding.to[BinaryFileEventTransport]
+      transports.addBinding.toProvider[BinaryFileEventTransportProvider].in[Singleton]
     }
     if (textFile.isDefined) {
-      transports.addBinding.to[TextFileEventTransport]
+      transports.addBinding.toProvider[TextFileEventTransportProvider].in[Singleton]
     }
     if (serverAddress.isDefined) {
-      transports.addBinding.to[LumosServiceEventTransport]
+      transports.addBinding.toProvider[LumosServiceEventTransportProvider].in[Singleton]
     }
     bind[EventTransport].to[MultiplexerEventTransport]
   }
 
-  @Singleton
-  @Provides
-  def providesBinaryFileEventTransport: BinaryFileEventTransport = {
-    new BinaryFileEventTransport(Paths.get(binaryFile()))
+  private class BinaryFileEventTransportProvider extends Provider[BinaryFileEventTransport] {
+    override def get(): BinaryFileEventTransport = {
+      new BinaryFileEventTransport(Paths.get(binaryFile()))
+    }
   }
 
-  @Singleton
-  @Provides
-  def providesTextFileEventTransport: TextFileEventTransport = {
-    new TextFileEventTransport(Paths.get(textFile()))
+  private class TextFileEventTransportProvider extends Provider[TextFileEventTransport] {
+    override def get(): TextFileEventTransport = {
+      new TextFileEventTransport(Paths.get(textFile()))
+    }
   }
 
-  @Singleton
-  @Provides
-  def providesLumosServiceEventTransport: LumosServiceEventTransport = {
-    val service = Thrift.client
-      //.withRequestTimeout(timeoutFlag())
-      .withSessionQualifier.noFailFast
-      .withSessionQualifier.noFailureAccrual
-      .newService(serverAddress())
-    val params = RichClientParam()
-    val client = LumosService.MethodPerEndpoint(LumosService.ServicePerEndpointBuilder.servicePerEndpoint(service, params))
-    new LumosServiceEventTransport(client)
+  private class LumosServiceEventTransportProvider extends Provider[LumosServiceEventTransport] {
+    override def get(): LumosServiceEventTransport = {
+      val service = Thrift.client
+        //.withRequestTimeout(timeoutFlag())
+        .withSessionQualifier.noFailFast
+        .withSessionQualifier.noFailureAccrual
+        .newService(serverAddress())
+      val params = RichClientParam()
+      val client = LumosService.MethodPerEndpoint(LumosService.ServicePerEndpointBuilder.servicePerEndpoint(service, params))
+      new LumosServiceEventTransport(client)
+    }
   }
 
   override def singletonShutdown(injector: Injector): Unit = {

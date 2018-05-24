@@ -25,7 +25,7 @@ enum DataType {
   DOUBLE,
   STRING,
   BOOLEAN,
-  BLOB,
+  FILE,
   DATASET,
 }
 
@@ -94,14 +94,14 @@ struct Task {
 
 struct Job {
   1: string name;
-  2: i64 create_time;
+  2: i64 create_time = 0;
   3: optional string owner;
   4: optional string contact;
   5: map<string, string> labels;
   6: map<string, string> metadata;
   7: list<AttrValue> inputs;
   8: list<AttrValue> outputs;
-  9: i32 progress;
+  9: i32 progress = 0;
   10: list<Task> tasks;
   11: optional ExecStatus status;
   12: list<ExecStatus> history;

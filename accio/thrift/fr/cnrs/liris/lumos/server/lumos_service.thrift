@@ -57,7 +57,7 @@ service LumosService {
   // Get information about this server.
   GetInfoResponse getInfo() throws (1: errors.ServerError e);
 
-  // Push an event.
+  // Push one or several events.
   PushEventResponse pushEvent(1: PushEventRequest req) throws (1: errors.ServerError e);
 
   // Retrieve a specific job.

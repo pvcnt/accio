@@ -16,19 +16,16 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.lumos.transport
+package fr.cnrs.liris.accio.domain
 
-import java.nio.file.Path
+import org.scalacheck.Arbitrary
 
-import com.twitter.io.Buf
-import fr.cnrs.liris.lumos.domain.Event
-import fr.cnrs.liris.lumos.domain.thrift.ThriftAdapter
-import fr.cnrs.liris.util.scrooge.TextScroogeSerializer
+object Arbitraries {
+  implicit def operator: Arbitrary[Operator] = Arbitrary(Generators.operator)
 
-final class TextFileEventTransport(path: Path) extends FileEventTransport(path) {
-  override def name = "TextFile"
+  implicit def opPayload: Arbitrary[OpPayload] = Arbitrary(Generators.opPayload)
 
-  override protected def serialize(event: Event): Buf = {
-    TextScroogeSerializer.toBuf(ThriftAdapter.toThrift(event))
-  }
+  implicit def opResult: Arbitrary[OpResult] = Arbitrary(Generators.opResult)
+
+  implicit def workflow: Arbitrary[Workflow] = Arbitrary(Generators.workflow)
 }

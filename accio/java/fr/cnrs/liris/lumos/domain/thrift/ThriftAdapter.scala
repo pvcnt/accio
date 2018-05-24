@@ -117,7 +117,7 @@ object ThriftAdapter {
       case DataType.Double => domain.DataType.Double
       case DataType.String => domain.DataType.String
       case DataType.Boolean => domain.DataType.Bool
-      case DataType.Blob => domain.DataType.File
+      case DataType.File => domain.DataType.File
       case DataType.Dataset => domain.DataType.Dataset
       case DataType.EnumUnknownDataType(_) => throw new IllegalArgumentException("Illegal value")
     }
@@ -205,7 +205,7 @@ object ThriftAdapter {
       case domain.DataType.Double => DataType.Double
       case domain.DataType.String => DataType.String
       case domain.DataType.Bool => DataType.Boolean
-      case domain.DataType.File => DataType.Blob
+      case domain.DataType.File => DataType.File
       case domain.DataType.Dataset => DataType.Dataset
     }
 

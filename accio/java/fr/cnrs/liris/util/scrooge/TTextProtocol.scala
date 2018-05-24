@@ -35,7 +35,7 @@ import scala.util.control.NonFatal
 private[scrooge] class TTextProtocol(transport: TTransport, charset: Charset) extends TProtocol(transport)
   with WriteOnlyTProtocol {
 
-  private[this] val contextStack = mutable.ListBuffer.empty[ParsingContext]
+  private[this] val contextStack = mutable.ListBuffer[ParsingContext](ParsingContext.Null)
   private[this] val writer = new OutputStreamWriter(new TTransportOutputStream(transport), charset)
   reset()
 
@@ -44,10 +44,13 @@ private[scrooge] class TTextProtocol(transport: TTransport, charset: Charset) ex
   override def writeByte(b: Byte): Unit = writeValue(b.toString)
 
   override def writeFieldBegin(field: TField): Unit = wrapExceptions {
-    writer.write(s"${field.name}: ")
+    writer.write("  " * contextStack.map(_.indent).sum)
+    writer.write(s"${field.name} = ")
   }
 
-  override def writeFieldEnd(): Unit = {}
+  override def writeFieldEnd(): Unit = {
+    writer.write("\n")
+  }
 
   override def writeFieldStop(): Unit = {}
 
@@ -88,7 +91,7 @@ private[scrooge] class TTextProtocol(transport: TTransport, charset: Charset) ex
   private def writeValue(s: String): Unit = wrapExceptions {
     currentContext.write()
     if (currentContext.isMapKey) {
-      writer.write(s"$s: ")
+      writer.write(s"$s = ")
     } else {
       writer.write(s)
     }
@@ -106,10 +109,11 @@ private[scrooge] class TTextProtocol(transport: TTransport, charset: Charset) ex
   }
 
   private def writeSequenceEnd(): Unit = {
-    wrapExceptions {
-      writer.write("]\n")
-    }
     popContext()
+    wrapExceptions {
+      writer.write("  " * contextStack.map(_.indent).sum)
+      writer.write("]")
+    }
   }
 
   /**
@@ -123,7 +127,7 @@ private[scrooge] class TTextProtocol(transport: TTransport, charset: Charset) ex
     }
     pushContext(context)
     wrapExceptions {
-      writer.write(" {\n")
+      writer.write("{\n")
     }
   }
 
@@ -132,10 +136,12 @@ private[scrooge] class TTextProtocol(transport: TTransport, charset: Charset) ex
    * written as objects.
    */
   private def writeObjectEnd(): Unit = wrapExceptions {
-    writer.write("\n}\n")
     popContext()
+    writer.write("  " * contextStack.map(_.indent).sum)
+    writer.write("}")
     // Flush at the end of the final struct.
     if (contextStack.size == 1) {
+      writer.write("\n")
       writer.flush()
     }
   }

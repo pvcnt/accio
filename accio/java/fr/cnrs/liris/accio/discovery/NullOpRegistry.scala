@@ -16,19 +16,13 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.lumos.transport
+package fr.cnrs.liris.accio.discovery
 
-import java.nio.file.Path
+import com.twitter.util.logging.Logging
+import fr.cnrs.liris.accio.domain.Operator
 
-import com.twitter.io.Buf
-import fr.cnrs.liris.lumos.domain.Event
-import fr.cnrs.liris.lumos.domain.thrift.ThriftAdapter
-import fr.cnrs.liris.util.scrooge.TextScroogeSerializer
+object NullOpRegistry extends OpRegistry with Logging {
+  logger.warn("Operator discovery is not configured, no operator will be available")
 
-final class TextFileEventTransport(path: Path) extends FileEventTransport(path) {
-  override def name = "TextFile"
-
-  override protected def serialize(event: Event): Buf = {
-    TextScroogeSerializer.toBuf(ThriftAdapter.toThrift(event))
-  }
+  override def ops: Iterable[Operator] = Iterable.empty
 }

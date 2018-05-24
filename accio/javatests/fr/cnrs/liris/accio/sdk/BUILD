@@ -22,8 +22,12 @@ scala_test(
     "//accio/java/fr/cnrs/liris/accio/sdk:annotations",
     "//accio/java/fr/cnrs/liris/accio/domain",
     "//accio/java/fr/cnrs/liris/lumos/domain",
+    "//accio/java/fr/cnrs/liris/util/geo",
+    "//accio/javatests/fr/cnrs/liris/lumos/domain",
     "//accio/javatests/fr/cnrs/liris/testing",
     "//3rdparty/jvm/com/twitter:util_slf4j_api",
+    "//3rdparty/jvm/com/github/nscala_time",
+    "//3rdparty/jvm/org/scalacheck",
   ],
   size = "small",
 )

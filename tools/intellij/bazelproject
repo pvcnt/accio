@@ -24,6 +24,5 @@ test_sources:
   javatests
 
 additional_languages:
-  python
   javascript
   scala
