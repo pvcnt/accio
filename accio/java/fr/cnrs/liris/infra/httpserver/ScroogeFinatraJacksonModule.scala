@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.infra.jackson
+package fr.cnrs.liris.infra.httpserver
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.PropertyNamingStrategy
@@ -31,6 +31,7 @@ import com.twitter.finatra.json.modules.FinatraJacksonModule
  */
 object ScroogeFinatraJacksonModule extends FinatraJacksonModule {
   override val serializationInclusion = JsonInclude.Include.NON_ABSENT
+
   override val propertyNamingStrategy: PropertyNamingStrategy = PropertyNamingStrategy.LOWER_CAMEL_CASE
 
   override def additionalJacksonModules = Seq(ScroogeJacksonModule)

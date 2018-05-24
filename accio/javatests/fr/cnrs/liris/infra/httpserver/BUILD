@@ -18,12 +18,12 @@ load("@io_bazel_rules_scala//thrift:thrift.bzl", "thrift_library")
 load("@io_bazel_rules_scala//twitter_scrooge:twitter_scrooge.bzl", "scrooge_scala_library")
 
 scala_test(
-  name = "jackson",
+  name = "httpserver",
   srcs = glob(["*.scala"]),
   size = "small",
   deps = [
     ":scrooge",
-    "//accio/java/fr/cnrs/liris/infra/jackson",
+    "//accio/java/fr/cnrs/liris/infra/httpserver",
     "//accio/javatests/fr/cnrs/liris/testing",
     "//3rdparty/jvm/com/twitter:finatra_jackson",
   ],

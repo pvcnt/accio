@@ -16,16 +16,21 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.lumos.gateway
+package fr.cnrs.liris.infra.httpserver
 
 import com.twitter.finagle.http.filter.Cors
 import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.util.Future
 
-class CorsFilter extends SimpleFilter[Request, Response] {
+final class CorsFilter(domains: Set[String]) extends SimpleFilter[Request, Response] {
   private[this] val cors = {
-    val allowsOrigin = { origin: String => Some(origin) }
+    val allowsOrigin =
+      if (domains.isEmpty) {
+        { origin: String => Some(origin) }
+      } else {
+        { origin: String => Some(origin).filter(domains.contains) }
+      }
     val allowsMethods = { method: String => Some(Seq("GET", "POST", "PUT", "DELETE")) }
     val allowsHeaders = { headers: Seq[String] => Some(headers) }
 
@@ -33,6 +38,7 @@ class CorsFilter extends SimpleFilter[Request, Response] {
     new Cors.HttpFilter(policy)
   }
 
-  override def apply(request: Request, service: Service[Request, Response]): Future[Response] =
+  override def apply(request: Request, service: Service[Request, Response]): Future[Response] = {
     cors.apply(request, service)
+  }
 }

@@ -23,11 +23,13 @@ import com.twitter.finagle.Thrift
 import com.twitter.finagle.thrift.RichClientParam
 import com.twitter.inject.TwitterModule
 import com.twitter.util.Duration
+import fr.cnrs.liris.infra.httpserver.CorsFilter
 import fr.cnrs.liris.lumos.server.LumosService
 
-object LumosClientModule extends TwitterModule {
+object GatewayModule extends TwitterModule {
   private[this] val serverFlag = flag[String]("server", "Address of the Lumos server")
   private[this] val timeoutFlag = flag[Duration]("timeout", Duration.Top, "Timeout when issuing a request to the server")
+  private[this] val corsDomainsFlag = flag("cors.domains", Seq.empty[String], "Domains for which to enable CORS support")
 
   @Singleton
   @Provides
@@ -40,4 +42,8 @@ object LumosClientModule extends TwitterModule {
     val params = RichClientParam()
     LumosService.MethodPerEndpoint(LumosService.ServicePerEndpointBuilder.servicePerEndpoint(service, params))
   }
+
+  @Singleton
+  @Provides
+  def providesCorsFilter: CorsFilter = new CorsFilter(corsDomainsFlag().toSet)
 }

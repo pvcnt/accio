@@ -24,7 +24,7 @@ import com.twitter.inject.annotations.Flag
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.discovery.{DiscoveryModule, OpRegistry}
 import fr.cnrs.liris.accio.domain.thrift.ThriftAdapter
-import fr.cnrs.liris.accio.scheduler.{Process, Scheduler, UnschedulableProcessException}
+import fr.cnrs.liris.accio.scheduler.{Process, Scheduler}
 import fr.cnrs.liris.accio.server.AccioService._
 import fr.cnrs.liris.accio.validation.{ValidationResult, WorkflowFactory, WorkflowPreparator, WorkflowValidator}
 import fr.cnrs.liris.accio.version.Version

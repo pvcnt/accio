@@ -58,16 +58,7 @@ object DataType {
     override def name = "File"
   }
 
-  def valueOf(str: String): Option[DataType] =
-    str match {
-      case "Int" => Some(Int)
-      case "Long" => Some(Long)
-      case "Float" => Some(Float)
-      case "Double" => Some(Double)
-      case "String" => Some(String)
-      case "Bool" => Some(Bool)
-      case "Dataset" => Some(Dataset)
-      case "File" => Some(File)
-      case _ => None
-    }
+  def values: Seq[DataType] = Seq(Int, Long, Float, Double, String, Bool, Dataset, File)
+
+  def valueOf(str: String): Option[DataType] = values.find(_.name == str)
 }

@@ -1,8 +1,8 @@
 load("@io_bazel_rules_scala//scala:scala_import.bzl", "scala_import")
 java_library(
-    name = "prettytime",
+    name = "test_interface",
     exports = [
-        "//external:jar/org/ocpsoft/prettytime/prettytime"
+        "//external:jar/org/scala_sbt/test_interface"
     ],
     visibility = [
         "//visibility:public"

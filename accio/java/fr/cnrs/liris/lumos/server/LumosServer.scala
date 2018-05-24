@@ -29,9 +29,9 @@ import fr.cnrs.liris.lumos.storage.install.StorageModule
 object LumosServerMain extends LumosServer
 
 class LumosServer extends ThriftServer {
-  override def modules = Seq(AuthModule, StorageModule)
+  override protected def modules = Seq(AuthModule, StorageModule)
 
-  override def configureThrift(router: ThriftRouter): Unit = {
+  override protected def configureThrift(router: ThriftRouter): Unit = {
     router
       .filter[LoggingMDCFilter]
       .filter[TraceIdMDCFilter]
@@ -44,7 +44,7 @@ class LumosServer extends ThriftServer {
       .add[LumosServiceController]
   }
 
-  override def warmup(): Unit = {
-    handle[LumosWarmupHandler]()
+  override protected def warmup(): Unit = {
+    handle[ServerWarmupHandler]()
   }
 }

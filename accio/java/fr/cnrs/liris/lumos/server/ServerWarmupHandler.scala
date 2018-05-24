@@ -26,7 +26,9 @@ import fr.cnrs.liris.infra.thriftserver.AuthFilter
 import fr.cnrs.liris.lumos.server.LumosService.ListJobs
 import javax.inject.Inject
 
-final class LumosWarmupHandler @Inject()(warmup: ThriftWarmup) extends Handler with Logging {
+private[server] final class ServerWarmupHandler @Inject()(warmup: ThriftWarmup)
+  extends Handler with Logging {
+
   override def handle(): Unit = {
     try {
       AuthFilter.MasterClientId.asCurrent {

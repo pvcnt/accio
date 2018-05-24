@@ -15,9 +15,10 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_library(
-  name = "jackson",
+  name = "httpserver",
   srcs = glob(["*.scala"]),
   deps = [
+    "//3rdparty/jvm/com/twitter:finatra_http",
     "//3rdparty/jvm/com/twitter:finatra_jackson",
     "//3rdparty/jvm/com/twitter:scrooge_core",
     "//3rdparty/jvm/com/google/guava",

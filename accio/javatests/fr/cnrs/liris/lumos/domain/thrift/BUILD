@@ -15,13 +15,14 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_test(
-  name = "domain",
+  name = "thrift",
   srcs = glob(["*.scala"]),
   deps = [
+    "//accio/java/fr/cnrs/liris/lumos/domain/thrift",
     "//accio/java/fr/cnrs/liris/lumos/domain",
     "//accio/javatests/fr/cnrs/liris/testing",
+    "//accio/javatests/fr/cnrs/liris/lumos/domain",
     "//3rdparty/jvm/org/scalacheck",
   ],
   size = "small",
-  visibility = ["//accio/javatests:__subpackages__"],
 )

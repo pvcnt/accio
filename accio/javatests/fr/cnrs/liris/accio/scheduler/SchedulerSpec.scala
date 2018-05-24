@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.scheduler
 
-import com.twitter.util.{Await, Throw}
+import com.twitter.util.Await
 import fr.cnrs.liris.testing.UnitSpec
 import org.scalatest.BeforeAndAfterEach
 

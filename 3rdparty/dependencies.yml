@@ -82,3 +82,9 @@ dependencies:
     junit-vintage-engine:
       version: "5.1.0"
       lang: java
+  org.scalacheck:
+    scalacheck:
+      # Stick to this version while we use ScalaTest 2.2.6.
+      # Cf. https://stackoverflow.com/a/35312699
+      version: "1.12.5"
+      lang: scala

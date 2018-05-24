@@ -18,37 +18,50 @@
 
 package fr.cnrs.liris.lumos.domain
 
+import fr.cnrs.liris.lumos.domain.Arbitraries._
 import fr.cnrs.liris.testing.UnitSpec
+import org.scalacheck.Arbitrary._
+import org.scalatest.prop.GeneratorDrivenPropertyChecks
 
 /**
  * Unit tests for [[Value]].
  */
-class ValueSpec extends UnitSpec {
+class ValueSpec extends UnitSpec with GeneratorDrivenPropertyChecks {
   behavior of "Value"
 
   it should "encode strings" in {
-    Value.String("foo").dataType shouldBe DataType.String
-    Value.String("foo").v shouldBe "foo"
+    forAll { v: String =>
+      Value.String(v).dataType shouldBe DataType.String
+      Value.String(v).v shouldBe v
+    }
   }
 
   it should "encode integers" in {
-    Value.Int(42).dataType shouldBe DataType.Int
-    Value.Int(42).v shouldBe 42
+    forAll { v: Int =>
+      Value.Int(v).dataType shouldBe DataType.Int
+      Value.Int(v).v shouldBe v
+    }
   }
 
   it should "encode longs" in {
-    Value.Long(992659245677255065L).dataType shouldBe DataType.Long
-    Value.Long(992659245677255065L).v shouldBe 992659245677255065L
+    forAll { v: Long =>
+      Value.Long(v).dataType shouldBe DataType.Long
+      Value.Long(v).v shouldBe v
+    }
   }
 
   it should "encode floats" in {
-    Value.Float(3.14f).dataType shouldBe DataType.Float
-    Value.Float(3.14f).v shouldBe 3.14f
+    forAll { v: Float =>
+      Value.Float(v).dataType shouldBe DataType.Float
+      Value.Float(v).v shouldBe v
+    }
   }
 
   it should "encode doubles" in {
-    Value.Double(3.14).dataType shouldBe DataType.Double
-    Value.Double(3.14).v shouldBe 3.14
+    forAll { v: Double =>
+      Value.Double(v).dataType shouldBe DataType.Double
+      Value.Double(v).v shouldBe v
+    }
   }
 
   it should "encode booleans" in {
@@ -60,13 +73,17 @@ class ValueSpec extends UnitSpec {
   }
 
   it should "encode files" in {
-    Value.File(RemoteFile("/path/to/file")).dataType shouldBe DataType.File
-    Value.File(RemoteFile("/path/to/file")).v shouldBe RemoteFile("/path/to/file")
+    forAll { v: RemoteFile =>
+      Value.File(v).dataType shouldBe DataType.File
+      Value.File(v).v shouldBe v
+    }
   }
 
   it should "encode datasets" in {
-    Value.Dataset(RemoteFile("/path/to/file")).dataType shouldBe DataType.Dataset
-    Value.Dataset(RemoteFile("/path/to/file")).v shouldBe RemoteFile("/path/to/file")
+    forAll { v: RemoteFile =>
+      Value.Dataset(RemoteFile(v)).dataType shouldBe DataType.Dataset
+      Value.Dataset(RemoteFile(v)).v shouldBe v
+    }
   }
 
   it should "cast strings into other types" in {

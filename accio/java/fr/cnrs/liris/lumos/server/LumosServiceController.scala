@@ -29,7 +29,7 @@ import fr.cnrs.liris.lumos.state.EventHandler
 import fr.cnrs.liris.lumos.storage.{JobQuery, JobStore}
 
 @Singleton
-final class LumosServiceController @Inject()(jobStore: JobStore, eventHandler: EventHandler)
+private[server] final class LumosServiceController @Inject()(store: JobStore, eventHandler: EventHandler)
   extends Controller with LumosService.ServicePerEndpoint {
 
   override val getInfo = handle(GetInfo) { args: GetInfo.Args =>
@@ -45,7 +45,7 @@ final class LumosServiceController @Inject()(jobStore: JobStore, eventHandler: E
   }
 
   override val getJob = handle(GetJob) { args: GetJob.Args =>
-    jobStore.get(args.req.name).flatMap {
+    store.get(args.req.name).flatMap {
       case Some(job) => Future.value(GetJobResponse(ThriftAdapter.toThrift(job)))
       case None => Future.exception(ServerException.NotFound("jobs", args.req.name))
     }
@@ -60,7 +60,7 @@ final class LumosServiceController @Inject()(jobStore: JobStore, eventHandler: E
         state = args.req.state.toSet.flatten.map(ThriftAdapter.toDomain),
         owner = args.req.owner,
         labels = maybeSelector.map(_.right.get))
-      jobStore
+      store
         .list(query, limit = args.req.limit, offset = args.req.offset)
         .map { results =>
           ListJobsResponse(

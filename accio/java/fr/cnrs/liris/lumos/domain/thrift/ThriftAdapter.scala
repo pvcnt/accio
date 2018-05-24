@@ -154,6 +154,7 @@ object ThriftAdapter {
       inputs = obj.inputs.map(toThrift),
       outputs = obj.outputs.map(toThrift),
       progress = obj.progress,
+      tasks = obj.tasks.map(toThrift),
       status = Some(toThrift(obj.status)),
       history = obj.history.map(toThrift))
   }
@@ -172,7 +173,7 @@ object ThriftAdapter {
         EventPayload.JobCompleted(JobCompletedEvent(e.outputs.map(toThrift), e.message))
       case e: domain.Event.TaskScheduled =>
         EventPayload.TaskScheduled(TaskScheduledEvent(e.name, e.metadata, e.message))
-      case e: domain.Event.TaskStarted => EventPayload.TaskStarted(TaskStartedEvent(e.name))
+      case e: domain.Event.TaskStarted => EventPayload.TaskStarted(TaskStartedEvent(e.name, e.message))
       case e: domain.Event.TaskCompleted =>
         EventPayload.TaskCompleted(TaskCompletedEvent(e.name, e.exitCode, e.metrics.map(toThrift), e.error.map(toThrift), e.message))
     }
@@ -212,7 +213,7 @@ object ThriftAdapter {
     ExecStatus(toThrift(obj.state), obj.time.millis, obj.message)
   }
 
-  private def toThrift(obj: domain.ExecStatus.State): ExecState =
+  def toThrift(obj: domain.ExecStatus.State): ExecState =
     obj match {
       case domain.ExecStatus.Pending => ExecState.Pending
       case domain.ExecStatus.Scheduled => ExecState.Scheduled

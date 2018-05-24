@@ -69,4 +69,5 @@ object ExecStatus {
     override def name = "Failed"
   }
 
+  def values: Seq[State] = Seq(Pending, Scheduled, Running, Failed, Successful, Canceled)
 }
