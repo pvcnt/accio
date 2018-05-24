@@ -30,15 +30,15 @@ import fr.cnrs.liris.lumos.transport.EventTransportModule
 object AccioServerMain extends AccioServer
 
 class AccioServer extends ThriftServer {
-  override def modules = Seq(
+  override protected def modules = Seq(
     AuthModule,
     DiscoveryModule,
     ValidationModule,
     SchedulerModule,
     EventTransportModule,
-    AccioConfigModule)
+    ServerModule)
 
-  override def configureThrift(router: ThriftRouter): Unit = {
+  override protected def configureThrift(router: ThriftRouter): Unit = {
     router
       .filter[LoggingMDCFilter]
       .filter[TraceIdMDCFilter]

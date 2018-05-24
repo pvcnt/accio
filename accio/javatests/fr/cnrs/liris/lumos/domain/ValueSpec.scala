@@ -81,8 +81,8 @@ class ValueSpec extends UnitSpec with GeneratorDrivenPropertyChecks {
 
   it should "encode datasets" in {
     forAll { v: RemoteFile =>
-      Value.Dataset(RemoteFile(v)).dataType shouldBe DataType.Dataset
-      Value.Dataset(RemoteFile(v)).v shouldBe v
+      Value.Dataset(v).dataType shouldBe DataType.Dataset
+      Value.Dataset(v).v shouldBe v
     }
   }
 

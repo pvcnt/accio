@@ -20,6 +20,7 @@ package fr.cnrs.liris.lumos.cli
 
 import com.twitter.util.Future
 import fr.cnrs.liris.infra.cli.{Environment, ExitCode}
+import fr.cnrs.liris.lumos.version.Version
 
 final class VersionCommand extends LumosCommand {
   private[this] val onlyClient = flag("client", false, "Show only version of the client (no server needed)")
@@ -38,7 +39,7 @@ final class VersionCommand extends LumosCommand {
       Future.Done
     }
     f.map { _ =>
-      env.reporter.outErr.printOutLn(s"Client version: devel")
+      env.reporter.outErr.printOutLn(s"Client version: ${Version.Current}")
       ExitCode.Success
     }
   }

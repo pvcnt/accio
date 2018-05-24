@@ -20,6 +20,6 @@ package fr.cnrs.liris.accio.server
 
 import com.twitter.inject.TwitterModule
 
-object AccioConfigModule extends TwitterModule {
+object ServerModule extends TwitterModule {
   private[this] val executorUriFlag = flag[String]("executor_uri", "URI to the executor")
 }

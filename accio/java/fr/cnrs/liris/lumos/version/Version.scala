@@ -16,29 +16,23 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace java fr.cnrs.liris.infra.httpserver
+package fr.cnrs.liris.lumos.version
 
-enum TestEnum {
-  FIRST,
-  SECOND,
-  OTHER_ELEM,
+/**
+ * Describes a version using semantic versioning.
+ *
+ * @param major Major component.
+ * @param minor Minor component.
+ * @param patch Patch component.
+ * @param label Additional label.
+ */
+case class Version private(major: Int, minor: Int, patch: Int, label: Option[String]) {
+  override def toString: String = s"$major.$minor.$patch${label.map(str => s"-$str").getOrElse("")}"
 }
 
-struct InnerStruct {
-  1: string s;
-}
-
-struct TestStruct {
-  1: i32 int;
-  2: i64 long;
-  3: string str;
-  4: double dbl;
-  5: bool b;
-  6: InnerStruct inner_struct;
-}
-
-union TestUnion {
-  1: string a;
-  2: i32 b;
-  3: InnerStruct c;
+object Version {
+  /**
+   * Return the current version of Lumos.
+   */
+  val Current = Version(0, 1, 0, None)
 }

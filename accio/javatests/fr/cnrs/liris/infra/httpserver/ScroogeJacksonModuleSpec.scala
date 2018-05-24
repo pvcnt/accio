@@ -19,8 +19,7 @@
 package fr.cnrs.liris.infra.httpserver
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import fr.cnrs.liris.infra.jackson.TestEnum.{First, OtherElem, Second}
-import fr.cnrs.liris.infra.jackson.{ScroogeJacksonModule, TestUnion}
+import fr.cnrs.liris.infra.httpserver.TestEnum.{First, OtherElem, Second}
 import fr.cnrs.liris.testing.UnitSpec
 
 /**

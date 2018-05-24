@@ -27,13 +27,14 @@ import fr.cnrs.liris.lumos.domain.{LabelSelector, Status}
 import fr.cnrs.liris.lumos.server.LumosService._
 import fr.cnrs.liris.lumos.state.EventHandler
 import fr.cnrs.liris.lumos.storage.{JobQuery, JobStore}
+import fr.cnrs.liris.lumos.version.Version
 
 @Singleton
 private[server] final class LumosServiceController @Inject()(store: JobStore, eventHandler: EventHandler)
   extends Controller with LumosService.ServicePerEndpoint {
 
   override val getInfo = handle(GetInfo) { args: GetInfo.Args =>
-    Future.value(GetInfoResponse("devel"))
+    Future.value(GetInfoResponse(Version.Current.toString))
   }
 
   override val pushEvent = handle(PushEvent) { args: PushEvent.Args =>
