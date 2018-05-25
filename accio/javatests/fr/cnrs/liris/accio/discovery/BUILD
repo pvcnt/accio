@@ -20,11 +20,14 @@ scala_test(
   deps = [
     "//accio/java/fr/cnrs/liris/accio/discovery",
     "//accio/java/fr/cnrs/liris/accio/domain",
+    "//accio/java/fr/cnrs/liris/accio/domain/thrift",
     "//accio/java/fr/cnrs/liris/lumos/domain",
+    "//accio/java/fr/cnrs/liris/util/scrooge",
     "//accio/javatests/fr/cnrs/liris/testing",
     "//accio/javatests/fr/cnrs/liris/accio/testing",
     "//accio/javatests/com/twitter/inject",
     "//3rdparty/jvm/com/twitter:inject_core",
   ],
+  data = glob(["file/*", "local/*"]),
   size = "small",
 )

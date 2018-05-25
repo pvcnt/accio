@@ -18,7 +18,10 @@
 
 package fr.cnrs.liris.accio.testing
 
+import com.twitter.util.{Future, Time}
 import fr.cnrs.liris.accio.discovery.OpDiscovery
 import fr.cnrs.liris.accio.domain.Operator
 
-final class MemoryOpDiscovery(val ops: Iterable[Operator]) extends OpDiscovery
+final class MemoryOpDiscovery(val ops: Iterable[Operator]) extends OpDiscovery {
+  override def close(deadline: Time): Future[Unit] = Future.Done
+}

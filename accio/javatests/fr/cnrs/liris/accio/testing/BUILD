@@ -20,6 +20,7 @@ scala_library(
   deps = [
     "//accio/java/fr/cnrs/liris/accio/discovery",
     "//accio/java/fr/cnrs/liris/accio/domain",
+    "//3rdparty/jvm/com/twitter:util_core",
   ],
   visibility = ["//accio/javatests:__subpackages__"]
 )

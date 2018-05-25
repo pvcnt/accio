@@ -18,31 +18,30 @@
 
 package fr.cnrs.liris.accio.discovery
 
-import fr.cnrs.liris.accio.testing.MemoryOpDiscovery
+import java.nio.file.Paths
+
 import fr.cnrs.liris.testing.UnitSpec
 
 /**
- * Unit tests for [[OpRegistry]].
+ * Unit tests for [[LocalOpDiscovery]].
  */
-class OpRegistrySpec extends UnitSpec {
-  behavior of "OpRegistry"
+class LocalOpDiscoverySpec extends UnitSpec {
+  behavior of "LocalOpDiscovery"
 
-  it should "return registered operators" in {
-    val registry = new OpRegistry(new MemoryOpDiscovery(testing.ops))
+  private val ops0 = Seq(testing.ops(0), testing.ops(1))
+  private val ops1 = Seq(testing.ops(2))
 
-    registry("FirstSimple") shouldBe testing.ops(0)
-    registry.get("FirstSimple") shouldBe Some(testing.ops(0))
-
-    registry("SecondSimple") shouldBe testing.ops(1)
-    registry.get("SecondSimple") shouldBe Some(testing.ops(1))
-
-    registry.ops should contain theSameElementsAs testing.ops
+  it should "discover operators" in {
+    val discovery = new LocalOpDiscovery(
+      Paths.get("accio/javatests/fr/cnrs/liris/accio/discovery/local"),
+      None)
+    discovery.ops should contain theSameElementsAs ops0 ++ ops1
   }
 
-  it should "reject unknown operators" in {
-    val registry = new OpRegistry(new MemoryOpDiscovery(testing.ops))
-
-    registry.get("Unknown") shouldBe None
-    a[NoSuchElementException] shouldBe thrownBy(registry("Unknown"))
+  it should "filter files by name" in {
+    val discovery = new LocalOpDiscovery(
+      Paths.get("accio/javatests/fr/cnrs/liris/accio/discovery/local"),
+      Some("^ops0"))
+    discovery.ops should contain theSameElementsAs ops0
   }
 }

@@ -18,8 +18,9 @@
 
 package fr.cnrs.liris.accio.discovery
 
+import com.twitter.util.Closable
 import fr.cnrs.liris.accio.domain.Operator
 
-trait OpDiscovery {
+trait OpDiscovery extends Closable {
   def ops: Iterable[Operator]
 }

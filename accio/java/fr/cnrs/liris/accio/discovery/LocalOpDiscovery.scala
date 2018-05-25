@@ -23,6 +23,7 @@ import java.nio.file.{Files, Path}
 
 import com.google.common.io.ByteStreams
 import com.twitter.util.logging.Logging
+import com.twitter.util.{Future, Time}
 import fr.cnrs.liris.accio.domain.thrift.ThriftAdapter
 import fr.cnrs.liris.accio.domain.{Operator, thrift}
 import fr.cnrs.liris.util.jvm.JavaHome
@@ -34,42 +35,54 @@ import scala.util.control.NonFatal
 
 final class LocalOpDiscovery(directory: Path, filter: Option[String]) extends OpDiscovery with Logging {
   override lazy val ops: Iterable[Operator] = {
-    var it = Files.list(directory).iterator.asScala.filter(Files.isRegularFile(_))
-    filter.foreach { filter =>
-      val regex = filter.r
-      it = it.filter(p => regex.findFirstIn(p.getFileName.toString).nonEmpty)
+    if (!Files.isDirectory(directory)) {
+      logger.warn(s"Directory $directory does not exist, no operator discovered")
+      Iterable.empty
+    } else {
+      var it = Files.list(directory).iterator.asScala.filter(Files.isRegularFile(_))
+      filter.foreach { filter =>
+        val regex = filter.r
+        it = it.filter(p => regex.findFirstIn(p.getFileName.toString).nonEmpty)
+      }
+      it.flatMap(readLibrary).toSet
     }
-    it.flatMap(readLibrary).toSet
   }
 
   private def readLibrary(file: Path): Set[Operator] = {
-    try {
-      val cmd = mutable.ListBuffer.empty[String]
-      if (file.getFileName.endsWith(".jar")) {
-        cmd += JavaHome.javaBinary.toString
-        cmd ++= Seq("-jar", file.toAbsolutePath.toString)
-      } else {
-        cmd += file.toAbsolutePath.toString
-      }
+    val cmd = mutable.ListBuffer.empty[String]
+    if (file.getFileName.endsWith(".jar")) {
+      cmd += JavaHome.javaBinary.toString
+      cmd ++= Seq("-jar", file.toAbsolutePath.toString)
+    } else {
+      cmd += file.toAbsolutePath.toString
+    }
 
-      val os = new ByteArrayOutputStream()
-      val process = new ProcessBuilder()
-        .command(cmd: _*)
-        .redirectErrorStream(true)
-        .start()
-      ByteStreams.copy(process.getInputStream, os)
-      process.waitFor()
+    val os = new ByteArrayOutputStream()
+    val process = new ProcessBuilder()
+      .command(cmd: _*)
+      .redirectErrorStream(true)
+      .start()
+    ByteStreams.copy(process.getInputStream, os)
+    val exitCode = process.waitFor()
 
-      val is = new ByteArrayInputStream(os.toByteArray)
-      val ops = mutable.Set.empty[Operator]
-      while (is.available() > 0) {
-        ops += ThriftAdapter.toDomain(BinaryScroogeSerializer.read(is, thrift.Operator))
+    if (exitCode != 0) {
+      logger.warn(s"Error while executing library defined at $file (exit code $exitCode): ${new String(os.toByteArray)}")
+      Set.empty
+    } else {
+      try {
+        val is = new ByteArrayInputStream(os.toByteArray)
+        val ops = mutable.Set.empty[Operator]
+        while (is.available() > 0) {
+          ops += ThriftAdapter.toDomain(BinaryScroogeSerializer.read(is, thrift.Operator))
+        }
+        ops.toSet
+      } catch {
+        case NonFatal(e) =>
+          logger.warn(s"Error while decoding library defined at $file: ${e.getMessage}")
+          Set.empty
       }
-      ops.toSet
-    } catch {
-      case NonFatal(e) =>
-        logger.warn(s"Error while reading library defined at $file", e)
-        Set.empty
     }
   }
+
+  override def close(deadline: Time): Future[Unit] = Future.Done
 }

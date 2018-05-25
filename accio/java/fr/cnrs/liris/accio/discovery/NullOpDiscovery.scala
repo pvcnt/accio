@@ -18,6 +18,7 @@
 
 package fr.cnrs.liris.accio.discovery
 
+import com.twitter.util.{Future, Time}
 import com.twitter.util.logging.Logging
 import fr.cnrs.liris.accio.domain.Operator
 
@@ -25,4 +26,6 @@ object NullOpDiscovery extends OpDiscovery with Logging {
   logger.warn("Operator discovery is not configured, no operator will be available")
 
   override def ops: Iterable[Operator] = Iterable.empty
+
+  override def close(deadline: Time): Future[Unit] = Future.Done
 }
