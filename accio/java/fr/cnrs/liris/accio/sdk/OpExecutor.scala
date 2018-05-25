@@ -131,7 +131,7 @@ final class OpExecutor(opMeta: OpMetadata, workDir: Path) extends Logging {
 
   private def decode(attr: Attribute, value: Value): Any = {
     Values.decode(value, attr.dataType, attr.aspects).getOrElse {
-      throw new IllegalArgumentException(s"Invalid input type for ${attr.name}: ${value.dataType}") with NoStackTrace
+      throw new IllegalArgumentException(s"Invalid input for ${attr.name}: ${value.v}") with NoStackTrace
     }
   }
 }

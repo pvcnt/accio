@@ -98,7 +98,7 @@ final class AccioServiceController @Inject()(
           .flatMap { _ =>
             val cmd = mutable.ListBuffer.empty[String]
             cmd += JavaHome.javaBinary.toString
-            cmd += s"-Xmm200M"
+            cmd += s"-Xms200M"
             cmd += s"-Xmx200M"
             cmd ++= Seq("-jar", executorUri)
             cmd ++= EventTransportModule.args

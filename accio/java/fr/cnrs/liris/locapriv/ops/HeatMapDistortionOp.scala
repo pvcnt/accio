@@ -36,18 +36,23 @@ case class HeatMapDistortionOp(
   distanceType: String = "topsoe",
   @Arg(help = "Cell Size in meters")
   cellSize: Distance,
-  @Arg(help = "Lower point")
-  lower: LatLng = LatLng.degrees(-61.0, -131.0),
-  @Arg(help = "Upper point")
-  upper: LatLng = LatLng.degrees(80, 171))
+  @Arg(help = "Lower point latitude")
+  lowerLat: Double = -61,
+  @Arg(help = "Lower point longitude")
+  lowerLng: Double = -131,
+  @Arg(help = "Upper point latitude")
+  upperLat: Double = 80,
+  @Arg(help = "Upper point longitude")
+  upperLng: Double = 171)
   extends ScalaOperator[HeatMapDistortionOp.Out] with SparkleOperator {
 
+  private[this] val lower = LatLng.degrees(lowerLat, lowerLng).toPoint
+  private[this] val upper = LatLng.degrees(upperLat, upperLng).toPoint
+
   private[this] val (nbRows, nbColumns, bottomCornerLeft) = {
-    val p1 = lower.toPoint
-    val p2 = upper.toPoint
-    val topCornerleft = Point(math.min(p1.x, p2.x), math.max(p1.y, p2.y))
-    val bottomCornerleft = Point(math.min(p1.x, p2.x), math.min(p1.y, p2.y))
-    val bottomCornerRight = Point(math.max(p1.x, p2.x), math.min(p1.y, p2.y))
+    val topCornerleft = Point(math.min(lower.x, upper.x), math.max(lower.y, upper.y))
+    val bottomCornerleft = Point(math.min(lower.x, upper.x), math.min(lower.y, upper.y))
+    val bottomCornerRight = Point(math.max(lower.x, upper.x), math.min(lower.y, upper.y))
 
     val width = bottomCornerleft.distance(bottomCornerRight)
     val height = topCornerleft.distance(bottomCornerleft)

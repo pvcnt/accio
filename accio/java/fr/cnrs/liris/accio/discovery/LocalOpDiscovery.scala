@@ -34,7 +34,7 @@ import scala.collection.mutable
 import scala.util.control.NonFatal
 
 final class LocalOpDiscovery(directory: Path, filter: Option[String]) extends OpDiscovery with Logging {
-  override lazy val ops: Iterable[Operator] = {
+  override val ops: Iterable[Operator] = {
     if (!Files.isDirectory(directory)) {
       logger.warn(s"Directory $directory does not exist, no operator discovered")
       Iterable.empty
@@ -50,8 +50,10 @@ final class LocalOpDiscovery(directory: Path, filter: Option[String]) extends Op
 
   private def readLibrary(file: Path): Set[Operator] = {
     val cmd = mutable.ListBuffer.empty[String]
-    if (file.getFileName.endsWith(".jar")) {
+    if (file.getFileName.toString.endsWith(".jar")) {
       cmd += JavaHome.javaBinary.toString
+      cmd ++= Seq("-Xms100M")
+      cmd ++= Seq("-Xmx100M")
       cmd ++= Seq("-jar", file.toAbsolutePath.toString)
     } else {
       cmd += file.toAbsolutePath.toString
@@ -66,7 +68,7 @@ final class LocalOpDiscovery(directory: Path, filter: Option[String]) extends Op
     val exitCode = process.waitFor()
 
     if (exitCode != 0) {
-      logger.warn(s"Error while executing library defined at $file (exit code $exitCode): ${new String(os.toByteArray)}")
+      logger.warn(s"Error while executing library defined at $file (exit code $exitCode):\n${new String(os.toByteArray)}")
       Set.empty
     } else {
       try {
@@ -75,6 +77,7 @@ final class LocalOpDiscovery(directory: Path, filter: Option[String]) extends Op
         while (is.available() > 0) {
           ops += ThriftAdapter.toDomain(BinaryScroogeSerializer.read(is, thrift.Operator))
         }
+        logger.info(s"Discovered operators ${ops.map(_.name).mkString(", ")}")
         ops.toSet
       } catch {
         case NonFatal(e) =>

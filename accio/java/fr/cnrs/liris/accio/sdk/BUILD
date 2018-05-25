@@ -30,6 +30,10 @@ scala_library(
     "//3rdparty/jvm/com/twitter:util_jvm",
     "//3rdparty/jvm/com/twitter:util_core",
     "//3rdparty/jvm/com/github/nscala_time",
+    "//3rdparty/jvm/com/twitter:util_slf4j_jul_bridge",
+  ],
+  runtime_deps = [
+    "//3rdparty/jvm/ch/qos/logback:logback_classic",
   ],
   exports = [
     "//accio/java/fr/cnrs/liris/util/geo",

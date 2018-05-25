@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
-scala_library(
+scala_binary(
   name = "ops",
   srcs = glob(["*.scala"]),
   deps = [
@@ -34,9 +34,6 @@ scala_library(
     "//3rdparty/jvm/com/twitter:util_jvm",
     "//3rdparty/jvm/com/twitter:util_slf4j_api",
   ],
-  exports = [
-    "//accio/java/fr/cnrs/liris/accio/sdk",
-  ],
   resources = [
     "linux_w4m_LST",
     "linux_w4m_LST_chunk",
@@ -45,5 +42,5 @@ scala_library(
   ],
   resource_strip_prefix = "accio/java",
   visibility = ["//visibility:public"],
-  #main_class = "fr.cnrs.liris.locapriv.ops.OpsLibrary"
+  main_class = "fr.cnrs.liris.locapriv.ops.OpsLibrary"
 )

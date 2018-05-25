@@ -193,7 +193,7 @@ object WorkflowValidator {
   /**
    * Pattern for valid names.
    */
-  private val NamePattern = "[a-zA-Z][a-zA-Z0-9.-]+"
+  private val NamePattern = "[a-zA-Z][a-zA-Z0-9._-]+"
 
   /**
    * Regex for valid names.

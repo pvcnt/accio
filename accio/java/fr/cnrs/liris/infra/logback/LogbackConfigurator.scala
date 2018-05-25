@@ -31,7 +31,7 @@ trait LogbackConfigurator {
   this: App =>
 
   init {
-    initLogback()
+    //initLogback()
     Slf4jBridgeUtility.attemptSlf4jBridgeHandlerInstallation()
   }
 

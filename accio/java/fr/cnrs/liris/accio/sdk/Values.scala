@@ -18,6 +18,7 @@
 
 package fr.cnrs.liris.accio.sdk
 
+import com.twitter.util.Try
 import fr.cnrs.liris.lumos.domain.{DataType, Value}
 import fr.cnrs.liris.util.geo.Distance
 import org.joda.time.{Duration, Instant, ReadableDuration, ReadableInstant}
@@ -60,6 +61,7 @@ private[sdk] object Values {
   def decode(value: Value, dataType: DataType, aspects: Set[String] = Set.empty): Option[Any] = {
     value.cast(dataType).flatMap { normalizedValue =>
       if (aspects.contains("time")) {
+        // TODO: parse strings.
         normalizedValue match {
           case Value.Long(v) => Some(new Instant(v))
           case _ => None
@@ -67,11 +69,13 @@ private[sdk] object Values {
       } else if (aspects.contains("duration")) {
         normalizedValue match {
           case Value.Long(v) => Some(new Duration(v))
+          case Value.String(v) => Try(Duration.parse(v)).toOption
           case _ => None
         }
       } else if (aspects.contains("distance")) {
         normalizedValue match {
           case Value.Double(v) => Some(Distance.meters(v))
+          case Value.String(v) => Try(Distance.parse(v)).toOption
           case _ => None
         }
       } else {

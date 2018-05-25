@@ -44,7 +44,6 @@ class JsonWorkflowParserSpec extends UnitSpec {
         |"seed": 1234567890123,
         |"steps": [
         |  {
-        |    "name": "step1",
         |    "op": "MyOp",
         |    "params": [
         |      {
@@ -84,7 +83,7 @@ class JsonWorkflowParserSpec extends UnitSpec {
       AttrValue("dbl", Value.Int(42)))
     workflow.steps shouldBe Seq(
       Step(
-        name = "step1",
+        name = "",
         op = "MyOp",
         params = Seq(
           Channel("v", Channel.Constant(Value.Int(14))),

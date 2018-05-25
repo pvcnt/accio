@@ -31,7 +31,7 @@ case class Workflow(
   repeat: Int = 1,
   resources: Map[String, Long] = Map.empty)
 
-case class Step(name: String, op: String, params: Seq[Channel] = Seq.empty)
+case class Step(op: String, name: String = "", params: Seq[Channel] = Seq.empty)
 
 case class Channel(name: String, source: Channel.Source)
 

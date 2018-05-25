@@ -61,7 +61,7 @@ class OpExecutorSpec extends UnitSpec with CreateTmpDirectory {
     val res = executor.execute(payload)
     res.successful shouldBe false
     res.error.isDefined shouldBe true
-    res.error.get.message shouldBe Some("Invalid input type for i: Double")
+    res.error.get.message shouldBe Some("Invalid input for i: 2.4")
   }
 
   it should "execute operators with no input" in {

@@ -28,7 +28,7 @@ function upstart_update {
   sudo systemctl start $1 || true
 }
 
-function build_client {
+function build_cli {
   bazel build accio/java/fr/cnrs/liris/lumos/cli:binary
   sudo cp bazel-genfiles/accio/java/fr/cnrs/liris/lumos/cli/cli_binary /usr/local/bin/lumos
 }
@@ -47,13 +47,13 @@ function build_gateway {
 }
 
 function build_all {
-  build_client
+  build_cli
   build_server
   build_gateway
 }
 
 function print_components {
-  echo 'Please select from: client, server, gateway, or all.'
+  echo 'Please select from: cli, server, gateway, or all.'
 }
 
 if [ "$#" -eq 0 ]; then

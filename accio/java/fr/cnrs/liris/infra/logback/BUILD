@@ -15,7 +15,7 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_library(
-  name = "logback",
+  name = "logback",w
   srcs = glob(["*.scala"]),
   deps = [
     "//3rdparty/jvm/ch/qos/logback:logback_core",

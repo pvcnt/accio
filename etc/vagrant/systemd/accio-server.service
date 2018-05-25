@@ -20,7 +20,7 @@
 Description=Accio server
 
 [Service]
-ExecStartPre=/bin/mkdir -p /var/lib/accio-server
+ExecStartPre=mkdir -p /var/lib/accio /var/lib/accio/ops
 ExecStart=/usr/bin/java \
   -Xmx3G \
   -server \
@@ -31,8 +31,9 @@ ExecStart=/usr/bin/java \
     -log.level=DEBUG \
     -scheduler=local \
     -scheduler.force_scheduling \
-    -scheduler.datadir=/var/lib/accio-server/scheduler \
-    -executor_uri=/usr/local/bin/accio-executor.jar
+    -scheduler.datadir=/var/lib/accio/scheduler \
+    -executor_uri=/var/lib/accio/executor.jar \
+    -discovery.local.root=/var/lib/accio/ops
 Restart=on-failure
 
 [Install]

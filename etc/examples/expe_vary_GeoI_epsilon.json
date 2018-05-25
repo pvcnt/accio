@@ -1,6 +1,8 @@
 {
-  "workflow": "workflow_Geo-I",
-  "name": "GeoI epsilon vary",
+  "labels": {
+    "workflow": "workflow_Geo-I"
+  },
+  "owner": "test",
   "params": {
     "epsilon": {
       "values": [
@@ -23,6 +25,100 @@
         0.0001
       ]
     }
-  }
+  },
+  "params": [
+    {
+      "name": "split_duration",
+      "value": "4.hours"
+    },
+    {
+      "name": "pois_duration",
+      "value": "15.minutes"
+    },
+    {
+      "name": "pois_diameter",
+      "value": "200.meters"
+    },
+    {
+      "name": "url",
+      "value": "/vagrant/etc/examples/geolife"
+    },
+    {
+      "name": "pois_threshold",
+      "value": "100.meters"
+    },
+    {
+      "name": "level",
+      "value": 15
+    },
+    {
+      "name": "epsilon",
+      "value": 0.01
+    }
+  ],
+  "steps": [
+    {
+      "op": "EventSource",
+      "params": {
+        "url": {"param": "url"}
+      }
+    },
+    {
+      "op": "DurationSplitting",
+      "params": {
+        "duration": {"param": "split_duration"},
+        "data": {"reference": "EventSource/data"}
+      }
+    },
+    {
+      "op": "GeoIndistinguishability",
+      "params": {
+        "epsilon": {"param": "epsilon"},
+        "data": {"reference": "DurationSplitting/data"}
+      }
+    },
+    {
+      "op": "PoisExtraction",
+      "name": "TrainPoisExtraction",
+      "params": {
+        "diameter": {"param": "pois_diameter"},
+        "duration": {"param": "pois_duration"},
+        "data": {"reference": "DurationSplitting/data"}
+      }
+    },
+    {
+      "op": "PoisExtraction",
+      "name": "TestPoisExtraction",
+      "params": {
+        "diameter": {"param": "pois_diameter"},
+        "duration": {"param": "pois_duration"},
+        "data": {"reference": "GeoIndistinguishability/data"}
+      }
+    },
+    {
+      "op": "PoisRetrieval",
+      "params": {
+        "threshold": {"param": "pois_threshold"},
+        "train": {"reference": "TrainPoisExtraction/data"},
+        "test": {"reference": "TestPoisExtraction/data"}
+      }
+    },
+    {
+      "op": "SpatialDistortion",
+      "params": {
+        "interpolate": false,
+        "train": {"reference": "DurationSplitting/data"},
+        "test": {"reference": "GeoIndistinguishability/data"}
+      }
+    },
+    {
+      "op": "AreaCoverage",
+      "params": {
+        "level": {"param": "level"},
+        "train": {"reference": "DurationSplitting/data"},
+        "test": {"reference": "GeoIndistinguishability/data"}
+      }
+    }
+  ]
 }
 

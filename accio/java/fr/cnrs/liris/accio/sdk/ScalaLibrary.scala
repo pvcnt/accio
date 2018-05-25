@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.sdk
 import java.io.FileOutputStream
 import java.nio.file.Paths
 
-import com.twitter.util.logging.Logging
+import com.twitter.util.logging.{Logging, Slf4jBridgeUtility}
 import fr.cnrs.liris.accio.domain.thrift.{OpPayload, ThriftAdapter}
 import fr.cnrs.liris.util.scrooge.BinaryScroogeSerializer
 
@@ -36,6 +36,7 @@ trait ScalaLibrary extends Logging {
     if (args.isEmpty) {
       printOperators()
     } else {
+      Slf4jBridgeUtility.attemptSlf4jBridgeHandlerInstallation()
       // We technically allow more than 2 arguments, although there will be ignored.
       if (args.length < 2) {
         logger.error(s"At least arguments should be provided, got ${args.length}")
@@ -55,7 +56,7 @@ trait ScalaLibrary extends Logging {
         return 6
     }
     operators.foreach { opMeta =>
-      println(BinaryScroogeSerializer.toString(ThriftAdapter.toThrift(opMeta.defn)))
+      System.out.write(BinaryScroogeSerializer.toBytes(ThriftAdapter.toThrift(opMeta.defn)))
     }
     0
   }
