@@ -9,6 +9,7 @@ scala_import(
         "//3rdparty/jvm/io/netty:netty_transport_native_epoll",
         "//3rdparty/jvm/io/netty:netty_transport_native_unix_common",
         ":finagle_core",
+        ":finagle_http_cookie_2_11",
         ":finagle_netty3_2_11"
     ],
     jars = [
@@ -56,7 +57,6 @@ scala_import(
 scala_import(
     name = "finagle_exp",
     exports = [
-        ":finagle_core",
         ":finagle_thrift"
     ],
     jars = [
@@ -107,6 +107,18 @@ java_library(
 
 
 java_library(
+    name = "finagle_http_cookie_2_11",
+    exports = [
+        "//external:jar/com/twitter/finagle_http_cookie_2_11"
+    ],
+    visibility = [
+        "//visibility:public"
+    ]
+)
+
+
+
+java_library(
     name = "finagle_init_2_11",
     exports = [
         "//external:jar/com/twitter/finagle_init_2_11"
@@ -118,13 +130,9 @@ java_library(
 
 
 
-scala_import(
-    name = "finagle_mux",
+java_library(
+    name = "finagle_mux_2_11",
     exports = [
-        ":finagle_exp",
-        ":finagle_netty4_2_11"
-    ],
-    jars = [
         "//external:jar/com/twitter/finagle_mux_2_11"
     ],
     visibility = [
@@ -500,7 +508,7 @@ scala_import(
         "//3rdparty/jvm/org/slf4j:jul_to_slf4j",
         "//3rdparty/jvm/org/slf4j:log4j_over_slf4j",
         "//3rdparty/jvm/org/slf4j:slf4j_api",
-        ":util_core",
+        ":finagle_core",
         ":util_slf4j_api"
     ],
     jars = [
@@ -517,7 +525,7 @@ scala_import(
     name = "inject_thrift",
     exports = [
         "//3rdparty/jvm/org/apache/thrift:libthrift",
-        ":finagle_mux",
+        ":finagle_mux_2_11",
         ":scrooge_core"
     ],
     jars = [
@@ -535,7 +543,6 @@ scala_import(
     exports = [
         "//3rdparty/jvm/commons_lang:commons_lang",
         ":finagle_core",
-        ":finagle_mux",
         ":inject_core"
     ],
     jars = [
