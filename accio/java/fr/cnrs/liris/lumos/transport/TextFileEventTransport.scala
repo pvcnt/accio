@@ -28,7 +28,7 @@ import fr.cnrs.liris.util.scrooge.TextScroogeSerializer
 final class TextFileEventTransport(path: Path) extends FileEventTransport(path) {
   override def name = "TextFile"
 
-  override protected def serialize(event: Event): Buf = {
-    TextScroogeSerializer.toBuf(ThriftAdapter.toThrift(event))
+  override protected def serialize(event: Event): Array[Byte] = {
+    TextScroogeSerializer.toBytes(ThriftAdapter.toThrift(event))
   }
 }
