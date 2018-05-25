@@ -19,7 +19,6 @@
 package fr.cnrs.liris.infra.thriftserver
 
 import com.twitter.util.Await
-import fr.cnrs.liris.infra.thriftserver.{StaticFileAuthStrategy, UserInfo}
 import fr.cnrs.liris.testing.{CreateTmpDirectory, UnitSpec}
 
 /**
