@@ -22,7 +22,7 @@ import fr.cnrs.liris.lumos.domain.Status.FieldViolation
 import fr.cnrs.liris.lumos.domain._
 import org.joda.time.Instant
 
-object JobStateMachine {
+private[state] object JobStateMachine {
   def apply(job: Job, event: Event): Either[Status, Job] =
     event.payload match {
       case e: Event.JobEnqueued => handleJobEnqueued(job, event.time, e)
@@ -41,14 +41,14 @@ object JobStateMachine {
       Left(Status.AlreadyExists(job.name))
     } else {
       Right(Job(
-        name = job.name,
+        name = e.job.name,
         createTime = time,
-        owner = job.owner,
-        contact = job.contact,
-        labels = job.labels,
-        metadata = job.metadata,
-        inputs = job.inputs,
-        tasks = job.tasks,
+        owner = e.job.owner,
+        contact = e.job.contact,
+        labels = e.job.labels,
+        metadata = e.job.metadata,
+        inputs = e.job.inputs,
+        tasks = e.job.tasks,
         status = ExecStatus(ExecStatus.Pending, time, message = Some("Job created"))))
     }
   }
