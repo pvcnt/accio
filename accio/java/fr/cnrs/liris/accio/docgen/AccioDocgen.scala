@@ -23,7 +23,7 @@ import java.nio.file.Paths
 import com.twitter.inject.app.App
 import com.twitter.util.Stopwatch
 import fr.cnrs.liris.accio.discovery.DiscoveryModule
-import fr.cnrs.liris.util.logback.LogbackConfigurator
+import fr.cnrs.liris.infra.logback.LogbackConfigurator
 
 object AccioDocgenMain extends AccioDocgen
 
