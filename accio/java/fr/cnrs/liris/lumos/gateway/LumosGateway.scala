@@ -24,10 +24,11 @@ import com.twitter.finatra.http.HttpServer
 import com.twitter.finatra.http.filters.{CommonFilters, LoggingMDCFilter, TraceIdMDCFilter}
 import com.twitter.finatra.http.routing.HttpRouter
 import fr.cnrs.liris.infra.httpserver.{CorsFilter, ScroogeFinatraJacksonModule}
+import fr.cnrs.liris.infra.logback.LogbackConfigurator
 
 object LumosGatewayMain extends LumosGateway
 
-class LumosGateway extends HttpServer {
+class LumosGateway extends HttpServer with LogbackConfigurator {
   private[this] val uiFlag = flag("ui", false, "Whether to enable the web-based user interface")
   private[this] val corsFlag = flag("cors", false, "Whether to enable CORS support")
 

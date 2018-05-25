@@ -29,29 +29,31 @@ function upstart_update {
 }
 
 function build_client {
-  bazel build accio/java/fr/cnrs/liris/accio/cli:binary
-  sudo cp bazel-genfiles/accio/java/fr/cnrs/liris/accio/cli/cli_binary /usr/local/bin/accio
+  bazel build accio/java/fr/cnrs/liris/lumos/cli:binary
+  sudo cp bazel-genfiles/accio/java/fr/cnrs/liris/lumos/cli/cli_binary /usr/local/bin/lumos
 }
 
 function build_server {
-  bazel build accio/java/fr/cnrs/liris/accio/server:server_deploy.jar
-  sudo cp bazel-bin/accio/java/fr/cnrs/liris/accio/server/server_deploy.jar /usr/local/bin/accio-server.jar
-  upstart_update accio-server
+  bazel build accio/java/fr/cnrs/liris/lumos/server:server_deploy.jar
+  sudo cp bazel-bin/accio/java/fr/cnrs/liris/lumos/server/server_deploy.jar /usr/local/bin/lumos-server.jar
+  upstart_update lumos-server
 }
 
-function build_executor {
-  bazel build accio/java/fr/cnrs/liris/accio/executor:executor_deploy.jar
-  sudo cp bazel-bin/accio/java/fr/cnrs/liris/accio/executor/executor_deploy.jar /var/lib/accio-executor.jar
+function build_gateway {
+  bazel run @yarn//:yarn
+  bazel build accio/java/fr/cnrs/liris/lumos/gateway:gateway_deploy.jar
+  sudo cp bazel-bin/accio/java/fr/cnrs/liris/lumos/gateway/gateway_deploy.jar /usr/local/bin/lumos-gateway.jar
+  upstart_update lumos-gateway
 }
 
 function build_all {
   build_client
   build_server
-  build_executor
+  build_gateway
 }
 
 function print_components {
-  echo 'Please select from: client, executor, server, or all.'
+  echo 'Please select from: client, server, gateway, or all.'
 }
 
 if [ "$#" -eq 0 ]; then

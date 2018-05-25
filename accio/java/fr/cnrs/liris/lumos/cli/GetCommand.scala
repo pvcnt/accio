@@ -43,6 +43,7 @@ final class GetCommand extends LumosCommand {
         }
         env.reporter.outErr.printOut(padTo(name.toUpperCase, width))
       }
+      env.reporter.outErr.printOutLn()
 
       val rows = resp.jobs.map(ThriftAdapter.toDomain).map { job =>
         Seq(job.name, humanize(job.createTime), job.status.state.name, job.labels.map { case (k, v) => s"$k=$v" }.mkString(", "))

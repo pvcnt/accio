@@ -34,7 +34,7 @@ object SchedulerModule extends TwitterModule {
   private[this] val typeFlag = flag("scheduler", "local", "Scheduler type")
 
   private[this] val forceSchedulingFlag = flag("scheduler.force_scheduling", false, "Whether to force the scheduling of too large tasks")
-  private[this] val dataDirFlag = flag[String]("scheduler.data_dir", "Path where to store scheduler data")
+  private[this] val dataDirFlag = flag[String]("scheduler.datadir", "Path where to store scheduler data")
   private[this] val reservedCpusFlag = flag("scheduler.reserved_cpus", 0, "Number of cores that are not available for scheduling")
   private[this] val reservedRamFlag = flag("scheduler.reserved_ram", StorageUnit.zero, "Amount of RAM that is not available for scheduling")
   private[this] val reservedDiskFlag = flag("scheduler.reserved_disk", StorageUnit.zero, "Disk space that is not available for scheduling")

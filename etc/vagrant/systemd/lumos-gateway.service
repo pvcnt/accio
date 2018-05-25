@@ -17,24 +17,18 @@
 # This is a development version, to be used with Vagrant only.
 
 [Unit]
-Description=Accio agent
+Description=Accio gateway
 
 [Service]
-ExecStartPre=/bin/mkdir -p /var/lib/accio-agent
 ExecStart=/usr/bin/java \
-  -Xmx3G \
+  -Xmx1G \
   -server \
-  -agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=n \
-  -jar /usr/local/bin/accio-agent.jar \
-    -cluster_name=devcluster \
-    -admin.port=":9990" \
-    -thrift.port=":9999" \
-    -log.level=DEBUG \
-    -scheduler=local \
-    -force_scheduling \
-    -executor_uri=/usr/local/bin/accio-executor.jar \
-    -datadir=/var/lib/accio-agent \
-    -storage=memory
+  -agentlib:jdwp=transport=dt_socket,server=y,address=8002,suspend=n \
+  -jar /usr/local/bin/lumos-gateway.jar \
+    -ui \
+    -server=localhost:9990 \
+    -http.port=":80" \
+    -admin.port=":8882" \
 Restart=on-failure
 
 [Install]

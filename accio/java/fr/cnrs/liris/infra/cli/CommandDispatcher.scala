@@ -82,9 +82,9 @@ final class CommandDispatcher(application: Application) {
         exitCode
       } catch {
         case NonFatal(e) =>
-          // Here are only handled "unexpected" exception. It means that common error cases (e.g., Thrift
-          // communication errors, invalid files) should be handled in commands. We treat exceptions caught here
-          // as fatal exception (it could be OOM exceptions), this is why they won't be very nicely formatted.
+          // Here are only handled "unexpected" exception. It means that common error cases
+          // (e.g., Thrift communication errors, invalid files) should be handled in commands. We
+          // treat exceptions caught here as fatal, this is why they won't be very nicely formatted.
           e.printStackTrace()
           // BugReport.printBug(outErr, e);
           // BugReport.sendBugReport(e, args, crashData);
@@ -137,7 +137,11 @@ final class CommandDispatcher(application: Application) {
         env.reporter.handle(Event.warn(s"Server error: ${e.getMessage}"))
         ExitCode.InternalError
     }*/
-    val f = command.execute(residue, env)
+    val f = command.execute(residue, env).handle {
+      case NonFatal(e) =>
+        env.reporter.warn(s"Internal error: ${e.getMessage}")
+        ExitCode.InternalError
+    }
     Await.result(f)
   }
 

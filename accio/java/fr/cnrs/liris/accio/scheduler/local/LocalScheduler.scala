@@ -40,6 +40,8 @@ final class LocalScheduler(
   dataDir: Path)
   extends Scheduler with Logging {
 
+  Files.createDirectories(dataDir)
+
   private case class Pending(process: Process)
 
   private case class Running(process: Process, future: Future[_])

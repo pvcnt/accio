@@ -17,19 +17,22 @@
 # This is a development version, to be used with Vagrant only.
 
 [Unit]
-Description=Accio gateway
+Description=Accio server
 
 [Service]
-ExecStartPre=/bin/mkdir -p /var/lib/accio-gateway
+ExecStartPre=/bin/mkdir -p /var/lib/accio-server
 ExecStart=/usr/bin/java \
-  -Xmx1G \
+  -Xmx3G \
   -server \
   -agentlib:jdwp=transport=dt_socket,server=y,address=8001,suspend=n \
-  -jar /usr/local/bin/accio-gateway.jar \
-    -ui \
-    -agent.server=localhost:9999 \
-    -admin.port=":8880" \
-    -http.port=":80"
+  -jar /usr/local/bin/accio-server.jar \
+    -thrift.port=":9991" \
+    -admin.port=":8881" \
+    -log.level=DEBUG \
+    -scheduler=local \
+    -scheduler.force_scheduling \
+    -scheduler.datadir=/var/lib/accio-server/scheduler \
+    -executor_uri=/usr/local/bin/accio-executor.jar
 Restart=on-failure
 
 [Install]

@@ -30,17 +30,15 @@ final class VersionCommand extends AccioCommand {
   override def help = "Display client and server version information."
 
   override def execute(residue: Seq[String], env: Environment): Future[ExitCode] = {
-    val f = if (onlyClient()) {
-      Future.Done
-    } else {
-      client.getInfo().foreach { resp =>
-        env.reporter.outErr.printOutLn(s"Server version: ${resp.version}")
-      }
-      Future.Done
-    }
-    f.map { _ =>
+    if (onlyClient()) {
       env.reporter.outErr.printOutLn(s"Client version: ${Version.Current}")
-      ExitCode.Success
+      Future.value(ExitCode.Success)
+    } else {
+      client.getInfo().map { resp =>
+        env.reporter.outErr.printOutLn(s"Server version: ${resp.version}")
+        env.reporter.outErr.printOutLn(s"Client version: ${Version.Current}")
+        ExitCode.Success
+      }
     }
   }
 }
