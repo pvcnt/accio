@@ -24,6 +24,7 @@ scala_test(
     "//accio/java/fr/cnrs/liris/lumos/domain",
     "//accio/javatests/fr/cnrs/liris/testing",
     "//accio/javatests/fr/cnrs/liris/accio/testing",
+    "//3rdparty/jvm/com/twitter:util_core",
     "//3rdparty/jvm/com/google/guava",
   ],
   size = "small",
