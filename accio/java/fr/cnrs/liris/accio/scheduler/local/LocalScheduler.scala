@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.scheduler.local
 import java.lang.{Process => JavaProcess}
 import java.nio.file.{Files, Path}
 import java.util.concurrent.atomic.AtomicReference
-import java.util.concurrent.{ConcurrentHashMap, ConcurrentLinkedDeque, Executors}
+import java.util.concurrent.{CancellationException, ConcurrentHashMap, ConcurrentLinkedDeque, Executors}
 
 import com.twitter.concurrent.NamedPoolThreadFactory
 import com.twitter.finagle.stats.StatsReceiver
@@ -96,7 +96,7 @@ final class LocalScheduler(
 
   override def kill(name: String): Future[Unit] = {
     running.remove(name).foreach { item =>
-      item.future.raise(new RuntimeException)
+      item.future.raise(new InterruptedException)
       releaseResources(item.process.resources)
     }
     Future.Done
@@ -122,6 +122,9 @@ final class LocalScheduler(
 
   private def schedule(process: Process): Future[Unit] = {
     pool(execute(process))
+      .handle { case _: CancellationException =>
+        logger.info(s"Killed execution of process ${process.name}")
+      }
       .onFailure { e =>
         logger.error(s"Unexpected error while executing process ${process.name}", e)
       }
