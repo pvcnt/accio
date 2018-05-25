@@ -19,13 +19,16 @@
 package fr.cnrs.liris.accio.discovery
 
 import fr.cnrs.liris.accio.domain.{Attribute, Operator}
+import fr.cnrs.liris.accio.testing.MemoryOpDiscovery
 import fr.cnrs.liris.lumos.domain.{DataType, RemoteFile, Value}
 import fr.cnrs.liris.testing.UnitSpec
 
 /**
- * Unit tests for [[MemoryOpRegistry]].
+ * Unit tests for [[OpRegistry]].
  */
-class MemoryOpRegistrySpec extends UnitSpec {
+class OpRegistrySpec extends UnitSpec {
+  behavior of "OpRegistry"
+
   private val ops = Seq(
     Operator(
       name = "FirstSimple",
@@ -48,24 +51,22 @@ class MemoryOpRegistrySpec extends UnitSpec {
         Attribute("data2", DataType.Dataset)),
       outputs = Seq(Attribute("data", DataType.Dataset))))
 
-  behavior of "OpRegistry"
-
   it should "return registered operators" in {
-    val registry = new MemoryOpRegistry(ops.toSet)
+    val registry = new OpRegistry(new MemoryOpDiscovery(ops))
+
     registry("FirstSimple") shouldBe ops(0)
     registry.get("FirstSimple") shouldBe Some(ops(0))
+
     registry("SecondSimple") shouldBe ops(1)
     registry.get("SecondSimple") shouldBe Some(ops(1))
+
+    registry.ops should contain theSameElementsAs ops
   }
 
-  it should "detect unknown operators" in {
-    val registry = new MemoryOpRegistry(ops.toSet)
+  it should "reject unknown operators" in {
+    val registry = new OpRegistry(new MemoryOpDiscovery(ops))
+
     registry.get("Unknown") shouldBe None
     a[NoSuchElementException] shouldBe thrownBy(registry("Unknown"))
-  }
-
-  it should "return all registered operators" in {
-    val registry = new MemoryOpRegistry(ops.toSet)
-    registry.ops should contain theSameElementsAs ops
   }
 }

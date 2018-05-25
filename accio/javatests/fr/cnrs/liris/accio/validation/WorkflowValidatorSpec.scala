@@ -18,8 +18,9 @@
 
 package fr.cnrs.liris.accio.validation
 
-import fr.cnrs.liris.accio.discovery.MemoryOpRegistry
+import fr.cnrs.liris.accio.discovery.OpRegistry
 import fr.cnrs.liris.accio.domain._
+import fr.cnrs.liris.accio.testing.MemoryOpDiscovery
 import fr.cnrs.liris.accio.validation.ValidationResult.FieldViolation
 import fr.cnrs.liris.lumos.domain.{AttrValue, DataType, RemoteFile, Value}
 import fr.cnrs.liris.testing.UnitSpec
@@ -30,32 +31,35 @@ import fr.cnrs.liris.testing.UnitSpec
 class WorkflowValidatorSpec extends UnitSpec {
   behavior of "WorkflowValidator"
 
-  private val validator = new WorkflowValidator(new MemoryOpRegistry(Set(Operator(
-    name = "FirstSimple",
-    executable = RemoteFile("."),
-    inputs = Seq(Attribute("foo", DataType.Int)),
-    outputs = Seq(Attribute("data", DataType.Dataset))),
-    Operator(
-      name = "SecondSimple",
+  private val validator = {
+    val registry = new OpRegistry(new MemoryOpDiscovery(Set(Operator(
+      name = "FirstSimple",
       executable = RemoteFile("."),
-      inputs = Seq(
-        Attribute("dbl", DataType.Double),
-        Attribute("str", DataType.String, defaultValue = Some(Value.String("something"))),
-        Attribute("data", DataType.Dataset)),
-      outputs = Seq(Attribute("data", DataType.Dataset))),
-    Operator(
-      name = "ThirdSimple",
-      executable = RemoteFile("."),
-      inputs = Seq(
-        Attribute("data1", DataType.Dataset),
-        Attribute("data2", DataType.Dataset)),
-      outputs = Seq(Attribute("data", DataType.Dataset))),
-    Operator(
-      name = "Deprecated",
-      executable = RemoteFile("."),
-      deprecation = Some("Do not use it!"),
       inputs = Seq(Attribute("foo", DataType.Int)),
-      outputs = Seq(Attribute("data", DataType.Dataset))))))
+      outputs = Seq(Attribute("data", DataType.Dataset))),
+      Operator(
+        name = "SecondSimple",
+        executable = RemoteFile("."),
+        inputs = Seq(
+          Attribute("dbl", DataType.Double),
+          Attribute("str", DataType.String, defaultValue = Some(Value.String("something"))),
+          Attribute("data", DataType.Dataset)),
+        outputs = Seq(Attribute("data", DataType.Dataset))),
+      Operator(
+        name = "ThirdSimple",
+        executable = RemoteFile("."),
+        inputs = Seq(
+          Attribute("data1", DataType.Dataset),
+          Attribute("data2", DataType.Dataset)),
+        outputs = Seq(Attribute("data", DataType.Dataset))),
+      Operator(
+        name = "Deprecated",
+        executable = RemoteFile("."),
+        deprecation = Some("Do not use it!"),
+        inputs = Seq(Attribute("foo", DataType.Int)),
+        outputs = Seq(Attribute("data", DataType.Dataset))))))
+    new WorkflowValidator(registry)
+  }
 
   it should "validate a legitimate job" in {
     val obj = Workflow(

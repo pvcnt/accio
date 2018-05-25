@@ -33,7 +33,9 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.util.control.NonFatal
 
-final class FileOpRegistry(directory: Path, checkFrequency: Duration) extends OpRegistry with Logging {
+final class FileOpDiscovery(directory: Path, checkFrequency: Duration, filter: Option[String])
+  extends OpDiscovery with Logging {
+
   private[this] val libraries = new ConcurrentHashMap[String, Library].asScala
   private[this] val executor = Executors.newSingleThreadExecutor()
   executor.submit(CheckThread)
@@ -41,7 +43,11 @@ final class FileOpRegistry(directory: Path, checkFrequency: Duration) extends Op
   override def ops: Iterable[Operator] = libraries.values.flatMap(_.ops)
 
   private def updateLibraries(): Unit = {
-    val it = Files.list(directory).iterator.asScala.filter(Files.isRegularFile(_))
+    var it = Files.list(directory).iterator.asScala.filter(Files.isRegularFile(_))
+    filter.foreach { filter =>
+      val regex = filter.r
+      it = it.filter(p => regex.findFirstIn(p.getFileName.toString).nonEmpty)
+    }
     val keys = it.map { file =>
       val lastModified = Files.getLastModifiedTime(file).toMillis
       val key = file.toAbsolutePath.toString

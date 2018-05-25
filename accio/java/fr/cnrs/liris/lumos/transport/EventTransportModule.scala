@@ -21,6 +21,7 @@ package fr.cnrs.liris.lumos.transport
 import java.nio.file.Paths
 
 import com.google.inject.{Provider, Singleton}
+import com.twitter.conversions.time._
 import com.twitter.finagle.Thrift
 import com.twitter.finagle.thrift.RichClientParam
 import com.twitter.inject.{Injector, TwitterModule}
@@ -29,11 +30,17 @@ import fr.cnrs.liris.lumos.server.LumosService
 import net.codingwell.scalaguice.ScalaMultibinder
 
 object EventTransportModule extends TwitterModule {
+  // Binary file transport.
   private[this] val binaryFile = flag[String]("event.binary.file", "File where to write Lumos events in Thrift binary format")
-  private[this] val textFile = flag[String]("event.text.file", "File where to write Lumos events in Thrift text format")
-  private[this] val serverAddress = flag[String]("event.server.address", "Address to a server where to send Lumos events")
 
-  def forwardableArgs: Seq[String] = {
+  // Text file transport.
+  private[this] val textFile = flag[String]("event.text.file", "File where to write Lumos events in Thrift text format")
+
+  // Lumos service transport.
+  private[this] val serverAddress = flag[String]("event.server.address", "Address to a server where to send Lumos events")
+  private[this] val serverTimeout = flag("event.server.timeout", 10.seconds, "Timeout when contacting the server")
+
+  def args: Seq[String] = {
     flags.filter(_.isDefined).flatMap(flag => Seq(s"-${flag.name}", flag.apply().toString))
   }
 
@@ -66,7 +73,7 @@ object EventTransportModule extends TwitterModule {
   private class LumosServiceEventTransportProvider extends Provider[LumosServiceEventTransport] {
     override def get(): LumosServiceEventTransport = {
       val service = Thrift.client
-        //.withRequestTimeout(timeoutFlag())
+        .withRequestTimeout(serverTimeout())
         .withSessionQualifier.noFailFast
         .withSessionQualifier.noFailureAccrual
         .newService(serverAddress())

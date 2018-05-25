@@ -32,7 +32,7 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.util.control.NonFatal
 
-final class LocalOpRegistry(directory: Path, filter: Option[String]) extends OpRegistry with Logging {
+final class LocalOpDiscovery(directory: Path, filter: Option[String]) extends OpDiscovery with Logging {
   override lazy val ops: Iterable[Operator] = {
     var it = Files.list(directory).iterator.asScala.filter(Files.isRegularFile(_))
     filter.foreach { filter =>

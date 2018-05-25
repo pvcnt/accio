@@ -18,14 +18,8 @@
 
 package fr.cnrs.liris.accio.discovery
 
-import com.google.inject.{Inject, Singleton}
 import fr.cnrs.liris.accio.domain.Operator
 
-@Singleton
-final class OpRegistry @Inject()(discovery: OpDiscovery) {
-  def ops: Iterable[Operator] = discovery.ops
-
-  def get(name: String): Option[Operator] = ops.find(_.name == name)
-
-  def apply(name: String): Operator = get(name).get
+trait OpDiscovery {
+  def ops: Iterable[Operator]
 }

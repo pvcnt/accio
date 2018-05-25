@@ -101,8 +101,8 @@ final class AccioServiceController @Inject()(
             cmd += s"-Xmm200M"
             cmd += s"-Xmx200M"
             cmd ++= Seq("-jar", executorUri)
-            cmd ++= EventTransportModule.forwardableArgs
-            cmd ++= DiscoveryModule.forwardableArgs
+            cmd ++= EventTransportModule.args
+            cmd ++= DiscoveryModule.args
             cmd += BinaryScroogeSerializer.toString(ThriftAdapter.toThrift(workflow))
             val process = Process(child.name, cmd.mkString, workflow.resources)
             scheduler

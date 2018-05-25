@@ -16,13 +16,9 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.discovery
+package fr.cnrs.liris.accio.testing
 
-import com.twitter.util.logging.Logging
+import fr.cnrs.liris.accio.discovery.OpDiscovery
 import fr.cnrs.liris.accio.domain.Operator
 
-object NullOpRegistry extends OpRegistry with Logging {
-  logger.warn("Operator discovery is not configured, no operator will be available")
-
-  override def ops: Iterable[Operator] = Iterable.empty
-}
+final class MemoryOpDiscovery(val ops: Iterable[Operator]) extends OpDiscovery

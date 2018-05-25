@@ -20,39 +20,46 @@ package fr.cnrs.liris.accio.discovery
 
 import java.nio.file.Paths
 
-import com.google.inject.{Provides, Singleton}
+import com.google.inject.Provider
 import com.twitter.conversions.time._
 import com.twitter.inject.TwitterModule
 
 object DiscoveryModule extends TwitterModule {
+  // Local discovery.
   private[this] val localRoot = flag[String]("discovery.local.root", "Directory in which to look for operator binaries")
-  private[this] val localFilter = flag[String]("discovery.local.filter", "Filters to select files")
+  private[this] val localFilter = flag[String]("discovery.local.filter", "Filter to select files")
+
+  // File discovery.
   private[this] val fileRoot = flag[String]("discovery.file.root", "Directory in which to look for definitions of operators")
   private[this] val fileFrequency = flag("discovery.file.frequency", 1.minute, "Frequency at which to check for updates")
+  private[this] val fileFilter = flag[String]("discovery.file.filter", "Filter to select files")
 
-  def forwardableArgs: Seq[String] = {
-    flags.filter(_.isDefined).map(flag => s"-${flag.name}=${flag()}")
+  def args: Seq[String] = {
+    flags.filter(_.isDefined).flatMap(flag => Seq(s"-${flag.name}", flag.apply().toString))
   }
 
   override def configure(): Unit = {
+    // As there can be only one operator discovery configured, the order in which they are
+    // instantiated, in case multiple flags are defined, is hard-coded.
     if (localRoot.isDefined) {
-      bind[OpRegistry].to[LocalOpRegistry]
+      bind[OpDiscovery].toProvider[LocalOpRegistryProvider]
     } else if (fileRoot.isDefined) {
-      bind[OpRegistry].to[FileOpRegistry]
+      bind[OpDiscovery].toProvider[FileOpRegistryProvider]
     } else {
-      bind[OpRegistry].toInstance(NullOpRegistry)
+      bind[OpDiscovery].toInstance(NullOpDiscovery)
     }
   }
 
-  @Provides
-  @Singleton
-  def providesFileOpRegistry: FileOpRegistry = {
-    new FileOpRegistry(Paths.get(fileRoot()), fileFrequency())
+  private class FileOpRegistryProvider extends Provider[FileOpDiscovery] {
+    override def get(): FileOpDiscovery = {
+      new FileOpDiscovery(Paths.get(fileRoot()), fileFrequency(), fileFilter.get)
+    }
   }
 
-  @Provides
-  @Singleton
-  def providesLocalOpRegistry: LocalOpRegistry = {
-    new LocalOpRegistry(Paths.get(localRoot()), localFilter.get)
+  private class LocalOpRegistryProvider extends Provider[LocalOpDiscovery] {
+    override def get(): LocalOpDiscovery = {
+      new LocalOpDiscovery(Paths.get(localRoot()), localFilter.get)
+    }
   }
+
 }
