@@ -85,9 +85,9 @@ class WorkflowValidatorSpec extends UnitSpec {
             Channel("dbl", Channel.Constant(Value.Double(3.14))),
             Channel("data", Channel.Reference("FirstSimple", "data"))))))
     val res = validator.validate(obj)
-    res.isValid shouldBe true
     res.errors should have size 0
     res.warnings should have size 0
+    res.isValid shouldBe true
   }
 
   it should "reject a duplicate step name" in {
@@ -136,17 +136,29 @@ class WorkflowValidatorSpec extends UnitSpec {
   }
 
   it should "reject an invalid operator param type" in {
-    val obj = Workflow(
+    var obj = Workflow(
       name = "invalid-job",
       steps = Seq(
         Step(
           op = "FirstSimple",
           name = "FirstSimple",
-          params = Seq(Channel("foo", Channel.Constant(Value.String("bar")))))))
-    val res = validator.validate(obj)
+          params = Seq(Channel("foo", Channel.Constant(Value.String("42.4")))))))
+    var res = validator.validate(obj)
     res.isValid shouldBe false
     res.errors should contain theSameElementsAs Set(
-      FieldViolation("Data type mismatch: requires Int, got String", "steps.0.inputs.foo.value"))
+      FieldViolation("Data type mismatch: requires Int, got String", "steps.0.inputs.foo.constant"))
+
+    obj = Workflow(
+      name = "valid-job",
+      params = Seq(AttrValue("p", Value.String("42.4"))),
+      steps = Seq(
+        Step(
+          op = "FirstSimple",
+          name = "FirstSimple",
+          params = Seq(Channel("foo", Channel.Param("p"))))))
+    res = validator.validate(obj)
+    res.isValid shouldBe false
+    res.errors should contain theSameElementsAs Set(FieldViolation("Data type mismatch: requires Int, got String", "steps.0.inputs.foo.param"))
   }
 
   it should "reject an unknown reference step name" in {
@@ -249,7 +261,7 @@ class WorkflowValidatorSpec extends UnitSpec {
     val res = validator.validate(obj)
     res.isValid shouldBe false
     res.errors should contain theSameElementsAs Set(
-      FieldViolation("Illegal value: First/Simple (should match [a-zA-Z][a-zA-Z0-9._-]+)", "steps.0.name"))
+      FieldViolation("Illegal value: First/Simple (should match [a-zA-Z][a-zA-Z0-9._-]*)", "steps.0.name"))
   }
 
   it should "reject a cyclic graph" in {
@@ -301,7 +313,7 @@ class WorkflowValidatorSpec extends UnitSpec {
     val res = validator.validate(obj)
     res.isValid shouldBe false
     res.errors should contain theSameElementsAs Set(
-      FieldViolation("Illegal value: workflow!id (should match [a-zA-Z][a-zA-Z0-9._-]+)", "name"))
+      FieldViolation("Illegal value: workflow!id (should match [a-zA-Z][a-zA-Z0-9._-]*)", "name"))
   }
 
   it should "reject a param type mismatch" in {
@@ -338,7 +350,7 @@ class WorkflowValidatorSpec extends UnitSpec {
     val res = validator.validate(obj)
     res.isValid shouldBe false
     res.errors should contain theSameElementsAs Set(
-      FieldViolation("Illegal value: foo/foo (should match [a-zA-Z][a-zA-Z0-9._-]+)", "params.0.name"))
+      FieldViolation("Illegal value: foo/foo (should match [a-zA-Z][a-zA-Z0-9._-]*)", "params.0.name"))
   }
 
   it should "reject an undeclared param" in {
@@ -353,5 +365,32 @@ class WorkflowValidatorSpec extends UnitSpec {
     res.isValid shouldBe false
     res.errors should contain theSameElementsAs Set(
       FieldViolation("Unknown parameter: undeclared", "steps.0.inputs.foo.param"))
+  }
+
+  it should "support casting parameters" in {
+    var obj = Workflow(
+      name = "valid-job",
+      params = Seq(AttrValue("p", Value.String("42"))),
+      steps = Seq(
+        Step(
+          op = "FirstSimple",
+          name = "FirstSimple",
+          params = Seq(Channel("foo", Channel.Param("p"))))))
+    var res = validator.validate(obj)
+    res.errors should have size 0
+    res.warnings should have size 0
+    res.isValid shouldBe true
+
+    obj = Workflow(
+      name = "valid-job",
+      steps = Seq(
+        Step(
+          op = "FirstSimple",
+          name = "FirstSimple",
+          params = Seq(Channel("foo", Channel.Constant(Value.String("42")))))))
+    res = validator.validate(obj)
+    res.errors should have size 0
+    res.warnings should have size 0
+    res.isValid shouldBe true
   }
 }

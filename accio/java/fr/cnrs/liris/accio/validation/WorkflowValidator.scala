@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.validation
 import com.google.inject.{Inject, Singleton}
 import fr.cnrs.liris.accio.discovery.OpRegistry
 import fr.cnrs.liris.accio.domain._
-import fr.cnrs.liris.lumos.domain.AttrValue
+import fr.cnrs.liris.lumos.domain.{AttrValue, DataType, Value}
 
 import scala.util.matching.Regex
 
@@ -143,6 +143,7 @@ final class WorkflowValidator @Inject()(registry: OpRegistry) {
                           s"steps.$idx.inputs.$name.port"))
                       case Some(otherAttr) =>
                         if (attr.dataType != otherAttr.dataType) {
+                          // TODO: support casting from one supported type to another.
                           builder.error(ValidationResult.FieldViolation(
                             s"Data type mismatch: requires ${attr.dataType}, got ${otherAttr.dataType}",
                             s"steps.$idx.inputs.$name"))
@@ -151,10 +152,10 @@ final class WorkflowValidator @Inject()(registry: OpRegistry) {
                   }
               }
             case Channel.Constant(v) =>
-              if (v.dataType != attr.dataType) {
+              if (!isAssignableFrom(attr.dataType, v)) {
                 builder.error(ValidationResult.FieldViolation(
                   s"Data type mismatch: requires ${attr.dataType}, got ${v.dataType}",
-                  s"steps.$idx.inputs.$name.value"))
+                  s"steps.$idx.inputs.$name.constant"))
               }
             case Channel.Param(paramName) =>
               workflow.params.find(_.name == paramName) match {
@@ -162,7 +163,7 @@ final class WorkflowValidator @Inject()(registry: OpRegistry) {
                   s"Unknown parameter: $paramName",
                   s"steps.$idx.inputs.$name.param"))
                 case Some(param) =>
-                  if (attr.dataType != param.value.dataType) {
+                  if (!isAssignableFrom(attr.dataType, param.value)) {
                     builder.error(ValidationResult.FieldViolation(
                       s"Data type mismatch: requires ${attr.dataType}, got ${param.value.dataType}",
                       s"steps.$idx.inputs.$name.param"))
@@ -171,6 +172,10 @@ final class WorkflowValidator @Inject()(registry: OpRegistry) {
           }
       }
     }
+  }
+
+  private def isAssignableFrom(dataType: DataType, value: Value): Boolean = {
+    dataType == value.dataType || value.cast(dataType).isDefined
   }
 
   private def detectCycles(graph: Graph): Set[Seq[String]] = {
@@ -193,7 +198,7 @@ object WorkflowValidator {
   /**
    * Pattern for valid names.
    */
-  private val NamePattern = "[a-zA-Z][a-zA-Z0-9._-]+"
+  private val NamePattern = "[a-zA-Z][a-zA-Z0-9._-]*"
 
   /**
    * Regex for valid names.
