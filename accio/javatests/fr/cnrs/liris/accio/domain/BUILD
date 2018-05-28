@@ -20,9 +20,11 @@ scala_test(
   deps = [
     "//accio/java/fr/cnrs/liris/accio/domain",
     "//accio/java/fr/cnrs/liris/lumos/domain",
+    "//accio/java/fr/cnrs/liris/util/geo",
     "//accio/javatests/fr/cnrs/liris/lumos/domain",
     "//accio/javatests/fr/cnrs/liris/testing",
     "//3rdparty/jvm/org/scalacheck",
+    "//3rdparty/jvm/com/github/nscala_time",
   ],
   size = "small",
   visibility = ["//accio/javatests:__subpackages__"],

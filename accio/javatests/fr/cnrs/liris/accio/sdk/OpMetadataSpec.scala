@@ -18,8 +18,8 @@
 
 package fr.cnrs.liris.accio.sdk
 
-import fr.cnrs.liris.accio.domain.Operator
-import fr.cnrs.liris.lumos.domain.{DataType, RemoteFile}
+import fr.cnrs.liris.accio.domain.{DataTypes, Operator}
+import fr.cnrs.liris.lumos.domain.{DataType, RemoteFile, Value}
 import fr.cnrs.liris.testing.UnitSpec
 import fr.cnrs.liris.util.geo.Distance
 import org.joda.time.{Duration, Instant}
@@ -29,6 +29,8 @@ import org.joda.time.{Duration, Instant}
  */
 class OpMetadataSpec extends UnitSpec {
   behavior of "OpMetadata"
+
+  DataTypes.register()
 
   it should "read definition of operators" in {
     val opMeta = OpMetadata.apply[DoALotOfThingsOp]
@@ -120,23 +122,23 @@ class OpMetadataSpec extends UnitSpec {
 
   it should "support timestamp inputs" in {
     val defn = OpMetadata.apply[AllDataTypesOp].defn
-    assertMandatoryInput(defn, "ts", DataType.Long, aspects = Set("time"))
-    assertMandatoryInput(defn, "ts2", DataType.Long, defaultValue = new Instant(123456), aspects = Set("time"))
-    assertOptionalInput(defn, "ts3", DataType.Long, aspects = Set("time"))
+    assertMandatoryInput(defn, "ts", DataTypes.Timestamp)
+    assertMandatoryInput(defn, "ts2", DataTypes.Timestamp, defaultValue = new Instant(123456))
+    assertOptionalInput(defn, "ts3", DataTypes.Timestamp)
   }
 
   it should "support duration parameters" in {
     val defn = OpMetadata.apply[AllDataTypesOp].defn
-    assertMandatoryInput(defn, "duration", DataType.Long, aspects = Set("duration"))
-    assertMandatoryInput(defn, "duration2", DataType.Long, defaultValue = new Duration(1000), aspects = Set("duration"))
-    assertOptionalInput(defn, "duration3", DataType.Long, aspects = Set("duration"))
+    assertMandatoryInput(defn, "duration", DataTypes.Duration)
+    assertMandatoryInput(defn, "duration2", DataTypes.Duration, defaultValue = new Duration(1000))
+    assertOptionalInput(defn, "duration3", DataTypes.Duration)
   }
 
   it should "support distance parameters" in {
     val defn = OpMetadata.apply[AllDataTypesOp].defn
-    assertMandatoryInput(defn, "dist", DataType.Double, aspects = Set("distance"))
-    assertMandatoryInput(defn, "dist2", DataType.Double, defaultValue = Distance.meters(42), aspects = Set("distance"))
-    assertOptionalInput(defn, "dist3", DataType.Double, aspects = Set("distance"))
+    assertMandatoryInput(defn, "dist", DataTypes.Distance)
+    assertMandatoryInput(defn, "dist2", DataTypes.Distance, defaultValue = Distance.meters(42))
+    assertOptionalInput(defn, "dist3", DataTypes.Distance)
   }
 
   it should "support dataset inputs" in {
@@ -168,7 +170,7 @@ class OpMetadataSpec extends UnitSpec {
     val expected = intercept[IllegalArgumentException] {
       OpMetadata.apply[InvalidParamOp]
     }
-    expected.getMessage shouldBe "Unsupported Scala type: Iterator[Int]"
+    expected.getMessage shouldBe "Unsupported Scala type: scala.collection.Iterator"
   }
 
   it should "detect optional fields to have a default value" in {
@@ -178,17 +180,16 @@ class OpMetadataSpec extends UnitSpec {
     expected.getMessage shouldBe "Input fr.cnrs.liris.accio.sdk.OptionalWithDefaultValueOp.i cannot be optional with a default value"
   }
 
-  private def assertMandatoryInput(defn: Operator, name: String, dataType: DataType, defaultValue: Any = null, aspects: Set[String] = Set.empty): Unit =
-    doAssertInput(defn, name, dataType, optional = false, defaultValue = Option(defaultValue), aspects = aspects)
+  private def assertMandatoryInput(defn: Operator, name: String, dataType: DataType, defaultValue: Any = null): Unit =
+    doAssertInput(defn, name, dataType, optional = false, defaultValue = Option(defaultValue))
 
-  private def assertOptionalInput(defn: Operator, name: String, dataType: DataType, aspects: Set[String] = Set.empty): Unit =
-    doAssertInput(defn, name, dataType, optional = true, defaultValue = None, aspects = aspects)
+  private def assertOptionalInput(defn: Operator, name: String, dataType: DataType): Unit =
+    doAssertInput(defn, name, dataType, optional = true, defaultValue = None)
 
-  private def doAssertInput(defn: Operator, name: String, dataType: DataType, optional: Boolean, defaultValue: Option[Any], aspects: Set[String]): Unit = {
+  private def doAssertInput(defn: Operator, name: String, dataType: DataType, optional: Boolean, defaultValue: Option[Any]): Unit = {
     val in = defn.inputs.find(_.name == name).get
     in.dataType shouldBe dataType
     in.optional shouldBe optional
-    in.defaultValue shouldBe defaultValue.map(Values.encode(_, dataType, aspects).get)
-    in.aspects shouldBe aspects
+    in.defaultValue shouldBe defaultValue.map(Value.apply(_, dataType))
   }
 }

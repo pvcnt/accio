@@ -21,6 +21,7 @@ package fr.cnrs.liris.infra.cli
 import ch.qos.logback.classic.LoggerContext
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.helpers.NOPAppender
+import com.twitter.util.logging.Slf4jBridgeUtility
 import org.slf4j.{Logger, LoggerFactory}
 
 trait Application {
@@ -49,7 +50,7 @@ trait Application {
     noopAppender.start()
     rootLogger.addAppender(noopAppender)
 
-    //Slf4jBridgeUtility.attemptSlf4jBridgeHandlerInstallation()
+    Slf4jBridgeUtility.attemptSlf4jBridgeHandlerInstallation()
 
     val dispatcher = new CommandDispatcher(this)
     val exitCode = dispatcher.exec(args, OutErr.System)

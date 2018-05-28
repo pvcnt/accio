@@ -19,23 +19,48 @@
 package fr.cnrs.liris.lumos.domain
 
 import fr.cnrs.liris.testing.UnitSpec
+import org.scalatest.BeforeAndAfterEach
+
+import scala.reflect.{ClassTag, classTag}
 
 /**
  * Unit tests for [[DataType]].
  */
-class DataTypeSpec extends UnitSpec {
+class DataTypeSpec extends UnitSpec with BeforeAndAfterEach {
   behavior of "DataType"
 
-  it should "retrieve the value of" in {
-    DataType.values should have size 8 // This forces to update the test when we add a new data type.
-    DataType.valueOf("Int") shouldBe Some(DataType.Int)
-    DataType.valueOf("Long") shouldBe Some(DataType.Long)
-    DataType.valueOf("Float") shouldBe Some(DataType.Float)
-    DataType.valueOf("Double") shouldBe Some(DataType.Double)
-    DataType.valueOf("String") shouldBe Some(DataType.String)
-    DataType.valueOf("Bool") shouldBe Some(DataType.Bool)
-    DataType.valueOf("Dataset") shouldBe Some(DataType.Dataset)
-    DataType.valueOf("File") shouldBe Some(DataType.File)
-    DataType.valueOf("foobar") shouldBe None
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    DataType.clear()
   }
+
+  it should "retrieve the value of" in {
+    DataType.register(TestCustomType)
+    DataType.values should have size 9
+    DataType.parse("Int") shouldBe Some(DataType.Int)
+    DataType.parse("Long") shouldBe Some(DataType.Long)
+    DataType.parse("Float") shouldBe Some(DataType.Float)
+    DataType.parse("Double") shouldBe Some(DataType.Double)
+    DataType.parse("String") shouldBe Some(DataType.String)
+    DataType.parse("Bool") shouldBe Some(DataType.Bool)
+    DataType.parse("Dataset") shouldBe Some(DataType.Dataset)
+    DataType.parse("File") shouldBe Some(DataType.File)
+    DataType.parse("Test") shouldBe Some(TestCustomType)
+    DataType.parse("Foobar") shouldBe None
+  }
+
+  object TestCustomType extends DataType.Custom {
+    override type JvmType = String
+
+    override def cls: ClassTag[this.JvmType] = classTag[Predef.String]
+
+    override def name: String = "Test"
+
+    override def base: DataType = DataType.String
+
+    override def encode(v: this.JvmType): Value = ???
+
+    override def decode(value: Value): Option[this.JvmType] = ???
+  }
+
 }

@@ -30,31 +30,28 @@ sealed trait Value {
 
 object Value {
 
-  def apply(v: Any, dataType: DataType): Value =
+  def apply(v: Any, dataType: DataType): Value = {
     dataType match {
-      case DataType.Int => Int(v.asInstanceOf[scala.Int])
-      case DataType.Long => Long(v.asInstanceOf[scala.Long])
-      case DataType.Float => Float(v.asInstanceOf[scala.Float])
-      case DataType.Double => Double(v.asInstanceOf[scala.Double])
+      case DataType.Int => Int(v.asInstanceOf[DataType.Int.JvmType])
+      case DataType.Long => Long(v.asInstanceOf[DataType.Long.JvmType])
+      case DataType.Float => Float(v.asInstanceOf[DataType.Float.JvmType])
+      case DataType.Double => Double(v.asInstanceOf[DataType.Double.JvmType])
       case DataType.String => String(v.toString)
-      case DataType.Bool => Bool(v.asInstanceOf[Boolean])
-      case DataType.Dataset => Dataset(v.asInstanceOf[RemoteFile])
-      case DataType.File => File(v.asInstanceOf[RemoteFile])
+      case DataType.Bool => Bool(v.asInstanceOf[DataType.Bool.JvmType])
+      case DataType.Dataset => Dataset(v.asInstanceOf[DataType.Dataset.JvmType])
+      case DataType.File => File(v.asInstanceOf[DataType.File.JvmType])
+      case d: DataType.Custom => Custom(v.asInstanceOf[d.JvmType], d)
     }
+  }
 
-  def apply(v: Any): Value =
-    v match {
-      case i: scala.Int => Int(i)
-      case l: scala.Long => Long(l)
-      case f: scala.Float => Float(f)
-      case d: scala.Double => Double(d)
-      case s: Predef.String => String(s)
-      case b: Boolean => Bool(b)
-      case f: RemoteFile => Dataset(f)
-      case _ => throw new IllegalArgumentException(s"Unsupported Scala value: $v")
+  def apply(v: Any): Value = {
+    DataType.values.find(_.cls.runtimeClass.isAssignableFrom(v.getClass)) match {
+      case Some(d) => apply(v, d)
+      case None => throw new IllegalArgumentException(s"Unsupported Scala value: $v")
     }
+  }
 
-  case class Int(v: scala.Int) extends Value {
+  case class Int(v: DataType.Int.JvmType) extends Value {
     override def dataType: DataType = DataType.Int
 
     override def cast(to: DataType): Option[Value] =
@@ -64,47 +61,61 @@ object Value {
         case DataType.Double => Some(Double(v))
         case DataType.String => Some(String(v.toString))
         case DataType.Int => Some(this)
+        case d: DataType.Custom =>
+          cast(d.base).flatMap(d.decode).orElse(d.decode(this)).map(v => Custom(v, d))
         case _ => None
       }
   }
 
-  case class Long(v: scala.Long) extends Value {
+  case class Long(v: DataType.Long.JvmType) extends Value {
     override def dataType: DataType = DataType.Long
 
     override def cast(to: DataType): Option[Value] =
       to match {
-        case DataType.Float => Some(Float(v))
-        case DataType.Double => Some(Double(v))
         case DataType.String => Some(String(v.toString))
+        //case DataType.Double => Some(Double(v))
+        //case DataType.Float if v <= scala.Float.MaxValue => Some(Float(v))
+        //case DataType.Int if v <= scala.Int.MaxValue => Some(Int(v.toInt))
         case DataType.Long => Some(this)
+        case d: DataType.Custom =>
+          cast(d.base).flatMap(d.decode).orElse(d.decode(this)).map(v => Custom(v, d))
         case _ => None
       }
   }
 
-  case class Float(v: scala.Float) extends Value {
+  case class Float(v: DataType.Float.JvmType) extends Value {
     override def dataType: DataType = DataType.Float
 
     override def cast(to: DataType): Option[Value] =
       to match {
+        //case DataType.Int if DoubleMath.isMathematicalInteger(v) => Some(Int(v.toInt))
+        //case DataType.Long if DoubleMath.isMathematicalInteger(v) => Some(Long(v.toLong))
         case DataType.Double => Some(Double(v))
         case DataType.String => Some(String(v.toString))
         case DataType.Float => Some(this)
+        case d: DataType.Custom =>
+          cast(d.base).flatMap(d.decode).orElse(d.decode(this)).map(v => Custom(v, d))
         case _ => None
       }
   }
 
-  case class Double(v: scala.Double) extends Value {
+  case class Double(v: DataType.Double.JvmType) extends Value {
     override def dataType: DataType = DataType.Double
 
     override def cast(to: DataType): Option[Value] =
       to match {
+        //case DataType.Float if v <= scala.Float.MaxValue => Some(Float(v.toFloat))
+        //case DataType.Int if DoubleMath.isMathematicalInteger(v) => Some(Int(v.toInt))
+        //case DataType.Long if DoubleMath.isMathematicalInteger(v) => Some(Long(v.toLong))
         case DataType.String => Some(String(v.toString))
         case DataType.Double => Some(this)
+        case d: DataType.Custom =>
+          cast(d.base).flatMap(d.decode).orElse(d.decode(this)).map(v => Custom(v, d))
         case _ => None
       }
   }
 
-  case class String(v: Predef.String) extends Value {
+  case class String(v: DataType.String.JvmType) extends Value {
     override def dataType: DataType = DataType.String
 
     override def cast(to: DataType): Option[Value] =
@@ -120,17 +131,21 @@ object Value {
             case _ => None
           }
         case DataType.String => Some(this)
+        case d: DataType.Custom =>
+          cast(d.base).flatMap(d.decode).orElse(d.decode(this)).map(v => Custom(v, d))
         case _ => None
       }
   }
 
-  case class Bool(v: Boolean) extends Value {
+  case class Bool(v: DataType.Bool.JvmType) extends Value {
     override def dataType: DataType = DataType.Bool
 
     override def cast(to: DataType): Option[Value] =
       to match {
         case DataType.String => Some(String(v.toString))
         case DataType.Bool => Some(this)
+        case d: DataType.Custom =>
+          cast(d.base).flatMap(d.decode).orElse(d.decode(this)).map(v => Custom(v, d))
         case _ => None
       }
   }
@@ -139,25 +154,36 @@ object Value {
 
   val False = Bool(false)
 
-  case class File(v: RemoteFile) extends Value {
+  case class File(v: DataType.File.JvmType) extends Value {
     override def dataType: DataType = DataType.File
 
     override def cast(to: DataType): Option[Value] =
       to match {
+        case DataType.Dataset => Some(Value.Dataset(v))
         case DataType.File => Some(this)
+        case d: DataType.Custom =>
+          cast(d.base).flatMap(d.decode).orElse(d.decode(this)).map(v => Custom(v, d))
         case _ => None
       }
   }
 
-  case class Dataset(v: RemoteFile) extends Value {
+  case class Dataset(v: DataType.Dataset.JvmType) extends Value {
     override def dataType: DataType = DataType.Dataset
 
     override def cast(to: DataType): Option[Value] =
       to match {
         case DataType.File => Some(File(v))
         case DataType.Dataset => Some(this)
+        case d: DataType.Custom =>
+          cast(d.base).flatMap(d.decode).orElse(d.decode(this)).map(v => Custom(v, d))
         case _ => None
       }
+  }
+
+  case class Custom(v: Any, dataType: DataType.Custom) extends Value {
+    override def cast(to: DataType): Option[Value] = {
+      dataType.encode(v.asInstanceOf[dataType.JvmType]).cast(to)
+    }
   }
 
 }

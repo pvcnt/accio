@@ -18,47 +18,110 @@
 
 package fr.cnrs.liris.lumos.domain
 
+import com.google.common.annotations.VisibleForTesting
+
+import scala.collection.mutable
+import scala.reflect.{ClassTag, classTag}
+
 sealed trait DataType {
+  type JvmType
+
   def name: String
+
+  def cls: ClassTag[JvmType]
 
   override def toString: String = name
 }
 
 object DataType {
+  // It is extremely important that in the following list File starts BEFORE Dataset. Indeed,
+  // both have the same JvmType (RemoteFile), we prefer to consider by default files (as all
+  // datasets are files, but not all files are datasets).
+  private[this] val builtIn = Seq(Int, Long, Float, Double, String, Bool, File, Dataset)
+  private[this] val custom = mutable.Set.empty[Custom]
 
   case object Int extends DataType {
+    override type JvmType = scala.Int
+
+    override def cls: ClassTag[JvmType] = classTag[scala.Int]
+
     override def name = "Int"
   }
 
   case object Long extends DataType {
+    override type JvmType = scala.Long
+
+    override def cls: ClassTag[JvmType] = classTag[scala.Long]
+
     override def name = "Long"
   }
 
   case object Float extends DataType {
+    override type JvmType = scala.Float
+
+    override def cls: ClassTag[JvmType] = classTag[scala.Float]
+
     override def name = "Float"
   }
 
   case object Double extends DataType {
+    override type JvmType = scala.Double
+
+    override def cls: ClassTag[JvmType] = classTag[scala.Double]
+
     override def name = "Double"
   }
 
   case object String extends DataType {
+    override type JvmType = Predef.String
+
+    override def cls: ClassTag[JvmType] = classTag[Predef.String]
+
     override def name = "String"
   }
 
   case object Bool extends DataType {
+    override type JvmType = scala.Boolean
+
+    override def cls: ClassTag[JvmType] = classTag[scala.Boolean]
+
     override def name = "Bool"
   }
 
   case object Dataset extends DataType {
+    override type JvmType = RemoteFile
+
+    override def cls: ClassTag[JvmType] = classTag[RemoteFile]
+
     override def name = "Dataset"
   }
 
   case object File extends DataType {
+    override type JvmType = RemoteFile
+
+    override def cls: ClassTag[JvmType] = classTag[RemoteFile]
+
     override def name = "File"
   }
 
-  def values: Seq[DataType] = Seq(Int, Long, Float, Double, String, Bool, Dataset, File)
+  trait Custom extends DataType {
+    def base: DataType
 
-  def valueOf(str: String): Option[DataType] = values.find(_.name == str)
+    def encode(v: JvmType): Value
+
+    def decode(value: Value): Option[JvmType]
+  }
+
+  def register(dataType: Custom): Unit = custom += dataType
+
+  @VisibleForTesting
+  private[domain] def clear(): Unit = custom.clear()
+
+  def values: Seq[DataType] = builtIn ++ custom.map(_.asInstanceOf[DataType])
+
+  def find(cls: Class[_]): Option[DataType] = values.find(_.cls.runtimeClass.isAssignableFrom(cls))
+
+  def find(cls: ClassTag[_]): Option[DataType] = find(cls.runtimeClass)
+
+  def parse(str: String): Option[DataType] = values.find(_.name == str)
 }

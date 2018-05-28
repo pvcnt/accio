@@ -19,7 +19,10 @@ scala_library(
   srcs = glob(["*.scala"]),
   deps = [
     "//accio/java/fr/cnrs/liris/lumos/domain",
+    "//accio/java/fr/cnrs/liris/util/geo",
     "//3rdparty/jvm/com/twitter:util_slf4j_api",
+    "//3rdparty/jvm/com/twitter:util_core",
+    "//3rdparty/jvm/com/github/nscala_time",
   ],
   exports = [
     "//accio/java/fr/cnrs/liris/lumos/domain",

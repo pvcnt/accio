@@ -123,14 +123,10 @@ final class OpExecutor(opMeta: OpMetadata, workDir: Path) extends Logging {
     }
   }
 
-  private def encode(attr: Attribute, v: Any): Value = {
-    Values.encode(v, attr.dataType, attr.aspects).getOrElse {
-      throw new RuntimeException(s"Invalid output type for ${attr.name}: ${v.getClass.getName}") with NoStackTrace
-    }
-  }
+  private def encode(attr: Attribute, v: Any): Value = Value.apply(v, attr.dataType)
 
   private def decode(attr: Attribute, value: Value): Any = {
-    Values.decode(value, attr.dataType, attr.aspects).getOrElse {
+    value.cast(attr.dataType).map(_.v).getOrElse {
       throw new IllegalArgumentException(s"Invalid input for ${attr.name}: ${value.v}") with NoStackTrace
     }
   }

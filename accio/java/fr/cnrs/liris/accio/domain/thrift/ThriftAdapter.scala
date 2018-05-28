@@ -19,6 +19,7 @@
 package fr.cnrs.liris.accio.domain.thrift
 
 import fr.cnrs.liris.accio.domain
+import fr.cnrs.liris.lumos.domain.DataType
 import fr.cnrs.liris.lumos.domain.thrift.{ThriftAdapter => LumosAdapter}
 
 object ThriftAdapter {
@@ -82,9 +83,12 @@ object ThriftAdapter {
     }
 
   private def toDomain(obj: Attribute): domain.Attribute = {
+    val dataType = DataType.parse(obj.dataType).getOrElse {
+      throw new IllegalArgumentException(s"Unknown data type: ${obj.dataType}")
+    }
     domain.Attribute(
       name = obj.name,
-      dataType = LumosAdapter.toDomain(obj.dataType),
+      dataType = dataType,
       help = obj.help,
       defaultValue = obj.defaultValue.map(LumosAdapter.toDomain),
       optional = obj.isOptional,
@@ -152,7 +156,7 @@ object ThriftAdapter {
   private def toThrift(obj: domain.Attribute): Attribute = {
     Attribute(
       name = obj.name,
-      dataType = LumosAdapter.toThrift(obj.dataType),
+      dataType = obj.dataType.name,
       help = obj.help,
       defaultValue = obj.defaultValue.map(LumosAdapter.toThrift),
       isOptional = obj.optional,

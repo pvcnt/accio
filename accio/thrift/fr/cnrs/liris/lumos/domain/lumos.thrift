@@ -18,17 +18,6 @@
 
 namespace java fr.cnrs.liris.lumos.domain.thrift
 
-enum DataType {
-  INT,
-  LONG,
-  FLOAT,
-  DOUBLE,
-  STRING,
-  BOOLEAN,
-  FILE,
-  DATASET,
-}
-
 struct RemoteFile {
   1: string uri;
   2: optional string content_type;
@@ -36,15 +25,19 @@ struct RemoteFile {
   4: optional string sha256;
 }
 
-union Value {
+union ValuePayload {
   1: i32 int;
   2: i64 long;
   3: double float;
   4: double dbl;
   5: string str;
   6: bool boolean;
-  7: RemoteFile dataset;
-  8: RemoteFile file;
+  7: RemoteFile file;
+}
+
+struct Value {
+  1: string data_type;
+  2: ValuePayload payload;
 }
 
 struct MetricValue {

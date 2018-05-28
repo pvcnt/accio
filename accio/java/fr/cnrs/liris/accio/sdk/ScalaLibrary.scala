@@ -22,6 +22,7 @@ import java.io.FileOutputStream
 import java.nio.file.Paths
 
 import com.twitter.util.logging.{Logging, Slf4jBridgeUtility}
+import fr.cnrs.liris.accio.domain.DataTypes
 import fr.cnrs.liris.accio.domain.thrift.{OpPayload, ThriftAdapter}
 import fr.cnrs.liris.util.scrooge.BinaryScroogeSerializer
 
@@ -33,6 +34,7 @@ trait ScalaLibrary extends Logging {
   final def main(args: Array[String]): Unit = sys.exit(run(args))
 
   final def run(args: Array[String]): Int = {
+    DataTypes.register()
     if (args.isEmpty) {
       printOperators()
     } else {

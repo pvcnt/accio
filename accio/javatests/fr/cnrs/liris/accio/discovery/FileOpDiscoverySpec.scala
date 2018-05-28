@@ -38,11 +38,11 @@ class FileOpDiscoverySpec extends UnitSpec with BeforeAndAfterEach with CreateTm
     // may delete files are part of those test cases.
     super.beforeEach()
     Files.copy(
-      Paths.get("accio/javatests/fr/cnrs/liris/accio/discovery/file/ops0.thriftbin"),
-      tmpDir.resolve("ops0.thriftbin"))
+      Paths.get("accio/javatests/fr/cnrs/liris/accio/discovery/file/ops0.binthrift"),
+      tmpDir.resolve("ops0.binthrift"))
     Files.copy(
-      Paths.get("accio/javatests/fr/cnrs/liris/accio/discovery/file/ops1.thriftbin"),
-      tmpDir.resolve("ops1.thriftbin"))
+      Paths.get("accio/javatests/fr/cnrs/liris/accio/discovery/file/ops1.binthrift"),
+      tmpDir.resolve("ops1.binthrift"))
   }
 
   it should "discover operators" in {
@@ -63,11 +63,11 @@ class FileOpDiscoverySpec extends UnitSpec with BeforeAndAfterEach with CreateTm
 
     discovery.ops should contain theSameElementsAs ops0
 
-    Files.copy(tmpDir.resolve("ops1.thriftbin"), tmpDir.resolve("ops01.thriftbin"))
+    Files.copy(tmpDir.resolve("ops1.binthrift"), tmpDir.resolve("ops01.binthrift"))
     Thread.sleep(1200)
     discovery.ops should contain theSameElementsAs ops0 ++ ops1
 
-    Files.delete(tmpDir.resolve("ops0.thriftbin"))
+    Files.delete(tmpDir.resolve("ops0.binthrift"))
     Thread.sleep(1200)
     discovery.ops should contain theSameElementsAs ops1
   }

@@ -23,7 +23,7 @@ import java.io.IOException
 import com.twitter.util.StorageUnit
 import com.twitter.util.logging.Logging
 import fr.cnrs.liris.accio.domain.{Attribute, Operator}
-import fr.cnrs.liris.lumos.domain.RemoteFile
+import fr.cnrs.liris.lumos.domain.{DataType, RemoteFile, Value}
 import fr.cnrs.liris.util.ResourceFileLoader
 import fr.cnrs.liris.util.StringUtils.maybe
 import fr.cnrs.liris.util.reflect.CaseClass
@@ -121,18 +121,20 @@ object OpMetadata extends Logging {
           }
 
           val isOptional = field.scalaType.isOption
-          val (dataType, aspects) = Values.dataTypeOf(if (isOptional) field.scalaType.args.head.tpe else field.scalaType.tpe)
+          val cls = if (isOptional) field.scalaType.args.head.runtimeClass else field.scalaType.runtimeClass
+          val dataType = DataType.find(cls).getOrElse {
+            throw new IllegalArgumentException(s"Unsupported Scala type: ${cls.getName}")
+          }
           val defaultValue = if (isOptional) {
             None
           } else {
-            field.defaultValue.flatMap(Values.encode(_, dataType, aspects))
+            field.defaultValue.map(Value.apply(_, dataType))
           }
           Attribute(
             name = field.name,
             dataType = dataType,
             help = maybe(in.help),
             optional = isOptional,
-            aspects = aspects,
             defaultValue = defaultValue)
       }
     }
@@ -140,8 +142,10 @@ object OpMetadata extends Logging {
   private def getOutputs(outRefl: CaseClass) = {
     outRefl.fields.flatMap { field =>
       field.annotations.get[Arg].map { out =>
-        val (dataType, aspects) = Values.dataTypeOf(field.scalaType.tpe)
-        Attribute(field.name, dataType = dataType, aspects = aspects, help = maybe(out.help))
+        val dataType = DataType.find(field.scalaType.runtimeClass).getOrElse {
+          throw new IllegalArgumentException(s"Unsupported Scala type: ${field.scalaType.runtimeClass.getName}")
+        }
+        Attribute(field.name, dataType = dataType, help = maybe(out.help))
       }.toSeq
     }
   }

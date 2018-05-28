@@ -59,8 +59,9 @@ function build_ops {
 
 function build_all {
   build_cli
-  build_server
+  build_ops
   build_executor
+  build_server
 }
 
 function print_components {

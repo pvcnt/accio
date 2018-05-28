@@ -22,6 +22,7 @@ import com.twitter.finatra.thrift.ThriftServer
 import com.twitter.finatra.thrift.filters._
 import com.twitter.finatra.thrift.routing.ThriftRouter
 import fr.cnrs.liris.accio.discovery.DiscoveryModule
+import fr.cnrs.liris.accio.domain.DataTypes
 import fr.cnrs.liris.accio.scheduler.install.SchedulerModule
 import fr.cnrs.liris.accio.validation.ValidationModule
 import fr.cnrs.liris.infra.logback.LogbackConfigurator
@@ -31,13 +32,18 @@ import fr.cnrs.liris.lumos.transport.EventTransportModule
 object AccioServerMain extends AccioServer
 
 class AccioServer extends ThriftServer with LogbackConfigurator {
+  private[this] val executorUri = flag("executor_uri", "/var/lib/accio/executor.jar", "URI to the executor")
+
+  init {
+    DataTypes.register()
+  }
+
   override protected def modules = Seq(
     AuthModule,
     DiscoveryModule,
     ValidationModule,
     SchedulerModule,
-    EventTransportModule,
-    ServerModule)
+    EventTransportModule)
 
   override protected def configureThrift(router: ThriftRouter): Unit = {
     router

@@ -53,7 +53,7 @@ private object SourceDeserializer extends StdDeserializer[Channel.Source](classO
 
 private object DataTypeDeserializer extends StdDeserializer[DataType](classOf[DataType]) {
   override def deserialize(jsonParser: JsonParser, ctx: DeserializationContext): DataType = {
-    DataType.valueOf(jsonParser.toString).getOrElse {
+    DataType.parse(jsonParser.toString).getOrElse {
       throw ctx.mappingException(s"Invalid data type: ${jsonParser.toString}")
     }
   }

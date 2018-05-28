@@ -54,12 +54,6 @@ class ThriftAdapterSpec extends UnitSpec with GeneratorDrivenPropertyChecks {
     }
   }
 
-  it should "convert DataType" in {
-    forAll { v: domain.DataType =>
-      ThriftAdapter.toDomain(ThriftAdapter.toThrift(v)) shouldBe v
-    }
-  }
-
   it should "convert ErrorDatum" in {
     forAll { v: domain.ErrorDatum =>
       ThriftAdapter.toDomain(ThriftAdapter.toThrift(v)) shouldBe v

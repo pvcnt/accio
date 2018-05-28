@@ -70,7 +70,7 @@ struct OpResult {
 
 struct Attribute {
   1: string name;
-  2: lumos.DataType data_type;
+  2: string data_type;
   3: optional string help;
   4: optional lumos.Value default_value;
   5: bool is_optional = false;

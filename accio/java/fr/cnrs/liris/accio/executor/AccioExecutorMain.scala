@@ -24,6 +24,7 @@ import com.twitter.inject.app.App
 import com.twitter.util.Await
 import com.twitter.util.logging.Logging
 import fr.cnrs.liris.accio.discovery.{DiscoveryModule, OpRegistry}
+import fr.cnrs.liris.accio.domain.DataTypes
 import fr.cnrs.liris.accio.domain.thrift.{ThriftAdapter, Workflow}
 import fr.cnrs.liris.lumos.transport.{EventTransport, EventTransportModule}
 import fr.cnrs.liris.util.scrooge.BinaryScroogeSerializer
@@ -36,9 +37,13 @@ object AccioExecutorMain extends AccioExecutor
  * Accio executor.
  */
 class AccioExecutor extends App with Logging {
-  override def modules = Seq(EventTransportModule, DiscoveryModule)
+  init {
+    DataTypes.register()
+  }
 
-  override def run(): Unit = {
+  override protected def modules = Seq(EventTransportModule, DiscoveryModule)
+
+  override protected def run(): Unit = {
     require(args.length == 1, "There should be a single argument")
     val workflow = try {
       ThriftAdapter.toDomain(BinaryScroogeSerializer.fromString(args.head, Workflow))

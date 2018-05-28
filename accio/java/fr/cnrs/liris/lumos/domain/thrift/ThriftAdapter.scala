@@ -23,18 +23,24 @@ import fr.cnrs.liris.lumos.domain
 import org.joda.time.Instant
 
 object ThriftAdapter {
-  def toDomain(obj: Value): domain.Value =
-    obj match {
-      case Value.Int(v) => domain.Value.Int(v)
-      case Value.Long(v) => domain.Value.Long(v)
-      case Value.Float(v) => domain.Value.Float(v.toFloat)
-      case Value.Dbl(v) => domain.Value.Double(v)
-      case Value.Boolean(v) => domain.Value.Bool(v)
-      case Value.Str(v) => domain.Value.String(v)
-      case Value.Dataset(v) => domain.Value.Dataset(toDomain(v))
-      case Value.File(v) => domain.Value.File(toDomain(v))
-      case Value.UnknownUnionField(_) => throw new IllegalArgumentException("Illegal value")
+  def toDomain(obj: Value): domain.Value = {
+    val value = obj.payload match {
+      case ValuePayload.Int(v) => domain.Value.Int(v)
+      case ValuePayload.Long(v) => domain.Value.Long(v)
+      case ValuePayload.Float(v) => domain.Value.Float(v.toFloat)
+      case ValuePayload.Dbl(v) => domain.Value.Double(v)
+      case ValuePayload.Boolean(v) => domain.Value.Bool(v)
+      case ValuePayload.Str(v) => domain.Value.String(v)
+      case ValuePayload.File(v) => domain.Value.File(toDomain(v))
+      case ValuePayload.UnknownUnionField(_) => throw new IllegalArgumentException("Illegal value")
     }
+    domain.DataType.parse(obj.dataType) match {
+      case None => throw new IllegalArgumentException(s"Unknown data type: ${obj.dataType}")
+      case Some(dataType) => value.cast(dataType).getOrElse {
+        throw new IllegalArgumentException(s"Invalid value for data type $dataType: $value")
+      }
+    }
+  }
 
   def toDomain(obj: Job): domain.Job = {
     domain.Job(
@@ -109,19 +115,6 @@ object ThriftAdapter {
     domain.ExecStatus(toDomain(obj.state), new Instant(obj.time), obj.message)
   }
 
-  def toDomain(obj: DataType): domain.DataType =
-    obj match {
-      case DataType.Int => domain.DataType.Int
-      case DataType.Long => domain.DataType.Long
-      case DataType.Float => domain.DataType.Float
-      case DataType.Double => domain.DataType.Double
-      case DataType.String => domain.DataType.String
-      case DataType.Boolean => domain.DataType.Bool
-      case DataType.File => domain.DataType.File
-      case DataType.Dataset => domain.DataType.Dataset
-      case DataType.EnumUnknownDataType(_) => throw new IllegalArgumentException("Illegal value")
-    }
-
   def toDomain(obj: ErrorDatum): domain.ErrorDatum = {
     domain.ErrorDatum(obj.mnemonic, obj.message, obj.stacktrace)
   }
@@ -132,14 +125,16 @@ object ThriftAdapter {
 
   def toThrift(obj: domain.Value): Value = {
     obj match {
-      case domain.Value.Int(v) => Value.Int(v)
-      case domain.Value.Long(v) => Value.Long(v)
-      case domain.Value.Float(v) => Value.Float(v)
-      case domain.Value.Double(v) => Value.Dbl(v)
-      case domain.Value.String(v) => Value.Str(v)
-      case domain.Value.Bool(v) => Value.Boolean(v)
-      case domain.Value.File(v) => Value.File(toThrift(v))
-      case domain.Value.Dataset(v) => Value.Dataset(toThrift(v))
+      case domain.Value.Int(v) => Value(obj.dataType.name, ValuePayload.Int(v))
+      case domain.Value.Long(v) => Value(obj.dataType.name, ValuePayload.Long(v))
+      case domain.Value.Float(v) => Value(obj.dataType.name, ValuePayload.Float(v))
+      case domain.Value.Double(v) => Value(obj.dataType.name, ValuePayload.Dbl(v))
+      case domain.Value.String(v) => Value(obj.dataType.name, ValuePayload.Str(v))
+      case domain.Value.Bool(v) => Value(obj.dataType.name, ValuePayload.Boolean(v))
+      case domain.Value.File(v) => Value(obj.dataType.name, ValuePayload.File(toThrift(v)))
+      case domain.Value.Dataset(v) => Value(obj.dataType.name, ValuePayload.File(toThrift(v)))
+      case domain.Value.Custom(v, dataType) =>
+        Value(dataType.name, toThrift(dataType.encode(v.asInstanceOf[dataType.JvmType])).payload)
     }
   }
 
@@ -196,18 +191,6 @@ object ThriftAdapter {
       status = Some(toThrift(obj.status)),
       history = obj.history.map(toThrift))
   }
-
-  def toThrift(obj: domain.DataType): DataType =
-    obj match {
-      case domain.DataType.Int => DataType.Int
-      case domain.DataType.Long => DataType.Long
-      case domain.DataType.Float => DataType.Float
-      case domain.DataType.Double => DataType.Double
-      case domain.DataType.String => DataType.String
-      case domain.DataType.Bool => DataType.Boolean
-      case domain.DataType.File => DataType.File
-      case domain.DataType.Dataset => DataType.Dataset
-    }
 
   private def toThrift(obj: domain.ExecStatus): ExecStatus = {
     ExecStatus(toThrift(obj.state), obj.time.millis, obj.message)
