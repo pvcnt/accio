@@ -33,7 +33,8 @@ ExecStart=/usr/bin/java \
     -scheduler.force_scheduling \
     -scheduler.datadir=/var/lib/accio/scheduler \
     -executor_uri=/var/lib/accio/executor.jar \
-    -discovery.local.root=/var/lib/accio/ops
+    -discovery.local.root=/var/lib/accio/ops \
+    -event.server.address=localhost:9990
 Restart=on-failure
 
 [Install]
