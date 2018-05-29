@@ -58,6 +58,7 @@ object DiscoveryModule extends TwitterPrivateModule {
     }
 
     // This is a private Guice module, the only exposed object is the registry.
+    bind[OpRegistry]
     expose[OpRegistry]
   }
 
