@@ -21,6 +21,21 @@ package fr.cnrs.liris.accio.discovery
 import com.twitter.util.Closable
 import fr.cnrs.liris.accio.domain.Operator
 
+/**
+ * An operator discovery is in charge of finding available implementations of operators. Indeed,
+ * as people writing workflows and people writing operators might be different, the workflows
+ * writers should not have to care about specifying the definition of operators to be used and
+ * their physical location. Instead, the Accio server uses an operator discovery implementation to
+ * automatically find all available operators. This interface allows to use different strategies
+ * towards that purpose.
+ *
+ * This is a low-level component that should never be directly accessed. Client code should instead
+ * rely on an operator registry.
+ */
 trait OpDiscovery extends Closable {
+  /**
+   * Return all available operators. The order in which operators are returned depends on the
+   * implementation and may not be deterministic.
+   */
   def ops: Iterable[Operator]
 }

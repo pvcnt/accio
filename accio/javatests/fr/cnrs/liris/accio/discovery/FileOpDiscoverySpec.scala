@@ -21,44 +21,41 @@ package fr.cnrs.liris.accio.discovery
 import java.nio.file.{Files, Paths}
 
 import com.twitter.conversions.time._
+import com.twitter.util.Await
 import fr.cnrs.liris.testing.{CreateTmpDirectory, UnitSpec}
-import org.scalatest.BeforeAndAfterEach
 
 /**
  * Unit tests for [[FileOpDiscovery]].
  */
-class FileOpDiscoverySpec extends UnitSpec with BeforeAndAfterEach with CreateTmpDirectory {
+class FileOpDiscoverySpec extends UnitSpec with CreateTmpDirectory {
   behavior of "FileOpDiscovery"
 
   private val ops0 = Seq(testing.ops(0), testing.ops(1))
   private val ops1 = Seq(testing.ops(2))
 
-  override protected def beforeEach(): Unit = {
-    // The files of interest are copied first into a temporary directory. It is indeed safer as we
-    // may delete files are part of those test cases.
-    super.beforeEach()
-    Files.copy(
-      Paths.get("accio/javatests/fr/cnrs/liris/accio/discovery/file/ops0.binthrift"),
-      tmpDir.resolve("ops0.binthrift"))
-    Files.copy(
-      Paths.get("accio/javatests/fr/cnrs/liris/accio/discovery/file/ops1.binthrift"),
-      tmpDir.resolve("ops1.binthrift"))
+  it should "discover operators by descriptors" in {
+    copyDescriptors()
+    val discovery = new FileOpDiscovery(tmpDir, 0.seconds, None)
+    discovery.ops should contain theSameElementsAs ops0 ++ ops1
+    Await.result(discovery.close())
   }
 
-  it should "discover operators" in {
-    val discovery = new FileOpDiscovery(
-      Paths.get("accio/javatests/fr/cnrs/liris/accio/discovery/file"),
-      0.seconds,
-      None)
+  it should "discover operators by binaries" in {
+    copyLibraries()
+    val discovery = new FileOpDiscovery(tmpDir, 0.seconds, None)
     discovery.ops should contain theSameElementsAs ops0 ++ ops1
+    Await.result(discovery.close())
   }
 
   it should "filter files by name" in {
+    copyDescriptors()
     val discovery = new FileOpDiscovery(tmpDir, 0.seconds, Some("^ops0"))
     discovery.ops should contain theSameElementsAs ops0
+    Await.result(discovery.close())
   }
 
   it should "automatically check for updates" in {
+    copyDescriptors()
     val discovery = new FileOpDiscovery(tmpDir, 1.second, Some("^ops0"))
 
     discovery.ops should contain theSameElementsAs ops0
@@ -70,5 +67,29 @@ class FileOpDiscoverySpec extends UnitSpec with BeforeAndAfterEach with CreateTm
     Files.delete(tmpDir.resolve("ops0.binthrift"))
     Thread.sleep(1200)
     discovery.ops should contain theSameElementsAs ops1
+
+    Await.result(discovery.close())
+  }
+
+  private def copyDescriptors(): Unit = {
+    // The files of interest are copied first into a temporary directory. It is indeed safer as we
+    // may delete files are part of those test cases.
+    Files.copy(
+      Paths.get("accio/javatests/fr/cnrs/liris/accio/discovery/descriptors/ops0.binthrift"),
+      tmpDir.resolve("ops0.binthrift"))
+    Files.copy(
+      Paths.get("accio/javatests/fr/cnrs/liris/accio/discovery/descriptors/ops1.binthrift"),
+      tmpDir.resolve("ops1.binthrift"))
+  }
+
+  private def copyLibraries(): Unit = {
+    // The files of interest are copied first into a temporary directory. It is indeed safer as we
+    // may delete files are part of those test cases.
+    Files.copy(
+      Paths.get("accio/javatests/fr/cnrs/liris/accio/discovery/libraries/ops0_deploy.jar"),
+      tmpDir.resolve("ops0.jar"))
+    Files.copy(
+      Paths.get("accio/javatests/fr/cnrs/liris/accio/discovery/libraries/ops1_deploy.jar"),
+      tmpDir.resolve("ops1.jar"))
   }
 }

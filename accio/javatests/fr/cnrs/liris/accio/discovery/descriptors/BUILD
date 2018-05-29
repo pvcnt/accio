@@ -14,22 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
-scala_test(
-  name = "discovery",
-  srcs = glob(["*.scala"]),
-  deps = [
-    "//accio/java/fr/cnrs/liris/accio/discovery",
-    "//accio/java/fr/cnrs/liris/accio/domain",
-    "//accio/java/fr/cnrs/liris/lumos/domain",
-    "//accio/javatests/fr/cnrs/liris/testing",
-    "//accio/javatests/fr/cnrs/liris/accio/testing",
-    "//accio/javatests/com/twitter/inject",
-    "//3rdparty/jvm/com/twitter:inject_core",
-  ],
-  data = [
-    "//accio/javatests/fr/cnrs/liris/accio/discovery/descriptors",
-    "//accio/javatests/fr/cnrs/liris/accio/discovery/libraries:ops0_deploy.jar",
-    "//accio/javatests/fr/cnrs/liris/accio/discovery/libraries:ops1_deploy.jar",
-  ],
-  size = "small",
+filegroup(
+  name = "descriptors",
+  srcs = glob(["*.binthrift"]),
+  visibility = ["//accio/javatests:__subpackages__"],
 )

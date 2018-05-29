@@ -38,22 +38,6 @@ class DiscoveryModuleSpec extends UnitSpec with CreateTwitterInjector {
     DiscoveryModule.args should have size 0
   }
 
-  it should "provide a local operator discovery" in {
-    val injector = createInjector("-discovery.local.root", "/dev/null")
-    injector.instance[OpDiscovery] shouldBe a[LocalOpDiscovery]
-    injector.instance[OpRegistry] shouldBe an[OpRegistry]
-
-    DiscoveryModule.args should contain theSameElementsAs Seq("-discovery.local.root", "/dev/null")
-  }
-
-  it should "provide a local operator discovery with a higher priority" in {
-    val injector = createInjector("-discovery.file.root", "/dev/null", "-discovery.local.root", "/dev/null")
-    injector.instance[OpDiscovery] shouldBe a[LocalOpDiscovery]
-    injector.instance[OpRegistry] shouldBe an[OpRegistry]
-
-    DiscoveryModule.args should contain allOf("-discovery.local.root", "/dev/null")
-  }
-
   it should "provide a file operator discovery" in {
     val injector = createInjector("-discovery.file.root", "/dev/null")
     injector.instance[OpDiscovery] shouldBe a[FileOpDiscovery]

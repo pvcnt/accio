@@ -21,44 +21,49 @@ package fr.cnrs.liris.accio.discovery
 import java.nio.file.Paths
 
 import com.google.inject.Provider
-import com.twitter.conversions.time._
-import com.twitter.inject.TwitterModule
+import com.twitter.inject.TwitterPrivateModule
+import com.twitter.util.Duration
 
-object DiscoveryModule extends TwitterModule {
-  // Local discovery.
-  private[this] val localRoot = flag[String]("discovery.local.root", "Directory in which to look for operator binaries")
-  private[this] val localFilter = flag[String]("discovery.local.filter", "Filter to select files")
-
+/**
+ * Guice module providing an operator discovery and registry.
+ */
+object DiscoveryModule extends TwitterPrivateModule {
   // File discovery.
-  private[this] val fileRoot = flag[String]("discovery.file.root", "Directory in which to look for definitions of operators")
-  private[this] val fileFrequency = flag("discovery.file.frequency", 1.minute, "Frequency at which to check for updates")
-  private[this] val fileFilter = flag[String]("discovery.file.filter", "Filter to select files")
+  private[this] val fileRoot = flag[String](
+    "discovery.file.directory",
+    "Directory in which to look for operator libraries. Only the files directly under " +
+      "that directory will be considered (i.e., sub-directories are ignored).")
+  private[this] val fileFrequency = flag[Duration](
+    "discovery.file.frequency",
+    "Frequency at which to check for file changes. 0 means disabled.")
+  private[this] val fileFilter = flag[String](
+    "discovery.file.filter",
+    "Regex used to filter the files. If set, only the files whose name matches this regex " +
+      "will be considered.")
 
+  /**
+   * Return the list of command-line arguments that define the configuration for this module.
+   */
   def args: Seq[String] = {
     flags.filter(_.isDefined).flatMap(flag => Seq(s"-${flag.name}", flag.apply().toString))
   }
 
-  override def configure(): Unit = {
+  override protected def configure(): Unit = {
     // As there can be only one operator discovery configured, the order in which they are
     // instantiated, in case multiple flags are defined, is hard-coded.
-    if (localRoot.isDefined) {
-      bind[OpDiscovery].toProvider[LocalOpRegistryProvider]
-    } else if (fileRoot.isDefined) {
+    if (fileRoot.isDefined) {
       bind[OpDiscovery].toProvider[FileOpRegistryProvider]
     } else {
       bind[OpDiscovery].toInstance(NullOpDiscovery)
     }
+
+    // This is a private Guice module, the only exposed object is the registry.
+    expose[OpRegistry]
   }
 
   private class FileOpRegistryProvider extends Provider[FileOpDiscovery] {
     override def get(): FileOpDiscovery = {
-      new FileOpDiscovery(Paths.get(fileRoot()), fileFrequency(), fileFilter.get)
-    }
-  }
-
-  private class LocalOpRegistryProvider extends Provider[LocalOpDiscovery] {
-    override def get(): LocalOpDiscovery = {
-      new LocalOpDiscovery(Paths.get(localRoot()), localFilter.get)
+      new FileOpDiscovery(Paths.get(fileRoot()), fileFrequency.get.getOrElse(Duration.Zero), fileFilter.get)
     }
   }
 

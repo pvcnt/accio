@@ -14,29 +14,22 @@
 # You should have received a copy of the GNU General Public License
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
-# This is a development version, to be used with Vagrant only.
+scala_binary(
+  name = "ops0",
+  srcs = glob(["*.scala"]),
+  deps = [
+    "//accio/java/fr/cnrs/liris/accio/sdk",
+  ],
+  main_class = "fr.cnrs.liris.accio.discovery.libraries.TestOps0",
+  visibility = ["//accio/javatests:__subpackages__"],
+)
 
-[Unit]
-Description=Accio server
-
-[Service]
-ExecStartPre=mkdir -p /var/lib/accio /var/lib/accio/ops
-ExecStart=/usr/bin/java \
-  -Xmx3G \
-  -server \
-  -agentlib:jdwp=transport=dt_socket,server=y,address=8001,suspend=n \
-  -jar /usr/local/bin/accio-server.jar \
-    -thrift.port=":9991" \
-    -admin.port=":8881" \
-    -log.level=DEBUG \
-    -scheduler=local \
-    -scheduler.force_scheduling \
-    -scheduler.datadir=/var/lib/accio/scheduler \
-    -executor_uri=/var/lib/accio/executor.jar \
-    -discovery.file.directory=/var/lib/accio/ops \
-    -discovery.file.frequency=1.minute \
-    -event.server.address=localhost:9990
-Restart=on-failure
-
-[Install]
-WantedBy=multi-user.target
+scala_binary(
+  name = "ops1",
+  srcs = glob(["*.scala"]),
+  deps = [
+    "//accio/java/fr/cnrs/liris/accio/sdk",
+  ],
+  main_class = "fr.cnrs.liris.accio.discovery.libraries.TestOps1",
+  visibility = ["//accio/javatests:__subpackages__"],
+)
