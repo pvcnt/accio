@@ -123,6 +123,12 @@ final class LocalScheduler(
   override def close(deadline: Time): Future[Unit] = Future.Done
 
   private def schedule(process: Process): Future[Unit] = {
+    // We create the working directory outside of the `execute` function because we use the
+    // existence or absence of a directory to indicate whether a process with a given name is known
+    // to the scheduler. There might be some delay before the task actually starts, the process
+    // might be killed in between, but we still want to keep track that a process with this name
+    // did exist at some point.
+    Files.createDirectories(getWorkDir(process.name))
     pool(execute(process))
       .handle { case _: CancellationException =>
         logger.info(s"Killed execution of process ${process.name}")
@@ -191,7 +197,6 @@ final class LocalScheduler(
 
   private def startProcess(process: Process): JavaProcess = {
     val workDir = getWorkDir(process.name)
-    Files.createDirectories(workDir)
     new ProcessBuilder()
       .command("bash", "-c", process.command)
       .directory(workDir.toFile)
@@ -200,11 +205,11 @@ final class LocalScheduler(
       .start()
   }
 
-  private def getWorkDir(taskId: String): Path = {
+  private def getWorkDir(name: String): Path = {
     dataDir
-      .resolve(taskId(0).toString)
-      .resolve(taskId(1).toString)
-      .resolve(taskId)
+      .resolve(name(0).toString)
+      .resolve(name(1).toString)
+      .resolve(name)
   }
 
   private def readLogFile(file: Path, skip: Option[Int], tail: Option[Int]): Future[Seq[String]] = {

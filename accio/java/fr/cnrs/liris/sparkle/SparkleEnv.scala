@@ -57,8 +57,7 @@ final class SparkleEnv(parallelism: Int) extends Logging {
     if (data.isEmpty) {
       emptyDataFrame
     } else {
-      val numPartitions = math.ceil(data.size.toDouble / parallelism).toInt
-      new MemoryDataFrame(data.toSeq, numPartitions, this, implicitly[Encoder[T]])
+      new MemoryDataFrame(data.toSeq, parallelism, this, implicitly[Encoder[T]])
     }
   }
 

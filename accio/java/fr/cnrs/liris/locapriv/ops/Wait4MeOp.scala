@@ -18,19 +18,20 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import java.io.FileOutputStream
-import java.nio.file.{Files, Path, Paths}
+import java.io.{ByteArrayOutputStream, FileOutputStream}
+import java.nio.file.attribute.PosixFilePermission
+import java.nio.file.{Files, Path}
 import java.util.Locale
 
-import com.google.common.io.Resources
-import fr.cnrs.liris.lumos.domain.RemoteFile
+import com.google.common.io.{ByteStreams, Resources}
 import fr.cnrs.liris.accio.sdk._
 import fr.cnrs.liris.locapriv.domain.Event
+import fr.cnrs.liris.lumos.domain.RemoteFile
 import fr.cnrs.liris.sparkle.DataFrame
 import fr.cnrs.liris.util.geo.{BoundingBox, Distance, Point}
 import org.joda.time.{Duration, Instant}
 
-import scala.collection.JavaConverters._
+import scala.util.control.NoStackTrace
 
 /**
  * Wrapper around the implementation of the Wait4Me algorithm, as provided by their authors.
@@ -80,8 +81,7 @@ case class Wait4MeOp(
         meanSpatialPointTranslation = Distance.Zero,
         meanTemporalPointTranslation = Duration.ZERO)
     } else {
-      val tmpDir = Files.createTempDirectory("accio-w4m-")
-      val localBinary = copyBinary(tmpDir, chunk)
+      val localBinary = copyBinary(ctx.workDir, chunk)
 
       // Convert the trash max from a percentage to an absolute size.
       val users = input.groupBy(_.id).map(_._1).collect().sorted
@@ -95,15 +95,15 @@ case class Wait4MeOp(
       }
 
       // We convert our dataset to the format required by W4M.
-      val w4mInputUri = tmpDir.resolve("w4mdata").toAbsolutePath.toString
+      val w4mInputUri = ctx.workDir.resolve("w4mdata").toAbsolutePath.toString
       toW4MDataFrame(input, users)
         .write
         .option("delimiter", '\t')
         .option("header", false)
         .csv(w4mInputUri)
 
-      val process = new ProcessBuilder(
-        localBinary.toAbsolutePath.toString,
+      val command = Seq(
+        localBinary.toString,
         s"$w4mInputUri/0.csv",
         "out", /* output files prefix */
         k.toString,
@@ -111,19 +111,21 @@ case class Wait4MeOp(
         radiusMaxOrDefault.meters.toString,
         trashMaxPercent.toString,
         "10" /* "if no idea enter 10" as suggested by paper's authors */)
-        .directory(tmpDir.toFile)
+      val os = new ByteArrayOutputStream()
+      val process = new ProcessBuilder()
+        .command(command: _*)
+        .directory(ctx.workDir.toFile)
         .redirectErrorStream(true)
-        .redirectOutput(ProcessBuilder.Redirect.to(tmpDir.resolve("stdout").toFile))
         .start()
+      ByteStreams.copy(process.getInputStream, os)
       val exitValue = process.waitFor()
-      val resultLines = Files.readAllLines(tmpDir.resolve("stdout")).asScala
 
       if (exitValue != 0) {
-        throw new RuntimeException("Error while executing Wait4Me binary, stdout/stderr follows.\n  " + resultLines.mkString("\n  "))
+        throw new RuntimeException("Error while executing Wait4Me binary, stdout/stderr follows.\n  " + os.toString) with NoStackTrace
       }
 
       // We convert back the result into a conventional dataset format.
-      val w4mOutputPath = tmpDir.resolve(f"out_${k}_${"%.3f".formatLocal(Locale.ENGLISH, delta.meters)}.txt").toString
+      val w4mOutputPath = ctx.workDir.resolve(f"out_${k}_${"%.3f".formatLocal(Locale.ENGLISH, delta.meters)}.txt").toString
       val output = fromW4MDataFrame(env.read[Wait4MeOp.W4MEvent].option("delimiter", '\t').csv(w4mOutputPath), users)
 
       // We extract metrics from the captured stdout. This is quite ugly, but this works.
@@ -135,10 +137,10 @@ case class Wait4MeOp(
       // Pseudo diameter: 109554.43835
       // Trash_size:70
       // ...
+      val resultLines = os.toString().split('\n')
       val statLines = resultLines.dropWhile(line => !line.startsWith("------")).drop(2)
       val metrics = statLines.map(_.split(":").last.trim)
 
-      //println(Files.list(ctx.workDir).iterator.asScala.mkString("\n"))
       val d = write(output, 0, ctx)
       //println("total events " + env.read[Event].csv(d.uri).count())
       //Files.list(Paths.get(d.uri)).iterator.asScala.foreach(p => Files.copy(p, Paths.get(s"/Users/vincent/workspace/accio/${p.getFileName}")))
@@ -202,7 +204,7 @@ case class Wait4MeOp(
 
   private def fromW4MDataFrame(df: DataFrame[Wait4MeOp.W4MEvent], users: Array[String]): DataFrame[Event] = {
     val keysReverseIndex = users.zipWithIndex.map { case (k, v) => v -> k }.toMap
-    //TODO: partition by user.
+    //TODO: partition by user. Right now there is only a single partition.
     df.map { event =>
       Event(keysReverseIndex(event.id), Point(event.x, event.y), new Instant(event.time * 1000))
     }

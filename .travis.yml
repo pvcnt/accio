@@ -24,6 +24,7 @@ cache:
   yarn: true
   directories:
   - "$HOME/.bazel_repository_cache"
+  - "3rdparty/node_modules"
 
 services:
 - mysql
@@ -36,6 +37,10 @@ env:
   - BAZEL_VERSION=0.11.0
 
 before_install:
+# Add support for running 32-bits binaries, required by the Wait4Me operator.
+- sudo dpkg --add-architecture i386
+- sudo apt-get -qq update
+- sudo apt-get install libc6:i386 libncurses5:i386 libstdc++6:i386
 - |
   wget -O install.sh "https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}-installer-linux-x86_64.sh"
   chmod +x install.sh

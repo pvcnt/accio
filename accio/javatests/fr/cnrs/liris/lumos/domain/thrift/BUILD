@@ -25,4 +25,5 @@ scala_test(
     "//3rdparty/jvm/org/scalacheck",
   ],
   size = "small",
+  timeout = "moderate", # Property-based testing takes time.
 )

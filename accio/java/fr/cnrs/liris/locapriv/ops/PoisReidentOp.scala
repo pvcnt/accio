@@ -62,8 +62,8 @@ case class PoisReidentOp(
     } else {
       val metrics = testPois.map { pois =>
         val distances = if (pois.nonEmpty) {
-          //Compute the distance between the set of POIs from the test user and the models (from the training users).
-          //This will give us an association between a training user and a distance. We only keep finite distances.
+          // Compute the distance between the set of POIs from the test user and the models (from the training users).
+          // This will give us an association between a training user and a distance. We only keep finite distances.
           trainPois
             .map(model => model.user -> model.distance(pois).meters)
             .filter { case (_, d) => !d.isInfinite }

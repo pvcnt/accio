@@ -89,7 +89,7 @@ object Generators {
     name <- alphaNumString
     createTime <- instant
     owner <- Gen.option(alphaNumString)
-    contact <- Gen.option(Gen.alphaStr)
+    contact <- Gen.option(alphaNumString)
     labels <- kvMap
     metadata <- kvMap
     inputs <- Gen.listOf(attrValue)

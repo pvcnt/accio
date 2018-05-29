@@ -66,15 +66,14 @@ class ThriftAdapterSpec extends UnitSpec with GeneratorDrivenPropertyChecks {
     }
   }
 
-  it should "convert Job" in {
-    // Jobs are costly to generate, we limit the number of test cases (down from 100).
-    forAll("job", MinSuccessful(10)) { v: domain.Job =>
+  it should "convert Event" in {
+    forAll("event") { v: domain.Event =>
       ThriftAdapter.toDomain(ThriftAdapter.toThrift(v)) shouldBe v
     }
   }
 
-  it should "convert Event" in {
-    forAll { v: domain.Event =>
+  it should "convert Job" in {
+    forAll("job") { v: domain.Job =>
       ThriftAdapter.toDomain(ThriftAdapter.toThrift(v)) shouldBe v
     }
   }

@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.domain
 
-import fr.cnrs.liris.lumos.domain.{DataType, RemoteFile, Value}
+import fr.cnrs.liris.lumos.domain.{RemoteFile, Value}
 import fr.cnrs.liris.testing.UnitSpec
 import fr.cnrs.liris.util.geo.Distance
 import org.joda.time.{Duration, Instant}

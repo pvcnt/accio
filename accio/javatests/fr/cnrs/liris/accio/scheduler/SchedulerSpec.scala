@@ -62,7 +62,7 @@ private[scheduler] trait SchedulerSpec extends BeforeAndAfterEach {
   }
 
   it should "kill a process" in {
-    val process = Process("echo-process", "sleep 100 && echo foo")
+    val process = Process("echo-process", "sleep 1000 && echo foo")
     Await.result(scheduler.submit(process))
 
     Await.result(scheduler.isActive("echo-process")) shouldBe true
