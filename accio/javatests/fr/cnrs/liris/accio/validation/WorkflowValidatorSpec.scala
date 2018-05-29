@@ -261,7 +261,7 @@ class WorkflowValidatorSpec extends UnitSpec {
     val res = validator.validate(obj)
     res.isValid shouldBe false
     res.errors should contain theSameElementsAs Set(
-      FieldViolation("Illegal value: First/Simple (should match [a-zA-Z][a-zA-Z0-9._-]*)", "steps.0.name"))
+      FieldViolation("Illegal value: First/Simple (should match [a-zA-Z0-9][a-zA-Z0-9._-]*)", "steps.0.name"))
   }
 
   it should "reject a cyclic graph" in {
@@ -313,7 +313,7 @@ class WorkflowValidatorSpec extends UnitSpec {
     val res = validator.validate(obj)
     res.isValid shouldBe false
     res.errors should contain theSameElementsAs Set(
-      FieldViolation("Illegal value: workflow!id (should match [a-zA-Z][a-zA-Z0-9._-]*)", "name"))
+      FieldViolation("Illegal value: workflow!id (should match [a-zA-Z0-9][a-zA-Z0-9._-]*)", "name"))
   }
 
   it should "reject a param type mismatch" in {
@@ -350,7 +350,7 @@ class WorkflowValidatorSpec extends UnitSpec {
     val res = validator.validate(obj)
     res.isValid shouldBe false
     res.errors should contain theSameElementsAs Set(
-      FieldViolation("Illegal value: foo/foo (should match [a-zA-Z][a-zA-Z0-9._-]*)", "params.0.name"))
+      FieldViolation("Illegal value: foo/foo (should match [a-zA-Z0-9][a-zA-Z0-9._-]*)", "params.0.name"))
   }
 
   it should "reject an undeclared param" in {
