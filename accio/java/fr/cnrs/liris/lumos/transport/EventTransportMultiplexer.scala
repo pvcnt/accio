@@ -22,29 +22,26 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import com.google.inject.{Inject, Singleton}
 import com.twitter.util.{Future, Time}
-import com.twitter.util.logging.Logging
 import fr.cnrs.liris.lumos.domain.Event
 
+/**
+ * An event transport that forwards events to underlying transports.
+ *
+ * @param transports A set of transports to forward the events to.
+ */
 @Singleton
-final class MultiplexerEventTransport @Inject()(transports: Set[EventTransport]) extends EventTransport with Logging {
+final class EventTransportMultiplexer @Inject()(transports: Set[EventTransport])
+  extends EventTransport {
+
   private[this] val errors = new AtomicInteger(0)
 
   def hasErrors: Boolean = errors.get > 0
 
   override def name = s"Multiplexer[${transports.map(_.name).mkString(",")}]"
 
-  override def sendEvent(event: Event): Future[Unit] = {
-    Future.join(transports.map(sendEvent(event, _)).toSeq)
-  }
+  override def sendEvent(event: Event): Unit = transports.foreach(_.sendEvent(event))
 
   override def close(deadline: Time): Future[Unit] = {
     Future.join(transports.map(_.close(deadline)).toSeq)
-  }
-
-  private def sendEvent(event: Event, transport: EventTransport): Future[Unit] = {
-    transport.sendEvent(event).onFailure { e =>
-      errors.incrementAndGet()
-      logger.error(s"Error while sending event to ${transport.name}", e)
-    }
   }
 }

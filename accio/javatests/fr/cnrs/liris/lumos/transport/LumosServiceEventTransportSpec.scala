@@ -22,6 +22,8 @@ import fr.cnrs.liris.lumos.domain.{Event, Job, thrift}
 import fr.cnrs.liris.lumos.server._
 import fr.cnrs.liris.testing.UnitSpec
 import org.joda.time.Instant
+import com.twitter.conversions.time._
+import com.twitter.util.Await
 
 /**
  * Unit tests for [[LumosServiceEventTransport]].
@@ -29,14 +31,18 @@ import org.joda.time.Instant
 class LumosServiceEventTransportSpec extends UnitSpec {
   behavior of "LumosServiceEventTransport"
 
-  it should "push events" in {
-    val service = new LumosServiceCollector
+  it should "push events in order" in {
+    val service = new LumosServiceCollector(500.millis)
     val transport = new LumosServiceEventTransport(LumosService.MethodPerEndpoint(service))
     val time = 123456789012L
+    println("1")
     transport.sendEvent(Event("foo", 0, new Instant(time), Event.JobEnqueued(Job(name = "foo"))))
+    println("2")
     transport.sendEvent(Event("foo", 1, new Instant(time), Event.JobStarted(message = Some("started"))))
+    println("3")
     transport.sendEvent(Event("bar", 0, new Instant(time), Event.JobEnqueued(Job(name = "bar"))))
     transport.sendEvent(Event("foo", 2, new Instant(time), Event.JobCompleted(message = Some("completed"))))
+    Await.result(transport.close())
 
     service.eventsOf("foo") should contain theSameElementsInOrderAs Seq(
       thrift.Event("foo", 0, time, thrift.EventPayload.JobEnqueued(thrift.JobEnqueuedEvent(thrift.Job(name = "foo", status = Some(thrift.ExecStatus(thrift.ExecState.Pending, 0, None)))))),
@@ -44,34 +50,5 @@ class LumosServiceEventTransportSpec extends UnitSpec {
       thrift.Event("foo", 2, time, thrift.EventPayload.JobCompleted(thrift.JobCompletedEvent(message = Some("completed")))))
     service.eventsOf("bar") should contain theSameElementsInOrderAs Seq(
       thrift.Event("bar", 0, time, thrift.EventPayload.JobEnqueued(thrift.JobEnqueuedEvent(thrift.Job(name = "bar", status = Some(thrift.ExecStatus(thrift.ExecState.Pending, 0, None)))))))
-  }
-
-  it should "not push events if some are missing" in {
-    val service = new LumosServiceCollector
-    val transport = new LumosServiceEventTransport(LumosService.MethodPerEndpoint(service))
-    val time = 123456789012L
-    transport.sendEvent(Event("foo", 0, new Instant(time), Event.JobEnqueued(Job(name = "foo"))))
-    transport.sendEvent(Event("foo", 1, new Instant(time), Event.JobStarted(message = Some("started"))))
-    transport.sendEvent(Event("foo", 3, new Instant(time), Event.JobCompleted(message = Some("completed"))))
-
-    service.eventsOf("foo") should contain theSameElementsInOrderAs Seq(
-      thrift.Event("foo", 0, time, thrift.EventPayload.JobEnqueued(thrift.JobEnqueuedEvent(thrift.Job(name = "foo", status = Some(thrift.ExecStatus(thrift.ExecState.Pending, 0, None)))))),
-      thrift.Event("foo", 1, time, thrift.EventPayload.JobStarted(thrift.JobStartedEvent(message = Some("started")))))
-  }
-
-  it should "ensure events are pushed in order" in {
-    val service = new LumosServiceCollector
-    val transport = new LumosServiceEventTransport(LumosService.MethodPerEndpoint(service))
-    val time = 123456789012L
-    transport.sendEvent(Event("foo", 0, new Instant(time), Event.JobEnqueued(Job(name = "foo"))))
-    transport.sendEvent(Event("foo", 1, new Instant(time), Event.JobStarted(message = Some("started"))))
-    transport.sendEvent(Event("foo", 3, new Instant(time), Event.JobCompleted(message = Some("completed"))))
-    transport.sendEvent(Event("foo", 2, new Instant(time), Event.JobExpanded(Seq.empty)))
-
-    service.eventsOf("foo") should contain theSameElementsInOrderAs Seq(
-      thrift.Event("foo", 0, time, thrift.EventPayload.JobEnqueued(thrift.JobEnqueuedEvent(thrift.Job(name = "foo", status = Some(thrift.ExecStatus(thrift.ExecState.Pending, 0, None)))))),
-      thrift.Event("foo", 1, time, thrift.EventPayload.JobStarted(thrift.JobStartedEvent(message = Some("started")))),
-      thrift.Event("foo", 2, time, thrift.EventPayload.JobExpanded(thrift.JobExpandedEvent())),
-      thrift.Event("foo", 3, time, thrift.EventPayload.JobCompleted(thrift.JobCompletedEvent(message = Some("completed")))))
   }
 }

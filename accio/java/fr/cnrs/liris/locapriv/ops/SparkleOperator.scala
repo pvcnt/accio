@@ -18,8 +18,10 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.lumos.domain.RemoteFile
+import java.net.{URI, URISyntaxException}
+
 import fr.cnrs.liris.accio.sdk.{OpContext, ScalaOperator}
+import fr.cnrs.liris.lumos.domain.RemoteFile
 import fr.cnrs.liris.sparkle.{DataFrame, Encoder, SparkleEnv}
 
 private[ops] trait SparkleOperator {
@@ -34,8 +36,22 @@ private[ops] trait SparkleOperator {
   }
 
   protected final def write[T](df: DataFrame[T], idx: Int, ctx: OpContext): RemoteFile = {
-    val uri = ctx.workDir.resolve(idx.toString).toString
+    val uri = s"file://${ctx.workDir}/$idx"
     df.write.csv(uri)
     RemoteFile(uri)
+  }
+
+  /**
+   * Returns the path encoded as an [[URI]].
+   *
+   * This concrete implementation returns URIs with "file" as the scheme. For example,
+   * the path "/tmp/foo bar.txt" will be encoded as "file:///tmp/foo%20bar.txt" (on Unix).
+   *
+   * @throws URISyntaxException if the URI cannot be constructed.
+   */
+  protected final def pathToUriString(path: String): String = {
+    // The authority (second argument) is set to an empty string (and not null) to force the
+    // resulting string to include "//" after the scheme name.
+    new URI("file", "", path, null, null).toString
   }
 }

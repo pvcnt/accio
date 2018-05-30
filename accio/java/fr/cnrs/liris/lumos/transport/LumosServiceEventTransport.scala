@@ -20,6 +20,7 @@ package fr.cnrs.liris.lumos.transport
 
 import com.twitter.util.logging.Logging
 import com.twitter.util.{Future, Time}
+import fr.cnrs.liris.infra.thriftserver.ServerError
 import fr.cnrs.liris.lumos.domain.Event
 import fr.cnrs.liris.lumos.domain.thrift.ThriftAdapter
 import fr.cnrs.liris.lumos.server.{LumosService, PushEventRequest}
@@ -27,61 +28,84 @@ import fr.cnrs.liris.lumos.server.{LumosService, PushEventRequest}
 import scala.collection.mutable
 
 /**
- * Transport pushing events to a Lumos server.
+ * Transport sending events to a Lumos server.
  *
- * @param client Lumos client.
+ * @param client Lumos client, assumed to be managed by this transport instance.
  */
 final class LumosServiceEventTransport(client: LumosService.MethodPerEndpoint)
   extends EventTransport with Logging {
 
-  // TODO: clean that structure periodically to avoid it growing in case of stale events.
   private[this] val states = mutable.Map.empty[String, State]
 
-  private class State(val queue: mutable.ListBuffer[Event], var lastSequence: Long)
+  private class State(val queue: mutable.Queue[Event], var active: Boolean)
 
   override def name = "LumosService"
 
-  override def sendEvent(event: Event): Future[Unit] = synchronized {
-    // All the complexity here lies in the fact that we want to enforce a correct order before
-    // sending events, otherwise they may be rejected by the server. What we do is that we keep
-    // a local buffer of events until we have a complete sequence, in which case we dequeue the
-    // latter. We then have to send the events one by one (instead of in parallel), to ensure that
-    // the previous event is indeed committed before sending the next one.
-
-    // I am not completely convinced that this code should belongs to the client side. Maybe it
-    // could be moved to the client-side, this alleviating clients of this concern.
-    val state = states.getOrElseUpdate(event.parent, new State(mutable.ListBuffer.empty[Event], -1))
-    if (state.queue.isEmpty && state.lastSequence == event.sequence - 1) {
-      state.lastSequence = event.sequence
+  override def sendEvent(event: Event): Unit = synchronized {
+    if (!states.contains(event.parent)) {
+      states(event.parent) = new State(mutable.Queue.empty, active = false)
+    }
+    val state = states(event.parent)
+    if (!state.active) {
+      state.active = true
       pushEvent(event)
     } else {
-      val idx = state.queue.indexWhere(_.sequence > event.sequence)
-      if (idx > -1) {
-        state.queue.insert(idx, event)
-      } else {
-        state.queue.append(event)
-      }
-      val sequences = state.queue.map(_.sequence).sliding(2).takeWhile(vs => vs.last == vs.head + 1).flatten.toSet
-      // TODO: return something in case an event was not accepted by the remote server.
-      if (sequences.nonEmpty && state.lastSequence == sequences.min - 1) {
-        var continue = true
-        var idx = 0
-        Future.whileDo(continue && idx < sequences.size) {
-          pushEvent(state.queue.remove(0))
-            .onFailure { _ => continue = false }
-            .onSuccess { _ => idx += 1 }
-        }.ensure {
-          state.lastSequence += idx
-        }
-      } else {
-        Future.Done
-      }
+      state.queue.enqueue(event)
     }
   }
 
-  override def close(deadline: Time): Future[Unit] = client.asClosable.close(deadline)
+  override def close(deadline: Time): Future[Unit] = synchronized {
+    // TODO: wait for current upload to complete.
+    client.asClosable.close(deadline).ensure(states.clear())
+  }
 
-  private def pushEvent(event: Event): Future[Unit] = {
-    client.pushEvent(PushEventRequest(ThriftAdapter.toThrift(event))).unit
+  private def pushEvent(event: Event): Unit = {
+    // TODO: handle retries.
+    client
+      .pushEvent(PushEventRequest(ThriftAdapter.toThrift(event)))
+      .onSuccess { _ =>
+        if (event.payload.isTerminal) {
+          states.remove(event.parent)
+        } else {
+          processQueue(event.parent)
+        }
+      }
+      .onFailure {
+        case e: ServerError => logger.error(s"Error while sending event: ${format(e)}")
+        case e: Throwable => logger.error(s"Internal error while sending event", e)
+      }
+  }
+
+  private def processQueue(parent: String): Unit = synchronized {
+    val state = states(parent)
+    if (state.queue.nonEmpty) {
+      pushEvent(state.queue.dequeue())
+    } else {
+      state.active = false
+    }
+  }
+
+  private def format(e: ServerError) = {
+    var sb = new StringBuilder
+    e.resourceType.foreach { resourceType =>
+      sb ++= resourceType
+      sb ++= (if (e.resourceName.isDefined) "/" else " ")
+    }
+    e.resourceName.foreach { resourceName =>
+      sb ++= resourceName
+      sb += ' '
+    }
+    sb ++= e.code.name
+    sb ++= ". "
+    e.message.foreach { message =>
+      sb ++= message
+      if (!message.endsWith(".")) {
+        sb += '.'
+      }
+    }
+    e.errors.toSeq.flatten.foreach { error =>
+      sb ++= s"\n - ${error.message} at ${error.field}"
+    }
+    sb.toString
   }
 }

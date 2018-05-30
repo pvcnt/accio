@@ -16,25 +16,16 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.lumos.transport
+package fr.cnrs.liris.accio.cli
 
-import java.nio.file.Path
+import fr.cnrs.liris.infra.cli.{Environment, HelpTopic}
 
-import fr.cnrs.liris.lumos.domain.Event
-import fr.cnrs.liris.lumos.domain.thrift.ThriftAdapter
-import fr.cnrs.liris.util.scrooge.TextScroogeSerializer
+final class OpsHelpTopic extends HelpTopic.Named {
+  override def name: String = "ops"
 
-/**
- * An event transport that writes events into a file, serialized as plain text. This format is
- * designed to be human-friendly and not necessarily machine-friendly (it may be difficult to
- * parse, and we provide no utility to do so).
- *
- * @param file File where to write the events.
- */
-final class TextFileEventTransport(file: Path) extends FileEventTransport(file) {
-  override def name = "TextFile"
+  override def help: String = "Displays the list of available operators."
 
-  override protected def serialize(event: Event): Array[Byte] = {
-    TextScroogeSerializer.toBytes(ThriftAdapter.toThrift(event))
+  override def print(name: String, env: Environment): Unit = {
+
   }
 }

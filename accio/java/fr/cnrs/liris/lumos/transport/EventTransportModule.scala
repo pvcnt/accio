@@ -55,7 +55,7 @@ object EventTransportModule extends TwitterModule {
     if (serverAddress.isDefined) {
       transports.addBinding.toProvider[LumosServiceEventTransportProvider].in[Singleton]
     }
-    bind[EventTransport].to[MultiplexerEventTransport]
+    bind[EventTransport].to[EventTransportMultiplexer]
   }
 
   private class BinaryFileEventTransportProvider extends Provider[BinaryFileEventTransport] {
@@ -84,6 +84,6 @@ object EventTransportModule extends TwitterModule {
   }
 
   override def singletonShutdown(injector: Injector): Unit = {
-    Await.ready(injector.instance[MultiplexerEventTransport].close())
+    Await.ready(injector.instance[EventTransportMultiplexer].close())
   }
 }

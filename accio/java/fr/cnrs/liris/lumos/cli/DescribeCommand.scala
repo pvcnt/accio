@@ -42,7 +42,7 @@ final class DescribeCommand extends LumosCommand {
       env.reporter.outErr.printOutLn(s"${padTo("Labels", colWidth)} ${if (job.labels.nonEmpty) job.labels.map { case (k, v) => s"$k=$v" }.mkString(", ") else "<none>"}")
       env.reporter.outErr.printOutLn(s"${padTo("Metadata", colWidth)} ${if (job.metadata.nonEmpty) job.labels.map { case (k, v) => s"$k=$v" }.mkString(", ") else "<none>"}")
       env.reporter.outErr.printOutLn(s"${padTo("Status", colWidth)} ${job.status.state.name}")
-      env.reporter.outErr.printOutLn(s"${padTo("Duration", colWidth)} ${humanize(job.duration)} %")
+      env.reporter.outErr.printOutLn(s"${padTo("Duration", colWidth)} ${humanize(job.duration)}")
       if (!job.status.state.isCompleted && job.progress > 0) {
         env.reporter.outErr.printOutLn(s"${padTo("Progress", colWidth)} ${job.progress} %")
       }
@@ -72,7 +72,7 @@ final class DescribeCommand extends LumosCommand {
       env.reporter.outErr.printOutLn()
       if (job.tasks.nonEmpty) {
         env.reporter.outErr.printOutLn("Tasks")
-        env.reporter.outErr.printOutLn(s"  ${padTo("Task name", 30)}  ${padTo("Status", 9)}  Duration")
+        env.reporter.outErr.printOutLn(s"  ${padTo("Task name", 30)}  ${padTo("Status", 10)}  Duration")
         job.tasks.foreach { task =>
           env.reporter.outErr.printOutLn(s"  ${padTo(task.name, 30)}  ${padTo(task.status.state.name, 9)}  ${humanize(task.duration)}")
         }

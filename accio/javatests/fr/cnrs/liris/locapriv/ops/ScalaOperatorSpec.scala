@@ -21,9 +21,9 @@ package fr.cnrs.liris.locapriv.ops
 import java.nio.file.Files
 import java.util.concurrent.atomic.AtomicInteger
 
-import fr.cnrs.liris.lumos.domain.RemoteFile
 import fr.cnrs.liris.accio.sdk.OpContext
 import fr.cnrs.liris.locapriv.domain.{Event, Poi}
+import fr.cnrs.liris.lumos.domain.RemoteFile
 import fr.cnrs.liris.sparkle.SparkleEnv
 import fr.cnrs.liris.testing.CreateTmpDirectory
 import org.scalatest.{BeforeAndAfterEach, FlatSpec}
@@ -56,14 +56,14 @@ private[ops] trait ScalaOperatorSpec extends BeforeAndAfterEach with CreateTmpDi
   }
 
   protected final def writeTraces(data: Event*): RemoteFile = {
-    val uri = tmpDir.resolve(s"tmp-${idx.getAndIncrement()}").toString
+    val uri = s"file://$tmpDir/tmp-${idx.getAndIncrement()}"
     env.parallelize(data).write.csv(uri)
-    RemoteFile(uri)
+    RemoteFile(uri, Some("text/csv"))
   }
 
   protected final def writePois(data: Seq[Poi]): RemoteFile = {
-    val uri = tmpDir.resolve(s"tmp-${idx.getAndIncrement()}").toString
+    val uri = s"file://$tmpDir/tmp-${idx.getAndIncrement()}"
     env.parallelize(data).write.csv(uri)
-    RemoteFile(uri)
+    RemoteFile(uri, Some("text/csv"))
   }
 }

@@ -43,6 +43,7 @@ final class TaskExecutor(workDir: Path, handler: TaskLifecycleHandler = NullTask
   def submit(name: String, executable: RemoteFile, payload: OpPayload): Unit = {
     val p = new TaskThread(name, executable, payload)
     if (tasks.putIfAbsent(name, p).isEmpty) {
+      logger.warn(s"Scheduled task $name")
       pool.submit(p)
     } else {
       logger.warn(s"Task $name was already running")
@@ -53,6 +54,8 @@ final class TaskExecutor(workDir: Path, handler: TaskLifecycleHandler = NullTask
     tasks.remove(name).foreach(_.kill())
   }
 
+  def close(): Unit = pool.shutdownNow()
+
   private class TaskThread(val name: String, executable: RemoteFile, val payload: OpPayload)
     extends Runnable {
 
@@ -61,6 +64,7 @@ final class TaskExecutor(workDir: Path, handler: TaskLifecycleHandler = NullTask
     private[this] var killed = false
 
     override def run(): Unit = {
+      logger.info(s"Starting task $name")
       val started = synchronized {
         if (!killed) {
           process = Some(start())
@@ -71,9 +75,11 @@ final class TaskExecutor(workDir: Path, handler: TaskLifecycleHandler = NullTask
       }
       try {
         if (started) {
+          logger.info(s"Started task $name")
           handler.taskStarted(name)
           val exitCode = process.get.waitFor()
           if (!killed) {
+            logger.info(s"Completed task $name (exit code: $exitCode)")
             handler.taskCompleted(name, exitCode, readResult())
           }
         }
@@ -88,6 +94,7 @@ final class TaskExecutor(workDir: Path, handler: TaskLifecycleHandler = NullTask
       synchronized {
         if (!killed) {
           killed = true
+          logger.info(s"Killed task $name")
         }
       }
       try {

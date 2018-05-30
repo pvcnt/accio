@@ -31,7 +31,8 @@ final class StateMachine(workflow: Workflow) extends Logging {
   private[this] val artifacts = mutable.Map.empty[String, AttrValue]
   private[this] val tasks = mutable.Map.empty[String, ExecStatus.State]
   private[this] val graph = Graph.create(workflow)
-  private[this] val sequence = new AtomicLong(2) // There has already been a JobEnqueued and a JobScheduled event.
+  // There has already been a JobEnqueued and a JobScheduled event, so we started at 2.
+  private[this] val sequence = new AtomicLong(2)
 
   workflow.steps.foreach(step => tasks(step.name) = ExecStatus.Pending)
 
@@ -43,23 +44,26 @@ final class StateMachine(workflow: Workflow) extends Logging {
     cancelAllSteps() ++ Seq(SideEffect.Publish(createEvent(Event.JobCanceled())))
   }
 
-  def completeJob(): Seq[SideEffect] = synchronized {
-    val outputs = artifacts.values.toSeq.sortBy(_.name)
-    Seq(SideEffect.Publish(createEvent(Event.JobCompleted(outputs))))
-  }
-
   def currentState: ExecStatus.State = synchronized {
+    // We should take care of only returning a completed state if the workflow is effectively
+    // completed, i.e., all its steps are completed. For example, we may already know that the
+    // workflow will eventually be marked as canceled, but if some steps are still running the best
+    // we can return is Running.
     val states = tasks.values.toSet
-    if (states == Set(ExecStatus.Pending)) {
-      ExecStatus.Pending
-    } else if (states.contains(ExecStatus.Running)) {
+    if (states.contains(ExecStatus.Running)) {
       ExecStatus.Running
+    } else if (states.contains(ExecStatus.Scheduled)) {
+      ExecStatus.Scheduled
     } else if (states == Set(ExecStatus.Successful)) {
       ExecStatus.Successful
-    } else if (states.contains(ExecStatus.Canceled)) {
+    } else if (states.forall(_.isCompleted) && states.contains(ExecStatus.Canceled)) {
       ExecStatus.Canceled
-    } else {
+    } else if (states.forall(_.isCompleted) && states.contains(ExecStatus.Lost)) {
+      ExecStatus.Lost
+    } else if (states.forall(_.isCompleted)) {
       ExecStatus.Failed
+    } else {
+      ExecStatus.Pending
     }
   }
 
@@ -98,23 +102,34 @@ final class StateMachine(workflow: Workflow) extends Logging {
           metrics = result.metrics,
           error = result.error,
           message = Some("Step completed with non-null exit code"))))
+        sideEffects ++= cancelNextSteps(stepName)
       }
     }
+
+    if (currentState.isCompleted) {
+      val outputs = artifacts.values.toSeq.sortBy(_.name)
+      sideEffects += SideEffect.Publish(createEvent(Event.JobCompleted(outputs)))
+    }
+
     sideEffects.toList
   }
 
   private def scheduleNextSteps(stepName: String): Seq[SideEffect] = {
     getNextNodes(stepName)
       .filter(node => node.predecessors.forall(dep => tasks(dep) == ExecStatus.Successful))
-      .flatMap(node => Seq(node) ++ getNextNodes(node.name))
       .flatMap(node => scheduleStep(node.name))
       .toSeq
   }
 
-  private def startAllSteps(): Seq[SideEffect] = {
-    graph.roots
-      .flatMap(node => scheduleStep(node.name))
+  private def cancelNextSteps(stepName: String): Seq[SideEffect] = {
+    getNextNodes(stepName)
+      .flatMap(node => Seq(node) ++ getNextNodes(node.name))
+      .flatMap(node => cancelStep(node.name))
       .toSeq
+  }
+
+  private def startAllSteps(): Seq[SideEffect] = {
+    graph.roots.flatMap(node => scheduleStep(node.name)).toSeq
   }
 
   private def cancelAllSteps(): Seq[SideEffect] = {

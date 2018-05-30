@@ -28,6 +28,7 @@ import com.twitter.util._
 import com.twitter.util.logging.Logging
 import fr.cnrs.liris.accio.domain.thrift.ThriftAdapter
 import fr.cnrs.liris.accio.domain.{Operator, thrift}
+import fr.cnrs.liris.lumos.domain.RemoteFile
 import fr.cnrs.liris.util.jvm.JavaHome
 import fr.cnrs.liris.util.scrooge.BinaryScroogeSerializer
 
@@ -145,7 +146,10 @@ final class FileOpDiscovery(directory: Path, checkFrequency: Duration, filter: O
       None
     } else {
       val is = new ByteArrayInputStream(os.toByteArray)
-      decode(is, file)
+      // Binary libraries cannot usually provide their own path, so we replace it with the path
+      // to the binary itself.
+      val remoteFile =  RemoteFile(file.toAbsolutePath.toString, Some("application/java-archive"))
+      decode(is, file).map(_.map(_.copy(executable = remoteFile)))
     }
   }
 
@@ -193,7 +197,8 @@ final class FileOpDiscovery(directory: Path, checkFrequency: Duration, filter: O
         Thread.sleep(checkFrequency.inMillis)
       } catch {
         case _: InterruptedException =>
-          // The thread as been interrupted, kill it properly. https://stackoverflow.com/a/4906814
+          // The thread as been interrupted, but sure the flag has been set property.
+          // https://stackoverflow.com/a/4906814
           Thread.currentThread().interrupt()
       }
     }

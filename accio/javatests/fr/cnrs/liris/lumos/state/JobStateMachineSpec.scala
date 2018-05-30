@@ -49,7 +49,7 @@ class JobStateMachineSpec extends UnitSpec {
       labels = Map("foo" -> "bar"),
       metadata = Map("bar" -> "foo"),
       inputs = Seq(AttrValue("p1", Value.Int(42))),
-      tasks = Seq(Task("task1")),
+      tasks = Seq(Task("task1", status = ExecStatus(ExecStatus.Pending, now, message = Some("Job created")))),
       status = ExecStatus(ExecStatus.Pending, now, Some("Job created")), // Defined.
       history = Seq.empty /* Defined */))
   }

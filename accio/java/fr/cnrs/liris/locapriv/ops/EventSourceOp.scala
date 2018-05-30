@@ -18,8 +18,8 @@
 
 package fr.cnrs.liris.locapriv.ops
 
-import fr.cnrs.liris.lumos.domain.RemoteFile
 import fr.cnrs.liris.accio.sdk._
+import fr.cnrs.liris.lumos.domain.RemoteFile
 
 @Op(
   category = "source",
@@ -32,7 +32,7 @@ case class EventSourceOp(
   extends ScalaOperator[EventSourceOp.Out] with SparkleOperator {
 
   override def execute(ctx: OpContext): EventSourceOp.Out = {
-    EventSourceOp.Out(RemoteFile(url))
+    EventSourceOp.Out(RemoteFile(pathToUriString(url), Some("text/csv")))
   }
 }
 

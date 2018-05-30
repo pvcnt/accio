@@ -59,6 +59,7 @@ enum ExecState {
   SUCCESSFUL,
   FAILED,
   CANCELED,
+  LOST,
 }
 
 struct ExecStatus {

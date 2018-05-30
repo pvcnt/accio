@@ -69,5 +69,11 @@ object ExecStatus {
     override def name = "Failed"
   }
 
-  def values: Seq[State] = Seq(Pending, Scheduled, Running, Failed, Successful, Canceled)
+  case object Lost extends State {
+    override def isCompleted = true
+
+    override def name = "Lost"
+  }
+
+  def values: Seq[State] = Seq(Pending, Scheduled, Running, Failed, Successful, Canceled, Lost)
 }

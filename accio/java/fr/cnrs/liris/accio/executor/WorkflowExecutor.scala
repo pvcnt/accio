@@ -42,29 +42,33 @@ final class WorkflowExecutor(
 
     override def taskStarted(name: String): Unit = applySideEffects(stateMachine.stepStarted(name))
   }
-  private[this] val scheduler = new TaskExecutor(workDir, handler)
+  private[this] val taskExecutor = new TaskExecutor(workDir, handler)
   private[this] val promise = new Promise[Int]
 
   def execute(): Future[Int] = {
-    logger.info(s"Starting the execution of workflow ${workflow.name}")
+    logger.info(s"Starting execution of workflow ${workflow.name}")
     applySideEffects(stateMachine.startJob())
     promise
   }
 
+  def close(): Unit = taskExecutor.close()
+
   private def applySideEffects(sideEffects: Iterable[SideEffect]): Unit = {
     sideEffects.foreach {
       case SideEffect.Publish(event) => transport.sendEvent(event)
-      case SideEffect.Kill(name) => scheduler.kill(name)
+      case SideEffect.Kill(name) => taskExecutor.kill(name)
       case SideEffect.Schedule(stepName, payload) =>
         registry.get(payload.op) match {
           case None =>
-            logger.error(s"Unknown operator: ${payload.op} (registered operators: ${registry.ops.map(_.name).mkString(", ")})")
+            logger.error(s"Cannot schedule unknown operator: ${payload.op}")
             applySideEffects(stateMachine.cancelJob())
-          case Some(op) => scheduler.submit(stepName, op.executable, payload)
+          case Some(op) => taskExecutor.submit(stepName, op.executable, payload)
         }
     }
+
     val state = stateMachine.currentState
     if (state.isCompleted) {
+      logger.info(s"Completed execution of workflow ${workflow.name}")
       promise.setValue(if (state == ExecStatus.Successful) 0 else 1)
     }
   }

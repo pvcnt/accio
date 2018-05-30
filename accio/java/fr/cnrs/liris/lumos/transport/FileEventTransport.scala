@@ -24,16 +24,19 @@ import java.nio.file.Path
 import com.twitter.util.{Future, Time}
 import fr.cnrs.liris.lumos.domain.Event
 
-abstract class FileEventTransport(path: Path) extends EventTransport {
-  // Note: I did an attempt at using com.twitter.io.Writer in order to provide asynchronicity.
-  // However, it seems that nothing prevented concurrent writes to the same file.
-  // TODO: investigate how to introduce thread-safe asynchronicity.
-  private[this] val os = new BufferedOutputStream(new FileOutputStream(path.toFile))
+/**
+ * Base class for event transports that write events into files.
+ *
+ * @param file File where to write the events.
+ */
+abstract class FileEventTransport(file: Path) extends EventTransport {
+  // TODO: make writes asynchronous. The difficult point is to avoid having concurrent writes
+  // in the same file, which would mess things up.
+  private[this] val os = new BufferedOutputStream(new FileOutputStream(file.toFile))
 
-  override final def sendEvent(event: Event): Future[Unit] = synchronized {
+  override final def sendEvent(event: Event): Unit = synchronized {
     val bytes = serialize(event)
     os.write(bytes, 0, bytes.length)
-    Future.Done
   }
 
   override final def close(deadline: Time): Future[Unit] = {
@@ -41,5 +44,10 @@ abstract class FileEventTransport(path: Path) extends EventTransport {
     Future.Done
   }
 
+  /**
+   * Serialize an event into bytes. Those bytes will be written as-is into the target file.
+   *
+   * @param event Events to serialize.
+   */
   protected def serialize(event: Event): Array[Byte]
 }

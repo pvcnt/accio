@@ -22,6 +22,7 @@ import java.nio.file.{Files, Paths}
 
 import com.twitter.conversions.time._
 import com.twitter.util.Await
+import fr.cnrs.liris.lumos.domain.RemoteFile
 import fr.cnrs.liris.testing.{CreateTmpDirectory, UnitSpec}
 
 /**
@@ -43,7 +44,8 @@ class FileOpDiscoverySpec extends UnitSpec with CreateTmpDirectory {
   it should "discover operators by binaries" in {
     copyLibraries()
     val discovery = new FileOpDiscovery(tmpDir, 0.seconds, None)
-    discovery.ops should contain theSameElementsAs ops0 ++ ops1
+    discovery.ops should contain theSameElementsAs ops0.map(_.copy(executable = RemoteFile(tmpDir.resolve("ops0.jar").toString, Some("application/java-archive")))) ++
+      ops1.map(_.copy(executable = RemoteFile(tmpDir.resolve("ops1.jar").toString, Some("application/java-archive"))))
     Await.result(discovery.close())
   }
 

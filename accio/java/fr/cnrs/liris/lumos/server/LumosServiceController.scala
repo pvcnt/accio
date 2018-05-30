@@ -33,6 +33,8 @@ import fr.cnrs.liris.lumos.version.Version
 private[server] final class LumosServiceController @Inject()(store: JobStore, eventHandler: EventHandler)
   extends Controller with LumosService.ServicePerEndpoint {
 
+  //TODO: garbage collect lost jobs.
+
   override val getInfo = handle(GetInfo) { args: GetInfo.Args =>
     Future.value(GetInfoResponse(Version.Current.toString))
   }

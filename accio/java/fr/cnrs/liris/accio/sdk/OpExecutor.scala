@@ -18,8 +18,7 @@
 
 package fr.cnrs.liris.accio.sdk
 
-import java.nio.file.{Files, Path}
-import java.util.UUID
+import java.nio.file.Path
 
 import com.twitter.util.logging.Logging
 import fr.cnrs.liris.accio.domain.{Attribute, OpPayload, OpResult}
@@ -47,17 +46,14 @@ final class OpExecutor(opMeta: OpMetadata, workDir: Path) extends Logging {
    */
   def execute(payload: OpPayload): OpResult = {
     try {
-      val sandboxDir = workDir.resolve(UUID.randomUUID().toString)
-      Files.createDirectories(sandboxDir.resolve("outputs"))
-
       val operator = createOperator(payload.params)
 
       val maybeSeed = if (opMeta.defn.unstable) Some(payload.seed) else None
-      val ctx = new OpContext(maybeSeed, sandboxDir.resolve("outputs"))
+      val ctx = new OpContext(maybeSeed, workDir)
       val profiler = new JvmProfiler
 
       // The actual operator is the only profiled section. The outcome is either an output object or an exception.
-      logger.debug(s"Starting operator ${opMeta.defn.name} (sandbox in ${sandboxDir.toAbsolutePath})")
+      logger.debug(s"Starting operator ${opMeta.defn.name} (sandbox in ${workDir.toAbsolutePath})")
       val res = profiler.profile {
         try {
           Right(operator.execute(ctx))

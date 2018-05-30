@@ -20,7 +20,7 @@
 Description=Accio server
 
 [Service]
-ExecStartPre=mkdir -p /var/lib/accio /var/lib/accio/ops
+ExecStartPre=/bin/mkdir -p /var/lib/accio /var/lib/accio/ops
 ExecStart=/usr/bin/java \
   -Xmx3G \
   -server \

@@ -28,33 +28,50 @@ case class Event(parent: String, sequence: Long, time: Instant, payload: Event.P
 
 object Event {
 
-  sealed trait Payload
+  sealed trait Payload {
+    def isTerminal: Boolean
+  }
 
-  case class JobEnqueued(job: Job) extends Payload
+  case class JobEnqueued(job: Job) extends Payload {
+    def isTerminal = false
+  }
 
-  case class JobExpanded(tasks: Seq[Task]) extends Payload
+  case class JobExpanded(tasks: Seq[Task]) extends Payload {
+    def isTerminal = false
+  }
 
-  case class JobScheduled(
-    metadata: Map[String, String] = Map.empty,
-    message: Option[String] = None)
-    extends Payload
+  case class JobScheduled(metadata: Map[String, String] = Map.empty, message: Option[String] = None)
+    extends Payload {
 
-  case class JobStarted(message: Option[String] = None) extends Payload
+    def isTerminal = false
+  }
 
-  case class JobCanceled(message: Option[String] = None) extends Payload
+  case class JobStarted(message: Option[String] = None) extends Payload {
+    def isTerminal = false
+  }
 
-  case class JobCompleted(
-    outputs: Seq[AttrValue] = Seq.empty,
-    message: Option[String] = None)
-    extends Payload
+  case class JobCanceled(message: Option[String] = None) extends Payload {
+    def isTerminal = true
+  }
+
+  case class JobCompleted(outputs: Seq[AttrValue] = Seq.empty, message: Option[String] = None)
+    extends Payload {
+
+    def isTerminal = true
+  }
 
   case class TaskScheduled(
     name: String,
     metadata: Map[String, String] = Map.empty,
     message: Option[String] = None)
-    extends Payload
+    extends Payload {
 
-  case class TaskStarted(name: String, message: Option[String] = None) extends Payload
+    def isTerminal = false
+  }
+
+  case class TaskStarted(name: String, message: Option[String] = None) extends Payload {
+    def isTerminal = false
+  }
 
   case class TaskCompleted(
     name: String,
@@ -62,6 +79,9 @@ object Event {
     metrics: Seq[MetricValue] = Seq.empty,
     error: Option[ErrorDatum] = None,
     message: Option[String] = None)
-    extends Payload
+    extends Payload {
+
+    def isTerminal = false
+  }
 
 }

@@ -19,20 +19,21 @@
 package fr.cnrs.liris.lumos.transport
 
 import com.twitter.finagle.Service
-import com.twitter.util.Future
+import com.twitter.util.{Duration, Future}
 import fr.cnrs.liris.lumos.domain.thrift
 import fr.cnrs.liris.lumos.server.LumosService.{GetInfo, GetJob, ListJobs, PushEvent}
 import fr.cnrs.liris.lumos.server._
 
 import scala.collection.mutable
 
-private[transport] class LumosServiceCollector extends LumosService.ServicePerEndpoint {
+private[transport] class LumosServiceCollector(latency: Duration) extends LumosService.ServicePerEndpoint {
   private[this] val collector = mutable.ListBuffer.empty[thrift.Event]
 
   def eventsOf(parent: String): Seq[thrift.Event] = collector.filter(_.parent == parent)
 
   override def pushEvent: Service[PushEvent.Args, PushEventResponse] = new Service[PushEvent.Args, PushEventResponse] {
     override def apply(request: PushEvent.Args): Future[PushEventResponse] = synchronized {
+      Thread.sleep(latency.inMillis)
       collector += request.req.event
       Future.value(PushEventResponse())
     }

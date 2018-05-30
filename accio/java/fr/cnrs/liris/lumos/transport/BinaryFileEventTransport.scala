@@ -20,12 +20,16 @@ package fr.cnrs.liris.lumos.transport
 
 import java.nio.file.Path
 
-import com.twitter.io.Buf
 import fr.cnrs.liris.lumos.domain.Event
 import fr.cnrs.liris.lumos.domain.thrift.ThriftAdapter
 import fr.cnrs.liris.util.scrooge.BinaryScroogeSerializer
 
-final class BinaryFileEventTransport(path: Path) extends FileEventTransport(path) {
+/**
+ * An event transport that writes events into a file, serialized in Thrift binary format.
+ *
+ * @param file File where to write the events.
+ */
+final class BinaryFileEventTransport(file: Path) extends FileEventTransport(file) {
   override def name = "BinaryFile"
 
   override protected def serialize(event: Event): Array[Byte] = {

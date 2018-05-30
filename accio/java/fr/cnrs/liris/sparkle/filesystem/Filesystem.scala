@@ -55,14 +55,6 @@ trait Filesystem {
   def list(uri: String): Iterable[String]
 
   /**
-   * Return the size of a resource. It should handle files and directories (in which case the total
-   * size of all contained files is returned)
-   *
-   * @param uri URI to a file or directory. The URI should match this filesystem's scheme.
-   */
-  def size(uri: String): StorageUnit
-
-  /**
    * Return whether a resource is a directory.
    *
    * @param uri URI to a file or directory. The URI should match this filesystem's scheme.

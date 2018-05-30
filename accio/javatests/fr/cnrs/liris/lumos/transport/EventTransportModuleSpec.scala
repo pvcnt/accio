@@ -32,32 +32,32 @@ class EventTransportModuleSpec extends UnitSpec with CreateTwitterInjector {
 
   it should "provide a default transport" in {
     val injector = createInjector()
-    injector.instance[EventTransport] shouldBe a[MultiplexerEventTransport]
-    injector.instance[MultiplexerEventTransport].name shouldBe "Multiplexer[]"
+    injector.instance[EventTransport] shouldBe a[EventTransportMultiplexer]
+    injector.instance[EventTransportMultiplexer].name shouldBe "Multiplexer[]"
 
     EventTransportModule.args should have size 0
   }
 
   it should "provide a transport with binary file support" in {
     val injector = createInjector("-event.binary.file", "/dev/null")
-    injector.instance[EventTransport] shouldBe a[MultiplexerEventTransport]
-    injector.instance[MultiplexerEventTransport].name shouldBe "Multiplexer[BinaryFile]"
+    injector.instance[EventTransport] shouldBe a[EventTransportMultiplexer]
+    injector.instance[EventTransportMultiplexer].name shouldBe "Multiplexer[BinaryFile]"
 
     EventTransportModule.args should contain theSameElementsAs Seq("-event.binary.file", "/dev/null")
   }
 
   it should "provide a transport with text file support" in {
     val injector = createInjector("-event.text.file", "/dev/null")
-    injector.instance[EventTransport] shouldBe a[MultiplexerEventTransport]
-    injector.instance[MultiplexerEventTransport].name shouldBe "Multiplexer[TextFile]"
+    injector.instance[EventTransport] shouldBe a[EventTransportMultiplexer]
+    injector.instance[EventTransportMultiplexer].name shouldBe "Multiplexer[TextFile]"
 
     EventTransportModule.args should contain theSameElementsAs Seq("-event.text.file", "/dev/null")
   }
 
   it should "provide a transport with Lumos service support" in {
     val injector = createInjector("-event.server.address", "localhost:9999")
-    injector.instance[EventTransport] shouldBe a[MultiplexerEventTransport]
-    injector.instance[MultiplexerEventTransport].name shouldBe "Multiplexer[LumosService]"
+    injector.instance[EventTransport] shouldBe a[EventTransportMultiplexer]
+    injector.instance[EventTransportMultiplexer].name shouldBe "Multiplexer[LumosService]"
 
     EventTransportModule.args should contain theSameElementsAs Seq("-event.server.address", "localhost:9999")
   }
@@ -67,8 +67,8 @@ class EventTransportModuleSpec extends UnitSpec with CreateTwitterInjector {
       "-event.binary.file", "/dev/null",
       "-event.text.file", "/dev/null",
       "-event.server.address", "localhost:9999")
-    injector.instance[EventTransport] shouldBe a[MultiplexerEventTransport]
-    injector.instance[MultiplexerEventTransport].name shouldBe "Multiplexer[BinaryFile,TextFile,LumosService]"
+    injector.instance[EventTransport] shouldBe a[EventTransportMultiplexer]
+    injector.instance[EventTransportMultiplexer].name shouldBe "Multiplexer[BinaryFile,TextFile,LumosService]"
 
     EventTransportModule.args should contain theSameElementsAs Seq(
       "-event.binary.file", "/dev/null",

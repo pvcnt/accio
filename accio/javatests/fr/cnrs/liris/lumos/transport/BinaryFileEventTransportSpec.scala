@@ -21,6 +21,7 @@ package fr.cnrs.liris.lumos.transport
 import java.io.ByteArrayInputStream
 import java.nio.file.Files
 
+import com.twitter.util.Await
 import fr.cnrs.liris.lumos.domain.{Event, Job, thrift}
 import fr.cnrs.liris.testing.{CreateTmpDirectory, UnitSpec}
 import fr.cnrs.liris.util.scrooge.BinaryScroogeSerializer
@@ -42,7 +43,7 @@ class BinaryFileEventTransportSpec extends UnitSpec with CreateTmpDirectory {
     transport.sendEvent(Event("foo", 1, new Instant(time), Event.JobStarted(message = Some("started"))))
     transport.sendEvent(Event("bar", 0, new Instant(time), Event.JobEnqueued(Job(name = "bar"))))
     transport.sendEvent(Event("foo", 2, new Instant(time), Event.JobCompleted(message = Some("completed"))))
-    transport.close()
+    Await.result(transport.close())
 
     val events = mutable.ListBuffer.empty[thrift.Event]
     val is = new ByteArrayInputStream(Files.readAllBytes(file))

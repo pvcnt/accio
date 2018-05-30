@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.sparkle
 
-import fr.cnrs.liris.sparkle.filesystem.PosixFilesystem
+import fr.cnrs.liris.sparkle.filesystem.{Filesystem, DefaultFilesystem}
 import fr.cnrs.liris.sparkle.format.csv.CsvDataFormat
 import fr.cnrs.liris.sparkle.format.{DataFormat, RowWriter}
 
@@ -47,19 +47,19 @@ final class DataFrameWriter[T](df: DataFrame[T]) {
     this
   }
 
-  def write(uri: String, format: DataFormat): Unit = {
+  def csv(uri: String): Unit = write(uri, CsvDataFormat, DefaultFilesystem)
+
+  def write(uri: String, format: DataFormat, filesystem: Filesystem): Unit = {
     val writer = format.writerFor(df.encoder.structType, _options.toMap)
     val extension = if (format.extension.nonEmpty) '.' + format.extension else ""
     df.env.submit[T, Unit](df, df.keys) { (key, elements) =>
       val dest = if (key == ".") uri else s"$uri/$key$extension"
-      write(dest, writer, elements)
+      write(dest, writer, filesystem, elements)
     }
   }
 
-  def csv(uri: String): Unit = write(uri, CsvDataFormat)
-
-  private def write(uri: String, writer: RowWriter, elements: Iterable[T]): Unit = {
-    val os = PosixFilesystem.createOutputStream(uri)
+  private def write(uri: String, writer: RowWriter, filesystem: Filesystem, elements: Iterable[T]): Unit = {
+    val os = filesystem.createOutputStream(uri)
     try {
       writer.write(elements.flatMap(df.encoder.serialize), os)
     } finally {

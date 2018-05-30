@@ -20,32 +20,23 @@ package fr.cnrs.liris.accio.server
 
 import com.google.inject.{Inject, Singleton}
 import com.twitter.finatra.thrift.Controller
-import com.twitter.inject.annotations.Flag
 import com.twitter.util.Future
-import fr.cnrs.liris.accio.discovery.{DiscoveryModule, OpRegistry}
+import fr.cnrs.liris.accio.discovery.OpRegistry
 import fr.cnrs.liris.accio.domain.thrift.ThriftAdapter
-import fr.cnrs.liris.accio.scheduler.{Process, Scheduler}
+import fr.cnrs.liris.accio.scheduler.Scheduler
 import fr.cnrs.liris.accio.server.AccioService._
-import fr.cnrs.liris.accio.validation.{ValidationResult, WorkflowFactory, WorkflowPreparator, WorkflowValidator}
+import fr.cnrs.liris.accio.validation.{ValidationResult, WorkflowPreparator, WorkflowValidator}
 import fr.cnrs.liris.accio.version.Version
 import fr.cnrs.liris.infra.thriftserver.{FieldViolation, ServerException, UserInfo}
-import fr.cnrs.liris.lumos.domain.{Event, Job}
-import fr.cnrs.liris.lumos.transport.{EventTransport, EventTransportModule}
-import fr.cnrs.liris.util.jvm.JavaHome
-import fr.cnrs.liris.util.scrooge.BinaryScroogeSerializer
-import org.joda.time.Instant
-
-import scala.collection.mutable
-import scala.util.control.NonFatal
+import fr.cnrs.liris.lumos.transport.EventTransport
 
 @Singleton
 final class AccioServiceController @Inject()(
-  factory: WorkflowFactory,
   preparator: WorkflowPreparator,
   validator: WorkflowValidator,
+  submitService: SubmitWorkflowService,
   scheduler: Scheduler,
   transport: EventTransport,
-  @Flag("executor_uri") executorUri: String,
   registry: OpRegistry)
   extends Controller with AccioService.ServicePerEndpoint {
 
@@ -86,42 +77,14 @@ final class AccioServiceController @Inject()(
     if (result.isInvalid) {
       Future.exception(ServerException.InvalidArgument(result.errors.map(v => ServerException.FieldViolation(v.message, v.field))))
     } else {
-      val workflows = factory.create(workflow)
-      val fs = Future.collect(workflows.map { child =>
-        val job = Job(
-          name = child.name,
-          owner = workflow.owner,
-          contact = workflow.contact,
-          labels = workflow.labels,
-          inputs = workflow.params)
-        transport.sendEvent(Event(workflow.name, 0, Instant.now(), Event.JobEnqueued(job)))
-          .flatMap { _ =>
-            val cmd = mutable.ListBuffer.empty[String]
-            cmd += JavaHome.javaBinary.toString
-            cmd += s"-Xms200M"
-            cmd += s"-Xmx200M"
-            cmd ++= Seq("-jar", executorUri)
-            cmd ++= EventTransportModule.args
-            cmd ++= DiscoveryModule.args
-            cmd += BinaryScroogeSerializer.toString(ThriftAdapter.toThrift(workflow))
-            val process = Process(child.name, cmd.mkString, workflow.resources)
-            scheduler
-              .submit(process)
-              .onSuccess { info =>
-                transport.sendEvent(Event(workflow.name, 1, Instant.now(), Event.JobScheduled(info.metadata)))
-              }
-              .rescue { case NonFatal(e) =>
-                transport.sendEvent(Event(workflow.name, 1, Instant.now(), Event.JobCompleted(message = Some(s"Failed to schedule job: ${e.getMessage}"))))
-              }
-          }
-      })
-      fs.map(_ => SubmitWorkflowResponse(workflow.name, workflows.map(_.name)))
+      submitService
+        .apply(workflow)
+        .map(workflows => SubmitWorkflowResponse(workflow.name, workflows.map(_.name)))
     }
   }
 
   override val killWorkflow = handle(KillWorkflow) { args: KillWorkflow.Args =>
-    scheduler.kill(args.req.name)
-    Future.value(KillWorkflowResponse())
+    scheduler.kill(args.req.name).map(_ => KillWorkflowResponse())
   }
 
   private def toThrift(obj: ValidationResult.FieldViolation) = FieldViolation(obj.message, obj.field)

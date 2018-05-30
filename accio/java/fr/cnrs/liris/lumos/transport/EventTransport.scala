@@ -33,12 +33,10 @@ trait EventTransport extends Closable {
   /**
    * Write an event to an endpoint.
    *
-   * Because it uses [[Future]]s, it means that implementations should not contain any blocking
-   * call and return quickly, before the event is actually written. This method should never
-   * directly throw an exception (but wrap them into a [[Future]]).
+   * Implementations should not contain any blocking call and return quickly, possibly before the
+   * event is actually written. This method should never throw any exception.
    *
    * @param event Event to write.
-   * @return A future completed once the event has been written.
    */
-  def sendEvent(event: Event): Future[Unit]
+  def sendEvent(event: Event): Unit
 }

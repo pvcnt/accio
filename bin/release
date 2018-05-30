@@ -19,14 +19,23 @@ DIST_DIR=dist
 
 mkdir -p $DIST_DIR
 
-bazel build accio/java/fr/cnrs/liris/accio/agent:agent_deploy.jar
+bazel build accio/java/fr/cnrs/liris/locapriv/ops:ops_deploy.jar
+
+bazel build accio/java/fr/cnrs/liris/accio/server:server_deploy.jar
 bazel build accio/java/fr/cnrs/liris/accio/executor:executor_deploy.jar
-bazel build accio/java/fr/cnrs/liris/accio/tools/gateway:gateway_deploy.jar
 bazel build accio/java/fr/cnrs/liris/accio/cli:binary
 
-cp bazel-bin/accio/java/fr/cnrs/liris/accio/agent/agent_deploy.jar $DIST_DIR/accio-agent.jar
+bazel build accio/java/fr/cnrs/liris/lumos/server:server_deploy.jar
+bazel build accio/java/fr/cnrs/liris/lumos/gateway:gateway_deploy.jar
+bazel build accio/java/fr/cnrs/liris/lumos/cli:binary
+
+cp bazel-bin/accio/java/fr/cnrs/liris/locapriv/ops/ops_deploy.jar $DIST_DIR/locapriv-ops.jar
+cp bazel-bin/accio/java/fr/cnrs/liris/accio/server/server_deploy.jar $DIST_DIR/accio-server.jar
 cp bazel-bin/accio/java/fr/cnrs/liris/accio/executor/executor_deploy.jar $DIST_DIR/accio-executor.jar
-cp bazel-bin/accio/java/fr/cnrs/liris/accio/tools/gateway/gateway_deploy.jar $DIST_DIR/accio-gateway.jar
 cp bazel-genfiles/accio/java/fr/cnrs/liris/accio/cli/cli_binary $DIST_DIR/accio
+
+cp bazel-bin/accio/java/fr/cnrs/liris/lumos/server/server_deploy.jar $DIST_DIR/lumos-server.jar
+cp bazel-bin/accio/java/fr/cnrs/liris/lumos/gateway/gateway_deploy.jar $DIST_DIR/lumos-gateway.jar
+cp bazel-genfiles/accio/java/fr/cnrs/liris/lumos/cli/cli_binary $DIST_DIR/lumos
 
 echo "Release artifacts are available in $DIST_DIR"

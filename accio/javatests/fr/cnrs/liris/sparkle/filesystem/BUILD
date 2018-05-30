@@ -14,11 +14,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
-scala_library(
+scala_test(
   name = "filesystem",
   srcs = glob(["*.scala"]),
   deps = [
-    "//accio/java/fr/cnrs/liris/util",
+    "//accio/java/fr/cnrs/liris/sparkle/filesystem",
+    "//accio/javatests/fr/cnrs/liris/testing",
+    "//3rdparty/jvm/org/scalacheck",
+    "//3rdparty/jvm/com/google/guava",
   ],
-  visibility = ["//visibility:public"],
+  size = "small",
 )

@@ -84,6 +84,7 @@ object ThriftAdapter {
       case ExecState.Successful => domain.ExecStatus.Successful
       case ExecState.Failed => domain.ExecStatus.Failed
       case ExecState.Canceled => domain.ExecStatus.Canceled
+      case ExecState.Lost => domain.ExecStatus.Lost
       case ExecState.EnumUnknownExecState(_) => throw new IllegalArgumentException("Illegal value")
     }
 
@@ -208,6 +209,7 @@ object ThriftAdapter {
       case domain.ExecStatus.Successful => ExecState.Successful
       case domain.ExecStatus.Failed => ExecState.Failed
       case domain.ExecStatus.Canceled => ExecState.Canceled
+      case domain.ExecStatus.Lost => ExecState.Lost
     }
 
   def toThrift(obj: domain.ErrorDatum): ErrorDatum = {

@@ -18,6 +18,7 @@
 
 package fr.cnrs.liris.lumos.transport
 
+import com.twitter.util.Await
 import fr.cnrs.liris.lumos.domain.{Event, Job}
 import fr.cnrs.liris.testing.{CreateTmpDirectory, UnitSpec}
 import org.joda.time.Instant
@@ -38,7 +39,7 @@ class TextFileEventTransportSpec extends UnitSpec with CreateTmpDirectory {
     transport.sendEvent(Event("foo", 1, new Instant(time), Event.JobStarted(message = Some("started"))))
     transport.sendEvent(Event("bar", 0, new Instant(time), Event.JobEnqueued(Job(name = "bar"))))
     transport.sendEvent(Event("foo", 2, new Instant(time), Event.JobCompleted(message = Some("completed"))))
-    transport.close()
+    Await.result(transport.close())
 
     val content = Source.fromFile(file.toFile).mkString.trim
     content shouldBe """{

@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.sparkle
 
-import fr.cnrs.liris.sparkle.filesystem.PosixFilesystem
+import fr.cnrs.liris.sparkle.filesystem.{Filesystem, DefaultFilesystem}
 import fr.cnrs.liris.sparkle.format.DataFormat
 import fr.cnrs.liris.sparkle.format.csv.CsvDataFormat
 
@@ -49,16 +49,18 @@ final class DataFrameReader[T](env: SparkleEnv, encoder: Encoder[T]) {
     this
   }
 
-  def read(uri: String, format: DataFormat): DataFrame[T] = {
+  def csv(uri: String): DataFrame[T] = read(uri, CsvDataFormat, DefaultFilesystem)
+
+  def read(uri: String, format: DataFormat, filesystem: Filesystem): DataFrame[T] = {
     new DataFrame[T] {
       override private[sparkle] def keys: Seq[String] = {
-        if (PosixFilesystem.isDirectory(uri)) {
+        if (filesystem.isDirectory(uri)) {
           val prefixLength = uri.stripSuffix("/").length + 1
           val suffix = if (format.extension.nonEmpty) '.' + format.extension else ""
           val suffixLength = suffix.length
-          val uris = PosixFilesystem.list(uri).filter(_.endsWith(suffix)).toSeq.sorted
+          val uris = filesystem.list(uri).filter(_.endsWith(suffix)).toSeq.sorted
           uris.map(_.drop(prefixLength).dropRight(suffixLength))
-        } else if (PosixFilesystem.isFile(uri)) {
+        } else if (filesystem.isFile(uri)) {
           Seq(".")
         } else {
           Seq.empty
@@ -67,10 +69,10 @@ final class DataFrameReader[T](env: SparkleEnv, encoder: Encoder[T]) {
 
       override private[sparkle] def load(key: String) = {
         val is = if (key == ".") {
-          PosixFilesystem.createInputStream(uri)
+          filesystem.createInputStream(uri)
         } else {
           val extension = if (format.extension.nonEmpty) '.' + format.extension else ""
-          PosixFilesystem.createInputStream(s"$uri/$key$extension")
+          filesystem.createInputStream(s"$uri/$key$extension")
         }
         val reader = format.readerFor(encoder.structType, _options.toMap)
         reader.read(is).map(encoder.deserialize)
@@ -81,6 +83,4 @@ final class DataFrameReader[T](env: SparkleEnv, encoder: Encoder[T]) {
       override private[sparkle] def encoder = self.encoder
     }
   }
-
-  def csv(uri: String): DataFrame[T] = read(uri, CsvDataFormat)
 }

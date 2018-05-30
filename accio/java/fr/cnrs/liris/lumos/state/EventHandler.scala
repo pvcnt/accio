@@ -23,7 +23,7 @@ import java.util.concurrent.locks.{Lock, ReentrantLock}
 
 import com.google.inject.{Inject, Singleton}
 import com.twitter.util.Future
-import fr.cnrs.liris.lumos.domain.{Event, Status}
+import fr.cnrs.liris.lumos.domain.{Event, Job, Status}
 import fr.cnrs.liris.lumos.storage.JobStore
 
 import scala.collection.JavaConverters._
@@ -37,16 +37,18 @@ final class EventHandler @Inject()(jobStore: JobStore) {
     val lock = locks(event.parent)
     lock.lock()
     try {
-      jobStore
-        .get(event.parent)
-        .flatMap {
-          case Some(job) =>
-            JobStateMachine.apply(job, event) match {
-              case Right(newJob) => jobStore.replace(newJob)
-              case Left(status) => Future.value(status)
-            }
-          case None => Future.value(Status.NotFound(event.parent))
-        }
+      jobStore.get(event.parent).flatMap {
+        case None =>
+          JobStateMachine.apply(Job(), event) match {
+            case Right(newJob) => jobStore.create(newJob)
+            case Left(status) => Future.value(status)
+          }
+        case Some(job) =>
+          JobStateMachine.apply(job, event) match {
+            case Right(newJob) => jobStore.replace(newJob)
+            case Left(status) => Future.value(status)
+          }
+      }
     } finally {
       lock.unlock()
     }

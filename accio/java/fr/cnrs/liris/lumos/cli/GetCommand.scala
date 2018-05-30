@@ -72,9 +72,9 @@ final class GetCommand extends LumosCommand {
   private def humanize(time: Instant) = timeFormat.print(time)
 
   private def fetch(): Future[ListJobsResponse] = {
-    var states = Set[ExecState](ExecState.Pending, ExecState.Running)
+    var states = Set[ExecState](ExecState.Pending, ExecState.Scheduled, ExecState.Running)
     if (allFlag()) {
-      states ++= Set(ExecState.Failed, ExecState.Successful, ExecState.Canceled)
+      states ++= Set(ExecState.Failed, ExecState.Successful, ExecState.Canceled, ExecState.Lost)
     }
     client.listJobs(ListJobsRequest(
       owner = ownerFlag.get,

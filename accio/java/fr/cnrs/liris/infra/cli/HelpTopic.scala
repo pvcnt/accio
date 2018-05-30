@@ -18,12 +18,22 @@
 
 package fr.cnrs.liris.infra.cli
 
-import com.twitter.util.Future
-
-trait HelpTopic {
-  def name: String
-
+sealed trait HelpTopic {
   def help: String
 
-  def execute(env: Environment): Future[ExitCode]
+  def print(name: String, env: Environment): Unit
+}
+
+object HelpTopic {
+
+  trait Named extends HelpTopic {
+    def name: String
+  }
+
+  trait Extended extends HelpTopic {
+    def placeholder: String
+
+    def supports(name: String): Boolean
+  }
+
 }

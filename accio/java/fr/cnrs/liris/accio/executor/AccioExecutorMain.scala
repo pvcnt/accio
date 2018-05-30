@@ -37,11 +37,9 @@ object AccioExecutorMain extends AccioExecutor
  * Accio executor.
  */
 class AccioExecutor extends App with Logging {
-  init {
-    DataTypes.register()
-  }
-
   override protected def modules = Seq(EventTransportModule, DiscoveryModule)
+
+  override protected def failfastOnFlagsNotParsed = true
 
   override protected def run(): Unit = {
     require(args.length == 1, "There should be a single argument")
@@ -56,5 +54,10 @@ class AccioExecutor extends App with Logging {
     val opRegistry = injector.instance[OpRegistry]
     val executor = new WorkflowExecutor(workflow, Paths.get("."), opRegistry, eventTransport)
     Await.ready(executor.execute())
+    executor.close()
+  }
+
+  init {
+    DataTypes.register()
   }
 }

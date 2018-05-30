@@ -37,7 +37,7 @@ trait CreateTmpDirectory extends BeforeAndAfterEach {
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
-    _tmpDir = Files.createTempDirectory(getClass.getSimpleName + '-')
+    _tmpDir = Files.createTempDirectory(getClass.getSimpleName + '-').toAbsolutePath
   }
 
   override protected def afterEach(): Unit = {
