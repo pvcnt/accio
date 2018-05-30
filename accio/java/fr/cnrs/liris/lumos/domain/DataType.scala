@@ -18,6 +18,8 @@
 
 package fr.cnrs.liris.lumos.domain
 
+import java.util.Locale
+
 import com.google.common.annotations.VisibleForTesting
 
 import scala.collection.mutable
@@ -122,6 +124,7 @@ object DataType {
   def find(cls: ClassTag[_]): Option[DataType] = find(cls.runtimeClass)
 
   def parse(str: String): Option[DataType] = {
-    str.split(':').flatMap(name => values.find(_.name == name)).headOption
+    val lowercaseStr = str.toLowerCase(Locale.ROOT)
+    values.find(_.name.toLowerCase(Locale.ROOT) == lowercaseStr)
   }
 }

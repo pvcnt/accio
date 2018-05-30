@@ -20,6 +20,7 @@ package fr.cnrs.liris.lumos.domain.thrift
 
 import com.github.nscala_time.time.Imports._
 import fr.cnrs.liris.lumos.domain
+import fr.cnrs.liris.lumos.domain.DataType
 import org.joda.time.Instant
 
 object ThriftAdapter {
@@ -34,8 +35,8 @@ object ThriftAdapter {
       case ValuePayload.File(v) => domain.Value.File(toDomain(v))
       case ValuePayload.UnknownUnionField(_) => throw new IllegalArgumentException("Illegal value")
     }
-    domain.DataType.parse(obj.dataType) match {
-      case None => throw new IllegalArgumentException(s"Unknown data type: ${obj.dataType}")
+    DataType.parse(obj.dataType) match {
+      case None => domain.Value.Unresolved(value, obj.dataType)
       case Some(dataType) => value.cast(dataType).getOrElse {
         throw new IllegalArgumentException(s"Invalid value for data type $dataType: $value")
       }
@@ -133,10 +134,11 @@ object ThriftAdapter {
       case domain.Value.Bool(v) => Value(obj.dataType.name, ValuePayload.Boolean(v))
       case domain.Value.File(v) => Value(obj.dataType.name, ValuePayload.File(toThrift(v)))
       case domain.Value.Dataset(v) => Value(obj.dataType.name, ValuePayload.File(toThrift(v)))
+      case domain.Value.Unresolved(value, originalDataType) => Value(originalDataType, toThrift(value).payload)
       case domain.Value.UserDefined(v, dataType) =>
         val encoded = dataType.encode(v.asInstanceOf[dataType.JvmType])
-        val dataTypeName = s"${dataType.name}:${encoded.dataType.name}"
-        Value(dataTypeName, toThrift(encoded).payload)
+        //val dataTypeName = s"${dataType.name}:${encoded.dataType.name}"
+        Value(dataType.name, toThrift(encoded).payload)
     }
   }
 

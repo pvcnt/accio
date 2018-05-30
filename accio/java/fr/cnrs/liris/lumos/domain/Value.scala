@@ -178,4 +178,12 @@ object Value {
     }
   }
 
+  case class Unresolved(value: Value, originalDataType: Predef.String) extends Value {
+    override def v: Any = value.v
+
+    override def dataType: DataType = value.dataType
+
+    override def cast(to: DataType): Option[Value] = value.cast(to)
+  }
+
 }

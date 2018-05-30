@@ -46,6 +46,10 @@ class ThriftAdapterSpec extends UnitSpec with GeneratorDrivenPropertyChecks {
     forAll(Generators.value) { v: domain.Value =>
       ThriftAdapter.toDomain(ThriftAdapter.toThrift(v)) shouldBe v
     }
+
+    // Unresolved data types.
+    ThriftAdapter.toDomain(Value("Unknown", ValuePayload.Int(42))) shouldBe domain.Value.Unresolved(domain.Value.Int(42), "Unknown")
+    ThriftAdapter.toThrift(domain.Value.Unresolved(domain.Value.Int(42), "Unknown")) shouldBe Value("Unknown", ValuePayload.Int(42))
   }
 
   it should "convert AttrValue" in {
