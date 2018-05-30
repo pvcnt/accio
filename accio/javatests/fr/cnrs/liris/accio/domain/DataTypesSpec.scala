@@ -42,27 +42,27 @@ class DataTypesSpec extends UnitSpec with GeneratorDrivenPropertyChecks {
   it should "encode distances" in {
     forAll { v: Distance =>
       val res = Value.apply(v, DataTypes.Distance)
-      res shouldBe a[Value.Custom]
-      res.asInstanceOf[Value.Custom].dataType shouldBe DataTypes.Distance
-      res.asInstanceOf[Value.Custom].v shouldBe v
+      res shouldBe a[Value.UserDefined]
+      res.asInstanceOf[Value.UserDefined].dataType shouldBe DataTypes.Distance
+      res.asInstanceOf[Value.UserDefined].v shouldBe v
     }
   }
 
   it should "encode durations" in {
     forAll { v: Duration =>
       val res = Value.apply(v, DataTypes.Duration)
-      res shouldBe a[Value.Custom]
-      res.asInstanceOf[Value.Custom].dataType shouldBe DataTypes.Duration
-      res.asInstanceOf[Value.Custom].v shouldBe v
+      res shouldBe a[Value.UserDefined]
+      res.asInstanceOf[Value.UserDefined].dataType shouldBe DataTypes.Duration
+      res.asInstanceOf[Value.UserDefined].v shouldBe v
     }
   }
 
   it should "encode timestamps" in {
     forAll { v: Instant =>
       val res = Value.apply(v, DataTypes.Timestamp)
-      res shouldBe a[Value.Custom]
-      res.asInstanceOf[Value.Custom].dataType shouldBe DataTypes.Timestamp
-      res.asInstanceOf[Value.Custom].v shouldBe v
+      res shouldBe a[Value.UserDefined]
+      res.asInstanceOf[Value.UserDefined].dataType shouldBe DataTypes.Timestamp
+      res.asInstanceOf[Value.UserDefined].v shouldBe v
     }
   }
 
@@ -80,7 +80,7 @@ class DataTypesSpec extends UnitSpec with GeneratorDrivenPropertyChecks {
 
   it should "cast into durations" in {
     Value.Int(3000).cast(DataTypes.Duration).get.v shouldBe Duration.standardSeconds(3)
-    Value.Long(3000).cast(DataTypes.Duration).get.v shouldBe Duration.standardSeconds(3)
+    Value.Long(3000L).cast(DataTypes.Duration).get.v shouldBe Duration.standardSeconds(3)
     Value.String("3.seconds").cast(DataTypes.Duration).get.v shouldBe Duration.standardSeconds(3)
 
     Value.Float(3.14f).cast(DataTypes.Duration) shouldBe None
@@ -88,5 +88,19 @@ class DataTypesSpec extends UnitSpec with GeneratorDrivenPropertyChecks {
     Value.True.cast(DataTypes.Duration) shouldBe None
     Value.File(RemoteFile("/dev/null")).cast(DataTypes.Duration) shouldBe None
     Value.Dataset(RemoteFile("/dev/null")).cast(DataTypes.Duration) shouldBe None
+  }
+
+  it should "cast into timestamps" in {
+    forAll { v: Long =>
+      Value.Long(v).cast(DataTypes.Timestamp).get.v shouldBe new Instant(v)
+    }
+
+    Value.Int(3).cast(DataTypes.Timestamp) shouldBe None
+    Value.Float(3.14f).cast(DataTypes.Timestamp) shouldBe None
+    Value.Double(3.14).cast(DataTypes.Timestamp) shouldBe None
+    Value.String("3.14.meters").cast(DataTypes.Timestamp) shouldBe None
+    Value.True.cast(DataTypes.Timestamp) shouldBe None
+    Value.File(RemoteFile("/dev/null")).cast(DataTypes.Timestamp) shouldBe None
+    Value.Dataset(RemoteFile("/dev/null")).cast(DataTypes.Timestamp) shouldBe None
   }
 }

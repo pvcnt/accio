@@ -31,61 +31,58 @@ object DataTypes {
     Seq(Distance, Timestamp, Duration).foreach(DataType.register)
   }
 
-  object Distance extends DataType.Custom {
+  object Distance extends DataType.UserDefined {
     override type JvmType = geo.Distance
 
     override def name: String = "Distance"
-
-    override def base: DataType = DataType.Double
 
     override def encode(v: this.JvmType): Value = Value.Double(v.meters)
 
     override def decode(value: Value): Option[this.JvmType] =
       value match {
         case Value.Double(v) => Some(geo.Distance.meters(v))
+        case Value.Float(v) => Some(geo.Distance.meters(v))
+        case Value.Int(v) => Some(geo.Distance.meters(v))
         case Value.String(v) => Try(geo.Distance.parse(v)).toOption
-        case Value.Custom(v, Distance) => Some(v.asInstanceOf[JvmType])
+        case Value.UserDefined(v, Distance) => Some(v.asInstanceOf[JvmType])
         case _ => None
       }
 
     override def cls: ClassTag[this.JvmType] = classTag[geo.Distance]
   }
 
-  object Timestamp extends DataType.Custom {
+  object Timestamp extends DataType.UserDefined {
     override type JvmType = Instant
 
     override def name: String = "Timestamp"
-
-    override def base: DataType = DataType.Long
 
     override def encode(v: this.JvmType): Value = Value.Long(v.getMillis)
 
     override def decode(value: Value): Option[this.JvmType] =
       value match {
         case Value.Long(v) => Some(new Instant(v))
-        case Value.Custom(v, Timestamp) => Some(v.asInstanceOf[JvmType])
+        case Value.UserDefined(v, Timestamp) => Some(v.asInstanceOf[JvmType])
         case _ => None
       }
 
     override def cls: ClassTag[this.JvmType] = classTag[Instant]
   }
 
-  object Duration extends DataType.Custom {
+  object Duration extends DataType.UserDefined {
     override type JvmType = JodaDuration
 
     override def name: String = "Duration"
-
-    override def base: DataType = DataType.Long
 
     override def encode(v: this.JvmType): Value = Value.Long(v.getMillis)
 
     override def decode(value: Value): Option[this.JvmType] =
       value match {
+        case Value.Int(v) => Some(new org.joda.time.Duration(v))
         case Value.Long(v) => Some(new org.joda.time.Duration(v))
         case Value.String(v) =>
           // We use Twitter's format for durations (e.g., "3.minutes").
           Try(new JodaDuration(TwitterDuration.parse(v).inMillis)).toOption
-        case Value.Custom(v, Duration) => Some(v.asInstanceOf[JvmType])
+        case Value.UserDefined(v, Duration) => Some(v.asInstanceOf[JvmType])
         case _ => None
       }
 

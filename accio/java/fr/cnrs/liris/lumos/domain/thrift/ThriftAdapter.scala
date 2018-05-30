@@ -133,8 +133,10 @@ object ThriftAdapter {
       case domain.Value.Bool(v) => Value(obj.dataType.name, ValuePayload.Boolean(v))
       case domain.Value.File(v) => Value(obj.dataType.name, ValuePayload.File(toThrift(v)))
       case domain.Value.Dataset(v) => Value(obj.dataType.name, ValuePayload.File(toThrift(v)))
-      case domain.Value.Custom(v, dataType) =>
-        Value(dataType.name, toThrift(dataType.encode(v.asInstanceOf[dataType.JvmType])).payload)
+      case domain.Value.UserDefined(v, dataType) =>
+        val encoded = dataType.encode(v.asInstanceOf[dataType.JvmType])
+        val dataTypeName = s"${dataType.name}:${encoded.dataType.name}"
+        Value(dataTypeName, toThrift(encoded).payload)
     }
   }
 

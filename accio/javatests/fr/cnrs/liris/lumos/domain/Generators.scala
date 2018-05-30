@@ -167,6 +167,6 @@ object Generators {
       case DataType.Bool => arbitrary[Boolean].map(v => Value.Bool(v))
       case DataType.File => remoteFile.map(v => Value.File(v))
       case DataType.Dataset => remoteFile.map(v => Value.Dataset(v))
-      case _: DataType.Custom => throw new AssertionError // No custom type is registered, should not happen.
+      case _: DataType.UserDefined => throw new AssertionError // No custom type is registered, should not happen.
     }
 }

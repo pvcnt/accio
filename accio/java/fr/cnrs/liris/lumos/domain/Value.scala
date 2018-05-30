@@ -40,7 +40,7 @@ object Value {
       case DataType.Bool => Bool(v.asInstanceOf[DataType.Bool.JvmType])
       case DataType.Dataset => Dataset(v.asInstanceOf[DataType.Dataset.JvmType])
       case DataType.File => File(v.asInstanceOf[DataType.File.JvmType])
-      case d: DataType.Custom => Custom(v.asInstanceOf[d.JvmType], d)
+      case d: DataType.UserDefined => UserDefined(v.asInstanceOf[d.JvmType], d)
     }
   }
 
@@ -61,8 +61,7 @@ object Value {
         case DataType.Double => Some(Double(v))
         case DataType.String => Some(String(v.toString))
         case DataType.Int => Some(this)
-        case d: DataType.Custom =>
-          cast(d.base).flatMap(d.decode).orElse(d.decode(this)).map(v => Custom(v, d))
+        case d: DataType.UserDefined => d.decode(this).map(v => UserDefined(v, d))
         case _ => None
       }
   }
@@ -77,8 +76,7 @@ object Value {
         //case DataType.Float if v <= scala.Float.MaxValue => Some(Float(v))
         //case DataType.Int if v <= scala.Int.MaxValue => Some(Int(v.toInt))
         case DataType.Long => Some(this)
-        case d: DataType.Custom =>
-          cast(d.base).flatMap(d.decode).orElse(d.decode(this)).map(v => Custom(v, d))
+        case d: DataType.UserDefined => d.decode(this).map(v => UserDefined(v, d))
         case _ => None
       }
   }
@@ -93,8 +91,7 @@ object Value {
         case DataType.Double => Some(Double(v))
         case DataType.String => Some(String(v.toString))
         case DataType.Float => Some(this)
-        case d: DataType.Custom =>
-          cast(d.base).flatMap(d.decode).orElse(d.decode(this)).map(v => Custom(v, d))
+        case d: DataType.UserDefined => d.decode(this).map(v => UserDefined(v, d))
         case _ => None
       }
   }
@@ -109,8 +106,7 @@ object Value {
         //case DataType.Long if DoubleMath.isMathematicalInteger(v) => Some(Long(v.toLong))
         case DataType.String => Some(String(v.toString))
         case DataType.Double => Some(this)
-        case d: DataType.Custom =>
-          cast(d.base).flatMap(d.decode).orElse(d.decode(this)).map(v => Custom(v, d))
+        case d: DataType.UserDefined => d.decode(this).map(v => UserDefined(v, d))
         case _ => None
       }
   }
@@ -131,8 +127,7 @@ object Value {
             case _ => None
           }
         case DataType.String => Some(this)
-        case d: DataType.Custom =>
-          cast(d.base).flatMap(d.decode).orElse(d.decode(this)).map(v => Custom(v, d))
+        case d: DataType.UserDefined => d.decode(this).map(v => UserDefined(v, d))
         case _ => None
       }
   }
@@ -144,8 +139,7 @@ object Value {
       to match {
         case DataType.String => Some(String(v.toString))
         case DataType.Bool => Some(this)
-        case d: DataType.Custom =>
-          cast(d.base).flatMap(d.decode).orElse(d.decode(this)).map(v => Custom(v, d))
+        case d: DataType.UserDefined => d.decode(this).map(v => UserDefined(v, d))
         case _ => None
       }
   }
@@ -161,8 +155,7 @@ object Value {
       to match {
         case DataType.Dataset => Some(Value.Dataset(v))
         case DataType.File => Some(this)
-        case d: DataType.Custom =>
-          cast(d.base).flatMap(d.decode).orElse(d.decode(this)).map(v => Custom(v, d))
+        case d: DataType.UserDefined => d.decode(this).map(v => UserDefined(v, d))
         case _ => None
       }
   }
@@ -174,13 +167,12 @@ object Value {
       to match {
         case DataType.File => Some(File(v))
         case DataType.Dataset => Some(this)
-        case d: DataType.Custom =>
-          cast(d.base).flatMap(d.decode).orElse(d.decode(this)).map(v => Custom(v, d))
+        case d: DataType.UserDefined => d.decode(this).map(v => UserDefined(v, d))
         case _ => None
       }
   }
 
-  case class Custom(v: Any, dataType: DataType.Custom) extends Value {
+  case class UserDefined(v: Any, dataType: DataType.UserDefined) extends Value {
     override def cast(to: DataType): Option[Value] = {
       dataType.encode(v.asInstanceOf[dataType.JvmType]).cast(to)
     }

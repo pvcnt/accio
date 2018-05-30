@@ -49,14 +49,12 @@ class DataTypeSpec extends UnitSpec with BeforeAndAfterEach {
     DataType.parse("Foobar") shouldBe None
   }
 
-  object TestCustomType extends DataType.Custom {
+  object TestCustomType extends DataType.UserDefined {
     override type JvmType = String
 
     override def cls: ClassTag[this.JvmType] = classTag[Predef.String]
 
     override def name: String = "Test"
-
-    override def base: DataType = DataType.String
 
     override def encode(v: this.JvmType): Value = ???
 

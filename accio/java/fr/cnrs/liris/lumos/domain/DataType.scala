@@ -38,7 +38,7 @@ object DataType {
   // both have the same JvmType (RemoteFile), we prefer to consider by default files (as all
   // datasets are files, but not all files are datasets).
   private[this] val builtIn = Seq(Int, Long, Float, Double, String, Bool, File, Dataset)
-  private[this] val custom = mutable.Set.empty[Custom]
+  private[this] val custom = mutable.Set.empty[UserDefined]
 
   case object Int extends DataType {
     override type JvmType = scala.Int
@@ -104,15 +104,13 @@ object DataType {
     override def name = "File"
   }
 
-  trait Custom extends DataType {
-    def base: DataType
-
+  trait UserDefined extends DataType {
     def encode(v: JvmType): Value
 
     def decode(value: Value): Option[JvmType]
   }
 
-  def register(dataType: Custom): Unit = custom += dataType
+  def register(dataType: UserDefined): Unit = custom += dataType
 
   @VisibleForTesting
   private[domain] def clear(): Unit = custom.clear()
@@ -123,5 +121,7 @@ object DataType {
 
   def find(cls: ClassTag[_]): Option[DataType] = find(cls.runtimeClass)
 
-  def parse(str: String): Option[DataType] = values.find(_.name == str)
+  def parse(str: String): Option[DataType] = {
+    str.split(':').flatMap(name => values.find(_.name == name)).headOption
+  }
 }

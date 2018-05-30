@@ -27,6 +27,7 @@ import org.scalacheck.Arbitrary._
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 
 import scala.reflect.{ClassTag, classTag}
+import scala.util.Try
 
 /**
  * Unit tests for [[Value]].
@@ -38,19 +39,20 @@ class ValueSpec extends UnitSpec with GeneratorDrivenPropertyChecks {
 
   implicit private def timestampArbitrary: Arbitrary[Timestamp] = Arbitrary(genTimestamp)
 
-  object TimestampType extends DataType.Custom {
+  object TimestampType extends DataType.UserDefined {
     override type JvmType = Timestamp
 
     override def name: String = "Timestamp"
 
     override def cls: ClassTag[this.JvmType] = classTag[Timestamp]
 
-    override def base: DataType = DataType.Long
-
     override def encode(v: this.JvmType): Value = Value.Long(v.getTime)
 
-    override def decode(value: Value): Option[this.JvmType] = {
-      Some(new Timestamp(value.asInstanceOf[Value.Long].v))
+    override def decode(value: Value): Option[this.JvmType] =
+    value match {
+      case Value.Long(v) => Some(new Timestamp(v))
+      case Value.String(v) => Try(v.toLong).toOption.map(v => new Timestamp(v))
+      case _ => None
     }
   }
 
@@ -88,7 +90,7 @@ class ValueSpec extends UnitSpec with GeneratorDrivenPropertyChecks {
   }
 
   it should "encode custom types" in {
-    forAll { v: Timestamp => Value.apply(v, TimestampType) shouldBe Value.Custom(v, TimestampType) }
+    forAll { v: Timestamp => Value.apply(v, TimestampType) shouldBe Value.UserDefined(v, TimestampType) }
   }
 
   it should "cast strings into other types" in {
@@ -208,13 +210,12 @@ class ValueSpec extends UnitSpec with GeneratorDrivenPropertyChecks {
 
   it should "cast timestamps into other types" in {
     forAll { t: Timestamp =>
-      val v = Value.Custom(t, TimestampType)
-      // Numeric instability with the following casts.
-      //v.cast(DataType.Float).get.cast(TimestampType) shouldBe v
-      //v.cast(DataType.Double).get.cast(TimestampType).get shouldBe v
+      val v = Value.UserDefined(t, TimestampType)
       v.cast(DataType.String).get.cast(TimestampType).get shouldBe v
       v.cast(DataType.Long).get.cast(TimestampType).get shouldBe v
 
+      v.cast(DataType.Float) shouldBe None
+      v.cast(DataType.Double) shouldBe None
       v.cast(DataType.Int) shouldBe None
       v.cast(DataType.Bool) shouldBe None
       v.cast(DataType.Dataset) shouldBe None
