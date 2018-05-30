@@ -59,26 +59,21 @@ final class FileOpDiscovery(directory: Path, checkFrequency: Duration, filter: O
 
   private[this] val libraries = new ConcurrentHashMap[String, Library].asScala
   private[this] val closed = new AtomicBoolean(false)
-  private[this] val pool = FuturePool.interruptible(Executors.newSingleThreadExecutor())
+  private[this] val pool = FuturePool(Executors.newSingleThreadExecutor())
   private[this] val binaryExtensions = Set("jar")
-  private[this] val thread = {
-    if (checkFrequency > Duration.Zero) {
-      logger.info(s"Starting thread to check operator updates every $checkFrequency")
-      Some(pool(updateLoop()))
-    } else {
-      logger.info(s"Automatic operator updates are disabled")
-      None
-    }
-  }
-  private[this] implicit val timer: Timer = new JavaTimer
+
+  // Read libraries a first time, and then start a loop if automatic updates have been enabled.
   updateLibraries()
+  if (checkFrequency > Duration.Zero) {
+    logger.info(s"Starting thread to check changes every $checkFrequency")
+    pool(BackgroundThread())
+  }
 
   override def ops: Iterable[Operator] = libraries.values.flatMap(_.ops)
 
   override def close(deadline: Time): Future[Unit] = {
-    // Stop the background thread, if some was running.
     if (closed.compareAndSet(false, true)) {
-      thread.foreach(_.raise(new InterruptedException))
+      pool.executor.shutdownNow()
     }
     Future.Done
   }
@@ -178,21 +173,30 @@ final class FileOpDiscovery(directory: Path, checkFrequency: Duration, filter: O
 
   private case class Library(ops: Set[Operator], lastModified: Long)
 
-  private def updateLoop(): Unit = {
-    Thread.sleep(checkFrequency.inMillis)
-    while (!closed.get) {
+  private object BackgroundThread {
+    def apply(): Unit = {
+      sleep()
+      while (!closed.get) {
+        try {
+          updateLibraries()
+        } catch {
+          case NonFatal(e) =>
+            // Catch and suppress any other error in order to avoid this thread to die prematurely.
+            logger.error("Error while updating libraries", e)
+        }
+        sleep()
+      }
+    }
+
+    private def sleep(): Unit = {
       try {
-        updateLibraries()
         Thread.sleep(checkFrequency.inMillis)
       } catch {
         case _: InterruptedException =>
-          // If the thread as been interrupted, kill it properly.
+          // The thread as been interrupted, kill it properly. https://stackoverflow.com/a/4906814
           Thread.currentThread().interrupt()
-          closed.set(true)
-        case NonFatal(e) =>
-          // Catch and suppress any other error in order to avoid this thread to die prematurely.
-          logger.error("Error while updating libraries", e)
       }
     }
   }
+
 }

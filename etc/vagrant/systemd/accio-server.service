@@ -33,7 +33,7 @@ ExecStart=/usr/bin/java \
     -scheduler.force_scheduling \
     -scheduler.datadir=/var/lib/accio/scheduler \
     -executor_uri=/var/lib/accio/executor.jar \
-    -discovery.file.directory=/var/lib/accio/ops \
+    -discovery.file.path=/var/lib/accio/ops \
     -discovery.file.frequency=1.minute \
     -event.server.address=localhost:9990
 Restart=on-failure

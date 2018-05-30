@@ -12,12 +12,11 @@ This operator can manipulate the source dataset, essentially to reduce its size,
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `url` | string; required | Dataset URL |
-| `kind` | string; optional; default: csv | Kind of dataset |
+| `url` | a string; required | Dataset URI |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `data` | dataset | Source dataset |
+| `data` | a file | Source dataset |
 {: class="table table-striped"}
 

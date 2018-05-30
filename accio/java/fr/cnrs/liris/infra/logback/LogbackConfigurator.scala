@@ -23,6 +23,7 @@ import ch.qos.logback.classic.jul.LevelChangePropagator
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.classic.{Level, LoggerContext}
 import ch.qos.logback.core.ConsoleAppender
+import ch.qos.logback.core.helpers.NOPAppender
 import com.twitter.app.App
 import com.twitter.util.logging.Slf4jBridgeUtility
 import org.slf4j.{Logger, LoggerFactory}
@@ -35,7 +36,7 @@ trait LogbackConfigurator {
     Slf4jBridgeUtility.attemptSlf4jBridgeHandlerInstallation()
   }
 
-  private def initLogback(): Unit = {
+  protected final def initLogback(): Unit = {
     // We assume SLF4J is bound to logback in the current environment.
     val ctx = LoggerFactory.getILoggerFactory.asInstanceOf[LoggerContext]
     val rootLogger = ctx.getLogger(Logger.ROOT_LOGGER_NAME)
@@ -57,5 +58,15 @@ trait LogbackConfigurator {
     levelChangePropagator.start()
     ctx.addListener(levelChangePropagator)
     rootLogger.setLevel(Level.INFO)
+  }
+
+  protected final def disableLogging(): Unit = {
+    val ctx = LoggerFactory.getILoggerFactory.asInstanceOf[LoggerContext]
+    ctx.reset()
+    val rootLogger = ctx.getLogger(Logger.ROOT_LOGGER_NAME)
+    val noopAppender = new NOPAppender[ILoggingEvent]
+    noopAppender.setContext(ctx)
+    noopAppender.start()
+    rootLogger.addAppender(noopAppender)
   }
 }

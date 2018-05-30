@@ -20,17 +20,17 @@ package fr.cnrs.liris.accio.discovery
 
 import java.nio.file.Paths
 
-import com.google.inject.Provider
-import com.twitter.inject.TwitterPrivateModule
-import com.twitter.util.Duration
+import com.google.inject.{Provider, Singleton}
+import com.twitter.inject.{Injector, TwitterModule}
+import com.twitter.util.{Await, Duration}
 
 /**
  * Guice module providing an operator discovery and registry.
  */
-object DiscoveryModule extends TwitterPrivateModule {
+object DiscoveryModule extends TwitterModule {
   // File discovery.
   private[this] val fileRoot = flag[String](
-    "discovery.file.directory",
+    "discovery.file.path",
     "Directory in which to look for operator libraries. Only the files directly under " +
       "that directory will be considered (i.e., sub-directories are ignored).")
   private[this] val fileFrequency = flag[Duration](
@@ -52,14 +52,14 @@ object DiscoveryModule extends TwitterPrivateModule {
     // As there can be only one operator discovery configured, the order in which they are
     // instantiated, in case multiple flags are defined, is hard-coded.
     if (fileRoot.isDefined) {
-      bind[OpDiscovery].toProvider[FileOpRegistryProvider]
+      bind[OpDiscovery].toProvider[FileOpRegistryProvider].in[Singleton]
     } else {
       bind[OpDiscovery].toInstance(NullOpDiscovery)
     }
+  }
 
-    // This is a private Guice module, the only exposed object is the registry.
-    bind[OpRegistry]
-    expose[OpRegistry]
+  override def singletonShutdown(injector: Injector): Unit = {
+    Await.result(injector.instance[OpDiscovery].close())
   }
 
   private class FileOpRegistryProvider extends Provider[FileOpDiscovery] {

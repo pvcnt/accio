@@ -10,162 +10,121 @@ order: 51
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `level` | integer; required | S2 cells levels |
-| `width` | duration; optional | Width of time buckets |
-| `train` | dataset; required | Train dataset |
-| `test` | dataset; required | Test dataset |
+| `level` | a 32-bit integer; required | S2 cells levels |
+| `width` | a duration; optional | Width of time buckets |
+| `train` | a file; required | Train dataset |
+| `test` | a file; required | Test dataset |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `precision` | map(string, double) | Area coverage precision |
-| `recall` | map(string, double) | Area coverage recall |
-| `fscore` | map(string, double) | Area coverage F-score |
+| `metrics` | a file | Area coverage metrics |
 {: class="table table-striped"}
 
 ## CountQueriesDistortion
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `n` | integer; optional; default: 1000 | Number of queries to generate |
-| `minSize` | distance; optional; default: 500.0.meters | Minimum size of the generated queries' geographical area |
-| `maxSize` | distance; optional; default: 2000.0.meters | Maximum size of the generated queries' geographical area |
-| `minDuration` | duration; optional; default: 2.hours | Minimum duration of the generated queries' temporal window |
-| `maxDuration` | duration; optional; default: 4.hours | Maximum duration of the generated queries' temporal window |
-| `train` | dataset; required | Train dataset |
-| `test` | dataset; required | Test dataset |
+| `n` | a 32-bit integer; optional; default: 1000 | Number of queries to generate |
+| `minSize` | a distance; optional; default: 500.0.meters | Minimum size of the generated queries' geographical area |
+| `maxSize` | a distance; optional; default: 2000.0.meters | Maximum size of the generated queries' geographical area |
+| `minDuration` | a duration; optional; default: PT7200S | Minimum duration of the generated queries' temporal window |
+| `maxDuration` | a duration; optional; default: PT14400S | Maximum duration of the generated queries' temporal window |
+| `train` | a file; required | Train dataset |
+| `test` | a file; required | Test dataset |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `value` | list(double) | Count query distortion |
+| `metrics` | a file | Metrics dataset |
 {: class="table table-striped"}
 
 ## DataCompleteness
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `train` | dataset; required | Train dataset |
-| `test` | dataset; required | Test dataset |
+| `train` | a file; required | Train dataset |
+| `test` | a file; required | Test dataset |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `value` | map(string, double) | Data completeness |
+| `metrics` | a file | Data completeness |
 {: class="table table-striped"}
 
 ## HeatMapDistortion
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `train` | dataset; required | Input train dataset |
-| `test` | dataset; required | Input test dataset |
-| `distanceType` | string; optional; default: topsoe | Type of distance metrics between matrices |
-| `cellSize` | distance; required | Cell Size in meters |
-| `lower` | location; optional; default: -61.0,-131.0 | Lower point |
-| `upper` | location; optional; default: 80.0,171.0 | Upper point |
+| `train` | a file; required | Input train dataset |
+| `test` | a file; required | Input test dataset |
+| `distanceType` | a string; optional; default: topsoe | Type of distance metrics between matrices |
+| `cellSize` | a distance; required | Cell Size in meters |
+| `lowerLat` | a 64-bit float; optional; default: -61.0 | Lower point latitude |
+| `lowerLng` | a 64-bit float; optional; default: -131.0 | Lower point longitude |
+| `upperLat` | a 64-bit float; optional; default: 80.0 | Upper point latitude |
+| `upperLng` | a 64-bit float; optional; default: 171.0 | Upper point longitude |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `distortions` | map(string, double) | Distortions ("-" = missing user in train or test)  |
-| `avgDist` | double | Average distortion |
-{: class="table table-striped"}
-
-## MmcReident
-
-| Input name | Type | Description |
-|:-----------|:-----|:------------|
-| `train` | dataset; required | Input train dataset |
-| `test` | dataset; required | Input test dataset |
-| `minPts` | integer; optional; default: 10 | Clustering parameter : minimum points in a cluster |
-| `diameter` | distance; optional; default: 3000.0.meters | Clustering parameter : maximum size cluster |
-| `duration` | duration; optional; default: 3.seconds+600.milliseconds | Clustering parameter : maximum cluster duration |
-| `attack` | string; optional; default: gambs | Attack |
-{: class="table table-striped"}
-
-| Output name | Type | Description |
-|:------------|:-----|:------------|
-| `matches` | map(string, string) | Matches between users |
-| `rate` | double | Re-Ident rate |
+| `distortions` | a file | Metrics dataset |
+| `avgDist` | a 64-bit float | Average distortion |
 {: class="table table-striped"}
 
 ## PoisReident
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `train` | dataset; required | Train dataset (POIs) |
-| `test` | dataset; required | Test dataset (POIs) |
+| `train` | a file; required | Train dataset (POIs) |
+| `test` | a file; required | Test dataset (POIs) |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `matches` | map(string, string) | Matches between users from test and train datasets |
-| `rate` | double | Correct re-identifications rate |
+| `metrics` | a file | Metrics dataset |
+| `rate` | a 64-bit float | Correct re-identifications rate |
 {: class="table table-striped"}
 
 ## PoisRetrieval
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `threshold` | distance; required | Maximum distance between two POIs to consider they match |
-| `overlap` | duration; optional | Minimum overlap between two POIs to consider they match |
-| `train` | dataset; required | Train dataset (POIs) |
-| `test` | dataset; required | Test dataset (POIs) |
+| `threshold` | a distance; required | Maximum distance between two POIs to consider they match |
+| `overlap` | a duration; optional | Minimum overlap between two POIs to consider they match |
+| `train` | a file; required | Train dataset (POIs) |
+| `test` | a file; required | Test dataset (POIs) |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `precision` | map(string, double) | POIs retrieval precision |
-| `recall` | map(string, double) | POIs retrieval recall |
-| `fscore` | map(string, double) | POIs retrieval F-Score |
+| `metrics` | a file | Metrics dataset |
 {: class="table table-striped"}
 
 ## SpatialDistortion
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `interpolate` | boolean; optional; default: true | Whether to interpolate between points |
-| `train` | dataset; required | Train dataset |
-| `test` | dataset; required | Test dataset |
+| `train` | a file; required | Train dataset |
+| `test` | a file; required | Test dataset |
+| `interpolate` | a boolean; optional; default: true | Whether to interpolate between points |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `min` | map(string, double) | Spatial distortion min |
-| `max` | map(string, double) | Spatial distortion max |
-| `stddev` | map(string, double) | Spatial distortion stddev |
-| `avg` | map(string, double) | Spatial distortion avg |
-| `median` | map(string, double) | Spatial distortion median |
+| `metrics` | a file | Metrics dataset |
 {: class="table table-striped"}
 
 ## SpatioTemporalDistortion
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `train` | dataset; required | Train dataset |
-| `test` | dataset; required | Test dataset |
+| `train` | a file; required | Train dataset |
+| `test` | a file; required | Test dataset |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `min` | map(string, double) | Temporal distortion min |
-| `max` | map(string, double) | Temporal distortion max |
-| `stddev` | map(string, double) | Temporal distortion stddev |
-| `avg` | map(string, double) | Temporal distortion avg |
-| `median` | map(string, double) | Temporal distortion median |
-{: class="table table-striped"}
-
-## TransmissionDelay
-
-| Input name | Type | Description |
-|:-----------|:-----|:------------|
-| `train` | dataset; required | Train dataset |
-| `test` | dataset; required | Test dataset |
-{: class="table table-striped"}
-
-| Output name | Type | Description |
-|:------------|:-----|:------------|
-| `value` | map(string, long) | Transmission delay |
+| `metrics` | a file | Metrics dataset |
 {: class="table table-striped"}
 

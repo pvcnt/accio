@@ -56,6 +56,8 @@ class DataTypeSpec extends UnitSpec with BeforeAndAfterEach {
 
     override def name: String = "Test"
 
+    override def help = "a test type"
+
     override def encode(v: this.JvmType): Value = ???
 
     override def decode(value: Value): Option[this.JvmType] = ???

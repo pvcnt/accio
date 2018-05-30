@@ -79,9 +79,9 @@ final class MarkdownDocgen @Inject()(registry: OpRegistry) {
       out.println("| Input name | Type | Description |")
       out.println("|:-----------|:-----|:------------|")
       opDef.inputs.foreach { argDef =>
-        out.print(s"| `${argDef.name}` | ${argDef.dataType}")
+        out.print(s"| `${argDef.name}` | ${argDef.dataType.help}")
         if (argDef.defaultValue.isDefined) {
-          out.print(s"; optional; default: ${argDef.defaultValue.get}")
+          out.print(s"; optional; default: ${argDef.defaultValue.get.v}")
         } else if (argDef.optional) {
           out.print("; optional")
         } else {
@@ -96,7 +96,7 @@ final class MarkdownDocgen @Inject()(registry: OpRegistry) {
       out.println("| Output name | Type | Description |")
       out.println("|:------------|:-----|:------------|")
       opDef.outputs.foreach { argDef =>
-        out.println(s"| `${argDef.name}` | ${argDef.dataType} | ${argDef.help.getOrElse("-")} |")
+        out.println(s"| `${argDef.name}` | ${argDef.dataType.help} | ${argDef.help.getOrElse("-")} |")
       }
       out.println("{: class=\"table table-striped\"}\n")
     }

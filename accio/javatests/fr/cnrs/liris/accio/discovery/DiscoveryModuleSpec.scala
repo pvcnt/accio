@@ -37,8 +37,8 @@ class DiscoveryModuleSpec extends UnitSpec with CreateTwitterInjector {
   }
 
   it should "provide a file operator discovery" in {
-    val injector = createInjector("-discovery.file.directory", "/dev/null")
+    val injector = createInjector("-discovery.file.path", "/dev/null")
     injector.instance[OpRegistry] shouldBe an[OpRegistry]
-    DiscoveryModule.args should contain theSameElementsAs Seq("-discovery.file.directory", "/dev/null")
+    DiscoveryModule.args should contain theSameElementsAs Seq("-discovery.file.path", "/dev/null")
   }
 }

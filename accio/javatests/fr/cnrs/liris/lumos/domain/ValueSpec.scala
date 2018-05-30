@@ -42,7 +42,9 @@ class ValueSpec extends UnitSpec with GeneratorDrivenPropertyChecks {
   object TimestampType extends DataType.UserDefined {
     override type JvmType = Timestamp
 
-    override def name: String = "Timestamp"
+    override def name = "Timestamp"
+
+    override def help = "a timestamp"
 
     override def cls: ClassTag[this.JvmType] = classTag[Timestamp]
 

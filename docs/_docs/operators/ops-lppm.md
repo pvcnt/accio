@@ -12,26 +12,26 @@ Generate locations satisfying geo-indistinguishability properties. The method us
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `epsilon` | double; optional; default: 0.001 | Privacy budget |
-| `data` | dataset; required | Input dataset |
+| `epsilon` | a 64-bit float; optional; default: 0.001 | Privacy budget |
+| `data` | a file; required | Input dataset |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `data` | dataset | Output dataset |
+| `data` | a file | Transformed dataset |
 {: class="table table-striped"}
 
 ## Promesse
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `epsilon` | distance; required | Distance to enforce between two consecutive points |
-| `data` | dataset; required | Input dataset |
+| `alpha` | a distance; required | Distance to enforce between two consecutive points |
+| `data` | a file; required | Input dataset |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `data` | dataset | Output dataset |
+| `data` | a file | Transformed dataset |
 {: class="table table-striped"}
 
 ## Wait4Me
@@ -40,29 +40,29 @@ Wrapper around the implementation of the Wait4Me algorithm provided by their aut
 
 | Input name | Type | Description |
 |:-----------|:-----|:------------|
-| `data` | dataset; required | Input dataset |
-| `k` | integer; required | Anonymity level |
-| `delta` | distance; required | Uncertainty |
-| `radiusMax` | distance; optional | Initial maximum radius used in clustering |
-| `trashMax` | double; optional; default: 0.1 | Global maximum trash size, in percentage of the dataset size |
-| `chunk` | boolean; optional; default: false | Whether to chunk the input dataset |
+| `data` | a file; required | Input dataset |
+| `k` | a 32-bit integer; required | Anonymity level |
+| `delta` | a distance; required | Uncertainty |
+| `radiusMax` | a distance; optional | Initial maximum radius used in clustering |
+| `trashMax` | a 64-bit float; optional; default: 0.1 | Global maximum trash size, in percentage of the dataset size |
+| `chunk` | a boolean; optional; default: false | Whether to chunk the input dataset |
 {: class="table table-striped"}
 
 | Output name | Type | Description |
 |:------------|:-----|:------------|
-| `data` | dataset | Output dataset |
-| `trashSize` | integer | Trash_size |
-| `trashedPoints` | long | Number of trashed points |
-| `discernibility` | long | Discernibility metric |
-| `totalXyTranslations` | distance | Total XY translations |
-| `totalTimeTranslations` | duration | Total time translations |
-| `xyTranslationsCount` | integer | XY translation count |
-| `timeTranslationsCount` | integer | Time translation count |
-| `createdPoints` | integer | Number of created points |
-| `deletedPoints` | integer | Number of deleted points |
-| `meanSpatialTraceTranslation` | distance | Mean spatial translation (per trace) |
-| `meanTemporalTraceTranslation` | duration | Mean temporal translation (per trace) |
-| `meanSpatialPointTranslation` | distance | Mean spatial translation (per point) |
-| `meanTemporalPointTranslation` | duration | Mean temporal translation (per point) |
+| `data` | a file | Output dataset |
+| `trashSize` | a 32-bit integer | Trash_size |
+| `trashedPoints` | a 64-bit integer | Number of trashed points |
+| `discernibility` | a 64-bit integer | Discernibility metric |
+| `totalXyTranslations` | a distance | Total XY translations |
+| `totalTimeTranslations` | a duration | Total time translations |
+| `xyTranslationsCount` | a 32-bit integer | XY translation count |
+| `timeTranslationsCount` | a 32-bit integer | Time translation count |
+| `createdPoints` | a 32-bit integer | Number of created points |
+| `deletedPoints` | a 32-bit integer | Number of deleted points |
+| `meanSpatialTraceTranslation` | a distance | Mean spatial translation (per trace) |
+| `meanTemporalTraceTranslation` | a duration | Mean temporal translation (per trace) |
+| `meanSpatialPointTranslation` | a distance | Mean spatial translation (per point) |
+| `meanTemporalPointTranslation` | a duration | Mean temporal translation (per point) |
 {: class="table table-striped"}
 

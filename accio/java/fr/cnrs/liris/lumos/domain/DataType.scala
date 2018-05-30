@@ -30,6 +30,8 @@ sealed trait DataType {
 
   def name: String
 
+  def help: String
+
   def cls: ClassTag[JvmType]
 
   override def toString: String = name
@@ -48,6 +50,8 @@ object DataType {
     override def cls: ClassTag[JvmType] = classTag[scala.Int]
 
     override def name = "Int"
+
+    override def help = "a 32-bit integer"
   }
 
   case object Long extends DataType {
@@ -56,6 +60,8 @@ object DataType {
     override def cls: ClassTag[JvmType] = classTag[scala.Long]
 
     override def name = "Long"
+
+    override def help = "a 64-bit integer"
   }
 
   case object Float extends DataType {
@@ -64,6 +70,8 @@ object DataType {
     override def cls: ClassTag[JvmType] = classTag[scala.Float]
 
     override def name = "Float"
+
+    override def help = "a 32-bit float"
   }
 
   case object Double extends DataType {
@@ -72,6 +80,8 @@ object DataType {
     override def cls: ClassTag[JvmType] = classTag[scala.Double]
 
     override def name = "Double"
+
+    override def help = "a 64-bit float"
   }
 
   case object String extends DataType {
@@ -80,6 +90,8 @@ object DataType {
     override def cls: ClassTag[JvmType] = classTag[Predef.String]
 
     override def name = "String"
+
+    override def help = "a string"
   }
 
   case object Bool extends DataType {
@@ -88,6 +100,8 @@ object DataType {
     override def cls: ClassTag[JvmType] = classTag[scala.Boolean]
 
     override def name = "Bool"
+
+    override def help = "a boolean"
   }
 
   case object Dataset extends DataType {
@@ -96,6 +110,8 @@ object DataType {
     override def cls: ClassTag[JvmType] = classTag[RemoteFile]
 
     override def name = "Dataset"
+
+    override def help = "a dataset"
   }
 
   case object File extends DataType {
@@ -104,6 +120,8 @@ object DataType {
     override def cls: ClassTag[JvmType] = classTag[RemoteFile]
 
     override def name = "File"
+
+    override def help = "a file"
   }
 
   trait UserDefined extends DataType {

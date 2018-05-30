@@ -36,6 +36,8 @@ object DataTypes {
 
     override def name: String = "Distance"
 
+    override def help = "a distance"
+
     override def encode(v: this.JvmType): Value = Value.Double(v.meters)
 
     override def decode(value: Value): Option[this.JvmType] =
@@ -56,6 +58,8 @@ object DataTypes {
 
     override def name: String = "Timestamp"
 
+    override def help = "an instant"
+
     override def encode(v: this.JvmType): Value = Value.Long(v.getMillis)
 
     override def decode(value: Value): Option[this.JvmType] =
@@ -72,6 +76,8 @@ object DataTypes {
     override type JvmType = JodaDuration
 
     override def name: String = "Duration"
+
+    override def help = "a duration"
 
     override def encode(v: this.JvmType): Value = Value.Long(v.getMillis)
 

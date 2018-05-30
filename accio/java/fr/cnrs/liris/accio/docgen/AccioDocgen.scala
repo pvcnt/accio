@@ -23,6 +23,7 @@ import java.nio.file.Paths
 import com.twitter.inject.app.App
 import com.twitter.util.Stopwatch
 import fr.cnrs.liris.accio.discovery.DiscoveryModule
+import fr.cnrs.liris.accio.domain.DataTypes
 import fr.cnrs.liris.infra.logback.LogbackConfigurator
 
 object AccioDocgenMain extends AccioDocgen
@@ -40,6 +41,7 @@ class AccioDocgen extends App with LogbackConfigurator {
 
   override def run(): Unit = {
     val elapsed = Stopwatch.start()
+    DataTypes.register()
     val docgen = injector.instance[MarkdownDocgen]
     docgen.generate(DocgenOpts(Paths.get(outFlag()), tocFlag()))
     println(s"Done in ${elapsed().inSeconds} seconds.")
