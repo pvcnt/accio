@@ -34,7 +34,7 @@ env:
   - MYSQL_HOST=127.0.0.1
   - MYSQL_USER=root
   matrix:
-  - BAZEL_VERSION=0.11.0
+  - BAZEL_VERSION=0.13.1
 
 before_install:
 # Add support for running 32-bits binaries, required by the Wait4Me operator.
