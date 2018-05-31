@@ -18,7 +18,7 @@
 
 // Code has been translated from Bazel, subject to the Apache License, Version 2.0.
 // https://github.com/bazelbuild/bazel/blob/master/src/main/java/com/google/devtools/build/lib/util/io/RecordingOutErr.java
-package fr.cnrs.liris.infra.cli
+package fr.cnrs.liris.infra.cli.io
 
 import java.io.{ByteArrayOutputStream, UnsupportedEncodingException}
 

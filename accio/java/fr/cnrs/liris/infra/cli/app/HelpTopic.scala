@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.infra.cli
+package fr.cnrs.liris.infra.cli.app
 
 sealed trait HelpTopic {
   def help: String

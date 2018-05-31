@@ -24,7 +24,7 @@ import com.twitter.util.Future
 import fr.cnrs.liris.accio.domain.thrift.ThriftAdapter
 import fr.cnrs.liris.accio.dsl.json.JsonWorkflowParser
 import fr.cnrs.liris.accio.server.ValidateWorkflowRequest
-import fr.cnrs.liris.infra.cli.{Environment, ExitCode, Reporter}
+import fr.cnrs.liris.infra.cli.app.{Environment, ExitCode, Reporter}
 import fr.cnrs.liris.infra.thriftserver.FieldViolation
 import fr.cnrs.liris.util.FileUtils
 

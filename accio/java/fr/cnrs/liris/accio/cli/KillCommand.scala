@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.cli
 
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.server.KillWorkflowRequest
-import fr.cnrs.liris.infra.cli.{Environment, ExitCode}
+import fr.cnrs.liris.infra.cli.app.{Environment, ExitCode}
 
 final class KillCommand extends AccioCommand {
   override def name = "kill"

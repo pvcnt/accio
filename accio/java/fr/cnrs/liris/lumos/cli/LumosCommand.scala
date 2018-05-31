@@ -21,7 +21,7 @@ package fr.cnrs.liris.lumos.cli
 import com.twitter.finagle.Thrift
 import com.twitter.finagle.thrift.{ClientId, RichClientParam}
 import com.twitter.util.Duration
-import fr.cnrs.liris.infra.cli.Command
+import fr.cnrs.liris.infra.cli.app.Command
 import fr.cnrs.liris.lumos.server.LumosService
 
 trait LumosCommand extends Command {

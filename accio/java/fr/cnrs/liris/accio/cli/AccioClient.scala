@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.accio.cli
 
-import fr.cnrs.liris.infra.cli.Application
+import fr.cnrs.liris.infra.cli.app.Application
 
 object AccioClientMain extends AccioClient
 

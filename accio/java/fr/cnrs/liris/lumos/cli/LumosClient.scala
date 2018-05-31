@@ -18,7 +18,7 @@
 
 package fr.cnrs.liris.lumos.cli
 
-import fr.cnrs.liris.infra.cli.Application
+import fr.cnrs.liris.infra.cli.app.Application
 
 object LumosClientMain extends LumosClient
 

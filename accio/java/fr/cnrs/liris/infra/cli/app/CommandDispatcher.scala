@@ -16,13 +16,14 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.infra.cli
+package fr.cnrs.liris.infra.cli.app
 
 import java.io.PrintStream
 
 import com.google.common.io.Flushables
 import com.twitter.app.Flags
 import com.twitter.util._
+import fr.cnrs.liris.infra.cli.io.OutErr
 
 import scala.util.control.NonFatal
 

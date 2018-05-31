@@ -16,31 +16,16 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.infra.cli
+package fr.cnrs.liris.infra.cli.app
 
-/**
- * A command line exit code.
- *
- * @param code Numerical code.
- * @param name Machine name.
- */
-case class ExitCode(code: Int, name: String)
+import fr.cnrs.liris.infra.cli.io.OutErr
 
-object ExitCode {
-  val Success = ExitCode(0, "SUCCESS")
-  val CommandLineError = ExitCode(1, "COMMAND_LINE_ERROR")
-  val DefinitionError = ExitCode(2, "DEFINITION_ERROR")
-  val InternalError = ExitCode(3, "INTERNAL_ERROR")
+trait Reporter extends ExceptionListener {
+  def outErr: OutErr
 
-  def select(codes: Seq[ExitCode]): ExitCode = {
-    if (codes.contains(CommandLineError)) {
-      CommandLineError
-    } else if (codes.contains(DefinitionError)) {
-      DefinitionError
-    } else if (codes.contains(InternalError)) {
-      InternalError
-    } else {
-      Success
-    }
-  }
+  def warn(message: String): Unit
+
+  def error(message: String): Unit
+
+  def info(message: String): Unit
 }

@@ -15,9 +15,10 @@
 # along with Accio.  If not, see <http://www.gnu.org/licenses/>.
 
 scala_library(
-  name = "cli",
+  name = "app",
   srcs = glob(["*.scala"]),
   deps = [
+    "//accio/java/fr/cnrs/liris/infra/cli/io",
     "//3rdparty/jvm/com/twitter:util_core",
     "//3rdparty/jvm/com/twitter:inject_app",
     "//3rdparty/jvm/com/google/guava",

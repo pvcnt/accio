@@ -22,7 +22,7 @@ import com.twitter.finagle.Thrift
 import com.twitter.finagle.thrift.{ClientId, RichClientParam}
 import com.twitter.util.Duration
 import fr.cnrs.liris.accio.server.AccioService
-import fr.cnrs.liris.infra.cli.Command
+import fr.cnrs.liris.infra.cli.app.Command
 
 trait AccioCommand extends Command {
   private[this] val serverFlag = flag[String]("server", "Server address")

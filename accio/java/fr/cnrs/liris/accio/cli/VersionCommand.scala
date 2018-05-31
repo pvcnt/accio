@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.cli
 
 import com.twitter.util.Future
 import fr.cnrs.liris.accio.version.Version
-import fr.cnrs.liris.infra.cli.{Environment, ExitCode}
+import fr.cnrs.liris.infra.cli.app.{Environment, ExitCode}
 
 final class VersionCommand extends AccioCommand {
   private[this] val onlyClient = flag("client", false, "Show only version of the client (no server needed)")

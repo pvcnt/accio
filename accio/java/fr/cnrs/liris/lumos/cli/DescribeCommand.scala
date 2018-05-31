@@ -19,7 +19,7 @@
 package fr.cnrs.liris.lumos.cli
 
 import com.twitter.util.Future
-import fr.cnrs.liris.infra.cli.{Environment, ExitCode}
+import fr.cnrs.liris.infra.cli.app.{Environment, ExitCode}
 import fr.cnrs.liris.lumos.domain.thrift.ThriftAdapter
 import fr.cnrs.liris.lumos.server.{GetJobRequest, GetJobResponse}
 import fr.cnrs.liris.util.StringUtils.padTo

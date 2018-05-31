@@ -16,11 +16,12 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.infra.cli
+package fr.cnrs.liris.infra.cli.app
 
 import java.io.IOException
 
 import com.twitter.util.logging.Logging
+import fr.cnrs.liris.infra.cli.io.{AnsiTerminal, OutErr}
 import org.joda.time.format.DateTimeFormat
 
 final class AnsiTerminalReporter(val outErr: OutErr, opts: AnsiTerminalReporter.Options)

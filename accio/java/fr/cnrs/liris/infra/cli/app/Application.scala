@@ -16,12 +16,13 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.infra.cli
+package fr.cnrs.liris.infra.cli.app
 
 import ch.qos.logback.classic.LoggerContext
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.helpers.NOPAppender
 import com.twitter.util.logging.Slf4jBridgeUtility
+import fr.cnrs.liris.infra.cli.io.OutErr
 import org.slf4j.{Logger, LoggerFactory}
 
 trait Application {

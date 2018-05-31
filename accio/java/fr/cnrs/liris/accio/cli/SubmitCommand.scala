@@ -23,7 +23,7 @@ import fr.cnrs.liris.accio.domain.Workflow
 import fr.cnrs.liris.accio.domain.thrift.ThriftAdapter
 import fr.cnrs.liris.accio.dsl.json.JsonWorkflowParser
 import fr.cnrs.liris.accio.server.SubmitWorkflowRequest
-import fr.cnrs.liris.infra.cli.{Environment, ExitCode, Reporter}
+import fr.cnrs.liris.infra.cli.app.{Environment, ExitCode, Reporter}
 import fr.cnrs.liris.lumos.domain.{AttrValue, Value}
 import fr.cnrs.liris.util.FileUtils
 

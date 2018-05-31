@@ -19,7 +19,7 @@
 // Code has been translated from Bazel, subject to the Apache License, Version 2.0.
 // https://github.com/bazelbuild/bazel/blob/master/src/main/java/com/google/devtools/build/lib/util/io/LineFlushingOutputStream.java
 
-package fr.cnrs.liris.infra.cli
+package fr.cnrs.liris.infra.cli.io
 
 import java.io.OutputStream
 
@@ -87,6 +87,6 @@ abstract class LineFlushingOutputStream extends OutputStream {
 }
 
 object LineFlushingOutputStream {
-  private val BufferLength = 8192
-  private[cli] val NewLine = '\n'.toByte
+  private[io] val BufferLength = 8192
+  private[io] val NewLine = '\n'.toByte
 }

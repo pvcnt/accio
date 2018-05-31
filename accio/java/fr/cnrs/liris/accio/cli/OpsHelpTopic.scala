@@ -18,14 +18,12 @@
 
 package fr.cnrs.liris.accio.cli
 
-import fr.cnrs.liris.infra.cli.{Environment, HelpTopic}
+import fr.cnrs.liris.infra.cli.app.{Environment, HelpTopic}
 
 final class OpsHelpTopic extends HelpTopic.Named {
   override def name: String = "ops"
 
   override def help: String = "Displays the list of available operators."
 
-  override def print(name: String, env: Environment): Unit = {
-
-  }
+  override def print(name: String, env: Environment): Unit = {}
 }
