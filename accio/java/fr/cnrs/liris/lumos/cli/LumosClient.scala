@@ -23,9 +23,7 @@ import fr.cnrs.liris.infra.cli.app.Application
 object LumosClientMain extends LumosClient
 
 class LumosClient extends Application {
-  override def name = "lumos"
-
-  override def productName = "Lumos"
+  override def name = "Lumos"
 
   override def commands = Set(new VersionCommand, new GetCommand, new DescribeCommand)
 }

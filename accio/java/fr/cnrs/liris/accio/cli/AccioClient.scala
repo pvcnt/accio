@@ -26,9 +26,7 @@ object AccioClientMain extends AccioClient
  * Entry point of the Accio command line application.
  */
 class AccioClient extends Application {
-  override def name = "accio"
-
-  override def productName = "Accio"
+  override def name = "Accio"
 
   override def commands = Set(
     new VersionCommand,

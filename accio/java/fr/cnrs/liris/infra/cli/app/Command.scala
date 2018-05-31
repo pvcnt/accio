@@ -19,6 +19,8 @@
 package fr.cnrs.liris.infra.cli.app
 
 import com.twitter.app.Flags
+import com.twitter.finagle.thrift.{ClientId, ThriftClientRequest}
+import com.twitter.finagle.{Service, Thrift}
 import com.twitter.util.Future
 
 /**
@@ -29,6 +31,8 @@ trait Command {
   private[this] val useColor = flag("color", true, "Use terminal controls to colorize output.")
   private[this] val quiet = flag("quiet", false, "Suppress all output, even for errors. Use exit code to determine the outcome.")
   private[this] val showTimestamp = flag("show_timestamps", false, "Include timestamps in messages")
+
+  private[this] val clusterFlag = flag[String]("cluster", "Name of the cluster to use")
 
   /**
    * Name of this command, as the user would type it.
@@ -52,6 +56,15 @@ trait Command {
   def hidden: Boolean = false
 
   def execute(residue: Seq[String], env: Environment): Future[ExitCode]
+
+  final def createThriftClient(env: Environment): Service[ThriftClientRequest, Array[Byte]] = {
+    val cluster = clusterFlag.get.map(env.config.apply).getOrElse(env.config.defaultCluster)
+    var builder = Thrift.client
+      .withSessionQualifier.noFailFast
+      .withSessionQualifier.noFailureAccrual
+    cluster.credentials.foreach(credentials => builder = builder.withClientId(ClientId(credentials)))
+    builder.newService(cluster.server)
+  }
 
   final def terminalOptions: AnsiTerminalReporter.Options = {
     AnsiTerminalReporter.Options(

@@ -16,7 +16,7 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnrs.liris.accio.cli.config
+package fr.cnrs.liris.infra.cli.app
 
 /**
  * Configuration specifying how to contact multiple Accio clusters.
@@ -24,16 +24,7 @@ package fr.cnrs.liris.accio.cli.config
  * @param clusters Configuration of individual clusters.
  * @throws IllegalArgumentException If clusters configuration is invalid.
  */
-case class ClusterConfig(clusters: Seq[Cluster]) {
-  {
-    // Validate that cluster definitions are valid.
-    require(clusters.nonEmpty, "You must define at least one cluster")
-    val duplicateClusterNames = clusters.groupBy(_.name).filter(_._2.size > 1).keySet
-    if (duplicateClusterNames.nonEmpty) {
-      throw new IllegalArgumentException(s"Duplicate cluster names: ${duplicateClusterNames.mkString(", ")}")
-    }
-  }
-
+case class ClusterConfig(clusters: Seq[ClusterConfig.Cluster]) {
   /**
    * Return the configuration of a given cluster.
    *
@@ -41,7 +32,7 @@ case class ClusterConfig(clusters: Seq[Cluster]) {
    * @throws IllegalArgumentException If no such client exists.
    */
   @throws[IllegalArgumentException]
-  def apply(clusterName: String): Cluster = {
+  def apply(clusterName: String): ClusterConfig.Cluster = {
     clusters.find(_.name == clusterName) match {
       case None => throw new IllegalArgumentException(s"No such cluster: $clusterName")
       case Some(clusterConfig) => clusterConfig
@@ -51,7 +42,7 @@ case class ClusterConfig(clusters: Seq[Cluster]) {
   /**
    * Return the configuration of the default cluster.
    */
-  def defaultCluster: Cluster = clusters.head
+  def defaultCluster: ClusterConfig.Cluster = clusters.head
 
   /**
    * Merge two cluster configurations into a new one. Entries in the other configuration for a cluster that already
@@ -72,5 +63,18 @@ case class ClusterConfig(clusters: Seq[Cluster]) {
 }
 
 object ClusterConfig {
-  def default = ClusterConfig(Seq(Cluster("default", "localhost:9999")))
+  /**
+   * Return the configuration for a local cluster listening on the default port.
+   */
+  def local = ClusterConfig(Seq(Cluster("default", "localhost:9999")))
+
+  /**
+   * Definition of a single cluster.
+   *
+   * @param name        Name of the cluster (used by the client to reference it).
+   * @param server      Address to the agent server (specified as a Finagle name).
+   * @param credentials Credentials used to authenticate against the server.
+   */
+  case class Cluster(name: String, server: String, credentials: Option[String] = None)
+
 }

@@ -33,5 +33,5 @@ final class JsonWorkflowParser(mapper: FinatraObjectMapper) extends WorkflowPars
 }
 
 object JsonWorkflowParser {
-  val default: JsonWorkflowParser = new JsonWorkflowParser(ObjectMapperFactory())
+  lazy val default: JsonWorkflowParser = new JsonWorkflowParser(ObjectMapperFactory())
 }

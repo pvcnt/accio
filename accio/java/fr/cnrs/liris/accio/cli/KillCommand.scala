@@ -34,13 +34,12 @@ final class KillCommand extends AccioCommand {
       env.reporter.error("You must provide at least one job name.")
       return Future.value(ExitCode.CommandLineError)
     }
+    val client = createAccioClient(env)
     val fs = residue.map { name =>
-      client
-        .killWorkflow(KillWorkflowRequest(name))
-        .map { _ =>
-          env.reporter.info(s"Killed job $name")
-          ExitCode.Success
-        }
+      client.killWorkflow(KillWorkflowRequest(name)).map { _ =>
+        env.reporter.info(s"Killed job $name")
+        ExitCode.Success
+      }
     }
     Future.collect(fs).map(ExitCode.select)
   }

@@ -18,6 +18,8 @@
 
 package fr.cnrs.liris.infra.cli.app
 
+import java.util.Locale
+
 import ch.qos.logback.classic.LoggerContext
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.helpers.NOPAppender
@@ -28,7 +30,7 @@ import org.slf4j.{Logger, LoggerFactory}
 trait Application {
   def name: String
 
-  def productName: String
+  def productName: String = name.toLowerCase(Locale.ROOT)
 
   def commands: Set[Command]
 

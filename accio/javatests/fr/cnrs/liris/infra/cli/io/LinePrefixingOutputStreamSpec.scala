@@ -28,7 +28,7 @@ import fr.cnrs.liris.testing.UnitSpec
 import org.scalatest.BeforeAndAfterEach
 
 /**
- * Unit tests for [[LinePrefixingOutputStream]].
+ * Unit tests for [[LinePrefixingOutputStream]] (and [[LineFlushingOutputStream]]).
  */
 class LinePrefixingOutputStreamSpec extends UnitSpec with BeforeAndAfterEach {
   behavior of "LinePrefixingOutputStream"

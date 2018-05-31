@@ -34,6 +34,7 @@ final class VersionCommand extends LumosCommand {
       env.reporter.outErr.printOutLn(s"Client version: ${Version.Current}")
       Future.value(ExitCode.Success)
     } else {
+      val client = createLumosClient(env)
       client.getInfo().map { resp =>
         env.reporter.outErr.printOutLn(s"Server version: ${resp.version}")
         env.reporter.outErr.printOutLn(s"Client version: ${Version.Current}")

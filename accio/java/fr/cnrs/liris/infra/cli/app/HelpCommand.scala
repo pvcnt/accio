@@ -51,7 +51,7 @@ final class HelpCommand extends Command {
   }
 
   private def printHelpSummary(env: Environment): Unit = {
-    env.reporter.outErr.printOutLn(s"Usage: ${env.application.name} <command> <options>...")
+    env.reporter.outErr.printOutLn(s"Usage: ${env.application.productName} <command> <options>...")
     env.reporter.outErr.printOutLn()
     env.reporter.outErr.printOutLn("Available commands:")
     val commands = env.application.commands ++ env.application.builtinCommands
@@ -62,11 +62,11 @@ final class HelpCommand extends Command {
     }
     env.reporter.outErr.printOutLn()
     env.reporter.outErr.printOutLn("Getting more help:")
-    env.reporter.outErr.printOutLn(s"  ${env.application.name} help <command> Print help and options for <command>.")
+    env.reporter.outErr.printOutLn(s"  ${env.application.productName} help <command> Print help and options for <command>.")
   }
 
   private def printCommand(command: Command, env: Environment): Unit = {
-    env.reporter.outErr.printOutLn(s"Usage: ${env.application.name} ${command.name} <options> ${if (command.allowResidue) "<arguments>" else ""}")
+    env.reporter.outErr.printOutLn(s"Usage: ${env.application.productName} ${command.name} <options> ${if (command.allowResidue) "<arguments>" else ""}")
     env.reporter.outErr.printOutLn()
     if (command.help.nonEmpty) {
       env.reporter.outErr.printOutLn(command.help)

@@ -24,6 +24,7 @@ import fr.cnrs.liris.accio.domain.thrift.ThriftAdapter
 import fr.cnrs.liris.accio.dsl.json.JsonWorkflowParser
 import fr.cnrs.liris.accio.server.SubmitWorkflowRequest
 import fr.cnrs.liris.infra.cli.app.{Environment, ExitCode, Reporter}
+import fr.cnrs.liris.infra.thriftserver.{ErrorCode, ServerError}
 import fr.cnrs.liris.lumos.domain.{AttrValue, Value}
 import fr.cnrs.liris.util.FileUtils
 
@@ -46,24 +47,25 @@ final class SubmitCommand extends AccioCommand {
       env.reporter.error("You must provide the path to a job file.")
       return Future.value(ExitCode.CommandLineError)
     }
-    parseAndSubmit(residue.head, residue.tail, env.reporter)
+    parseAndSubmit(residue.head, residue.tail, env)
   }
 
-  private def parseAndSubmit(uri: String, residue: Seq[String], reporter: Reporter): Future[ExitCode] = {
+  private def parseAndSubmit(uri: String, residue: Seq[String], env: Environment): Future[ExitCode] = {
     val file = FileUtils.expandPath(uri).toFile
     if (!file.canRead) {
-      reporter.error(s"Cannot read workflow definition file: ${file.getAbsolutePath}")
+      env.reporter.error(s"Cannot read workflow definition file: ${file.getAbsolutePath}")
       return Future.value(ExitCode.DefinitionError)
     }
+    val client = createAccioClient(env)
     JsonWorkflowParser.default
       .parse(file)
       .map(merge(_, residue))
       .flatMap(job => client.submitWorkflow(SubmitWorkflowRequest(ThriftAdapter.toThrift(job))))
       .map { resp =>
         resp.warnings.foreach { violation =>
-          reporter.warn(s"${violation.message} (at ${violation.field})")
+          env.reporter.warn(s"${violation.message} (at ${violation.field})")
         }
-        reporter.info(s"Submitted workflow ${resp.name}")
+        env.reporter.info(s"Submitted workflow ${resp.name}")
         ExitCode.Success
       }
   }

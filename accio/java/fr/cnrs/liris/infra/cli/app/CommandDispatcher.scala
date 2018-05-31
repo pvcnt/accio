@@ -24,6 +24,7 @@ import com.google.common.io.Flushables
 import com.twitter.app.Flags
 import com.twitter.util._
 import fr.cnrs.liris.infra.cli.io.OutErr
+import fr.cnrs.liris.infra.thriftserver.{ErrorCode, ServerError}
 
 import scala.util.control.NonFatal
 
@@ -115,32 +116,21 @@ final class CommandDispatcher(application: Application) {
   }
 
   private def tryExec(command: Command, residue: Seq[String], env: Environment): ExitCode = {
-    /*val f = command.execute(residue, env).handle {
-      case e: ServerError =>
-        e.message.foreach { message =>
-          env.reporter.handle(Event.error(message))
-        }
-        e.details.foreach { details =>
-          details.warnings.foreach { violation =>
-            env.reporter.handle(Event(EventKind.Warning, s"${violation.message} (at ${violation.field})"))
-          }
-          details.errors.foreach { violation =>
-            env.reporter.handle(Event(EventKind.Error, s"${violation.message} (at ${violation.field})"))
-          }
-        }
-        e.code match {
-          case ErrorCode.InvalidArgument => ExitCode.DefinitionError
-          case ErrorCode.NotFound => ExitCode.CommandLineError
-          case ErrorCode.FailedPrecondition => ExitCode.CommandLineError
-          case _ => ExitCode.InternalError
-        }
-      case NonFatal(e) =>
-        env.reporter.handle(Event.warn(s"Server error: ${e.getMessage}"))
-        ExitCode.InternalError
-    }*/
     val f = command.execute(residue, env).handle {
+      case e: ServerError if e.code == ErrorCode.InvalidArgument =>
+        env.reporter.error(e.message.getOrElse("The request has some errors."))
+        e.errors.toSeq.flatten.foreach { error =>
+          env.reporter.error(s"${error.message} at ${error.field}")
+        }
+        ExitCode.DefinitionError
+      case e: ServerError if e.code == ErrorCode.NotFound =>
+        env.reporter.error(e.message.getOrElse("The resource was not found."))
+        ExitCode.CommandLineError
+      case e: ServerError if e.code == ErrorCode.Unauthenticated =>
+        env.reporter.error(e.message.getOrElse("The provided credentials are invalid."))
+        ExitCode.CommandLineError
       case NonFatal(e) =>
-        env.reporter.warn(s"Internal error: ${e.getMessage}")
+        env.reporter.error(e.getMessage)
         ExitCode.InternalError
     }
     Await.result(f)

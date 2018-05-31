@@ -41,6 +41,10 @@ function prepare_extras() {
   ln -sf /home/vagrant/accio/etc/vagrant/lumosbuild.sh /usr/local/bin/lumosbuild
   chown vagrant: /usr/local/bin/acciobuild && chmod +x /usr/local/bin/acciobuild
   chown vagrant: /usr/local/bin/lumosbuild && chmod +x /usr/local/bin/lumosbuild
+
+  # Copy default clusters.json files.
+  mkdir -p /etc/accio && cp /home/vagrant/accio/etc/vagrant/accio/clusters.json /etc/accio
+  mkdir -p /etc/lumos && cp /home/vagrant/accio/etc/vagrant/lumos/clusters.json /etc/lumos
 }
 
 function prepare_sources {

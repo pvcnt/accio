@@ -19,6 +19,9 @@ scala_library(
   srcs = glob(["*.scala"]),
   deps = [
     "//accio/java/fr/cnrs/liris/infra/cli/io",
+    "//accio/java/fr/cnrs/liris/util",
+    "//accio/thrift/fr/cnrs/liris/infra/thriftserver",
+    "//3rdparty/jvm/com/twitter:finatra_jackson",
     "//3rdparty/jvm/com/twitter:util_core",
     "//3rdparty/jvm/com/twitter:inject_app",
     "//3rdparty/jvm/com/google/guava",
@@ -26,6 +29,7 @@ scala_library(
     "//3rdparty/jvm/ch/qos/logback:logback_classic",
     "//3rdparty/jvm/com/twitter:util_slf4j_jul_bridge",
     "//3rdparty/jvm/com/twitter:util_slf4j_api",
+    "//3rdparty/jvm/com/twitter:finatra_thrift",
   ],
   visibility = ["//visibility:public"],
 )

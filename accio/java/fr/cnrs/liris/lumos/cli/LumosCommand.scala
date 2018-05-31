@@ -18,24 +18,13 @@
 
 package fr.cnrs.liris.lumos.cli
 
-import com.twitter.finagle.Thrift
-import com.twitter.finagle.thrift.{ClientId, RichClientParam}
-import com.twitter.util.Duration
-import fr.cnrs.liris.infra.cli.app.Command
+import com.twitter.finagle.thrift.RichClientParam
+import fr.cnrs.liris.infra.cli.app.{Command, Environment}
 import fr.cnrs.liris.lumos.server.LumosService
 
 trait LumosCommand extends Command {
-  private[this] val serverFlag = flag[String]("server", "Server address")
-  private[this] val timeoutFlag = flag("timeout", Duration.Top, "Server address")
-  private[this] val credentialsFlag = flag[String]("credentials", "Credentials")
-
-  protected lazy val client: LumosService.MethodPerEndpoint = {
-    var builder = Thrift.client
-      .withRequestTimeout(timeoutFlag())
-      .withSessionQualifier.noFailFast
-      .withSessionQualifier.noFailureAccrual
-    credentialsFlag.get.foreach(credentials => builder = builder.withClientId(ClientId(credentials)))
-    val service = builder.newService(serverFlag())
+  protected final def createLumosClient(env: Environment): LumosService.MethodPerEndpoint = {
+    val service = createThriftClient(env)
     val params = RichClientParam()
     LumosService.MethodPerEndpoint(LumosService.ServicePerEndpointBuilder.servicePerEndpoint(service, params))
   }

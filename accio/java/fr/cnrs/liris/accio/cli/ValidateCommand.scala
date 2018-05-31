@@ -40,20 +40,21 @@ final class ValidateCommand extends AccioCommand {
       env.reporter.error("You must specify at least one file to validate as argument")
       return Future.value(ExitCode.CommandLineError)
     }
-    val fs = residue.map(path => validate(path, env.reporter))
+    val fs = residue.map(path => validate(path, env))
     Future.collect(fs).map(ExitCode.select)
   }
 
-  private def validate(uri: String, reporter: Reporter): Future[ExitCode] = {
+  private def validate(uri: String, env: Environment): Future[ExitCode] = {
     val file = FileUtils.expandPath(uri).toFile
     if (!file.canRead) {
-      reporter.error(s"Cannot read file ${file.getAbsolutePath}")
+      env.reporter.error(s"Cannot read file ${file.getAbsolutePath}")
       return Future.value(ExitCode.DefinitionError)
     }
+    val client = createAccioClient(env)
     JsonWorkflowParser.default
       .parse(file)
       .flatMap(workflow => client.validateWorkflow(ValidateWorkflowRequest(ThriftAdapter.toThrift(workflow))))
-      .map(resp => handleResponse(resp.errors, resp.warnings, file, reporter))
+      .map(resp => handleResponse(resp.errors, resp.warnings, file, env.reporter))
   }
 
   private def handleResponse(errors: Seq[FieldViolation], warnings: Seq[FieldViolation], file: File, reporter: Reporter) = {

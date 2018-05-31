@@ -18,4 +18,8 @@
 
 package fr.cnrs.liris.infra.cli.app
 
-final class Environment(val application: Application, val reporter: Reporter)
+final class Environment(val application: Application, val reporter: Reporter) {
+  lazy val config: ClusterConfig = {
+    ConfigParser.default.parse(application.productName, reporter)
+  }
+}

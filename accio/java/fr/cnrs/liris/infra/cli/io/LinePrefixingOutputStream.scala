@@ -47,7 +47,9 @@ import com.google.common.base.Charsets
  * my prefix: boo
  * </code>
  */
-final class LinePrefixingOutputStream(linePrefix: String, sink: OutputStream) extends LineFlushingOutputStream {
+final class LinePrefixingOutputStream(linePrefix: String, sink: OutputStream)
+  extends LineFlushingOutputStream {
+
   private[this] val linePrefixBytes = linePrefix.getBytes(Charsets.UTF_8)
 
   override protected def flushingHook(): Unit = sink.synchronized {

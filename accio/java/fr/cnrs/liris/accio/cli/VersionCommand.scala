@@ -34,6 +34,7 @@ final class VersionCommand extends AccioCommand {
       env.reporter.outErr.printOutLn(s"Client version: ${Version.Current}")
       Future.value(ExitCode.Success)
     } else {
+      val client = createAccioClient(env)
       client.getInfo().map { resp =>
         env.reporter.outErr.printOutLn(s"Server version: ${resp.version}")
         env.reporter.outErr.printOutLn(s"Client version: ${Version.Current}")

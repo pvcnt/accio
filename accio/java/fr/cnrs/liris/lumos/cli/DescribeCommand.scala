@@ -21,7 +21,7 @@ package fr.cnrs.liris.lumos.cli
 import com.twitter.util.Future
 import fr.cnrs.liris.infra.cli.app.{Environment, ExitCode}
 import fr.cnrs.liris.lumos.domain.thrift.ThriftAdapter
-import fr.cnrs.liris.lumos.server.{GetJobRequest, GetJobResponse}
+import fr.cnrs.liris.lumos.server.GetJobRequest
 import fr.cnrs.liris.util.StringUtils.padTo
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{Duration, Instant}
@@ -34,7 +34,8 @@ final class DescribeCommand extends LumosCommand {
   override def allowResidue = true
 
   override def execute(residue: Seq[String], env: Environment): Future[ExitCode] = {
-    fetch(residue.head).map { resp =>
+    val client = createLumosClient(env)
+    client.getJob(GetJobRequest(name)).map { resp =>
       val job = ThriftAdapter.toDomain(resp.job)
       env.reporter.outErr.printOutLn(s"${padTo("Id", colWidth)} ${job.name}")
       env.reporter.outErr.printOutLn(s"${padTo("Created", colWidth)} ${humanize(job.createTime)}")
@@ -97,6 +98,4 @@ final class DescribeCommand extends LumosCommand {
       f"${ms / 1000}%.3f s"
     }
   }
-
-  private def fetch(name: String): Future[GetJobResponse] = client.getJob(GetJobRequest(name))
 }

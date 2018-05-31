@@ -21,7 +21,7 @@ package fr.cnrs.liris.lumos.cli
 import com.twitter.util.Future
 import fr.cnrs.liris.infra.cli.app.{Environment, ExitCode}
 import fr.cnrs.liris.lumos.domain.thrift.{ExecState, ThriftAdapter}
-import fr.cnrs.liris.lumos.server.{ListJobsRequest, ListJobsResponse}
+import fr.cnrs.liris.lumos.server.ListJobsRequest
 import fr.cnrs.liris.util.StringUtils.padTo
 import org.joda.time.Instant
 import org.joda.time.format.DateTimeFormat
@@ -35,7 +35,17 @@ final class GetCommand extends LumosCommand {
   override def name = "get"
 
   override def execute(residue: Seq[String], env: Environment): Future[ExitCode] = {
-    fetch().map { resp =>
+    var states = Set[ExecState](ExecState.Pending, ExecState.Scheduled, ExecState.Running)
+    if (allFlag()) {
+      states ++= Set(ExecState.Failed, ExecState.Successful, ExecState.Canceled, ExecState.Lost)
+    }
+    val req = ListJobsRequest(
+      owner = ownerFlag.get,
+      labels = labelsFlag.get,
+      state = Some(states),
+      limit = limitFlag.get)
+    val client = createLumosClient(env)
+    client.listJobs(req).map { resp =>
       val columns = Seq(("Id", 32), ("Created", 15), ("Status", 9), ("Labels", 30))
       columns.zipWithIndex.foreach { case ((name, width), idx) =>
         if (idx > 0) {
@@ -70,16 +80,4 @@ final class GetCommand extends LumosCommand {
   private[this] val timeFormat = DateTimeFormat.forPattern("YYYY-MM-dd HH:mm")
 
   private def humanize(time: Instant) = timeFormat.print(time)
-
-  private def fetch(): Future[ListJobsResponse] = {
-    var states = Set[ExecState](ExecState.Pending, ExecState.Scheduled, ExecState.Running)
-    if (allFlag()) {
-      states ++= Set(ExecState.Failed, ExecState.Successful, ExecState.Canceled, ExecState.Lost)
-    }
-    client.listJobs(ListJobsRequest(
-      owner = ownerFlag.get,
-      labels = labelsFlag.get,
-      state = Some(states),
-      limit = limitFlag.get))
-  }
 }
