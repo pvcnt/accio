@@ -28,22 +28,50 @@ import fr.cnrs.liris.util.scrooge.BinaryScroogeSerializer
 
 import scala.util.control.NonFatal
 
+/**
+ * Trait used to help implementing an operator library in Scala. It is designed to be implenting
+ * within an object, and provides the main class of the library's binary.
+ */
 trait ScalaLibrary extends Logging {
+
+  import ScalaLibrary._
+
+  /**
+   * Return the metadata of the operators this library provides. This method may throw exceptions,
+   * in which case they will be automatically caught later.
+   */
   def ops: Seq[OpMetadata]
 
+  /**
+   * Library's entrypoint. Execute the given command and exits.
+   *
+   * @param args Command-line arguments.
+   */
   final def main(args: Array[String]): Unit = sys.exit(run(args))
 
+  /**
+   * Execute the given command and exits. This is essentially a test-friendly version of [[main]],
+   * as it does not brutally exits.
+   *
+   * @param args Command-line arguments.
+   */
   final def run(args: Array[String]): Int = {
     DataTypes.register()
+
     if (args.isEmpty) {
+      // If the binary is called without any argument, it is a request to print the Thrift-encoded
+      // definition of the operators this library provides.
       printOperators()
     } else {
+      // If arguments are provided, there should be two of them: the first one is the base 64
+      // representation of a Thrift-encoded payload to execute, the second one is the path to a
+      // file where to write the Thrift-encoded result of the execution.
       Slf4jBridgeUtility.attemptSlf4jBridgeHandlerInstallation()
-      // We technically allow more than 2 arguments, although there will be ignored.
       if (args.length < 2) {
         logger.error(s"At least arguments should be provided, got ${args.length}")
-        2
+        CommandLineError
       } else {
+        // We technically allow more than 2 arguments, although there will be ignored.
         executeOperator(args.head, args(1))
       }
     }
@@ -55,12 +83,12 @@ trait ScalaLibrary extends Logging {
     } catch {
       case NonFatal(e) =>
         logger.error("Error while extracting operator definitions", e)
-        return 6
+        return InternalError
     }
     operators.foreach { opMeta =>
       System.out.write(BinaryScroogeSerializer.toBytes(ThriftAdapter.toThrift(opMeta.defn)))
     }
-    0
+    Successful
   }
 
   private def executeOperator(encodedPayload: String, outputFileName: String): Int = {
@@ -70,19 +98,19 @@ trait ScalaLibrary extends Logging {
     } catch {
       case NonFatal(e) =>
         logger.error(s"Failed to read payload from $encodedPayload", e)
-        return 5
+        return CommandLineError
     }
     val operators = try {
       ops
     } catch {
       case NonFatal(e) =>
         logger.error("Error while extracting operator definitions", e)
-        return 6
+        return InternalError
     }
     operators.find(_.defn.name == payload.op) match {
       case None =>
         logger.error(s"Unknown operator: ${payload.op}")
-        3
+        CommandLineError
       case Some(opMeta) =>
         val executor = new OpExecutor(opMeta, Paths.get("."))
         val res = executor.execute(payload)
@@ -92,11 +120,18 @@ trait ScalaLibrary extends Logging {
         } catch {
           case NonFatal(e) =>
             logger.error(s"Failed to write result file to $outputFileName", e)
-            return 4
+            return InternalError
         } finally {
           os.close()
         }
-        if (res.successful) 0 else 1
+        if (res.successful) Successful else Failed
     }
   }
+}
+
+object ScalaLibrary {
+  private[sdk] val Successful = 0
+  private[sdk] val CommandLineError = 1
+  private[sdk] val InternalError = 3
+  private[sdk] val Failed = -1
 }

@@ -21,7 +21,9 @@ package fr.cnrs.liris.accio.domain
 import fr.cnrs.liris.lumos.domain.{DataType, RemoteFile, Value}
 
 /**
- * Definition of an operator.
+ * Definition of an operator. An operator is the basic processing unit of Accio. It takes a typed
+ * list of inputs and produces a typed list of outputs. The actual implementation of an operator is
+ * provided by an executable binary, which follows a well-defined protocol.
  *
  * @param name        Unique operator name.
  * @param category    Category.

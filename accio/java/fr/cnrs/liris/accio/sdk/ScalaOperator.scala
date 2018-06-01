@@ -19,10 +19,14 @@
 package fr.cnrs.liris.accio.sdk
 
 /**
- * An operator is the basic processing unit of Accio. It takes a typed input and produces a typed
- * output. The input is materialized as the parameters of this case class, while the output is
- * materialized as the parameters of the output type. Fields of the input and output types must be
- * of one of the allowed types. All operators should be annotated with the [[Op]] annotation.
+ * Trait used to help implementing an operator in Scala. Operators should be defined as case
+ * classes. The inputs of the operator are materialized as the parameters of this case class,
+ * while the outputs are materialized as the parameters of the output it produces, which itself is
+ * a case class.
+ *
+ * Fields of the input and output types must be annotated with the [[Arg]] annotation, while the
+ * operator must be annotation with the [[Op]] annotation. Input and output parameters must be
+ * supported by one of the registered [[fr.cnrs.liris.lumos.domain.DataType]].
  *
  * @tparam T Output type
  */
@@ -30,7 +34,7 @@ trait ScalaOperator[T] {
   this: Product =>
   
   /**
-   * Execute this operator. With given input and context, it should produce a deterministic output.
+   * Execute this operator. Within provided context, it should produce a deterministic output.
    *
    * Implementations can use a seed if they need some randomness. Outside of this, the execution
    * should be perfectly deterministic. A working directory is provided for operators who need to

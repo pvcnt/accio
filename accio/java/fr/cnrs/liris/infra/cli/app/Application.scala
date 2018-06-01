@@ -34,8 +34,6 @@ trait Application {
 
   def commands: Set[Command]
 
-  def helpTopics: Set[HelpTopic] = Set.empty
-
   final def builtinCommands: Set[Command] = Set(new HelpCommand)
 
   /**
