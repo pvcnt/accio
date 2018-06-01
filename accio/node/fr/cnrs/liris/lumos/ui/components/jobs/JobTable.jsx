@@ -19,12 +19,10 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
-import autobind from 'autobind-decorator';
 import moment from 'moment';
 
 @withRouter
 class JobTable extends React.Component {
-  @autobind
   handleClick(job) {
     this.props.history.push(`/jobs/view/${job.name}`);
   }
@@ -55,10 +53,12 @@ class JobTable extends React.Component {
 
 JobTable.propTypes = {
   jobs: PropTypes.array,
+  totalCount: PropTypes.number,
 };
 
 JobTable.defaultProps = {
   jobs: [],
+  totalCount: 0,
 };
 
 export default JobTable;

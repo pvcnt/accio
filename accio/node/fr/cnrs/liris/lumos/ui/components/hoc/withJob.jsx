@@ -17,7 +17,6 @@
  */
 
 import React from 'react';
-import autobind from 'autobind-decorator';
 import { NonIdealState, Spinner } from '@blueprintjs/core';
 import xhr from '../../utils/xhr';
 
@@ -32,19 +31,18 @@ export default function withJob(WrappedComponent) {
       };
     }
 
-    @autobind
     onSuccess(resp) {
       this.setState({ isLoading: false, isLoaded: true, data: resp });
     }
 
-    @autobind
     onError(resp) {
-      console.log('Unexpected error while fetching job', resp);
+      console.log('Unexpected error while fetching job.', resp);
       this.setState({ isLoading: false, isLoaded: true });
     }
 
     load(props) {
-      xhr(`/api/jobs/${props.match.params.name}`).then(this.onSuccess, this.onError);
+      xhr(`/api/v1/jobs/${props.match.params.name}`)
+        .then(resp => this.onSuccess(resp), resp => this.onError(resp));
     }
 
     componentDidMount() {
@@ -59,7 +57,7 @@ export default function withJob(WrappedComponent) {
       if (this.state.isLoading) {
         return <Spinner/>;
       } else if (this.state.isLoaded && null !== this.state.data) {
-        return <WrappedComponent campaign={this.state.data}/>;
+        return <WrappedComponent job={this.state.data}/>;
       } else if (this.state.isLoaded) {
         return <NonIdealState visual="error" title="An error occurred while loading job."/>;
       }

@@ -17,7 +17,6 @@
  */
 
 import React from 'react';
-import autobind from 'autobind-decorator';
 import { Spinner, NonIdealState } from '@blueprintjs/core';
 import xhr from '../../utils/xhr';
 
