@@ -25,22 +25,47 @@ import com.google.common.annotations.VisibleForTesting
 import scala.collection.mutable
 import scala.reflect.{ClassTag, classTag}
 
+/**
+ * A data type is used to characterise the nature of the pieces of information that Lumos
+ * manipulates. Indeed, every [[Value]] is bound to a specific data type that is used to validate
+ * its correctness and allow to build rich user interfaces. Built-in data types are provided by
+ * Lumos itself, but custom data types can be implemented by extending the [[DataType.UserDefined]]
+ * trait and registering it with [[DataType.register]].
+ *
+ * A data type is bound to one (and only one) JVM type, even though nothing prevents the same JVM
+ * type to be bound to several data types. However, this is not recommended for user-defined data
+ * types.
+ */
 sealed trait DataType {
+  /**
+   * The JVM type that this data type is bound to. Even though Scala offers no way to force that,
+   * this has to be redefined by implementations.
+   */
   type JvmType
 
+  /**
+   * Return the name of this data type. It should be short and unique across all data types.
+   */
   def name: String
 
+  /**
+   * Return a short human-readable description characterising values of this data type. For example,
+   * a data type representing a timestamp could provide as help "a timestamp".
+   */
   def help: String
 
+  /**
+   * Return the class tag for values of this data type.
+   */
   def cls: ClassTag[JvmType]
 
   override def toString: String = name
 }
 
 object DataType {
-  // It is extremely important that in the following list File starts BEFORE Dataset. Indeed,
-  // both have the same JvmType (RemoteFile), we prefer to consider by default files (as all
-  // datasets are files, but not all files are datasets).
+  // It is important that in the following list File starts BEFORE Dataset. Indeed, both have
+  // the same JvmType (RemoteFile), we prefer to consider that by default RemoteFile's are files
+  // and not datasets (as all datasets are files, but not all files are datasets).
   private[this] val builtIn = Seq(Int, Long, Float, Double, String, Bool, File, Dataset)
   private[this] val custom = mutable.Set.empty[UserDefined]
 
@@ -130,7 +155,16 @@ object DataType {
     def decode(value: Value): Option[JvmType]
   }
 
-  def register(dataType: UserDefined): Unit = custom += dataType
+  /**
+   * Register a new user-defined data type. It has no effect if the data type was already
+   * registered.
+   *
+   * @param dataType Data type to register
+   */
+  def register(dataType: UserDefined): Unit = {
+    // TODO: throw exception if a data type with the same name already exists (but is not the same instance).
+    custom += dataType
+  }
 
   @VisibleForTesting
   private[domain] def clear(): Unit = custom.clear()
