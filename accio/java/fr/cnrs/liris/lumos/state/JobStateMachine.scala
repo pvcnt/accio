@@ -121,6 +121,7 @@ private[state] object JobStateMachine {
         }
         Right(job.copy(
           history = job.history :+ job.status,
+          progress = 100,
           status = ExecStatus(state, time, e.message),
           outputs = e.outputs))
       }
@@ -142,6 +143,7 @@ private[state] object JobStateMachine {
         }
         Right(job.copy(
           history = job.history :+ job.status,
+          progress = 100,
           status = ExecStatus(ExecStatus.Canceled, time),
           tasks = tasks))
       }
