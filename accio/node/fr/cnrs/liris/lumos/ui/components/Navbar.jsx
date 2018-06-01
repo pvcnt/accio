@@ -24,7 +24,6 @@ import { noop } from 'lodash';
 import { logout } from '../utils/auth';
 
 const LINKS = [
-  { title: 'Home', path: '/', icon: 'home' },
   { title: 'Jobs', path: '/jobs', icon: 'applications' },
 ];
 

@@ -21,8 +21,8 @@ import autobind from 'autobind-decorator';
 import { Spinner, NonIdealState } from '@blueprintjs/core';
 import xhr from '../../utils/xhr';
 
-export default function withCampaignList(WrappedComponent) {
-  return class CampaignListContainer extends React.Component {
+export default function withJobList(WrappedComponent) {
+  return class JobListContainer extends React.Component {
     constructor(props) {
       super(props);
       this.state = {
@@ -32,24 +32,22 @@ export default function withCampaignList(WrappedComponent) {
       };
     }
 
-    @autobind
     onSuccess(resp) {
       this.setState({ isLoading: false, isLoaded: true, data: resp });
     }
 
-    @autobind
     onError(resp) {
-      console.log('Unexpected error while fetching campaigns', resp);
+      console.log('Unexpected error while fetching jobs.', resp);
       this.setState({ isLoading: false, isLoaded: true });
     }
 
     load(props) {
       this.setState({ isLoading: true });
-      let url = '/api/campaigns';
+      let url = '/api/v1/jobs';
       if (props.filter && Object.keys(props.filter).length > 0) {
         url += '?' + map(props.filter, (v, k) => `${k}=${encodeURIComponent(v)}`).join('&');
       }
-      xhr(url).then(this.onSuccess, this.onError)
+      xhr(url).then(resp => this.onSuccess(resp), resp => this.onError(resp))
     }
 
     componentDidMount() {
@@ -66,9 +64,9 @@ export default function withCampaignList(WrappedComponent) {
       if (this.state.isLoading) {
         return <Spinner/>;
       } else if (this.state.isLoaded && null !== this.state.data) {
-        return <WrappedComponent campaigns={this.state.data.campaigns}/>;
+        return <WrappedComponent {...this.state.data}/>;
       } else if (this.state.isLoaded) {
-        return <NonIdealState visual="error" title="An error occurred while loading campaigns."/>;
+        return <NonIdealState visual="error" title="An error occurred while loading jobs."/>;
       }
       return null;
     }

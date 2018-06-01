@@ -47,7 +47,7 @@ final class ApiController @Inject()(client: LumosService.MethodPerEndpoint) exte
     }
   }
 
-  get("/api/v1/job/:name") { httpReq: GetJobHttpRequest =>
+  get("/api/v1/jobs/:name") { httpReq: GetJobHttpRequest =>
     client
       .getJob(GetJobRequest(httpReq.name))
       .map { resp =>

@@ -49,7 +49,7 @@ private[server] final class LumosServiceController @Inject()(store: JobStore, ev
 
   override val getJob = handle(GetJob) { args: GetJob.Args =>
     store.get(args.req.name).flatMap {
-      case Some(job) => Future.value(GetJobResponse(ThriftAdapter.toThrift(job)))
+      case Some(job) =>Future.value(GetJobResponse(ThriftAdapter.toThrift(job)))
       case None => Future.exception(ServerException.NotFound("jobs", args.req.name))
     }
   }

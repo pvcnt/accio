@@ -34,51 +34,56 @@ final class DescribeCommand extends LumosCommand {
   override def allowResidue = true
 
   override def execute(residue: Seq[String], env: Environment): Future[ExitCode] = {
-    val client = createLumosClient(env)
-    client.getJob(GetJobRequest(name)).map { resp =>
-      val job = ThriftAdapter.toDomain(resp.job)
-      env.reporter.outErr.printOutLn(s"${padTo("Id", colWidth)} ${job.name}")
-      env.reporter.outErr.printOutLn(s"${padTo("Created", colWidth)} ${humanize(job.createTime)}")
-      env.reporter.outErr.printOutLn(s"${padTo("Owner", colWidth)} ${job.owner.getOrElse("<none>")}")
-      env.reporter.outErr.printOutLn(s"${padTo("Labels", colWidth)} ${if (job.labels.nonEmpty) job.labels.map { case (k, v) => s"$k=$v" }.mkString(", ") else "<none>"}")
-      env.reporter.outErr.printOutLn(s"${padTo("Metadata", colWidth)} ${if (job.metadata.nonEmpty) job.labels.map { case (k, v) => s"$k=$v" }.mkString(", ") else "<none>"}")
-      env.reporter.outErr.printOutLn(s"${padTo("Status", colWidth)} ${job.status.state.name}")
-      env.reporter.outErr.printOutLn(s"${padTo("Duration", colWidth)} ${humanize(job.duration)}")
-      if (!job.status.state.isCompleted && job.progress > 0) {
-        env.reporter.outErr.printOutLn(s"${padTo("Progress", colWidth)} ${job.progress} %")
-      }
-      job.startTime.foreach { startTime =>
-        env.reporter.outErr.printOutLn(s"${padTo("Started", colWidth)} ${humanize(startTime)}")
-      }
-      job.endTime.foreach { endTime =>
-        env.reporter.outErr.printOutLn(s"${padTo("Completed", colWidth)} ${humanize(endTime)}")
-      }
-
-      if (job.inputs.nonEmpty) {
-        env.reporter.outErr.printOutLn("Inputs")
-        val maxLength = job.inputs.map(_.name.length).max
-        job.inputs.foreach { attr =>
-          env.reporter.outErr.printOutLn(s"  ${padTo(attr.name, maxLength)} ${attr.value.v}")
+    if (residue.isEmpty) {
+      env.reporter.warn("Specify the identifier of a job to describe.")
+      Future.value(ExitCode.CommandLineError)
+    } else {
+      val client = createLumosClient(env)
+      client.getJob(GetJobRequest(residue.head)).map { resp =>
+        val job = ThriftAdapter.toDomain(resp.job)
+        env.reporter.outErr.printOutLn(s"${padTo("Id", colWidth)} ${job.name}")
+        env.reporter.outErr.printOutLn(s"${padTo("Created", colWidth)} ${humanize(job.createTime)}")
+        env.reporter.outErr.printOutLn(s"${padTo("Owner", colWidth)} ${job.owner.getOrElse("<none>")}")
+        env.reporter.outErr.printOutLn(s"${padTo("Labels", colWidth)} ${if (job.labels.nonEmpty) job.labels.map { case (k, v) => s"$k=$v" }.mkString(", ") else "<none>"}")
+        env.reporter.outErr.printOutLn(s"${padTo("Metadata", colWidth)} ${if (job.metadata.nonEmpty) job.labels.map { case (k, v) => s"$k=$v" }.mkString(", ") else "<none>"}")
+        env.reporter.outErr.printOutLn(s"${padTo("Status", colWidth)} ${job.status.state.name}")
+        env.reporter.outErr.printOutLn(s"${padTo("Duration", colWidth)} ${humanize(job.duration)}")
+        if (!job.status.state.isCompleted && job.progress > 0) {
+          env.reporter.outErr.printOutLn(s"${padTo("Progress", colWidth)} ${job.progress} %")
         }
-      }
-
-      if (job.outputs.nonEmpty) {
-        env.reporter.outErr.printOutLn("Outputs")
-        val maxLength = job.outputs.map(_.name.length).max
-        job.outputs.foreach { attr =>
-          env.reporter.outErr.printOutLn(s"  ${padTo(attr.name, maxLength)} ${attr.value.v}")
+        job.startTime.foreach { startTime =>
+          env.reporter.outErr.printOutLn(s"${padTo("Started", colWidth)} ${humanize(startTime)}")
         }
-      }
-
-      env.reporter.outErr.printOutLn()
-      if (job.tasks.nonEmpty) {
-        env.reporter.outErr.printOutLn("Tasks")
-        env.reporter.outErr.printOutLn(s"  ${padTo("Task name", 30)}  ${padTo("Status", 10)}  Duration")
-        job.tasks.foreach { task =>
-          env.reporter.outErr.printOutLn(s"  ${padTo(task.name, 30)}  ${padTo(task.status.state.name, 9)}  ${humanize(task.duration)}")
+        job.endTime.foreach { endTime =>
+          env.reporter.outErr.printOutLn(s"${padTo("Completed", colWidth)} ${humanize(endTime)}")
         }
+
+        if (job.inputs.nonEmpty) {
+          env.reporter.outErr.printOutLn("Inputs")
+          val maxLength = job.inputs.map(_.name.length).max
+          job.inputs.foreach { attr =>
+            env.reporter.outErr.printOutLn(s"  ${padTo(attr.name, maxLength)} ${attr.value.v}")
+          }
+        }
+
+        if (job.outputs.nonEmpty) {
+          env.reporter.outErr.printOutLn("Outputs")
+          val maxLength = job.outputs.map(_.name.length).max
+          job.outputs.foreach { attr =>
+            env.reporter.outErr.printOutLn(s"  ${padTo(attr.name, maxLength)} ${attr.value.v}")
+          }
+        }
+
+        env.reporter.outErr.printOutLn()
+        if (job.tasks.nonEmpty) {
+          env.reporter.outErr.printOutLn("Tasks")
+          env.reporter.outErr.printOutLn(s"  ${padTo("Task name", 30)}  ${padTo("Status", 10)}  Duration")
+          job.tasks.foreach { task =>
+            env.reporter.outErr.printOutLn(s"  ${padTo(task.name, 30)}  ${padTo(task.status.state.name, 10)}  ${humanize(task.duration)}")
+          }
+        }
+        ExitCode.Success
       }
-      ExitCode.Success
     }
   }
 

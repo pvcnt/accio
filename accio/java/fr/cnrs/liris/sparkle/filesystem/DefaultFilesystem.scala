@@ -70,10 +70,10 @@ object DefaultFilesystem extends Filesystem {
   override def isFile(uri: String): Boolean = Files.isRegularFile(getFile(uri))
 
   private def getFile(uri: String): Path = {
-    // We accept, for this filesystem only, a raw path to be passed as argument.
     if (uri.startsWith("file:")) {
-      Paths.get(new URI(uri))
+      Paths.get(new URI(uri.replace("://", ":")))
     } else {
+      // We accept, for this filesystem only, a raw path to be passed as argument.
       Paths.get(uri)
     }
   }

@@ -26,16 +26,12 @@ html, body {
 }
 
 .container {
-  width: 1200px;
+  width: 1140px;
   margin: 0 auto;
 }
 
 .content {
   margin-top: 20px;
-}
-
-body {
-  padding-top: 70px;
 }
 
 footer {
