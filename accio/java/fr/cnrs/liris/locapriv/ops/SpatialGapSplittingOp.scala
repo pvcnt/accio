@@ -25,9 +25,7 @@ import fr.cnrs.liris.util.geo.Distance
 
 @Op(
   category = "transform",
-  help = "Split traces, when there is a too huge distance between consecutive events.",
-  cpus = 4,
-  ram = "2G")
+  help = "Split traces, when there is a too huge distance between consecutive events.")
 case class SpatialGapSplittingOp(
   @Arg(help = "Maximum distance between two consecutive events")
   distance: Distance,

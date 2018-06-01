@@ -29,9 +29,7 @@ import scala.collection.mutable
 
 @Op(
   category = "metric",
-  help = "Compute area coverage difference between two datasets of traces",
-  cpus = 4,
-  ram = "2G")
+  help = "Compute area coverage difference between two datasets of traces.")
 case class AreaCoverageOp(
   @Arg(help = "S2 cells levels")
   level: Int,

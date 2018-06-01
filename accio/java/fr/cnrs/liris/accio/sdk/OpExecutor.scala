@@ -29,19 +29,16 @@ import scala.util.control.{NoStackTrace, NonFatal}
 /**
  * Entry point for executing an operator from a payload. It manages the whole lifecycle of
  * instantiating an operator, executing it, collecting its outputs and returning them.
+ * An [[OpExecutor]] instance is tied to a specific operator.
  *
- * The main goal here is to enforce reproducibility of the execution. Given the same inputs, the
- * result should be the same outputs (modulo the metrics, as timing or load information may vary
- * and are not controllable).
- *
- * @param opMeta  Operator metadata.
- * @param workDir Path to the sandbox, where the executor can write temporary files.
+ * @param opMeta  Metadata of the operator to execute.
+ * @param workDir A path where the executor can write temporary files.
  */
 final class OpExecutor(opMeta: OpMetadata, workDir: Path) extends Logging {
   /**
    * Execute an operator.
    *
-   * @param payload Operator payload.
+   * @param payload Operator payload. It should match the [[opMeta]].
    * @return Result of the execution.
    */
   def execute(payload: OpPayload): OpResult = {
@@ -52,7 +49,8 @@ final class OpExecutor(opMeta: OpMetadata, workDir: Path) extends Logging {
       val ctx = new OpContext(maybeSeed, workDir)
       val profiler = new JvmProfiler
 
-      // The actual operator is the only profiled section. The outcome is either an output object or an exception.
+      // The actual operator is the only profiled section. The outcome is either an output object
+      // or an exception.
       logger.debug(s"Starting operator ${opMeta.defn.name} (sandbox in ${workDir.toAbsolutePath})")
       val res = profiler.profile {
         try {

@@ -24,9 +24,13 @@ import java.nio.file.Path
  * Execution context of an operator.
  *
  * @param _seed    Seed used by an unstable operator, if it is the case.
- * @param workDir  Working directory where temporary data can be written. It will be removed after operator completion.
+ * @param workDir  Working directory where temporary data can be written. It may be removed after
+ *                 the operator completes.
  */
 final class OpContext(_seed: Option[Long], val workDir: Path) {
+  /**
+   * Return whether this context contains a seed.
+   */
   def hasSeed: Boolean = _seed.isDefined
 
   /**
@@ -35,7 +39,7 @@ final class OpContext(_seed: Option[Long], val workDir: Path) {
    * @throws IllegalStateException If the operator is not declared as unstable.
    */
   def seed: Long = _seed match {
-    case None => throw new IllegalStateException("Operator is not declared as unstable, cannot access the seed")
+    case None => throw new IllegalStateException("No seed is available")
     case Some(s) => s
   }
 }

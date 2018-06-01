@@ -25,9 +25,7 @@ import fr.cnrs.liris.util.geo.{Distance, Point}
 
 @Op(
   category = "metric",
-  help = "Compute spatial distortion between two datasets of traces",
-  cpus = 3,
-  ram = "3G")
+  help = "Compute spatial distortion between two datasets of traces")
 case class SpatialDistortionOp(
   @Arg(help = "Train dataset")
   train: RemoteFile,

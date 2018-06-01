@@ -26,9 +26,7 @@ import org.joda.time.Duration
 
 @Op(
   category = "metric",
-  help = "Compute POIs retrieval difference between two POIs datasets",
-  cpus = 2,
-  ram = "1G")
+  help = "Compute POIs retrieval difference between two POIs datasets.")
 case class PoisRetrievalOp(
   @Arg(help = "Maximum distance between two POIs to consider they match")
   threshold: Distance,

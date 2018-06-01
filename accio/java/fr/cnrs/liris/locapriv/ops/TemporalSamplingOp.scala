@@ -27,9 +27,7 @@ import fr.cnrs.liris.locapriv.domain.Event
   category = "transform",
   help = "Enforce a minimum duration between two consecutive events in traces.",
   description = "If the duration is less than a given threshold, events will be discarded until " +
-    "the next point that fulfills the minimum duration requirement.",
-  cpus = 4,
-  ram = "2G")
+    "the next point that fulfills the minimum duration requirement.")
 case class TemporalSamplingOp(
   @Arg(help = "Minimum duration between two consecutive events")
   duration: Duration,

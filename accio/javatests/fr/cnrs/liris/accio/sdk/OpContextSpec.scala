@@ -20,7 +20,7 @@ package fr.cnrs.liris.accio.sdk
 
 import java.nio.file.Paths
 
-import fr.cnrs.liris.testing.{UnitSpec, CreateTmpDirectory}
+import fr.cnrs.liris.testing.{CreateTmpDirectory, UnitSpec}
 
 /**
  * Unit tests for [[OpContext]].
@@ -28,15 +28,15 @@ import fr.cnrs.liris.testing.{UnitSpec, CreateTmpDirectory}
 class OpContextSpec extends UnitSpec with CreateTmpDirectory {
   behavior of "OpContext"
 
-  it should "provide a seed for unstable operators" in {
+  it should "provide a seed and a working directory" in {
     val ctx = new OpContext(Some(1234567890L), Paths.get("."))
     ctx.seed shouldBe 1234567890L
+    ctx.workDir shouldBe Paths.get(".")
   }
 
-  it should "not provide a seed for stable operators" in {
+  it should "not provide a seed when not needed" in {
     val ctx = new OpContext(None, Paths.get("."))
-    an[IllegalStateException] shouldBe thrownBy {
-      ctx.seed
-    }
+    val e = intercept[IllegalStateException](ctx.seed)
+    e.getMessage shouldBe "No seed is available"
   }
 }

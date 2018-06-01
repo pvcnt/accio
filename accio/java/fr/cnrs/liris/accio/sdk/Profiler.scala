@@ -57,8 +57,9 @@ object NullProfiler extends Profiler {
 }
 
 /**
- * Profiler measuring JVM-related metrics. Note: Memory-related metrics may not be entirely accurate, as there is no
- * way to isolate them on only a specific portion of code. They are computed for the entire JVM process.
+ * Profiler measuring JVM-related metrics. Note: Memory-related metrics may not be entirely
+ * accurate, as there is no way to isolate them on only a specific portion of code. They are
+ * computed for the entire JVM process.
  */
 final class JvmProfiler extends Profiler {
   private[this] val _wallTime = new AtomicLong(0)

@@ -25,9 +25,7 @@ import fr.cnrs.liris.util.geo.Distance
 
 @Op(
   category = "lppm",
-  help = "Enforce speed smoothing guarantees on traces.",
-  cpus = 4,
-  ram = "2G")
+  help = "Enforce speed smoothing guarantees on traces.")
 case class PromesseOp(
   @Arg(help = "Distance to enforce between two consecutive points")
   alpha: Distance,

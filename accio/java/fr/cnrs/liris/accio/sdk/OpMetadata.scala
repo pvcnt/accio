@@ -20,7 +20,6 @@ package fr.cnrs.liris.accio.sdk
 
 import java.io.IOException
 
-import com.twitter.util.StorageUnit
 import com.twitter.util.logging.Logging
 import fr.cnrs.liris.accio.domain.{Attribute, Operator}
 import fr.cnrs.liris.lumos.domain.{DataType, RemoteFile, Value}
@@ -32,7 +31,8 @@ import scala.reflect.runtime.{universe => ru}
 import scala.util.matching.Regex
 
 /**
- * Metadata about an operator, i.e., its definition and runtime information.
+ * Metadata about an operator, i.e., its definition and its JVM class. The class is needed
+ * internally to instantiate it later on.
  *
  * @param defn  Operator definition.
  * @param clazz Operator class.
@@ -50,8 +50,20 @@ object OpMetadata extends Logging {
    */
   private[this] val OpRegex: Regex = ("^" + OpPattern + "$").r
 
+  /**
+   * Read operator metadata from its type.
+   *
+   * @tparam T Operator type.
+   * @throws IllegalArgumentException If the operator is invalid.
+   */
   def apply[T <: ScalaOperator[_] : ru.TypeTag]: OpMetadata = apply(ru.typeOf[T])
 
+  /**
+   * Read operator metadata from its type.
+   *
+   * @param tpe Operator type.
+   * @throws IllegalArgumentException If the operator is invalid.
+   */
   def apply(tpe: ru.Type): OpMetadata = {
     val opRefl = CaseClass.apply(tpe)
     opRefl.annotations.get[Op] match {
@@ -63,10 +75,6 @@ object OpMetadata extends Logging {
         if (OpRegex.findFirstIn(name).isEmpty) {
           throw new IllegalArgumentException(s"Invalid name for operator in $tpe: $name")
         }
-        val resources = Map(
-          "cpus" -> op.cpus.toLong,
-          "ramMb" -> parseStorageUnit(op.ram()).inMegabytes,
-          "diskGb" -> parseStorageUnit(op.disk()).inGigabytes)
         val defn = Operator(
           name = name,
           category = op.category,
@@ -76,8 +84,7 @@ object OpMetadata extends Logging {
           help = maybe(op.help),
           description = maybe(op.description).flatMap(loadDescription(_, clazz)),
           deprecation = maybe(op.deprecation),
-          unstable = op.unstable,
-          resources = resources)
+          unstable = op.unstable)
         new OpMetadata(defn, clazz)
     }
   }
@@ -148,24 +155,5 @@ object OpMetadata extends Logging {
         Attribute(field.name, dataType = dataType, help = maybe(out.help))
       }.toSeq
     }
-  }
-
-  private[this] val StorageUnitRegex = "^(\\d+(?:\\.\\d*)?)\\s?([a-zA-Z]?)$".r
-
-  private def parseStorageUnit(str: String) = str match {
-    case StorageUnitRegex(v, u) =>
-      val vv = v.toLong
-      val uu = u.toLowerCase match {
-        case "" | "b" => 1L
-        case "k" => 1L << 10
-        case "m" => 1L << 20
-        case "g" => 1L << 30
-        case "t" => 1L << 40
-        case "p" => 1L << 50
-        case "e" => 1L << 60
-        case badUnit => throw new NumberFormatException(s"Unrecognized unit $badUnit")
-      }
-      new StorageUnit(vv * uu)
-    case _ => throw new NumberFormatException(s"invalid storage unit string: $str")
   }
 }

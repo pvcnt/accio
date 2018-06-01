@@ -26,9 +26,7 @@ import fr.cnrs.liris.locapriv.domain.Event
 @Op(
   category = "transform",
   help = "Enforce a given duration on each trace.",
-  description = "Longer traces will be truncated, shorter traces will be discarded.",
-  cpus = 4,
-  ram = "2G")
+  description = "Longer traces will be truncated, shorter traces will be discarded.")
 case class EnforceDurationOp(
   @Arg(help = "Minimum duration of a trace")
   minDuration: Option[Duration],

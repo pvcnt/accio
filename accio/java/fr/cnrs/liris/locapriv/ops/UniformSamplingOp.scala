@@ -28,9 +28,7 @@ import scala.util.Random
   category = "transform",
   help = "Uniformly sample events inside traces.",
   description = "Perform a uniform sampling on traces, keeping each event with a given probability.",
-  unstable = true,
-  cpus = 4,
-  ram = "2G")
+  unstable = true)
 case class UniformSamplingOp(
   @Arg(help = "Probability to keep each event")
   probability: Double,

@@ -26,9 +26,7 @@ import org.joda.time.Instant
 
 @Op(
   category = "metric",
-  help = "Compute temporal distortion difference between two datasets of traces",
-  cpus = 3,
-  ram = "6G")
+  help = "Compute temporal distortion difference between two datasets of traces.")
 case class SpatioTemporalDistortionOp(
   @Arg(help = "Train dataset")
   train: RemoteFile,

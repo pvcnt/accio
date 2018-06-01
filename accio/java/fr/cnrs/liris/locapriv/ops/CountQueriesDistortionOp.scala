@@ -31,9 +31,7 @@ import org.joda.time.{Duration, Interval}
 @Op(
   category = "metric",
   help = "Evaluate count query distortion between to datasets.",
-  unstable = true,
-  cpus = 2,
-  ram = "1G")
+  unstable = true)
 case class CountQueriesDistortionOp(
   @Arg(help = "Number of queries to generate")
   n: Int = 1000,

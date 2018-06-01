@@ -60,19 +60,4 @@ public @interface Op {
      * A deprecation message that will be used each time this operator is used in a workflow.
      */
     String deprecation() default "";
-
-    /**
-     * Number of CPU cores required to execute this operator. It will be allocated at least this number of cores.
-     */
-    int cpus() default 1;
-
-    /**
-     * Amount of RAM required to execute this operator. It will be allocated at least this amount of RAM.
-     */
-    String ram() default "512M";
-
-    /**
-     * Amount of disk required to execute this operator. It will be allocated at least this amount of disk.
-     */
-    String disk() default "1G";
 }

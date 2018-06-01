@@ -24,9 +24,7 @@ import fr.cnrs.liris.locapriv.domain.Event
 
 @Op(
   category = "metric",
-  help = "Compute data completeness difference between two datasets of traces.",
-  cpus = 2,
-  ram = "1G")
+  help = "Compute data completeness difference between two datasets of traces.")
 case class DataCompletenessOp(
   @Arg(help = "Train dataset")
   train: RemoteFile,

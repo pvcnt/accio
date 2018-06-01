@@ -27,9 +27,7 @@ import org.joda.time.Instant
 @Op(
   category = "transform",
   help = "Collapse temporal gaps between days.",
-  description = "Removes empty days by shifting data to fill those empty days.",
-  cpus = 4,
-  ram = "2G")
+  description = "Removes empty days by shifting data to fill those empty days.")
 case class CollapseTemporalGapsOp(
   @Arg(help = "Start date for all traces")
   startAt: Instant,

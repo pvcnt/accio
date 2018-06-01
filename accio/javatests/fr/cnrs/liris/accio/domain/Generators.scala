@@ -54,7 +54,6 @@ object Generators {
     inputs = inputs,
     outputs = outputs,
     deprecation = deprecation,
-    resources = resources,
     unstable = unstable)
 
   val opPayload: Gen[OpPayload] = for {

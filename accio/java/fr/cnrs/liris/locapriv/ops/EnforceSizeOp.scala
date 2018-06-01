@@ -25,9 +25,7 @@ import fr.cnrs.liris.locapriv.domain.Event
 @Op(
   category = "transform",
   help = "Enforce a given size on each trace.",
-  description = "Larger traces will be truncated, smaller traces will be discarded.",
-  cpus = 4,
-  ram = "2G")
+  description = "Larger traces will be truncated, smaller traces will be discarded.")
 case class EnforceSizeOp(
   @Arg(help = "Minimum number of events in each trace")
   minSize: Option[Int],

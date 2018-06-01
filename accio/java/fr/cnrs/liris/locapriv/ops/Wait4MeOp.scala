@@ -45,8 +45,7 @@ import scala.util.control.NoStackTrace
 @Op(
   help = "Time-tolerant k-anonymization",
   description = "Wrapper around the implementation of the Wait4Me algorithm provided by their authors.",
-  category = "lppm",
-  ram = "2G")
+  category = "lppm")
 case class Wait4MeOp(
   @Arg(help = "Input dataset")
   data: RemoteFile,

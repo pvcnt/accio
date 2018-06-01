@@ -24,18 +24,17 @@ import fr.cnrs.liris.locapriv.domain.{Poi, PoiSet}
 import fr.cnrs.liris.sparkle.DataFrame
 
 /**
- * Implementation of a re-identification attack using the points of interest as a discriminating information. The POIs
- * are used to model the behaviour of training users, and then extracted from the tracks of test users and compared to
- * those from the training users. The comparison here is done between set of POIs, and only the spatial information.
+ * Implementation of a re-identification attack using the points of interest as a discriminating
+ * information. The POIs are used to model the behavior of training users, and then extracted from
+ * the tracks of test users and compared to those from the training users. The comparison here is
+ * done between set of POIs, and only the spatial information.
  *
  * Vincent Primault, Sonia Ben Mokhtar, Cédric Lauradoux and Lionel Brunie. Differentially Private
  * Location Privacy in Practice. In MOST'14.
  */
 @Op(
   category = "metric",
-  help = "Re-identification attack using POIs a the discriminating information.",
-  cpus = 6,
-  ram = "3G")
+  help = "Re-identification attack using POIs a the discriminating information.")
 case class PoisReidentOp(
   @Arg(help = "Train dataset (POIs)")
   train: RemoteFile,

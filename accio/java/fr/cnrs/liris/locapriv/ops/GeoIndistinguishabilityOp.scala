@@ -27,9 +27,7 @@ import fr.cnrs.liris.locapriv.domain.{Event, Laplace}
   help = "Enforce geo-indistinguishability guarantees on traces.",
   description = "Generate locations satisfying geo-indistinguishability properties. The method used here is the one " +
     "presented by the authors of the paper and consists in adding noise following a double-exponential distribution.",
-  unstable = true,
-  cpus = 4,
-  ram = "2G")
+  unstable = true)
 case class GeoIndistinguishabilityOp(
   @Arg(help = "Privacy budget")
   epsilon: Double = 0.001,

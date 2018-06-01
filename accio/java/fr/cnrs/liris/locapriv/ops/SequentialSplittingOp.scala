@@ -24,9 +24,7 @@ import fr.cnrs.liris.locapriv.domain.Event
 
 @Op(
   category = "transform",
-  help = "Split traces sequentially, according to chronological order.",
-  cpus = 4,
-  ram = "2G")
+  help = "Split traces sequentially, according to chronological order.")
 case class SequentialSplittingOp(
   @Arg(help = "Percentage of events at which a trace begins")
   percentBegin: Int,

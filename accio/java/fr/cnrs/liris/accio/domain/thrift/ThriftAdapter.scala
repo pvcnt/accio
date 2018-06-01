@@ -49,7 +49,6 @@ object ThriftAdapter {
       inputs = obj.inputs.map(toDomain),
       outputs = obj.outputs.map(toDomain),
       deprecation = obj.deprecation,
-      resources = obj.resources.toMap,
       unstable = obj.unstable)
   }
 
@@ -149,7 +148,6 @@ object ThriftAdapter {
       inputs = obj.inputs.map(toThrift),
       outputs = obj.outputs.map(toThrift),
       deprecation = obj.deprecation,
-      resources = obj.resources,
       unstable = obj.unstable)
   }
 

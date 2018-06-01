@@ -86,6 +86,6 @@ struct Operator {
   6: list<Attribute> inputs;
   7: list<Attribute> outputs;
   8: optional string deprecation;
-  9: map<string, i64> resources;
+  // 9: removed
   10: bool unstable;
 }

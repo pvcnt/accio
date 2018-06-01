@@ -27,9 +27,7 @@ import fr.cnrs.liris.util.geo.Distance
   category = "transform",
   help = "Enforce a minimum distance between two consecutive events in traces.",
   description = "If the distance is less than a given threshold, records will be discarded until " +
-    "the next point that fulfills the minimum distance requirement.",
-  cpus = 4,
-  ram = "2G")
+    "the next point that fulfills the minimum distance requirement.")
 case class SpatialSamplingOp(
   @Arg(help = "Minimum distance between two consecutive events")
   distance: Distance,

@@ -26,9 +26,7 @@ import fr.cnrs.liris.locapriv.domain.Event
   category = "transform",
   help = "Regularly sample events inside traces using the modulo operator.",
   description = "It will ensure that the final number of events is exactly (+/- 1) the one " +
-    "required, and that events are regularly sampled (i.e., one out of x).",
-  cpus = 4,
-  ram = "2G")
+    "required, and that events are regularly sampled (i.e., one out of x).")
 case class ModuloSamplingOp(
   @Arg(help = "Number of events to keep")
   n: Int,

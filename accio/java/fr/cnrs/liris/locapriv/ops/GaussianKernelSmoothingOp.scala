@@ -27,9 +27,7 @@ import fr.cnrs.liris.util.geo.Point
 @Op(
   category = "transform",
   help = "Apply gaussian kernel smoothing on traces.",
-  description = "Apply gaussian kernel smoothing on a trace, attenuating the impact of noisy observations.",
-  cpus = 4,
-  ram = "2G")
+  description = "Apply gaussian kernel smoothing on a trace, attenuating the impact of noisy observations.")
 case class GaussianKernelSmoothingOp(
   @Arg(help = "Bandwidth")
   omega: Duration,

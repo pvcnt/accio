@@ -26,9 +26,7 @@ import fr.cnrs.liris.util.geo.Distance
 
 @Op(
   category = "transform",
-  help = "Compute POIs retrieval difference between two datasets of traces",
-  cpus = 4,
-  ram = "3G")
+  help = "Compute POIs retrieval difference between two datasets of traces.")
 case class PoisExtractionOp(
   @Arg(help = "Clustering maximum diameter")
   diameter: Distance,

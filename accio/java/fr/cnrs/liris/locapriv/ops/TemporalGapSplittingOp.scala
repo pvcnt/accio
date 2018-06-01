@@ -25,9 +25,7 @@ import fr.cnrs.liris.locapriv.domain.Event
 
 @Op(
   category = "transform",
-  help = "Split traces, when there is a too long duration between consecutive events.",
-  cpus = 4,
-  ram = "2G")
+  help = "Split traces, when there is a too long duration between consecutive events.")
 case class TemporalGapSplittingOp(
   @Arg(help = "Maximum duration between two consecutive events")
   duration: Duration,

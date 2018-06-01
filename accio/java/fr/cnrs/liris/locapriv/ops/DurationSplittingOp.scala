@@ -25,9 +25,7 @@ import fr.cnrs.liris.locapriv.domain.Event
 
 @Op(
   category = "transform",
-  help = "Split traces, ensuring a maximum duration for each one.",
-  cpus = 4,
-  ram = "2G")
+  help = "Split traces, ensuring a maximum duration for each one.")
 case class DurationSplittingOp(
   @Arg(help = "Maximum duration of each trace")
   duration: Duration,
