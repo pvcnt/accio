@@ -25,13 +25,12 @@ import fr.cnrs.liris.accio.discovery.DiscoveryModule
 import fr.cnrs.liris.accio.domain.DataTypes
 import fr.cnrs.liris.accio.scheduler.install.SchedulerModule
 import fr.cnrs.liris.accio.validation.ValidationModule
-import fr.cnrs.liris.infra.logback.LogbackConfigurator
 import fr.cnrs.liris.infra.thriftserver.{AuthFilter, AuthModule}
 import fr.cnrs.liris.lumos.transport.EventTransportModule
 
 object AccioServerMain extends AccioServer
 
-class AccioServer extends ThriftServer with LogbackConfigurator {
+class AccioServer extends ThriftServer {
   private[this] val executorUri = flag("executor_uri", "/var/lib/accio/executor.jar", "URI to the executor")
 
   init {

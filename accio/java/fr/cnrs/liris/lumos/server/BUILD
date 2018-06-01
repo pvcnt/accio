@@ -25,7 +25,6 @@ scala_binary(
     "//accio/java/fr/cnrs/liris/lumos/storage/install",
     "//accio/java/fr/cnrs/liris/lumos/version",
     "//accio/java/fr/cnrs/liris/infra/thriftserver",
-    "//accio/java/fr/cnrs/liris/infra/logback",
     "//accio/thrift/fr/cnrs/liris/lumos/server",
     "//3rdparty/jvm/com/twitter:finatra_thrift",
     "//3rdparty/jvm/com/twitter:util_slf4j_api",

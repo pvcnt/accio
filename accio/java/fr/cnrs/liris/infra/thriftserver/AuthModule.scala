@@ -28,14 +28,14 @@ import scala.collection.mutable
 
 object AuthModule extends TwitterModule {
   private[this] val staticConfigFileFlag = flag[String](
-    "auth.static_file",
+    "auth.static.file",
     "File that contains the mapping between client identifiers and users.")
   private[this] val webhookConfigFileFlag = flag[String](
-    "auth.webhook_config_file",
+    "auth.webhook.config_file",
     "File that contains webhook configuration. The agent will query the remote service to " +
       "determine if authentication is allowed.")
   private[this] val webhookCacheTtlFlag = flag(
-    "auth.webhook_cache_ttl",
+    "auth.webhook.cache_ttl",
     120.seconds,
     "The duration to cache responses from the webhook token strategy.")
   private[this] val trustFlag = flag(
