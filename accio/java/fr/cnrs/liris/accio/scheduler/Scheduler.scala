@@ -21,7 +21,7 @@ package fr.cnrs.liris.accio.scheduler
 import com.twitter.util.{Closable, Future}
 
 trait Scheduler extends Closable {
-  def submit(process: Process): Future[ProcessInfo]
+  def submit(process: Process): Future[ProcessMetadata]
 
   def kill(name: String): Future[Unit]
 

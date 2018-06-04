@@ -79,19 +79,19 @@ final class LocalScheduler(
   statsReceiver.provideGauge("scheduler", "pending")(pending.size.toFloat)
   statsReceiver.provideGauge("scheduler", "running")(running.size.toFloat)
 
-  override def submit(process: Process): Future[ProcessInfo] = {
+  override def submit(process: Process): Future[ProcessMetadata] = {
     if (isActive0(process.name) || isCompleted0(process.name)) {
       Future.exception(new IllegalArgumentException(s"Process ${process.name} already exists"))
     } else if (reserveResources(process.name, process.resources)) {
       running(process.name) = Running(process, schedule(process))
-      Future.value(ProcessInfo())
+      Future.value(ProcessMetadata())
     } else {
       if (!forceScheduling && !isEnoughResources(process.name, process.resources, totalResources)) {
         Future.exception(new RuntimeException(s"Not enough resources to schedule process ${process.name}"))
       } else {
         logger.info(s"Queued process ${process.name}")
         pending.add(Pending(process))
-        Future.value(ProcessInfo())
+        Future.value(ProcessMetadata())
       }
     }
   }
