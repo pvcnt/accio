@@ -20,7 +20,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { HashRouter } from 'react-router-dom';
+import { Provider } from 'react-redux';
 import App from './components/App';
+import store from './store';
 
 // Import stylesheets.
 import 'normalize.css/normalize.css';
@@ -29,4 +31,7 @@ import '@blueprintjs/icons/lib/css/blueprint-icons.css';
 import '@blueprintjs/datetime/lib/css/blueprint-datetime.css';
 import './app.css';
 
-ReactDOM.render(<HashRouter><App/></HashRouter>, document.getElementById('app'));
+ReactDOM.render(
+  <HashRouter><Provider store={store}><App/></Provider></HashRouter>,
+  document.getElementById('app')
+);
