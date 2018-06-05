@@ -6,7 +6,7 @@ scala_import(
         "//3rdparty/jvm/io/netty:netty_handler",
         "//3rdparty/jvm/io/netty:netty_handler_proxy",
         "//3rdparty/jvm/io/netty:netty_transport",
-        "//3rdparty/jvm/io/netty:netty_transport_native_epoll",
+        "//3rdparty/jvm/io/netty:netty_transport_native_epoll_jar_linux_x86_64",
         "//3rdparty/jvm/io/netty:netty_transport_native_unix_common",
         ":finagle_core",
         ":finagle_http_cookie_2_11",
@@ -16,7 +16,7 @@ scala_import(
         "//external:jar/com/twitter/finagle_base_http_2_11"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -63,7 +63,7 @@ scala_import(
         "//external:jar/com/twitter/finagle_exp_2_11"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -100,7 +100,7 @@ java_library(
         ":util_cache_2_11"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -112,7 +112,7 @@ java_library(
         "//external:jar/com/twitter/finagle_http_cookie_2_11"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -124,7 +124,7 @@ java_library(
         "//external:jar/com/twitter/finagle_init_2_11"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -136,7 +136,7 @@ java_library(
         "//external:jar/com/twitter/finagle_mux_2_11"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -171,7 +171,7 @@ java_library(
         "//external:jar/com/twitter/finagle_netty3_2_11"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -183,12 +183,12 @@ java_library(
         "//3rdparty/jvm/io/netty:netty_handler",
         "//3rdparty/jvm/io/netty:netty_handler_proxy",
         "//3rdparty/jvm/io/netty:netty_transport",
-        "//3rdparty/jvm/io/netty:netty_transport_native_epoll",
+        "//3rdparty/jvm/io/netty:netty_transport_native_epoll_jar_linux_x86_64",
         "//3rdparty/jvm/io/netty:netty_transport_native_unix_common",
         "//external:jar/com/twitter/finagle_netty4_2_11"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -208,7 +208,7 @@ scala_import(
         "//external:jar/com/twitter/finagle_netty4_http_2_11"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -270,7 +270,7 @@ java_library(
         "//external:jar/com/twitter/finagle_thriftmux_2_11"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -285,7 +285,7 @@ java_library(
         "//external:jar/com/twitter/finagle_toggle_2_11"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -297,7 +297,7 @@ java_library(
         "//external:jar/com/twitter/finagle_tunable_2_11"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -410,7 +410,7 @@ scala_import(
         "//external:jar/com/twitter/finatra_utils_2_11"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -515,7 +515,7 @@ scala_import(
         "//external:jar/com/twitter/inject_slf4j_2_11"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -532,7 +532,7 @@ scala_import(
         "//external:jar/com/twitter/inject_thrift_2_11"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -549,7 +549,7 @@ scala_import(
         "//external:jar/com/twitter/inject_utils_2_11"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -616,7 +616,7 @@ scala_import(
         "//external:jar/com/twitter/twitter_server_2_11"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -665,7 +665,7 @@ java_library(
         "//external:jar/com/twitter/util_cache_2_11"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -693,7 +693,7 @@ java_library(
         "//external:jar/com/twitter/util_collection_2_11"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -723,7 +723,7 @@ java_library(
         "//external:jar/com/twitter/util_function_2_11"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -735,7 +735,7 @@ java_library(
         "//external:jar/com/twitter/util_hashing_2_11"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -765,7 +765,7 @@ java_library(
         "//external:jar/com/twitter/util_lint_2_11"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -777,7 +777,7 @@ java_library(
         "//external:jar/com/twitter/util_logging_2_11"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -789,7 +789,7 @@ java_library(
         "//external:jar/com/twitter/util_registry_2_11"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -801,7 +801,7 @@ java_library(
         "//external:jar/com/twitter/util_security_2_11"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -867,7 +867,7 @@ java_library(
         "//external:jar/com/twitter/util_tunable_2_11"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 

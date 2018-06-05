@@ -27,6 +27,14 @@ dependencies:
     nscala-time:
       version: "2.18.0"
       lang: scala
+  com.google.guava:
+    guava:
+      version: "19.0"
+      lang: java
+  com.google.code.findbugs:
+    jsr305:
+      version: "3.0.1"
+      lang: java
   com.twitter:
     scrooge:
       version: "18.5.0"
@@ -52,6 +60,10 @@ dependencies:
       version: "18.5.0"
       lang: scala
       modules: [logback-classic]
+  org.apache.thrift:
+    libthrift:
+      version: "0.10.0"
+      lang: java
   ch.qos.logback:
     logback-classic:
       version: "1.2.3"
@@ -87,4 +99,16 @@ dependencies:
       # Stick to this version while we use ScalaTest 2.2.6.
       # Cf. https://stackoverflow.com/a/35312699
       version: "1.12.5"
+      lang: scala
+  com.lihaoyi:
+    fastparse:
+      version: "1.0.0"
+      lang: scala
+    fastparse-utils:
+      # Explicitly specifiied to force it being considered as Scala by bazel-deps and not mess up with macros.
+      version: "1.0.0"
+      lang: scala
+    sourcecode:
+      # Explicitly specifiied to force it being considered as Scala by bazel-deps and not mess up with macros.
+      version: "0.1.4"
       lang: scala

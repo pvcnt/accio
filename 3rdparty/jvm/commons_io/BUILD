@@ -5,7 +5,7 @@ java_library(
         "//external:jar/commons_io/commons_io"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 

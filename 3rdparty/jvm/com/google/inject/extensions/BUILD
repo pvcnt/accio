@@ -5,7 +5,7 @@ java_library(
         "//external:jar/com/google/inject/extensions/guice_assistedinject"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -17,7 +17,7 @@ java_library(
         "//external:jar/com/google/inject/extensions/guice_multibindings"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 

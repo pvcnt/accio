@@ -21,8 +21,6 @@ scala_library(
     "//accio/java/fr/cnrs/liris/accio/dsl",
     "//accio/java/fr/cnrs/liris/accio/domain",
     "//accio/java/fr/cnrs/liris/lumos/domain",
-    "//accio/java/fr/cnrs/liris/util/geo",
-    "//accio/java/fr/cnrs/liris/util",
     "//3rdparty/jvm/com/twitter:finatra_jackson",
     "//3rdparty/jvm/com/twitter:util_core",
   ],

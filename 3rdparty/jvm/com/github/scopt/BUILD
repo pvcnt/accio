@@ -5,7 +5,7 @@ java_library(
         "//external:jar/com/github/scopt/scopt_2_11"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 

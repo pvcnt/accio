@@ -6,7 +6,7 @@ java_library(
         "//external:jar/com/fasterxml/jackson/module/jackson_module_paranamer"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -20,7 +20,7 @@ java_library(
         ":jackson_module_paranamer"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 

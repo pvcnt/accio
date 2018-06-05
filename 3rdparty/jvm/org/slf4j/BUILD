@@ -5,7 +5,7 @@ java_library(
         "//external:jar/org/slf4j/jcl_over_slf4j"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -17,7 +17,7 @@ java_library(
         "//external:jar/org/slf4j/jul_to_slf4j"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -29,7 +29,7 @@ java_library(
         "//external:jar/org/slf4j/log4j_over_slf4j"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -41,7 +41,7 @@ java_library(
         "//external:jar/org/slf4j/slf4j_api"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 

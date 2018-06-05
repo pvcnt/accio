@@ -5,7 +5,7 @@ java_library(
         "//external:jar/net/sourceforge/f2j/arpack_combined_all"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 

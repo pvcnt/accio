@@ -5,7 +5,7 @@ java_library(
         "//external:jar/com/github/fommil/netlib/core"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 

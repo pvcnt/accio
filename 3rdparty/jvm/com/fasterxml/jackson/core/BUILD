@@ -5,7 +5,7 @@ java_library(
         "//external:jar/com/fasterxml/jackson/core/jackson_annotations"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -17,7 +17,7 @@ java_library(
         "//external:jar/com/fasterxml/jackson/core/jackson_core"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -31,7 +31,7 @@ java_library(
         ":jackson_core"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 

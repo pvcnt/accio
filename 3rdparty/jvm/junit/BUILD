@@ -6,7 +6,7 @@ java_library(
         "//external:jar/junit/junit"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 

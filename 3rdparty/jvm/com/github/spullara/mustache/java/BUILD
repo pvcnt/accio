@@ -6,7 +6,7 @@ java_library(
         "//external:jar/com/github/spullara/mustache/java/compiler"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 

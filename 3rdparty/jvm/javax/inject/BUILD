@@ -5,7 +5,7 @@ java_library(
         "//external:jar/javax/inject/javax_inject"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 

@@ -6,7 +6,7 @@ java_library(
         "//external:jar/org/scala_lang/scala_compiler"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -18,7 +18,7 @@ java_library(
         "//external:jar/org/scala_lang/scala_library"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -30,7 +30,7 @@ java_library(
         "//external:jar/org/scala_lang/scala_reflect"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -43,7 +43,7 @@ java_library(
         ":scala_compiler"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 

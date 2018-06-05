@@ -5,7 +5,7 @@ java_library(
         "//external:jar/org/hdrhistogram/HdrHistogram"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 

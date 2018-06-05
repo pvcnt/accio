@@ -5,7 +5,7 @@ java_library(
         "//external:jar/javax/servlet/servlet_api"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 

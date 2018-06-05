@@ -5,7 +5,7 @@ java_library(
         "//external:jar/io/netty/netty"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -17,7 +17,7 @@ java_library(
         "//external:jar/io/netty/netty_buffer"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -29,7 +29,7 @@ java_library(
         "//external:jar/io/netty/netty_codec"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -42,7 +42,7 @@ java_library(
         ":netty_codec"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -54,7 +54,7 @@ java_library(
         "//external:jar/io/netty/netty_codec_http2"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -66,7 +66,7 @@ java_library(
         "//external:jar/io/netty/netty_codec_socks"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -78,7 +78,7 @@ java_library(
         "//external:jar/io/netty/netty_common"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -92,7 +92,7 @@ java_library(
         ":netty_codec"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -106,7 +106,7 @@ java_library(
         ":netty_codec_socks"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -118,7 +118,7 @@ java_library(
         "//external:jar/io/netty/netty_resolver"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -130,7 +130,7 @@ java_library(
         "//external:jar/io/netty/netty_tcnative_boringssl_static"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -143,20 +143,20 @@ java_library(
         ":netty_resolver"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
 
 
 java_library(
-    name = "netty_transport_native_epoll",
+    name = "netty_transport_native_epoll_jar_linux_x86_64",
     exports = [
-        "//external:jar/io/netty/netty_transport_native_epoll",
+        "//external:jar/io/netty/netty_transport_native_epoll_jar_linux_x86_64",
         ":netty_common"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -168,7 +168,7 @@ java_library(
         "//external:jar/io/netty/netty_transport_native_unix_common"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 

@@ -5,7 +5,7 @@ java_library(
         "//external:jar/com/github/ben_manes/caffeine/caffeine"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 

@@ -8,7 +8,7 @@ java_library(
         "//external:jar/com/google/inject/guice"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 

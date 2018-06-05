@@ -7,7 +7,7 @@ java_library(
         "//external:jar/org/apache/httpcomponents/httpclient"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -19,7 +19,7 @@ java_library(
         "//external:jar/org/apache/httpcomponents/httpcore"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 

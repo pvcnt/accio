@@ -6,7 +6,7 @@ java_library(
         "//external:jar/net/codingwell/scala_guice_2_11"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 

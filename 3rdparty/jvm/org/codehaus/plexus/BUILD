@@ -5,7 +5,7 @@ java_library(
         "//external:jar/org/codehaus/plexus/plexus_utils"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 

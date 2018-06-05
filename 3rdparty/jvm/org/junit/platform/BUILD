@@ -5,7 +5,7 @@ java_library(
         "//external:jar/org/junit/platform/junit_platform_commons"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -19,7 +19,7 @@ java_library(
         ":junit_platform_commons"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 

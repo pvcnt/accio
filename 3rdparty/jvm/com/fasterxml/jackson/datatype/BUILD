@@ -6,7 +6,7 @@ java_library(
         "//external:jar/com/fasterxml/jackson/datatype/jackson_datatype_joda"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 

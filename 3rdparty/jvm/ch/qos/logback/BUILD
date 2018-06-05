@@ -16,6 +16,7 @@ java_library(
 java_library(
     name = "logback_core",
     exports = [
+        "//3rdparty/jvm/org/fusesource/jansi:jansi",
         "//external:jar/ch/qos/logback/logback_core"
     ],
     visibility = [

@@ -6,7 +6,7 @@ java_library(
         ":spire_macros_2_11"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
@@ -18,7 +18,7 @@ java_library(
         "//external:jar/org/spire_math/spire_macros_2_11"
     ],
     visibility = [
-        "//visibility:public"
+        "//3rdparty/jvm:__subpackages__"
     ]
 )
 
