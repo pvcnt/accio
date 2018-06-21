@@ -19,7 +19,11 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
+import { toPairs, findLastIndex }  from 'lodash';
+import { Tag, Intent, ProgressBar } from '@blueprintjs/core';
 import moment from 'moment';
+
+import { isJobFailed, isJobSuccessful, isJobRunning } from '../../constants';
 
 @withRouter
 class JobTable extends React.Component {
@@ -28,21 +32,60 @@ class JobTable extends React.Component {
   }
 
   render() {
-    const rows = this.props.jobs.map((item, idx) => {
+    const rows = this.props.jobs.map((job, idx) => {
+      const labels = toPairs(job.labels).map((kv, idx) => {
+        return <Tag intent={Intent.PRIMARY} key={idx}>{kv[0]}={kv[1]}</Tag>;
+      });
+
+      let startTime = job.createTime;
+      if (job.status.state === 'Running') {
+        startTime = job.status.time;
+      } else {
+        const idx = findLastIndex(job.history, item => item.state === 'Running');
+        if (idx > -1) {
+          startTime = job.history[idx].time;
+        }
+      }
+
+      let progressBar;
+      let label = job.status.state;
+      if (isJobFailed(job)) {
+        progressBar = <ProgressBar value={1} intent={Intent.DANGER} animate={false}/>;
+      } else if (isJobSuccessful(job)) {
+        progressBar = <ProgressBar value={1} intent={Intent.SUCCESS} animate={false}/>;
+        if (isJobRunning(job)) {
+          label = `${job.progress} %`;
+        }
+      } else {
+        progressBar = <ProgressBar value={job.progress / 100}/>;
+      }
+
       return (
-        <tr onClick={() => this.handleClick(item)} key={idx}>
-          <td>{item.name}</td>
-          <td>{item.status.state}</td>
+        <tr onClick={() => this.handleClick(job)} key={idx}>
+          <td><input type="checkbox"/></td>
+          <td>{job.name}</td>
+          <td>{job.owner || '(unknown)'}</td>
+          <td>
+            {progressBar}
+            <div className="progress-label">{label}</div>
+          </td>
+          <td>{moment(startTime).fromNow()}</td>
+          <td>{labels}</td>
         </tr>
       );
     });
+
     return (
       <table className="pt-html-table pt-interactive pt-html-table-striped"
              style={{ width: '100%' }}>
         <thead>
         <tr>
-          <th>Name</th>
-          <th>State</th>
+          <th>&nbsp;</th>
+          <th>ID</th>
+          <th>Owner</th>
+          <th>Progress</th>
+          <th>Start Time</th>
+          <th>Labels</th>
         </tr>
         </thead>
         <tbody>{rows}</tbody>
@@ -53,13 +96,10 @@ class JobTable extends React.Component {
 
 JobTable.propTypes = {
   jobs: PropTypes.array.isRequired,
-  totalCount: PropTypes.number.isRequired,
-  onPageChange: PropTypes.func.isRequired,
 };
 
 JobTable.defaultProps = {
   jobs: [],
-  totalCount: 0,
 };
 
 export default JobTable;

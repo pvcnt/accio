@@ -18,30 +18,36 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import JobTable from './JobTable';
-import Pager from './Pager';
-import JobSearch from './JobSearch';
+import { range } from 'lodash';
+import classnames from 'classnames';
+import { JOBS_PER_PAGE } from '../../constants';
 
-class JobList extends React.Component {
+class Pager extends React.Component {
+  handleClick(e, page) {
+    e.nativeEvent.preventDefault();
+    if (page !== this.props.page) {
+      this.props.onChange(page);
+    }
+  }
+
   render() {
-    return (
-      <div>
-        <JobTable jobs={this.props.jobs}/>
-
-        <Pager totalCount={this.props.totalCount}
-               onChange={this.props.onPageChange}
-               page={this.props.page}/>
-      </div>
-    );
+    const pageCount = Math.ceil(this.props.totalCount / JOBS_PER_PAGE);
+    const pages = range(1, pageCount).map(n => {
+      const className = classnames({
+        active: n === this.props.page,
+        first: n === 1,
+        last: n === pageCount,
+      });
+      return <li key={n} className={className}><a onClick={e => this.handleClick(e, n)}>{n}</a></li>;
+    });
+    return <ul className="pager">{pages}</ul>;
   }
 }
 
-JobTable.propTypes = {
-  jobs: PropTypes.array.isRequired,
-  page: PropTypes.number.isRequired,
+Pager.propTypes = {
   totalCount: PropTypes.number.isRequired,
-  onPageChange: PropTypes.func.isRequired,
-  onFilterChange: PropTypes.func.isRequired,
+  page: PropTypes.number.isRequired,
+  onChange: PropTypes.func.isRequired,
 };
 
-export default JobList;
+export default Pager;

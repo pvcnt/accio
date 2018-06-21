@@ -16,7 +16,19 @@
  * along with Accio.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import JobTable from './JobTable';
-import withJobList from '../hoc/withJobList';
+import React from 'react';
+import JobListContainer from './JobListContainer';
 
-export default withJobList(JobTable);
+class JobsView extends React.Component {
+  render() {
+    return (
+      <div>
+        <h2>Jobs</h2>
+
+        <JobListContainer/>
+      </div>
+    );
+  }
+}
+
+export default JobsView;

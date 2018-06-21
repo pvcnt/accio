@@ -17,3 +17,24 @@
  */
 
 export const JOBS_PER_PAGE = 30;
+
+export const FAILED_STATES = ['Lost', 'Failed', 'Canceled'];
+export const SUCCESSFUL_STATES = ['Successful'];
+export const RUNNING_STATES = ['Running'];
+export const COMPLETED_STATES = FAILED_STATES.concat(SUCCESSFUL_STATES);
+
+export function isJobFailed(job) {
+  return FAILED_STATES.indexOf(job.status.state) > -1;
+}
+
+export function isJobRunning(job) {
+  return RUNNING_STATES.indexOf(job.status.state) > -1;
+}
+
+export function isJobSuccessful(job) {
+  return SUCCESSFUL_STATES.indexOf(job.status.state) > -1;
+}
+
+export function isJobCompleted(job) {
+  return COMPLETED_STATES.indexOf(job.status.state) > -1;
+}

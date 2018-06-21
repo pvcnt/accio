@@ -4,6 +4,7 @@
     "@blueprintjs/core": "^2.0.1",
     "@blueprintjs/datetime": "^2.0.1",
     "autobind-decorator": "^2.1.0",
+    "classnames": "^2.2.6",
     "moment": "^2.19.3",
     "prop-types": "^15.6.0",
     "react": "^16.2.0",

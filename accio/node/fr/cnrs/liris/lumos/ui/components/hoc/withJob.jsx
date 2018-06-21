@@ -36,7 +36,7 @@ function getJobName(props) {
 }
 
 export default function withJob(WrappedComponent) {
-  class JobContainer extends React.Component {
+  class WithJob extends React.Component {
     loadData() {
       this.props.dispatch(getJob(getJobName(this.props)));
     }
@@ -63,5 +63,5 @@ export default function withJob(WrappedComponent) {
     }
   }
 
-  return connect(mapStateToProps)(JobContainer);
+  return connect(mapStateToProps)(WithJob);
 }

@@ -18,30 +18,27 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import JobTable from './JobTable';
-import Pager from './Pager';
-import JobSearch from './JobSearch';
+import { InputGroup } from '@blueprintjs/core';
 
-class JobList extends React.Component {
+class JobSearch extends React.Component {
+  handleBlur(e) {
+    if (e.target.value !== this.props.value) {
+      this.props.onChange(e.target.value);
+    }
+  }
+
   render() {
     return (
       <div>
-        <JobTable jobs={this.props.jobs}/>
 
-        <Pager totalCount={this.props.totalCount}
-               onChange={this.props.onPageChange}
-               page={this.props.page}/>
       </div>
     );
   }
 }
 
-JobTable.propTypes = {
-  jobs: PropTypes.array.isRequired,
-  page: PropTypes.number.isRequired,
-  totalCount: PropTypes.number.isRequired,
-  onPageChange: PropTypes.func.isRequired,
-  onFilterChange: PropTypes.func.isRequired,
+JobSearch.propTypes = {
+  value: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired,
 };
 
-export default JobList;
+export default JobSearch;

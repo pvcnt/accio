@@ -31,10 +31,12 @@ class LoginDialog extends React.Component {
       password: '',
     };
   }
+
   @autobind
   handleChange(e) {
     this.setState({ password: e.target.value });
   }
+
   @autobind
   handleSubmit(e) {
     e.nativeEvent.preventDefault();
@@ -53,6 +55,7 @@ class LoginDialog extends React.Component {
       }
     })
   }
+
   render() {
     return (
       <Dialog isOpen={true}

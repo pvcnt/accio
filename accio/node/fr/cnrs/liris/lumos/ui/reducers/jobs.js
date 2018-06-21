@@ -31,7 +31,8 @@ const initialState = {
   list: {
     status: 'pending',
     totalCount: 0,
-    page: 0,
+    page: 1,
+    labelSelector: null,
     ids: [],
   },
 };
@@ -87,11 +88,22 @@ export default function jobsReducer(state = initialState, action) {
     case GET_JOB_FAILED:
       return updateJobStatus(state, [action.job.name], 'failed');
     case FETCH_JOBS_REQUEST:
-      return updateJobListStatus(state, 'loading');
+      return {
+        ...state,
+        list: {
+          ...state.list,
+          status: 'loading',
+          page: action.page,
+          labelSelector: action.labelSelector,
+        },
+      };
     case FETCH_JOBS_SUCCESS:
       return updateJobListEntities(updateJobEntities(state, action.jobs), action.jobs, action.totalCount);
     case FETCH_JOBS_FAILED:
-      return updateJobListStatus(state, 'failed');
+      return {
+        ...state,
+        list: { ...state.list, status: 'failed' },
+      };
     default:
       return state;
   }

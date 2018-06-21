@@ -19,12 +19,14 @@
 import React from 'react';
 import { Spinner, NonIdealState } from '@blueprintjs/core';
 import { connect } from 'react-redux';
+import JobList from './JobList';
 import { fetchJobs } from '../../actions';
 
-const mapStateToProps = (state, ownProps) => {
+const mapStateToProps = (state) => {
   const jobs = state.jobs.list.ids.map(name => state.jobs.entities[name]);
   return {
     jobs,
+    page: state.jobs.list.page,
     totalCount: state.jobs.list.totalCount,
     status: state.jobs.list.status,
     isLoading: state.jobs.list.status === 'loading',
@@ -33,39 +35,31 @@ const mapStateToProps = (state, ownProps) => {
   };
 };
 
-export default function withJobList(WrappedComponent) {
-  class JobListContainer extends React.Component {
-    constructor(props) {
-      super(props);
-      this.state = {
-        page: 1,
-      };
-    }
+const mapDispatchToProps = (dispatch, ownProps) => {
+  return {
+    loadData: () => dispatch(fetchJobs()),
+    onPageChange: (page) => dispatch(fetchJobs(page)),
+    onFilterChange: (filter) => dispatch(fetchJobs(ownProps.page, filter)),
+  }
+};
 
-    handlePageChange(page) {
-      this.setState({ page }, newState => this.props.dispatch(fetchJobs(newState.page)));
-    }
 
-    loadData() {
-      this.props.dispatch(fetchJobs(this.state.page));
-    }
-
-    componentDidMount() {
-      this.loadData();
-    }
-
-    render() {
-      if (this.props.isLoading) {
-        return <Spinner/>;
-      } else if (this.props.isFailed) {
-        return <NonIdealState visual="error" title="An error occurred while loading jobs."/>;
-      } else if (this.props.isLoaded) {
-        return <WrappedComponent {...this.props}
-                         onPageChange={page => this.handlePageChange(page)}/>;
-      }
-      return null;
-    }
+@connect(mapStateToProps, mapDispatchToProps)
+class JobListContainer extends React.Component {
+  componentDidMount() {
+    this.props.loadData();
   }
 
-  return connect(mapStateToProps)(JobListContainer);
+  render() {
+    if (this.props.isLoading) {
+      return <Spinner/>;
+    } else if (this.props.isFailed) {
+      return <NonIdealState visual="error" title="An error occurred while loading jobs."/>;
+    } else if (this.props.isLoaded) {
+      return <JobList {...this.props}/>;
+    }
+    return null;
+  }
 }
+
+export default JobListContainer;
