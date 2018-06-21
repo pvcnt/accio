@@ -50,14 +50,14 @@ class JobTable extends React.Component {
       let progressBar;
       let label = job.status.state;
       if (isJobFailed(job)) {
-        progressBar = <ProgressBar value={1} intent={Intent.DANGER} animate={false}/>;
+        progressBar = <ProgressBar value={1} intent={Intent.DANGER} animate={false} stripes={false}/>;
       } else if (isJobSuccessful(job)) {
-        progressBar = <ProgressBar value={1} intent={Intent.SUCCESS} animate={false}/>;
+        progressBar = <ProgressBar value={1} intent={Intent.SUCCESS} animate={false} stripes={false}/>;
         if (isJobRunning(job)) {
           label = `${job.progress} %`;
         }
       } else {
-        progressBar = <ProgressBar value={job.progress / 100}/>;
+        progressBar = <ProgressBar value={job.progress / 100} stripes={false}/>;
       }
 
       return (

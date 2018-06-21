@@ -27,6 +27,7 @@ const mapStateToProps = (state) => {
   return {
     jobs,
     page: state.jobs.list.page,
+    filter: state.jobs.list.labelSelector || '',
     totalCount: state.jobs.list.totalCount,
     status: state.jobs.list.status,
     isLoading: state.jobs.list.status === 'loading',
@@ -39,7 +40,7 @@ const mapDispatchToProps = (dispatch, ownProps) => {
   return {
     loadData: () => dispatch(fetchJobs()),
     onPageChange: (page) => dispatch(fetchJobs(page)),
-    onFilterChange: (filter) => dispatch(fetchJobs(ownProps.page, filter)),
+    onFilterChange: (filter) => dispatch(fetchJobs(ownProps.page, filter || null)),
   }
 };
 

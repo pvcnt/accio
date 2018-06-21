@@ -32,12 +32,8 @@ class Pager extends React.Component {
 
   render() {
     const pageCount = Math.ceil(this.props.totalCount / JOBS_PER_PAGE);
-    const pages = range(1, pageCount).map(n => {
-      const className = classnames({
-        active: n === this.props.page,
-        first: n === 1,
-        last: n === pageCount,
-      });
+    const pages = range(1, pageCount + 1).map(n => {
+      const className = classnames({ active: n === this.props.page });
       return <li key={n} className={className}><a onClick={e => this.handleClick(e, n)}>{n}</a></li>;
     });
     return <ul className="pager">{pages}</ul>;

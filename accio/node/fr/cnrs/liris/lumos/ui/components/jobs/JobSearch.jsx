@@ -18,19 +18,43 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import { InputGroup } from '@blueprintjs/core';
+import { InputGroup, Button, Intent } from '@blueprintjs/core';
 
 class JobSearch extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      value: props.value,
+    };
+  }
+
+  handleChange(e) {
+    this.setState({ value: e.target.value });
+  }
+
   handleBlur(e) {
     if (e.target.value !== this.props.value) {
       this.props.onChange(e.target.value);
     }
   }
 
+  handleSubmit() {
+    if (this.state.value !== this.props.value) {
+      this.props.onChange(this.state.value);
+    }
+  }
+
   render() {
     return (
-      <div>
-
+      <div className="job-search">
+        <form onSubmit={() => this.handleSubmit()}>
+          <InputGroup leftIcon="search"
+                      value={this.state.value}
+                      placeholder="Search by labels…"
+                      fill={true}
+                      onChange={e => this.handleChange(e)}
+                      onBlur={e => this.handleBlur(e)}/>
+        </form>
       </div>
     );
   }

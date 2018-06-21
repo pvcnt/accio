@@ -60,13 +60,6 @@ function updateJobEntities(state, entities) {
   };
 }
 
-function updateJobListStatus(state, status) {
-  return {
-    ...state,
-    list: { ...state.list, status },
-  };
-}
-
 function updateJobListEntities(state, entities, totalCount) {
   return {
     ...state,

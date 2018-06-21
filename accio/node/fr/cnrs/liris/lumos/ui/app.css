@@ -44,6 +44,10 @@ footer a {
   margin-left: 10px;
 }
 
+h2 {
+  margin-bottom: 25px;
+}
+
 /**
  * Job list.
  */
@@ -51,6 +55,10 @@ footer a {
   font-size: 0.9em;
   font-style: italic;
   text-align: center;
+}
+
+.job-search {
+  margin-bottom: 10px;
 }
 
 .pager {
@@ -79,11 +87,13 @@ footer a {
 }
 
 .pager li:first-child a {
-  border-radius: 3px 0 0 3px;
+  border-top-left-radius: 3px;
+  border-bottom-left-radius: 3px;
 }
 
 .pager li:last-child a {
-  border-radius: 0 3px 3px 0;
+  border-top-right-radius: 3px;
+  border-bottom-right-radius: 3px;
 }
 
 .pager li:not(:last-child) a {

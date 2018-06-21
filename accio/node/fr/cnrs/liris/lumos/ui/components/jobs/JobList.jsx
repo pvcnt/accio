@@ -26,6 +26,8 @@ class JobList extends React.Component {
   render() {
     return (
       <div>
+        <JobSearch value={this.props.filter} onChange={this.props.onFilterChange}/>
+
         <JobTable jobs={this.props.jobs}/>
 
         <Pager totalCount={this.props.totalCount}
@@ -39,6 +41,7 @@ class JobList extends React.Component {
 JobTable.propTypes = {
   jobs: PropTypes.array.isRequired,
   page: PropTypes.number.isRequired,
+  filter: PropTypes.string.isRequired,
   totalCount: PropTypes.number.isRequired,
   onPageChange: PropTypes.func.isRequired,
   onFilterChange: PropTypes.func.isRequired,
