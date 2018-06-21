@@ -55,14 +55,21 @@ final class DataFrameReader[T](env: SparkleEnv, encoder: Encoder[T]) {
     new DataFrame[T] {
       override private[sparkle] def keys: Seq[String] = {
         if (filesystem.isDirectory(uri)) {
+          // Keys are computed by removing the `uri` prefix and the format extension.
           val prefixLength = uri.stripSuffix("/").length + 1
           val suffix = if (format.extension.nonEmpty) '.' + format.extension else ""
           val suffixLength = suffix.length
-          val uris = filesystem.list(uri).filter(_.endsWith(suffix)).toSeq.sorted
-          uris.map(_.drop(prefixLength).dropRight(suffixLength))
+          filesystem.list(uri)
+            .filter(_.endsWith(suffix))
+            .map(_.drop(prefixLength).dropRight(suffixLength))
+            .toSeq
+            .sorted
         } else if (filesystem.isFile(uri)) {
+          // We reading directly a file, we use by convention a single dot as key. This is reversed
+          // in the DataFrameWriter class.
           Seq(".")
         } else {
+          // We should not be here...
           Seq.empty
         }
       }

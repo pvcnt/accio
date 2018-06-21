@@ -71,6 +71,8 @@ object DefaultFilesystem extends Filesystem {
 
   private def getFile(uri: String): Path = {
     if (uri.startsWith("file:")) {
+      // Paths.get does not accept URIs with an authority, even empty. However NIO APIs
+      // (e.g., Files.list) generate URIs with such empty authorities...
       Paths.get(new URI(uri.replace("://", ":")))
     } else {
       // We accept, for this filesystem only, a raw path to be passed as argument.

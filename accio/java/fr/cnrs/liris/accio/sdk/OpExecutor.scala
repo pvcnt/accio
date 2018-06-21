@@ -46,7 +46,8 @@ final class OpExecutor(opMeta: OpMetadata, workDir: Path) extends Logging {
       val operator = createOperator(payload.params)
 
       val maybeSeed = if (opMeta.defn.unstable) Some(payload.seed) else None
-      val ctx = new OpContext(maybeSeed, workDir)
+      // We fully resolve `workDir`, as it will be included in the URIs of generated files/datasets.
+      val ctx = new OpContext(maybeSeed, workDir.toRealPath())
       val profiler = new JvmProfiler
 
       // The actual operator is the only profiled section. The outcome is either an output object

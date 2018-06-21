@@ -51,7 +51,8 @@ private[ops] trait SparkleOperator {
    */
   protected final def pathToUriString(path: String): String = {
     // The authority (second argument) is set to an empty string (and not null) to force the
-    // resulting string to include "//" after the scheme name.
+    // resulting string to include "//" after the scheme name. This is needed for consistency
+    // because the NIO APIs we use (e.g., Files.list) return URIs in that format.
     new URI("file", "", path, null, null).toString
   }
 }
