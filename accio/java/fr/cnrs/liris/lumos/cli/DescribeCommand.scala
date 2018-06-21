@@ -20,6 +20,7 @@ package fr.cnrs.liris.lumos.cli
 
 import com.twitter.util.Future
 import fr.cnrs.liris.infra.cli.app.{Environment, ExitCode}
+import fr.cnrs.liris.lumos.domain.{DataType, RemoteFile, Value}
 import fr.cnrs.liris.lumos.domain.thrift.ThriftAdapter
 import fr.cnrs.liris.lumos.server.GetJobRequest
 import fr.cnrs.liris.util.StringUtils.padTo
@@ -47,22 +48,22 @@ final class DescribeCommand extends LumosCommand {
         env.reporter.outErr.printOutLn(s"${padTo("Labels", colWidth)} ${if (job.labels.nonEmpty) job.labels.map { case (k, v) => s"$k=$v" }.mkString(", ") else "<none>"}")
         env.reporter.outErr.printOutLn(s"${padTo("Metadata", colWidth)} ${if (job.metadata.nonEmpty) job.labels.map { case (k, v) => s"$k=$v" }.mkString(", ") else "<none>"}")
         env.reporter.outErr.printOutLn(s"${padTo("Status", colWidth)} ${job.status.state.name}")
-        env.reporter.outErr.printOutLn(s"${padTo("Duration", colWidth)} ${humanize(job.duration)}")
-        if (!job.status.state.isCompleted && job.progress > 0) {
-          env.reporter.outErr.printOutLn(s"${padTo("Progress", colWidth)} ${job.progress} %")
-        }
         job.startTime.foreach { startTime =>
           env.reporter.outErr.printOutLn(s"${padTo("Started", colWidth)} ${humanize(startTime)}")
         }
         job.endTime.foreach { endTime =>
           env.reporter.outErr.printOutLn(s"${padTo("Completed", colWidth)} ${humanize(endTime)}")
         }
+        env.reporter.outErr.printOutLn(s"${padTo("Duration", colWidth)} ${humanize(job.duration)}")
+        if (!job.status.state.isCompleted && job.progress > 0) {
+          env.reporter.outErr.printOutLn(s"${padTo("Progress", colWidth)} ${job.progress} %")
+        }
 
         if (job.inputs.nonEmpty) {
           env.reporter.outErr.printOutLn("Inputs")
           val maxLength = job.inputs.map(_.name.length).max
           job.inputs.foreach { attr =>
-            env.reporter.outErr.printOutLn(s"  ${padTo(attr.name, maxLength)} ${attr.value.v}")
+            env.reporter.outErr.printOutLn(s"  ${padTo(attr.name, maxLength)} ${humanize(attr.value)}")
           }
         }
 
@@ -70,20 +71,29 @@ final class DescribeCommand extends LumosCommand {
           env.reporter.outErr.printOutLn("Outputs")
           val maxLength = job.outputs.map(_.name.length).max
           job.outputs.foreach { attr =>
-            env.reporter.outErr.printOutLn(s"  ${padTo(attr.name, maxLength)} ${attr.value.v}")
+            env.reporter.outErr.printOutLn(s"  ${padTo(attr.name, maxLength)} ${humanize(attr.value)}")
           }
         }
 
         env.reporter.outErr.printOutLn()
         if (job.tasks.nonEmpty) {
           env.reporter.outErr.printOutLn("Tasks")
-          env.reporter.outErr.printOutLn(s"  ${padTo("Task name", 30)}  ${padTo("Status", 10)}  Duration")
+          env.reporter.outErr.printOutLn(s"  ${padTo("TASK NAME", 30)}  ${padTo("STATUS", 10)}  DURATION")
           job.tasks.foreach { task =>
             env.reporter.outErr.printOutLn(s"  ${padTo(task.name, 30)}  ${padTo(task.status.state.name, 10)}  ${humanize(task.duration)}")
           }
         }
         ExitCode.Success
       }
+    }
+  }
+
+  private def humanize(value: Value): String = {
+    value.cast(DataType.File) match {
+      case Some(v) =>
+        // If the value can be viewed as a file, we display its directly its URI.
+        v.v.asInstanceOf[RemoteFile].uri
+      case _ => value.v.toString
     }
   }
 

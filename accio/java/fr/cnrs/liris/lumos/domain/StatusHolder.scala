@@ -27,32 +27,38 @@ trait StatusHolder {
 
   final def state: ExecStatus.State = status.state
 
-  final def startTime: Option[Instant] = {
-    val idx = history.lastIndexWhere(_ == ExecStatus.Running)
-    if (idx > -1) Some(history(idx).time) else None
+  final def startTime: Option[Instant] = getLastTransition(ExecStatus.Running).map(_.time)
+
+  final def endTime: Option[Instant] = getLastTransition(_.isCompleted, _ == ExecStatus.Running).map(_.time)
+
+  final def duration: Duration = {
+    startTime.flatMap(start => endTime.map(end => new Duration(start, end))).getOrElse(Duration.ZERO)
   }
 
-  final def endTime: Option[Instant] = {
-    val startAt = history.lastIndexWhere(_ == ExecStatus.Running)
-    if (startAt > -1) {
-      val idx = history.indexWhere(_.state.isCompleted, startAt)
-      if (idx > -1) Some(history(idx).time) else None
+  private def getLastTransition(to: ExecStatus.State): Option[ExecStatus] = {
+    if (status.state == to) {
+      Some(status)
     } else {
-      None
+      val idx = history.lastIndexWhere(_.state == to)
+      if (idx > -1) Some(history(idx)) else None
     }
   }
 
-  final def duration: Duration = {
-    val startAt = history.lastIndexWhere(_ == ExecStatus.Running)
-    if (startAt > -1) {
-      val endAt = history.indexWhere(_.state.isCompleted, startAt)
-      if (endAt > -1) {
-        new Duration(history(startAt).time, history(endAt).time)
-      } else {
-        new Duration(history(startAt).time, Instant.now())
-      }
+  private def getLastTransition(to: ExecStatus.State => Boolean, after: ExecStatus.State => Boolean): Option[ExecStatus] = {
+    if (after(status.state)) {
+      None
     } else {
-      Duration.ZERO
+      val startAt = history.lastIndexWhere(item => after(item.state))
+      if (startAt > -1) {
+        if (to(status.state)) {
+          Some(status)
+        } else {
+          val idx = history.lastIndexWhere(item => to(item.state), startAt)
+          if (idx > -1) Some(history(idx)) else None
+        }
+      } else {
+        None
+      }
     }
   }
 }

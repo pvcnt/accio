@@ -46,7 +46,7 @@ final class GetCommand extends LumosCommand {
       limit = limitFlag.get)
     val client = createLumosClient(env)
     client.listJobs(req).map { resp =>
-      val columns = Seq(("Id", 32), ("Created", 15), ("Status", 9), ("Labels", 30))
+      val columns = Seq(("ID", 32), ("CREATED", 15), ("STATUS", 9), ("LABELS", 30))
       columns.zipWithIndex.foreach { case ((name, width), idx) =>
         if (idx > 0) {
           env.reporter.outErr.printOut("  ")
