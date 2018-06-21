@@ -17,51 +17,51 @@
  */
 
 import React from 'react';
-import { NonIdealState, Spinner } from '@blueprintjs/core';
-import xhr from '../../utils/xhr';
+import { Spinner, NonIdealState } from '@blueprintjs/core';
+import { connect } from 'react-redux';
+import { getJob } from '../../actions';
+
+const mapStateToProps = (state, ownProps) => {
+  const name = getJobName(ownProps);
+  return {
+    isLoading: state.jobs.status[name] === 'loading',
+    isLoaded: state.jobs.status[name] === 'loaded',
+    isFailed: state.jobs.status[name] === 'failed',
+    job: state.jobs.entities[name],
+  };
+};
+
+function getJobName(props) {
+  return props.match.params.name;
+}
 
 export default function withJob(WrappedComponent) {
-  return class WithJobContainer extends React.Component {
-    constructor(props) {
-      super(props);
-      this.state = {
-        isLoading: false,
-        isLoaded: false,
-        data: null,
-      };
-    }
-
-    onSuccess(resp) {
-      this.setState({ isLoading: false, isLoaded: true, data: resp });
-    }
-
-    onError(resp) {
-      console.log('Unexpected error while fetching job.', resp);
-      this.setState({ isLoading: false, isLoaded: true });
-    }
-
-    load(props) {
-      xhr(`/api/v1/jobs/${props.match.params.name}`)
-        .then(resp => this.onSuccess(resp), resp => this.onError(resp));
+  class JobContainer extends React.Component {
+    loadData() {
+      this.props.dispatch(getJob(getJobName(this.props)));
     }
 
     componentDidMount() {
-      this.load(this.props);
+      this.loadData();
     }
 
-    componentWillReceiveProps(nextProps) {
-      this.load(nextProps);
+    componentDidUpdate(prevProps) {
+      if (getJobName(prevProps) !== getJobName(this.props)) {
+        this.loadData();
+      }
     }
 
     render() {
-      if (this.state.isLoading) {
+      if (this.props.isLoading) {
         return <Spinner/>;
-      } else if (this.state.isLoaded && null !== this.state.data) {
-        return <WrappedComponent job={this.state.data}/>;
-      } else if (this.state.isLoaded) {
+      } else if (this.props.isFailed) {
         return <NonIdealState visual="error" title="An error occurred while loading job."/>;
+      } else if (this.props.isLoaded) {
+        return <WrappedComponent job={this.props.job}/>;
       }
       return null;
     }
   }
+
+  return connect(mapStateToProps)(JobContainer);
 }

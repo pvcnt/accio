@@ -18,56 +18,54 @@
 
 import React from 'react';
 import { Spinner, NonIdealState } from '@blueprintjs/core';
-import xhr from '../../utils/xhr';
+import { connect } from 'react-redux';
+import { fetchJobs } from '../../actions';
+
+const mapStateToProps = (state, ownProps) => {
+  const jobs = state.jobs.list.ids.map(name => state.jobs.entities[name]);
+  return {
+    jobs,
+    totalCount: state.jobs.list.totalCount,
+    status: state.jobs.list.status,
+    isLoading: state.jobs.list.status === 'loading',
+    isLoaded: state.jobs.list.status === 'loaded',
+    isFailed: state.jobs.list.status === 'failed',
+  };
+};
 
 export default function withJobList(WrappedComponent) {
-  return class JobListContainer extends React.Component {
+  class JobListContainer extends React.Component {
     constructor(props) {
       super(props);
       this.state = {
-        isLoading: false,
-        isLoaded: false,
-        data: null,
+        page: 1,
       };
     }
 
-    onSuccess(resp) {
-      this.setState({ isLoading: false, isLoaded: true, data: resp });
+    handlePageChange(page) {
+      this.setState({ page }, newState => this.props.dispatch(fetchJobs(newState.page)));
     }
 
-    onError(resp) {
-      console.log('Unexpected error while fetching jobs.', resp);
-      this.setState({ isLoading: false, isLoaded: true });
-    }
-
-    load(props) {
-      this.setState({ isLoading: true });
-      let url = '/api/v1/jobs';
-      if (props.filter && Object.keys(props.filter).length > 0) {
-        url += '?' + map(props.filter, (v, k) => `${k}=${encodeURIComponent(v)}`).join('&');
-      }
-      xhr(url).then(resp => this.onSuccess(resp), resp => this.onError(resp))
+    loadData() {
+      this.props.dispatch(fetchJobs(this.state.page));
     }
 
     componentDidMount() {
-      this.load(this.props);
-    }
-
-    componentWillReceiveProps(nextProps) {
-      // We always reload the list of campaigns, even if the properties did not change, to avoid
-      // showing stale data.
-      this.load(nextProps);
+      this.loadData();
     }
 
     render() {
-      if (this.state.isLoading) {
+      if (this.props.isLoading) {
         return <Spinner/>;
-      } else if (this.state.isLoaded && null !== this.state.data) {
-        return <WrappedComponent {...this.state.data}/>;
-      } else if (this.state.isLoaded) {
+      } else if (this.props.isFailed) {
         return <NonIdealState visual="error" title="An error occurred while loading jobs."/>;
+      } else if (this.props.isLoaded) {
+        return <WrappedComponent {...this.props}
+                         onPageChange={page => this.handlePageChange(page)}/>;
       }
       return null;
     }
-  };
+  }
+
+  return connect(mapStateToProps)(JobListContainer);
 }

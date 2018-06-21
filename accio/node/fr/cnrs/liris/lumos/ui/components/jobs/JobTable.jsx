@@ -52,8 +52,9 @@ class JobTable extends React.Component {
 }
 
 JobTable.propTypes = {
-  jobs: PropTypes.array,
-  totalCount: PropTypes.number,
+  jobs: PropTypes.array.isRequired,
+  totalCount: PropTypes.number.isRequired,
+  onPageChange: PropTypes.func.isRequired,
 };
 
 JobTable.defaultProps = {
