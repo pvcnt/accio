@@ -23,22 +23,89 @@ import fr.cnrs.liris.accio.discovery.OpRegistry
 import fr.cnrs.liris.accio.domain._
 import fr.cnrs.liris.lumos.domain.{AttrValue, DataType, Value}
 
+import scala.util.Random
 import scala.util.matching.Regex
 
 /**
- * Workflow validator.
+ * Workflow validator, in charge of ensuring the workflow objects have a valid structure.
  *
- * @param registry Operator registry.
+ * @param registry      Operator registry.
+ * @param nameGenerator Name generator.
  */
 @Singleton
-final class WorkflowValidator @Inject()(registry: OpRegistry) {
+final class WorkflowValidator @Inject()(registry: OpRegistry, nameGenerator: NameGenerator) {
 
   import WorkflowValidator._
 
   /**
-   * Validate the definition of a workflow.
+   * Prepare the definition of a workflow before it is validated. This does not validate the
+   * workflow nor throw any exception, but normalizes as much as possible the workflow (e.g., by
+   * filling fields that may have been omitted).
    *
-   * @param workflow Workflow to validate.
+   * @param workflow Workflow definition.
+   * @param user Current user's name.
+   */
+  def prepare(workflow: Workflow, user: Option[String]): Workflow = {
+    val name = if (workflow.name.isEmpty) nameGenerator.generateName() else workflow.name
+    val params = workflow.params.map(prepareParam(_, workflow))
+    val seed = if (workflow.seed == 0) Random.nextLong() else workflow.seed
+    val steps = prepareSteps(workflow)
+    workflow.copy(
+      name = name,
+      owner = user.orElse(workflow.owner),
+      params = params,
+      seed = seed,
+      steps = steps)
+  }
+
+  private def prepareParam(param: AttrValue, workflow: Workflow): AttrValue = {
+    // We collect the data types as which the parameter is actually used. If only one is used, we
+    // then attempt to cast the parameter into that particular type.
+    val dataTypes = workflow.steps.flatMap { step =>
+      step.params.flatMap {
+        case Channel(name, Channel.Param(paramName)) if paramName == param.name =>
+          registry.get(step.op).toSeq.flatMap { op =>
+            op.inputs.find(_.name == name).map(_.dataType).toSet
+          }
+        case _ => Set.empty
+      }
+    }.toSet
+    if (dataTypes.size == 1) {
+      param.value.cast(dataTypes.head)
+        .map(v => param.copy(value = v))
+        .getOrElse(param)
+    } else {
+      param
+    }
+  }
+
+  private def prepareSteps(workflow: Workflow): Seq[Step] = {
+    workflow.steps.map { step =>
+      val op = registry.get(step.op)
+      val params = step.params.zipWithIndex.map { case (channel, idx) =>
+        // If a channel name is omitted, we try to find a matching positional input on the
+        // associated operator, and fill the name accordingly. Because the order of inputs might
+        // change later on, this allows to explicitly keep track of input values without ambiguity.
+        val name = if (channel.name.isEmpty && op.isDefined && idx < op.get.inputs.length) {
+          op.get.inputs(idx).name
+        } else {
+          channel.name
+        }
+        channel.copy(name = name)
+      }
+      // If step name is omitted, it defaults to the operator's name. It means that if an operator
+      // appears multiple times in a workflow, associated steps must have their names redefined.
+      val name = if (step.name.isEmpty) step.op else step.name
+      step.copy(name = name, params = params)
+    }
+  }
+
+  /**
+   * Validate the definition of a workflow. This method does not throw any exception in case the
+   * workflow is invalid, but return every error found as a [[ValidationResult]]. You should
+   * usually call [[WorkflowValidator.prepare]] before calling this method.
+   *
+   * @param workflow Workflow definition.
    */
   def validate(workflow: Workflow): ValidationResult = {
     val builder = new ValidationResult.Builder

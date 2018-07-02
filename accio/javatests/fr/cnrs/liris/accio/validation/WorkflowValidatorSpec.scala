@@ -31,6 +31,10 @@ import fr.cnrs.liris.testing.UnitSpec
 class WorkflowValidatorSpec extends UnitSpec {
   behavior of "WorkflowValidator"
 
+  private object FixedNamedGenerator extends NameGenerator {
+    override def generateName(): String = "non-random-name"
+  }
+
   private val validator = {
     val registry = new OpRegistry(new MemoryOpDiscovery(Set(Operator(
       name = "FirstSimple",
@@ -58,16 +62,106 @@ class WorkflowValidatorSpec extends UnitSpec {
         deprecation = Some("Do not use it!"),
         inputs = Seq(Attribute("foo", DataType.Int)),
         outputs = Seq(Attribute("data", DataType.Dataset))))))
-    new WorkflowValidator(registry)
+    new WorkflowValidator(registry, FixedNamedGenerator)
   }
 
-  it should "validate a legitimate job" in {
-    val obj = Workflow(
-      name = "valid-job",
+  it should "overwrite the owner if specified" in {
+    var obj = Workflow(name = "some-job")
+    var workflow = validator.prepare(obj, Some("me"))
+    workflow.owner shouldBe Some("me")
+
+    obj = Workflow(name = "some-job", owner = Some("him"))
+    workflow = validator.prepare(obj, Some("me"))
+    workflow.owner shouldBe Some("me")
+  }
+
+  it should "generate a seed if empty" in {
+    var obj = Workflow(name = "some-job")
+    var workflow = validator.prepare(obj, None)
+    workflow.seed shouldNot be(0L)
+
+    // ... but it should not overwrite an already-defined seed.
+    obj = Workflow(name = "some-job", seed = 1234L)
+    workflow = validator.prepare(obj, None)
+    workflow.seed shouldBe 1234L
+  }
+
+  it should "generate a name if empty" in {
+    var obj = Workflow()
+    var workflow = validator.prepare(obj, None)
+    workflow.name shouldBe "non-random-name"
+
+    // ... but it should not overwrite an already-defined name.
+    obj = Workflow(name = "some-job")
+    workflow = validator.prepare(obj, None)
+    workflow.name shouldBe "some-job"
+  }
+
+  it should "fill step name if empty" in {
+    var obj = Workflow(
+      name = "some-job",
       steps = Seq(Step(
         op = "FirstSimple",
-        name = "FirstSimple",
-        params = Seq(Channel("foo", Channel.Constant(Value.Int(42))))),
+        params = Seq(Channel("foo", Channel.Constant(Value.Int(42)))))))
+    var workflow = validator.prepare(obj, None)
+    workflow.steps.head.name shouldBe "FirstSimple"
+
+    // ... but it should not overwrite an already-defined name.
+    obj = Workflow(
+      name = "some-job",
+      steps = Seq(Step(
+        op = "FirstSimple",
+        name = "UserDefinedName",
+        params = Seq(Channel("foo", Channel.Constant(Value.Int(42)))))))
+    workflow = validator.prepare(obj, None)
+    workflow.steps.head.name shouldBe "UserDefinedName"
+  }
+
+  it should "fill step input name if empty" in {
+    val obj = Workflow(
+      name = "some-job",
+      steps = Seq(Step(
+        op = "SecondSimple",
+        params = Seq(
+          Channel("dbl", Channel.Constant(Value.Double(3.14))),
+          Channel("", Channel.Constant(Value.String("bar")))))))
+    val workflow = validator.prepare(obj, None)
+    workflow.steps.head.params shouldBe Seq(
+      Channel("dbl", Channel.Constant(Value.Double(3.14))),
+      Channel("str", Channel.Constant(Value.String("bar"))))
+  }
+
+  it should "cast params to the most appropriate type" in {
+    var obj = Workflow(
+      name = "some-job",
+      params = Seq(AttrValue("param", Value.String("42"))),
+      steps = Seq(Step(
+        op = "FirstSimple",
+        params = Seq(Channel("foo", Channel.Param("param"))))))
+    var workflow = validator.prepare(obj, None)
+    workflow.params shouldBe Seq(AttrValue("param", Value.Int(42)))
+
+    obj = Workflow(
+      name = "some-job",
+      params = Seq(AttrValue("param", Value.String("42"))),
+      steps = Seq(Step(
+        op = "FirstSimple",
+        params = Seq(Channel("foo", Channel.Param("param")))),
+        Step(
+          op = "SecondSimple",
+          params = Seq(Channel("i", Channel.Param("param"))))))
+    workflow = validator.prepare(obj, None)
+    workflow.params shouldBe Seq(AttrValue("param", Value.Int(42)))
+  }
+
+  it should "validate a legitimate wofklow" in {
+    val obj = Workflow(
+      name = "valid-job",
+      steps = Seq(
+        Step(
+          op = "FirstSimple",
+          name = "FirstSimple",
+          params = Seq(Channel("foo", Channel.Constant(Value.Int(42))))),
         Step(
           op = "FirstSimple",
           name = "FirstSimple1",

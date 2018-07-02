@@ -25,14 +25,13 @@ import fr.cnrs.liris.accio.discovery.OpRegistry
 import fr.cnrs.liris.accio.domain.thrift.ThriftAdapter
 import fr.cnrs.liris.accio.scheduler.Scheduler
 import fr.cnrs.liris.accio.server.AccioService._
-import fr.cnrs.liris.accio.validation.{ValidationResult, WorkflowPreparator, WorkflowValidator}
+import fr.cnrs.liris.accio.validation.{ValidationResult, WorkflowValidator}
 import fr.cnrs.liris.accio.version.Version
 import fr.cnrs.liris.infra.thriftserver.{FieldViolation, ServerException, UserInfo}
 import fr.cnrs.liris.lumos.transport.EventTransport
 
 @Singleton
 final class AccioServiceController @Inject()(
-  preparator: WorkflowPreparator,
   validator: WorkflowValidator,
   submitService: SubmitWorkflowService,
   scheduler: Scheduler,
@@ -65,14 +64,14 @@ final class AccioServiceController @Inject()(
 
   override val validateWorkflow = handle(ValidateWorkflow) { args: ValidateWorkflow.Args =>
     Future {
-      val workflow = preparator.prepare(ThriftAdapter.toDomain(args.req.workflow), UserInfo.current.map(_.name))
+      val workflow = validator.prepare(ThriftAdapter.toDomain(args.req.workflow), UserInfo.current.map(_.name))
       val result = validator.validate(workflow)
       ValidateWorkflowResponse(result.errors.map(toThrift), result.warnings.map(toThrift))
     }
   }
 
   override val submitWorkflow = handle(SubmitWorkflow) { args: SubmitWorkflow.Args =>
-    val workflow = preparator.prepare(ThriftAdapter.toDomain(args.req.workflow), UserInfo.current.map(_.name))
+    val workflow = validator.prepare(ThriftAdapter.toDomain(args.req.workflow), UserInfo.current.map(_.name))
     val result = validator.validate(workflow)
     if (result.isInvalid) {
       Future.exception(ServerException.InvalidArgument(result.errors.map(v => ServerException.FieldViolation(v.message, v.field))))
